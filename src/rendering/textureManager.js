@@ -1,6 +1,10 @@
 import { fetchAssetJson } from '../utils/assetLoading.js'
+import { computeMapTopologyFingerprint } from '../game/mapTopology.js'
+import { prepareCityBuildings } from '../game/cityBuildings.js'
+import { normalizeDecorationSettings } from '../game/decorationSettings.js'
 // rendering/textureManager.js
-import { TILE_SIZE } from '../config.js'
+import { TILE_SIZE, PLAYER_POSITIONS } from '../config.js'
+import { gameState } from '../gameState.js'
 import { bootMark } from '../ui/bootTiming.js'
 import { reportBootTextures } from '../ui/bootProgress.js'
 import { buildingImageMap } from '../buildingImageMap.js'
@@ -8,15 +12,20 @@ import { getImageTextureWithBlendMode, normalizeSpriteSheetBlendMode } from './s
 import { expandCompactSpriteSheetMetadata, hasTaggedSpriteSheetTiles } from '../utils/spriteSheetMetadata.js'
 import { estimateDecodedImageBytes, loadPreparedImage } from './prepared/imagePreparation.js'
 import { PreparationGeneration } from './prepared/preparedMap.js'
+import {
+  buildDecorationLayout,
+  buildDecorationPools,
+  decorationHash,
+  decorationSeed,
+  getValidDecorationCell,
+  SINGLE_DECORATION_INTERVAL
+} from './decorationLayout.js'
+import { cutoutDecorationGroup } from './decorationCutout.js'
 
 const DEFAULT_COMBAT_DECAL_SHEET_PATH = 'images/map/sprite_sheets/debris_craters_tracks.webp'
 const DEFAULT_COMBAT_DECAL_METADATA_PATH = 'images/map/sprite_sheets/debris_craters_tracks.json'
 const DEFAULT_CRYSTAL_SHEET_PATH = 'images/map/sprite_sheets/crystals_q90_1024x1024.webp'
 const DEFAULT_CRYSTAL_METADATA_PATH = 'images/map/sprite_sheets/crystals_q90_1024x1024.json'
-const DEFAULT_STREET_SHEET_PATH = 'images/map/sprite_sheets/streets24_q90_1024x1024.webp'
-const DEFAULT_STREET_METADATA_PATH = 'images/map/sprite_sheets/streets24_q90_1024x1024.json'
-const LAND_DECORATIVE_INTERVAL = 33
-const LAND_IMPASSABLE_INTERVAL = 50
 const STREET_DIRECTION_MASKS = {
   top: 1,
   right: 2,
@@ -67,10 +76,12 @@ export class TextureManager {
     this.defaultCrystalSheetImage = null
     this.defaultCrystalSheetMetadata = null
     this.defaultCrystalTagBuckets = {}
-    this.defaultStreetSheetImage = null
-    this.defaultStreetSheetMetadata = null
     this.defaultStreetTagBuckets = {}
     this.integratedGroupedTagCatalog = {}
+    this.integratedDecorationPools = buildDecorationPools([])
+    this.hasGroundDetails = false
+    this.naturalDecorationRules = false
+    this.decorationLayoutCache = null
     this.defaultCombatDecalGroupedTagCatalog = {}
     this.streetSelectionPoolCache = new Map()
     this.streetTileSelectionCache = new Map()
@@ -163,7 +174,10 @@ export class TextureManager {
         this.integratedSpriteSheetImagesByPath[sheetPath] = image
         return image
       })
-      .catch(() => null)
+      .catch(() => {
+        console.warn(`Skipping unavailable sprite sheet: ${sheetPath}`)
+        return null
+      })
       .finally(() => {
         delete this.integratedSpriteSheetLoadsByPath[sheetPath]
       })
@@ -185,12 +199,14 @@ export class TextureManager {
           ...tile,
           tagSet: this.buildTagSet(tile.tags),
           streetDirectionMask: this.getStreetDirectionMask(tile.tags),
-          image: getImageTextureWithBlendMode(entry.image, entry.blendMode, entry.blackKey),
+          image: getImageTextureWithBlendMode(entry.image, entry.blendMode, entry.blackKey, entry.metadata),
           blendMode: entry.blendMode,
           blackKey: entry.blackKey,
           sheetPath: entry.sheetPath
         }
         tile.tags.forEach((tag) => {
+          // Decorative rocks are props, never terrain replacements.
+          if ((tag === 'rock' || tag === 'rocks') && (tile.tags.includes('decorative') || tile.tags.includes('ground_detail'))) return
           if (!buckets[tag]) {
             buckets[tag] = []
           }
@@ -207,10 +223,20 @@ export class TextureManager {
     for (const biome of ['grass', 'soil', 'sand', 'snow']) {
       catalog[biome] = {
         all: this.getTagBucketCandidates(tagBuckets, [biome]),
-        passable: this.getTagBucketCandidates(tagBuckets, [biome, 'passable'], ['decorative', 'impassable']),
+        passable: this.getTagBucketCandidates(tagBuckets, [biome, 'passable'], ['decorative', 'impassable', 'ground_detail']),
         decorative: this.getTagBucketCandidates(tagBuckets, [biome, 'decorative']),
         impassable: this.getTagBucketCandidates(tagBuckets, [biome, 'impassable'])
       }
+    }
+    catalog.universal = {
+      decorative: this.getTagBucketCandidates(tagBuckets, ['universal', 'decorative']),
+      impassable: this.getTagBucketCandidates(tagBuckets, ['universal', 'impassable'])
+    }
+    for (const biome of ['grass', 'soil', 'sand', 'snow']) {
+      // Universal props only supplement biomes that have their own decorative art.
+      catalog[biome].decorativeWithUniversal = catalog[biome].decorative.length
+        ? catalog[biome].decorative.concat(catalog.universal.decorative)
+        : catalog.universal.decorative
     }
     return catalog
   }
@@ -240,7 +266,7 @@ export class TextureManager {
         }
         sheetGroups[groupLabel].push({
           ...tile,
-          image: getImageTextureWithBlendMode(entry.image, entry.blendMode, entry.blackKey),
+          image: getImageTextureWithBlendMode(entry.image, entry.blendMode, entry.blackKey, entry.metadata),
           blendMode: entry.blendMode,
           blackKey: entry.blackKey,
           sheetPath: entry.sheetPath
@@ -384,49 +410,11 @@ export class TextureManager {
     }
   }
 
-  async preloadDefaultStreetSheet() {
-    try {
-      const metadata = expandCompactSpriteSheetMetadata(await fetchAssetJson(DEFAULT_STREET_METADATA_PATH))
-      if (!this.hasTaggedIntegratedTiles(metadata)) {
-        this.defaultStreetSheetMetadata = null
-        this.defaultStreetTagBuckets = {}
-        this.clearStreetSelectionPoolCache()
-        return
-      }
-
-      const image = await this.loadIntegratedSpriteSheetImage(DEFAULT_STREET_SHEET_PATH)
-      if (!image) {
-        this.defaultStreetSheetMetadata = null
-        this.defaultStreetTagBuckets = {}
-        this.clearStreetSelectionPoolCache()
-        return
-      }
-
-      const blendMode = normalizeSpriteSheetBlendMode(metadata?.blendMode)
-      const blackKey = metadata?.blackKey || null
-      this.defaultStreetSheetImage = image
-      this.defaultStreetSheetMetadata = metadata
-      this.defaultStreetTagBuckets = this.buildIntegratedTagBuckets([{
-        sheetPath: DEFAULT_STREET_SHEET_PATH,
-        metadata,
-        image,
-        blendMode,
-        blackKey
-      }])
-      this.clearStreetSelectionPoolCache()
-    } catch (err) {
-      this.defaultStreetSheetMetadata = null
-      this.defaultStreetTagBuckets = {}
-      this.clearStreetSelectionPoolCache()
-      window.logger.warn('Failed to preload default street sheet:', err)
-    }
-  }
-
   async setIntegratedSpriteSheetConfig(config = {}) {
     this.integratedPreparationGeneration?.cancel('Integrated sprite-sheet preparation superseded')
     const preparation = new PreparationGeneration(++this.texturePreparationGeneration)
     this.integratedPreparationGeneration = preparation
-    const enabled = Boolean(config?.enabled)
+    const enabled = Boolean(config?.enabled) && !(Array.isArray(config.sheets) && config.sheets.length === 0)
     const requestedBiomeTag = ['soil', 'sand', 'grass', 'snow', 'mixed'].includes(config?.biomeTag)
       ? config.biomeTag
       : this.integratedBiomeTag
@@ -442,18 +430,31 @@ export class TextureManager {
       this.integratedBlendMode = 'black'
       this.integratedBlackKey = null
       this.integratedGroupedTagCatalog = {}
+      this.integratedDecorationPools = buildDecorationPools([])
+      this.hasGroundDetails = false
+      this.naturalDecorationRules = false
+      this.decorationLayoutCache = null
       this.integratedRenderSignature = `off|${this.integratedBiomeTag}`
       this.clearStreetSelectionPoolCache()
       this.integratedConfigVersion++
       return
     }
 
+    if (Array.isArray(config?.sheets) && config.sheets.length) {
+      this.lastIntegratedSheetEntries = config.sheets
+    }
+    // A single-sheet request without a usable sheet (for example a saved game
+    // restored with custom mode on) keeps the current multi-sheet selection
+    // instead of silently switching custom mode off.
+    const hasSingleSheet = Boolean(config?.sheetPath && config?.metadata)
     const sheetEntries = Array.isArray(config?.sheets) && config.sheets.length
       ? config.sheets
-      : [{
-        sheetPath: config?.sheetPath,
-        metadata: config?.metadata
-      }]
+      : (!hasSingleSheet && this.lastIntegratedSheetEntries?.length
+        ? this.lastIntegratedSheetEntries
+        : [{
+          sheetPath: config?.sheetPath,
+          metadata: config?.metadata
+        }])
 
     const normalizedEntries = []
     for (const entry of sheetEntries) {
@@ -485,6 +486,10 @@ export class TextureManager {
       this.integratedBlendMode = 'black'
       this.integratedBlackKey = null
       this.integratedGroupedTagCatalog = {}
+      this.integratedDecorationPools = buildDecorationPools([])
+      this.hasGroundDetails = false
+      this.naturalDecorationRules = false
+      this.decorationLayoutCache = null
       this.integratedRenderSignature = 'off'
       this.clearStreetSelectionPoolCache()
       this.integratedConfigVersion++
@@ -492,6 +497,7 @@ export class TextureManager {
     }
 
     preparation.assertCurrent(this.texturePreparationGeneration)
+    normalizedEntries.sort((a, b) => a.sheetPath < b.sheetPath ? -1 : a.sheetPath > b.sheetPath ? 1 : 0)
     this.integratedSpriteSheetMode = true
     this.integratedSpriteSheets = normalizedEntries
     this.integratedSpriteSheetPath = normalizedEntries[0].sheetPath
@@ -501,13 +507,36 @@ export class TextureManager {
     this.integratedTagBuckets = this.buildIntegratedTagBuckets(normalizedEntries)
     this.integratedLandBuckets = this.buildIntegratedLandBuckets(this.integratedTagBuckets)
     this.integratedGroupedTagCatalog = this.buildGroupedTagCatalog(normalizedEntries)
+    const decorationGroups = [...(this.integratedGroupedTagCatalog.decorative || []), ...(this.integratedGroupedTagCatalog.ground_detail || [])]
+    const seenGroups = new Set()
+    const preparedGroups = []
+    for (const group of decorationGroups) {
+      const first = group.tilesByOffset['0,0']
+      const key = `${first.sheetPath}:${group.groupLabel}`
+      if (seenGroups.has(key)) continue
+      seenGroups.add(key)
+      const tagSet = TextureManager.collectGroupTagSet(group)
+      preparedGroups.push({ ...(tagSet.has('ground_detail') ? group : cutoutDecorationGroup(group)), tagSet })
+    }
+    // Optional prop and detail sheets may carry ungrouped 1x1 tiles.
+    const singles = new Set([...(this.integratedTagBuckets.decorative || []), ...(this.integratedTagBuckets.ground_detail || [])])
+    for (const tile of singles) {
+      if (TextureManager.getGroupTagId(tile.tags)) continue
+      const group = { width: 1, height: 1, tilesByOffset: { '0,0': tile }, tagSet: new Set(tile.tags) }
+      preparedGroups.push(tile.tags.includes('ground_detail') ? group : cutoutDecorationGroup(group))
+    }
+    this.hasShoreDecorations = preparedGroups.some(group => group.tagSet.has('shore'))
+    this.integratedDecorationPools = buildDecorationPools(preparedGroups)
+    this.hasGroundDetails = preparedGroups.some(group => group.tagSet.has('ground_detail'))
+    this.naturalDecorationRules = normalizedEntries.some(entry => /\/dtv[23]_/.test(entry.sheetPath))
+    this.decorationLayoutCache = null
     this.integratedBiomeTag = ['soil', 'sand', 'grass', 'snow', 'mixed'].includes(config?.biomeTag) ? config.biomeTag : 'grass'
     this.integratedBlendMode = normalizeSpriteSheetBlendMode(normalizedEntries[0].metadata?.blendMode)
     this.integratedBlackKey = normalizedEntries[0].blackKey
     const signatureSheets = normalizedEntries
       .map(entry => `${entry.sheetPath}|${entry.metadata?.tileSize}|${entry.metadata?.borderWidth}|${Object.keys(entry.metadata?.tiles || {}).length}|${entry.blendMode}|${entry.blackKey?.cutoffBrightness ?? 'default'}|${entry.blackKey?.softenBrightness ?? 'default'}`)
       .join(';')
-    this.integratedRenderSignature = `${signatureSheets}|${this.integratedBiomeTag}`
+    this.integratedRenderSignature = `${signatureSheets}|${this.integratedBiomeTag}|${computeMapTopologyFingerprint({ enabled: true, sheets: normalizedEntries, ...gameState })}`
     this.clearStreetSelectionPoolCache()
     this.integratedConfigVersion++
   }
@@ -520,22 +549,72 @@ export class TextureManager {
     return Math.abs(hash)
   }
 
-  getLandClassificationTag(x, y, biomeTag = this.integratedBiomeTag) {
-    const requestedBiome = ['soil', 'sand', 'grass', 'snow'].includes(biomeTag)
-      ? biomeTag
-      : 'grass'
-    const hash = TextureManager.coordHash(x, y)
-    const landBuckets = this.integratedLandBuckets[requestedBiome]
-    const hasImpassable = Boolean(landBuckets?.impassable.length)
-    const hasDecorative = Boolean(landBuckets?.decorative.length)
-    const hasPassable = Boolean(landBuckets?.passable.length)
+  getDefaultDecorationBiome() {
+    return ['soil', 'sand', 'grass', 'snow'].includes(this.integratedBiomeTag) ? this.integratedBiomeTag : 'grass'
+  }
 
-    if (hasImpassable && hash % LAND_IMPASSABLE_INTERVAL === 0) return 'impassable'
-    if (hasDecorative && hash % LAND_DECORATIVE_INTERVAL === 0) return 'decorative'
-    if (hasPassable) return 'passable'
-    if (hasDecorative) return 'decorative'
-    if (hasImpassable) return 'impassable'
-    return 'passable'
+  /**
+   * Decoration layout for the given map, built once per map grid and sheet
+   * configuration: multi-tile sprites first, then 1x1 sprites.
+   */
+  getDecorationLayout(mapGrid) {
+    if (!Array.isArray(mapGrid) || !mapGrid.length) return null
+    const width = mapGrid[0]?.length || 0
+    const cache = this.decorationLayoutCache
+    if (
+      cache &&
+      cache.mapGrid === mapGrid &&
+      cache.firstTile === mapGrid[0][0] &&
+      cache.seed === gameState.mapSeed &&
+      cache.citySeeds === gameState.citySeeds &&
+      cache.cityClusterSize === gameState.cityClusterSize &&
+      cache.ruinSeeds === gameState.ruinSeeds &&
+      cache.ruinClusterSize === gameState.ruinClusterSize &&
+      cache.stoneCount === gameState.stoneCount &&
+      cache.width === width &&
+      cache.height === mapGrid.length &&
+      cache.version === this.integratedConfigVersion
+    ) {
+      return cache.layout
+    }
+    const layout = buildDecorationLayout(mapGrid, this.integratedDecorationPools, {
+      defaultBiome: this.getDefaultDecorationBiome(),
+      ruinSeed: gameState.mapSeed,
+      ...normalizeDecorationSettings(gameState),
+      salt: this.naturalDecorationRules ? decorationSeed(gameState.mapSeed) : 0,
+      placementRules: Boolean(this.naturalDecorationRules),
+      startPositions: Object.values(PLAYER_POSITIONS).slice(0, gameState.playerCount || 2).map(point => ({ x: Math.floor(width * point.x), y: Math.floor(mapGrid.length * point.y) }))
+    })
+    prepareCityBuildings(mapGrid, layout)
+    this.decorationLayoutCache = {
+      mapGrid,
+      firstTile: mapGrid[0][0],
+      seed: gameState.mapSeed,
+      citySeeds: gameState.citySeeds,
+      cityClusterSize: gameState.cityClusterSize,
+      ruinSeeds: gameState.ruinSeeds,
+      ruinClusterSize: gameState.ruinClusterSize,
+      stoneCount: gameState.stoneCount,
+      width,
+      height: mapGrid.length,
+      version: this.integratedConfigVersion,
+      layout
+    }
+    return layout
+  }
+
+  getGroundDetailForMapTile(mapGrid, x, y) {
+    if (!this.integratedSpriteSheetMode || !this.hasGroundDetails || mapGrid?.[y]?.[x]?.type !== 'land') return null
+    const layout = this.getDecorationLayout(mapGrid)
+    const cell = layout?.groundDetails?.[y * layout.width + x]
+    if (!cell) return null
+    // Reuse the footprint validation for edited maps without decorating occupancy.
+    if (!getValidDecorationCell(layout, mapGrid, x, y, this.getDefaultDecorationBiome(), true)) return null
+    return cell.group.tilesByOffset[`${cell.offsetX},${cell.offsetY}`] || null
+  }
+
+  invalidateDecorationLayout() {
+    this.decorationLayoutCache = null
   }
 
   selectIntegratedTileByTags(requiredTags, x, y, excludedTags = []) {
@@ -794,50 +873,61 @@ export class TextureManager {
     return integrated.length ? integrated : fallback
   }
 
+  static collectGroupTagSet(group) {
+    const tagSet = new Set()
+    if (!group?.tilesByOffset) return tagSet
+    Object.values(group.tilesByOffset).forEach((tile) => {
+      if (!Array.isArray(tile?.tags)) return
+      tile.tags.forEach((tag) => {
+        if (tag === 'group' || /^group_\d+$/.test(tag)) return
+        tagSet.add(tag)
+      })
+    })
+    return tagSet
+  }
+
+  filterGroupedTagCandidates(groups, options = {}) {
+    if (!Array.isArray(groups) || !groups.length) return []
+    const requiredAnyTags = Array.isArray(options.requiredAnyTags) ? options.requiredAnyTags.filter(Boolean) : []
+    const requiredAllTags = Array.isArray(options.requiredAllTags) ? options.requiredAllTags.filter(Boolean) : []
+    if (!requiredAnyTags.length && !requiredAllTags.length) return groups
+
+    // Catalog arrays are rebuilt on every sheet/config change, so a WeakMap keyed by
+    // the array invalidates itself and keeps per-tile lookups allocation-free.
+    if (!this.filteredGroupCandidateCache) this.filteredGroupCandidateCache = new WeakMap()
+    let perGroups = this.filteredGroupCandidateCache.get(groups)
+    if (!perGroups) {
+      perGroups = new Map()
+      this.filteredGroupCandidateCache.set(groups, perGroups)
+    }
+    const cacheKey = `${requiredAnyTags.join(',')}|${requiredAllTags.join(',')}`
+    const cachedGroups = perGroups.get(cacheKey)
+    if (cachedGroups) return cachedGroups
+
+    const filteredGroups = groups.filter((group) => {
+      const tagSet = TextureManager.collectGroupTagSet(group)
+      if (requiredAllTags.length && !requiredAllTags.every(tag => tagSet.has(tag))) return false
+      if (requiredAnyTags.length && !requiredAnyTags.some(tag => tagSet.has(tag))) return false
+      return true
+    })
+    perGroups.set(cacheKey, filteredGroups)
+    return filteredGroups
+  }
+
   selectGroupedTileVariant(tag, options = {}) {
     const width = Math.max(1, Math.floor(options.width || 1))
     const height = Math.max(1, Math.floor(options.height || 1))
     const offsetX = Math.max(0, Math.floor(options.offsetX || 0))
     const offsetY = Math.max(0, Math.floor(options.offsetY || 0))
     const includeDefaultDecals = Boolean(options.includeDefaultDecals)
-    const groups = this.getGroupedTagCandidates(tag, { includeDefaultDecals })
-      .filter(group => group.width === width && group.height === height)
+    const groups = this.filterGroupedTagCandidates(
+      this.getGroupedTagCandidates(tag, { includeDefaultDecals }),
+      options
+    ).filter(group => group.width === width && group.height === height)
     if (!groups.length) return null
     const seed = Number.isFinite(options.seed) ? options.seed : 0
     const selectedGroup = groups[Math.abs(seed) % groups.length]
     return selectedGroup.tilesByOffset[`${offsetX},${offsetY}`] || null
-  }
-
-  selectGroupedTileForMapTile(tag, x, y, mapGrid, matchesCell) {
-    const groups = this.getGroupedTagCandidates(tag)
-    if (!Array.isArray(groups) || !groups.length || !Array.isArray(mapGrid)) return null
-    const mapHeight = mapGrid.length
-    const mapWidth = mapGrid[0]?.length || 0
-    if (!mapWidth || !mapHeight) return null
-
-    for (const group of groups) {
-      for (let offsetY = 0; offsetY < group.height; offsetY++) {
-        for (let offsetX = 0; offsetX < group.width; offsetX++) {
-          const anchorX = x - offsetX
-          const anchorY = y - offsetY
-          if (anchorX < 0 || anchorY < 0) continue
-          if ((anchorX + group.width) > mapWidth || (anchorY + group.height) > mapHeight) continue
-          let fits = true
-          for (let gy = 0; gy < group.height && fits; gy++) {
-            for (let gx = 0; gx < group.width; gx++) {
-              if (!matchesCell(anchorX + gx, anchorY + gy)) {
-                fits = false
-                break
-              }
-            }
-          }
-          if (!fits) continue
-          const selected = group.tilesByOffset[`${offsetX},${offsetY}`]
-          if (selected?.rect) return selected
-        }
-      }
-    }
-    return null
   }
 
   getIntegratedTileForMapTile(type, x, y, options = {}) {
@@ -846,7 +936,7 @@ export class TextureManager {
       const selectedStreetTile = this.selectStreetTileByTags(['street'], x, y, mapGrid)
       if (!selectedStreetTile?.rect) return null
       return {
-        image: selectedStreetTile.image || this.integratedSpriteSheetImage || this.defaultStreetSheetImage,
+        image: selectedStreetTile.image || this.integratedSpriteSheetImage,
         rect: selectedStreetTile.rect,
         tags: selectedStreetTile.tags || [],
         sheetPath: selectedStreetTile.sheetPath || null
@@ -860,41 +950,37 @@ export class TextureManager {
     let selected = null
     const mapGrid = options?.mapGrid
 
-    if (type === 'land') {
+    let rotation = 0
+    let selectedTags = null
+    if (type === 'land' || type === 'water') {
+      const tileBiome = mapGrid?.[y]?.[x]?.biome
       const requestedBiome = ['soil', 'sand', 'grass', 'snow'].includes(options?.biomeTag)
         ? options.biomeTag
-        : (this.integratedBiomeTag === 'mixed' ? 'grass' : this.integratedBiomeTag)
-      const landBuckets = this.integratedLandBuckets[requestedBiome]
-      const classification = this.getLandClassificationTag(x, y, requestedBiome)
-      if (classification === 'decorative') {
-        if (mapGrid) {
-          selected = this.selectGroupedTileForMapTile('decorative', x, y, mapGrid, (cellX, cellY) => {
-            const tile = mapGrid[cellY]?.[cellX]
-            return tile?.type === 'land' && this.getLandClassificationTag(cellX, cellY, requestedBiome) === 'decorative'
-          })
-        }
-        if (landBuckets?.decorative.length) {
-          selected = selected || this.selectIntegratedTileFromCandidates(landBuckets.decorative, x, y)
-        }
-      } else if (classification === 'impassable') {
-        selected = this.selectIntegratedTileFromCandidates(landBuckets?.impassable, x, y)
-      } else {
-        selected = this.selectIntegratedTileFromCandidates(landBuckets?.passable, x, y)
-      }
-      selected = selected || this.selectIntegratedTileFromCandidates(
-        landBuckets?.all,
-        x,
-        y
-      )
-    } else if (type === 'rock') {
+        : (['soil', 'sand', 'grass', 'snow'].includes(tileBiome) ? tileBiome : this.getDefaultDecorationBiome())
       if (mapGrid) {
-        selected = this.selectGroupedTileForMapTile('rocks', x, y, mapGrid, (cellX, cellY) => mapGrid[cellY]?.[cellX]?.type === 'rock')
-          || this.selectGroupedTileForMapTile('rock', x, y, mapGrid, (cellX, cellY) => mapGrid[cellY]?.[cellX]?.type === 'rock')
+        // Decorations come from the precomputed layout (multi-tile first, then 1x1).
+        const cell = getValidDecorationCell(this.getDecorationLayout(mapGrid), mapGrid, x, y, this.getDefaultDecorationBiome())
+        if (cell && (!options?.biomeTag || cell.biome === requestedBiome)) {
+          rotation = cell.rotation || 0
+          if (type === 'water') selectedTags = cell.group.waterTags
+          selected = cell.group.tilesByOffset[`${cell.offsetX},${cell.offsetY}`] || null
+        }
+      } else if (type === 'land') {
+        // Without a map only 1x1 sprites can be chosen.
+        const hash = decorationHash(x, y, 7919)
+        const singles = this.integratedDecorationPools?.[requestedBiome]?.single
+        if (singles?.length && hash % SINGLE_DECORATION_INTERVAL === 0) {
+          selected = singles[(hash >>> 8) % singles.length].tilesByOffset['0,0'] || null
+        }
       }
-      selected = selected || this.selectIntegratedTileByTags(['rocks'], x, y)
+      // Custom ground sheets (passable, non-decorative tiles) still cover the
+      // remaining cells. The bundled sheets have none, so those cells show the
+      // default organic ground.
+      if (type === 'water') selected = selected || this.selectIntegratedTileByTags(['water'], x, y)
+      if (type === 'land') selected = selected || this.selectIntegratedTileFromCandidates(this.integratedLandBuckets[requestedBiome]?.passable, x, y)
+    } else if (type === 'rock') {
+      selected = this.selectIntegratedTileByTags(['rocks'], x, y)
         || this.selectIntegratedTileByTags(['rock'], x, y)
-    } else if (type === 'water') {
-      selected = this.selectIntegratedTileByTags(['water'], x, y)
     } else {
       selected = this.selectIntegratedTileByTags([type], x, y)
         || this.selectIntegratedTileByTags(['passable'], x, y)
@@ -903,9 +989,10 @@ export class TextureManager {
     if (!selected?.rect) return null
 
     return {
-      image: selected.image || getImageTextureWithBlendMode(this.integratedSpriteSheetImage, this.integratedBlendMode, this.integratedBlackKey),
+      image: selected.image || getImageTextureWithBlendMode(this.integratedSpriteSheetImage, this.integratedBlendMode, this.integratedBlackKey, this.integratedSpriteSheetMetadata),
       rect: selected.rect,
-      tags: selected.tags || [],
+      tags: selectedTags || selected.tags || [],
+      rotation,
       sheetPath: selected.sheetPath || null
     }
   }
@@ -961,9 +1048,9 @@ export class TextureManager {
 
 
   // Preload all tile textures at startup.
-  // Water decode was ~346ms and the three sheets ~1492ms together on a cold load.
+  // The three bundled sheets take ~1492ms together on a cold load.
   async preloadAllTextures(callback, onProgress) {
-    const totalWeight = 346 + (497 * 3)
+    const totalWeight = 497 * 3
     let completedWeight = 0
     const report = (fraction) => {
       if (typeof onProgress === 'function') onProgress(fraction)
@@ -980,36 +1067,13 @@ export class TextureManager {
     this.texturePreparationState = 'preparing'
     this.texturePreparationError = null
     this.texturePreparationProgress.completed = 0
-    this.texturePreparationProgress.total = 4
+    this.texturePreparationProgress.total = 3
 
     this.preloadPromise = (async() => {
       try {
         bootMark('tile-textures:start')
-        const waterImg = await loadPreparedImage('images/map/water_spritesheet.webp').catch(error => {
-          window.logger?.warn?.('Water image unavailable; using procedural water', error)
-          return null
-        })
-        bootMark('tile-textures:water-decoded')
-        completedWeight += 346
-        report(completedWeight / totalWeight)
-        this.texturePreparationProgress.completed++
-
-        // Water remains a separate animated frame set. These frames are
-        // prepared before readiness and are never included in static pages.
+        // Water is rendered procedurally; no bitmap water frames are loaded.
         const waterFrames = []
-        for (let i = 0; waterImg && i < 16; i++) {
-          const canvas = document.createElement('canvas')
-          canvas.width = TILE_SIZE
-          canvas.height = TILE_SIZE
-          const ctx = canvas.getContext('2d')
-          ctx.imageSmoothingEnabled = true
-          ctx.imageSmoothingQuality = 'high'
-          const sx = (i % 8) * 64
-          const sy = Math.floor(i / 8) * 64
-          ctx.drawImage(waterImg, sx, sy, 64, 64, 0, 0, TILE_SIZE, TILE_SIZE)
-          waterFrames.push(canvas)
-        }
-        bootMark('tile-textures:water-frames')
 
         const reportSheet = async(promise) => {
           const result = await promise
@@ -1020,18 +1084,15 @@ export class TextureManager {
         }
         await Promise.all([
           reportSheet(this.preloadDefaultCombatDecalSheet()),
-          reportSheet(this.preloadDefaultCrystalSheet()),
-          reportSheet(this.preloadDefaultStreetSheet())
+          reportSheet(this.preloadDefaultCrystalSheet())
         ])
 
         // Publish one complete texture generation after every source decoded
         // and every finite prepared variant was built.
         this.waterFrames = waterFrames
         const decodedImages = new Set([
-          waterImg,
           this.defaultCombatDecalSheetImage,
-          this.defaultCrystalSheetImage,
-          this.defaultStreetSheetImage
+          this.defaultCrystalSheetImage
         ].filter(Boolean))
         this.textureByteUsage = {
           decodedSourceBytes: [...decodedImages].reduce((total, image) => total + estimateDecodedImageBytes(image), 0),
@@ -1074,8 +1135,7 @@ export class TextureManager {
     return [
       { key: 'water-animation-source', image: null, animated: true, frames: this.waterFrames },
       { key: 'combat-decals', image: this.defaultCombatDecalSheetImage, animated: false },
-      { key: 'crystals', image: this.defaultCrystalSheetImage, animated: false },
-      { key: 'streets', image: this.defaultStreetSheetImage, animated: false }
+      { key: 'crystals', image: this.defaultCrystalSheetImage, animated: false }
     ].filter(asset => asset.image || asset.frames?.length)
   }
 

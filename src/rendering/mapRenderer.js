@@ -9,7 +9,7 @@ import {
   WATER_EFFECT_ZOOM
 } from '../config.js'
 import { getSotDrawOffset, OrganicTerrain, shorelineCornerMask } from './organicTerrain.js'
-import { getTileDecalSignature } from '../game/tileDecals.js'
+import { getTileDecalSignature, isDecalBlockedTile } from '../game/tileDecals.js'
 import { getCanvasLogicalSize } from './renderingUtils.js'
 import { RENDER_REVISION_DOMAINS } from './prepared/renderRevisionStore.js'
 import {
@@ -1576,8 +1576,34 @@ export class MapRenderer {
   }
 
   useOrganicTerrain(useTexture) {
-    // Explicit custom biome/spritesheet selections retain their own art.
-    return useTexture && this.organicTerrain?.ready && !this.textureManager.integratedSpriteSheetMode
+    // The organic terrain is always the ground. Custom sprite sheets only add
+    // decorations (and optional custom ground tiles) on top of it.
+    return Boolean(useTexture && this.organicTerrain?.ready)
+  }
+
+  // Called while baking static terrain chunks, below decorative overlays.
+  drawGroundDetail(ctx, mapGrid, x, y, screenX, screenY) {
+    if (!this.textureManager.hasGroundDetails) return false
+    const detail = this.textureManager.getGroundDetailForMapTile(mapGrid, x, y)
+    if (!detail) return false
+    const alpha = ctx.globalAlpha
+    ctx.globalAlpha = alpha * 0.55
+    const drawn = this.drawIntegratedTileImage(ctx, detail, screenX, screenY)
+    ctx.globalAlpha = alpha
+    return drawn
+  }
+
+  drawIntegratedLandOverlay(ctx, mapGrid, tile, x, y, screenX, screenY) {
+    if (!this.textureManager.integratedSpriteSheetMode || (tile?.type !== 'land' && tile?.type !== 'water') || tile.airstripStreet) return false
+    if (tile.type === 'water' && !this.textureManager.hasShoreDecorations) return false
+    const overlay = this.textureManager.getIntegratedTileForMapTile(tile.type, x, y, { mapGrid })
+    if (overlay?.tags?.includes('passable') && !overlay.tags.includes('decorative')) {
+      const drawn = this.drawIntegratedTileImage(ctx, overlay, screenX, screenY)
+      this.drawGroundDetail(ctx, mapGrid, x, y, screenX, screenY)
+      return drawn
+    }
+    this.drawGroundDetail(ctx, mapGrid, x, y, screenX, screenY)
+    return this.drawIntegratedTileImage(ctx, overlay, screenX, screenY)
   }
 
   drawBaseLayer(ctx, mapGrid, startTileX, startTileY, endTileX, endTileY, offsetX, offsetY, useTexture, currentWaterFrame, options = {}) {
@@ -1660,9 +1686,11 @@ export class MapRenderer {
         const screenX = x * TILE_SIZE - offsetX
         const screenY = y * TILE_SIZE - offsetY
         if (this.useOrganicTerrain(useTexture)) {
-          this.organicTerrain.drawDecoration(ctx, mapGrid, x, y, screenX, screenY, TILE_SIZE, this.sotMask[y]?.[x])
+          if (!this.drawIntegratedLandOverlay(ctx, mapGrid, tile, x, y, screenX, screenY)) {
+            this.organicTerrain.drawDecoration(ctx, mapGrid, x, y, screenX, screenY, TILE_SIZE, this.sotMask[y]?.[x])
+          }
         }
-        this.drawTileDecalOverlay(ctx, tile, x, y, screenX, screenY)
+        this.drawTileDecalOverlay(ctx, tile, x, y, screenX, screenY, mapGrid)
 
         if (tile.seedCrystal) {
           this.drawSeedOverlay(ctx, x, y, screenX, screenY, useTexture, tile.seedCrystalDensity || tile.oreDensity || 1)
@@ -1704,6 +1732,17 @@ export class MapRenderer {
   drawIntegratedTileImage(ctx, integratedTile, screenX, screenY) {
     if (!integratedTile?.image || !integratedTile?.rect) return false
     const { image, rect } = integratedTile
+    const rotation = integratedTile.rotation || 0
+    if (rotation) {
+      // Rotated source offsets were prepared with the footprint. Each cell
+      // rotates about its center, equivalent to rotating the complete group.
+      ctx.save()
+      ctx.translate(screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2)
+      ctx.rotate(rotation * Math.PI / 180)
+      ctx.drawImage(image, rect.x, rect.y, rect.width, rect.height, -TILE_SIZE / 2, -TILE_SIZE / 2, TILE_SIZE, TILE_SIZE)
+      ctx.restore()
+      return true
+    }
     ctx.drawImage(
       image,
       rect.x,
@@ -1775,13 +1814,9 @@ export class MapRenderer {
     ctx.restore()
   }
 
-  drawFallbackTileBase(ctx, tileX, tileY, type, screenX, screenY, useTexture, currentWaterFrame) {
+  drawFallbackTileBase(ctx, tileX, tileY, type, screenX, screenY, _useTexture, _currentWaterFrame) {
     if (type === 'water') {
-      if (USE_PROCEDURAL_WATER_RENDERING) {
-        this.drawProceduralWater(ctx, screenX, screenY, TILE_SIZE + 1, tileX, tileY)
-      } else {
-        this.drawClassicWater(ctx, screenX, screenY, TILE_SIZE + 1, currentWaterFrame)
-      }
+      this.drawProceduralWater(ctx, screenX, screenY, TILE_SIZE + 1, tileX, tileY)
       return
     }
 
@@ -1830,6 +1865,10 @@ export class MapRenderer {
         ? this.textureManager.getIntegratedTileForMapTile(type, tileX, tileY, { mapGrid, biomeTag: tileBiome })
         : this.textureManager.getIntegratedTileForMapTile(type, tileX, tileY)
       if (integratedTile?.image && integratedTile?.rect) {
+        if (type === 'land' && mapGrid && this.textureManager.hasGroundDetails && integratedTile.tags?.includes('decorative')) {
+          this.drawFallbackTileBase(ctx, tileX, tileY, type, screenX, screenY, useTexture, currentWaterFrame)
+          this.drawGroundDetail(ctx, mapGrid, tileX, tileY, screenX, screenY)
+        }
         if (type === 'rock' && this.textureManager.integratedSpriteSheetMode) {
           const landTile = mapGrid
             ? this.textureManager.getIntegratedTileForMapTile('land', tileX, tileY, { mapGrid, biomeTag: tileBiome })
@@ -1839,6 +1878,9 @@ export class MapRenderer {
           }
         }
         this.drawIntegratedTileImage(ctx, integratedTile, screenX, screenY)
+        if (type === 'land' && mapGrid && integratedTile.tags?.includes('passable') && !integratedTile.tags.includes('decorative')) {
+          this.drawGroundDetail(ctx, mapGrid, tileX, tileY, screenX, screenY)
+        }
         const blend = mapGrid?.[tileY]?.[tileX]?.biomeBlend
         if (type === 'land' && blend?.biome && blend.alpha > 0) {
           const blendTile = this.textureManager.getIntegratedTileForMapTile('land', tileX, tileY, { mapGrid, biomeTag: blend.biome })
@@ -1849,6 +1891,7 @@ export class MapRenderer {
     }
 
     this.drawFallbackTileBase(ctx, tileX, tileY, type, screenX, screenY, useTexture, currentWaterFrame)
+    if (type === 'land' && mapGrid) this.drawGroundDetail(ctx, mapGrid, tileX, tileY, screenX, screenY)
   }
 
   drawProceduralWater(ctx, screenX, screenY, size, tileX, tileY) {
@@ -1897,16 +1940,6 @@ export class MapRenderer {
     ctx.fillRect(screenX, screenY, size, size)
   }
 
-  drawClassicWater(ctx, screenX, screenY, size, currentWaterFrame) {
-    if (currentWaterFrame) {
-      ctx.drawImage(currentWaterFrame, screenX, screenY, size, size)
-      return
-    }
-
-    ctx.fillStyle = TILE_COLORS.water
-    ctx.fillRect(screenX, screenY, size, size)
-  }
-
   drawOreOverlay(ctx, tileX, tileY, screenX, screenY, useTexture, density = 1) {
     const normalizedDensity = Math.max(1, Math.min(5, Number.isFinite(density) ? Math.floor(density) : 1))
     const integratedTile = this.textureManager.selectCrystalTileByTags(
@@ -1947,10 +1980,12 @@ export class MapRenderer {
     ctx.fillRect(screenX, screenY, TILE_SIZE + 1, TILE_SIZE + 1)
   }
 
-  drawTileDecalOverlay(ctx, tile, tileX, tileY, screenX, screenY) {
+  drawTileDecalOverlay(ctx, tile, tileX, tileY, screenX, screenY, mapGrid = null) {
     if (!tile?.decal || typeof tile.decal !== 'object') return
     const tag = tile.decal.tag
     if (!tag) return
+    // Older decals stay hidden while a structure or impassable decoration covers the tile.
+    if (mapGrid && isDecalBlockedTile(mapGrid, tileX, tileY, tag)) return
 
     const variantSeed = Number.isFinite(tile.decal.variantSeed)
       ? tile.decal.variantSeed
@@ -2097,7 +2132,7 @@ export class MapRenderer {
   /**
    * Draw a Smoothening Overlay Texture (SOT) on a single tile
    */
-  drawSOT(ctx, tileX, tileY, orientation, scrollOffset, useTexture, sotApplied, type = 'street', currentWaterFrame = null) {
+  drawSOT(ctx, tileX, tileY, orientation, scrollOffset, useTexture, sotApplied, type = 'street', _currentWaterFrame = null) {
     // Organic shores own the complete land alpha. A legacy water triangle
     // would punch an isolated hole behind the water-hosted feathered edge.
     if (this.useOrganicTerrain(useTexture) && type === 'water') return
@@ -2149,11 +2184,7 @@ export class MapRenderer {
         ? this.textureManager.getIntegratedTileForMapTile('water', tileX, tileY)
         : null
       if (!this.drawIntegratedTileImage(ctx, integratedWaterTile, drawX, drawY)) {
-        if (USE_PROCEDURAL_WATER_RENDERING) {
-          this.drawProceduralWater(ctx, drawX, drawY, drawSize, tileX, tileY)
-        } else {
-          this.drawClassicWater(ctx, drawX, drawY, drawSize, currentWaterFrame)
-        }
+        this.drawProceduralWater(ctx, drawX, drawY, drawSize, tileX, tileY)
       }
     } else if (type === 'street') {
       const fullStreetTile = this.textureManager.selectFullStreetTileForSOT?.(tileX, tileY)
@@ -2341,7 +2372,7 @@ export class MapRenderer {
         const screenX = x * TILE_SIZE - scrollOffset.x
         const screenY = y * TILE_SIZE - scrollOffset.y
 
-        this.drawTileDecalOverlay(ctx, tile, x, y, screenX, screenY)
+        this.drawTileDecalOverlay(ctx, tile, x, y, screenX, screenY, mapGrid)
 
         if (tile.seedCrystal) {
           if (gpuRenderedResources && !this.shouldRenderCrystalOverlayOnCpu(tile, x, y)) {

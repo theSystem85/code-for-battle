@@ -1,6 +1,9 @@
+import { findCityBuildingById } from './game/cityBuildings.js'
+import { normalizeDecorationSettings } from './game/decorationSettings.js'
 import { exportAutomationSession, restoreAutomationSession, resetPolicyStore } from './policies/policyStore.js'
 // saveGame.js
 import { gameState } from './gameState.js'
+import { migrateSavedSpriteSheetState } from './ui/spriteSheetRegistry.js'
 import { factories } from './main.js'
 import { units } from './main.js'
 import { mapGrid } from './main.js'
@@ -331,6 +334,8 @@ function ensureMapGridMatchesDimensions(grid, width, height) {
 
 function createSerializableMapTile(tile = {}) {
   return {
+    cityBuilding: tile.cityBuilding ? { ...tile.cityBuilding } : undefined,
+    cityStreet: tile.cityStreet ? true : undefined,
     type: typeof tile.type === 'string' ? tile.type : 'land',
     ore: Boolean(tile.ore),
     oreDensity: Number.isFinite(tile.oreDensity) ? Math.max(0, Math.min(5, Math.floor(tile.oreDensity))) : undefined,
@@ -405,6 +410,9 @@ function restoreStaticMapTiles(loaded, targetMapGrid) {
         targetTile.seedCrystalDensity = Number.isFinite(savedTile?.seedCrystalDensity)
           ? Math.max(0, Math.min(5, Math.floor(savedTile.seedCrystalDensity)))
           : (targetTile.seedCrystal ? Math.max(1, targetTile.oreDensity || 1) : 0)
+        targetTile.cityBuilding = savedTile?.cityBuilding ? { ...savedTile.cityBuilding } : undefined
+        if (savedTile?.cityStreet) targetTile.cityStreet = true
+        else delete targetTile.cityStreet
         targetTile.decal = savedTile?.decal && typeof savedTile.decal.tag === 'string'
           ? {
             tag: savedTile.decal.tag,
@@ -845,11 +853,15 @@ function buildSaveObject(label) {
       mapTilesX: gameState.mapTilesX,
       mapTilesY: gameState.mapTilesY,
       mapSeed: gameState.mapSeed,
+      mapTopologyFingerprint: gameState.mapTopologyFingerprint,
+      mapTopologySheets: (getTextureManager()?.integratedSpriteSheets || []).map(({ sheetPath, metadata }) => ({ sheetPath, metadata })),
+      ...normalizeDecorationSettings(gameState),
       mapOreFieldCount: gameState.mapOreFieldCount,
       mapOreTotalValue: gameState.mapOreTotalValue,
       lastOreUpdate: Number.isFinite(gameState.lastOreUpdate) ? gameState.lastOreUpdate : 0,
       speedMultiplier: gameState.speedMultiplier,
       useIntegratedSpriteSheetMode: Boolean(gameState.useIntegratedSpriteSheetMode),
+      activeSpriteSheetSelections: gameState.activeSpriteSheetSelections,
       activeSpriteSheetPath: gameState.activeSpriteSheetPath || null,
       activeSpriteSheetMetadata: gameState.activeSpriteSheetMetadata || null,
       activeSpriteSheetBiomeTag: gameState.activeSpriteSheetBiomeTag || 'grass',
@@ -1055,6 +1067,7 @@ function loadGameFromSaveObject(saveObj, key) {
     }
 
     if (!loaded.automationSession) resetPolicyStore() // Old saves/replays cannot execute unrelated local automations.
+    const previousTopologyFingerprint = gameState.mapTopologyFingerprint
     Object.assign(gameState, loaded.gameState)
 
     gameState.speedMultiplier = Number.isFinite(loaded.gameState?.speedMultiplier)
@@ -1074,7 +1087,13 @@ function loadGameFromSaveObject(saveObj, key) {
       : 0
     restoreDeterministicRng(loaded.gameState)
 
+    const topologyMismatch = loaded.gameState.mapTopologyFingerprint && previousTopologyFingerprint !== loaded.gameState.mapTopologyFingerprint
+    gameState.mapTopologyFingerprint = loaded.gameState.mapTopologyFingerprint || 'default'
+    migrateSavedSpriteSheetState(loaded.gameState)
     gameState.useIntegratedSpriteSheetMode = Boolean(loaded.gameState?.useIntegratedSpriteSheetMode)
+    gameState.activeSpriteSheetSelections = Array.isArray(loaded.gameState?.activeSpriteSheetSelections)
+      ? loaded.gameState.activeSpriteSheetSelections.filter(path => typeof path === 'string')
+      : undefined
     gameState.activeSpriteSheetPath = loaded.gameState?.activeSpriteSheetPath || null
     gameState.activeSpriteSheetMetadata = loaded.gameState?.activeSpriteSheetMetadata || null
     gameState.activeSpriteSheetBiomeTag = loaded.gameState?.activeSpriteSheetBiomeTag || 'grass'
@@ -1100,6 +1119,11 @@ function loadGameFromSaveObject(saveObj, key) {
       gameState.mapSeed = savedSeed
     }
 
+    Object.assign(gameState, normalizeDecorationSettings(loaded.gameState))
+    for (const [key, value] of Object.entries(normalizeDecorationSettings(gameState))) {
+      const input = document.getElementById(key)
+      if (input) input.value = value
+    }
     const savedOreFieldCount = Number.isFinite(loaded?.gameState?.mapOreFieldCount)
       ? Math.max(0, Math.min(24, Math.floor(loaded.gameState.mapOreFieldCount)))
       : (Number.isFinite(gameState.mapOreFieldCount)
@@ -1577,6 +1601,9 @@ function loadGameFromSaveObject(saveObj, key) {
         if (!target) {
           target = gameState.buildings.find(b => b.id === unit.targetId)
         }
+        if (!target) {
+          target = findCityBuildingById(gameState.mapGrid, unit.targetId)
+        }
         if (target) {
           unit.target = target
         }
@@ -1823,12 +1850,16 @@ function loadGameFromSaveObject(saveObj, key) {
 
     const textureManager = getTextureManager()
     if (textureManager?.setIntegratedSpriteSheetConfig) {
-      textureManager.setIntegratedSpriteSheetConfig({
-        enabled: Boolean(gameState.useIntegratedSpriteSheetMode),
-        sheetPath: gameState.activeSpriteSheetPath,
-        metadata: gameState.activeSpriteSheetMetadata,
-        biomeTag: gameState.activeSpriteSheetBiomeTag
-      }).then(() => {
+      const restoreSheets = Array.isArray(gameState.activeSpriteSheetSelections) && gameState.activeSpriteSheetSelections.length
+        ? import('./ui/mapEditorControls.js').then(module => module.applyIntegratedSpriteSheetRuntime(null, { preserveTopology: true, sheetsOverride: loaded.gameState.mapTopologySheets }))
+        : textureManager.setIntegratedSpriteSheetConfig({
+          enabled: Boolean(gameState.useIntegratedSpriteSheetMode),
+          ...(gameState.activeSpriteSheetSelections?.length === 0 ? { sheets: [] } : {}),
+          sheetPath: gameState.activeSpriteSheetPath,
+          metadata: gameState.activeSpriteSheetMetadata,
+          biomeTag: gameState.activeSpriteSheetBiomeTag
+        })
+      restoreSheets.then(() => {
         if (mapRenderer) {
           mapRenderer.invalidateAllChunks()
         }
@@ -2005,7 +2036,9 @@ function loadGameFromSaveObject(saveObj, key) {
       queueMissionIntro(getBuiltinMissionById(key.slice(BUILTIN_SAVE_PREFIX.length)))
     }
 
-    showNotification('Game loaded: ' + (saveObj.label || key))
+    showNotification('Game loaded: ' + (saveObj.label || key) + (topologyMismatch
+      ? '. This save uses a different sheet/tag configuration; its saved topology is preserved.'
+      : ''))
   }
 }
 

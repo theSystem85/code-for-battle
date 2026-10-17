@@ -4,10 +4,36 @@ import {
   commitMapMutationTransaction,
   notifyDecalTileMutation
 } from '../rendering/prepared/mapMutationNotifier.js'
+import { hasBlockingBuilding } from '../utils/buildingPassability.js'
 
 const DECAL_TAGS = new Set(['impact', 'crater', 'debris'])
 const DEFAULT_SEED = 1
-const WATER_BLOCKED_DECAL_TAGS = new Set(['impact', 'crater'])
+// Impact marks only belong on passable ground. Debris is exempt: it is the
+// rubble stamped on a destroyed structure's own footprint.
+const IMPACT_DECAL_TAGS = new Set(['impact', 'crater'])
+const surfaceBlockers = new Map()
+
+/**
+ * Register (or clear with null) a named check that reports impassable
+ * surfaces the tile data alone cannot see, such as living city buildings or
+ * impassable decorations. Signature: (mapGrid, tileX, tileY, tile) => boolean.
+ */
+export function setDecalSurfaceBlocker(name, check) {
+  if (typeof check === 'function') surfaceBlockers.set(name, check)
+  else surfaceBlockers.delete(name)
+}
+
+/** True when an impact/crater decal must not be created or drawn on this tile. */
+export function isDecalBlockedTile(mapGrid, tileX, tileY, tag) {
+  if (!IMPACT_DECAL_TAGS.has(tag)) return false
+  const tile = getTileForDecal(mapGrid, tileX, tileY)
+  if (!tile) return true
+  if (tile.type === 'water' || tile.type === 'rock' || tile.seedCrystal || hasBlockingBuilding(tile)) return true
+  for (const check of surfaceBlockers.values()) {
+    if (check(mapGrid, tileX, tileY, tile)) return true
+  }
+  return false
+}
 
 function shouldPreserveExistingDecal(existingTag, nextTag) {
   return existingTag === 'crater' && nextTag === 'impact'
@@ -57,7 +83,7 @@ export function setTileDecal(mapGrid, gameState, tileX, tileY, tag, options = {}
 
   const tile = getTileForDecal(mapGrid, tileX, tileY)
   if (!tile) return null
-  if (tile.type === 'water' && WATER_BLOCKED_DECAL_TAGS.has(tag)) return null
+  if (isDecalBlockedTile(mapGrid, tileX, tileY, tag)) return null
 
   if (shouldPreserveExistingDecal(tile.decal?.tag, tag)) {
     return tile.decal

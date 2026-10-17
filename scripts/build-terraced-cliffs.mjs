@@ -1,17 +1,23 @@
 // Offline sprite compiler: generated stone material + shared contour geometry.
 // All geometry, lighting and alpha shadows are baked; runtime only blits sprites.
 import sharp from 'sharp'
+import { cliffMacroProfile } from './cliffMacroProfile.mjs'
 import { writeFile } from 'node:fs/promises'
+export const contours = [[], [[0, 3]], [[1, 0]], [[1, 3]], [[2, 1]], [[0, 1], [2, 3]], [[2, 0]], [[2, 3]], [[3, 2]], [[0, 2]], [[3, 0], [1, 2]], [[1, 2]], [[3, 1]], [[0, 1]], [[3, 0]], []]
+
+async function main() {
 const root = new URL('../public/images/terrain/', import.meta.url)
-const source = await sharp(new URL('source/terraced-cliffs.webp', root).pathname).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
-const canyon = await sharp(new URL('source/terraced-cliffs-canyon.webp', root).pathname).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
+// Build-only source art lives outside public/ so it never ships in a deploy.
+const srcDir = new URL('../assets-src/terrain/', import.meta.url)
+const source = await sharp(new URL('terraced-cliffs.webp', srcDir).pathname).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
+const canyon = await sharp(new URL('terraced-cliffs-canyon.webp', srcDir).pathname).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
 const cell = 160, tile = 64, padding = 48, variants = 8, tallCell = 224, tallPadding = 80
 const macroBaseY = cell * variants, macroVariantWidth = 2048, macroVariantHeight = 576
 const tallBaseY = macroBaseY + macroVariantHeight * Math.ceil(variants / 2)
 const atlasWidth = macroVariantWidth * 2, atlasHeight = tallBaseY + tallCell * variants
 // Bits run clockwise: NW NE SE SW. Directed lines keep high ground on left.
 const points = [[32, 0], [64, 32], [32, 64], [0, 32]]
-export const contours = [[], [[0, 3]], [[1, 0]], [[1, 3]], [[2, 1]], [[0, 1], [2, 3]], [[2, 0]], [[2, 3]], [[3, 2]], [[0, 2]], [[3, 0], [1, 2]], [[1, 2]], [[3, 1]], [[0, 1]], [[3, 0]], []]
+
 // Sample solid face and rim only, excluding generated gutters/colored alpha noise.
 // Row five contains five broad, front-facing stratified rock variations.
 function stone(variant, u, v) {
@@ -134,16 +140,11 @@ async function makeMacro(mask, length, variant) {
     const u = along / logicalLength
     // Zero displacement at both endpoints guarantees exact joins. Broad waves
     // between them keep multi-tile silhouettes visibly organic.
-    const envelope = Math.sin(Math.PI * u) ** 2
-    const wave = envelope * (Math.sin(u * Math.PI * (2.4 + variant * .13) + variant) * 8 + Math.sin(u * 31 + variant * 2) * 3)
-    const line = tile + wave
+    const profile = cliffMacroProfile(mask, u, variant)
+    const line = tile + profile.wave
     const signed = mask === 3 ? wy - line : mask === 12 ? line - wy : mask === 6 ? line - wx : wx - line
-    const rimRough = envelope * (Math.sin(u * 47 + variant * 1.7) * 3 + Math.sin(u * 19) * 2)
-    const d = signed - rimRough
-    // Use the south-facing macro as the density reference while preserving a
-    // shorter north-facing projection and intermediate side projections.
-    const directionalDepth = mask === 3 ? 108 : mask === 12 ? 64 : 92
-    const wallDepth = Math.max(24, directionalDepth + Math.sin(u * 13 + variant) * 9 + Math.sin(u * 29 + variant * 3) * 6)
+    const d = signed - profile.roughness
+    const wallDepth = profile.wallDepth
     // Only the south-facing macro casts onto the ground. In particular, mask
     // 12 is the north-facing opposite of mask 3 and must remain shadow-free.
     const shadeLength = mask === 3 ? 44 : 0
@@ -154,7 +155,7 @@ async function makeMacro(mask, length, variant) {
     if (d >= -wallDepth && d <= 3) {
       const v = Math.max(0, Math.min(1, (3 - d) / (wallDepth + 3)))
       const rgb = sample(variant, u, v)
-      const strata = .9 + .1 * Math.sin(v * Math.PI * (10 + variant % 3) + u * 8)
+      const strata = .9 + .1 * Math.sin(v * Math.PI * (10 + variant % 3) + profile.strataPhase)
       const light = mask === 12 ? 1.11 : mask === 6 ? 1.04 : mask === 9 ? .84 : .80
       const rim = d < 1 ? 1.14 : 1
       pixel = [...rgb.map(c => Math.min(255, Math.round(c * strata * light * rim))), 255]
@@ -191,7 +192,7 @@ for (let variant = 0; variant < variants; variant++) for (let mask = 0; mask < 1
   tallTiles[`${mask},${variant}`] = { mask, variant, heightClass: 2, rect }
 }
 // Five newly generated transparent crack/chip overlays share the final atlas.
-const topPath = new URL('source/plateau-details.webp', root).pathname
+const topPath = new URL('plateau-details.webp', srcDir).pathname
 const topMeta = await sharp(topPath).metadata()
 for (let variant = 0; variant < variants; variant++) {
   const detailVariant = variant % 5
@@ -212,3 +213,7 @@ const filename = 'terraced-cliffs.webp'
 await sharp({ create: { width: atlasWidth, height: atlasHeight, channels: 4, background: '#00000000' } }).composite(layers).webp({ quality: 85, alphaQuality: 100, effort: 6 }).toFile(new URL(filename, root).pathname)
 await writeFile(new URL('terraced-cliffs.json', root), JSON.stringify({ schemaVersion: 3, sheetPath: `images/terrain/${filename}`, sheetWidth: atlasWidth, sheetHeight: atlasHeight, tileSize: cell, rowHeight: cell, borderWidth: 0, blendMode: 'alpha', columns: 17, rows: variants, tags: ['rocks', 'impassable', 'cliff'], tiles, macroTiles, tallTiles, cliffLayout: { logicalTileSize: tile, padding, tallCell, tallPadding, tallBaseY, variants, cornerBits: ['NW', 'NE', 'SE', 'SW'], emptyMasks: [0, 15], macroLengths: [1, 2, 3, 4], macroMasks: [3, 6, 9, 12], quality: 85, alphaQuality: 100, contours } }, null, 2) + '\n')
 console.log(`Built terraced-cliffs.webp: ${atlasWidth}x${atlasHeight}, short/tall contours and 1-4-cell macro cliffs × ${variants} variants, WebP quality 85 / lossless alpha`)
+
+}
+
+main().catch(error => { console.error(error); process.exitCode = 1 })

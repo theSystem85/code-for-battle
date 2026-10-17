@@ -264,7 +264,7 @@ describe('MapRenderer water rendering', () => {
     expect(second[2] - first[2]).toBeCloseTo(-0.75)
     renderer.drawTileDecalOverlay = vi.fn()
     renderer.renderSOTOverlays(ctx, map, { x: 0.6, y: 0.95 }, 0, 0, 4, 4, { skipWaterSot: true })
-    expect(renderer.drawTileDecalOverlay).toHaveBeenCalledWith(ctx, map[0][0], 0, 0, -0.6, -0.95)
+    expect(renderer.drawTileDecalOverlay).toHaveBeenCalledWith(ctx, map[0][0], 0, 0, -0.6, -0.95, map)
   })
 
   it('prewarms static terrain chunks so scrolling does not discover uncached terrain', () => {

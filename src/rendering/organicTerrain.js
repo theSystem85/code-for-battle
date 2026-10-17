@@ -553,6 +553,8 @@ export class OrganicTerrain {
   drawDecoration(ctx, grid, x, y, sx, sy, size, sotInfo) {
     const tile = grid[y][x], h = terrainHash(x, y, 91)
     if (tile.type !== 'land' || tile.airstripStreet || tile.ore || tile.seedCrystal || tile.building || sotInfo || h % 19 !== 0) return
+    // The fallback details row is green summer vegetation; never on snow.
+    if (tile.biome === 'snow') return
     for (const [dx, dy] of DIRECTIONS) if (grid[y + dy]?.[x + dx]?.type !== 'land') return
     const variant = (h >>> 8) % 12
     ctx.drawImage(this.details, variant * 32, 192, 32, 32, sx, sy, size, size)

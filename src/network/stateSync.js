@@ -1,3 +1,5 @@
+import { normalizeDecorationSettings } from '../game/decorationSettings.js'
+import { getCityBuildings, applyCitySnapshot } from '../game/cityBuildings.js'
 import { applyProductionCompletionAck, getCompletionReceipt } from '../policies/completionReceipts.js'
 import { exportAutomationSession, restoreAutomationSession, getPolicyStoreVersion } from '../policies/policyStore.js'
 /**
@@ -700,9 +702,15 @@ export function createGameStateSnapshot({ fullAutomation = false } = {}) {
     partyStates: gameState.partyStates,
     // Include map seed, dimensions, and player count so client can generate matching map
     mapSeed: gameState.mapSeed,
+    mapTopologyFingerprint: gameState.mapTopologyFingerprint,
+    mapTopologySheets: fullAutomation || !gameState.gameStarted ? gameState.mapTopologySheets : undefined,
     mapTilesX: gameState.mapTilesX,
     mapTilesY: gameState.mapTilesY,
     playerCount: gameState.playerCount,
+    ...normalizeDecorationSettings(gameState),
+    useIntegratedSpriteSheetMode: Boolean(gameState.useIntegratedSpriteSheetMode),
+    activeSpriteSheetSelections: gameState.activeSpriteSheetSelections,
+    cityBuildings: getCityBuildings(gameState.mapGrid).map(building => ({ ...building })),
     mapOreFieldCount: gameState.mapOreFieldCount,
     mapOreTotalValue: gameState.mapOreTotalValue,
     mapWaterPercent: gameState.mapWaterPercent,
@@ -750,7 +758,7 @@ function syncClientMap(seed, width, height, playerCount, mapOreFieldCount, mapOr
   }
 
   // Only regenerate map once per connection
-  if (mapSynced) {
+  if (mapSynced && (gameState.gameStarted || terrainSettings?.mapTopologyFingerprint === gameState.mapTopologyFingerprint)) {
     return true
   }
 
@@ -779,6 +787,12 @@ function syncClientMap(seed, width, height, playerCount, mapOreFieldCount, mapOr
       gameState.mapOreTotalValue = mapOreTotalValue
     }
     if (terrainSettings && typeof terrainSettings === 'object') {
+      gameState.mapTopologyFingerprint = terrainSettings.mapTopologyFingerprint || 'default'
+      Object.assign(gameState, normalizeDecorationSettings(terrainSettings))
+      if (typeof terrainSettings.useIntegratedSpriteSheetMode === 'boolean') {
+        gameState.useIntegratedSpriteSheetMode = terrainSettings.useIntegratedSpriteSheetMode
+        gameState.activeSpriteSheetSelections = terrainSettings.activeSpriteSheetSelections
+      }
       gameState.mapWaterPercent = terrainSettings.mapWaterPercent
       gameState.mapRockPercent = terrainSettings.mapRockPercent
       gameState.mapShoreNorth = !!terrainSettings.mapShoreNorth
@@ -830,7 +844,10 @@ function syncClientMap(seed, width, height, playerCount, mapOreFieldCount, mapOr
     const restoredGrid = gameState.mapGrid
     if (Array.isArray(restoredGrid) && restoredGrid.length) {
       bindRenderingDensityPreparation()
-      prepareRuntimeMap({ grid: restoredGrid }).catch(error => {
+      const sheetPreparation = typeof terrainSettings?.useIntegratedSpriteSheetMode === 'boolean'
+        ? import('../ui/mapEditorControls.js').then(module => module.applyIntegratedSpriteSheetRuntime(null, { preserveTopology: true, authoritative: true, sheetsOverride: terrainSettings.mapTopologySheets }))
+        : Promise.resolve()
+      sheetPreparation.then(() => prepareRuntimeMap({ grid: restoredGrid })).catch(error => {
         window.logger?.warn?.('Prepared map generation failed after network restore', error)
       })
     }
@@ -888,6 +905,11 @@ export function applyGameStateSnapshot(snapshot) {
   // This must happen before syncing buildings so placeBuilding can work
   if (snapshot.mapSeed && snapshot.mapTilesX && snapshot.mapTilesY) {
     syncClientMap(snapshot.mapSeed, snapshot.mapTilesX, snapshot.mapTilesY, snapshot.playerCount, snapshot.mapOreFieldCount, snapshot.mapOreTotalValue, {
+      mapTopologyFingerprint: snapshot.mapTopologyFingerprint,
+      mapTopologySheets: snapshot.mapTopologySheets,
+      useIntegratedSpriteSheetMode: snapshot.useIntegratedSpriteSheetMode,
+      activeSpriteSheetSelections: snapshot.activeSpriteSheetSelections,
+      ...normalizeDecorationSettings(snapshot),
       mapWaterPercent: snapshot.mapWaterPercent,
       mapRockPercent: snapshot.mapRockPercent,
       mapShoreNorth: snapshot.mapShoreNorth,
@@ -904,6 +926,8 @@ export function applyGameStateSnapshot(snapshot) {
       mapSnowOnPlateaus: snapshot.mapSnowOnPlateaus
     })
   }
+
+  if (Array.isArray(snapshot.cityBuildings)) applyCitySnapshot(gameState.mapGrid, gameState, snapshot.cityBuildings)
 
   if (Array.isArray(snapshot.mapDecals)) {
     applyMapDecals(gameState.mapGrid, snapshot.mapDecals)

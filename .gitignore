@@ -42,3 +42,9 @@ Thumbs.db
 
 # Local legal identity config
 impressum.config.json
+
+# Local working scratch (prop sources before atlas pack)
+tmp/
+
+# Generated Lighthouse reports (regenerate with npm run lighthouse)
+tests/lighthouse/

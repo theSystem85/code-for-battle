@@ -127,6 +127,19 @@ import {
   tryHandleDirectFleetInteraction,
   tryHandleFriendlyUnitInteraction
 } from '../../src/input/mouseSelection.js'
+import { handleStandardCommands } from '../../src/input/mouseCommands.js'
+import { prepareCityBuildings } from '../../src/game/cityBuildings.js'
+
+function prepareCityFixture() {
+  const map = Array.from({ length: 8 }, () => Array.from({ length: 8 }, () => ({ type: 'land' })))
+  const group = { width: 2, height: 1, tagSet: new Set(['city']) }
+  const cells = new Array(64).fill(null)
+  cells[2 * 8 + 2] = { group, anchorX: 2, anchorY: 2 }
+  cells[2 * 8 + 3] = { group, anchorX: 2, anchorY: 2 }
+  const [city] = prepareCityBuildings(map, { width: 8, height: 8, cells })
+  gameState.mapGrid = map
+  return city
+}
 
 const createCursorManager = () => ({
   setIsOverEnemy: vi.fn(),
@@ -1068,6 +1081,34 @@ describe('MouseHandler', () => {
 
     const target = findEnemyTarget(TILE_SIZE * 2.5, TILE_SIZE * 2.5, _handler.gameFactories, [])
     expect(target).toBe(null)
+  })
+
+  it('findEnemyTarget returns a living neutral city building under the cursor', () => {
+    const city = prepareCityFixture()
+    expect(findEnemyTarget(TILE_SIZE * 3.5, TILE_SIZE * 2.5, [], [])).toBe(city)
+    expect(findEnemyTarget(TILE_SIZE * 5.5, TILE_SIZE * 2.5, [], [])).toBe(null)
+    city.health = 0
+    expect(findEnemyTarget(TILE_SIZE * 3.5, TILE_SIZE * 2.5, [], [])).toBe(null)
+  })
+
+  it('shows the attack cursor over a city building without force attack', () => {
+    prepareCityFixture()
+    const _handler = new MouseHandler()
+    const cursorManager = createCursorManager()
+    const tank = { id: 't1', type: 'tank', owner: 'player', x: 0, y: TILE_SIZE * 2, level: 0 }
+    _handler.updateEnemyHover(TILE_SIZE * 2.5, TILE_SIZE * 2.5, [], [], [tank], cursorManager)
+    expect(cursorManager.setIsOverEnemy).toHaveBeenCalledWith(true)
+    expect(cursorManager.setIsOverEnemyInRange).toHaveBeenCalledWith(true)
+  })
+
+  it('issues a normal (not forced) attack on a city building from a standard click', () => {
+    const city = prepareCityFixture()
+    const tank = { id: 't1', type: 'tank', owner: 'player', x: 0, y: 0, tileX: 0, tileY: 0 }
+    const unitCommands = { handleAttackCommand: vi.fn(), handleMovementCommand: vi.fn() }
+    const handler = { selectionManager: { isCommandableUnit: () => true }, gameFactories: [], gameUnits: [tank] }
+    handleStandardCommands(handler, TILE_SIZE * 2.5, TILE_SIZE * 2.5, [tank], unitCommands, gameState.mapGrid)
+    expect(unitCommands.handleAttackCommand).toHaveBeenCalledWith([tank], city, gameState.mapGrid, false)
+    expect(unitCommands.handleMovementCommand).not.toHaveBeenCalled()
   })
 
   it('cancels repair and sell modes on context menu', () => {

@@ -12,6 +12,7 @@ import {
 } from '../rendering/spriteSheetAnimation.js'
 import { expandCompactSpriteSheetMetadata } from '../utils/spriteSheetMetadata.js'
 import { getStoredItem, setStoredItem } from '../storage/indexedDbStorage.js'
+import { DEFAULT_SSE_SHEETS, OPTIONAL_SSE_SHEETS, filterRetiredSheetPaths, isRetiredSpriteSheetPath } from './spriteSheetRegistry.js'
 
 const DEFAULT_TILE_SIZE = 64
 const DEFAULT_BORDER_WIDTH = 1
@@ -23,7 +24,7 @@ const SSE_LAST_SHEET_KEY = 'rts-sse-last-sheet'
 const SSE_LAST_ANIMATION_SHEET_KEY = 'rts-sse-last-animation-sheet'
 const SSE_MODE_STORAGE_KEY = 'rts-sse-mode'
 const ANIMATION_DEFAULT_DURATION_MS = 1050
-const SSE_PREVIEW_BACKGROUND_TILE = 'images/map/land01.webp'
+const SSE_PREVIEW_BACKGROUND_TILE = 'images/terrain/source/meadow.webp'
 const COMBAT_DECAL_SHEET_PATH = 'images/map/sprite_sheets/debris_craters_tracks.webp'
 const COMBAT_DECAL_BLACK_KEY = Object.freeze({
   cutoffBrightness: 8,
@@ -39,7 +40,23 @@ export const DEFAULT_SSE_TAGS = [
   'soil',
   'snow',
   'sand',
+  'universal',
+  'spring',
+  'summer',
+  'autumn',
+  'winter',
   'rocks',
+  'ruins',
+  'trees',
+  'farm',
+  'landmark',
+  'roadside',
+  'stones',
+  'rare',
+  'inner_cuts',
+  'shore', 'onshore', 'offshore', 'shore_trans',
+  'ground_detail',
+  'city',
   'concrete',
   'street',
   'top',
@@ -53,16 +70,7 @@ export const DEFAULT_SSE_TAGS = [
 
 export const DEFAULT_SSE_ANIMATION_TAGS = ['explosion']
 
-const fallbackSheets = [
-  'images/map/sprite_sheets/streets24_q90_1024x1024.webp',
-  'images/map/sprite_sheets/grass.webp',
-  'images/map/sprite_sheets/soil.webp',
-  'images/map/sprite_sheets/snow.webp',
-  'images/map/sprite_sheets/desert.webp',
-  'images/map/sprite_sheets/water.webp',
-  'images/map/sprite_sheets/multiTerrainSpriteSheet.webp',
-  'images/map/sprite_sheets/debris_craters_tracks.webp'
-]
+const fallbackSheets = [...DEFAULT_SSE_SHEETS, ...OPTIONAL_SSE_SHEETS]
 
 function safeParseJson(raw, fallback) {
   if (!raw) return fallback
@@ -1531,8 +1539,9 @@ async function loadSheetList() {
     const response = await fetch(SSE_SHEETS_INDEX, { cache: 'no-store' })
     if (response.ok) {
       const data = await response.json()
-      if (Array.isArray(data?.sheets) && data.sheets.length) {
-        return data.sheets
+      const sheets = filterRetiredSheetPaths(data?.sheets)
+      if (sheets.length) {
+        return [...new Set([...sheets, ...OPTIONAL_SSE_SHEETS])]
       }
     }
   } catch {
@@ -1546,8 +1555,9 @@ async function loadAnimationSheetList() {
     const response = await fetch(SSE_ANIMATION_SHEETS_INDEX, { cache: 'no-store' })
     if (response.ok) {
       const data = await response.json()
-      if (Array.isArray(data?.sheets) && data.sheets.length) {
-        return data.sheets
+      const sheets = filterRetiredSheetPaths(data?.sheets)
+      if (sheets.length) {
+        return [...new Set([...sheets, ...OPTIONAL_SSE_SHEETS])]
       }
     }
   } catch {
@@ -1714,7 +1724,8 @@ export async function initSpriteSheetEditor(options = {}) {
   renderSheetOptions(state)
   updateModeTabUi(state)
 
-  const lastSheet = getStoredItem(SSE_LAST_SHEET_KEY)
+  const storedLastSheet = getStoredItem(SSE_LAST_SHEET_KEY)
+  const lastSheet = isRetiredSpriteSheetPath(storedLastSheet) ? null : storedLastSheet
   const lastAnimationSheet = getStoredItem(SSE_LAST_ANIMATION_SHEET_KEY)
   const initialSheetPath = state.mode === 'animated'
     ? (lastAnimationSheet && state.sheetPaths.includes(lastAnimationSheet) ? lastAnimationSheet : state.sheetPaths[0])
@@ -2118,6 +2129,7 @@ export async function initSpriteSheetEditor(options = {}) {
   }
   state.onModalClosed = () => {
     setSidebarHidden(false)
+    options.onClose?.()
   }
 
   // Finish initial sheet loading and reveal the workspace before publishing the
@@ -2182,7 +2194,7 @@ export async function initSpriteSheetEditor(options = {}) {
     },
     suggestTileForMap(x, y, tagBuckets) {
       if (!tagBuckets || typeof tagBuckets !== 'object') return null
-      const preferredTags = ['passable', 'decorative', 'impassable', 'street', 'intersection', 'concrete', 'grass', 'soil', 'sand', 'snow']
+      const preferredTags = ['trees', 'rocks', 'stones', 'farm', 'landmark', 'roadside', 'shore', 'onshore', 'offshore', 'shore_trans', 'ground_detail', 'city', 'ruins', 'passable', 'decorative', 'impassable', 'street', 'intersection', 'concrete', 'grass', 'soil', 'sand', 'snow', 'universal', 'spring', 'summer', 'autumn', 'winter']
       for (const tag of preferredTags) {
         const list = tagBuckets[tag]
         if (Array.isArray(list) && list.length) {

@@ -5,7 +5,7 @@ import { logPerformance } from '../performanceUtils.js'
 import { getSimulationTime } from './time.js'
 
 // Simple in-memory cache for sharing A* paths between units
-const pathCache = new Map()
+import { pathCache } from './pathCache.js'
 
 /**
  * Retrieve a cached path or reuse a path to the same end coordinate

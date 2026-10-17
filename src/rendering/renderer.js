@@ -1,4 +1,6 @@
 import { withTimeout } from '../utils/assetLoading.js'
+import { renderCityHealthBars } from '../game/cityBuildings.js'
+import { setDecalSurfaceBlocker } from '../game/tileDecals.js'
 import { factoryExitVisibility } from '../game/factoryExit.js'
 import { renderFactoryInterior, renderFactoryExitEffects, clipOutsideFactoryBody } from './factoryExitRenderer.js'
 // rendering/renderer.js
@@ -49,6 +51,12 @@ export class Renderer {
   constructor() {
     this.textureManager = new TextureManager()
     this.mapRenderer = new MapRenderer(this.textureManager)
+    // Impassable decorations (trees, frozen lakes, city blocks) never carry impact decals.
+    const textureManager = this.textureManager
+    setDecalSurfaceBlocker('impassableDecorations', (mapGrid, tileX, tileY, tile) => {
+      if (!textureManager.integratedSpriteSheetMode || tile.type !== 'land') return false
+      return Boolean(textureManager.getIntegratedTileForMapTile('land', tileX, tileY, { mapGrid })?.tags?.includes('impassable'))
+    })
     this.buildingRenderer = new BuildingRenderer()
     this.unitRenderer = new UnitRenderer()
     this.effectsRenderer = new EffectsRenderer()
@@ -429,11 +437,12 @@ export class Renderer {
     let uiMs = 0
     // Render all game elements in order
     let gpuRendered = false
+    const integratedMode = this.textureManager.integratedSpriteSheetMode
     const hasIntegratedWaterTiles = Boolean(
-      gameState.useIntegratedSpriteSheetMode &&
+      integratedMode &&
       this.textureManager.integratedTagBuckets?.water?.length
     )
-    const needsCpuTerrainComposite = !gameState.useIntegratedSpriteSheetMode
+    const needsCpuTerrainComposite = !integratedMode
     const hasGpuStreetAtlas = Boolean(
       needsCpuTerrainComposite &&
       this.textureManager.defaultStreetTagBuckets?.street?.some(tile => tile?.image && tile?.rect)
@@ -445,13 +454,13 @@ export class Renderer {
     // viewport. Static land and street art already lives in the bounded,
     // prewarmed 2D chunk cache, so only water and its SOT wedges belong here.
     const gpuWaterOnly = Boolean(
-      (gameState.useIntegratedSpriteSheetMode && !hasIntegratedWaterTiles) ||
+      (integratedMode && !hasIntegratedWaterTiles) ||
       needsCpuTerrainComposite
     )
     const shouldUseGpuTerrain = Boolean(
       USE_PROCEDURAL_WATER_RENDERING &&
       ((gpuContext && gpuCanvas) || (webgpuCanvas && typeof navigator !== 'undefined' && navigator.gpu)) &&
-      (!gameState.useIntegratedSpriteSheetMode || gpuWaterOnly)
+      (!integratedMode || gpuWaterOnly)
     )
 
     let gpuBackend = 'cpu'
@@ -671,6 +680,7 @@ export class Renderer {
     uiMs += framePhases.end(FRAME_PHASE.ui)
     framePhases.begin(FRAME_PHASE.entities)
     const entityOverlaysSpan = renderProfiler.startSpan(PROFILER_SPAN_IDS.ENTITY_OVERLAYS)
+    renderCityHealthBars(gameCtx, mapGrid, scrollOffset)
     this.buildingRenderer.renderOverlays(gameCtx, visibleBuildings, scrollOffset, true, frameEntityIndex)
     this.buildingRenderer.renderOverlays(gameCtx, visibleFactories, scrollOffset, true, frameEntityIndex)
     this.unitRenderer.renderOverlays(gameCtx, visibleGroundedUnits, scrollOffset, frameEntityIndex, units, true)

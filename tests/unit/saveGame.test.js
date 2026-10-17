@@ -292,6 +292,32 @@ describe('saveGame.js', () => {
     localStorage.clear()
   })
 
+  it('round trips city HP, destroyed footprints and cluster settings through saveGame', async() => {
+    const { gameState } = await import('../../src/gameState.js')
+    const { mapGrid } = await import('../../src/main.js')
+    const originalMap = mapGrid.map(row => row.map(tile => ({ ...tile })))
+    const city = { id: 'city-2,2', type: 'city', owner: 'neutral', x: 2, y: 2, width: 2, height: 1, health: 0, maxHealth: 250 }
+    mapGrid[2][2].cityBuilding = city
+    mapGrid[2][2].decal = { tag: 'debris', variantSeed: 42, groupWidth: 2, groupHeight: 1, groupOriginX: 2, groupOriginY: 2 }
+    Object.assign(gameState, { citySeeds: 0, cityClusterSize: 12, ruinSeeds: 8, ruinClusterSize: 15 })
+    gameState.mapTopologyFingerprint = 'saved-city-tags'
+    saveGameModule.saveGame('CityRoundTrip')
+    gameState.mapTopologyFingerprint = 'different-current-tags'
+    delete mapGrid[2][2].cityBuilding
+    gameState.citySeeds = 2
+    saveGameModule.loadGame('rts_save_CityRoundTrip')
+    const { showNotification } = await import('../../src/ui/notifications.js')
+    expect(showNotification).toHaveBeenCalledWith(expect.stringContaining('different sheet/tag configuration'))
+    expect(gameState.mapTopologyFingerprint).toBe('saved-city-tags')
+    expect(mapGrid[2][2].cityBuilding).toEqual(city)
+    expect(mapGrid[2][2].decal.tag).toBe('debris')
+    expect(gameState.citySeeds).toBe(0)
+    expect(gameState.cityClusterSize).toBe(12)
+    expect(gameState.ruinSeeds).toBe(8)
+    expect(gameState.ruinClusterSize).toBe(15)
+    mapGrid.splice(0, mapGrid.length, ...originalMap)
+  })
+
   describe('getSaveGames', () => {
     it('should return builtin missions', () => {
       const saves = saveGameModule.getSaveGames()
@@ -382,6 +408,7 @@ describe('saveGame.js', () => {
 
     it('should serialize game state correctly', async() => {
       const { gameState } = await import('../../src/gameState.js')
+      gameState.mapTopologyFingerprint = 'saved-topology'
       gameState.money = 25000
       gameState.gameTime = 120
 
@@ -391,6 +418,7 @@ describe('saveGame.js', () => {
       const parsed = decodeSaveObject(saved)
       const state = JSON.parse(decodeSaveObject(parsed).state)
 
+      expect(state.gameState.mapTopologyFingerprint).toBe('saved-topology')
       expect(state.gameState.money).toBe(25000)
       expect(state.gameState.gameTime).toBe(120)
     })

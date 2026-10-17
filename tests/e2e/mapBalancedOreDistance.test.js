@@ -1,5 +1,17 @@
 import { test, expect } from '@playwright/test'
 
+// Sidebar map settings regenerate only through the Apply button (spec 136).
+async function applyMapSettings(page) {
+  const button = page.locator('#mapSettingsApplyBtn')
+  // fill() does not commit a number input; fire its change event first.
+  await page.evaluate(() => document.activeElement?.dispatchEvent(new Event('change', { bubbles: true })))
+  await expect(button).toBeEnabled({ timeout: 3000 }).catch(() => {})
+  if (!(await button.isEnabled())) return
+  await button.click()
+  // The button disables itself once the regenerated map is applied.
+  await expect(button).toBeDisabled({ timeout: 60000 })
+}
+
 test.describe('Map generation ore field count rules', () => {
   test('supports OFC=0 and applies center/near/spread placement rules with immediate map updates', async({ page }) => {
     await page.goto('/?seed=11&players=4&oreFieldCount=0')
@@ -47,6 +59,7 @@ test.describe('Map generation ore field count rules', () => {
     // Immediate update check: change OFC in the input (no shuffle button) and verify map regenerates instantly.
     await page.locator('#mapOreFieldCount').fill('6')
     await page.locator('#mapOreFieldCount').dispatchEvent('change')
+    await applyMapSettings(page)
 
     await expect.poll(async() => {
       return page.evaluate(() => {
@@ -103,6 +116,7 @@ test.describe('Map generation ore field count rules', () => {
     // parties=4 and OFC=10 => 4 near + up to 4 center + remaining spread (2)
     await page.locator('#mapOreFieldCount').fill('10')
     await page.locator('#mapOreFieldCount').dispatchEvent('change')
+    await applyMapSettings(page)
     await expect.poll(async() => {
       return page.evaluate(() => window.gameState?.mapOreFieldCount)
     }).toBe(10)
@@ -158,6 +172,7 @@ test.describe('Map generation ore field count rules', () => {
     const signatureSameSeed = ofcTenStats.signature
     await page.locator('#mapSeed').fill('11')
     await page.locator('#mapSeed').dispatchEvent('change')
+    await applyMapSettings(page)
 
     const signatureSameAgain = await page.evaluate(() => {
       const mapGrid = window.gameState?.mapGrid || []
@@ -173,6 +188,7 @@ test.describe('Map generation ore field count rules', () => {
 
     await page.locator('#mapSeed').fill('12')
     await page.locator('#mapSeed').dispatchEvent('change')
+    await applyMapSettings(page)
 
     const signatureDifferentSeed = await page.evaluate(() => {
       const mapGrid = window.gameState?.mapGrid || []

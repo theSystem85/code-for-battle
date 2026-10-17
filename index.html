@@ -867,6 +867,17 @@
             </div>
           </div>
           <div class="sidebar-form-row">
+            <div class="floating-label-input"><input type="number" class="sidebar-input" id="citySeeds" min="0" max="8" value="2" placeholder=" "><label for="citySeeds">City Centers</label></div>
+            <div class="floating-label-input"><input type="number" class="sidebar-input" id="cityClusterSize" min="3" max="20" value="8" placeholder=" "><label for="cityClusterSize">City Radius</label></div>
+          </div>
+          <div class="sidebar-form-row">
+            <div class="floating-label-input"><input type="number" class="sidebar-input" id="ruinSeeds" min="0" max="10" value="3" placeholder=" "><label for="ruinSeeds">Ruin Centers</label></div>
+            <div class="floating-label-input"><input type="number" class="sidebar-input" id="ruinClusterSize" min="3" max="20" value="7" placeholder=" "><label for="ruinClusterSize">Ruin Radius</label></div>
+          </div>
+          <div class="sidebar-form-row">
+            <div class="floating-label-input"><input type="number" class="sidebar-input" id="stoneCount" min="0" max="400" value="40" placeholder=" "><label for="stoneCount">Stones</label></div>
+          </div>
+          <div class="sidebar-form-row">
             <div class="floating-label-input">
               <input type="number" class="sidebar-input" id="mapOreTotalValue" min="0" step="1000" max="5000000" value="64000" placeholder=" ">
               <label for="mapOreTotalValue">Total Ore Value</label>
@@ -919,6 +930,10 @@
               <input type="checkbox" id="mapCenterLakeCheckbox" checked>
               <span>Big Center Lake</span>
             </label>
+          </div>
+          <div class="map-settings-apply">
+            <button id="mapSettingsApplyBtn" class="action-button map-settings-apply__button" type="button" disabled aria-disabled="true">Apply map settings</button>
+            <small class="sidebar-hint">Map changes are applied and the map is regenerated only when you click Apply.</small>
           </div>
           <div class="map-edit-controls">
             <div class="sidebar-field">
@@ -1220,10 +1235,6 @@
           </div>
           <div class="config-modal__section">
             <h3 class="config-modal__section-title">Graphics</h3>
-            <label class="config-modal__field config-modal__field--toggle">
-              <input type="checkbox" id="settingsProceduralWaterToggle" checked>
-              <span>Use procedural water rendering instead of classic animated water tiles</span>
-            </label>
             <label class="config-modal__field config-modal__field--toggle">
               <input type="checkbox" id="settingsDynamicWaterLandBlendToggle" checked>
               <span>Blend animated water dynamically onto land shoreline tiles</span>

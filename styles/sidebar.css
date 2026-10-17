@@ -2038,3 +2038,26 @@ body.save-game-editor-open { overflow: hidden; }
   display: none !important;
 }
 
+
+/* Map settings Apply button: disabled until a sidebar map setting changes. */
+.map-settings-apply {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 8px 0;
+}
+
+.map-settings-apply__button {
+  width: 100%;
+}
+
+.map-settings-apply__button[data-pending="true"]:not(:disabled) {
+  background: #2f7d32;
+  border-color: #7bd17f;
+  color: #fff;
+}
+
+.map-settings-apply__button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

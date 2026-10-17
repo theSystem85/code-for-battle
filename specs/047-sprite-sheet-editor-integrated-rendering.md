@@ -53,7 +53,7 @@ Add a new Sprite Sheet Editor (SSE) modal in Map Settings that allows tile segme
 ```json
 {
   "schemaVersion": 1,
-  "sheetPath": "images/map/sprite_sheets/grass.webp",
+  "sheetPath": "images/map/sprite_sheets/dt_grass_1024_q85.webp",
   "tileSize": 64,
   "borderWidth": 1,
   "tags": ["passable", "decorative", "impassable", "street"],
@@ -177,7 +177,7 @@ Add a new Sprite Sheet Editor (SSE) modal in Map Settings that allows tile segme
 
 
 ## Follow-up (2026-04-26): Major sprite sheets default compilation
-- Runtime defaults must use the separated tagged sprite sheets for streets, seasons/terrain, crystals, rocks/cliffs, and combat decals. The retired `major_sprite_sheet_default` must not be generated, indexed, selected, or loaded.
+- Runtime defaults must use the separated tagged sprite sheets for streets, crystals, combat decals and the biome decorative (`dt_*`) sheets. Plain ground always comes from the organic terrain art. The retired `major_sprite_sheet_default` must not be generated, indexed, selected, or loaded.
 - Stored selections that only reference the retired major sheet must migrate to all available separated default sheets.
 - The production build must not compile or regenerate a combined major sprite sheet.
 - Major sprite sheet metadata must preserve merged tags and tile rect mappings so opening it in SSE immediately restores combined tag overlays.
@@ -185,3 +185,11 @@ Add a new Sprite Sheet Editor (SSE) modal in Map Settings that allows tile segme
 
 - Follow-up (2026-04-26, revision B): major-sheet metadata should support compact `tileEntries` encoding and runtime expansion; SSE should lazy-load sheet images on modal open instead of startup; grouped multi-tile assets in the compiled major atlas must be packed contiguously and arranged by ascending size buckets (all 1x1 rows first, then size-2 groups, then size-3, etc.).
 - Follow-up (2026-04-26, revision C): generated major-sheet atlas outputs are build artifacts and must stay ignored by git; the build metadata stores per-tile image hashes and duplicate logical tiles must point at the first physical atlas tile with the same hash instead of copying identical pixels into the generated image again.
+
+## Follow-up (2026-10-15): Sheet cleanup and shared registry
+- `src/ui/spriteSheetRegistry.js` is the single list of bundled static sheets (`DEFAULT_SSE_SHEETS`), shared by Map Settings and the Sprite Sheet Editor. `public/images/map/sprite_sheets/index.json` must list the same sheets.
+- Removed sheets: `seasons_1024_q90_2`, `seasons_1024_q90_3`, `rocks_64x64_1024x1024_q85` and `rockCliffsMountains_64x64_1024x1024`. They are listed in `RETIRED_SPRITE_SHEET_PATHS` together with the older `major_sprite_sheet_default` and the never-shipped editor fallbacks.
+- On startup, stored editor metadata, applied metadata, the last-opened sheet and the selection list that reference a retired sheet are removed or filtered. Saved games that reference a retired sheet load with the active sheet cleared and fall back to the defaults.
+- With custom sprite sheets on, any land cell without a decoration shows the default organic ground.
+- The editor preview background uses `images/terrain/source/meadow.webp`.
+- Water is always rendered procedurally (CPU pass, WebGL or WebGPU). The bitmap water files (`water_spritesheet.webp`, `water01.webp`, `water_animation.gif`), the classic water fallback and the "procedural water" settings toggle were removed; a stored `useProceduralWaterRendering: false` is ignored. Tone and saturation sliders stay.

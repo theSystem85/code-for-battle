@@ -1,3 +1,4 @@
+import { getCityBuildings, applyCityDamage } from './game/cityBuildings.js'
 // logic.js
 import { createImpactVisual } from './rendering/vfx/impactVfx.js'
 import {
@@ -316,10 +317,13 @@ export function triggerExplosion(
     }
   })
 
+  const cityBuildings = getCityBuildings(_mapGrid)
   // Apply damage to nearby buildings
-  if (gameState.buildings && gameState.buildings.length > 0) {
-    gameState.buildings.forEach(building => {
-      if (building.health <= 0) return
+  if (gameState.buildings?.length || cityBuildings.length) {
+    const ordinaryCount = gameState.buildings?.length || 0
+    for (let index = 0; index < ordinaryCount + cityBuildings.length; index++) {
+      const building = index < ordinaryCount ? gameState.buildings[index] : cityBuildings[index - ordinaryCount]
+      if (building.health <= 0) continue
 
       const buildingMinX = building.x * TILE_SIZE
       const buildingMinY = building.y * TILE_SIZE
@@ -355,6 +359,11 @@ export function triggerExplosion(
         if (buildingDamageCaps && buildingDamageCaps[building.type] !== undefined) {
           const maxDamage = buildingDamageCaps[building.type]
           damage = Math.min(damage, maxDamage)
+        }
+
+        if (building.type === 'city') {
+          applyCityDamage(building, damage, _mapGrid, gameState, playPositionalSound)
+          continue
         }
 
         // Check for god mode protection for player buildings
@@ -404,7 +413,7 @@ export function triggerExplosion(
           }
         }
       }
-    })
+    }
   }
 }
 

@@ -11,7 +11,7 @@ function image() {
   for (let y = 1; y < 4; y++) {
     for (let x = 1; x < 5; x++) pixel(x, y, [255, 0, 0, 255])
   }
-  pixel(2, 2, [0, 0, 0, 255]) // Transparent hole in the extracted component.
+  pixel(2, 2, [0, 0, 0, 255]) // Black pixel enclosed by the component: kept as sprite detail.
   pixel(8, 5, [0, 255, 0, 255])
   pixel(9, 5, [0, 255, 0, 255])
   pixel(0, 7, [16, 16, 16, 255])
@@ -20,11 +20,12 @@ function image() {
 }
 
 describe('SSE connected-component isolation', () => {
-  it('crops only the clicked component and preserves holes as transparent', () => {
+  it('crops only the clicked component and keeps enclosed black pixels opaque', () => {
     const result = isolateComponent(image(), 1, 1)
     expect(result.bbox).toEqual({ x: 1, y: 1, width: 4, height: 3 })
     expect(result.area).toBe(11)
-    expect(result.pixels[(1 * 4 + 1) * 4 + 3]).toBe(0)
+    expect(result.holes).toBe(1)
+    expect([...result.pixels.slice((1 * 4 + 1) * 4, (1 * 4 + 1) * 4 + 4)]).toEqual([0, 0, 0, 255])
     expect(isolateComponent(image(), 8, 5).area).toBe(2)
   })
   it('rejects background, transparent pixels and out-of-bounds clicks', () => {

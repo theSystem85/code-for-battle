@@ -1,4 +1,6 @@
 import { fetchAssetJson } from '../utils/assetLoading.js'
+import { computeMapTopologyFingerprint, topologyChangesAllowed } from '../game/mapTopology.js'
+import { showNotification } from './notifications.js'
 import { gameState } from '../gameState.js'
 import { AnimationSheetPreparation } from '../rendering/animationSheetPreparation.js'
 import { getMapRenderer, getTextureManager } from '../rendering.js'
@@ -21,7 +23,15 @@ import {
 import { listPartyStates, observePartyOwnershipChange } from '../network/multiplayerStore.js'
 import { initSpriteSheetEditor } from './spriteSheetEditor.js'
 import { expandCompactSpriteSheetMetadata, hasTaggedSpriteSheetTiles } from '../utils/spriteSheetMetadata.js'
-import { getStoredItem, setStoredItem } from '../storage/indexedDbStorage.js'
+import { getStoredItem, setStoredItem, removeStoredItem, getStoredKeys } from '../storage/indexedDbStorage.js'
+import {
+  DEFAULT_SSE_SHEETS,
+  OPTIONAL_SSE_SHEETS,
+  filterRetiredSheetPaths,
+  isRetiredSpriteSheetPath,
+  purgeRetiredSheetStorage,
+  sanitizeAppliedSheetMetadata
+} from './spriteSheetRegistry.js'
 
 let editButton = null
 let tileSelect = null
@@ -56,17 +66,6 @@ const COMBAT_DECAL_BLACK_KEY = Object.freeze({
   cutoffBrightness: 8,
   softenBrightness: 24
 })
-const RETIRED_MAJOR_SPRITE_SHEET_PATH = 'images/map/sprite_sheets/major_sprite_sheet_default.webp'
-
-const DEFAULT_SSE_SHEETS = [
-  'images/map/sprite_sheets/streets24_q90_1024x1024.webp',
-  'images/map/sprite_sheets/seasons_1024_q90_2.webp',
-  'images/map/sprite_sheets/seasons_1024_q90_3.webp',
-  'images/map/sprite_sheets/crystals_q90_1024x1024.webp',
-  'images/map/sprite_sheets/rocks_64x64_1024x1024_q85.webp',
-  'images/map/sprite_sheets/rockCliffsMountains_64x64_1024x1024.webp',
-  'images/map/sprite_sheets/debris_craters_tracks.webp'
-]
 const DEFAULT_ANIMATION_SHEET_PATH = 'images/map/animations/explosion.webp'
 const DEFAULT_ANIMATION_METADATA_PATH = 'images/map/animations/explosion.json'
 const RETIRED_EXPLOSION_SHEET_PATTERN = /^images\/map\/animations\/\d+x\d+_\d+x\d+_.*explosion\.(webp|png|jpg|jpeg)$/i
@@ -173,7 +172,7 @@ function mergeSheetPaths(baseSheetPaths = [], additionalSheetPaths = []) {
     if (
       typeof sheetPath !== 'string' ||
       !sheetPath.trim() ||
-      sheetPath === RETIRED_MAJOR_SPRITE_SHEET_PATH ||
+      isRetiredSpriteSheetPath(sheetPath) ||
       seen.has(sheetPath)
     ) return
     seen.add(sheetPath)
@@ -426,12 +425,12 @@ async function loadStaticSheetPaths() {
   try {
     const parsed = await fetchAssetJson(SSE_SHEETS_INDEX)
     if (Array.isArray(parsed?.sheets) && parsed.sheets.length) {
-      return parsed.sheets.filter(path => typeof path === 'string' && path !== RETIRED_MAJOR_SPRITE_SHEET_PATH)
+      return [...new Set([...filterRetiredSheetPaths(parsed.sheets), ...OPTIONAL_SSE_SHEETS])]
     }
   } catch (err) {
     window.logger.warn('Failed to load sprite sheet index:', err)
   }
-  return [...DEFAULT_SSE_SHEETS]
+  return [...DEFAULT_SSE_SHEETS, ...OPTIONAL_SSE_SHEETS]
 }
 
 async function loadMetadataForSheet(sheetPath, { allowLocalOverride = true } = {}) {
@@ -465,6 +464,11 @@ function renderIntegratedSheetSelectionList(sheetPaths = []) {
     checkbox.dataset.sheetPath = sheetPath
     checkbox.checked = selectedPaths.has(sheetPath)
     checkbox.addEventListener('change', async() => {
+      if (!topologyChangesAllowed(gameState)) {
+        checkbox.checked = !checkbox.checked
+        showNotification('Map sheet changes are controlled by the host before the match starts.')
+        return
+      }
       const currentSelected = new Set(Array.isArray(gameState.activeSpriteSheetSelections) ? gameState.activeSpriteSheetSelections : sheetPaths)
       if (checkbox.checked) currentSelected.add(sheetPath)
       else currentSelected.delete(sheetPath)
@@ -499,7 +503,25 @@ async function loadDefaultAnimationMetadata() {
   }
 }
 
-async function applyIntegratedSpriteSheetRuntime(metadata = null) {
+export async function applyIntegratedSpriteSheetRuntime(metadata = null, { preserveTopology = false, authoritative = false, sheetsOverride = null } = {}) {
+  if (!preserveTopology && !topologyChangesAllowed(gameState, authoritative)) {
+    showNotification('Map sheet changes are controlled by the host before the match starts.')
+    return
+  }
+  const previousFingerprint = gameState.mapTopologyFingerprint
+  const updateTopology = async() => {
+    if (preserveTopology) return
+    const fingerprint = computeMapTopologyFingerprint({
+      ...gameState,
+      enabled: textureManager.integratedSpriteSheetMode,
+      sheets: textureManager.integratedSpriteSheets
+    })
+    gameState.mapTopologySheets = (textureManager.integratedSpriteSheets || []).map(({ sheetPath, metadata }) => ({ sheetPath, metadata }))
+    gameState.mapTopologyFingerprint = fingerprint
+    if (previousFingerprint != null && previousFingerprint !== fingerprint) {
+      await regenerateTopology?.()
+    }
+  }
   const textureManager = getTextureManager()
   if (!textureManager?.setIntegratedSpriteSheetConfig) return
   cacheRuntimeIntegratedMetadata(metadata)
@@ -520,6 +542,7 @@ async function applyIntegratedSpriteSheetRuntime(metadata = null) {
     if (Array.isArray(gameState.units) && Array.isArray(gameState.mapGrid)) {
       gameState.occupancyMap = initializeOccupancyMap(gameState.units, gameState.mapGrid, textureManager)
     }
+    await updateTopology()
     return
   }
 
@@ -527,19 +550,20 @@ async function applyIntegratedSpriteSheetRuntime(metadata = null) {
     ? gameState.availableStaticSpriteSheets
     : await loadStaticSheetPaths()
   gameState.availableStaticSpriteSheets = allStaticSheets
-  if (!Array.isArray(gameState.activeSpriteSheetSelections) || !gameState.activeSpriteSheetSelections.length) {
-    gameState.activeSpriteSheetSelections = [...allStaticSheets]
+  if (!Array.isArray(gameState.activeSpriteSheetSelections)) {
+    gameState.activeSpriteSheetSelections = [...DEFAULT_SSE_SHEETS]
   }
 
-  const selectedSheetPaths = allStaticSheets.filter(path => gameState.activeSpriteSheetSelections.includes(path))
+  const selectedSheetPaths = gameState.activeSpriteSheetSelections.filter(path => allStaticSheets.includes(path)).sort()
   const multiplayerActive = isMultiplayerSessionActive()
   const allowLocalOverride = !multiplayerActive
   const resolvedSheets = []
   for (const sheetPath of selectedSheetPaths) {
     const runtimeAppliedMetadata = runtimeAppliedStaticMetadataBySheetPath.get(sheetPath)
-    const resolvedMetadata = metadata?.sheetPath === sheetPath
+    const savedMetadata = sheetsOverride?.find(entry => entry.sheetPath === sheetPath)?.metadata
+    const resolvedMetadata = savedMetadata || (metadata?.sheetPath === sheetPath
       ? metadata
-      : (runtimeAppliedMetadata || await loadMetadataForSheet(sheetPath, { allowLocalOverride }))
+      : ((!multiplayerActive && runtimeAppliedMetadata) || await loadMetadataForSheet(sheetPath, { allowLocalOverride })))
     if (!hasTaggedTiles(resolvedMetadata)) continue
     resolvedSheets.push({
       sheetPath,
@@ -568,6 +592,12 @@ async function applyIntegratedSpriteSheetRuntime(metadata = null) {
   if (Array.isArray(gameState.units) && Array.isArray(gameState.mapGrid)) {
     gameState.occupancyMap = initializeOccupancyMap(gameState.units, gameState.mapGrid, textureManager)
   }
+  await updateTopology()
+}
+
+let regenerateTopology = null
+export function setTopologyRegenerator(callback) {
+  regenerateTopology = callback
 }
 
 function updatePauseIcon() {
@@ -629,7 +659,7 @@ function toggleEditMode() {
   updatePauseIcon()
 }
 
-export function initMapEditorControls() {
+export async function initMapEditorControls() {
   editButton = document.getElementById('mapEditModeBtn')
   tileSelect = document.getElementById('mapEditTileSelect')
   randomCheckbox = document.getElementById('mapEditRandomToggle')
@@ -659,10 +689,13 @@ export function initMapEditorControls() {
   } catch (err) {
     window.logger.warn('Failed to load integrated sprite sheet biome:', err)
   }
+  purgeRetiredSheetStorage({ getStoredItem, setStoredItem, removeStoredItem, getStoredKeys })
+  if (isRetiredSpriteSheetPath(gameState.activeSpriteSheetPath)) gameState.activeSpriteSheetPath = null
+  gameState.activeSpriteSheetMetadata = sanitizeAppliedSheetMetadata(gameState.activeSpriteSheetMetadata)
   try {
     const storedAppliedMetadata = getStoredItem(SSE_APPLIED_METADATA_STORAGE_KEY)
     if (storedAppliedMetadata) {
-      const parsed = JSON.parse(storedAppliedMetadata)
+      const parsed = sanitizeAppliedSheetMetadata(JSON.parse(storedAppliedMetadata))
       if (parsed && typeof parsed === 'object' && hasTaggedTiles(parsed) &&
         typeof parsed.sheetPath === 'string' && DEFAULT_SSE_SHEETS.includes(parsed.sheetPath)) {
         gameState.activeSpriteSheetMetadata = parsed
@@ -675,35 +708,32 @@ export function initMapEditorControls() {
   }
 
   gameState.availableStaticSpriteSheets = mergeSheetPaths(
-    DEFAULT_SSE_SHEETS,
+    [...DEFAULT_SSE_SHEETS, ...OPTIONAL_SSE_SHEETS],
     [gameState.activeSpriteSheetMetadata?.sheetPath, gameState.activeSpriteSheetPath]
   )
 
   try {
-    const storedSelected = safeParseJson(getStoredItem(INTEGRATED_SELECTED_SHEETS_STORAGE_KEY), [])
-    if (Array.isArray(storedSelected) && storedSelected.length) {
+    const storedSelected = safeParseJson(getStoredItem(INTEGRATED_SELECTED_SHEETS_STORAGE_KEY), null)
+    if (Array.isArray(storedSelected)) {
       gameState.activeSpriteSheetSelections = gameState.availableStaticSpriteSheets.filter(path => storedSelected.includes(path))
     }
   } catch (err) {
     window.logger.warn('Failed to load selected integrated sprite sheets:', err)
   }
-  if (!Array.isArray(gameState.activeSpriteSheetSelections) || !gameState.activeSpriteSheetSelections.length) {
-    gameState.activeSpriteSheetSelections = [...gameState.availableStaticSpriteSheets]
+  if (!Array.isArray(gameState.activeSpriteSheetSelections)) {
+    gameState.activeSpriteSheetSelections = [...DEFAULT_SSE_SHEETS]
   }
   renderIntegratedSheetSelectionList(gameState.availableStaticSpriteSheets)
-  loadStaticSheetPaths().then(async(sheetPaths) => {
+  const runtimeReady = loadStaticSheetPaths().then(async(sheetPaths) => {
     gameState.availableStaticSpriteSheets = mergeSheetPaths(
       sheetPaths,
       [gameState.activeSpriteSheetMetadata?.sheetPath, gameState.activeSpriteSheetPath]
     )
     const availablePaths = gameState.availableStaticSpriteSheets
-    if (!Array.isArray(gameState.activeSpriteSheetSelections) || !gameState.activeSpriteSheetSelections.length) {
-      gameState.activeSpriteSheetSelections = [...availablePaths]
+    if (!Array.isArray(gameState.activeSpriteSheetSelections)) {
+      gameState.activeSpriteSheetSelections = [...DEFAULT_SSE_SHEETS]
     } else {
       gameState.activeSpriteSheetSelections = availablePaths.filter(path => gameState.activeSpriteSheetSelections.includes(path))
-      if (!gameState.activeSpriteSheetSelections.length) {
-        gameState.activeSpriteSheetSelections = [...availablePaths]
-      }
     }
     renderIntegratedSheetSelectionList(availablePaths)
     if (gameState.useIntegratedSpriteSheetMode) {
@@ -760,6 +790,11 @@ export function initMapEditorControls() {
     integratedSpriteSheetModeCheckbox.checked = gameState.useIntegratedSpriteSheetMode
     updateIntegratedSheetSelectionVisibility()
     integratedSpriteSheetModeCheckbox.addEventListener('change', async(e) => {
+      if (!topologyChangesAllowed(gameState)) {
+        e.target.checked = gameState.useIntegratedSpriteSheetMode
+        showNotification('Map sheet changes are controlled by the host before the match starts.')
+        return
+      }
       const enabled = Boolean(e.target.checked)
       gameState.useIntegratedSpriteSheetMode = enabled
       updateIntegratedSheetSelectionVisibility()
@@ -788,15 +823,13 @@ export function initMapEditorControls() {
 
   initSpriteSheetEditor({
     initialSheetPath: gameState.activeSpriteSheetPath,
+    onClose: () => applyIntegratedSpriteSheetRuntime(),
     onSheetDataChange: (metadata) => {
       gameState.activeSpriteSheetPath = metadata?.sheetPath || gameState.activeSpriteSheetPath || null
       gameState.activeSpriteSheetMetadata = metadata
       cacheRuntimeIntegratedMetadata(metadata)
       if (metadata?.sheetPath && hasTaggedTiles(metadata)) {
         ensureIntegratedSheetVisible(metadata.sheetPath, { autoSelect: false })
-      }
-      if (gameState.useIntegratedSpriteSheetMode) {
-        applyIntegratedSpriteSheetRuntime(metadata)
       }
     },
     onAnimationSheetDataChange: (metadata) => {
@@ -806,6 +839,10 @@ export function initMapEditorControls() {
       gameState.activeSpriteSheetPath = metadata?.sheetPath || gameState.activeSpriteSheetPath || null
       gameState.activeSpriteSheetMetadata = metadata
       cacheRuntimeIntegratedMetadata(metadata)
+      if (!topologyChangesAllowed(gameState)) {
+        showNotification('Map sheet changes are controlled by the host before the match starts.')
+        return
+      }
       if (metadata?.sheetPath && hasTaggedTiles(metadata)) {
         ensureIntegratedSheetVisible(metadata.sheetPath, { autoSelect: true })
       }
@@ -824,10 +861,6 @@ export function initMapEditorControls() {
         window.logger.warn('Failed to persist applied SSE animation metadata:', err)
       }
     }
-  }).then((controller) => {
-    if (gameState.useIntegratedSpriteSheetMode) {
-      controller.refreshRuntimeSheetData()
-    }
   }).catch((err) => {
     window.logger.warn('Failed to initialize Sprite Sheet Editor:', err)
   })
@@ -839,6 +872,7 @@ export function initMapEditorControls() {
   updateLockState()
   syncControlsFromState()
   updatePauseIcon()
+  await runtimeReady
 }
 
 export function applyProductionBrush(kind, payload) {

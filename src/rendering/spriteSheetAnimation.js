@@ -1,6 +1,6 @@
 import { TILE_SIZE } from '../config.js'
 import { getCanvasLogicalSize } from './renderingUtils.js'
-import { applyBlackKey } from './blackKeyPixels.js'
+import { applyBlackKey, applyEdgeConnectedBlackKey, buildBlackKeySeedMask } from './blackKeyPixels.js'
 import { prepareExplosionInWorker } from './explosionPreparation.js'
 
 const FILENAME_PATTERN = /^(\d+)x(\d+)_([0-9]+)x([0-9]+)_.+\.[a-z0-9]+$/i
@@ -100,7 +100,7 @@ export function parseSpriteSheetMetadataFromFilename(assetPath) {
   return metadata
 }
 
-function buildBlackTransparentTexture(image, blackKeyConfig = null) {
+function buildBlackTransparentTexture(image, blackKeyConfig = null, metadata = null) {
   if (!image || !image.complete || image.naturalWidth <= 0 || image.naturalHeight <= 0) {
     return null
   }
@@ -118,27 +118,47 @@ function buildBlackTransparentTexture(image, blackKeyConfig = null) {
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
   const data = imageData.data
 
-  applyBlackKey(data, cutoffBrightness, softenBrightness)
+  if (metadata?.tiles) {
+    // Map sprite sheets: only background connected to each sprite's outer
+    // edge is keyed, so dark detail inside a sprite stays opaque.
+    const seeds = buildBlackKeySeedMask(canvas.width, canvas.height, metadata)
+    applyEdgeConnectedBlackKey(data, canvas.width, canvas.height, cutoffBrightness, softenBrightness, seeds)
+  } else {
+    applyBlackKey(data, cutoffBrightness, softenBrightness)
+  }
 
   ctx.putImageData(imageData, 0, 0)
   return canvas
 }
 
-export function getImageTextureWithBlendMode(image, blendMode = 'black', blackKeyConfig = null) {
+// Tag edits that add or remove inner_cuts change the keyed texture.
+function innerCutsSignature(metadata) {
+  let hash = 0
+  let count = 0
+  for (const [key, tile] of Object.entries(metadata.tiles || {})) {
+    if (!tile?.tags?.includes?.('inner_cuts')) continue
+    count++
+    for (let i = 0; i < key.length; i++) hash = (Math.imul(hash, 31) + key.charCodeAt(i)) >>> 0
+  }
+  return count ? `:cuts${count}-${hash.toString(36)}` : ''
+}
+
+export function getImageTextureWithBlendMode(image, blendMode = 'black', blackKeyConfig = null, metadata = null) {
   const normalizedBlendMode = normalizeSpriteSheetBlendMode(blendMode)
   if (!image || normalizedBlendMode === 'alpha') {
     return image
   }
 
   const normalizedBlackKey = blackKeyConfig ? normalizeBlackKeyConfig(blackKeyConfig) : null
-  const cacheKey = normalizedBlackKey ? `black:${normalizedBlackKey.cutoffBrightness}:${normalizedBlackKey.softenBrightness}` : 'black:24:48'
+  const cacheKey = (normalizedBlackKey ? `black:${normalizedBlackKey.cutoffBrightness}:${normalizedBlackKey.softenBrightness}` : 'black:24:48') +
+    (metadata?.tiles ? `:edges${innerCutsSignature(metadata)}` : '')
   const existingByConfig = processedImageCache.get(image)
   const existing = existingByConfig?.get(cacheKey)
   if (existing) {
     return existing
   }
 
-  const processed = buildBlackTransparentTexture(image, normalizedBlackKey)
+  const processed = buildBlackTransparentTexture(image, normalizedBlackKey, metadata)
   if (processed) {
     const nextCache = existingByConfig || new Map()
     nextCache.set(cacheKey, processed)
