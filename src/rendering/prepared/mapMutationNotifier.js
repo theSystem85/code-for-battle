@@ -60,6 +60,29 @@ let revisionStore = null
 let pendingTopologyBounds = null
 let pendingSurfaceBounds = null
 let mutationEpoch = 0
+const mapReplacedListeners = new Set()
+
+/**
+ * Subscribe to whole-map lifecycle replacements (new game, restart, load,
+ * multiplayer map sync). Client-local map traces that are not part of the
+ * tile data use this to drop state from the previous map. Returns an
+ * unsubscribe function.
+ */
+export function addMapReplacedListener(listener) {
+  if (typeof listener !== 'function') return () => {}
+  mapReplacedListeners.add(listener)
+  return () => mapReplacedListeners.delete(listener)
+}
+
+function notifyMapReplaced() {
+  mapReplacedListeners.forEach(listener => {
+    try {
+      listener()
+    } catch (error) {
+      globalThis.window?.logger?.warn?.('Map replaced listener failed:', error)
+    }
+  })
+}
 
 function getDimensions(source) {
   if (Array.isArray(source)) {
@@ -168,6 +191,7 @@ export function consumePendingTerrainSync() {
 }
 
 export function beginMapMutationTransaction(source, { replace = false } = {}) {
+  if (replace) notifyMapReplaced()
   const store = ensureRevisionStore(source)
   if (!store) return null
 

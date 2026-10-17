@@ -5,11 +5,14 @@
 // emitting a mark never allocates. Emission is distance based (not per frame),
 // collinear movement is merged into one longer segment, and pivots in place
 // produce short "scuff" arc records. Nothing here touches shared RNG, gameState
-// or savegames: marks are client-local decoration and are rebuilt from scratch
-// after a load or map change.
+// or savegames: marks are client-local decoration and are wiped whenever the
+// map is replaced (restart, new map, load, multiplayer map sync). The shared
+// mapGrid array is refilled in place on those paths, so array identity alone
+// cannot detect them; the map lifecycle listener below does.
 
 import { TILE_SIZE } from '../config.js'
 import { getStoredItem, setStoredItem } from '../storage/indexedDbStorage.js'
+import { addMapReplacedListener } from '../rendering/prepared/mapMutationNotifier.js'
 
 // Hard cap of stored segments. At 37 bytes per slot this is ~0.6 MB of typed
 // arrays; baked chunk canvases are bounded separately by the renderer.
@@ -276,7 +279,7 @@ export const trackMarkStore = new TrackMarkStore()
 // ---------------------------------------------------------------------------
 // Emission
 
-const unitTrackState = new WeakMap()
+let unitTrackState = new WeakMap()
 let boundMapGrid = null
 
 function normalizeAngle(a) {
@@ -398,7 +401,18 @@ export function updateTrackMarks(units, mapGrid, now) {
   }
 }
 
-export function resetTrackMarksForTests() {
+/**
+ * Drop every stored mark and per-unit emitter state. Called on each whole-map
+ * replacement so traces from a previous match never survive a restart.
+ */
+export function clearTrackMarks() {
   boundMapGrid = null
+  unitTrackState = new WeakMap()
   trackMarkStore.clear()
+}
+
+addMapReplacedListener(clearTrackMarks)
+
+export function resetTrackMarksForTests() {
+  clearTrackMarks()
 }
