@@ -973,6 +973,26 @@ describe('multiplayer client snapshot sync', () => {
     expect(gameState.buildings[0].sellStartTime).toBe(11750)
   })
 
+  it('restores independent turret barrel times across peer clocks without replacing existing arrays', () => {
+    gameState.simulationTime = 300
+    const times = [0, 150, null]
+    gameState.buildings = [{
+      id: 'gun-v3', type: 'turretGunV3', owner: 'player1', x: 0, y: 0,
+      width: 1, height: 1, health: 300, muzzleFlashIndex: 1, barrelShotTimes: times
+    }]
+    const snapshot = commandSync.createGameStateSnapshot()
+    expect(snapshot.buildings[0].barrelShotElapsed).toEqual([300, 150, null])
+    asClient()
+    gameState.simulationTime = 1000
+    commandSync.applyGameStateSnapshot({ buildings: snapshot.buildings })
+    expect(gameState.buildings[0].barrelShotTimes).toBe(times)
+    expect(times).toEqual([700, 850, null])
+    expect(gameState.buildings[0].muzzleFlashIndex).toBe(1)
+    gameState.buildings = []
+    commandSync.applyGameStateSnapshot({ buildings: snapshot.buildings })
+    expect(gameState.buildings[0].barrelShotTimes).toEqual([700, 850, null])
+  })
+
   it('includes sparse map decals and omits default explosion frame rects', () => {
     gameState.mapBiomeWeights = {}
     gameState.simulationTime = 1000

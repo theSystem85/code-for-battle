@@ -2,29 +2,82 @@
   "turretGunV1": {
     "base": "turret01_base.webp",
     "top": "turret01_top.webp",
-    "rotationOffset": 1.5708,
-    "muzzleFlashOffsets": [
-      { "x": 31, "y": 0 }
+    "barrel": "turret01_barrel.webp",
+    "coordinateSize": 64,
+    "rotationOffset": -1.5707963267948966,
+    "barrelMounts": [
+      {
+        "x": 32,
+        "y": 38
+      }
     ],
-    "comment": "Muzzle flash spawns at (31x0y) coords relative to the top left of the turret01_top.webp image"
+    "muzzleFlashOffsets": [
+      {
+        "x": 32,
+        "y": 60
+      }
+    ]
   },
   "turretGunV2": {
     "base": "turret02_base.webp",
     "top": "turret02_top.webp",
-    "rotationOffset": -1.5708,
+    "barrel": "turret02_barrel.webp",
+    "coordinateSize": 64,
+    "rotationOffset": -1.5707963267948966,
+    "barrelMounts": [
+      {
+        "x": 23,
+        "y": 38
+      },
+      {
+        "x": 41,
+        "y": 38
+      }
+    ],
     "muzzleFlashOffsets": [
-      { "x": 20, "y": 60 },
-      { "x": 42, "y": 60 }
+      {
+        "x": 23,
+        "y": 60
+      },
+      {
+        "x": 41,
+        "y": 60
+      }
     ]
   },
   "turretGunV3": {
     "base": "turret03_base.webp",
     "top": "turret03_top.webp",
-    "rotationOffset": -1.5708,
+    "barrel": "turret03_barrel.webp",
+    "coordinateSize": 64,
+    "rotationOffset": -1.5707963267948966,
+    "barrelMounts": [
+      {
+        "x": 23,
+        "y": 38
+      },
+      {
+        "x": 41,
+        "y": 38
+      },
+      {
+        "x": 32,
+        "y": 40
+      }
+    ],
     "muzzleFlashOffsets": [
-      { "x": 20, "y": 60 },
-      { "x": 42, "y": 60 },
-      { "x": 31, "y": 62 }
+      {
+        "x": 23,
+        "y": 60
+      },
+      {
+        "x": 41,
+        "y": 60
+      },
+      {
+        "x": 32,
+        "y": 62
+      }
     ]
   }
 }

@@ -83,8 +83,8 @@ describe('prepared sprite generation and registry', () => {
 
     expect(manifest.webpQuality).toBe(85)
     expect(manifest.densities).toEqual([1, 2, 3])
-    expect(manifest.inventory.entryCount).toBe(303)
-    expect(manifest.entries).toHaveLength(303)
+    expect(manifest.inventory.entryCount).toBe(306)
+    expect(manifest.entries).toHaveLength(306)
     expect(manifest.entries.every(entry =>
       entry.hasAlpha &&
       entry.alphaMode === 'straight' &&
@@ -92,6 +92,15 @@ describe('prepared sprite generation and registry', () => {
       entry.logicalHeight > 0 &&
       entry.variants.every(variant => variant.path.endsWith('.webp'))
     )).toBe(true)
+
+    const turretLayers = manifest.entries.filter(entry => entry.id.startsWith('building:turretGun'))
+    expect(turretLayers).toHaveLength(9)
+    for (const entry of turretLayers) {
+      for (const variant of entry.variants) {
+        expect(entry.sourceWidth).toBeGreaterThanOrEqual(variant.backingWidth)
+        expect(entry.sourceHeight).toBeGreaterThanOrEqual(variant.backingHeight)
+      }
+    }
 
     const apacheBodies = manifest.entries.filter(entry => entry.id.startsWith('aircraft:apache:body:'))
     expect(apacheBodies).toHaveLength(48 * 5)

@@ -1,4 +1,4 @@
-import { MUZZLE_FLASH_DURATION, MUZZLE_FLASH_SIZE, RECOIL_DISTANCE, RECOIL_DURATION, TILE_SIZE } from '../config.js'
+import { TILE_SIZE } from '../config.js'
 import {
   BATTLESHIP_TURRET_NAMES,
   getBattleshipTurretLocalPoint
@@ -11,6 +11,8 @@ import {
   drawPreparedSpriteTopLeft,
   getPreparedSprite
 } from './prepared/preparedSpritePipeline.js'
+
+import { getRecoilOffset, renderTurretMuzzleFlash } from './turretFiringEffects.js'
 
 const SOUTH_FACING_SOURCE_ANGLE = Math.PI / 2
 const IMAGE_PATHS = Object.freeze({
@@ -96,32 +98,6 @@ export function getNavalFleetBaseImage(type) {
   return isNavalFleetImageLoaded(type) ? getImageState(type).image : null
 }
 
-function getRecoilOffset(startTime, now) {
-  if (!Number.isFinite(startTime) || now - startTime > RECOIL_DURATION) return 0
-  const progress = Math.max(0, (now - startTime) / RECOIL_DURATION)
-  const easedProgress = 1 - Math.pow(1 - progress, 3)
-  return RECOIL_DISTANCE * (1 - easedProgress)
-}
-
-function renderBattleshipMuzzleFlash(ctx, x, y, startTime, now) {
-  if (!Number.isFinite(startTime) || now - startTime > MUZZLE_FLASH_DURATION) return
-  const progress = Math.max(0, (now - startTime) / MUZZLE_FLASH_DURATION)
-  const alpha = 1 - progress
-  const size = MUZZLE_FLASH_SIZE * 1.25 * (1 - progress * 0.5)
-  ctx.save()
-  ctx.globalAlpha *= alpha
-  const gradient = ctx.createRadialGradient(x, y, 0, x, y, size)
-  gradient.addColorStop(0, '#fff')
-  gradient.addColorStop(0.28, '#fff36a')
-  gradient.addColorStop(0.65, '#ff8a22')
-  gradient.addColorStop(1, 'rgba(255, 90, 0, 0)')
-  ctx.fillStyle = gradient
-  ctx.beginPath()
-  ctx.arc(x, y, size, 0, Math.PI * 2)
-  ctx.fill()
-  ctx.restore()
-}
-
 function renderBattleshipLayers(ctx, unit, centerX, centerY, opacity) {
   const turretImage = getImageState('battleshipTurret').image
   const barrelImage = getImageState('battleshipBarrel').image
@@ -161,7 +137,7 @@ function renderBattleshipLayers(ctx, unit, centerX, centerY, opacity) {
       } else {
         ctx.drawImage(barrelImage, barrelX - barrelWidth / 2, barrelY, barrelWidth, barrelHeight)
       }
-      renderBattleshipMuzzleFlash(
+      renderTurretMuzzleFlash(
         ctx,
         barrelX,
         barrelY + barrelHeight * 0.96,

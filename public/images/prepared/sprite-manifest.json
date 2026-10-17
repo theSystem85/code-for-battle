@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "assetVersion": "7ae84ff8b7733947",
+  "assetVersion": "eba5ceb8d8ece97d",
   "generatedBy": "scripts/build-prepared-sprites.mjs",
   "webpQuality": 85,
   "unitWebpQuality": 95,
@@ -10,10 +10,10 @@
     3
   ],
   "inventory": {
-    "entryCount": 303,
-    "sourceCount": 62,
-    "generatedVariantCount": 909,
-    "decodedVariantBytes": 32643552
+    "entryCount": 306,
+    "sourceCount": 65,
+    "generatedVariantCount": 918,
+    "decodedVariantBytes": 32647248
   },
   "entries": [
     {
@@ -16049,11 +16049,57 @@
       ]
     },
     {
+      "id": "building:turretGunV1:barrel",
+      "category": "building",
+      "source": "/images/map/buildings/turret01_barrel.webp",
+      "sourceWidth": 16,
+      "sourceHeight": 88,
+      "logicalWidth": 2,
+      "logicalHeight": 11,
+      "hasAlpha": true,
+      "alphaMode": "straight",
+      "anchorSpace": "logical-pixels",
+      "anchors": {
+        "muzzle": {
+          "x": 1,
+          "y": 11
+        }
+      },
+      "states": [
+        "base",
+        "recoil",
+        "firing"
+      ],
+      "variants": [
+        {
+          "density": 1,
+          "path": "/images/prepared/building/turretGunV1/barrel@1x.webp",
+          "backingWidth": 2,
+          "backingHeight": 11,
+          "decodedBytes": 88
+        },
+        {
+          "density": 2,
+          "path": "/images/prepared/building/turretGunV1/barrel@2x.webp",
+          "backingWidth": 4,
+          "backingHeight": 22,
+          "decodedBytes": 352
+        },
+        {
+          "density": 3,
+          "path": "/images/prepared/building/turretGunV1/barrel@3x.webp",
+          "backingWidth": 6,
+          "backingHeight": 33,
+          "decodedBytes": 792
+        }
+      ]
+    },
+    {
       "id": "building:turretGunV1:base",
       "category": "building",
       "source": "/images/map/buildings/turret01_base.webp",
-      "sourceWidth": 64,
-      "sourceHeight": 64,
+      "sourceWidth": 256,
+      "sourceHeight": 256,
       "logicalWidth": 32,
       "logicalHeight": 32,
       "hasAlpha": true,
@@ -16102,8 +16148,8 @@
       "id": "building:turretGunV1:top",
       "category": "building",
       "source": "/images/map/buildings/turret01_top.webp",
-      "sourceWidth": 64,
-      "sourceHeight": 64,
+      "sourceWidth": 256,
+      "sourceHeight": 256,
       "logicalWidth": 32,
       "logicalHeight": 32,
       "hasAlpha": true,
@@ -16145,11 +16191,57 @@
       ]
     },
     {
+      "id": "building:turretGunV2:barrel",
+      "category": "building",
+      "source": "/images/map/buildings/turret02_barrel.webp",
+      "sourceWidth": 16,
+      "sourceHeight": 88,
+      "logicalWidth": 2,
+      "logicalHeight": 11,
+      "hasAlpha": true,
+      "alphaMode": "straight",
+      "anchorSpace": "logical-pixels",
+      "anchors": {
+        "muzzle": {
+          "x": 1,
+          "y": 11
+        }
+      },
+      "states": [
+        "base",
+        "recoil",
+        "firing"
+      ],
+      "variants": [
+        {
+          "density": 1,
+          "path": "/images/prepared/building/turretGunV2/barrel@1x.webp",
+          "backingWidth": 2,
+          "backingHeight": 11,
+          "decodedBytes": 88
+        },
+        {
+          "density": 2,
+          "path": "/images/prepared/building/turretGunV2/barrel@2x.webp",
+          "backingWidth": 4,
+          "backingHeight": 22,
+          "decodedBytes": 352
+        },
+        {
+          "density": 3,
+          "path": "/images/prepared/building/turretGunV2/barrel@3x.webp",
+          "backingWidth": 6,
+          "backingHeight": 33,
+          "decodedBytes": 792
+        }
+      ]
+    },
+    {
       "id": "building:turretGunV2:base",
       "category": "building",
       "source": "/images/map/buildings/turret02_base.webp",
-      "sourceWidth": 64,
-      "sourceHeight": 64,
+      "sourceWidth": 256,
+      "sourceHeight": 256,
       "logicalWidth": 32,
       "logicalHeight": 32,
       "hasAlpha": true,
@@ -16198,8 +16290,8 @@
       "id": "building:turretGunV2:top",
       "category": "building",
       "source": "/images/map/buildings/turret02_top.webp",
-      "sourceWidth": 64,
-      "sourceHeight": 64,
+      "sourceWidth": 256,
+      "sourceHeight": 256,
       "logicalWidth": 32,
       "logicalHeight": 32,
       "hasAlpha": true,
@@ -16241,11 +16333,57 @@
       ]
     },
     {
+      "id": "building:turretGunV3:barrel",
+      "category": "building",
+      "source": "/images/map/buildings/turret03_barrel.webp",
+      "sourceWidth": 16,
+      "sourceHeight": 88,
+      "logicalWidth": 2,
+      "logicalHeight": 11,
+      "hasAlpha": true,
+      "alphaMode": "straight",
+      "anchorSpace": "logical-pixels",
+      "anchors": {
+        "muzzle": {
+          "x": 1,
+          "y": 11
+        }
+      },
+      "states": [
+        "base",
+        "recoil",
+        "firing"
+      ],
+      "variants": [
+        {
+          "density": 1,
+          "path": "/images/prepared/building/turretGunV3/barrel@1x.webp",
+          "backingWidth": 2,
+          "backingHeight": 11,
+          "decodedBytes": 88
+        },
+        {
+          "density": 2,
+          "path": "/images/prepared/building/turretGunV3/barrel@2x.webp",
+          "backingWidth": 4,
+          "backingHeight": 22,
+          "decodedBytes": 352
+        },
+        {
+          "density": 3,
+          "path": "/images/prepared/building/turretGunV3/barrel@3x.webp",
+          "backingWidth": 6,
+          "backingHeight": 33,
+          "decodedBytes": 792
+        }
+      ]
+    },
+    {
       "id": "building:turretGunV3:base",
       "category": "building",
       "source": "/images/map/buildings/turret03_base.webp",
-      "sourceWidth": 64,
-      "sourceHeight": 64,
+      "sourceWidth": 256,
+      "sourceHeight": 256,
       "logicalWidth": 32,
       "logicalHeight": 32,
       "hasAlpha": true,
@@ -16294,8 +16432,8 @@
       "id": "building:turretGunV3:top",
       "category": "building",
       "source": "/images/map/buildings/turret03_top.webp",
-      "sourceWidth": 64,
-      "sourceHeight": 64,
+      "sourceWidth": 256,
+      "sourceHeight": 256,
       "logicalWidth": 32,
       "logicalHeight": 32,
       "hasAlpha": true,
