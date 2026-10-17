@@ -135,6 +135,7 @@ import {
 import { UnitRenderer } from '../rendering/unitRenderer.js'
 import { preloadRocketTankImage } from '../rendering/rocketTankImageRenderer.js'
 import { getStoredItem, setStoredItem } from '../storage/indexedDbStorage.js'
+import { createMapSettingsApplyController } from '../ui/mapSettingsApply.js'
 import {
   beginMapMutationTransaction,
   commitMapMutationTransaction
@@ -1061,7 +1062,7 @@ class Game {
     const applyMapSettingsAndRegenerate = async(changedField = null) => {
       if (!topologyChangesAllowed(gameState)) {
         showNotification('Map settings are controlled by the host before the match starts.')
-        return
+        return false
       }
       const values = {}
       for (const key of Object.keys(DECORATION_SETTINGS)) values[key] = document.getElementById(key)?.value ?? gameState[key]
@@ -1200,10 +1201,8 @@ class Game {
         console.error('Map regeneration failed', error)
       }
       refreshSidebarMultiplayer()
-    }
-
-    if (seedInput) {
-      seedInput.addEventListener('change', applyMapSettingsAndRegenerate)
+      this.mapSettingsApply?.resync()
+      return true
     }
 
     const persistDimension = (input, storageKey) => {
@@ -1213,7 +1212,6 @@ class Game {
         const sanitized = sanitizeMapDimension(input.value, fallback)
         input.value = sanitized
         updateMapDimensionLabelsAndSaveEstimate()
-        applyMapSettingsAndRegenerate()
       })
     }
 
@@ -1224,13 +1222,9 @@ class Game {
     })
     updateMapDimensionLabelsAndSaveEstimate()
 
+    // Players live in the multiplayer section and still regenerate at once.
     if (playerCountInput) {
-      playerCountInput.addEventListener('change', applyMapSettingsAndRegenerate)
-    }
-
-    for (const key of Object.keys(DECORATION_SETTINGS)) {
-      const input = document.getElementById(key)
-      if (input) input.addEventListener('change', applyMapSettingsAndRegenerate)
+      playerCountInput.addEventListener('change', () => applyMapSettingsAndRegenerate())
     }
 
     if (oreFieldInput) {
@@ -1239,7 +1233,6 @@ class Game {
       oreFieldInput.value = sanitizeOreFieldCount(oreFieldInput.value || gameState.mapOreFieldCount)
       oreFieldInput.addEventListener('change', () => {
         oreFieldInput.value = sanitizeOreFieldCount(oreFieldInput.value)
-        applyMapSettingsAndRegenerate()
       })
     }
     if (oreTotalValueInput) {
@@ -1249,7 +1242,6 @@ class Game {
       oreTotalValueInput.value = sanitizeOreTotalValue(oreTotalValueInput.value || gameState.mapOreTotalValue)
       oreTotalValueInput.addEventListener('change', () => {
         oreTotalValueInput.value = sanitizeOreTotalValue(oreTotalValueInput.value)
-        applyMapSettingsAndRegenerate()
       })
     }
 
@@ -1260,7 +1252,6 @@ class Game {
       startMoneyInput.value = sanitizeStartMoney(startMoneyInput.value || gameState.startMoney)
       startMoneyInput.addEventListener('change', () => {
         startMoneyInput.value = sanitizeStartMoney(startMoneyInput.value)
-        applyMapSettingsAndRegenerate()
       })
     }
 
@@ -1284,7 +1275,6 @@ class Game {
       waterPercentInput.value = sanitizeTerrainPercent(waterPercentInput.value || gameState.mapWaterPercent, 10)
       waterPercentInput.addEventListener('change', () => {
         waterPercentInput.value = sanitizeTerrainPercent(waterPercentInput.value, gameState.mapWaterPercent)
-        applyMapSettingsAndRegenerate('water')
       })
     }
 
@@ -1294,55 +1284,38 @@ class Game {
       rockPercentInput.value = sanitizeTerrainPercent(rockPercentInput.value || gameState.mapRockPercent, 10)
       rockPercentInput.addEventListener('change', () => {
         rockPercentInput.value = sanitizeTerrainPercent(rockPercentInput.value, gameState.mapRockPercent)
-        applyMapSettingsAndRegenerate('rock')
       })
     }
 
-    ;[shoreNorthCheckbox, shoreWestCheckbox, shoreEastCheckbox, shoreSouthCheckbox, centerLakeCheckbox]
-      .filter(Boolean)
-      .forEach((checkbox) => {
-        checkbox.addEventListener('change', applyMapSettingsAndRegenerate)
-      })
-
-    if (biomeSelect) biomeSelect.addEventListener('change', applyMapSettingsAndRegenerate)
-    if (biomeDistributionSelect) biomeDistributionSelect.addEventListener('change', applyMapSettingsAndRegenerate)
-    if (snowOnPlateausCheckbox) snowOnPlateausCheckbox.addEventListener('change', applyMapSettingsAndRegenerate)
-    let biomeInputTimer = null
-    const scheduleBiomeRegeneration = () => {
-      clearTimeout(biomeInputTimer)
-      biomeInputTimer = setTimeout(() => applyMapSettingsAndRegenerate(), 120)
-    }
     if (shorelineWidthInput) {
       shorelineWidthInput.min = 0
       shorelineWidthInput.max = 12
       shorelineWidthInput.value = sanitizeShorelineWidth(shorelineWidthInput.value, gameState.mapShorelineWidth)
-      shorelineWidthInput.addEventListener('input', scheduleBiomeRegeneration)
       shorelineWidthInput.addEventListener('change', () => {
-        clearTimeout(biomeInputTimer)
         shorelineWidthInput.value = sanitizeShorelineWidth(shorelineWidthInput.value, gameState.mapShorelineWidth)
-        applyMapSettingsAndRegenerate()
       })
     }
     if (transitionPixelsInput) {
       transitionPixelsInput.min = 1
       transitionPixelsInput.max = 64
       transitionPixelsInput.value = sanitizeTransitionPixels(transitionPixelsInput.value, gameState.mapBiomeTransitionPixels)
-      transitionPixelsInput.addEventListener('input', scheduleBiomeRegeneration)
-      transitionPixelsInput.addEventListener('change', () => { clearTimeout(biomeInputTimer); applyMapSettingsAndRegenerate() })
     }
-    if (biomeRegionCountInput) {
-      biomeRegionCountInput.addEventListener('input', scheduleBiomeRegeneration)
-      biomeRegionCountInput.addEventListener('change', () => {
-        clearTimeout(biomeInputTimer)
-        applyMapSettingsAndRegenerate()
-      })
-    }
-    Object.values(biomeWeightInputs).filter(Boolean).forEach(input => {
-      input.addEventListener('input', scheduleBiomeRegeneration)
-      input.addEventListener('change', () => {
-        clearTimeout(biomeInputTimer)
-        applyMapSettingsAndRegenerate()
-      })
+
+    // Sidebar map settings only regenerate the map when Apply is clicked.
+    // The button stays disabled until a watched value differs from the last
+    // applied snapshot. SSE sheet toggles keep their own regeneration path.
+    const mapSettingInputs = [
+      seedInput, mapWidthInput, mapHeightInput, oreFieldInput, oreTotalValueInput, startMoneyInput,
+      waterPercentInput, rockPercentInput, shoreNorthCheckbox, shoreWestCheckbox, shoreEastCheckbox,
+      shoreSouthCheckbox, centerLakeCheckbox, biomeSelect, biomeRegionCountInput, biomeDistributionSelect,
+      shorelineWidthInput, transitionPixelsInput, snowOnPlateausCheckbox, ...Object.values(biomeWeightInputs),
+      ...Object.keys(DECORATION_SETTINGS).map(key => document.getElementById(key))
+    ]
+    this.mapSettingsApply = createMapSettingsApplyController({
+      inputs: mapSettingInputs,
+      button: document.getElementById('mapSettingsApplyBtn'),
+      fieldOf: input => (input === waterPercentInput ? 'water' : input === rockPercentInput ? 'rock' : null),
+      onApply: changedField => applyMapSettingsAndRegenerate(changedField)
     })
   }
 
