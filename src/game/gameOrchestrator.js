@@ -43,6 +43,8 @@ import { initMapEditorControls } from '../ui/mapEditorControls.js'
 import { bindSidebarAccordions } from '../ui/sidebarAccordion.js'
 import { initializeSessionRNG } from '../network/deterministicRandom.js'
 import { resetHarvesterRuntimeState } from './harvesterLogic.js'
+import { clearTransientMapTraces } from './mapTraceReset.js'
+import { explosions as hostExplosions } from '../logic.js'
 
 
 const TILE_LENGTH_METERS = 10
@@ -1527,6 +1529,7 @@ class Game {
     gameState.attackGroupTargets = []
     gameState.unitWrecks = []
     gameState.selectedWreckId = null
+    clearTransientMapTraces(gameState, { explosionLists: [hostExplosions] })
     selectedUnits.length = 0
     gameState.remoteControl = {
       forward: 0,
@@ -1703,6 +1706,7 @@ class Game {
     gameState.defeatedPlayers = new Set()
     gameState.unitWrecks = []
     gameState.selectedWreckId = null
+    clearTransientMapTraces(gameState, { explosionLists: [hostExplosions] })
     selectedUnits.length = 0
     gameState.remoteControl = {
       forward: 0,

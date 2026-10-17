@@ -1,0 +1,9 @@
+{
+  "version": "0.59.0",
+  "features": [],
+  "improvements": [],
+  "bugfixes": [
+    "Track marks from the previous match are now removed when you restart, start a new map or load a savegame.",
+    "Explosions, smoke, mine sweeper dust and land and sea mines from the previous match no longer carry over into a restarted game."
+  ]
+}
