@@ -9,7 +9,7 @@
   border-top-color: rgba(100, 220, 180, 0.9);
   border-radius: 50%;
   pointer-events: none;
-  animation: map-action-hold var(--hold-time, 1300ms) linear forwards;
+  animation: map-action-hold var(--hold-time, 800ms) linear forwards;
 }
 @keyframes map-action-hold {
   from { transform: rotate(0deg) scale(0.7); opacity: 0.4; }

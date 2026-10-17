@@ -1,12 +1,12 @@
 import { afterEach, expect, it } from 'vitest'
 import { initSettingsModal, openSettingsModal } from '../../src/ui/settingsModal.js'
-import { MAP_ACTION_LONG_PRESS_MS, setMapActionLongPressMs } from '../../src/config.js'
+import { DEFAULT_MAP_ACTION_LONG_PRESS_MS, MAP_ACTION_LONG_PRESS_MS, setMapActionLongPressMs } from '../../src/config.js'
 
 // Opening through the public API may precede the idle startup initializer.
 afterEach(() => {
   document.body.innerHTML = ''
   document.body.className = ''
-  setMapActionLongPressMs(1500)
+  setMapActionLongPressMs(DEFAULT_MAP_ACTION_LONG_PRESS_MS)
 })
 
 it('binds hold duration before opening and tolerates deferred initialization afterward', () => {
