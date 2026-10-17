@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { setTileDecal, setWorldDecal, setBuildingDebrisDecals } from '../../src/game/tileDecals.js'
+import { setTileDecal, setWorldDecal, setBuildingDebrisDecals, isDecalBlockedTile, setDecalSurfaceBlocker } from '../../src/game/tileDecals.js'
 
 describe('tileDecals', () => {
   it('sets a deterministic decal variant from map seed and tile coordinate', () => {
@@ -92,5 +92,34 @@ describe('tileDecals', () => {
     expect(debrisDecal?.tag).toBe('debris')
     expect(mapGrid[0][0].decal?.tag).toBe('debris')
     expect(mapGrid[0][0].decalCounter).toBe(1)
+  })
+
+  it('only places impact and crater decals on passable tiles', () => {
+    const mapGrid = [[{ type: 'rock' }, { type: 'land', building: { type: 'powerPlant' } }, { type: 'land', seedCrystal: true }, { type: 'land' }, { type: 'land', building: { type: 'airstrip' }, buildOnlyOccupied: true }]]
+    const gameState = { mapSeed: '9' }
+    for (const x of [0, 1, 2]) {
+      expect(setTileDecal(mapGrid, gameState, x, 0, 'impact')).toBeNull()
+      expect(setTileDecal(mapGrid, gameState, x, 0, 'crater')).toBeNull()
+      expect(mapGrid[0][x].decal).toBeUndefined()
+    }
+    expect(setTileDecal(mapGrid, gameState, 3, 0, 'crater')?.tag).toBe('crater')
+    // Build-only airstrip tiles stay drivable, so they keep their marks.
+    expect(setTileDecal(mapGrid, gameState, 4, 0, 'impact')?.tag).toBe('impact')
+    // Debris is the rubble of a destroyed structure and may sit on its footprint.
+    expect(setTileDecal(mapGrid, gameState, 1, 0, 'debris')?.tag).toBe('debris')
+  })
+
+  it('consults registered surface blockers for impassable decorations', () => {
+    const mapGrid = [[{ type: 'land' }, { type: 'land' }]]
+    setDecalSurfaceBlocker('test', (_grid, x) => x === 1)
+    try {
+      expect(isDecalBlockedTile(mapGrid, 1, 0, 'impact')).toBe(true)
+      expect(isDecalBlockedTile(mapGrid, 0, 0, 'impact')).toBe(false)
+      expect(isDecalBlockedTile(mapGrid, 1, 0, 'debris')).toBe(false)
+      expect(setWorldDecal(mapGrid, { mapSeed: '1' }, 48, 16, 'crater')).toBeNull()
+    } finally {
+      setDecalSurfaceBlocker('test', null)
+    }
+    expect(isDecalBlockedTile(mapGrid, 1, 0, 'impact')).toBe(false)
   })
 })

@@ -5,6 +5,7 @@ import { prepareCityBuildings, getCityBuildings, applyCityDamage, applyCitySnaps
 import { createReplayEntityReference } from '../../src/replayCommandPrimitives.js'
 import { CITY_BUILDING_HEALTH } from '../../src/config.js'
 import { pathCache } from '../../src/game/pathCache.js'
+import { setTileDecal } from '../../src/game/tileDecals.js'
 
 vi.mock('../../src/sound.js', () => ({ playPositionalSound: vi.fn() }))
 vi.mock('../../src/game/spriteSheetEffects.js', () => ({ spawnDestructionExplosion: vi.fn() }))
@@ -143,5 +144,15 @@ describe('city structure lifecycle', () => {
     expect(getAttackableCityAtWorld(map, worldX, worldY)).toBe(building)
     applyCityDamage(building, 9999, map, {})
     expect(getAttackableCityAtWorld(map, worldX, worldY)).toBeNull()
+  })
+
+  it('leaves no impact decal on a living city building, but allows it once destroyed', () => {
+    const { map, buildings } = prepared()
+    const building = buildings[0]
+    expect(setTileDecal(map, {}, building.x + 1, building.y + 1, 'impact')).toBeNull()
+    expect(map[building.y + 1][building.x + 1].decal).toBeUndefined()
+    applyCityDamage(building, 9999, map, {})
+    expect(map[building.y][building.x].decal.tag).toBe('debris')
+    expect(setTileDecal(map, {}, building.x, building.y, 'crater')?.tag).toBe('crater')
   })
 })

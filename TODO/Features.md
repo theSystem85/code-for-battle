@@ -216,7 +216,7 @@ Completed entries stay here so the detail is not dropped. Do not add new work in
 
 - [x] **Biome-aware decorative map tiles (0.61.0; 2026-09-22, rebased 2026-10-17)** — hybrid per-biome + `universal` DT sprite sheets (WebP 85%, seasons/group tags, winter lakes impassable), per-cell placement by `tile.biome` so multi-tile groups stay inside one biome on mixed maps, organic DT retained, cliffs/boulders unchanged, skill at `skills/map-assets/SKILL.md`, sheets `dtv2_*` packed with the SSE (v2, 2026-10-16).
   - Spec: [Map Decorative Tiles Research](../specs/120-map-decorative-tiles-research.md)
-  - Round 3 (0.61.0, 2026-10-17): city HP cut tenfold (150/250/400); cities accept a normal attack click with the attack cursor; city houses sit on streets connected to the road network. Change note: [PR #688 round 3](../docs/changes/2026-10-17-pr688-round3.md); spec: [Destructible city buildings](../specs/132-destructible-city-buildings.md)
+  - Round 3 (0.61.0, 2026-10-17): city HP cut tenfold (150/250/400); cities accept a normal attack click with the attack cursor; city houses sit on streets connected to the road network; impact decals only on passable tiles. Change note: [PR #688 round 3](../docs/changes/2026-10-17-pr688-round3.md); spec: [Destructible city buildings](../specs/132-destructible-city-buildings.md)
 
 - [x] **Street sprite-sheet v24 routing follow-up (2026-04-26)** — replaced retired street-sheet defaults with `streets24_q90_1024x1024`, tightened street sprite selection to exact directional-tag matches, and made `full` street tiles dominant for diagonal corner clusters.
   - Spec: [Street sprite-sheet routing (streets24 default)](../specs/051-street-sheet-routing.md)
