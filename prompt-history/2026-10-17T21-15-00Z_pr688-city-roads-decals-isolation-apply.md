@@ -13,3 +13,8 @@ now rebase 688 on main (but do not merge yet) and then fix these issues:
 6) ensure when map properties are changed in the sidebar that the map does not immediately rerender but an apply button gets shown and enabled as soon as changes were detected.
 
 Outcome: rebased onto main 0.60.0 as 0.61.0, then one conventional commit per fix. See docs/changes/2026-10-17-pr688-round3.md.
+
+## Follow-up requests (same session)
+
+- Item 7: "non-winter shrubs and trees still show up on snow tiles. Make placement strict: on snow tiles, only place props with an explicit snow tag ... make sure the code is ready to pick up a new snow-tagged optional sheet."
+- Item 8: Patrick approved the winter sprite sources (`winter_shrubs`, `winter_pines`, `winter_bare_trees`, `winter_small`). Isolate them with the SSE flow keeping interior dark pixels, pack them into a new optional lossless WebP + JSON sheet at about 10 m per tile, tag them only with decorative, passable/impassable, snow and group tags, register it as optional so it is placed on snow, and verify it on a snow map.
