@@ -24,6 +24,25 @@ export const BIOME_SEASONS = Object.freeze({
 
 const SEASON_TAGS = new Set(['spring', 'summer', 'autumn', 'winter'])
 
+// Snow is strict: vegetation only lands on snow when the sprite is tagged
+// 'snow' explicitly (snowy trees and shrubs from a winter sheet). Universal
+// vegetation (green shrubs, trees, fields, reeds) is never borrowed for snow;
+// universal rocks, ruins, landmarks and other non-vegetation props still are.
+export const VEGETATION_TAGS = Object.freeze(['trees', 'tree', 'shrubs', 'shrub', 'bushes', 'bush', 'vegetation', 'plants', 'flowers', 'reeds', 'farm'])
+const VEGETATION_TAG_SET = new Set(VEGETATION_TAGS)
+
+export function isVegetationGroup(tagSet) {
+  for (const tag of tagSet) if (VEGETATION_TAG_SET.has(tag)) return true
+  return false
+}
+
+/** Whether a decorative group may be placed on the given biome by tags alone. */
+export function groupAllowedOnBiome(tagSet, biome) {
+  if (!(tagSet instanceof Set)) return false
+  if (biome === 'snow' && !tagSet.has('snow') && isVegetationGroup(tagSet)) return false
+  return true
+}
+
 // Universal sprites have their own painted ground. When most of the footprint
 // is still opaque after the ground cut-out (clearings, paths, rubble fields),
 // they would show as foreign ground patches on other biomes, so skip them.
@@ -95,6 +114,7 @@ export function buildDecorationPools(groups) {
     DECORATION_BIOMES.forEach((biome) => {
       if (!group.tagSet.has(biome) && (group.tagSet.has('ground_detail') || !isUniversal)) return
       if (!groupSeasonAllowed(group.tagSet, biome)) return
+      if (!groupAllowedOnBiome(group.tagSet, biome)) return
       const target = group.tagSet.has('ground_detail') ? pools[biome].groundDetail : (group.width * group.height) > 1 ? pools[biome].multi : pools[biome].single
       target.push(group)
     })

@@ -16,22 +16,33 @@ export const DEFAULT_SSE_SHEETS = Object.freeze([
 
 // Vite resolves availability at build time; missing future sheets never enter
 // either picker. Both image and metadata must exist before registration.
-const futureSheetFiles = import.meta.glob('/public/images/map/sprite_sheets/dtv3_*.{webp,json}', { eager: true, query: '?url', import: 'default' })
-export function availableFutureSheets(files, warn = console.warn) {
-  return ['dtv3_ground_detail', 'dtv3_shore', 'dtv3_city'].flatMap(name => {
-    const prefix = `/public/${SHEET_DIR}${name}`
-    if (Object.hasOwn(files, `${prefix}.webp`) && Object.hasOwn(files, `${prefix}.json`)) return [`${SHEET_DIR}${name}.webp`]
+// Besides the required dtv3 sheets, any other bundled `dtv<N>_<name>` pair
+// (for example a future snow-tagged winter sheet such as `dtv3_winter`) is
+// registered automatically, so dropping its .webp + .json into the folder is
+// enough to offer it.
+const futureSheetFiles = import.meta.glob('/public/images/map/sprite_sheets/dtv*_*.{webp,json}', { eager: true, query: '?url', import: 'default' })
+const REQUIRED_FUTURE_SHEETS = Object.freeze(['dtv3_ground_detail', 'dtv3_shore', 'dtv3_city'])
+const BASE_OPTIONAL_SHEETS = Object.freeze(['dtv2_grass', 'dtv2_soil', 'dtv2_sand', 'dtv2_snow', 'dtv2_universal'])
+export function availableFutureSheets(files = {}, warn = console.warn) {
+  files = files || {}
+  const prefixOf = name => `/public/${SHEET_DIR}${name}`
+  const hasPair = name => Object.hasOwn(files, `${prefixOf(name)}.webp`) && Object.hasOwn(files, `${prefixOf(name)}.json`)
+  const required = REQUIRED_FUTURE_SHEETS.flatMap(name => {
+    if (hasPair(name)) return [`${SHEET_DIR}${name}.webp`]
     warn(`Skipping unavailable optional sprite sheet: ${name}`)
     return []
   })
+  const known = new Set([...REQUIRED_FUTURE_SHEETS, ...BASE_OPTIONAL_SHEETS])
+  const discovered = [...new Set(Object.keys(files || {})
+    .map(path => path.match(/\/(dtv\d+_[A-Za-z0-9_-]+)\.(?:webp|json)$/)?.[1])
+    .filter(name => name && !known.has(name) && hasPair(name)))]
+    .sort()
+    .map(name => `${SHEET_DIR}${name}.webp`)
+  return [...required, ...discovered]
 }
 
 export const OPTIONAL_SSE_SHEETS = Object.freeze([
-  `${SHEET_DIR}dtv2_grass.webp`,
-  `${SHEET_DIR}dtv2_soil.webp`,
-  `${SHEET_DIR}dtv2_sand.webp`,
-  `${SHEET_DIR}dtv2_snow.webp`,
-  `${SHEET_DIR}dtv2_universal.webp`,
+  ...BASE_OPTIONAL_SHEETS.map(name => `${SHEET_DIR}${name}.webp`),
   ...availableFutureSheets(futureSheetFiles)
 ])
 
