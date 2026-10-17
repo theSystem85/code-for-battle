@@ -103,7 +103,7 @@ See [placement specification](../../specs/121-map-generator-placement-rules.md) 
 
 ## Destructible cities (PR #688 follow-up)
 
-`dtv3_city`, `dtv3_shore` and `dtv3_ground_detail` are registered as optional only when both WebP and JSON exist. Never put them in the default selection or the defaults-only `index.json`. City groups and all footprint cells carry `universal`, `decorative`, `impassable`, `city` and the matching `group_N` where needed. Keep propLayout ids stable.
+`dtv3_city`, `dtv3_shore` and `dtv3_ground_detail` are registered as optional only when both WebP and JSON exist. Any other bundled `dtv<N>_<name>` WebP + JSON pair (for example `dtv3_winter`, the snow vegetation sheet) is discovered and registered as optional automatically. Snow only receives vegetation tagged `snow`. Never put them in the default selection or the defaults-only `index.json`. City groups and all footprint cells carry `universal`, `decorative`, `impassable`, `city` and the matching `group_N` where needed. Keep propLayout ids stable.
 
 City groups use seeded city centers and a loose street grid, with whole-footprint keep-clear validation and no water. The four shared settings are `citySeeds` (2, 0–8), `cityClusterSize` (8, 3–20), `ruinSeeds` (3, 0–10) and `ruinClusterSize` (7, 3–20). Zero seeds disables that category. Maintain matching sidebar, storage/URL, save and host snapshot behavior.
 
