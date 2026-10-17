@@ -43,7 +43,8 @@ describe('city clusters and settings', () => {
     const clusters = buildRuinClusters(map, { salt: 688 + 7919, count: 2, radius: 8, minDistance: 1 })
     for (const placement of layout.placements) {
       const { anchorX: x, anchorY: y } = placement
-      expect(clusters.centers.some(c => Math.hypot(c.x - x, c.y - y) <= 8)).toBe(true)
+      // Organic cities: houses line streets that reach about one radius from the (possibly nudged) centre.
+      expect(clusters.centers.some(c => Math.hypot(c.x - x, c.y - y) <= 8 + 6)).toBe(true)
       for (let dy = 0; dy < 2; dy++) for (let dx = 0; dx < 2; dx++) {
         expect(map[y + dy][x + dx].type).toBe('land')
         expect(Math.hypot(x + dx - 20, y + dy - 20)).toBeGreaterThan(8)
