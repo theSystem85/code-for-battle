@@ -6,6 +6,7 @@ import { commandableSelection, applicableAutomations, mapActionOptions, applyMap
 import { broadcastGameCommand } from '../../network/commandBroadcast.js'
 import { COMMAND_TYPES } from '../../network/commandTypes.js'
 import { isLocalPartyAutomationLocked } from '../../network/multiplayerStore.js'
+import { fitMapActionLabels } from './mapActionLabels.js'
 import './mapActionMenu.css'
 
 const installedMenus = new WeakMap()
@@ -77,10 +78,12 @@ export function installMapActionMenu(canvas, { selection, units, commands, handl
             id: entry.policy.id, label: entry.policy.name, text: entry.policy.name, customTooltip: true,
             onSelect: () => { dispatch(id, { ...origin, policyId: entry.policy.id }); close() }
           })))
+          fitMapActionLabels(menu.element)
         } else { dispatch(id); close() }
       }
     }))
     menu.open(anchor, items)
+    fitMapActionLabels(menu.element)
     resetInput()
     return true
   }
