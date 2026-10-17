@@ -196,6 +196,13 @@ const definitions = [
       : ['base', 'construction-clip', 'selling-clip']
   })),
   ...['turretGunV1', 'turretGunV2', 'turretGunV3'].map((type, index) => ({
+    id: `building:${type}:barrel`,
+    source: buildingSource(`turret0${index + 1}_barrel.webp`),
+    target: { reference: buildingSource(`turret0${index + 1}_base.webp`), maxDimension: TILE_SIZE },
+    anchors: { muzzle: [0.5, 1] },
+    states: ['base', 'recoil', 'firing']
+  })),
+  ...['turretGunV1', 'turretGunV2', 'turretGunV3'].map((type, index) => ({
     id: `building:${type}:top`,
     source: buildingSource(`turret0${index + 1}_top.webp`),
     target: { width: TILE_SIZE, height: TILE_SIZE },

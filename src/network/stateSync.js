@@ -194,6 +194,18 @@ function simulationElapsed(simNow, startTime) {
   return typeof startTime === 'number' ? Math.max(0, simNow - startTime) : null
 }
 
+function restoreBuildingBarrelTimes(building, snapshot, simNow) {
+  const elapsed = snapshot.barrelShotElapsed
+  if (!Array.isArray(elapsed)) return
+  const count = Math.min(3, elapsed.length)
+  if (!building.barrelShotTimes || building.barrelShotTimes.length !== count) {
+    building.barrelShotTimes = new Array(count).fill(null)
+  }
+  for (let index = 0; index < count; index++) {
+    building.barrelShotTimes[index] = Number.isFinite(elapsed[index]) ? simNow - elapsed[index] : null
+  }
+}
+
 function ensureExplosionSyncId(exp) {
   if (!exp) return null
   if (!exp.id) {
@@ -592,6 +604,8 @@ export function createGameStateSnapshot({ fullAutomation = false } = {}) {
       ammo: building.ammo,
       maxAmmo: building.maxAmmo,
       turretDirection: building.turretDirection,
+      muzzleFlashIndex: building.muzzleFlashIndex,
+      barrelShotElapsed: building.barrelShotTimes?.map(time => simulationElapsed(simNow, time)),
       // Animation state uses the simulation clock on both peers
       muzzleFlashElapsed: simulationElapsed(simNow, building.muzzleFlashStartTime),
       recoilElapsed: simulationElapsed(simNow, building.recoilStartTime)
@@ -1092,6 +1106,7 @@ export function applyGameStateSnapshot(snapshot) {
         // Apply converted animation times
         existing.muzzleFlashStartTime = muzzleFlashStartTime
         existing.recoilStartTime = recoilStartTime
+        restoreBuildingBarrelTimes(existing, snapshotBuilding, simNow)
         existing.constructionStartTime = constructionStartTime
         existing.sellStartTime = sellStartTime
         return existing
@@ -1108,6 +1123,7 @@ export function applyGameStateSnapshot(snapshot) {
           constructionStartTime,
           sellStartTime
         }
+        restoreBuildingBarrelTimes(newBuilding, snapshotBuilding, simNow)
         newBuildings.push(newBuilding)
         return newBuilding
       }

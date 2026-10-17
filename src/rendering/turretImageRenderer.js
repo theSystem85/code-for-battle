@@ -1,13 +1,15 @@
 import { loadPreparedImage } from './prepared/imagePreparation.js'
 // turretImageRenderer.js
-// Renders turret buildings using separate base and top image assets
+// Renders turret buildings using separate foundation, housing and barrel image assets
 
 import turretImageConfig from '../turretImageConfig.json' with { type: 'json' }
-import { MUZZLE_FLASH_DURATION } from '../config.js'
+import { TURRET_RECOIL_DISTANCE } from '../config.js'
+import { getRecoilOffset, renderTurretMuzzleFlash } from './turretFiringEffects.js'
 import { gameState } from '../gameState.js'
 import { getSimulationTime } from '../game/time.js'
 import {
   drawPreparedSpriteCentered,
+  drawPreparedSpriteTopLeft,
   getPreparedBuildingLayer
 } from './prepared/preparedSpritePipeline.js'
 
@@ -42,7 +44,7 @@ export function preloadTurretImages(callback, onProgress) {
   const turretTypes = Object.keys(turretImageConfig)
   let loadedCount = 0
   let errorCount = 0
-  const totalImages = turretTypes.length * 2 // base and top for each turret
+  const totalImages = turretTypes.length * 3 // base, housing and barrel for each turret
 
   function onImageComplete() {
     loadedCount++
@@ -67,12 +69,13 @@ export function preloadTurretImages(callback, onProgress) {
     // Initialize cache for this turret type
     turretImageCache[turretType] = {}
 
-    if (getPreparedBuildingLayer(turretType, 'base') && getPreparedBuildingLayer(turretType, 'top')) {
+    if (getPreparedBuildingLayer(turretType, 'base') && getPreparedBuildingLayer(turretType, 'top') && getPreparedBuildingLayer(turretType, 'barrel')) {
+      onImageComplete()
       onImageComplete()
       onImageComplete()
       return
     }
-    for (const layer of ['base', 'top']) {
+    for (const layer of ['base', 'top', 'barrel']) {
       const path = `images/map/buildings/${config[layer]}`
       loadPreparedImage(path).then(image => {
         turretImageCache[turretType][layer] = image
@@ -95,17 +98,15 @@ export function preloadTurretImages(callback, onProgress) {
  * @returns {boolean} True if turret images are available and loaded
  */
 export function turretImagesAvailable(buildingType) {
-  if (getPreparedBuildingLayer(buildingType, 'base') && getPreparedBuildingLayer(buildingType, 'top')) return true
-  return turretImagesPreloaded &&
-         turretImageCache[buildingType] &&
-         turretImageCache[buildingType].base &&
-         turretImageCache[buildingType].top &&
-         turretImageCache[buildingType].base.complete &&
-         turretImageCache[buildingType].top.complete
+  if (getPreparedBuildingLayer(buildingType, 'base') &&
+      getPreparedBuildingLayer(buildingType, 'top') &&
+      getPreparedBuildingLayer(buildingType, 'barrel')) return true
+  const images = turretImageCache[buildingType]
+  return Boolean(turretImagesPreloaded && images?.base?.complete && images?.top?.complete && images?.barrel?.complete)
 }
 
 /**
- * Render a turret building using separate base and top image assets
+ * Render a turret building using separate foundation, housing and barrel image assets
  * @param {CanvasRenderingContext2D} ctx - Canvas context
  * @param {Object} building - Building object
  * @param {number} screenX - Screen X position
@@ -117,8 +118,9 @@ export function turretImagesAvailable(buildingType) {
 export function renderTurretWithImages(ctx, building, screenX, screenY, width, height) {
   const preparedBase = getPreparedBuildingLayer(building.type, 'base')
   const preparedTop = getPreparedBuildingLayer(building.type, 'top')
+  const preparedBarrel = getPreparedBuildingLayer(building.type, 'barrel')
   // Check if images are available for this building type
-  if (!preparedBase && !turretImagesAvailable(building.type)) {
+  if (!turretImagesAvailable(building.type)) {
     return false // Use fallback rendering
   }
 
@@ -150,7 +152,7 @@ export function renderTurretWithImages(ctx, building, screenX, screenY, width, h
   ctx.translate(centerX, centerY)
 
   // Rotate based on turret direction
-  // Building turret direction needs +π/2 adjustment for correct image orientation
+  // Source sprites face south; the config maps that direction to game-space aim.
   const rotationOffset = config.rotationOffset !== undefined ? config.rotationOffset : Math.PI / 2
   const turretRotation = (building.turretDirection || 0) + rotationOffset
   ctx.rotate(turretRotation)
@@ -168,36 +170,27 @@ export function renderTurretWithImages(ctx, building, screenX, screenY, width, h
     ctx.drawImage(topImg, -topWidth / 2, -topHeight / 2, topWidth, topHeight)
   }
 
-  // 3. Render muzzle flash if active
-  if (building.muzzleFlashStartTime && now - building.muzzleFlashStartTime <= MUZZLE_FLASH_DURATION) {
-    const flashProgress = (now - building.muzzleFlashStartTime) / MUZZLE_FLASH_DURATION
-    const flashAlpha = 1 - flashProgress
-    const flashSize = 20 * (1 - flashProgress * 0.5) // Start at 20px, shrink 50%
-
-    ctx.save()
-    ctx.globalAlpha = flashAlpha
-
-    // Support single or multiple muzzle flash offsets
-    const offsets = config.muzzleFlashOffsets || (config.muzzleFlashOffset ? [config.muzzleFlashOffset] : [])
-    const index = building.muzzleFlashIndex || 0
-    const offset = offsets[index] || offsets[0]
-
-    // Position flash at the configured offset from top-left of turret top image
-    // Convert from image coordinates to centered coordinates
-    const flashX = (offset.x - topSourceWidth / 2) * topScale
-    const flashY = (offset.y - topSourceHeight / 2) * topScale
-
-    // Create radial gradient for muzzle flash
-    const gradient = ctx.createRadialGradient(flashX, flashY, 0, flashX, flashY, flashSize)
-    gradient.addColorStop(0, '#FFF')
-    gradient.addColorStop(0.3, '#FF0')
-    gradient.addColorStop(1, 'rgba(255, 165, 0, 0)')
-
-    ctx.fillStyle = gradient
-    ctx.beginPath()
-    ctx.arc(flashX, flashY, flashSize, 0, Math.PI * 2)
-    ctx.fill()
-    ctx.restore()
+  // Only the fired barrel recoils; base and armored housing remain fixed.
+  // Bounded at three barrels, with no per-frame state allocation or entity scans.
+  const barrelImage = images?.barrel
+  const barrelWidth = preparedBarrel?.logicalWidth || barrelImage.width * baseScale
+  const barrelHeight = preparedBarrel?.logicalHeight || barrelImage.height * baseScale
+  const coordinateScale = topWidth / config.coordinateSize
+  const coordinateCenter = config.coordinateSize / 2
+  for (let index = 0; index < config.barrelMounts.length; index++) {
+    const mount = config.barrelMounts[index]
+    const isLastBarrel = index === (building.muzzleFlashIndex || 0)
+    const recoilTime = building.barrelShotTimes?.[index] ?? (isLastBarrel ? building.recoilStartTime : null)
+    const flashTime = building.barrelShotTimes?.[index] ?? (isLastBarrel ? building.muzzleFlashStartTime : null)
+    const recoil = getRecoilOffset(recoilTime, now, TURRET_RECOIL_DISTANCE)
+    const x = (mount.x - coordinateCenter) * coordinateScale
+    const y = (mount.y - coordinateCenter) * coordinateScale - recoil
+    if (preparedBarrel) {
+      drawPreparedSpriteTopLeft(ctx, preparedBarrel, x - barrelWidth / 2, y)
+    } else {
+      ctx.drawImage(barrelImage, x - barrelWidth / 2, y, barrelWidth, barrelHeight)
+    }
+    renderTurretMuzzleFlash(ctx, x, y + barrelHeight, flashTime, now)
   }
 
   ctx.restore() // Restore turret rotation
@@ -216,7 +209,7 @@ export function getTurretImageCacheStats() {
     types: Object.keys(turretImageCache),
     totalImages: Object.keys(turretImageCache).reduce((count, type) => {
       const cache = turretImageCache[type]
-      return count + (cache.base ? 1 : 0) + (cache.top ? 1 : 0)
+      return count + (cache.base ? 1 : 0) + (cache.top ? 1 : 0) + (cache.barrel ? 1 : 0)
     }, 0)
   }
 }

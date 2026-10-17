@@ -655,9 +655,10 @@ function fireTurretProjectile(building, target, centerX, centerY, now, bullets, 
     if (points && points.length > 0) {
       const idx = building.nextSpawnIndex || 0
       const pt = points[idx % points.length]
-      const scale = TILE_SIZE / 64 // images are 64px base size
-      const localX = (pt.x - 32) * scale
-      const localY = (pt.y - 32) * scale
+      const coordinateSize = cfg.coordinateSize || 64
+      const scale = TILE_SIZE / coordinateSize
+      const localX = (pt.x - coordinateSize / 2) * scale
+      const localY = (pt.y - coordinateSize / 2) * scale
       const rotationOffset = cfg.rotationOffset !== undefined ? cfg.rotationOffset : Math.PI / 2
       const rot = (building.turretDirection || 0) + rotationOffset
       const cos = Math.cos(rot)
@@ -789,6 +790,11 @@ function fireTurretProjectile(building, target, centerX, centerY, now, bullets, 
   // Trigger recoil and muzzle flash animations for turrets
   building.recoilStartTime = now
   building.muzzleFlashStartTime = now
+  const gunConfig = getTurretImageConfig(building.type)
+  if (gunConfig?.barrelMounts) {
+    if (!building.barrelShotTimes) building.barrelShotTimes = new Array(gunConfig.barrelMounts.length).fill(null)
+    building.barrelShotTimes[building.muzzleFlashIndex || 0] = now
+  }
 
   // Don't update lastShotTime here - it's handled in the main firing logic
 }
