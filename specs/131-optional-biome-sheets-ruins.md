@@ -1,6 +1,6 @@
 # Optional biome sheets and clustered ruins
 
-Version: 0.56.0. Follow-up to PR #688.
+Version: 0.61.0 (originally 0.56.0, renumbered on the 2026-10-17 rebase). Follow-up to PR #688.
 
 - Keep the seven main sprite sheets in their original order in the default registry and index.
 - Offer all five dtv2 sheets as optional custom sheets in Map Settings and SSE. Do not select them automatically.
