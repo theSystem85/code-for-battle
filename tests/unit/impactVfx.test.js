@@ -1,3 +1,4 @@
+import { UNIT_PROPERTIES } from '../../src/config.js'
 import { deterministicRNG } from '../../src/network/deterministicRandom.js'
 import { describe, expect, it, vi } from 'vitest'
 import { ImpactVfx, createImpactVisual, selectImpactProfile, MAX_IMPACT_PARTICLES, MOBILE_IMPACT_PARTICLES, isLowImpactQuality } from '../../src/rendering/vfx/impactVfx.js'
@@ -9,7 +10,7 @@ describe('impact visuals', () => {
   it.each(['tank', 'tank_v1', 'tank-v2', 'tank-v3'])('selects blasty for %s', type => {
     expect(selectImpactProfile(type)).toBe('blasty')
   })
-  it.each(['m2', 'bradley', 'm2Bradley', 'bradleyM2'])('selects sparky for %s', type => {
+  it.each(['lightTank', 'm2', 'bradley', 'm2Bradley', 'bradleyM2'])('selects sparky for %s', type => {
     expect(selectImpactProfile(type)).toBe('sparky')
   })
   it('uses shooter profile for generic shells, actual travel direction and collision surface', () => {
@@ -20,6 +21,38 @@ describe('impact visuals', () => {
     expect(visual.impactSurface).toBe('ground')
     expect(projectile).toEqual({ vx: 0, vy: 2, originType: 'shell', target: { width: 2 } })
     expect(selectImpactProfile('unknown')).toBe('default')
+  })
+  it('reads the configured profile and resolves actual Bradley projectile and shooter IDs', () => {
+    for (const type of ['tank', 'tank_v1', 'tank-v2', 'tank-v3', 'lightTank']) {
+      expect(selectImpactProfile(type)).toBe(UNIT_PROPERTIES[type].impactVfxProfile)
+    }
+    expect(UNIT_PROPERTIES.tank).toBe(UNIT_PROPERTIES.tank_v1)
+    expect(Object.keys(UNIT_PROPERTIES)).not.toContain('tank')
+    expect(createImpactVisual(0, 0, 0, 40, null, { originType: 'lightTank' }).impactProfile).toBe('sparky')
+    expect(createImpactVisual(0, 0, 0, 40, { type: 'lightTank' }, { originType: 'shell' }).impactProfile).toBe('sparky')
+  })
+  it('maintains a bright tank body beyond 300 ms at more than twice the old radius', () => {
+    const pool = new ImpactVfx()
+    pool.emit(explosion(), 0, false)
+    const flash = pool.particles.find(p => p.kind === 4 && p.life)
+    expect(flash.life).toBe(400)
+    expect(flash.size).toBeGreaterThan(80)
+    const ctx = context()
+    pool.render(ctx, {}, { x: 0, y: 0 }, 310, 200, 200)
+    expect(ctx.arc.mock.calls.some(call => call[2] > 80)).toBe(true)
+  })
+  it('adds scorch, dirt and more dust on ground, with more sparks on metal', () => {
+    for (const profile of ['sparky', 'blasty']) {
+      const ground = new ImpactVfx()
+      const metal = new ImpactVfx()
+      ground.emit({ ...explosion(profile), impactSurface: 'ground' }, 0, false)
+      metal.emit(explosion(profile), 0, false)
+      const count = (pool, kind) => pool.particles.filter(p => p.life && p.kind === kind).length
+      expect(count(ground, 5)).toBe(1)
+      expect(count(metal, 5)).toBe(0)
+      expect(count(ground, 3)).toBeGreaterThan(count(metal, 3))
+      expect(count(metal, 0)).toBeGreaterThan(count(ground, 0))
+    }
   })
   it('reuses preallocated slots under sustained overload and emits each impact only once', () => {
     const pool = new ImpactVfx()
@@ -37,9 +70,9 @@ describe('impact visuals', () => {
     const pool = new ImpactVfx()
     pool.emit(explosion('sparky'), 0, false)
     const active = pool.particles.filter(p => p.life > 0)
-    expect(active.length).toBeGreaterThan(12)
+    expect(active.length).toBeGreaterThanOrEqual(25)
     expect(active.every(p => p.kind === 0 || p.kind === 4)).toBe(true)
-    expect(active.every(p => p.life <= 260)).toBe(true)
+    expect(active.every(p => p.life <= 400)).toBe(true)
     expect(active.find(p => p.kind === 4).size).toBeLessThanOrEqual(4)
     expect(active.filter(p => p.kind === 0).every(p => p.vx < 0)).toBe(true)
   })
@@ -58,7 +91,10 @@ describe('impact visuals', () => {
     const metal = new ImpactVfx()
     ground.emit({ ...explosion('sparky'), impactSurface: 'ground' }, 0, false)
     metal.emit(explosion('sparky'), 0, false)
-    expect(Math.abs(ground.particles[1].vy / ground.particles[1].vx)).toBeGreaterThan(Math.abs(metal.particles[1].vy / metal.particles[1].vx))
+    const angles = pool => pool.particles.filter(p => p.life && p.kind === 0).map(p => Math.abs(Math.atan2(-p.vy, -p.vx)))
+    expect(Math.max(...angles(ground))).toBeGreaterThan(0.6)
+    expect(angles(ground).every(angle => angle <= 1.3)).toBe(true)
+    expect(angles(metal).every(angle => angle <= 0.6)).toBe(true)
   })
   it('scales mobile counts, suppresses the pulse, expires and culls particles, and restores canvas state', () => {
     const pool = new ImpactVfx()
@@ -110,16 +146,16 @@ describe('impact visuals', () => {
     expect(pool.prepare(5)).toBeNull()
     pool.prepare(1)
   })
-  it('draws only line segments for sparks and never strokes an explosion circle', () => {
+  it.each(['blasty', 'sparky', 'default'])('never strokes a circle for %s', profile => {
     const pool = new ImpactVfx()
     const ctx = context()
     let circleInPath = false
     ctx.beginPath.mockImplementation(() => { circleInPath = false })
     ctx.arc.mockImplementation(() => { circleInPath = true })
     ctx.stroke.mockImplementation(() => { expect(circleInPath).toBe(false) })
-    pool.emit(explosion(), 0, false)
+    pool.emit(explosion(profile), 0, false)
     pool.render(ctx, {}, { x: 0, y: 0 }, 80, 200, 200)
-    expect(ctx.drawImage).toHaveBeenCalled()
+    expect(ctx.drawImage).not.toHaveBeenCalled()
     expect(ctx.arc).toHaveBeenCalled()
     expect(ctx.stroke).toHaveBeenCalled()
   })
