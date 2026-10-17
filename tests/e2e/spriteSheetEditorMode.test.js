@@ -413,7 +413,7 @@ test.describe('Sprite Sheet Editor integration', () => {
       return {
         rockNull: rockTile === null,
         // Streets always fall back to the bundled default street sheet.
-        streetNullOrDefault: streetTile === null || String(streetTile.sheetPath || '').includes('streets24'),
+        streetNullOrDefault: streetTile === null,
         waterNull: waterTile === null,
         landNull: landTile === null
       }

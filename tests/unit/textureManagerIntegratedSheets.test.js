@@ -1,4 +1,3 @@
-import { readFileSync } from 'node:fs'
 import { describe, it, expect, vi } from 'vitest'
 import { TextureManager } from '../../src/rendering/textureManager.js'
 import { buildOccupancyMap } from '../../src/units.js'
@@ -388,13 +387,13 @@ describe('TextureManager integrated multi-sheet selection', () => {
           tags: ['street', 'top'],
           rect: { x: 0, y: 0, width: 64, height: 64 },
           image: { id: 'default-streets' },
-          sheetPath: 'images/map/sprite_sheets/streets24_q90_1024x1024.webp'
+          sheetPath: 'images/map/sprite_sheets/custom_streets.webp'
         },
         {
           tags: ['street', 'top', 'left'],
           rect: { x: 64, y: 0, width: 64, height: 64 },
           image: { id: 'default-streets' },
-          sheetPath: 'images/map/sprite_sheets/streets24_q90_1024x1024.webp'
+          sheetPath: 'images/map/sprite_sheets/custom_streets.webp'
         }
       ]
     }
@@ -417,13 +416,13 @@ describe('TextureManager integrated multi-sheet selection', () => {
           tags: ['street', 'top', 'left'],
           rect: { x: 0, y: 0, width: 64, height: 64 },
           image: { id: 'default-streets' },
-          sheetPath: 'images/map/sprite_sheets/streets24_q90_1024x1024.webp'
+          sheetPath: 'images/map/sprite_sheets/custom_streets.webp'
         },
         {
           tags: ['street', 'full', 'top', 'bottom', 'left', 'right'],
           rect: { x: 64, y: 0, width: 64, height: 64 },
           image: { id: 'default-streets' },
-          sheetPath: 'images/map/sprite_sheets/streets24_q90_1024x1024.webp'
+          sheetPath: 'images/map/sprite_sheets/custom_streets.webp'
         }
       ],
       full: [
@@ -431,7 +430,7 @@ describe('TextureManager integrated multi-sheet selection', () => {
           tags: ['street', 'full', 'top', 'bottom', 'left', 'right'],
           rect: { x: 64, y: 0, width: 64, height: 64 },
           image: { id: 'default-streets' },
-          sheetPath: 'images/map/sprite_sheets/streets24_q90_1024x1024.webp'
+          sheetPath: 'images/map/sprite_sheets/custom_streets.webp'
         }
       ]
     }
@@ -452,13 +451,13 @@ describe('TextureManager integrated multi-sheet selection', () => {
       tags: ['street', 'grass', 'top', 'bottom', 'left', 'right'],
       rect: { x: 256, y: 256, width: 64, height: 64 },
       image: { id: 'default-streets' },
-      sheetPath: 'images/map/sprite_sheets/streets24_q90_1024x1024.webp'
+      sheetPath: 'images/map/sprite_sheets/custom_streets.webp'
     }
     const grassRightT = {
       tags: ['street', 'grass', 'top', 'bottom', 'right'],
       rect: { x: 320, y: 256, width: 64, height: 64 },
       image: { id: 'default-streets' },
-      sheetPath: 'images/map/sprite_sheets/streets24_q90_1024x1024.webp'
+      sheetPath: 'images/map/sprite_sheets/custom_streets.webp'
     }
     manager.defaultStreetTagBuckets = {
       street: [grassFourWay, grassRightT],
@@ -483,29 +482,19 @@ describe('TextureManager integrated multi-sheet selection', () => {
     expect(manager.selectStreetTileByTags(['street'], 1, 1, rightTGrid)).toBe(grassRightT)
   })
 
-  it('keeps the real streets24 grass T and 4-way metadata distinct', () => {
-    const metadata = JSON.parse(readFileSync(
-      'public/images/map/sprite_sheets/streets24_q90_1024x1024.json',
-      'utf8'
-    ))
-
-    expect(metadata.tiles['4,4'].tags).toEqual(['street', 'grass', 'right', 'top', 'bottom'])
-    expect(metadata.tiles['5,4'].tags).toEqual(['street', 'grass', 'left', 'right', 'top', 'bottom'])
-  })
-
   it('selects only full-tagged street tiles for SOT fill art', () => {
     const manager = new TextureManager()
     const isolatedStreet = {
       tags: ['street', 'grass'],
       rect: { x: 0, y: 0, width: 64, height: 64 },
       image: { id: 'default-streets' },
-      sheetPath: 'images/map/sprite_sheets/streets24_q90_1024x1024.webp'
+      sheetPath: 'images/map/sprite_sheets/custom_streets.webp'
     }
     const fullGrassStreet = {
       tags: ['street', 'full', 'grass'],
       rect: { x: 64, y: 0, width: 64, height: 64 },
       image: { id: 'default-streets' },
-      sheetPath: 'images/map/sprite_sheets/streets24_q90_1024x1024.webp'
+      sheetPath: 'images/map/sprite_sheets/custom_streets.webp'
     }
     manager.defaultStreetTagBuckets = {
       street: [isolatedStreet, fullGrassStreet],
@@ -524,7 +513,7 @@ describe('TextureManager integrated multi-sheet selection', () => {
       tags: ['street', 'grass', 'top', 'right'],
       rect: { x: 0, y: 0, width: 64, height: 64 },
       image: { id: 'default-streets' },
-      sheetPath: 'images/map/sprite_sheets/streets24_q90_1024x1024.webp'
+      sheetPath: 'images/map/sprite_sheets/custom_streets.webp'
     }
     manager.defaultStreetTagBuckets = {
       street: [streetCorner],
@@ -549,32 +538,6 @@ describe('TextureManager integrated multi-sheet selection', () => {
     expect(second).toBe(streetCorner)
     expect(lookupSpy.mock.calls.length).toBe(callsAfterFirst)
     expect(poolSpy).toHaveBeenCalledTimes(1)
-  })
-
-  it('loads the dedicated street atlas instead of the combined major atlas', async() => {
-    const manager = new TextureManager()
-    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
-      ok: true,
-      json: async() => ({
-        blendMode: 'alpha',
-        tiles: {
-          '0,0': {
-            tags: ['street', 'grass'],
-            rect: { x: 0, y: 0, width: 64, height: 64 }
-          }
-        }
-      })
-    })
-    const imageSpy = vi.spyOn(manager, 'loadIntegratedSpriteSheetImage').mockResolvedValue({ id: 'street-only' })
-
-    await manager.preloadDefaultStreetSheet()
-
-    expect(fetchSpy).toHaveBeenCalledWith(
-      'images/map/sprite_sheets/streets24_q90_1024x1024.json',
-      expect.objectContaining({ cache: 'no-cache', signal: expect.any(globalThis.AbortSignal) })
-    )
-    expect(imageSpy).toHaveBeenCalledWith('images/map/sprite_sheets/streets24_q90_1024x1024.webp')
-    expect(manager.defaultStreetSheetImage).toEqual({ id: 'street-only' })
   })
 
   it('places multi-tile decorations from the layout, inside one biome, and frozen lakes block movement', async() => {
