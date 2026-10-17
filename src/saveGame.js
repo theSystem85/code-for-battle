@@ -335,6 +335,7 @@ function ensureMapGridMatchesDimensions(grid, width, height) {
 function createSerializableMapTile(tile = {}) {
   return {
     cityBuilding: tile.cityBuilding ? { ...tile.cityBuilding } : undefined,
+    cityStreet: tile.cityStreet ? true : undefined,
     type: typeof tile.type === 'string' ? tile.type : 'land',
     ore: Boolean(tile.ore),
     oreDensity: Number.isFinite(tile.oreDensity) ? Math.max(0, Math.min(5, Math.floor(tile.oreDensity))) : undefined,
@@ -410,6 +411,8 @@ function restoreStaticMapTiles(loaded, targetMapGrid) {
           ? Math.max(0, Math.min(5, Math.floor(savedTile.seedCrystalDensity)))
           : (targetTile.seedCrystal ? Math.max(1, targetTile.oreDensity || 1) : 0)
         targetTile.cityBuilding = savedTile?.cityBuilding ? { ...savedTile.cityBuilding } : undefined
+        if (savedTile?.cityStreet) targetTile.cityStreet = true
+        else delete targetTile.cityStreet
         targetTile.decal = savedTile?.decal && typeof savedTile.decal.tag === 'string'
           ? {
             tag: savedTile.decal.tag,
