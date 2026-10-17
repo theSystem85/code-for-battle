@@ -7,7 +7,8 @@
   "blendMode": "black",
   "tags": [
     "decorative",
-    "universal"
+    "universal",
+    "inner_cuts"
   ],
   "columns": 6,
   "rows": 7,
@@ -457,7 +458,8 @@
         "universal",
         "decorative",
         "passable",
-        "roadside"
+        "roadside",
+        "inner_cuts"
       ],
       "rect": {
         "x": 128,
@@ -505,7 +507,8 @@
         "universal",
         "decorative",
         "passable",
-        "roadside"
+        "roadside",
+        "inner_cuts"
       ],
       "rect": {
         "x": 320,
@@ -521,7 +524,8 @@
         "universal",
         "decorative",
         "passable",
-        "roadside"
+        "roadside",
+        "inner_cuts"
       ],
       "rect": {
         "x": 0,
@@ -537,7 +541,8 @@
         "universal",
         "decorative",
         "passable",
-        "roadside"
+        "roadside",
+        "inner_cuts"
       ],
       "rect": {
         "x": 64,
@@ -601,7 +606,8 @@
         "universal",
         "decorative",
         "passable",
-        "roadside"
+        "roadside",
+        "inner_cuts"
       ],
       "rect": {
         "x": 320,
@@ -787,7 +793,8 @@
         "universal",
         "decorative",
         "passable",
-        "roadside"
+        "roadside",
+        "inner_cuts"
       ]
     },
     {
@@ -829,7 +836,8 @@
         "universal",
         "decorative",
         "passable",
-        "roadside"
+        "roadside",
+        "inner_cuts"
       ]
     },
     {
@@ -843,7 +851,8 @@
         "universal",
         "decorative",
         "passable",
-        "roadside"
+        "roadside",
+        "inner_cuts"
       ]
     },
     {
@@ -857,7 +866,8 @@
         "universal",
         "decorative",
         "passable",
-        "roadside"
+        "roadside",
+        "inner_cuts"
       ]
     },
     {
@@ -913,7 +923,8 @@
         "universal",
         "decorative",
         "passable",
-        "roadside"
+        "roadside",
+        "inner_cuts"
       ]
     },
     {

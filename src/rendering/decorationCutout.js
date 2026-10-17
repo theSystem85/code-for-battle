@@ -118,7 +118,11 @@ export function cutoutDecorationGroup(group, cellSize = 64) {
   }
   // Key only ground connected to the group's outer border; ground-coloured
   // or dark pixels enclosed by the sprite are part of it and stay opaque.
-  const background = keyGround ? floodBorderBackground(data, width, height, index => !data[index * 4 + 3] || groundDistance(index) < KEY_OUTER) : null
+  // Sprites tagged inner_cuts (crowns, fences, arches) also key enclosed ground.
+  const innerCuts = group.tagSet instanceof Set
+    ? group.tagSet.has('inner_cuts')
+    : Object.values(group.tilesByOffset).some(tile => tile?.tags?.includes('inner_cuts'))
+  const background = keyGround && !innerCuts ? floodBorderBackground(data, width, height, index => !data[index * 4 + 3] || groundDistance(index) < KEY_OUTER) : null
 
   let alphaSum = 0
   for (let y = 0; y < height; y++) {
@@ -126,7 +130,7 @@ export function cutoutDecorationGroup(group, cellSize = 64) {
     for (let x = 0; x < width; x++) {
       const i = ((y * width) + x) * 4
       if (!data[i + 3]) continue
-      const keep = background?.[(y * width) + x] ? smoothstep(KEY_INNER, KEY_OUTER, groundDistance((y * width) + x)) : 1
+      const keep = (innerCuts && keyGround) || background?.[(y * width) + x] ? smoothstep(KEY_INNER, KEY_OUTER, groundDistance((y * width) + x)) : 1
       const edge = Math.min(edgeY, x, width - 1 - x)
       const featherWidth = keyGround
         ? FEATHER_PX

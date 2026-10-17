@@ -11,7 +11,8 @@
     "passable",
     "sand",
     "snow",
-    "soil"
+    "soil",
+    "inner_cuts"
   ],
   "columns": 6,
   "rows": 6,
@@ -170,7 +171,8 @@
         "sand",
         "snow",
         "ground_detail",
-        "passable"
+        "passable",
+        "inner_cuts"
       ],
       "rect": {
         "x": 192,
@@ -188,7 +190,8 @@
         "sand",
         "snow",
         "ground_detail",
-        "passable"
+        "passable",
+        "inner_cuts"
       ],
       "rect": {
         "x": 256,
@@ -206,7 +209,8 @@
         "sand",
         "snow",
         "ground_detail",
-        "passable"
+        "passable",
+        "inner_cuts"
       ],
       "rect": {
         "x": 320,
@@ -242,7 +246,8 @@
         "sand",
         "snow",
         "ground_detail",
-        "passable"
+        "passable",
+        "inner_cuts"
       ],
       "rect": {
         "x": 64,
@@ -562,7 +567,8 @@
         "sand",
         "snow",
         "ground_detail",
-        "passable"
+        "passable",
+        "inner_cuts"
       ]
     },
     {
@@ -578,7 +584,8 @@
         "sand",
         "snow",
         "ground_detail",
-        "passable"
+        "passable",
+        "inner_cuts"
       ]
     },
     {
@@ -594,7 +601,8 @@
         "sand",
         "snow",
         "ground_detail",
-        "passable"
+        "passable",
+        "inner_cuts"
       ]
     },
     {
@@ -626,7 +634,8 @@
         "sand",
         "snow",
         "ground_detail",
-        "passable"
+        "passable",
+        "inner_cuts"
       ]
     },
     {

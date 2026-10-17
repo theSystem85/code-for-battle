@@ -82,7 +82,7 @@ describe('dtv3_winter sheet', () => {
     const { readFileSync } = await import('node:fs')
     const sheet = JSON.parse(readFileSync('public/images/map/sprite_sheets/dtv3_winter.json', 'utf8'))
     expect(sheet.sheetPath).toBe('images/map/sprite_sheets/dtv3_winter.webp')
-    const allowed = /^(decorative|passable|impassable|snow|group_\d+)$/
+    const allowed = /^(decorative|passable|impassable|snow|inner_cuts|group_\d+)$/
     for (const tile of Object.values(sheet.tiles)) {
       expect(tile.tags.every(tag => allowed.test(tag))).toBe(true)
       expect(tile.tags).toEqual(expect.arrayContaining(['decorative', 'snow']))

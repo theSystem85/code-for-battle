@@ -9,7 +9,8 @@
     "decorative",
     "impassable",
     "passable",
-    "snow"
+    "snow",
+    "inner_cuts"
   ],
   "columns": 6,
   "rows": 8,
@@ -23,7 +24,8 @@
         "decorative",
         "impassable",
         "snow",
-        "group_1"
+        "group_1",
+        "inner_cuts"
       ],
       "rect": {
         "x": 0,
@@ -39,7 +41,8 @@
         "decorative",
         "impassable",
         "snow",
-        "group_1"
+        "group_1",
+        "inner_cuts"
       ],
       "rect": {
         "x": 64,
@@ -55,7 +58,8 @@
         "decorative",
         "impassable",
         "snow",
-        "group_2"
+        "group_2",
+        "inner_cuts"
       ],
       "rect": {
         "x": 128,
@@ -71,7 +75,8 @@
         "decorative",
         "impassable",
         "snow",
-        "group_2"
+        "group_2",
+        "inner_cuts"
       ],
       "rect": {
         "x": 192,
@@ -87,7 +92,8 @@
         "decorative",
         "impassable",
         "snow",
-        "group_3"
+        "group_3",
+        "inner_cuts"
       ],
       "rect": {
         "x": 256,
@@ -103,7 +109,8 @@
         "decorative",
         "impassable",
         "snow",
-        "group_3"
+        "group_3",
+        "inner_cuts"
       ],
       "rect": {
         "x": 320,
@@ -119,7 +126,8 @@
         "decorative",
         "impassable",
         "snow",
-        "group_1"
+        "group_1",
+        "inner_cuts"
       ],
       "rect": {
         "x": 0,
@@ -135,7 +143,8 @@
         "decorative",
         "impassable",
         "snow",
-        "group_1"
+        "group_1",
+        "inner_cuts"
       ],
       "rect": {
         "x": 64,
@@ -151,7 +160,8 @@
         "decorative",
         "impassable",
         "snow",
-        "group_2"
+        "group_2",
+        "inner_cuts"
       ],
       "rect": {
         "x": 128,
@@ -167,7 +177,8 @@
         "decorative",
         "impassable",
         "snow",
-        "group_2"
+        "group_2",
+        "inner_cuts"
       ],
       "rect": {
         "x": 192,
@@ -183,7 +194,8 @@
         "decorative",
         "impassable",
         "snow",
-        "group_3"
+        "group_3",
+        "inner_cuts"
       ],
       "rect": {
         "x": 256,
@@ -199,7 +211,8 @@
         "decorative",
         "impassable",
         "snow",
-        "group_3"
+        "group_3",
+        "inner_cuts"
       ],
       "rect": {
         "x": 320,
@@ -215,7 +228,8 @@
         "decorative",
         "impassable",
         "snow",
-        "group_4"
+        "group_4",
+        "inner_cuts"
       ],
       "rect": {
         "x": 0,
@@ -231,7 +245,8 @@
         "decorative",
         "impassable",
         "snow",
-        "group_4"
+        "group_4",
+        "inner_cuts"
       ],
       "rect": {
         "x": 64,
@@ -247,7 +262,8 @@
         "decorative",
         "impassable",
         "snow",
-        "group_5"
+        "group_5",
+        "inner_cuts"
       ],
       "rect": {
         "x": 128,
@@ -263,7 +279,8 @@
         "decorative",
         "impassable",
         "snow",
-        "group_5"
+        "group_5",
+        "inner_cuts"
       ],
       "rect": {
         "x": 192,
@@ -279,7 +296,8 @@
         "decorative",
         "impassable",
         "snow",
-        "group_6"
+        "group_6",
+        "inner_cuts"
       ],
       "rect": {
         "x": 256,
@@ -295,7 +313,8 @@
         "decorative",
         "impassable",
         "snow",
-        "group_6"
+        "group_6",
+        "inner_cuts"
       ],
       "rect": {
         "x": 320,
@@ -311,7 +330,8 @@
         "decorative",
         "impassable",
         "snow",
-        "group_4"
+        "group_4",
+        "inner_cuts"
       ],
       "rect": {
         "x": 0,
@@ -327,7 +347,8 @@
         "decorative",
         "impassable",
         "snow",
-        "group_4"
+        "group_4",
+        "inner_cuts"
       ],
       "rect": {
         "x": 64,
@@ -343,7 +364,8 @@
         "decorative",
         "impassable",
         "snow",
-        "group_5"
+        "group_5",
+        "inner_cuts"
       ],
       "rect": {
         "x": 128,
@@ -359,7 +381,8 @@
         "decorative",
         "impassable",
         "snow",
-        "group_5"
+        "group_5",
+        "inner_cuts"
       ],
       "rect": {
         "x": 192,
@@ -375,7 +398,8 @@
         "decorative",
         "impassable",
         "snow",
-        "group_6"
+        "group_6",
+        "inner_cuts"
       ],
       "rect": {
         "x": 256,
@@ -391,7 +415,8 @@
         "decorative",
         "impassable",
         "snow",
-        "group_6"
+        "group_6",
+        "inner_cuts"
       ],
       "rect": {
         "x": 320,
@@ -775,7 +800,8 @@
         "decorative",
         "impassable",
         "snow",
-        "group_1"
+        "group_1",
+        "inner_cuts"
       ]
     },
     {
@@ -789,7 +815,8 @@
         "decorative",
         "impassable",
         "snow",
-        "group_2"
+        "group_2",
+        "inner_cuts"
       ]
     },
     {
@@ -803,7 +830,8 @@
         "decorative",
         "impassable",
         "snow",
-        "group_3"
+        "group_3",
+        "inner_cuts"
       ]
     },
     {
@@ -817,7 +845,8 @@
         "decorative",
         "impassable",
         "snow",
-        "group_4"
+        "group_4",
+        "inner_cuts"
       ]
     },
     {
@@ -831,7 +860,8 @@
         "decorative",
         "impassable",
         "snow",
-        "group_5"
+        "group_5",
+        "inner_cuts"
       ]
     },
     {
@@ -845,7 +875,8 @@
         "decorative",
         "impassable",
         "snow",
-        "group_6"
+        "group_6",
+        "inner_cuts"
       ]
     },
     {
@@ -1165,7 +1196,8 @@
         "decorative",
         "impassable",
         "snow",
-        "group_1"
+        "group_1",
+        "inner_cuts"
       ],
       "propId": "winter_bare_tree_01"
     },
@@ -1188,7 +1220,8 @@
         "decorative",
         "impassable",
         "snow",
-        "group_2"
+        "group_2",
+        "inner_cuts"
       ],
       "propId": "winter_bare_tree_02"
     },
@@ -1211,7 +1244,8 @@
         "decorative",
         "impassable",
         "snow",
-        "group_3"
+        "group_3",
+        "inner_cuts"
       ],
       "propId": "winter_bare_tree_03"
     },
@@ -1234,7 +1268,8 @@
         "decorative",
         "impassable",
         "snow",
-        "group_4"
+        "group_4",
+        "inner_cuts"
       ],
       "propId": "winter_bare_tree_04"
     },
@@ -1257,7 +1292,8 @@
         "decorative",
         "impassable",
         "snow",
-        "group_5"
+        "group_5",
+        "inner_cuts"
       ],
       "propId": "winter_bare_tree_05"
     },
@@ -1280,7 +1316,8 @@
         "decorative",
         "impassable",
         "snow",
-        "group_6"
+        "group_6",
+        "inner_cuts"
       ],
       "propId": "winter_bare_tree_06"
     },

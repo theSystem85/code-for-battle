@@ -12,11 +12,14 @@ export function applyBlackKey(data, cutoffBrightness = 24, softenBrightness = 48
 
 const GROUP_TAG = /^group_\d+$/
 
+export const INNER_CUTS_TAG = 'inner_cuts'
+
 /**
  * Pixels the edge-connected black key may start from: everything outside the
  * sheet's tile rects (gutters, unused cells), the image border, and each
  * tile's outer edges. Edges shared with another tile of the same multi-tile
- * group are interior seams of one sprite and are not seeded.
+ * group are interior seams of one sprite and are not seeded. Tiles tagged
+ * `inner_cuts` are seeded completely, so their enclosed black is keyed too.
  */
 export function buildBlackKeySeedMask(width, height, metadata = null) {
   const seeds = new Uint8Array(width * height)
@@ -47,6 +50,13 @@ export function buildBlackKeySeedMask(width, height, metadata = null) {
     const group = byCell.get(`${col},${row}`)
     const sameGroup = (dc, dr) => Boolean(group) && byCell.get(`${col + dc},${row + dr}`) === group
     const { x, y, width: w, height: h } = tile.rect
+    if ((tile.tags || []).includes(INNER_CUTS_TAG)) {
+      // inner_cuts: every near-black pixel of the tile is background, enclosed or not.
+      for (let py = Math.max(0, y); py < Math.min(height, y + h); py++) {
+        seeds.fill(1, py * width + Math.max(0, x), py * width + Math.min(width, x + w))
+      }
+      continue
+    }
     if (!sameGroup(0, -1)) for (let px = x; px < x + w; px++) mark(px, y)
     if (!sameGroup(0, 1)) for (let px = x; px < x + w; px++) mark(px, y + h - 1)
     if (!sameGroup(-1, 0)) for (let py = y; py < y + h; py++) mark(x, py)

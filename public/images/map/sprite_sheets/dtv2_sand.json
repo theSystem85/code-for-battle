@@ -7,7 +7,8 @@
   "blendMode": "black",
   "tags": [
     "decorative",
-    "sand"
+    "sand",
+    "inner_cuts"
   ],
   "columns": 6,
   "rows": 8,
@@ -235,7 +236,8 @@
         "sand",
         "decorative",
         "impassable",
-        "ruins"
+        "ruins",
+        "inner_cuts"
       ],
       "rect": {
         "x": 256,
@@ -674,7 +676,8 @@
         "sand",
         "decorative",
         "impassable",
-        "ruins"
+        "ruins",
+        "inner_cuts"
       ]
     },
     {

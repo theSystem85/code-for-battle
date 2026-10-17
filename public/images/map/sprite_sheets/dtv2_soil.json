@@ -7,7 +7,8 @@
   "blendMode": "black",
   "tags": [
     "decorative",
-    "soil"
+    "soil",
+    "inner_cuts"
   ],
   "columns": 6,
   "rows": 8,
@@ -390,7 +391,8 @@
         "soil",
         "decorative",
         "passable",
-        "trees"
+        "trees",
+        "inner_cuts"
       ],
       "rect": {
         "x": 128,
@@ -423,7 +425,8 @@
         "decorative",
         "passable",
         "group_10",
-        "farm"
+        "farm",
+        "inner_cuts"
       ],
       "rect": {
         "x": 0,
@@ -440,7 +443,8 @@
         "decorative",
         "passable",
         "group_10",
-        "farm"
+        "farm",
+        "inner_cuts"
       ],
       "rect": {
         "x": 64,
@@ -707,7 +711,8 @@
         "soil",
         "decorative",
         "passable",
-        "trees"
+        "trees",
+        "inner_cuts"
       ]
     },
     {
@@ -736,7 +741,8 @@
         "decorative",
         "passable",
         "group_10",
-        "farm"
+        "farm",
+        "inner_cuts"
       ]
     },
     {

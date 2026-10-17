@@ -51,6 +51,8 @@ export const DEFAULT_SSE_TAGS = [
   'farm',
   'landmark',
   'roadside',
+  'stones',
+  'inner_cuts',
   'shore', 'onshore', 'offshore', 'shore_trans',
   'ground_detail',
   'city',
@@ -2191,7 +2193,7 @@ export async function initSpriteSheetEditor(options = {}) {
     },
     suggestTileForMap(x, y, tagBuckets) {
       if (!tagBuckets || typeof tagBuckets !== 'object') return null
-      const preferredTags = ['trees', 'rocks', 'farm', 'landmark', 'roadside', 'shore', 'onshore', 'offshore', 'shore_trans', 'ground_detail', 'city', 'ruins', 'passable', 'decorative', 'impassable', 'street', 'intersection', 'concrete', 'grass', 'soil', 'sand', 'snow', 'universal', 'spring', 'summer', 'autumn', 'winter']
+      const preferredTags = ['trees', 'rocks', 'stones', 'farm', 'landmark', 'roadside', 'shore', 'onshore', 'offshore', 'shore_trans', 'ground_detail', 'city', 'ruins', 'passable', 'decorative', 'impassable', 'street', 'intersection', 'concrete', 'grass', 'soil', 'sand', 'snow', 'universal', 'spring', 'summer', 'autumn', 'winter']
       for (const tag of preferredTags) {
         const list = tagBuckets[tag]
         if (Array.isArray(list) && list.length) {

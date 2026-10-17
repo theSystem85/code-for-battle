@@ -131,6 +131,18 @@ function buildBlackTransparentTexture(image, blackKeyConfig = null, metadata = n
   return canvas
 }
 
+// Tag edits that add or remove inner_cuts change the keyed texture.
+function innerCutsSignature(metadata) {
+  let hash = 0
+  let count = 0
+  for (const [key, tile] of Object.entries(metadata.tiles || {})) {
+    if (!tile?.tags?.includes?.('inner_cuts')) continue
+    count++
+    for (let i = 0; i < key.length; i++) hash = (Math.imul(hash, 31) + key.charCodeAt(i)) >>> 0
+  }
+  return count ? `:cuts${count}-${hash.toString(36)}` : ''
+}
+
 export function getImageTextureWithBlendMode(image, blendMode = 'black', blackKeyConfig = null, metadata = null) {
   const normalizedBlendMode = normalizeSpriteSheetBlendMode(blendMode)
   if (!image || normalizedBlendMode === 'alpha') {
@@ -139,7 +151,7 @@ export function getImageTextureWithBlendMode(image, blendMode = 'black', blackKe
 
   const normalizedBlackKey = blackKeyConfig ? normalizeBlackKeyConfig(blackKeyConfig) : null
   const cacheKey = (normalizedBlackKey ? `black:${normalizedBlackKey.cutoffBrightness}:${normalizedBlackKey.softenBrightness}` : 'black:24:48') +
-    (metadata?.tiles ? ':edges' : '')
+    (metadata?.tiles ? `:edges${innerCutsSignature(metadata)}` : '')
   const existingByConfig = processedImageCache.get(image)
   const existing = existingByConfig?.get(cacheKey)
   if (existing) {
