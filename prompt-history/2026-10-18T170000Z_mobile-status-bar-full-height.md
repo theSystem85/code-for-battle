@@ -11,3 +11,9 @@ Context from the dispatching agent: stretch the money and power bars vertically 
 ## Result
 
 See `docs/changes/2026-10-18-mobile-status-bar-full-height.md`. Portrait PWA bars grow from 12px to 18px (all of the status bar except 3px top padding and 13px kept for the home indicator); landscape rows share the bar height; desktop has no slack and is unchanged.
+
+## Follow-up 2026-10-18T17:45:00Z
+
+Processed by: Grok Bot (executor subagent); exact model not exposed.
+
+A CSS-only follow-up that makes the money/power values in the taller portrait PWA bars larger and bolder (12px, 600). It also served as the CSS-only deploy that checks the new live update on a running dev page.

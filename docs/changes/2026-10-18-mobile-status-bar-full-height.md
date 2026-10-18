@@ -14,3 +14,6 @@ In the iPhone portrait PWA layout the money and power bars were fixed 12px strip
 - U05209, U05210 (`tests/unit/mobileStatusBarHeight.test.js`): the CSS rules.
 - E00129 (`tests/e2e/mobileStatusBarFullHeight.test.js`): 390x844 iPhone emulation, standalone mode with a simulated 34px inset; the tracks are 18px tall, start 3px below the bar top, keep 13px free at the bottom and keep the text centered.
 - Screenshots: `/workspace/vfx-verify/status-bar-height/{before,after}-*.png`.
+
+## Follow-up: larger labels (2026-10-18)
+With the bars now 18px tall, the portrait PWA money and power values use `font-size: 12px` and `font-weight: 600` (were 10px / 500). This was a CSS-only change, used as the first live-update check on the dev deploy: it was applied to an open page without a reload (`/workspace/vfx-verify/live-update/dev-*.png`). Covered by U05209.
