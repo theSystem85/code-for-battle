@@ -1534,7 +1534,7 @@ body.mobile-portrait #sidebar {
 body.mobile-portrait {
   --sidebar-width: clamp(220px, 74vw, 320px);
   --portrait-condensed-bar-height: 96px;
-  --portrait-condensed-toggle-width: calc(var(--mobile-action-size) * 0.44);
+  --portrait-condensed-toggle-width: calc(var(--mobile-action-size) * 0.88);
 }
 
 body.mobile-portrait #sidebar {
@@ -1730,7 +1730,7 @@ body.mobile-portrait.sidebar-condensed #gameCanvasGL {
   body:not(.mobile-landscape):not(.mobile-portrait) {
     --sidebar-width: clamp(220px, 74vw, 320px);
     --portrait-condensed-bar-height: 96px;
-    --portrait-condensed-toggle-width: calc(var(--mobile-action-size) * 0.44);
+    --portrait-condensed-toggle-width: calc(var(--mobile-action-size) * 0.88);
   }
 
   html:not(.no-js) body:not(.mobile-landscape):not(.mobile-portrait) #sidebar {
