@@ -11,7 +11,7 @@ import {
   validateEntry,
   versionDefines
 } from '../../scripts/versioning.mjs'
-import { APP_VERSION, APP_VERSION_LABEL } from '../../src/version.js'
+import { APP_VERSION, APP_VERSION_LABEL, formatVersionDisplay } from '../../src/version.js'
 
 const dirs = []
 function scratchRepo(version, entries = {}) {
@@ -72,17 +72,22 @@ describe('build-time versioning', () => {
     expect(() => computeAppVersion(root)).toThrow(/Invalid unreleased/)
   })
 
-  it('[U05202] labels deploy previews with their PR number and leaves production and dev plain', () => {
-    expect(computeVersionLabel('0.62.1', { CONTEXT: 'deploy-preview', REVIEW_ID: '757' })).toBe('0.62.1-pr757')
+  it('[U05202] labels deploy previews only with their PR number and leaves production and dev plain', () => {
+    expect(computeVersionLabel('0.62.1', { CONTEXT: 'deploy-preview', REVIEW_ID: '757' })).toBe('PR757')
     expect(computeVersionLabel('0.62.1', { CONTEXT: 'production', REVIEW_ID: '757' })).toBe('0.62.1')
     expect(computeVersionLabel('0.62.1', { CONTEXT: 'branch-deploy', BRANCH: 'dev' })).toBe('0.62.1')
     expect(computeVersionLabel('0.62.1', {})).toBe('0.62.1')
     const defines = versionDefines(scratchRepo('1.2.3', { features: { 'x.json': { description: 'X' } } }), { CONTEXT: 'deploy-preview', REVIEW_ID: '9' })
-    expect(defines).toEqual({ __APP_VERSION__: '"1.3.0"', __APP_VERSION_LABEL__: '"1.3.0-pr9"' })
+    expect(defines).toEqual({ __APP_VERSION__: '"1.3.0"', __APP_VERSION_LABEL__: '"PR9"' })
   })
 
   it('[U05203] injects the computed repository version into src/version.js', () => {
     expect(APP_VERSION).toBe(computeAppVersion(process.cwd()).version)
-    expect(APP_VERSION_LABEL.startsWith(APP_VERSION)).toBe(true)
+    expect(APP_VERSION_LABEL === APP_VERSION || /^PR\d+$/.test(APP_VERSION_LABEL)).toBe(true)
+  })
+
+  it('[U05209] prefixes versions with v and shows preview labels as they are', () => {
+    expect(formatVersionDisplay('0.62.1')).toBe('v0.62.1')
+    expect(formatVersionDisplay('PR758')).toBe('PR758')
   })
 })

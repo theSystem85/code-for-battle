@@ -89,13 +89,13 @@ export function computeAppVersion(root) {
   return { baseVersion, version: bumpVersion(baseVersion, entries), entries }
 }
 
-// Netlify deploy previews keep their pull request number in the shown label,
-// for example 0.62.1-pr757. Production, the dev branch deploy and local
+// Netlify deploy previews show only their pull request label, for example
+// PR758, with no version number. Production, the dev branch deploy and local
 // builds show the plain version. The label is display-only; release digests
 // and the service worker compare the plain APP_VERSION.
 export function computeVersionLabel(version, env = {}) {
   const reviewId = String(env.REVIEW_ID || '').trim()
-  if (env.CONTEXT === 'deploy-preview' && /^\d+$/.test(reviewId)) return `${version}-pr${reviewId}`
+  if (env.CONTEXT === 'deploy-preview' && /^\d+$/.test(reviewId)) return `PR${reviewId}`
   return version
 }
 

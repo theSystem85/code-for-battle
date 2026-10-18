@@ -4,6 +4,8 @@
 // Blobs stores. Netlify sets REDIS_KEY_PREFIX=dev: for the branch-deploy
 // context only, so every Redis key and every Blobs key written by a dev deploy
 // starts with "dev:" while production (no variable) stays unprefixed.
+// Deploy previews of PRs into main get no variable either, so they share
+// production's keys on purpose (Patrick's decision, 2026-10-18).
 const PREFIX_PATTERN = /^[A-Za-z0-9_-]{1,32}:$/
 
 export function normalizeStorageKeyPrefix(value) {

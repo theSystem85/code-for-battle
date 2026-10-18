@@ -33,6 +33,7 @@ describe('storage key prefix', () => {
 
   it('[U05194] reads the prefix from the explicit env bag, Netlify.env and process.env, and throws on a typo', () => {
     expect(readStorageKeyPrefix({})).toBe('')
+    expect(readStorageKeyPrefix({ CONTEXT: 'deploy-preview' })).toBe('')
     expect(readStorageKeyPrefix({ REDIS_KEY_PREFIX: 'dev:' })).toBe('dev:')
     globalThis.Netlify = { env: { get: key => (key === 'REDIS_KEY_PREFIX' ? 'dev:' : undefined) } }
     expect(readStorageKeyPrefix({})).toBe('dev:')
