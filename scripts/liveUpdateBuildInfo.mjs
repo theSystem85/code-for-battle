@@ -8,12 +8,33 @@
 // version string itself. Hashed chunk and asset file names are replaced by
 // stable tokens, so a stylesheet change alone keeps the signature.
 import { Buffer } from 'node:buffer'
+import { execSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import process from 'node:process'
 
 export const BUILD_INFO_FILE = 'build-info.json'
+// Format of build-info.json itself.
+export const UPDATE_MANIFEST_VERSION = 1
+const UPDATE_TRAILER = /^Live-Update:\s*(safe|breaking)\b\s*(.*)$/im
+
+// The coding agent records its safe-vs-breaking decision as a commit trailer,
+// e.g. "Live-Update: breaking (changes unit AI)". Without one, the client
+// decides from the JS signature and the state schema version.
+export function readUpdateDecision(commitBody = '') {
+  const match = String(commitBody || '').match(UPDATE_TRAILER)
+  if (!match) return { kind: 'auto', reason: '' }
+  return { kind: match[1].toLowerCase(), reason: match[2].trim().replace(/^[(-]\s*|\)$/g, '') }
+}
+
+function readHeadCommitBody(root) {
+  try {
+    return execSync('git log -1 --format=%B', { cwd: root, stdio: ['ignore', 'pipe', 'ignore'] }).toString()
+  } catch {
+    return ''
+  }
+}
 
 const EXCLUDED_MODULE = /[\\/](?:features[\\/][^?]*\.json|src[\\/]version\.json)(?:\?.*)?$/
 const GLOB_ENTRY = /["'](?:\.\.\/)+features\/[^"']+\.json["']\s*:\s*[\w$]+\s*,?/g
@@ -78,7 +99,7 @@ export function isLiveUpdateBuild(env = process.env) {
   return env.CONTEXT === 'branch-deploy' && env.BRANCH === 'dev'
 }
 
-export function liveUpdateBuildInfoPlugin({ root, version, enabled }) {
+export function liveUpdateBuildInfoPlugin({ root, version, enabled, stateSchemaVersion }) {
   return {
     name: 'cfb-live-update-build-info',
     apply: 'build',
@@ -87,11 +108,14 @@ export function liveUpdateBuildInfoPlugin({ root, version, enabled }) {
       if (!bundle['index.html']) return
       const commitInfo = readCommitInfo(root)
       const info = {
+        manifestVersion: UPDATE_MANIFEST_VERSION,
         version,
         commit: commitInfo.commit || 'unknown',
         message: commitInfo.message || '',
         builtAt: new Date().toISOString(),
         liveUpdate: Boolean(enabled),
+        stateSchemaVersion,
+        update: readUpdateDecision(readHeadCommitBody(root)),
         jsSignature: computeJsSignature(bundle, { version, root }),
         css: collectStylesheets(bundle, root)
       }
