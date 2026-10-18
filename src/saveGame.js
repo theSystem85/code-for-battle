@@ -3,6 +3,8 @@ import { normalizeDecorationSettings } from './game/decorationSettings.js'
 import { exportAutomationSession, restoreAutomationSession, resetPolicyStore } from './policies/policyStore.js'
 // saveGame.js
 import { gameState } from './gameState.js'
+import { GAME_STATE_SCHEMA_VERSION } from './gameStateSchema.js'
+import { migrateLiveState } from './gameStateMigrations.js'
 import { migrateSavedSpriteSheetState } from './ui/spriteSheetRegistry.js'
 import { factories } from './main.js'
 import { units } from './main.js'
@@ -842,6 +844,7 @@ function buildSaveObject(label) {
   const mapTileState = createMapTileStateSnapshot(mapGrid)
 
   const saveData = {
+    schemaVersion: GAME_STATE_SCHEMA_VERSION,
     automationSession: exportAutomationSession([...units, ...gameState.buildings, ...factories]),
     gameState: {
       money: gameState.money,
@@ -1077,6 +1080,14 @@ function loadGameFromSaveObject(saveObj, key) {
       loaded = JSON.parse(stateString)
     } catch (err) {
       window.logger.warn('Failed to parse saved game state:', err)
+      return
+    }
+
+    try {
+      const savedSchemaVersion = loaded.schemaVersion ?? 1
+      loaded = migrateLiveState(loaded, savedSchemaVersion, GAME_STATE_SCHEMA_VERSION)
+    } catch (err) {
+      window.logger.warn(`Failed to migrate saved game state for ${key}:`, err)
       return
     }
 

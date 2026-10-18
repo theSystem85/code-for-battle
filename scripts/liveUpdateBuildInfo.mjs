@@ -106,6 +106,16 @@ export function liveUpdateBuildInfoPlugin({ root, version, enabled, stateSchemaV
     enforce: 'post',
     generateBundle(_options, bundle) {
       if (!bundle['index.html']) return
+      if (enabled) {
+        const migrationSource = readFileSync(resolve(root, 'src/gameStateMigrations.js'), 'utf8')
+        const missing = []
+        for (let target = 2; target <= stateSchemaVersion; target += 1) {
+          if (!new RegExp(`migrations\\s*\\[\\s*${target}\\s*\\]\\s*=`).test(migrationSource)) missing.push(target)
+        }
+        if (missing.length) {
+          this.warn(`GAME_STATE_SCHEMA_VERSION ${stateSchemaVersion} has no migration(s) targeting version(s): ${missing.join(', ')}`)
+        }
+      }
       const commitInfo = readCommitInfo(root)
       const info = {
         manifestVersion: UPDATE_MANIFEST_VERSION,
