@@ -38,7 +38,7 @@ import { resetAttackDirections } from '../ai/enemyStrategies.js'
 import { getTextureManager, preloadTileTextures, getMapRenderer, publishPreparedRuntimeMap } from '../rendering.js'
 import { milestoneSystem } from '../game/milestoneSystem.js'
 import { updateDangerZoneMaps } from '../game/dangerZoneMap.js'
-import { APP_VERSION } from '../version.js'
+import { APP_VERSION_LABEL } from '../version.js'
 import versionInfo from '../version.json' with { type: 'json' }
 import { initializeShadowOfWar, updateShadowOfWar } from '../game/shadowOfWar.js'
 import { initSpatialQuadtree } from '../game/spatialQuadtree.js'
@@ -1396,7 +1396,7 @@ class Game {
 
     if (versionElement) {
       const commitHash = versionInfo?.commit || 'unknown'
-      versionElement.textContent = `${APP_VERSION} (${commitHash})`
+      versionElement.textContent = `${APP_VERSION_LABEL} (${commitHash})`
     }
 
     if (commitMessageElement) {

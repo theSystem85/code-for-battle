@@ -229,4 +229,23 @@ describe('signalling API', () => {
     const afterRelease = await handler(request('GET', `/api/signalling/invite-code/${secondBody.shortCode}`))
     expect(afterRelease.status).toBe(404)
   })
+  it('keeps every signalling and invite key under dev: on the dev branch deploy', async() => {
+    globalThis.Netlify = { env: { get: key => (key === 'REDIS_KEY_PREFIX' ? 'dev:' : undefined) } }
+    blobs.set('offer:prod-token-aaaa:peer-9', { offer: 'production' })
+    const offer = await handler(request('POST', '/api/signalling/offer', {
+      inviteToken: 'lobby-token-dev1',
+      alias: 'galina',
+      peerId: 'peer-1',
+      offer: JSON.stringify({ type: 'offer', sdp: 'v=0' }),
+      offerRevision: 1
+    }))
+    expect(offer.status).toBe(200)
+    const devKeys = [...blobs.keys()].filter(key => key !== 'offer:prod-token-aaaa:peer-9')
+    expect(devKeys.length).toBeGreaterThan(0)
+    expect(devKeys.every(key => key.startsWith('dev:'))).toBe(true)
+    const pending = await handler(request('GET', '/api/signalling/pending/lobby-token-dev1'))
+    const sessions = await pending.json()
+    expect(sessions).toHaveLength(1)
+    expect(sessions[0].alias).toBe('galina')
+  })
 })

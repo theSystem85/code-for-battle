@@ -1,5 +1,5 @@
 import { completeBoot, createReleaseDigest, getBootReleaseDigest, getHighlightIndex, getLoadingHighlights, LAST_DURATION_KEY, readBootStorage } from './releaseDigest.js'
-import { APP_VERSION } from '../version.js'
+import { APP_VERSION_LABEL } from '../version.js'
 import { getBootProgress } from './bootProgress.js'
 
 const state = {
@@ -91,7 +91,7 @@ function render() {
 
   if (kicker) kicker.textContent = state.kicker || 'Patrick Beyer Software'
   if (detail) detail.textContent = state.detail || 'Preparing the battlefield'
-  if (version) version.textContent = bootDigest && !bootCompleted ? `Loading update v${bootDigest.fromVersion} → v${APP_VERSION}` : `v${APP_VERSION}`
+  if (version) version.textContent = bootDigest && !bootCompleted ? `Loading update v${bootDigest.fromVersion} → v${APP_VERSION_LABEL}` : `v${APP_VERSION_LABEL}`
   if (bootDigest && !bootCompleted && state.visible) {
     if (!digestComponent || !root.contains(digestComponent.root)) {
       digestComponent = createReleaseDigest(bootDigest, { compact: true })

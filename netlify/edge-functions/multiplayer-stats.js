@@ -53,10 +53,20 @@ function readEdgeRedis() {
   } catch {
     // The Netlify global is missing outside the edge runtime.
   }
-  return readRuntimeRedisEnv({
+  let keyPrefix = ''
+  try {
+    if (typeof Netlify !== 'undefined' && Netlify.env && typeof Netlify.env.get === 'function') {
+      // Only the dev branch deploy sets this (dev:). Production stays unprefixed.
+      keyPrefix = Netlify.env.get('REDIS_KEY_PREFIX') || ''
+    }
+  } catch {
+    // Unset keys throw.
+  }
+  const redis = readRuntimeRedisEnv({
     UPSTASH_REDIS_REST_URL: typeof url === 'string' ? url : '',
     UPSTASH_REDIS_REST_TOKEN: typeof token === 'string' ? token : ''
   })
+  return redis ? { ...redis, keyPrefix: typeof keyPrefix === 'string' ? keyPrefix : '' } : null
 }
 
 // Upstash is called with fetch from the edge runtime, which is the hot path.
@@ -73,7 +83,8 @@ export default async(request) => {
   return handleMultiplayerStatsRequest(request, {
     env: {
       UPSTASH_REDIS_REST_URL: redis.url,
-      UPSTASH_REDIS_REST_TOKEN: redis.token
+      UPSTASH_REDIS_REST_TOKEN: redis.token,
+      REDIS_KEY_PREFIX: redis.keyPrefix
     },
     fetchImpl: fetch,
     now: () => Date.now(),

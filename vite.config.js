@@ -10,6 +10,7 @@ import {
   PRECACHE_GLOB_PATTERNS,
   PRECACHE_MAX_FILE_BYTES
 } from './src/pwa/precachePolicy.js'
+import { versionDefines } from './scripts/versioning.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const LEGAL_ENTRY_DIR = resolve(__dirname, 'src/legal')
@@ -98,6 +99,10 @@ const legalRoutePlugin = {
 
 export default defineConfig({
   appType: 'mpa',
+  // APP_VERSION is computed here from package.json plus the unreleased
+  // release-note entries (see scripts/versioning.mjs). Nothing in src/ holds a
+  // hand-edited version number.
+  define: versionDefines(__dirname),
   plugins: [
     legalRoutePlugin,
     offlineAssetManifestPlugin(),

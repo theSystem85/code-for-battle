@@ -4,6 +4,7 @@ Agent skills for this repo also live under `skills/`:
 - `skills/new-unit/SKILL.md` — new unit checklist
 - `skills/ship-unit/SKILL.md` — ship unit checklist
 - `skills/map-assets/SKILL.md` — biome decorative map tiles / SSE sheet pipeline
+- `skills/make-a-release/SKILL.md` — "make a release": fold unreleased notes, dev -> main rebase merge, tag, dev reset
 
 Use this skill to generate new RTS art assets directly during coding tasks (units/buildings, sidebar + map variants).
 

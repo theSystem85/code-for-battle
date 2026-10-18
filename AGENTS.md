@@ -23,10 +23,78 @@ RULES for agentic codeing
 
 ## Git / Workflow
 
-Never merge `main` into a feature branch, and never create merge commits. Update a feature branch with `git fetch && git rebase origin/main`, then push with `git push --force-with-lease`. Merge pull requests without merge commits (squash or rebase).
+Never merge `main` (or `dev`) into a feature branch, and never create merge commits. Update a feature branch with `git fetch && git rebase origin/<target>` (`main` in main mode, `dev` in dev mode, see Deployment), then push with `git push --force-with-lease`. Merge pull requests with **rebase merge** so every commit is kept; do not squash unless Patrick asks for it.
 
-## Versioned release notes
+## Deployment
 
-With every feature update, add a very brief, single-line, user-facing description to a versioned JSON file in `features/` (for example `features/0.47.0.json`). Each file must contain its numeric `major.minor.patch` `version` and three separate arrays: `features`, `improvements`, and `bugfixes`. Record bugfixes and improvements in their respective arrays with equally brief descriptions. Keep earlier release files unchanged; append entries to the unreleased version only. Bump `package.json` and the lockfile root version for a new release and run `node scripts/generate-version.js` so `APP_VERSION` matches. Do not assign new notes to an already shipped version: version diffs include entries strictly newer than the last successfully loaded version and no newer than the current version.
+### Modes
 
-The app bundles these files for offline access and uses the same release-digest component in the loading screen and User Manual. Loading prioritizes features, displays only improvement/bugfix counts when features exist, and falls back to improvement/bugfix descriptions when there are no new features. Descriptions must fit a short loading-screen line. These release notes are required in addition to `docs/changes/`, specs, and prompt history.
+The repository has two long-lived branches: `main` (production, https://code-for-battle.netlify.app) and `dev` (branch deploy, https://dev--code-for-battle.netlify.app). Patrick switches between the two modes in chat ("work on dev now", "back to main"). Agents keep using the current mode until he says otherwise. Codex is only prompted through Grok Bot, so Grok Bot must tell Codex which mode is active and which base branch to use.
+
+- **Main mode (default):** branch from `main`, open a PR into `main` (draft until it is ready), wait for the Netlify deploy preview and CI to pass, and merge **only when Patrick asks**. Never merge into `main` on your own.
+- **Dev mode:** branch from `dev` and open a PR into `dev`, also for Codex tasks (Codex Cloud `--branch dev`, PR base `dev`). As soon as the PR has no conflicts with `dev` (rebase it onto `origin/dev` if needed), merge it with a rebase merge right away. No review wait. Patrick authorised this auto-merge for PRs into `dev` only. One agent per feature branch; never push directly to `dev`.
+
+### Checks before every push
+
+There is no CI on `dev` and deploys are not gated, so the agent that pushes is the safety net. Before **every** push (any branch, both modes) run locally and fix all failures:
+
+1. `npm run lint`
+2. `npm run test` (unit and integration tests)
+3. `npm run test:e2e` (Playwright, Chromium). If the full suite cannot run in your environment, run the e2e tests that cover the changed area and say exactly what was skipped in the PR description.
+
+GitHub Actions (`.github/workflows/ci.yml`) only runs for PRs into `main` and pushes to `main`. Do not add CI jobs for `dev`.
+
+### Netlify
+
+- `main` deploys to production.
+- `dev` is the only branch deploy. Netlify builds it right after each merge into `dev`.
+- Deploy previews are built for PRs into `main` only. PRs into `dev` get no preview; test them on the dev deploy after the merge.
+- Netlify cannot filter by PR base on its own, so `netlify.toml` runs `node scripts/netlify-ignore.mjs` as its `ignore` command. It builds production, builds the `dev` branch deploy, skips any other branch deploy, and skips deploy previews whose PR base is `dev` (looked up on the public GitHub API; if the lookup fails it builds).
+- **Backend separation:** the dev branch deploy uses the same Upstash Redis database and Netlify Blobs stores as production, but Netlify sets `REDIS_KEY_PREFIX=dev:` for the branch-deploy context only. Every Redis key (multiplayer stats Lua scripts) and every Blobs key (signalling, invite codes, Blobs stats fallback) is then written under `dev:` (`src/network/storageKeyPrefix.js`). Production has no prefix. Any new server or edge code that touches Redis or Blobs must go through that prefix (`readStorageKeyPrefix` / `prefixBlobStore`) and needs a test for it.
+
+### Branch protection
+
+`main` is protected: no direct pushes, no force-pushes, no deletion; changes land only through PRs with a passing `smoke-test` CI check. This also applies to admins.
+
+### Releases (dev to main)
+
+A release moves everything from `dev` to `main`. Use the "make a release" skill (`skills/make-a-release/SKILL.md`) when Patrick says "make a release". In short:
+
+1. On a branch from up-to-date `dev`, run `npm run release -- --dry-run` and show Patrick the changelog and new version.
+2. After his OK, run `npm run release`. It folds all `features/unreleased/**` entries into `features/<version>.json`, deletes the entry files, writes the version into `package.json` and `package-lock.json`, commits `chore(release): X.Y.Z` and creates a local tag `vX.Y.Z`. It pushes nothing.
+3. Get that commit onto `dev` (PR into `dev`, auto-merged), then open a PR from `dev` into `main` and **rebase-merge** it. All dev commits are kept on `main`, nothing is squashed.
+4. The rebase merge gives the commits new ids, so on the updated `main` run `npm run release:tag` (moves `vX.Y.Z` onto the release commit on `main`) and push the tag with `git push origin vX.Y.Z`.
+5. Reset `dev` to `main` with `git push --force-with-lease=dev:<old dev sha> origin origin/main:dev`. This force-push is allowed **only right after a release and only if nothing new landed on `dev`** since the release PR was opened. If something did land, stop and ask Patrick.
+
+In main mode a release works the same way, except the release commit goes through a PR into `main` and step 5 is skipped.
+
+## Versioning and release notes
+
+Never edit the version by hand. `package.json` holds the **last released** version and changes only through `npm run release`. There is no committed generated version file any more: `src/version.js` reads `__APP_VERSION__`, which `vite.config.js` (and `vitest.config.js`) compute at build time with `scripts/versioning.mjs`.
+
+Every PR that changes behaviour adds one small file per change under `features/unreleased/<category>/`, where category is `features`, `improvements` or `bugfixes`:
+
+```json
+{ "description": "One short, user-facing line that fits the loading screen." }
+```
+
+Name it `<pr-number>-<slug>.json` or `<YYYY-MM-DD>-<slug>.json`. Add `"breaking": true` for a breaking change. Never edit another PR's entry file and never edit released `features/<version>.json` files. Because each PR only adds its own files, parallel branches never conflict on the version.
+
+The shown version is computed with semver from `package.json` plus the unreleased entries: any breaking entry bumps the major version, any feature bumps the minor version, otherwise any improvement or bugfix bumps the patch version. Netlify deploy previews append their PR number (for example `0.62.1-pr757`); production, `dev` and local builds show the plain version. `npm run version:show` prints the current value.
+
+Classify entries the same way as `docs/changes/` notes: a bug is something broken or contrary to intended behaviour, an improvement is polish of something that exists, a feature is a new capability.
+
+The app bundles the released files and the unreleased entries for offline access and uses the same release-digest component in the loading screen and User Manual (`src/ui/releaseDigest.js`): unreleased entries count as part of the current build version. Loading prioritizes features, displays only improvement/bugfix counts when features exist, and falls back to improvement/bugfix descriptions when there are no new features. These entries are required in addition to `docs/changes/`, specs, and prompt history.
+
+## Pull request descriptions
+
+Every PR description (by any agent, into `main` or `dev`) contains a **manual test plan** that covers every new feature, bugfix and improvement in the PR. It is a Markdown table with one row per test step and these columns, in this order:
+
+| ID | Area | Steps | Expected result | Unit tests | E2E tests |
+|---|---|---|---|---|---|
+| T01 | Loading screen | Open the deploy preview | Version shows `v0.62.1-pr757` | 2: U05170, U05171 | 0 |
+
+- IDs are `T01`, `T02`, ... per PR.
+- The last two columns give the number of unit and e2e tests that cover the row, followed by their IDs (`0` when none).
+- GitHub does not render clickable checkboxes inside tables, so put the checkboxes in a task list directly below the table, one per row and keyed by the same ID, for example `- [ ] T01 Loading screen version label`. The reviewer ticks them on GitHub after verifying each step.
+- `.github/pull_request_template.md` holds this skeleton.

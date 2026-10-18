@@ -1,6 +1,12 @@
+import { dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitest/config'
+import { versionDefines } from './scripts/versioning.mjs'
 
 export default defineConfig({
+  // Same build-time version constants as vite.config.js.
+  define: versionDefines(dirname(fileURLToPath(import.meta.url))),
+
   test: {
     // Enable globals for describe, it, expect, etc.
     globals: true,

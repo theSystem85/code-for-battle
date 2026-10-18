@@ -57,7 +57,9 @@ export default [
         WebGL2RenderingContext: 'readonly',
         alert: 'readonly',
         process: 'readonly',
-        Netlify: 'readonly'
+        Netlify: 'readonly',
+        __APP_VERSION__: 'readonly',
+        __APP_VERSION_LABEL__: 'readonly'
       }
     },
     rules: {

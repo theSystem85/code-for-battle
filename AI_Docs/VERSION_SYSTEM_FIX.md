@@ -1,3 +1,5 @@
+> **Superseded (2026-10-18):** the version is now computed at build time from `package.json` plus `features/unreleased/**` entries, and `npm run release` creates releases. See the "Deployment" and "Versioning and release notes" sections of `AGENTS.md`. The scripts described below were removed.
+
 # Version Management System - Bug Fix
 
 ## Problem

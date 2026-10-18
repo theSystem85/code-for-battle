@@ -1,3 +1,5 @@
+import { prefixBlobStore, readStorageKeyPrefix } from './storageKeyPrefix.js'
+
 export const PRESENCE_STATUSES = Object.freeze([
   'menu',
   'single-player',
@@ -31,7 +33,8 @@ local staleBefore = tonumber(ARGV[4])
 local rlMax = tonumber(ARGV[5])
 local rlWindow = tonumber(ARGV[6])
 local openToken = ARGV[7]
-local rlKey = "cfb:rl:" .. sessionId
+local p = ARGV[8] or ""
+local rlKey = p .. "cfb:rl:" .. sessionId
 local hits = redis.call("INCR", rlKey)
 if hits == 1 or redis.call("TTL", rlKey) < 0 then
   redis.call("EXPIRE", rlKey, rlWindow)
@@ -42,7 +45,7 @@ end
 local statuses = {"menu","single-player","mp-host","mp-client","looking-for-match"}
 local counts = {}
 for i, name in ipairs(statuses) do
-  local key = "cfb:presence:" .. name
+  local key = p .. "cfb:presence:" .. name
   if name == status then
     redis.call("ZADD", key, now, sessionId)
   else
@@ -52,17 +55,17 @@ for i, name in ipairs(statuses) do
   redis.call("EXPIRE", key, 180)
   counts[i] = redis.call("ZCARD", key)
 end
-redis.call("ZREM", "cfb:open-hosts", sessionId)
-redis.call("DEL", "cfb:open-token:" .. sessionId)
+redis.call("ZREM", p .. "cfb:open-hosts", sessionId)
+redis.call("DEL", p .. "cfb:open-token:" .. sessionId)
 local openState = "closed"
 if openToken ~= "" then
-  local claimed = redis.call("GET", "cfb:claimed:" .. openToken)
+  local claimed = redis.call("GET", p .. "cfb:claimed:" .. openToken)
   if claimed ~= false then
     openState = "filled"
   else
-    redis.call("SET", "cfb:open-token:" .. sessionId, openToken, "EX", 90)
-    redis.call("ZADD", "cfb:open-hosts", now, sessionId)
-    redis.call("EXPIRE", "cfb:open-hosts", 180)
+    redis.call("SET", p .. "cfb:open-token:" .. sessionId, openToken, "EX", 90)
+    redis.call("ZADD", p .. "cfb:open-hosts", now, sessionId)
+    redis.call("EXPIRE", p .. "cfb:open-hosts", 180)
     openState = "listed"
   end
 end
@@ -75,7 +78,8 @@ local now = tonumber(ARGV[2])
 local staleBefore = tonumber(ARGV[3])
 local rlMax = tonumber(ARGV[4])
 local rlWindow = tonumber(ARGV[5])
-local rlKey = "cfb:rl:claim:" .. selfId
+local p = ARGV[6] or ""
+local rlKey = p .. "cfb:rl:claim:" .. selfId
 local hits = redis.call("INCR", rlKey)
 if hits == 1 or redis.call("TTL", rlKey) < 0 then
   redis.call("EXPIRE", rlKey, rlWindow)
@@ -83,31 +87,31 @@ end
 if hits > rlMax then
   return {"rate"}
 end
-redis.call("ZREMRANGEBYSCORE", "cfb:open-hosts", "-inf", staleBefore)
+redis.call("ZREMRANGEBYSCORE", p .. "cfb:open-hosts", "-inf", staleBefore)
 local heldId = false
 local heldScore = false
 while true do
-  local popped = redis.call("ZPOPMIN", "cfb:open-hosts")
+  local popped = redis.call("ZPOPMIN", p .. "cfb:open-hosts")
   if popped[1] == nil then break end
   local id = popped[1]
   local score = popped[2]
-  local token = redis.call("GET", "cfb:open-token:" .. id)
+  local token = redis.call("GET", p .. "cfb:open-token:" .. id)
   if token == false then
-    redis.call("DEL", "cfb:open-token:" .. id)
+    redis.call("DEL", p .. "cfb:open-token:" .. id)
   elseif id == selfId then
     heldId = id
     heldScore = score
   else
-    redis.call("DEL", "cfb:open-token:" .. id)
-    redis.call("SET", "cfb:claimed:" .. token, "1", "EX", 600)
+    redis.call("DEL", p .. "cfb:open-token:" .. id)
+    redis.call("SET", p .. "cfb:claimed:" .. token, "1", "EX", 600)
     if heldId ~= false then
-      redis.call("ZADD", "cfb:open-hosts", heldScore, heldId)
+      redis.call("ZADD", p .. "cfb:open-hosts", heldScore, heldId)
     end
     return {id, token}
   end
 end
 if heldId ~= false then
-  redis.call("ZADD", "cfb:open-hosts", heldScore, heldId)
+  redis.call("ZADD", p .. "cfb:open-hosts", heldScore, heldId)
 end
 return {}
 `.trim()
@@ -543,7 +547,8 @@ export function presencePipeline(input) {
     String(input.now - PRESENCE_STALE_MS),
     String(RATE_LIMIT_MAX),
     String(Math.round(RATE_LIMIT_WINDOW_MS / 1000)),
-    input.openInviteToken || ''
+    input.openInviteToken || '',
+    input.keyPrefix || ''
   ]]
 }
 
@@ -556,7 +561,8 @@ export function claimPipeline(input) {
     String(input.now),
     String(input.now - PRESENCE_STALE_MS),
     String(RATE_LIMIT_MAX),
-    String(Math.round(RATE_LIMIT_WINDOW_MS / 1000))
+    String(Math.round(RATE_LIMIT_WINDOW_MS / 1000)),
+    input.keyPrefix || ''
   ]]
 }
 
@@ -640,9 +646,11 @@ export async function handleMultiplayerStatsRequest(request, options = {}) {
   if (parsed.error) return jsonResponse(400, { error: 'invalid_request' })
 
   const now = typeof options.now === 'function' ? options.now() : Date.now()
-  const input = { ...parsed, now }
   const redis = readRuntimeRedisEnv(options.env || {})
   try {
+    // Dev branch deploys namespace all Redis and Blobs keys (REDIS_KEY_PREFIX).
+    const keyPrefix = readStorageKeyPrefix(options.env || {})
+    const input = { ...parsed, now, keyPrefix }
     let outcome
     if (redis) {
       const fetchImpl = options.fetchImpl || fetch
@@ -654,9 +662,10 @@ export async function handleMultiplayerStatsRequest(request, options = {}) {
         ? applyPresence(options.memory, input)
         : claimOpenHost(options.memory, input)
     } else if (options.blobs) {
+      const blobs = options.blobsPrefixed ? options.blobs : prefixBlobStore(options.blobs, keyPrefix)
       outcome = route === 'presence'
-        ? await blobsPresence(options.blobs, input)
-        : await blobsClaim(options.blobs, input)
+        ? await blobsPresence(blobs, input)
+        : await blobsClaim(blobs, input)
     } else {
       return jsonResponse(503, { error: 'unavailable' })
     }

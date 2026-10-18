@@ -1,0 +1,2 @@
+- [x] **Dev branch workflow, build-time versioning and test IDs** — `dev` branch deploy only (no previews for PRs into dev, `dev:` backend key prefix), version computed at build time from `features/unreleased/**` entries with `npm run release`, `[U00001]`/`[E00001]` IDs on every test with a check in `npm run lint`, and the PR test plan rule in AGENTS.md.
+  Spec: [Dev branch workflow, versioning and test IDs](../../specs/dev-branch-workflow-versioning-test-ids.md)
