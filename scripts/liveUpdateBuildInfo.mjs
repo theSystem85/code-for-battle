@@ -17,6 +17,9 @@ import process from 'node:process'
 export const BUILD_INFO_FILE = 'build-info.json'
 // Format of build-info.json itself.
 export const UPDATE_MANIFEST_VERSION = 1
+export const LIVE_MODULES = {
+  'update-notice': 'src/pwa/swappable/updateNotice.js'
+}
 const UPDATE_TRAILER = /^Live-Update:\s*(safe|breaking)\b\s*(.*)$/im
 
 // The coding agent records its safe-vs-breaking decision as a commit trailer,
@@ -54,12 +57,29 @@ export function computeJsSignature(bundle, options = {}) {
     if (output.type !== 'chunk') continue
     for (const [id, module] of Object.entries(output.modules || {})) {
       if (EXCLUDED_MODULE.test(id)) continue
+      if (options.excludeModules?.some(moduleId => id.replace(/\\/g, '/').endsWith(moduleId))) continue
       const key = id.replace(options.root || '', '')
       parts.push(`${output.name}::${key}::${normalizeModuleCode(module.code, options)}`)
     }
   }
   parts.sort()
   return createHash('sha256').update(parts.join('\n')).digest('hex').slice(0, 32)
+}
+
+export function collectLiveModules(bundle, root = '') {
+  const modules = {}
+  for (const [key, moduleId] of Object.entries(LIVE_MODULES)) {
+    const normalizedId = resolve(root, moduleId).replace(/\\/g, '/')
+    const chunk = Object.values(bundle).find(output => output.type === 'chunk'
+      && output.facadeModuleId?.replace(/\\/g, '/') === normalizedId)
+    const source = chunk?.modules?.[normalizedId]?.code
+    if (!chunk || source === undefined) continue
+    modules[key] = {
+      url: `/${chunk.fileName}`,
+      signature: createHash('sha256').update(normalizeModuleCode(source)).digest('hex').slice(0, 16)
+    }
+  }
+  return modules
 }
 
 // Stable keys for every stylesheet the page can load: the <link> tags of
@@ -104,6 +124,12 @@ export function liveUpdateBuildInfoPlugin({ root, version, enabled, stateSchemaV
     name: 'cfb-live-update-build-info',
     apply: 'build',
     enforce: 'post',
+    buildStart() {
+      if (!enabled) return
+      for (const [key, moduleId] of Object.entries(LIVE_MODULES)) {
+        this.emitFile({ type: 'chunk', id: resolve(root, moduleId), name: `live-${key}` })
+      }
+    },
     generateBundle(_options, bundle) {
       if (!bundle['index.html']) return
       if (enabled) {
@@ -127,6 +153,8 @@ export function liveUpdateBuildInfoPlugin({ root, version, enabled, stateSchemaV
         stateSchemaVersion,
         update: readUpdateDecision(readHeadCommitBody(root)),
         jsSignature: computeJsSignature(bundle, { version, root }),
+        coreJsSignature: computeJsSignature(bundle, { version, root, excludeModules: Object.values(LIVE_MODULES) }),
+        modules: collectLiveModules(bundle, root),
         css: collectStylesheets(bundle, root)
       }
       this.emitFile({ type: 'asset', fileName: BUILD_INFO_FILE, source: `${JSON.stringify(info, null, 2)}\n` })

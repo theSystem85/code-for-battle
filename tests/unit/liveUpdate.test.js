@@ -57,6 +57,10 @@ describe('dev live update', () => {
     expect(classifyBuildChange(base, { ...base, commit: 'bbbbbbb', jsSignature: 'js-2' })).toBe('breaking')
     expect(classifyBuildChange(base, { ...base, commit: 'bbbbbbb', update: { kind: 'breaking', reason: 'x' } })).toBe('breaking')
     expect(classifyBuildChange(base, { ...base, commit: 'bbbbbbb', update: { kind: 'safe' }, jsSignature: 'js-2' })).toBe('breaking')
+    expect(classifyBuildChange(
+      { ...base, coreJsSignature: 'core', modules: { 'update-notice': { signature: 'a' } } },
+      { ...base, commit: 'bbbbbbb', jsSignature: 'js-2', coreJsSignature: 'core', update: { kind: 'safe' }, modules: { 'update-notice': { signature: 'b' } } }
+    )).toBe('hot')
     expect(classifyBuildChange(base, { ...base, commit: 'bbbbbbb', stateSchemaVersion: 2 }, 1)).toBe('breaking')
     expect(classifyBuildChange(base, { ...base, commit: 'bbbbbbb', stateSchemaVersion: 1 }, 1)).toBe('safe')
     expect(planStylesheetSwaps(base, { ...base, css: { ...base.css, 'html:1': '/assets/sidebar-CCCCCCCC.css' } }))
@@ -90,7 +94,7 @@ describe('dev live update', () => {
     expect(await result).toBe('safe')
     expect(reload).not.toHaveBeenCalled()
     expect(prepareReload).not.toHaveBeenCalled()
-    expect(ui.showSafe).toHaveBeenCalledWith(next, 1)
+    expect(ui.showSafe).toHaveBeenCalledWith(next, 1, 0)
     expect(document.getElementById('appVersion').textContent).toBe('0.62.3 (bbbbbbb)')
     expect(updater.getBaseline().commit).toBe('bbbbbbb')
   })
