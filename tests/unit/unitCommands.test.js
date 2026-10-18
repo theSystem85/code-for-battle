@@ -114,7 +114,7 @@ describe('UnitCommandsHandler utility queues', () => {
     gameState.humanPlayer = 'player'
   })
 
-  it('rejects movement and attack orders for vehicles leaving the garage', () => {
+  it('[U04678] rejects movement and attack orders for vehicles leaving the garage', () => {
     const unit = { id: 'garage-tank', type: 'tank', owner: 'player', health: 100,
       x: 32, y: 32, path: [], moveTarget: null, target: null, factoryExit: { phase: 'moving' } }
     handler.handleMovementCommand([unit], 160, 160, mapGrid)
@@ -124,7 +124,7 @@ describe('UnitCommandsHandler utility queues', () => {
     expect(unit.target).toBeNull()
   })
 
-  it('initializes and resets utility queue state when mode changes', () => {
+  it('[U04679] initializes and resets utility queue state when mode changes', () => {
     const unit = {}
 
     const queue = handler.ensureUtilityQueueState(unit, 'heal')
@@ -142,7 +142,7 @@ describe('UnitCommandsHandler utility queues', () => {
     expect(queue.lockedByUser).toBe(false)
   })
 
-  it('clears utility queue state without removing the queue object', () => {
+  it('[U04680] clears utility queue state without removing the queue object', () => {
     const unit = {
       utilityQueue: {
         mode: 'repair',
@@ -164,7 +164,7 @@ describe('UnitCommandsHandler utility queues', () => {
     expect(unit.utilityQueue.lockedByUser).toBe(false)
   })
 
-  it('cancels current utility task state based on unit type', () => {
+  it('[U04681] cancels current utility task state based on unit type', () => {
     const ambulance = { type: 'ambulance', healingTarget: { id: 'u1' }, healingTimer: 5 }
     const tanker = { type: 'tankerTruck', refuelTarget: { id: 'u2' }, refuelTimer: 3, emergencyTarget: 'u3', emergencyMode: true }
     const recovery = {
@@ -191,7 +191,7 @@ describe('UnitCommandsHandler utility queues', () => {
     expect(recovery.repairStarted).toBe(false)
   })
 
-  it('validates wreck targets only for repair mode and assigned tanks', () => {
+  it('[U04682] validates wreck targets only for repair mode and assigned tanks', () => {
     const serviceUnit = { id: 'rt1', type: 'recoveryTank' }
     const wreck = { id: 'w1', isBeingRestored: false, isBeingRecycled: false, towedBy: null, assignedTankId: null }
 
@@ -204,7 +204,7 @@ describe('UnitCommandsHandler utility queues', () => {
     expect(handler.isUtilityTargetValid('repair', serviceUnit, { id: 'w1', isWreckTarget: true })).toBe(false)
   })
 
-  it('validates unit targets based on utility mode requirements', () => {
+  it('[U04683] validates unit targets based on utility mode requirements', () => {
     const serviceUnit = { id: 'a1', type: 'ambulance', owner: 'player', ammoCargo: 0, maxAmmoCargo: 10 }
 
     expect(handler.isUtilityTargetValid('heal', serviceUnit, {
@@ -248,7 +248,7 @@ describe('UnitCommandsHandler utility queues', () => {
     })).toBe(false)
   })
 
-  it('assigns an ambulance to a target and builds movement plan', () => {
+  it('[U04684] assigns an ambulance to a target and builds movement plan', () => {
     const ambulance = { id: 'amb1', type: 'ambulance', owner: 'player', tileX: 0, tileY: 0, medics: 1, health: 10 }
     const target = { id: 'tank1', type: 'tank', owner: 'player', tileX: 1, tileY: 0, crew: { driver: false, gunner: true } }
 
@@ -263,7 +263,7 @@ describe('UnitCommandsHandler utility queues', () => {
     expect(ambulance.healingTimer).toBe(0)
   })
 
-  it('rejects ambulance targets that already have full crew', () => {
+  it('[U04685] rejects ambulance targets that already have full crew', () => {
     const ambulance = { id: 'amb1', type: 'ambulance', owner: 'player', tileX: 0, tileY: 0, medics: 1, health: 10 }
     const target = { id: 'tank1', type: 'tank', owner: 'player', tileX: 1, tileY: 0, crew: { driver: true, gunner: true } }
 
@@ -273,7 +273,7 @@ describe('UnitCommandsHandler utility queues', () => {
     expect(showNotification).toHaveBeenCalledWith('Target unit is already fully crewed!', 2000)
   })
 
-  it('assigns a tanker truck to a refuel target', () => {
+  it('[U04686] assigns a tanker truck to a refuel target', () => {
     const tanker = { id: 'tank1', type: 'tankerTruck', owner: 'player', tileX: 0, tileY: 0, health: 5 }
     const target = { id: 'unit1', type: 'tank', owner: 'player', tileX: 1, tileY: 0, gas: 0, maxGas: 10 }
 
@@ -287,7 +287,7 @@ describe('UnitCommandsHandler utility queues', () => {
     expect(tanker.refuelTarget).toBe(target)
   })
 
-  it('assigns ammunition trucks for resupply and sets queue metadata', () => {
+  it('[U04687] assigns ammunition trucks for resupply and sets queue metadata', () => {
     const ammoTruck = {
       id: 'ammo1',
       type: 'ammunitionTruck',
@@ -311,7 +311,7 @@ describe('UnitCommandsHandler utility queues', () => {
     expect(ammoTruck.utilityQueue.currentTargetType).toBe('building')
   })
 
-  it('blocks recovery tasks when another tank is assigned to the wreck', () => {
+  it('[U04688] blocks recovery tasks when another tank is assigned to the wreck', () => {
     const tank = { id: 'rt1', type: 'recoveryTank', owner: 'player', tileX: 0, tileY: 0, health: 10 }
     const wreck = { id: 'w1' }
 
@@ -331,7 +331,7 @@ describe('UnitCommandsHandler utility queues', () => {
     expect(showNotification).toHaveBeenCalledWith('Another recovery tank is already assigned to this wreck.', 2000)
   })
 
-  it('assigns recovery tanks to tow wrecks and records workshop data', () => {
+  it('[U04689] assigns recovery tanks to tow wrecks and records workshop data', () => {
     // Recovery tank needs crew with loader for canRecoveryTankRepair to pass
     const tank = {
       id: 'rt1',
@@ -381,7 +381,7 @@ describe('UnitCommandsHandler utility queues', () => {
     expect(playSound).not.toHaveBeenCalled()
   })
 
-  it('starts the next utility task for queued wreck targets', () => {
+  it('[U04690] starts the next utility task for queued wreck targets', () => {
     const tank = {
       id: 'rt1',
       type: 'recoveryTank',
@@ -419,7 +419,7 @@ describe('UnitCommandsHandler utility queues', () => {
     expect(tank.utilityQueue.currentTargetAction).toBe('recycle')
   })
 
-  it('reports queue position for current and queued targets', () => {
+  it('[U04691] reports queue position for current and queued targets', () => {
     const unit = {
       utilityQueue: {
         currentTargetId: 'u1',
@@ -448,7 +448,7 @@ describe('UnitCommandsHandler handleAttackCommand', () => {
     gameState.humanPlayer = 'player'
   })
 
-  it('should assign attack targets to selected units', () => {
+  it('[U04692] should assign attack targets to selected units', () => {
     const selectedUnits = [
       { id: 'u1', type: 'tank', owner: 'player', tileX: 0, tileY: 0, health: 100 },
       { id: 'u2', type: 'tank', owner: 'player', tileX: 1, tileY: 0, health: 100 }
@@ -463,7 +463,7 @@ describe('UnitCommandsHandler handleAttackCommand', () => {
     expect(selectedUnits[1].target).toBe(target)
   })
 
-  it('should set forcedAttack when isForceAttack is true', () => {
+  it('[U04693] should set forcedAttack when isForceAttack is true', () => {
     const selectedUnits = [
       { id: 'u1', type: 'tank', owner: 'player', tileX: 0, tileY: 0, health: 100 }
     ]
@@ -476,7 +476,7 @@ describe('UnitCommandsHandler handleAttackCommand', () => {
     expect(selectedUnits[0].forcedAttack).toBe(true)
   })
 
-  it('should handle empty selectedUnits array gracefully', () => {
+  it('[U04694] should handle empty selectedUnits array gracefully', () => {
     const target = { id: 'enemy1', owner: 'enemy', tileX: 5, tileY: 5, x: 160, y: 160, health: 100 }
 
     expect(() => handler.handleAttackCommand([], target, mapGrid, false)).not.toThrow()
@@ -497,7 +497,7 @@ describe('UnitCommandsHandler handleRefineryUnloadCommand', () => {
     gameState.humanPlayer = 'player'
   })
 
-  it('should assign refinery to harvesters', () => {
+  it('[U04695] should assign refinery to harvesters', () => {
     const harvesters = [
       { id: 'h1', type: 'harvester', owner: 'player', tileX: 0, tileY: 0, oreCarried: 100, health: 100 }
     ]
@@ -510,7 +510,7 @@ describe('UnitCommandsHandler handleRefineryUnloadCommand', () => {
     expect(harvesters[0].assignedRefinery).toBe(refinery)
   })
 
-  it('should handle harvesters with no resources', () => {
+  it('[U04696] should handle harvesters with no resources', () => {
     const harvesters = [
       { id: 'h1', type: 'harvester', owner: 'player', tileX: 0, tileY: 0, heldResources: 0, health: 100 }
     ]
@@ -537,7 +537,7 @@ describe('UnitCommandsHandler handleHarvesterCommand', () => {
     gameState.humanPlayer = 'player'
   })
 
-  it('should set manualOreTarget when commanding harvesters to ore location', () => {
+  it('[U04697] should set manualOreTarget when commanding harvesters to ore location', () => {
     const harvesters = [
       { id: 'h1', type: 'harvester', owner: 'player', tileX: 0, tileY: 0, health: 100, x: 0, y: 0 }
     ]
@@ -552,7 +552,7 @@ describe('UnitCommandsHandler handleHarvesterCommand', () => {
     expect(harvesters[0].moveTarget).toEqual(oreTarget)
   })
 
-  it('keeps a single harvester on the clicked ore tile even when the field has neighboring ore tiles', () => {
+  it('[U04698] keeps a single harvester on the clicked ore tile even when the field has neighboring ore tiles', () => {
     const harvesters = [
       { id: 'h1', type: 'harvester', owner: 'player', tileX: 6, tileY: 5, health: 100, x: 192, y: 160 }
     ]
@@ -568,7 +568,7 @@ describe('UnitCommandsHandler handleHarvesterCommand', () => {
     expect(harvesters[0].moveTarget).toEqual(oreTarget)
   })
 
-  it('spreads multiple harvesters across connected ore tiles when commanding one ore field', () => {
+  it('[U04699] spreads multiple harvesters across connected ore tiles when commanding one ore field', () => {
     const harvesters = [
       { id: 'h1', type: 'harvester', owner: 'player', tileX: 0, tileY: 0, health: 100, x: 0, y: 0 },
       { id: 'h2', type: 'harvester', owner: 'player', tileX: 1, tileY: 0, health: 100, x: 32, y: 0 }
@@ -601,7 +601,7 @@ describe('UnitCommandsHandler attack group and movement', () => {
     gameState.humanPlayer = 'player'
   })
 
-  it('clears attack group state and attack queues from units', () => {
+  it('[U04700] clears attack group state and attack queues from units', () => {
     const unitWithQueue = { id: 'u1', attackQueue: [{ target: { id: 't1' } }] }
     const unitNoQueue = { id: 'u2' }
     gameState.attackGroupTargets = [{ id: 't1' }]
@@ -612,7 +612,7 @@ describe('UnitCommandsHandler attack group and movement', () => {
     expect(gameState.attackGroupTargets).toEqual([])
   })
 
-  it('validates canAmbulanceProvideCrew returns false for invalid units', () => {
+  it('[U04701] validates canAmbulanceProvideCrew returns false for invalid units', () => {
     expect(handler.canAmbulanceProvideCrew(null)).toBe(false)
     expect(handler.canAmbulanceProvideCrew({ type: 'tank' })).toBe(false)
     expect(handler.canAmbulanceProvideCrew({ type: 'ambulance', health: 0 })).toBe(false)
@@ -621,7 +621,7 @@ describe('UnitCommandsHandler attack group and movement', () => {
     expect(handler.canAmbulanceProvideCrew({ type: 'ambulance', health: 10, medics: 1 })).toBe(true)
   })
 
-  it('validates canTankerProvideFuel returns false for invalid units', () => {
+  it('[U04702] validates canTankerProvideFuel returns false for invalid units', () => {
     expect(handler.canTankerProvideFuel(null)).toBe(false)
     expect(handler.canTankerProvideFuel({ type: 'tank' })).toBe(false)
     expect(handler.canTankerProvideFuel({ type: 'tankerTruck', health: 0 })).toBe(false)
@@ -629,7 +629,7 @@ describe('UnitCommandsHandler attack group and movement', () => {
     expect(handler.canTankerProvideFuel({ type: 'tankerTruck', health: 10 })).toBe(true)
   })
 
-  it('validates canRecoveryTankRepair returns false for invalid units', () => {
+  it('[U04703] validates canRecoveryTankRepair returns false for invalid units', () => {
     expect(handler.canRecoveryTankRepair(null)).toBe(false)
     expect(handler.canRecoveryTankRepair({ type: 'tank' })).toBe(false)
     expect(handler.canRecoveryTankRepair({ type: 'recoveryTank', health: 0 })).toBe(false)
@@ -637,7 +637,7 @@ describe('UnitCommandsHandler attack group and movement', () => {
     expect(handler.canRecoveryTankRepair({ type: 'recoveryTank', health: 10 })).toBe(true)
   })
 
-  it('validates canAmmunitionTruckOperate and canAmmunitionTruckProvideAmmo', () => {
+  it('[U04704] validates canAmmunitionTruckOperate and canAmmunitionTruckProvideAmmo', () => {
     expect(handler.canAmmunitionTruckOperate(null)).toBe(false)
     expect(handler.canAmmunitionTruckOperate({ type: 'tank' })).toBe(false)
     expect(handler.canAmmunitionTruckOperate({ type: 'ammunitionTruck', health: 0 })).toBe(false)
@@ -648,7 +648,7 @@ describe('UnitCommandsHandler attack group and movement', () => {
     expect(handler.canAmmunitionTruckProvideAmmo({ type: 'ammunitionTruck', health: 10, ammoCargo: 5 })).toBe(true)
   })
 
-  it('cancels recovery task and releases wreck assignment', () => {
+  it('[U04705] cancels recovery task and releases wreck assignment', () => {
     const wreckData = { id: 'w1', assignedTankId: 'rt1', towedBy: 'rt1' }
     getWreckById.mockReturnValue(wreckData)
 
@@ -667,13 +667,13 @@ describe('UnitCommandsHandler attack group and movement', () => {
     expect(tank.recoveryProgress).toBe(0)
   })
 
-  it('cancels recovery task does nothing for non-recovery tanks', () => {
+  it('[U04706] cancels recovery task does nothing for non-recovery tanks', () => {
     const tank = { id: 'u1', type: 'tank', recoveryTask: null }
     handler.cancelRecoveryTask(tank)
     expect(tank.recoveryTask).toBe(null)
   })
 
-  it('findUnitById returns null for missing id', () => {
+  it('[U04707] findUnitById returns null for missing id', () => {
     expect(handler.findUnitById(null)).toBe(null)
     expect(handler.findUnitById(undefined)).toBe(null)
     units.push({ id: 'u1', type: 'tank' })
@@ -681,7 +681,7 @@ describe('UnitCommandsHandler attack group and movement', () => {
     expect(handler.findUnitById('nonexistent')).toBe(null)
   })
 
-  it('advanceUtilityQueue clears mode when queue is empty', () => {
+  it('[U04708] advanceUtilityQueue clears mode when queue is empty', () => {
     const unit = {
       utilityQueue: {
         mode: 'heal',
@@ -702,7 +702,7 @@ describe('UnitCommandsHandler attack group and movement', () => {
     expect(unit.utilityQueue.lockedByUser).toBe(false)
   })
 
-  it('isEnemyTargetForUnit properly detects enemy targets', () => {
+  it('[U04709] isEnemyTargetForUnit properly detects enemy targets', () => {
     expect(handler.isEnemyTargetForUnit(null, { owner: 'player1' })).toBe(false)
     expect(handler.isEnemyTargetForUnit({ owner: 'player2' }, null)).toBe(false)
     expect(handler.isEnemyTargetForUnit({ owner: 'player2' }, { owner: 'player1' })).toBe(true)
@@ -710,7 +710,7 @@ describe('UnitCommandsHandler attack group and movement', () => {
     expect(handler.isEnemyTargetForUnit({ owner: 'player' }, { owner: 'player1' })).toBe(false)
   })
 
-  it('calculateSemicircleFormation arranges single unit directly in front', () => {
+  it('[U04710] calculateSemicircleFormation arranges single unit directly in front', () => {
     const units = [{ id: 'u1' }]
     const target = { tileX: 5, tileY: 5, x: 160, y: 160 }
     const safeDistance = 100
@@ -721,7 +721,7 @@ describe('UnitCommandsHandler attack group and movement', () => {
     expect(positions[0].x).toBeCloseTo(target.x + 32 / 2 - safeDistance, 1)
   })
 
-  it('calculateSemicircleFormation creates arc for multiple units', () => {
+  it('[U04711] calculateSemicircleFormation creates arc for multiple units', () => {
     const selectedUnits = [{ id: 'u1' }, { id: 'u2' }, { id: 'u3' }]
     const target = { tileX: 5, tileY: 5, x: 160, y: 160 }
     const safeDistance = 100
@@ -738,7 +738,7 @@ describe('UnitCommandsHandler attack group and movement', () => {
     })
   })
 
-  it('blocks harvesters from manually targeting ore above their XP level', () => {
+  it('[U04712] blocks harvesters from manually targeting ore above their XP level', () => {
     const harvesters = [
       { id: 'h1', type: 'harvester', owner: 'player', tileX: 0, tileY: 0, health: 100, x: 0, y: 0, level: 0 }
     ]
@@ -753,14 +753,14 @@ describe('UnitCommandsHandler attack group and movement', () => {
     expect(showNotification).toHaveBeenCalledWith('1 harvester needs XP level 2 to harvest this ore.', 2500)
   })
 
-  it('getTargetPoint returns center for units with tileX', () => {
+  it('[U04713] getTargetPoint returns center for units with tileX', () => {
     const unitTarget = { tileX: 3, tileY: 4, x: 96, y: 128 }
     const point = handler.getTargetPoint(unitTarget, { x: 0, y: 0 })
     expect(point.x).toBe(96 + 16)
     expect(point.y).toBe(128 + 16)
   })
 
-  it('getTargetPoint returns closest point for buildings', () => {
+  it('[U04714] getTargetPoint returns closest point for buildings', () => {
     const buildingTarget = { x: 4, y: 5, width: 2, height: 2 }
     const unitCenter = { x: 64, y: 80 }
     const point = handler.getTargetPoint(buildingTarget, unitCenter)
@@ -769,7 +769,7 @@ describe('UnitCommandsHandler attack group and movement', () => {
     expect(point.y).toBe(160) // Clipped to top edge
   })
 
-  it('handleDamagedUnitToRecoveryTankCommand queues repair targets', () => {
+  it('[U04715] handleDamagedUnitToRecoveryTankCommand queues repair targets', () => {
     const recoveryTank = {
       id: 'rt1',
       type: 'recoveryTank',
@@ -798,7 +798,7 @@ describe('UnitCommandsHandler attack group and movement', () => {
     expect(playSound).toHaveBeenCalledWith('movement', 0.5)
   })
 
-  it('handleDamagedUnitToRecoveryTankCommand skips fully healthy units', () => {
+  it('[U04716] handleDamagedUnitToRecoveryTankCommand skips fully healthy units', () => {
     const recoveryTank = { id: 'rt1', type: 'recoveryTank', owner: 'player' }
     const healthyUnits = [
       { id: 'u1', type: 'tank', owner: 'player', health: 100, maxHealth: 100 },
@@ -812,7 +812,7 @@ describe('UnitCommandsHandler attack group and movement', () => {
     expect(handler.setUtilityQueue).not.toHaveBeenCalled()
   })
 
-  it('issueTankerKamikazeCommand sets kamikaze state and path', async() => {
+  it('[U04717] issueTankerKamikazeCommand sets kamikaze state and path', async() => {
     const tanker = {
       id: 't1',
       type: 'tankerTruck',
@@ -844,7 +844,7 @@ describe('UnitCommandsHandler attack group and movement', () => {
     expect(tanker.emergencyMode).toBe(false)
   })
 
-  it('handleMovementCommand filters out units without commanders', () => {
+  it('[U04718] handleMovementCommand filters out units without commanders', () => {
     const commandableUnit = { id: 'u1', type: 'tank', owner: 'player', tileX: 0, tileY: 0 }
     const noCommanderUnit = {
       id: 'u2',
@@ -862,7 +862,7 @@ describe('UnitCommandsHandler attack group and movement', () => {
     expect(showNotification).not.toHaveBeenCalled() // At least one commandable unit exists
   })
 
-  it('handleMovementCommand shows notification when all units lack commanders', () => {
+  it('[U04719] handleMovementCommand shows notification when all units lack commanders', () => {
     const noCommanderUnit = {
       id: 'u1',
       type: 'tank',
@@ -876,7 +876,7 @@ describe('UnitCommandsHandler attack group and movement', () => {
 
     expect(showNotification).toHaveBeenCalledWith('Cannot command units without commanders!', 2000)
   })
-  it('handleMovementCommand aborts unreachable movement and notifies human player', () => {
+  it('[U04720] handleMovementCommand aborts unreachable movement and notifies human player', () => {
     const unit = { id: 'u1', type: 'tank', owner: 'player', tileX: 0, tileY: 0 }
 
     findPathForOwner.mockReturnValue(null)
@@ -888,7 +888,7 @@ describe('UnitCommandsHandler attack group and movement', () => {
     expect(showNotification).toHaveBeenCalledWith('Cannot reach that location. Move command aborted.', 2200)
   })
 
-  it('handleMovementCommand does not notify for unreachable non-human units', () => {
+  it('[U04721] handleMovementCommand does not notify for unreachable non-human units', () => {
     const aiUnit = { id: 'u2', type: 'tank', owner: 'enemy', tileX: 0, tileY: 0 }
 
     findPathForOwner.mockReturnValue(null)
@@ -898,7 +898,7 @@ describe('UnitCommandsHandler attack group and movement', () => {
     expect(showNotification).not.toHaveBeenCalledWith('Cannot reach that location. Move command aborted.', 2200)
   })
 
-  it('handleMovementCommand retains a battleship target while assigning its new path', () => {
+  it('[U04722] handleMovementCommand retains a battleship target while assigning its new path', () => {
     const target = { id: 'enemy-ship', health: 100 }
     const battleship = {
       id: 'battle-1',
@@ -922,7 +922,7 @@ describe('UnitCommandsHandler attack group and movement', () => {
     expect(battleship.moveTarget).toEqual({ x: 2, y: 2 })
   })
 
-  it('handleMovementCommand puts harvesters into manual hold when moving to non-ore tiles', () => {
+  it('[U04723] handleMovementCommand puts harvesters into manual hold when moving to non-ore tiles', () => {
     const harvester = { id: 'h1', type: 'harvester', owner: 'player', tileX: 0, tileY: 0 }
     const commandMap = Array.from({ length: 6 }, () => Array.from({ length: 6 }, () => ({ type: 'land', ore: false })))
 
@@ -936,7 +936,7 @@ describe('UnitCommandsHandler attack group and movement', () => {
     expect(harvester.lastPlayerCommandTime).toBeDefined()
   })
 
-  it('handleMovementCommand promotes ore clicks into manual harvester ore targets', () => {
+  it('[U04724] handleMovementCommand promotes ore clicks into manual harvester ore targets', () => {
     const harvester = { id: 'h2', type: 'harvester', owner: 'player', tileX: 0, tileY: 0 }
     const commandMap = Array.from({ length: 6 }, () => Array.from({ length: 6 }, () => ({ type: 'land', ore: false })))
     commandMap[3][3].ore = true
@@ -950,7 +950,7 @@ describe('UnitCommandsHandler attack group and movement', () => {
   })
 
 
-  it('handleMovementCommand no-ops F22 already in landing sequence for same airstrip', () => {
+  it('[U04725] handleMovementCommand no-ops F22 already in landing sequence for same airstrip', () => {
     vi.mocked(getBuildingIdentifier).mockImplementation(building => building.id)
 
     gameState.buildings = [{
@@ -995,7 +995,7 @@ describe('UnitCommandsHandler attack group and movement', () => {
     expect(f22.forcedAttack).toBe(true)
   })
 
-  it('handleMovementCommand still assigns F22 flight to a different airstrip', () => {
+  it('[U04726] handleMovementCommand still assigns F22 flight to a different airstrip', () => {
     vi.mocked(getBuildingIdentifier).mockImplementation(building => building.id)
 
     gameState.buildings = [{
@@ -1041,7 +1041,7 @@ describe('UnitCommandsHandler attack group and movement', () => {
   })
 
 
-  it('planUtilityAssignments distributes targets among service units', () => {
+  it('[U04727] planUtilityAssignments distributes targets among service units', () => {
     const ambulance1 = { id: 'amb1', type: 'ambulance', owner: 'player', tileX: 0, tileY: 0, x: 0, y: 0, health: 10, medics: 2 }
     const ambulance2 = { id: 'amb2', type: 'ambulance', owner: 'player', tileX: 5, tileY: 5, x: 160, y: 160, health: 10, medics: 2 }
 
@@ -1060,7 +1060,7 @@ describe('UnitCommandsHandler attack group and movement', () => {
     expect(result.assignments.length).toBeGreaterThan(0)
   })
 
-  it('queueUtilityTargets returns false when no capable units', () => {
+  it('[U04728] queueUtilityTargets returns false when no capable units', () => {
     const result = handler.queueUtilityTargets([], [{ id: 't1' }], 'heal', mapGrid)
     expect(result).toBe(false)
   })
@@ -1074,22 +1074,22 @@ describe('Exported utility functions', () => {
   })
 
   describe('getUnitTilePosition', () => {
-    it('returns null for null/undefined unit', () => {
+    it('[U04729] returns null for null/undefined unit', () => {
       expect(getUnitTilePosition(null)).toBe(null)
       expect(getUnitTilePosition(undefined)).toBe(null)
     })
 
-    it('returns tile coordinates when unit has tileX/tileY', () => {
+    it('[U04730] returns tile coordinates when unit has tileX/tileY', () => {
       const unit = { tileX: 5, tileY: 3 }
       expect(getUnitTilePosition(unit)).toEqual({ x: 5, y: 3 })
     })
 
-    it('converts pixel coordinates to tile coordinates', () => {
+    it('[U04731] converts pixel coordinates to tile coordinates', () => {
       const unit = { x: 160, y: 96 } // TILE_SIZE = 32, so 160/32 = 5, 96/32 = 3
       expect(getUnitTilePosition(unit)).toEqual({ x: 5, y: 3 })
     })
 
-    it('handles pixel coordinates with offset correctly', () => {
+    it('[U04732] handles pixel coordinates with offset correctly', () => {
       const unit = { x: 175, y: 111 } // 175 + 16 = 191, floor(191/32) = 5; 111 + 16 = 127, floor(127/32) = 3
       expect(getUnitTilePosition(unit)).toEqual({ x: 5, y: 3 })
     })
@@ -1102,20 +1102,20 @@ describe('Exported utility functions', () => {
       mapGrid = createMapGrid(6, 6)
     })
 
-    it('returns null for invalid inputs', () => {
+    it('[U04733] returns null for invalid inputs', () => {
       expect(computeUtilityApproachPath(null, {}, 'heal', mapGrid)).toBe(null)
       expect(computeUtilityApproachPath({}, null, 'heal', mapGrid)).toBe(null)
       expect(computeUtilityApproachPath({}, {}, 'heal', null)).toBe(null)
       expect(computeUtilityApproachPath({}, {}, 'heal', [])).toBe(null)
     })
 
-    it('returns null when start tile cannot be determined', () => {
+    it('[U04734] returns null when start tile cannot be determined', () => {
       const serviceUnit = { owner: 'player' }
       const target = { tileX: 1, tileY: 1 }
       expect(computeUtilityApproachPath(serviceUnit, target, 'heal', mapGrid)).toBe(null)
     })
 
-    it('computes heal approach path using ambulance offsets', () => {
+    it('[U04735] computes heal approach path using ambulance offsets', () => {
       const serviceUnit = { tileX: 0, tileY: 0, owner: 'player' }
       const target = { tileX: 2, tileY: 2 }
 
@@ -1129,7 +1129,7 @@ describe('Exported utility functions', () => {
       expect(findPathForOwner).toHaveBeenCalled()
     })
 
-    it('computes repair approach path for wreck targets', () => {
+    it('[U04736] computes repair approach path for wreck targets', () => {
       const serviceUnit = { tileX: 0, tileY: 0, owner: 'player' }
       const target = { tileX: 2, tileY: 2, isWreckTarget: true }
 
@@ -1149,7 +1149,7 @@ describe('Exported utility functions', () => {
   })
 
   describe('clearAttackGroupState', () => {
-    it('clears attack queues from units', () => {
+    it('[U04737] clears attack queues from units', () => {
       const unitWithQueue = { id: 'u1', attackQueue: [{ target: { id: 't1' } }] }
       const unitNoQueue = { id: 'u2' }
       gameState.attackGroupTargets = [{ id: 't1' }]
@@ -1162,7 +1162,7 @@ describe('Exported utility functions', () => {
   })
 
   describe('canAmbulanceProvideCrew', () => {
-    it('returns false for invalid ambulances', () => {
+    it('[U04738] returns false for invalid ambulances', () => {
       expect(canAmbulanceProvideCrew(null)).toBe(false)
       expect(canAmbulanceProvideCrew({ type: 'tank' })).toBe(false)
       expect(canAmbulanceProvideCrew({ type: 'ambulance', health: 0 })).toBe(false)
@@ -1170,71 +1170,71 @@ describe('Exported utility functions', () => {
       expect(canAmbulanceProvideCrew({ type: 'ambulance', health: 10, medics: 0 })).toBe(false)
     })
 
-    it('returns true for valid ambulances', () => {
+    it('[U04739] returns true for valid ambulances', () => {
       expect(canAmbulanceProvideCrew({ type: 'ambulance', health: 10, medics: 1 })).toBe(true)
     })
   })
 
   describe('canTankerProvideFuel', () => {
-    it('returns false for invalid tankers', () => {
+    it('[U04740] returns false for invalid tankers', () => {
       expect(canTankerProvideFuel(null)).toBe(false)
       expect(canTankerProvideFuel({ type: 'tank' })).toBe(false)
       expect(canTankerProvideFuel({ type: 'tankerTruck', health: 0 })).toBe(false)
       expect(canTankerProvideFuel({ type: 'tankerTruck', health: 10, crew: { loader: false } })).toBe(false)
     })
 
-    it('returns true for valid tankers', () => {
+    it('[U04741] returns true for valid tankers', () => {
       expect(canTankerProvideFuel({ type: 'tankerTruck', health: 10 })).toBe(true)
     })
   })
 
   describe('canRecoveryTankRepair', () => {
-    it('returns false for invalid recovery tanks', () => {
+    it('[U04742] returns false for invalid recovery tanks', () => {
       expect(canRecoveryTankRepair(null)).toBe(false)
       expect(canRecoveryTankRepair({ type: 'tank' })).toBe(false)
       expect(canRecoveryTankRepair({ type: 'recoveryTank', health: 0 })).toBe(false)
       expect(canRecoveryTankRepair({ type: 'recoveryTank', health: 10, crew: { loader: false } })).toBe(false)
     })
 
-    it('returns true for valid recovery tanks', () => {
+    it('[U04743] returns true for valid recovery tanks', () => {
       expect(canRecoveryTankRepair({ type: 'recoveryTank', health: 10 })).toBe(true)
     })
   })
 
   describe('canAmmunitionTruckOperate', () => {
-    it('returns false for invalid ammo trucks', () => {
+    it('[U04744] returns false for invalid ammo trucks', () => {
       expect(canAmmunitionTruckOperate(null)).toBe(false)
       expect(canAmmunitionTruckOperate({ type: 'tank' })).toBe(false)
       expect(canAmmunitionTruckOperate({ type: 'ammunitionTruck', health: 0 })).toBe(false)
       expect(canAmmunitionTruckOperate({ type: 'ammunitionTruck', health: 10, crew: { loader: false } })).toBe(false)
     })
 
-    it('returns true for operational ammo trucks', () => {
+    it('[U04745] returns true for operational ammo trucks', () => {
       expect(canAmmunitionTruckOperate({ type: 'ammunitionTruck', health: 10 })).toBe(true)
     })
   })
 
   describe('canAmmunitionTruckProvideAmmo', () => {
-    it('returns false when truck cannot operate', () => {
+    it('[U04746] returns false when truck cannot operate', () => {
       expect(canAmmunitionTruckProvideAmmo({ type: 'ammunitionTruck', health: 0 })).toBe(false)
     })
 
-    it('returns false when truck has no ammo', () => {
+    it('[U04747] returns false when truck has no ammo', () => {
       expect(canAmmunitionTruckProvideAmmo({ type: 'ammunitionTruck', health: 10, ammoCargo: 0 })).toBe(false)
     })
 
-    it('returns true when truck has ammo', () => {
+    it('[U04748] returns true when truck has ammo', () => {
       expect(canAmmunitionTruckProvideAmmo({ type: 'ammunitionTruck', health: 10, ammoCargo: 5 })).toBe(true)
     })
   })
 
   describe('isEnemyTargetForUnit', () => {
-    it('returns false for invalid inputs', () => {
+    it('[U04749] returns false for invalid inputs', () => {
       expect(isEnemyTargetForUnit(null, { owner: 'player1' })).toBe(false)
       expect(isEnemyTargetForUnit({ owner: 'player2' }, null)).toBe(false)
     })
 
-    it('detects enemy targets correctly', () => {
+    it('[U04750] detects enemy targets correctly', () => {
       expect(isEnemyTargetForUnit({ owner: 'player2' }, { owner: 'player1' })).toBe(true)
       expect(isEnemyTargetForUnit({ owner: 'player1' }, { owner: 'player1' })).toBe(false)
       expect(isEnemyTargetForUnit({ owner: 'player' }, { owner: 'player1' })).toBe(false)
@@ -1242,14 +1242,14 @@ describe('Exported utility functions', () => {
   })
 
   describe('getTargetPoint', () => {
-    it('returns center point for units with tileX', () => {
+    it('[U04751] returns center point for units with tileX', () => {
       const unitTarget = { tileX: 3, tileY: 4, x: 96, y: 128 }
       const point = getTargetPoint(unitTarget, { x: 0, y: 0 })
       expect(point.x).toBe(96 + 16)
       expect(point.y).toBe(128 + 16)
     })
 
-    it('returns closest point on building rectangle', () => {
+    it('[U04752] returns closest point on building rectangle', () => {
       const buildingTarget = { x: 4, y: 5, width: 2, height: 2 }
       const unitCenter = { x: 64, y: 80 }
       const point = getTargetPoint(buildingTarget, unitCenter)
@@ -1260,12 +1260,12 @@ describe('Exported utility functions', () => {
   })
 
   describe('findUnitById', () => {
-    it('returns null for invalid id', () => {
+    it('[U04753] returns null for invalid id', () => {
       expect(findUnitById(null)).toBe(null)
       expect(findUnitById(undefined)).toBe(null)
     })
 
-    it('finds unit by id', () => {
+    it('[U04754] finds unit by id', () => {
       units.push({ id: 'u1', type: 'tank' })
       expect(findUnitById('u1')).toEqual({ id: 'u1', type: 'tank' })
       expect(findUnitById('nonexistent')).toBe(null)

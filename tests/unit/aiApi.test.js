@@ -91,7 +91,7 @@ const combatOutput = JSON.parse(
 )
 
 describe('LLM Control API validation', () => {
-  it('accepts the example payloads', () => {
+  it('[U00087] accepts the example payloads', () => {
     const results = {
       earlyInput: validateGameTickInput(earlyGameInput),
       earlyOutput: validateGameTickOutput(earlyGameOutput),
@@ -110,7 +110,7 @@ describe('LLM Control API validation', () => {
 describe('LLM Control API applier', () => {
 
 
-  it('validates sell_building outputs in the protocol schema', () => {
+  it('[U00088] validates sell_building outputs in the protocol schema', () => {
     const result = validateGameTickOutput({
       protocolVersion: '1.0',
       tick: 10,
@@ -120,7 +120,7 @@ describe('LLM Control API applier', () => {
     expect(result.ok).toBe(true)
   })
 
-  it('requires artillery turret before howitzer is available', () => {
+  it('[U00089] requires artillery turret before howitzer is available', () => {
     const owner = 'player1'
     const baseBuildings = [
       { type: 'vehicleFactory', owner, health: 100 },
@@ -138,7 +138,7 @@ describe('LLM Control API applier', () => {
     )
     expect(withArtilleryTurret.has('howitzer')).toBe(true)
   })
-  it('applies building placement and unit production actions', () => {
+  it('[U00090] applies building placement and unit production actions', () => {
     const state = resetGameState()
     const mapGrid = createTestMapGrid(24, 24)
     const occupancyMap = Array.from({ length: mapGrid.length }, () => Array(mapGrid[0].length).fill(0))
@@ -197,7 +197,7 @@ describe('LLM Control API applier', () => {
     expect(state.llmStrategic.unitQueuesByPlayer['player1']).toHaveLength(1)
   })
 
-  it('replaces an unsafe LLM-requested gas station position with safe AI placement', () => {
+  it('[U00091] replaces an unsafe LLM-requested gas station position with safe AI placement', () => {
     const owner = 'ai1'
     const aiFactory = {
       id: owner,
@@ -248,7 +248,7 @@ describe('LLM Control API applier', () => {
     expect(aiFactory.buildingPosition).toEqual(safePosition)
   })
 
-  it('applies move and attack commands', () => {
+  it('[U00092] applies move and attack commands', () => {
     resetGameState()
     const mapGrid = createTestMapGrid(20, 20)
     const units = [
@@ -310,7 +310,7 @@ describe('LLM Control API applier', () => {
 })
 
 describe('LLM exporter compact output', () => {
-  it('omits world-pixel position and null/default fields from unit snapshots', () => {
+  it('[U00093] omits world-pixel position and null/default fields from unit snapshots', () => {
     const state = resetGameState()
     state.mapTilesX = 20
     state.mapTilesY = 20
@@ -377,7 +377,7 @@ describe('LLM exporter compact output', () => {
     expect(apache.orders?.targetId).toBe('enemy1')
   })
 
-  it('omits null rallyPoint from building snapshots', () => {
+  it('[U00094] omits null rallyPoint from building snapshots', () => {
     const state = resetGameState()
     const buildings = [
       { id: 'b1', type: 'constructionYard', owner: 'player1', health: 300, maxHealth: 300, x: 5, y: 5, width: 3, height: 3, constructionFinished: true, rallyPoint: null },
@@ -400,7 +400,7 @@ describe('LLM exporter compact output', () => {
     expect(vf.rallyPoint).toBeDefined()
   })
 
-  it('aggregates multiple damage events for the same target into one entry', () => {
+  it('[U00095] aggregates multiple damage events for the same target into one entry', () => {
     resetTransitions()
     // Simulate three hits on the same target
     recordDamage({ attackerId: 'a1', targetId: 'u1', targetKind: 'unit', amount: 10, tick: 1, timeSeconds: 0.1 })

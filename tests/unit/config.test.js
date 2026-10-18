@@ -183,20 +183,20 @@ import {
 
 describe('config.js', () => {
   describe('Core Constants', () => {
-    it('should have TILE_SIZE defined as 32', () => {
+    it('[U00971] should have TILE_SIZE defined as 32', () => {
       expect(TILE_SIZE).toBe(32)
     })
 
-    it('should have MIN_MAP_TILES defined', () => {
+    it('[U00972] should have MIN_MAP_TILES defined', () => {
       expect(MIN_MAP_TILES).toBe(25)
     })
 
-    it('should have DEFAULT_MAP_TILES defined', () => {
+    it('[U00973] should have DEFAULT_MAP_TILES defined', () => {
       expect(DEFAULT_MAP_TILES_X).toBe(200)
       expect(DEFAULT_MAP_TILES_Y).toBe(200)
     })
 
-    it('should have DIRECTIONS with 8 cardinal directions', () => {
+    it('[U00974] should have DIRECTIONS with 8 cardinal directions', () => {
       expect(DIRECTIONS).toHaveLength(8)
       expect(DIRECTIONS).toContainEqual({ x: 0, y: -1 }) // north
       expect(DIRECTIONS).toContainEqual({ x: 1, y: 0 })  // east
@@ -219,43 +219,43 @@ describe('config.js', () => {
       setMapDimensions(originalMapX, originalMapY)
     })
 
-    it('should get current map dimensions', () => {
+    it('[U00975] should get current map dimensions', () => {
       const dimensions = getMapDimensions()
       expect(dimensions).toHaveProperty('width')
       expect(dimensions).toHaveProperty('height')
     })
 
-    it('should set map dimensions', () => {
+    it('[U00976] should set map dimensions', () => {
       const result = setMapDimensions(64, 64)
       expect(result.width).toBe(64)
       expect(result.height).toBe(64)
     })
 
-    it('should enforce minimum map size', () => {
+    it('[U00977] should enforce minimum map size', () => {
       const result = setMapDimensions(10, 10)
       expect(result.width).toBe(MIN_MAP_TILES)
       expect(result.height).toBe(MIN_MAP_TILES)
     })
 
-    it('should handle non-finite width', () => {
+    it('[U00978] should handle non-finite width', () => {
       const result = setMapDimensions(NaN, 50)
       expect(result.width).toBe(DEFAULT_MAP_TILES_X)
       expect(result.height).toBe(50)
     })
 
-    it('should handle non-finite height', () => {
+    it('[U00979] should handle non-finite height', () => {
       const result = setMapDimensions(50, Infinity)
       expect(result.width).toBe(50)
       expect(result.height).toBe(DEFAULT_MAP_TILES_Y)
     })
 
-    it('should calculate map width in pixels', () => {
+    it('[U00980] should calculate map width in pixels', () => {
       setMapDimensions(100, 100)
       const width = getMapWidth()
       expect(width).toBe(100 * TILE_SIZE)
     })
 
-    it('should calculate map height in pixels', () => {
+    it('[U00981] should calculate map height in pixels', () => {
       setMapDimensions(100, 100)
       const height = getMapHeight()
       expect(height).toBe(100 * TILE_SIZE)
@@ -263,7 +263,7 @@ describe('config.js', () => {
   })
 
   describe('Unit Configuration', () => {
-    it('should have UNIT_COSTS for all unit types', () => {
+    it('[U00982] should have UNIT_COSTS for all unit types', () => {
       expect(UNIT_COSTS.tank).toBeDefined()
       expect(UNIT_COSTS.harvester).toBeDefined()
       expect(UNIT_COSTS.rocketTank).toBeDefined()
@@ -274,7 +274,7 @@ describe('config.js', () => {
       expect(UNIT_COSTS.howitzer).toBeDefined()
     })
 
-    it('should have UNIT_PROPERTIES for all unit types', () => {
+    it('[U00983] should have UNIT_PROPERTIES for all unit types', () => {
       expect(UNIT_PROPERTIES.tank_v1).toBeDefined()
       expect(UNIT_PROPERTIES.harvester).toBeDefined()
       expect(UNIT_PROPERTIES.rocketTank).toBeDefined()
@@ -285,27 +285,27 @@ describe('config.js', () => {
       expect(UNIT_PROPERTIES.howitzer).toBeDefined()
     })
 
-    it('should have health properties for units', () => {
+    it('[U00984] should have health properties for units', () => {
       expect(UNIT_PROPERTIES.tank_v1.health).toBeGreaterThan(0)
       expect(UNIT_PROPERTIES.tank_v1.maxHealth).toBeGreaterThan(0)
     })
 
-    it('should have speed properties for units', () => {
+    it('[U00985] should have speed properties for units', () => {
       expect(UNIT_PROPERTIES.tank_v1.speed).toBeGreaterThan(0)
       expect(UNIT_PROPERTIES.harvester.speed).toBeGreaterThan(0)
     })
 
-    it('should keep harvester rotation only 50% faster than a tank', () => {
+    it('[U00986] should keep harvester rotation only 50% faster than a tank', () => {
       expect(UNIT_PROPERTIES.harvester.rotationSpeed).toBeCloseTo(UNIT_PROPERTIES.tank_v1.rotationSpeed * 1.5)
     })
 
-    it('should have UNIT_GAS_PROPERTIES for fuel-consuming units', () => {
+    it('[U00987] should have UNIT_GAS_PROPERTIES for fuel-consuming units', () => {
       expect(UNIT_GAS_PROPERTIES.tank_v1).toBeDefined()
       expect(UNIT_GAS_PROPERTIES.tank_v1.tankSize).toBeGreaterThan(0)
       expect(UNIT_GAS_PROPERTIES.tank_v1.consumption).toBeGreaterThan(0)
     })
 
-    it('should have UNIT_AMMO_CAPACITY for combat units', () => {
+    it('[U00988] should have UNIT_AMMO_CAPACITY for combat units', () => {
       expect(UNIT_AMMO_CAPACITY.tank_v1).toBeGreaterThan(0)
       expect(UNIT_AMMO_CAPACITY.rocketTank).toBeGreaterThan(0)
       expect(UNIT_AMMO_CAPACITY.howitzer).toBeGreaterThan(0)
@@ -314,19 +314,19 @@ describe('config.js', () => {
   })
 
   describe('Party Configuration', () => {
-    it('should have PARTY_COLORS for all players', () => {
+    it('[U00989] should have PARTY_COLORS for all players', () => {
       expect(PARTY_COLORS.player1).toBeDefined()
       expect(PARTY_COLORS.player2).toBeDefined()
       expect(PARTY_COLORS.player3).toBeDefined()
       expect(PARTY_COLORS.player4).toBeDefined()
     })
 
-    it('should have legacy aliases in PARTY_COLORS', () => {
+    it('[U00990] should have legacy aliases in PARTY_COLORS', () => {
       expect(PARTY_COLORS.player).toBe(PARTY_COLORS.player1)
       expect(PARTY_COLORS.enemy).toBe(PARTY_COLORS.player2)
     })
 
-    it('should have PLAYER_POSITIONS for all players', () => {
+    it('[U00991] should have PLAYER_POSITIONS for all players', () => {
       expect(PLAYER_POSITIONS.player1).toBeDefined()
       expect(PLAYER_POSITIONS.player2).toBeDefined()
       expect(PLAYER_POSITIONS.player1.x).toBeDefined()
@@ -335,13 +335,13 @@ describe('config.js', () => {
   })
 
   describe('Combat Configuration', () => {
-    it('should have HIT_ZONE_DAMAGE_MULTIPLIERS', () => {
+    it('[U00992] should have HIT_ZONE_DAMAGE_MULTIPLIERS', () => {
       expect(HIT_ZONE_DAMAGE_MULTIPLIERS.FRONT).toBe(1.0)
       expect(HIT_ZONE_DAMAGE_MULTIPLIERS.SIDE).toBeGreaterThan(1.0)
       expect(HIT_ZONE_DAMAGE_MULTIPLIERS.REAR).toBeGreaterThan(HIT_ZONE_DAMAGE_MULTIPLIERS.SIDE)
     })
 
-    it('should have TANK_V3_BURST configuration', () => {
+    it('[U00993] should have TANK_V3_BURST configuration', () => {
       expect(TANK_V3_BURST.COUNT).toBeGreaterThan(1)
       expect(TANK_V3_BURST.DELAY).toBeGreaterThan(0)
     })
@@ -370,17 +370,17 @@ describe('config.js', () => {
       setServiceDiscoveryRange(originalValues.SERVICE_DISCOVERY_RANGE)
     })
 
-    it('should update XP_MULTIPLIER', () => {
+    it('[U00994] should update XP_MULTIPLIER', () => {
       setXpMultiplier(5)
       expect(XP_MULTIPLIER).toBe(5)
     })
 
-    it('should update CREW_KILL_CHANCE', () => {
+    it('[U00995] should update CREW_KILL_CHANCE', () => {
       setCrewKillChance(0.5)
       expect(CREW_KILL_CHANCE).toBe(0.5)
     })
 
-    it('should update ENEMY_SELECTION and ENEMY_CONTROL', () => {
+    it('[U00996] should update ENEMY_SELECTION and ENEMY_CONTROL', () => {
       const originalSelection = ENABLE_ENEMY_SELECTION
       const originalControl = ENABLE_ENEMY_CONTROL
 
@@ -395,12 +395,12 @@ describe('config.js', () => {
       setEnemyControlEnabled(originalControl)
     })
 
-    it('should update TARGETING_SPREAD', () => {
+    it('[U00997] should update TARGETING_SPREAD', () => {
       setTargetingSpread(16)
       expect(TARGETING_SPREAD).toBe(16)
     })
 
-    it('should update HARVESTER settings', () => {
+    it('[U00998] should update HARVESTER settings', () => {
       const originalCapacity = HARVESTER_CAPPACITY
       const originalUnloadTime = HARVESTER_UNLOAD_TIME
 
@@ -415,7 +415,7 @@ describe('config.js', () => {
       setHarvesterUnloadTime(originalUnloadTime)
     })
 
-    it('should update TANK_FIRE_RANGE and linked SERVICE_DISCOVERY_RANGE', () => {
+    it('[U00999] should update TANK_FIRE_RANGE and linked SERVICE_DISCOVERY_RANGE', () => {
       // First set them to same value
       const originalFireRange = TANK_FIRE_RANGE
       setTankFireRange(12)
@@ -425,21 +425,21 @@ describe('config.js', () => {
       setTankFireRange(originalFireRange)
     })
 
-    it('should update SERVICE_DISCOVERY_RANGE independently', () => {
+    it('[U01000] should update SERVICE_DISCOVERY_RANGE independently', () => {
       const original = SERVICE_DISCOVERY_RANGE
       setServiceDiscoveryRange(15)
       expect(SERVICE_DISCOVERY_RANGE).toBe(15)
       setServiceDiscoveryRange(original)
     })
 
-    it('should update SERVICE_SERVING_RANGE', () => {
+    it('[U01001] should update SERVICE_SERVING_RANGE', () => {
       const original = SERVICE_SERVING_RANGE
       setServiceServingRange(2.5)
       expect(SERVICE_SERVING_RANGE).toBe(2.5)
       setServiceServingRange(original)
     })
 
-    it('should update rotation speeds', () => {
+    it('[U01002] should update rotation speeds', () => {
       const origDefault = DEFAULT_ROTATION_SPEED
       const origFast = FAST_ROTATION_SPEED
       const origWagon = TANK_WAGON_ROT
@@ -469,7 +469,7 @@ describe('config.js', () => {
       setTurretAimingThreshold(origAiming)
     })
 
-    it('should update ore spread settings', () => {
+    it('[U01003] should update ore spread settings', () => {
       const origInterval = ORE_SPREAD_INTERVAL
       const origProb = ORE_SPREAD_PROBABILITY
       const origEnabled = ORE_SPREAD_ENABLED
@@ -489,7 +489,7 @@ describe('config.js', () => {
       setOreSpreadEnabled(origEnabled)
     })
 
-    it('should update pathfinding settings', () => {
+    it('[U01004] should update pathfinding settings', () => {
       const origCalcInterval = PATH_CALC_INTERVAL
       const origCacheTtl = PATH_CACHE_TTL
       const origMaxPaths = MAX_PATHS_PER_CYCLE
@@ -514,7 +514,7 @@ describe('config.js', () => {
       setPathfindingThreshold(origThreshold)
     })
 
-    it('should update AI settings', () => {
+    it('[U01005] should update AI settings', () => {
       const origFrameSkip = AI_UPDATE_FRAME_SKIP
       const origAttackInterval = ATTACK_PATH_CALC_INTERVAL
       const origDecisionInterval = AI_DECISION_INTERVAL
@@ -534,7 +534,7 @@ describe('config.js', () => {
       setAiDecisionInterval(origDecisionInterval)
     })
 
-    it('should update stuck detection settings', () => {
+    it('[U01006] should update stuck detection settings', () => {
       const origCheckInterval = STUCK_CHECK_INTERVAL
       const origThreshold = STUCK_THRESHOLD
       const origCooldown = STUCK_HANDLING_COOLDOWN
@@ -564,7 +564,7 @@ describe('config.js', () => {
       setMoveTargetReachedThreshold(origMoveThreshold)
     })
 
-    it('should update gas and ammo settings', () => {
+    it('[U01007] should update gas and ammo settings', () => {
       const origGasTime = GAS_REFILL_TIME
       const origGasCost = GAS_REFILL_COST
       const origHelipadFuel = HELIPAD_FUEL_CAPACITY
@@ -594,7 +594,7 @@ describe('config.js', () => {
       setAmmoResupplyTime(origAmmoTime)
     })
 
-    it('should update mine settings', () => {
+    it('[U01008] should update mine settings', () => {
       const origCapacity = MINE_CAPACITY
       const origHealth = MINE_HEALTH
       const origDamage = MINE_DAMAGE_CENTER
@@ -634,7 +634,7 @@ describe('config.js', () => {
       setMineTriggerRadius(origTriggerRadius)
     })
 
-    it('should update howitzer settings', () => {
+    it('[U01009] should update howitzer settings', () => {
       const origCost = HOWITZER_COST
       const origSpeed = HOWITZER_SPEED
       const origRotation = HOWITZER_ROTATION_SPEED
@@ -694,7 +694,7 @@ describe('config.js', () => {
       setHowitzerBuildingDamageMultiplier(origBuildingDamage)
     })
 
-    it('should update collision settings', () => {
+    it('[U01010] should update collision settings', () => {
       const origMult = STATIC_COLLISION_BOUNCE_MULT
 
       setStaticCollisionBounceMult(1.0)
@@ -708,42 +708,42 @@ describe('config.js', () => {
       setStaticCollisionBounceMult(origMult)
     })
 
-    it('should update recovery tank ratio', () => {
+    it('[U01011] should update recovery tank ratio', () => {
       const orig = RECOVERY_TANK_RATIO
       setRecoveryTankRatio(10)
       expect(RECOVERY_TANK_RATIO).toBe(10)
       setRecoveryTankRatio(orig)
     })
 
-    it('should update smoke particles', () => {
+    it('[U01012] should update smoke particles', () => {
       const orig = MAX_SMOKE_PARTICLES
       setMaxSmokeParticles(500)
       expect(MAX_SMOKE_PARTICLES).toBe(500)
       setMaxSmokeParticles(orig)
     })
 
-    it('should update tanker supply capacity', () => {
+    it('[U01013] should update tanker supply capacity', () => {
       const orig = TANKER_SUPPLY_CAPACITY
       setTankerSupplyCapacity(50000)
       expect(TANKER_SUPPLY_CAPACITY).toBe(50000)
       setTankerSupplyCapacity(orig)
     })
 
-    it('should update inertia stop threshold', () => {
+    it('[U01014] should update inertia stop threshold', () => {
       const orig = INERTIA_STOP_THRESHOLD
       setInertiaStopThreshold(2)
       expect(INERTIA_STOP_THRESHOLD).toBe(2)
       setInertiaStopThreshold(orig)
     })
 
-    it('should update street speed multiplier', () => {
+    it('[U01015] should update street speed multiplier', () => {
       const orig = STREET_SPEED_MULTIPLIER
       setStreetSpeedMultiplier(2.0)
       expect(STREET_SPEED_MULTIPLIER).toBe(2.0)
       setStreetSpeedMultiplier(orig)
     })
 
-    it('should update ammo factory and truck settings', () => {
+    it('[U01016] should update ammo factory and truck settings', () => {
       const origRange = AMMO_FACTORY_RANGE
       const origTruckRange = AMMO_TRUCK_RANGE
       const origCargo = AMMO_TRUCK_CARGO
@@ -778,14 +778,14 @@ describe('config.js', () => {
       setAmmoParticleDamage(origParticleDamage)
     })
 
-    it('should update bullet speed', () => {
+    it('[U01017] should update bullet speed', () => {
       const orig = TANK_BULLET_SPEED
       setTankBulletSpeed(10)
       expect(TANK_BULLET_SPEED).toBe(10)
       setTankBulletSpeed(orig)
     })
 
-    it('should update keyboard scroll speed', () => {
+    it('[U01018] should update keyboard scroll speed', () => {
       const orig = KEYBOARD_SCROLL_SPEED
       setKeyboardScrollSpeed(16)
       expect(KEYBOARD_SCROLL_SPEED).toBe(16)
@@ -794,7 +794,7 @@ describe('config.js', () => {
   })
 
   describe('Joystick Mapping Functions', () => {
-    it('should return default tank joystick mapping', () => {
+    it('[U01019] should return default tank joystick mapping', () => {
       const mapping = getMobileTankJoystickMapping()
       expect(mapping).toBeDefined()
       expect(mapping.left).toBeDefined()
@@ -803,39 +803,39 @@ describe('config.js', () => {
       expect(mapping.right.tap).toBeDefined()
     })
 
-    it('should return default vehicle joystick mapping', () => {
+    it('[U01020] should return default vehicle joystick mapping', () => {
       const mapping = getMobileVehicleJoystickMapping()
       expect(mapping).toBeDefined()
       expect(mapping.left).toBeDefined()
       expect(mapping.right).toBeDefined()
     })
 
-    it('should return default apache joystick mapping', () => {
+    it('[U01021] should return default apache joystick mapping', () => {
       const mapping = getMobileApacheJoystickMapping()
       expect(mapping).toBeDefined()
       expect(mapping.left).toBeDefined()
       expect(mapping.right).toBeDefined()
     })
 
-    it('should return tank mapping for getMobileJoystickMapping with "tank" profile', () => {
+    it('[U01022] should return tank mapping for getMobileJoystickMapping with "tank" profile', () => {
       const mapping = getMobileJoystickMapping('tank')
       const tankMapping = getMobileTankJoystickMapping()
       expect(mapping).toEqual(tankMapping)
     })
 
-    it('should return apache mapping for getMobileJoystickMapping with "apache" profile', () => {
+    it('[U01023] should return apache mapping for getMobileJoystickMapping with "apache" profile', () => {
       const mapping = getMobileJoystickMapping('apache')
       const apacheMapping = getMobileApacheJoystickMapping()
       expect(mapping).toEqual(apacheMapping)
     })
 
-    it('should return vehicle mapping for getMobileJoystickMapping with unknown profile', () => {
+    it('[U01024] should return vehicle mapping for getMobileJoystickMapping with unknown profile', () => {
       const mapping = getMobileJoystickMapping('unknown')
       const vehicleMapping = getMobileVehicleJoystickMapping()
       expect(mapping).toEqual(vehicleMapping)
     })
 
-    it('should return vehicle mapping for getMobileJoystickMapping with no profile', () => {
+    it('[U01025] should return vehicle mapping for getMobileJoystickMapping with no profile', () => {
       const mapping = getMobileJoystickMapping()
       const vehicleMapping = getMobileVehicleJoystickMapping()
       expect(mapping).toEqual(vehicleMapping)
@@ -852,7 +852,7 @@ describe('config.js', () => {
         setMobileTankJoystickMapping(originalMapping)
       })
 
-      it('should update tank joystick mapping with object', () => {
+      it('[U01026] should update tank joystick mapping with object', () => {
         const newMapping = {
           left: { up: ['backward'], down: ['forward'] },
           right: { tap: ['fire'] }
@@ -865,7 +865,7 @@ describe('config.js', () => {
         expect(updated.left.down).toContain('forward')
       })
 
-      it('should handle string input with JSON', () => {
+      it('[U01027] should handle string input with JSON', () => {
         const newMapping = JSON.stringify({
           left: { up: ['forward'] },
           right: { tap: ['fire'] }
@@ -877,11 +877,11 @@ describe('config.js', () => {
         expect(updated.left.up).toContain('forward')
       })
 
-      it('should handle empty string input', () => {
+      it('[U01028] should handle empty string input', () => {
         expect(() => setMobileTankJoystickMapping('')).not.toThrow()
       })
 
-      it('should reject invalid action names', () => {
+      it('[U01029] should reject invalid action names', () => {
         const invalidMapping = {
           left: { up: ['invalidAction'] }
         }
@@ -889,7 +889,7 @@ describe('config.js', () => {
         expect(() => setMobileTankJoystickMapping(invalidMapping)).toThrow()
       })
 
-      it('should accept comma-separated action strings', () => {
+      it('[U01030] should accept comma-separated action strings', () => {
         const mapping = {
           left: { up: 'forward, backward' },
           right: { tap: 'fire' }
@@ -902,7 +902,7 @@ describe('config.js', () => {
         expect(updated.left.up).toContain('backward')
       })
 
-      it('should accept "none" as empty action list', () => {
+      it('[U01031] should accept "none" as empty action list', () => {
         const mapping = {
           left: { up: 'none' },
           right: {}
@@ -914,7 +914,7 @@ describe('config.js', () => {
         expect(updated.left.up).toEqual([])
       })
 
-      it('should accept null as empty action list', () => {
+      it('[U01032] should accept null as empty action list', () => {
         const mapping = {
           left: { up: null },
           right: {}
@@ -938,7 +938,7 @@ describe('config.js', () => {
         setMobileVehicleJoystickMapping(originalMapping)
       })
 
-      it('should update vehicle joystick mapping', () => {
+      it('[U01033] should update vehicle joystick mapping', () => {
         const newMapping = {
           left: { up: ['forward'] },
           right: { left: ['turnLeft'] }
@@ -962,7 +962,7 @@ describe('config.js', () => {
         setMobileApacheJoystickMapping(originalMapping)
       })
 
-      it('should update apache joystick mapping', () => {
+      it('[U01034] should update apache joystick mapping', () => {
         const newMapping = {
           left: { up: ['ascend'], down: ['descend'] },
           right: { tap: ['fire'] }
@@ -975,7 +975,7 @@ describe('config.js', () => {
         expect(updated.left.down).toContain('descend')
       })
 
-      it('should handle strafe actions', () => {
+      it('[U01035] should handle strafe actions', () => {
         const newMapping = {
           left: { left: ['strafeLeft'], right: ['strafeRight'] },
           right: {}
@@ -991,7 +991,7 @@ describe('config.js', () => {
   })
 
   describe('isTurretTankUnitType()', () => {
-    it('should return true for tank unit types', () => {
+    it('[U01036] should return true for tank unit types', () => {
       expect(isTurretTankUnitType('tank')).toBe(true)
       expect(isTurretTankUnitType('tank_v1')).toBe(true)
       expect(isTurretTankUnitType('tank_v2')).toBe(true)
@@ -1000,11 +1000,11 @@ describe('config.js', () => {
       expect(isTurretTankUnitType('tank-v3')).toBe(true)
     })
 
-    it('should return true for rocketTank', () => {
+    it('[U01037] should return true for rocketTank', () => {
       expect(isTurretTankUnitType('rocketTank')).toBe(true)
     })
 
-    it('should return false for non-turret units', () => {
+    it('[U01038] should return false for non-turret units', () => {
       expect(isTurretTankUnitType('harvester')).toBe(false)
       expect(isTurretTankUnitType('ambulance')).toBe(false)
       expect(isTurretTankUnitType('tankerTruck')).toBe(false)
@@ -1012,7 +1012,7 @@ describe('config.js', () => {
       expect(isTurretTankUnitType('howitzer')).toBe(false)
     })
 
-    it('should return false for invalid types', () => {
+    it('[U01039] should return false for invalid types', () => {
       expect(isTurretTankUnitType('')).toBe(false)
       expect(isTurretTankUnitType(null)).toBe(false)
       expect(isTurretTankUnitType(undefined)).toBe(false)
@@ -1020,7 +1020,7 @@ describe('config.js', () => {
   })
 
   describe('CONFIG_VARIABLE_NAMES', () => {
-    it('should be an array of strings', () => {
+    it('[U01040] should be an array of strings', () => {
       expect(Array.isArray(CONFIG_VARIABLE_NAMES)).toBe(true)
       expect(CONFIG_VARIABLE_NAMES.length).toBeGreaterThan(0)
       CONFIG_VARIABLE_NAMES.forEach(name => {
@@ -1028,7 +1028,7 @@ describe('config.js', () => {
       })
     })
 
-    it('should include core variables', () => {
+    it('[U01041] should include core variables', () => {
       expect(CONFIG_VARIABLE_NAMES).toContain('TILE_SIZE')
       expect(CONFIG_VARIABLE_NAMES).toContain('MAP_TILES_X')
       expect(CONFIG_VARIABLE_NAMES).toContain('MAP_TILES_Y')
@@ -1036,13 +1036,13 @@ describe('config.js', () => {
       expect(CONFIG_VARIABLE_NAMES).toContain('UNIT_PROPERTIES')
     })
 
-    it('should include howitzer variables', () => {
+    it('[U01042] should include howitzer variables', () => {
       expect(CONFIG_VARIABLE_NAMES).toContain('HOWITZER_COST')
       expect(CONFIG_VARIABLE_NAMES).toContain('HOWITZER_FIRE_RANGE')
       expect(CONFIG_VARIABLE_NAMES).toContain('HOWITZER_FIREPOWER')
     })
 
-    it('should include combat variables', () => {
+    it('[U01043] should include combat variables', () => {
       expect(CONFIG_VARIABLE_NAMES).toContain('TANK_FIRE_RANGE')
       expect(CONFIG_VARIABLE_NAMES).toContain('BULLET_DAMAGES')
       expect(CONFIG_VARIABLE_NAMES).toContain('HIT_ZONE_DAMAGE_MULTIPLIERS')
@@ -1050,22 +1050,22 @@ describe('config.js', () => {
   })
 
   describe('Config Override Helpers', () => {
-    it('returns an array of config variables', () => {
+    it('[U01044] returns an array of config variables', () => {
       const variables = listConfigVariables()
       expect(Array.isArray(variables)).toBe(true)
     })
 
-    it('throws for unknown config value accessors', () => {
+    it('[U01045] throws for unknown config value accessors', () => {
       expect(() => getConfigValue('NOT_A_CONFIG_VALUE')).toThrow()
       expect(() => updateConfigValue('NOT_A_CONFIG_VALUE', 5)).toThrow()
       expect(() => isConfigValueOverridden('NOT_A_CONFIG_VALUE')).toThrow()
     })
 
-    it('returns an empty overrides object when no overrides are active', () => {
+    it('[U01046] returns an empty overrides object when no overrides are active', () => {
       expect(getConfigOverrides()).toEqual({})
     })
 
-    it('loads overrides from external sources without throwing', async() => {
+    it('[U01047] loads overrides from external sources without throwing', async() => {
       const fetchSpy = vi.fn(async() => ({ ok: false }))
       vi.stubGlobal('fetch', fetchSpy)
       window.localStorage.setItem('rts-config-overrides', JSON.stringify({ unknown: 5 }))

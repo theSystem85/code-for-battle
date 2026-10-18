@@ -103,7 +103,7 @@ describe('AttackGroupHandler', () => {
   })
 
   describe('constructor', () => {
-    it('should initialize with default values', () => {
+    it('[U00206] should initialize with default values', () => {
       const newHandler = new AttackGroupHandler()
 
       expect(newHandler.isAttackGroupSelecting).toBe(false)
@@ -116,25 +116,25 @@ describe('AttackGroupHandler', () => {
   })
 
   describe('shouldStartAttackGroupMode()', () => {
-    it('should return true for selected combat units', () => {
+    it('[U00207] should return true for selected combat units', () => {
       const result = handler.shouldStartAttackGroupMode(selectedUnits)
 
       expect(result).toBe(true)
     })
 
-    it('should return false for empty selection', () => {
+    it('[U00208] should return false for empty selection', () => {
       const result = handler.shouldStartAttackGroupMode([])
 
       expect(result).toBe(false)
     })
 
-    it('should return false for null selection', () => {
+    it('[U00209] should return false for null selection', () => {
       const result = handler.shouldStartAttackGroupMode(null)
 
       expect(result).toBeFalsy()
     })
 
-    it('should return false for harvesters', () => {
+    it('[U00210] should return false for harvesters', () => {
       const harvesters = [
         { id: 'harvester-1', type: 'harvester', owner: 'player1', health: 100, isBuilding: false }
       ]
@@ -144,7 +144,7 @@ describe('AttackGroupHandler', () => {
       expect(result).toBe(false)
     })
 
-    it('should return false for ambulances (service vehicles)', () => {
+    it('[U00211] should return false for ambulances (service vehicles)', () => {
       const ambulances = [
         { id: 'amb-1', type: 'ambulance', owner: 'player1', health: 100, isBuilding: false }
       ]
@@ -154,7 +154,7 @@ describe('AttackGroupHandler', () => {
       expect(result).toBe(false)
     })
 
-    it('should return false for tanker trucks (service vehicles)', () => {
+    it('[U00212] should return false for tanker trucks (service vehicles)', () => {
       const tankers = [
         { id: 'tanker-1', type: 'tankerTruck', owner: 'player1', health: 100, isBuilding: false }
       ]
@@ -164,7 +164,7 @@ describe('AttackGroupHandler', () => {
       expect(result).toBe(false)
     })
 
-    it('should return true for a selected naval transport bulk-load drag', () => {
+    it('[U00213] should return true for a selected naval transport bulk-load drag', () => {
       const transports = [
         { id: 'ferry-1', type: 'vehicleFerry', owner: 'player1', health: 100, isNaval: true }
       ]
@@ -172,7 +172,7 @@ describe('AttackGroupHandler', () => {
       expect(handler.shouldStartAttackGroupMode(transports)).toBe(true)
     })
 
-    it('should return false for recovery tanks (service vehicles)', () => {
+    it('[U00214] should return false for recovery tanks (service vehicles)', () => {
       const recoveryTanks = [
         { id: 'rt-1', type: 'recoveryTank', owner: 'player1', health: 100, isBuilding: false }
       ]
@@ -182,7 +182,7 @@ describe('AttackGroupHandler', () => {
       expect(result).toBe(false)
     })
 
-    it('should return false for mine sweepers (service vehicles)', () => {
+    it('[U00215] should return false for mine sweepers (service vehicles)', () => {
       const sweepers = [
         { id: 'ms-1', type: 'mineSweeper', owner: 'player1', health: 100, isBuilding: false }
       ]
@@ -192,7 +192,7 @@ describe('AttackGroupHandler', () => {
       expect(result).toBe(false)
     })
 
-    it('should return false for mine layers (service vehicles)', () => {
+    it('[U00216] should return false for mine layers (service vehicles)', () => {
       const layers = [
         { id: 'ml-1', type: 'mineLayer', owner: 'player1', health: 100, isBuilding: false }
       ]
@@ -202,7 +202,7 @@ describe('AttackGroupHandler', () => {
       expect(result).toBe(false)
     })
 
-    it('should return false when factory is selected', () => {
+    it('[U00217] should return false when factory is selected', () => {
       const unitsWithFactory = [
         { id: 'tank-1', type: 'tank', owner: 'player1', health: 100, isBuilding: false },
         { type: 'vehicleFactory', isBuilding: true }
@@ -213,7 +213,7 @@ describe('AttackGroupHandler', () => {
       expect(result).toBe(false)
     })
 
-    it('should return false in building placement mode', () => {
+    it('[U00218] should return false in building placement mode', () => {
       gameState.buildingPlacementMode = true
 
       const result = handler.shouldStartAttackGroupMode(selectedUnits)
@@ -221,7 +221,7 @@ describe('AttackGroupHandler', () => {
       expect(result).toBe(false)
     })
 
-    it('should return false in repair mode', () => {
+    it('[U00219] should return false in repair mode', () => {
       gameState.repairMode = true
 
       const result = handler.shouldStartAttackGroupMode(selectedUnits)
@@ -229,7 +229,7 @@ describe('AttackGroupHandler', () => {
       expect(result).toBe(false)
     })
 
-    it('should return false in sell mode', () => {
+    it('[U00220] should return false in sell mode', () => {
       gameState.sellMode = true
 
       const result = handler.shouldStartAttackGroupMode(selectedUnits)
@@ -237,7 +237,7 @@ describe('AttackGroupHandler', () => {
       expect(result).toBe(false)
     })
 
-    it('should return false when already in attack group mode', () => {
+    it('[U00221] should return false when already in attack group mode', () => {
       gameState.attackGroupMode = true
 
       const result = handler.shouldStartAttackGroupMode(selectedUnits)
@@ -245,7 +245,7 @@ describe('AttackGroupHandler', () => {
       expect(result).toBe(false)
     })
 
-    it('should return false for enemy units', () => {
+    it('[U00222] should return false for enemy units', () => {
       const enemyUnits = [
         { id: 'enemy-tank', type: 'tank', owner: 'enemy', health: 100, isBuilding: false }
       ]
@@ -255,7 +255,7 @@ describe('AttackGroupHandler', () => {
       expect(result).toBe(false)
     })
 
-    it('should return true if at least one combat unit among service vehicles', () => {
+    it('[U00223] should return true if at least one combat unit among service vehicles', () => {
       const mixedUnits = [
         { id: 'harvester-1', type: 'harvester', owner: 'player1', health: 100, isBuilding: false },
         { id: 'tank-1', type: 'tank', owner: 'player1', health: 100, isBuilding: false },
@@ -267,7 +267,7 @@ describe('AttackGroupHandler', () => {
       expect(result).toBe(true)
     })
 
-    it('should return true for selected defensive buildings', () => {
+    it('[U00224] should return true for selected defensive buildings', () => {
       const defensiveBuildings = [
         { id: 'turret-1', type: 'rocketTurret', owner: 'player1', health: 100, isBuilding: true }
       ]
@@ -279,7 +279,7 @@ describe('AttackGroupHandler', () => {
   })
 
   describe('handleMouseUp()', () => {
-    it('should reset attack group state after handling', () => {
+    it('[U00225] should reset attack group state after handling', () => {
       handler.isAttackGroupSelecting = true
       handler.attackGroupWasDragging = false
 
@@ -289,7 +289,7 @@ describe('AttackGroupHandler', () => {
       expect(gameState.attackGroupMode).toBe(false)
     })
 
-    it('should call standard command function when not dragging', () => {
+    it('[U00226] should call standard command function when not dragging', () => {
       handler.attackGroupWasDragging = false
       const standardCommandFn = vi.fn()
 
@@ -300,7 +300,7 @@ describe('AttackGroupHandler', () => {
       )
     })
 
-    it('should find and attack enemies in attack group area when dragging', () => {
+    it('[U00227] should find and attack enemies in attack group area when dragging', () => {
       handler.attackGroupWasDragging = true
       gameState.attackGroupStart = { x: 0, y: 0 }
       gameState.attackGroupEnd = { x: 100, y: 100 }
@@ -314,7 +314,7 @@ describe('AttackGroupHandler', () => {
       expect(unitCommands.handleAttackCommand).toHaveBeenCalled()
     })
 
-    it('should queue AGF command with alt key pressed', () => {
+    it('[U00228] should queue AGF command with alt key pressed', () => {
       handler.attackGroupWasDragging = true
       gameState.attackGroupStart = { x: 0, y: 0 }
       gameState.attackGroupEnd = { x: 100, y: 100 }
@@ -331,7 +331,7 @@ describe('AttackGroupHandler', () => {
       expect(markWaypointsAdded).toHaveBeenCalled()
     })
 
-    it('should disable AGF rendering temporarily', () => {
+    it('[U00229] should disable AGF rendering temporarily', () => {
       vi.useFakeTimers()
 
       handler.handleMouseUp(100, 100, [], selectedUnits, unitCommands, mapGrid, null)
@@ -345,7 +345,7 @@ describe('AttackGroupHandler', () => {
       vi.useRealTimers()
     })
 
-    it('records AGF guard commands when friendlies are boxed', () => {
+    it('[U00230] records AGF guard commands when friendlies are boxed', () => {
       handler.attackGroupWasDragging = true
       gameState.attackGroupStart = { x: 0, y: 0 }
       gameState.attackGroupEnd = { x: 100, y: 100 }
@@ -367,7 +367,7 @@ describe('AttackGroupHandler', () => {
       }), { source: 'human' })
     })
 
-    it('loads boxed ground units into a selected hovercraft without activating guard mode', () => {
+    it('[U00231] loads boxed ground units into a selected hovercraft without activating guard mode', () => {
       handler.attackGroupWasDragging = true
       gameState.attackGroupStart = { x: 0, y: 0 }
       gameState.attackGroupEnd = { x: 160, y: 160 }
@@ -399,7 +399,7 @@ describe('AttackGroupHandler', () => {
   })
 
   describe('resetAttackGroupState()', () => {
-    it('should reset all attack group state properties', () => {
+    it('[U00232] should reset all attack group state properties', () => {
       handler.isAttackGroupSelecting = true
       handler.attackGroupWasDragging = true
       handler.hasSelectedCombatUnits = true
@@ -423,7 +423,7 @@ describe('AttackGroupHandler', () => {
   })
 
   describe('findEnemyUnitsInAttackGroup()', () => {
-    it('should find enemy units within attack group bounds', () => {
+    it('[U00233] should find enemy units within attack group bounds', () => {
       gameState.attackGroupStart = { x: 0, y: 0 }
       gameState.attackGroupEnd = { x: 100, y: 100 }
 
@@ -438,7 +438,7 @@ describe('AttackGroupHandler', () => {
       expect(enemies[0].id).toBe('enemy-1')
     })
 
-    it('should not include player units', () => {
+    it('[U00234] should not include player units', () => {
       gameState.attackGroupStart = { x: 0, y: 0 }
       gameState.attackGroupEnd = { x: 100, y: 100 }
 
@@ -453,7 +453,7 @@ describe('AttackGroupHandler', () => {
       expect(enemies[0].owner).toBe('enemy')
     })
 
-    it('should not include dead units', () => {
+    it('[U00235] should not include dead units', () => {
       gameState.attackGroupStart = { x: 0, y: 0 }
       gameState.attackGroupEnd = { x: 100, y: 100 }
 
@@ -466,7 +466,7 @@ describe('AttackGroupHandler', () => {
       expect(enemies.length).toBe(0)
     })
 
-    it('should include enemy buildings within bounds', () => {
+    it('[U00236] should include enemy buildings within bounds', () => {
       gameState.attackGroupStart = { x: 0, y: 0 }
       gameState.attackGroupEnd = { x: 200, y: 200 }
       gameState.buildings = [
@@ -479,7 +479,7 @@ describe('AttackGroupHandler', () => {
       expect(enemies[0].id).toBe('enemy-building')
     })
 
-    it('should handle inverted attack group bounds', () => {
+    it('[U00237] should handle inverted attack group bounds', () => {
       gameState.attackGroupStart = { x: 100, y: 100 }
       gameState.attackGroupEnd = { x: 0, y: 0 }
 
@@ -492,7 +492,7 @@ describe('AttackGroupHandler', () => {
       expect(enemies.length).toBe(1)
     })
 
-    it('should handle "player" owner as human player', () => {
+    it('[U00238] should handle "player" owner as human player', () => {
       gameState.humanPlayer = 'player1'
       gameState.attackGroupStart = { x: 0, y: 0 }
       gameState.attackGroupEnd = { x: 100, y: 100 }
@@ -510,7 +510,7 @@ describe('AttackGroupHandler', () => {
   })
 
   describe('setupAttackQueue()', () => {
-    it('should set up attack queue for combat units', () => {
+    it('[U00239] should set up attack queue for combat units', () => {
       const enemyTargets = [
         { id: 'enemy-1', owner: 'enemy', health: 100 },
         { id: 'enemy-2', owner: 'enemy', health: 100 }
@@ -522,7 +522,7 @@ describe('AttackGroupHandler', () => {
       expect(selectedUnits[0].target).toBe(enemyTargets[0])
     })
 
-    it('should filter out harvesters from combat units', () => {
+    it('[U00240] should filter out harvesters from combat units', () => {
       const mixedUnits = [
         { id: 'harvester-1', type: 'harvester', owner: 'player1', attackQueue: [] },
         { id: 'tank-1', type: 'tank', owner: 'player1', attackQueue: [] }
@@ -537,7 +537,7 @@ describe('AttackGroupHandler', () => {
       expect(mixedUnits[1].attackQueue.length).toBe(1) // Tank has attack queue
     })
 
-    it('should clear previous target before setting new attack queue', () => {
+    it('[U00241] should clear previous target before setting new attack queue', () => {
       selectedUnits[0].target = { id: 'old-target' }
       const enemyTargets = [
         { id: 'enemy-1', owner: 'enemy', health: 100 }
@@ -548,7 +548,7 @@ describe('AttackGroupHandler', () => {
       expect(selectedUnits[0].target).toBe(enemyTargets[0])
     })
 
-    it('should call handleAttackCommand with first target', () => {
+    it('[U00242] should call handleAttackCommand with first target', () => {
       const enemyTargets = [
         { id: 'enemy-1', owner: 'enemy', health: 100 }
       ]
@@ -563,7 +563,7 @@ describe('AttackGroupHandler', () => {
       )
     })
 
-    it('should set attackGroupTargets in gameState', () => {
+    it('[U00243] should set attackGroupTargets in gameState', () => {
       const enemyTargets = [
         { id: 'enemy-1', owner: 'enemy', health: 100 }
       ]
@@ -573,7 +573,7 @@ describe('AttackGroupHandler', () => {
       expect(gameState.attackGroupTargets).toEqual(enemyTargets)
     })
 
-    it('should set and reset isAttackGroupOperation flag', () => {
+    it('[U00244] should set and reset isAttackGroupOperation flag', () => {
       const enemyTargets = [
         { id: 'enemy-1', owner: 'enemy', health: 100 }
       ]
@@ -584,7 +584,7 @@ describe('AttackGroupHandler', () => {
       expect(unitCommands.isAttackGroupOperation).toBe(false)
     })
 
-    it('queues AGF targets for selected defensive buildings with newest queued target first', () => {
+    it('[U00245] queues AGF targets for selected defensive buildings with newest queued target first', () => {
       const turret = {
         id: 'turret-1',
         type: 'rocketTurret',
@@ -609,7 +609,7 @@ describe('AttackGroupHandler', () => {
 
   })
 
-  it('prepends newly queued AGF targets ahead of existing building forced queue entries', () => {
+  it('[U00246] prepends newly queued AGF targets ahead of existing building forced queue entries', () => {
     const turret = {
       id: 'turret-2',
       type: 'rocketTurret',
@@ -640,7 +640,7 @@ describe('AttackGroupHandler', () => {
 
 
   describe('shouldDisableAGFRendering()', () => {
-    it('should return the disableAGFRendering flag', () => {
+    it('[U00247] should return the disableAGFRendering flag', () => {
       handler.disableAGFRendering = true
       expect(handler.shouldDisableAGFRendering()).toBe(true)
 
@@ -650,7 +650,7 @@ describe('AttackGroupHandler', () => {
   })
 
   describe('updateAGFCapability()', () => {
-    it('should update hasSelectedCombatUnits based on selection', () => {
+    it('[U00248] should update hasSelectedCombatUnits based on selection', () => {
       handler.hasSelectedCombatUnits = false
 
       handler.updateAGFCapability(selectedUnits)
@@ -658,7 +658,7 @@ describe('AttackGroupHandler', () => {
       expect(handler.hasSelectedCombatUnits).toBe(true)
     })
 
-    it('should set false when no combat units selected', () => {
+    it('[U00249] should set false when no combat units selected', () => {
       handler.hasSelectedCombatUnits = true
       const nonCombatUnits = [
         { type: 'harvester', owner: 'player1', isBuilding: false }

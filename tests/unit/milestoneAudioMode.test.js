@@ -25,7 +25,7 @@ function fakeVideo(play) {
 }
 
 describe('milestone embedded vs separate audio', () => {
-  it('plays embedded audio when there is no usable separate MP3', () => {
+  it('[U02728] plays embedded audio when there is no usable separate MP3', () => {
     expect(milestoneClipUsesEmbeddedAudio(false)).toBe(true)
     expect(milestoneClipUsesEmbeddedAudio(undefined)).toBe(true)
     expect(milestoneClipUsesEmbeddedAudio(null)).toBe(true)
@@ -42,7 +42,7 @@ describe('milestone embedded vs separate audio', () => {
     expect(failed.muteVideo).toBe(false)
   })
 
-  it('keeps the video audible when a separate MP3 is usable', () => {
+  it('[U02729] keeps the video audible when a separate MP3 is usable', () => {
     expect(milestoneClipUsesEmbeddedAudio(true)).toBe(false)
     expect(resolveMilestoneAudioMode(true)).toEqual({
       useSeparateAudio: true,
@@ -51,7 +51,7 @@ describe('milestone embedded vs separate audio', () => {
     })
   })
 
-  it('scales embedded and companion volume by master, sfx, voice, mute, and fade', () => {
+  it('[U02730] scales embedded and companion volume by master, sfx, voice, mute, and fade', () => {
     expect(resolveMilestonePlaybackVolume(1, 1, 1, false, 1)).toBeCloseTo(MILESTONE_NARRATION_GAIN)
     expect(resolveMilestonePlaybackVolume(0.5, 1, 1, false, 1)).toBeCloseTo(MILESTONE_NARRATION_GAIN * 0.5)
     expect(resolveMilestonePlaybackVolume(1, 0.5, 0.5, false, 1)).toBeCloseTo(MILESTONE_NARRATION_GAIN * 0.25)
@@ -66,7 +66,7 @@ describe('milestone embedded vs separate audio', () => {
     expect(resolveMilestonePlaybackVolume(0.5, 0.5, 1, false, 1, MILESTONE_VIDEO_BED_GAIN)).toBeCloseTo(MILESTONE_VIDEO_BED_GAIN * 0.25)
   })
 
-  it('unmutes when asked and mutes when the caller forces silence', () => {
+  it('[U02731] unmutes when asked and mutes when the caller forces silence', () => {
     const embedded = fakeVideo()
     applyMilestoneVideoAudioState(embedded, false, 0.28)
     expect(embedded.muted).toBe(false)
@@ -82,7 +82,7 @@ describe('milestone embedded vs separate audio', () => {
     expect(companion.volume).toBe(0)
   })
 
-  it('plays embedded audio unmuted, and falls back to muted playback when autoplay blocks it', async() => {
+  it('[U02732] plays embedded audio unmuted, and falls back to muted playback when autoplay blocks it', async() => {
     const allowed = fakeVideo()
     const allowedResult = await playMilestoneVideoWithAudioPolicy(allowed, false, 0.2, false)
     expect(allowedResult).toMatchObject({
@@ -106,7 +106,7 @@ describe('milestone embedded vs separate audio', () => {
     expect(blocked.play).toHaveBeenCalledTimes(2)
   })
 
-  it('plays the video unmuted at bed level while a companion MP3 is in use', async() => {
+  it('[U02733] plays the video unmuted at bed level while a companion MP3 is in use', async() => {
     const video = fakeVideo()
     const result = await playMilestoneVideoWithAudioPolicy(video, true, MILESTONE_VIDEO_BED_GAIN, false)
     expect(result).toMatchObject({
@@ -122,7 +122,7 @@ describe('milestone embedded vs separate audio', () => {
     expect(video.volume).toBeCloseTo(MILESTONE_VIDEO_BED_GAIN)
   })
 
-  it('falls back to a muted picture when unmuted playback is blocked for a companion clip', async() => {
+  it('[U02734] falls back to a muted picture when unmuted playback is blocked for a companion clip', async() => {
     const video = fakeVideo(vi.fn()
       .mockRejectedValueOnce(Object.assign(new Error('play blocked'), { name: 'NotAllowedError' }))
       .mockResolvedValueOnce(undefined))
@@ -135,7 +135,7 @@ describe('milestone embedded vs separate audio', () => {
     expect(video.play).toHaveBeenCalledTimes(2)
   })
 
-  it('keeps a muted game silent without treating a zero fade as a missing MP3', async() => {
+  it('[U02735] keeps a muted game silent without treating a zero fade as a missing MP3', async() => {
     const video = fakeVideo()
     const result = await playMilestoneVideoWithAudioPolicy(video, false, 0, true)
     expect(result.useEmbeddedAudio).toBe(true)
@@ -144,7 +144,7 @@ describe('milestone embedded vs separate audio', () => {
     expect(video.volume).toBe(0)
   })
 
-  it('fades milestone audio with the radar and stops it when the clip is interrupted', () => {
+  it('[U02736] fades milestone audio with the radar and stops it when the clip is interrupted', () => {
     const previous = getMasterVolume()
     setMasterVolume(1)
     const video = {

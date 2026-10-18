@@ -12,7 +12,7 @@ test.describe('Help shortcut routing', () => {
     await page.waitForFunction(() => Boolean(window.gameState))
   })
 
-  test('pressing i opens settings modal on keybindings tab and never shows legacy help overlay', async({ page }) => {
+  test('[E00051] pressing i opens settings modal on keybindings tab and never shows legacy help overlay', async({ page }) => {
     await page.keyboard.press('i')
 
     const settingsModal = page.locator('#configSettingsModal')
@@ -22,7 +22,7 @@ test.describe('Help shortcut routing', () => {
     await expect(page.locator('#helpOverlay')).toHaveCount(0)
   })
 
-  test('clicking sidebar info button opens settings modal on keybindings tab', async({ page }) => {
+  test('[E00052] clicking sidebar info button opens settings modal on keybindings tab', async({ page }) => {
     await page.click('#helpBtn')
 
     const settingsModal = page.locator('#configSettingsModal')

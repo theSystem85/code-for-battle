@@ -27,12 +27,12 @@ describe('air and naval milestone videos', () => {
     system = new MilestoneSystem()
   })
 
-  it('exposes one trigger per new milestone', () => {
+  it('[U02723] exposes one trigger per new milestone', () => {
     expect(FIRST_UNIT_VIDEO_MILESTONES).toHaveLength(UNIT_CASES.length)
     expect(FIRST_BUILDING_VIDEO_MILESTONES).toHaveLength(BUILDING_CASES.length)
   })
 
-  it.each(UNIT_CASES)('plays the %s video once for the local player', (type, id, video) => {
+  it.each(UNIT_CASES)('[U02724] plays the %s video once for the local player', (type, id, video) => {
     const state = { humanPlayer: 'player1', buildings: [], units: [{ type, owner: 'player1' }] }
     system.checkMilestones(state)
     expect(system.isAchieved(id)).toBe(true)
@@ -44,13 +44,13 @@ describe('air and naval milestone videos', () => {
     expect(firstProductionNarrationMilestoneId(type)).toBe(id)
   })
 
-  it.each(BUILDING_CASES)('plays the %s building video once', (type, id, video) => {
+  it.each(BUILDING_CASES)('[U02725] plays the %s building video once', (type, id, video) => {
     system.checkMilestones({ humanPlayer: 'player1', buildings: [{ type, owner: 'player1' }], units: [] })
     expect(system.isAchieved(id)).toBe(true)
     expect(playSyncedVideoAudio).toHaveBeenCalledWith(video, expect.anything())
   })
 
-  it('ignores enemy units and buildings', () => {
+  it('[U02726] ignores enemy units and buildings', () => {
     system.checkMilestones({
       humanPlayer: 'player1',
       units: UNIT_CASES.map(([type]) => ({ type, owner: 'enemy1' })),
@@ -59,7 +59,7 @@ describe('air and naval milestone videos', () => {
     for (const [, id] of [...UNIT_CASES, ...BUILDING_CASES]) expect(system.isAchieved(id)).toBe(false)
   })
 
-  it('does not replay after restoring achieved milestones', () => {
+  it('[U02727] does not replay after restoring achieved milestones', () => {
     system.setAchievedMilestones(['firstF35', 'firstShipyard'])
     system.checkMilestones({ humanPlayer: 'player1', units: [{ type: 'f35', owner: 'player1' }], buildings: [{ type: 'shipyard', owner: 'player1' }] })
     expect(playSyncedVideoAudio).not.toHaveBeenCalled()

@@ -21,7 +21,7 @@ function createMap(width, height, type = 'land') {
 }
 
 describe('naval integration', () => {
-  it('requires the lower three rows of the 5x5 Shipyard footprint to be water', () => {
+  it('[U03166] requires the lower three rows of the 5x5 Shipyard footprint to be water', () => {
     const mapGrid = createMap(20, 20)
     for (let y = 7; y <= 10; y++) {
       for (let x = 5; x <= 9; x++) mapGrid[y][x].type = 'water'
@@ -37,7 +37,7 @@ describe('naval integration', () => {
     expect(canPlaceBuilding('shipyard', 5, 5, mapGrid, [], [], factories, 'player')).toBe(false)
   })
 
-  it('anchors a large stern V and smaller bow V to the rendered hull endpoints', () => {
+  it('[U03167] anchors a large stern V and smaller bow V to the rendered hull endpoints', () => {
     const unit = {
       isNaval: true,
       x: 5 * TILE_SIZE,
@@ -60,7 +60,7 @@ describe('naval integration', () => {
     expect(BOW_WAKE_INNER_ANGLE_RADIANS * (180 / Math.PI)).toBeCloseTo(70)
   })
 
-  it('replaces bow/stern wakes with a fading circular disturbance while rotating', () => {
+  it('[U03168] replaces bow/stern wakes with a fading circular disturbance while rotating', () => {
     const unit = {
       id: 'turning-destroyer',
       type: 'destroyer',
@@ -91,7 +91,7 @@ describe('naval integration', () => {
     })
   })
 
-  it('finds water-only paths and keeps water terrain free in the occupancy map', () => {
+  it('[U03169] finds water-only paths and keeps water terrain free in the occupancy map', () => {
     const mapGrid = createMap(8, 8, 'water')
     mapGrid[3][3].type = 'land'
     const destroyer = {
@@ -118,7 +118,7 @@ describe('naval integration', () => {
     expect(path.every(tile => mapGrid[tile.y][tile.x].type === 'water')).toBe(true)
   })
 
-  it('clips the three-tile Shipyard service area to water and gates each refill by its support building', () => {
+  it('[U03170] clips the three-tile Shipyard service area to water and gates each refill by its support building', () => {
     const mapGrid = createMap(20, 20, 'water')
     const shipyard = {
       type: 'shipyard', owner: 'player1', x: 5, y: 5, width: 5, height: 5,

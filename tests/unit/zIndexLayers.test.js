@@ -19,19 +19,19 @@ function readCssLayerVariables(css) {
 }
 
 describe('z-index layers', () => {
-  it('keeps HUD chrome, including the bell layer, below every modal backdrop', () => {
+  it('[U05173] keeps HUD chrome, including the bell layer, below every modal backdrop', () => {
     expect(hudLayersStayBelowModals()).toBe(true)
     expect(Z_LAYERS.hudFloat).toBeLessThan(Z_LAYERS.modal)
     expect(Z_LAYERS.hudPopover).toBeLessThan(Z_LAYERS.modal)
     expect(Z_LAYERS.hud).toBeGreaterThan(Z_LAYERS.canvas)
   })
 
-  it('mirrors the CSS custom properties in base.css', () => {
+  it('[U05174] mirrors the CSS custom properties in base.css', () => {
     const vars = readCssLayerVariables(readRepoFile('styles/base.css'))
     expect(vars).toEqual(Z_LAYER_CSS_VARS)
   })
 
-  it('pins the notification bell, history panel, and status pills to HUD layers', () => {
+  it('[U05175] pins the notification bell, history panel, and status pills to HUD layers', () => {
     const history = readRepoFile('styles/notificationHistory.css')
     const overlays = readRepoFile('styles/overlays.css')
     expect(history).toMatch(/\.notif-badge\s*\{[^}]*z-index:\s*var\(--z-hud-float\)/)
@@ -41,7 +41,7 @@ describe('z-index layers', () => {
     expect(overlays).toMatch(/\.benchmark-countdown\s*\{[^}]*z-index:\s*var\(--z-hud-float\)/)
   })
 
-  it('puts modal backdrops on the modal layer or above', () => {
+  it('[U05176] puts modal backdrops on the modal layer or above', () => {
     const overlays = readRepoFile('styles/overlays.css')
     const modals = readRepoFile('styles/modals.css')
     const sidebar = readRepoFile('styles/sidebar.css')

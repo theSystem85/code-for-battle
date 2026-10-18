@@ -14,7 +14,7 @@ const mixedSettings = {
 }
 
 describe('mixed map biomes', () => {
-  it('is deterministic and creates organic blended region boundaries', () => {
+  it('[U02561] is deterministic and creates organic blended region boundaries', () => {
     const first = makeGrid(60, 60)
     const second = makeGrid(60, 60)
     assignMapBiomes(first, 9123, mixedSettings)
@@ -27,7 +27,7 @@ describe('mixed map biomes', () => {
     expect(first.flat().filter(tile => tile.biomeBlend?.alpha > 0).length).toBeGreaterThan(20)
   })
 
-  it('adds transition metadata where biome regions meet only diagonally', () => {
+  it('[U02562] adds transition metadata where biome regions meet only diagonally', () => {
     const grid = makeGrid(80, 80)
     assignMapBiomes(grid, 9123, { ...mixedSettings, mapBiomeRegionCount: 32 })
     const regionBiomes = new Map()
@@ -54,7 +54,7 @@ describe('mixed map biomes', () => {
     expect(fractionalCornerTransitions).toBeGreaterThan(diagonalOnlyTransitions)
   })
 
-  it('uses four-color-style region assignment to avoid matching adjacent regions', () => {
+  it('[U02563] uses four-color-style region assignment to avoid matching adjacent regions', () => {
     const grid = makeGrid(70, 70)
     assignMapBiomes(grid, 44, mixedSettings)
     const regionBiomes = new Map()
@@ -78,7 +78,7 @@ describe('mixed map biomes', () => {
     expect(validTransitionEdges).toBeGreaterThan(0)
   })
 
-  it('adds sand only beside ocean-connected water and not an enclosed lake', () => {
+  it('[U02564] adds sand only beside ocean-connected water and not an enclosed lake', () => {
     const grid = makeGrid(40, 40)
     for (let y = 0; y < 40; y++) grid[y][0].type = 'water'
     for (let y = 18; y <= 21; y++) for (let x = 18; x <= 21; x++) grid[y][x].type = 'water'
@@ -92,7 +92,7 @@ describe('mixed map biomes', () => {
     expect(grid[20][17].biomeBlend?.biome).not.toBe('sand')
   })
 
-  it('uses corner-weighted biome blending around every inland shoreline edge', () => {
+  it('[U02565] uses corner-weighted biome blending around every inland shoreline edge', () => {
     const cases = [
       ['north', grid => { for (let x = 0; x < 24; x++) grid[0][x].type = 'water' }, 2, 12, [1, 1, 0.5, 0.5]],
       ['south', grid => { for (let x = 0; x < 24; x++) grid[23][x].type = 'water' }, 21, 12, [0.5, 0.5, 1, 1]],
@@ -113,7 +113,7 @@ describe('mixed map biomes', () => {
     }
   })
 
-  it('treats plateau snow as an independent overlay setting', () => {
+  it('[U02566] treats plateau snow as an independent overlay setting', () => {
     const grid = makeGrid(15, 15)
     for (let y = 5; y <= 9; y++) for (let x = 5; x <= 9; x++) grid[y][x].type = 'rock'
     assignMapBiomes(grid, 8, {
@@ -127,7 +127,7 @@ describe('mixed map biomes', () => {
     expect(grid[2][2].biome).toBe('soil')
   })
 
-  it('keeps plateau snow dominant over shoreline sand', () => {
+  it('[U02567] keeps plateau snow dominant over shoreline sand', () => {
     const grid = makeGrid(20, 20)
     for (let x = 0; x < 20; x++) grid[0][x].type = 'water'
     for (let y = 1; y <= 5; y++) for (let x = 5; x <= 9; x++) grid[y][x].type = 'rock'
@@ -136,7 +136,7 @@ describe('mixed map biomes', () => {
     expect(grid[2][7].biomeBlend).toBeUndefined()
   })
 
-  it('keeps the sand coastline source when snow covers a shore plateau', () => {
+  it('[U02568] keeps the sand coastline source when snow covers a shore plateau', () => {
     const grid = makeGrid(20, 20)
     for (let x = 0; x < 20; x++) grid[0][x].type = 'water'
     for (let y = 1; y <= 5; y++) for (let x = 5; x <= 9; x++) grid[y][x].type = 'rock'
@@ -147,7 +147,7 @@ describe('mixed map biomes', () => {
     expect(grid[5][9].biome).toBe('snow')
   })
 
-  it('uses the configured shoreline width in tiles', () => {
+  it('[U02569] uses the configured shoreline width in tiles', () => {
     const grid = makeGrid(20, 20)
     for (let x = 0; x < 20; x++) grid[0][x].type = 'water'
     assignMapBiomes(grid, 10, { ...mixedSettings, mapBiomeRegionCount: 1, mapBiomeWeights: { grass: 100, soil: 0, sand: 20, snow: 0 }, mapSnowOnPlateaus: false, mapShorelineWidth: 3 })

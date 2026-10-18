@@ -148,7 +148,7 @@ afterEach(() => {
 })
 
 describe('AI reactivation events', () => {
-  it('subscribes and unsubscribes to AI reactivation', () => {
+  it('[U05125] subscribes and unsubscribes to AI reactivation', () => {
     const handler = vi.fn()
     const cleanup = observeAiReactivation(handler)
     document.dispatchEvent(new CustomEvent(AI_REACTIVATION_EVENT, { detail: { partyId: 'party-1' } }))
@@ -159,7 +159,7 @@ describe('AI reactivation events', () => {
     expect(handler).toHaveBeenCalledTimes(1)
   })
 
-  it('returns a no-op cleanup when handler is invalid', () => {
+  it('[U05126] returns a no-op cleanup when handler is invalid', () => {
     const addListenerSpy = vi.spyOn(document, 'addEventListener')
 
     const cleanup = observeAiReactivation('not-a-function')
@@ -171,7 +171,7 @@ describe('AI reactivation events', () => {
 })
 
 describe('Host session behavior', () => {
-  it('answers offers and flushes queued ICE candidates', async() => {
+  it('[U05127] answers offers and flushes queued ICE candidates', async() => {
     const monitor = watchHostInvite({ partyId: 'party-1', inviteToken: 'token-1' })
     const entry = {
       peerId: 'peer-1',
@@ -195,7 +195,7 @@ describe('Host session behavior', () => {
     expect(lastPeerConnection.addIceCandidate).toHaveBeenCalledWith({ candidate: 'candidate-1' })
   })
 
-  it('answers an ICE restart with the new offer revision', async() => {
+  it('[U05128] answers an ICE restart with the new offer revision', async() => {
     const monitor = watchHostInvite({ partyId: 'party-1', inviteToken: 'token-1' })
     monitor._processEntry({
       peerId: 'peer-1',
@@ -219,7 +219,7 @@ describe('Host session behavior', () => {
     }))
   })
 
-  it('processes and forwards data channel control messages', () => {
+  it('[U05129] processes and forwards data channel control messages', () => {
     const onControlMessage = vi.fn()
     const monitor = watchHostInvite({ partyId: 'party-1', inviteToken: 'token-1' })
     monitor._processEntry({
@@ -240,7 +240,7 @@ describe('Host session behavior', () => {
     expect(commandSync.updateNetworkStats).toHaveBeenCalledWith(0, JSON.stringify({ type: 'remote-control', input: 'payload' }).length)
   })
 
-  it('ignores non-peer or malformed ICE candidates', () => {
+  it('[U05130] ignores non-peer or malformed ICE candidates', () => {
     const monitor = watchHostInvite({ partyId: 'party-1', inviteToken: 'token-1' })
     monitor._processEntry({
       peerId: 'peer-1',
@@ -261,7 +261,7 @@ describe('Host session behavior', () => {
     expect(lastPeerConnection.addIceCandidate).toHaveBeenCalledWith({ candidate: 'peer-candidate' })
   })
 
-  it('applies peer ICE candidates even when the host cursor was cleared', () => {
+  it('[U05131] applies peer ICE candidates even when the host cursor was cleared', () => {
     const monitor = watchHostInvite({ partyId: 'party-1', inviteToken: 'token-1' })
     monitor._processEntry({
       peerId: 'peer-1',
@@ -285,7 +285,7 @@ describe('Host session behavior', () => {
     expect(session.candidateCursor).toBe(2)
   })
 
-  it('sends host status updates through the data channel', () => {
+  it('[U05132] sends host status updates through the data channel', () => {
     const monitor = watchHostInvite({ partyId: 'party-1', inviteToken: 'token-1' })
     monitor._processEntry({
       peerId: 'peer-1',
@@ -303,7 +303,7 @@ describe('Host session behavior', () => {
     expect(commandSync.updateNetworkStats).toHaveBeenCalledWith(expectedPayload.length, 0)
   })
 
-  it('skips host status updates when data channel is not open', () => {
+  it('[U05133] skips host status updates when data channel is not open', () => {
     const monitor = watchHostInvite({ partyId: 'party-1', inviteToken: 'token-1' })
     monitor._processEntry({
       peerId: 'peer-1',
@@ -321,7 +321,7 @@ describe('Host session behavior', () => {
     expect(commandSync.updateNetworkStats).not.toHaveBeenCalled()
   })
 
-  it('notifies session state on data channel close', () => {
+  it('[U05134] notifies session state on data channel close', () => {
     const onStateChange = vi.fn()
     const monitor = watchHostInvite({ partyId: 'party-1', inviteToken: 'token-1' })
     monitor._processEntry({
@@ -342,7 +342,7 @@ describe('Host session behavior', () => {
 })
 
 describe('Host invite monitoring', () => {
-  it('handles client connection state changes', () => {
+  it('[U05135] handles client connection state changes', () => {
     const monitor = watchHostInvite({ partyId: 'party-1', inviteToken: 'token-1' })
     const session = {
       alias: 'Remote',
@@ -362,7 +362,7 @@ describe('Host invite monitoring', () => {
     expect(commandSync.startGameStateSync).toHaveBeenCalled()
   })
 
-  it('does not reinitialize lockstep when already enabled', () => {
+  it('[U05136] does not reinitialize lockstep when already enabled', () => {
     commandSync.isLockstepEnabled.mockReturnValue(true)
     const monitor = watchHostInvite({ partyId: 'party-1', inviteToken: 'token-1' })
     const session = {
@@ -378,7 +378,7 @@ describe('Host invite monitoring', () => {
     expect(commandSync.initializeLockstepSession).not.toHaveBeenCalled()
   })
 
-  it('restores AI control on disconnect and stops sync', () => {
+  it('[U05137] restores AI control on disconnect and stops sync', () => {
     commandSync.isLockstepEnabled.mockReturnValue(true)
     const monitor = watchHostInvite({ partyId: 'party-1', inviteToken: 'token-1' })
     const session = {
@@ -406,7 +406,7 @@ describe('Host invite monitoring', () => {
   })
 
 
-  it('pauses game when client becomes unresponsive and resumes on heartbeat pong', () => {
+  it('[U05138] pauses game when client becomes unresponsive and resumes on heartbeat pong', () => {
     const monitor = watchHostInvite({ partyId: 'party-1', inviteToken: 'token-1' })
     const session = {
       alias: 'Remote',
@@ -433,7 +433,7 @@ describe('Host invite monitoring', () => {
     expect(gameState.gamePaused).toBe(false)
   })
 
-  it('routes control messages to command sync and remote control handlers', () => {
+  it('[U05139] routes control messages to command sync and remote control handlers', () => {
     const monitor = watchHostInvite({ partyId: 'party-1', inviteToken: 'token-1' })
     const session = { sourceId: 'remote-party-1-peer-1' }
 
@@ -444,7 +444,7 @@ describe('Host invite monitoring', () => {
     expect(remoteControlState.applyRemoteControlSnapshot).toHaveBeenCalledWith(session.sourceId, { type: 'remote-control', payload: { axis: 'x' } })
   })
 
-  it('ignores unsupported control message types', () => {
+  it('[U05140] ignores unsupported control message types', () => {
     const monitor = watchHostInvite({ partyId: 'party-1', inviteToken: 'token-1' })
     const session = { sourceId: 'remote-party-1-peer-1' }
 
@@ -454,7 +454,7 @@ describe('Host invite monitoring', () => {
     expect(remoteControlState.applyRemoteControlSnapshot).not.toHaveBeenCalled()
   })
 
-  it('clears host invite monitor when token is removed', () => {
+  it('[U05141] clears host invite monitor when token is removed', () => {
     const monitor = watchHostInvite({ partyId: 'party-2', inviteToken: 'token-2' })
     const stopSpy = vi.spyOn(monitor, 'stop')
 
@@ -467,12 +467,12 @@ describe('Host invite monitoring', () => {
 })
 
 describe('kickPlayer', () => {
-  it('returns false when there is no active session', async() => {
+  it('[U05142] returns false when there is no active session', async() => {
     const result = await kickPlayer('party-1')
     expect(result).toBe(false)
   })
 
-  it('kicks the active player and regenerates the invite token', async() => {
+  it('[U05143] kicks the active player and regenerates the invite token', async() => {
     const monitor = watchHostInvite({ partyId: 'party-1', inviteToken: 'token-1' })
     const dataChannel = createDataChannel()
     const session = {
@@ -498,7 +498,7 @@ describe('kickPlayer', () => {
     expect(commandSync.stopGameStateSync).toHaveBeenCalled()
   })
 
-  it('does not mark a kicked player as reconnecting when the session closes', async() => {
+  it('[U05144] does not mark a kicked player as reconnecting when the session closes', async() => {
     const monitor = watchHostInvite({ partyId: 'party-1', inviteToken: 'token-1' })
     const dataChannel = createDataChannel()
     const session = {

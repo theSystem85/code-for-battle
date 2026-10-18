@@ -173,31 +173,31 @@ describe('benchmarkScenario.js', () => {
   })
 
   describe('setupBenchmarkScenario', () => {
-    it('should throw error if game is not available', () => {
+    it('[U00424] should throw error if game is not available', () => {
       getCurrentGame.mockReturnValue(null)
 
       expect(() => setupBenchmarkScenario()).toThrow('Game instance not available')
     })
 
-    it('should set playerCount to 4', () => {
+    it('[U00425] should set playerCount to 4', () => {
       setupBenchmarkScenario()
 
       expect(gameState.playerCount).toBe(4)
     })
 
-    it('should set humanPlayer to player1', () => {
+    it('[U00426] should set humanPlayer to player1', () => {
       setupBenchmarkScenario()
 
       expect(gameState.humanPlayer).toBe('player1')
     })
 
-    it('should set speedMultiplier to 1', () => {
+    it('[U00427] should set speedMultiplier to 1', () => {
       setupBenchmarkScenario()
 
       expect(gameState.speedMultiplier).toBe(1)
     })
 
-    it('should call game.resetGame()', () => {
+    it('[U00428] should call game.resetGame()', () => {
       const mockGame = {
         resetGame: vi.fn(),
         centerOnPlayerFactory: vi.fn()
@@ -209,13 +209,13 @@ describe('benchmarkScenario.js', () => {
       expect(mockGame.resetGame).toHaveBeenCalled()
     })
 
-    it('should set money to 50000', () => {
+    it('[U00429] should set money to 50000', () => {
       setupBenchmarkScenario()
 
       expect(gameState.money).toBe(50000)
     })
 
-    it('should reset gameTime to 0', () => {
+    it('[U00430] should reset gameTime to 0', () => {
       gameState.gameTime = 12345
 
       setupBenchmarkScenario()
@@ -223,7 +223,7 @@ describe('benchmarkScenario.js', () => {
       expect(gameState.gameTime).toBe(0)
     })
 
-    it('should reset frameCount to 0', () => {
+    it('[U00431] should reset frameCount to 0', () => {
       gameState.frameCount = 999
 
       setupBenchmarkScenario()
@@ -231,13 +231,13 @@ describe('benchmarkScenario.js', () => {
       expect(gameState.frameCount).toBe(0)
     })
 
-    it('should set benchmarkActive to true', () => {
+    it('[U00432] should set benchmarkActive to true', () => {
       setupBenchmarkScenario()
 
       expect(gameState.benchmarkActive).toBe(true)
     })
 
-    it('should initialize availableUnitTypes with expected unit types', () => {
+    it('[U00433] should initialize availableUnitTypes with expected unit types', () => {
       setupBenchmarkScenario()
 
       expect(gameState.availableUnitTypes).toBeInstanceOf(Set)
@@ -247,7 +247,7 @@ describe('benchmarkScenario.js', () => {
       expect(gameState.availableUnitTypes.has('harvester')).toBe(true)
     })
 
-    it('should clear defeatedPlayers set', () => {
+    it('[U00434] should clear defeatedPlayers set', () => {
       gameState.defeatedPlayers = new Set(['player2', 'player3'])
 
       setupBenchmarkScenario()
@@ -255,7 +255,7 @@ describe('benchmarkScenario.js', () => {
       expect(gameState.defeatedPlayers.size).toBe(0)
     })
 
-    it('should set factory budgets to 50000', () => {
+    it('[U00435] should set factory budgets to 50000', () => {
       setupBenchmarkScenario()
 
       factories.forEach(factory => {
@@ -263,7 +263,7 @@ describe('benchmarkScenario.js', () => {
       })
     })
 
-    it('should mark factories as benchmark structures', () => {
+    it('[U00436] should mark factories as benchmark structures', () => {
       setupBenchmarkScenario()
 
       factories.forEach(factory => {
@@ -271,7 +271,7 @@ describe('benchmarkScenario.js', () => {
       })
     })
 
-    it('should clear factory rally points', () => {
+    it('[U00437] should clear factory rally points', () => {
       factories.forEach(factory => {
         factory.rallyPoint = { x: 5, y: 5 }
       })
@@ -283,31 +283,31 @@ describe('benchmarkScenario.js', () => {
       })
     })
 
-    it('should call cleanupOreFromBuildings', () => {
+    it('[U00438] should call cleanupOreFromBuildings', () => {
       setupBenchmarkScenario()
 
       expect(cleanupOreFromBuildings).toHaveBeenCalled()
     })
 
-    it('should call updatePowerSupply', () => {
+    it('[U00439] should call updatePowerSupply', () => {
       setupBenchmarkScenario()
 
       expect(updatePowerSupply).toHaveBeenCalledWith(gameState.buildings, gameState)
     })
 
-    it('should call initializeOccupancyMap', () => {
+    it('[U00440] should call initializeOccupancyMap', () => {
       setupBenchmarkScenario()
 
       expect(initializeOccupancyMap).toHaveBeenCalled()
     })
 
-    it('should call updateDangerZoneMaps', () => {
+    it('[U00441] should call updateDangerZoneMaps', () => {
       setupBenchmarkScenario()
 
       expect(updateDangerZoneMaps).toHaveBeenCalledWith(gameState)
     })
 
-    it('should set gamePaused to false', () => {
+    it('[U00442] should set gamePaused to false', () => {
       gameState.gamePaused = true
 
       setupBenchmarkScenario()
@@ -315,13 +315,13 @@ describe('benchmarkScenario.js', () => {
       expect(gameState.gamePaused).toBe(false)
     })
 
-    it('should set gameStarted to true', () => {
+    it('[U00443] should set gameStarted to true', () => {
       setupBenchmarkScenario()
 
       expect(gameState.gameStarted).toBe(true)
     })
 
-    it('should call centerOnPlayerFactory if available', () => {
+    it('[U00444] should call centerOnPlayerFactory if available', () => {
       const mockGame = {
         resetGame: vi.fn(),
         centerOnPlayerFactory: vi.fn()
@@ -333,7 +333,7 @@ describe('benchmarkScenario.js', () => {
       expect(mockGame.centerOnPlayerFactory).toHaveBeenCalled()
     })
 
-    it('should not throw if centerOnPlayerFactory is not available', () => {
+    it('[U00445] should not throw if centerOnPlayerFactory is not available', () => {
       const mockGame = {
         resetGame: vi.fn()
         // centerOnPlayerFactory not defined
@@ -343,7 +343,7 @@ describe('benchmarkScenario.js', () => {
       expect(() => setupBenchmarkScenario()).not.toThrow()
     })
 
-    it('should create units for each player', () => {
+    it('[U00446] should create units for each player', () => {
       setupBenchmarkScenario()
 
       // Should have created multiple units
@@ -351,20 +351,20 @@ describe('benchmarkScenario.js', () => {
       expect(units.length).toBeGreaterThan(0)
     })
 
-    it('should create buildings for each player', () => {
+    it('[U00447] should create buildings for each player', () => {
       setupBenchmarkScenario()
 
       expect(createBuilding).toHaveBeenCalled()
       expect(placeBuilding).toHaveBeenCalled()
     })
 
-    it('should call canPlaceBuilding before placing buildings', () => {
+    it('[U00448] should call canPlaceBuilding before placing buildings', () => {
       setupBenchmarkScenario()
 
       expect(canPlaceBuilding).toHaveBeenCalled()
     })
 
-    it('should clear unitWrecks array', () => {
+    it('[U00449] should clear unitWrecks array', () => {
       gameState.unitWrecks = [{ id: 'wreck1' }]
 
       setupBenchmarkScenario()
@@ -372,7 +372,7 @@ describe('benchmarkScenario.js', () => {
       expect(gameState.unitWrecks).toEqual([])
     })
 
-    it('should clear smokeParticles array', () => {
+    it('[U00450] should clear smokeParticles array', () => {
       gameState.smokeParticles = [{ id: 'smoke1' }]
 
       setupBenchmarkScenario()
@@ -380,7 +380,7 @@ describe('benchmarkScenario.js', () => {
       expect(gameState.smokeParticles).toEqual([])
     })
 
-    it('should clear smokeParticlePool array', () => {
+    it('[U00451] should clear smokeParticlePool array', () => {
       gameState.smokeParticlePool = [{ id: 'pool1' }]
 
       setupBenchmarkScenario()
@@ -388,7 +388,7 @@ describe('benchmarkScenario.js', () => {
       expect(gameState.smokeParticlePool).toEqual([])
     })
 
-    it('should reset destruction counters', () => {
+    it('[U00452] should reset destruction counters', () => {
       gameState.playerUnitsDestroyed = 100
       gameState.enemyUnitsDestroyed = 50
       gameState.playerBuildingsDestroyed = 25
@@ -402,7 +402,7 @@ describe('benchmarkScenario.js', () => {
       expect(gameState.enemyBuildingsDestroyed).toBe(0)
     })
 
-    it('should reset totalMoneyEarned', () => {
+    it('[U00453] should reset totalMoneyEarned', () => {
       gameState.totalMoneyEarned = 99999
 
       setupBenchmarkScenario()
@@ -410,7 +410,7 @@ describe('benchmarkScenario.js', () => {
       expect(gameState.totalMoneyEarned).toBe(0)
     })
 
-    it('should include factories in buildings array', () => {
+    it('[U00454] should include factories in buildings array', () => {
       setupBenchmarkScenario()
 
       // Buildings array should include the factories
@@ -419,7 +419,7 @@ describe('benchmarkScenario.js', () => {
   })
 
   describe('teardownBenchmarkScenario', () => {
-    it('should set benchmarkActive to false', () => {
+    it('[U00455] should set benchmarkActive to false', () => {
       gameState.benchmarkActive = true
 
       teardownBenchmarkScenario()
@@ -427,7 +427,7 @@ describe('benchmarkScenario.js', () => {
       expect(gameState.benchmarkActive).toBe(false)
     })
 
-    it('should call resetBenchmarkCameraFocus', () => {
+    it('[U00456] should call resetBenchmarkCameraFocus', () => {
       teardownBenchmarkScenario()
 
       expect(resetBenchmarkCameraFocus).toHaveBeenCalled()
@@ -435,13 +435,13 @@ describe('benchmarkScenario.js', () => {
   })
 
   describe('scenario configuration', () => {
-    it('should set up 4 players for benchmark', () => {
+    it('[U00457] should set up 4 players for benchmark', () => {
       setupBenchmarkScenario()
 
       expect(gameState.playerCount).toBe(4)
     })
 
-    it('should configure available unit types correctly', () => {
+    it('[U00458] should configure available unit types correctly', () => {
       setupBenchmarkScenario()
 
       const expectedTypes = [
@@ -455,7 +455,7 @@ describe('benchmarkScenario.js', () => {
       })
     })
 
-    it('should clear newUnitTypes set', () => {
+    it('[U00459] should clear newUnitTypes set', () => {
       gameState.newUnitTypes = new Set(['tank_v1'])
 
       setupBenchmarkScenario()
@@ -463,7 +463,7 @@ describe('benchmarkScenario.js', () => {
       expect(gameState.newUnitTypes.size).toBe(0)
     })
 
-    it('should clear newBuildingTypes set', () => {
+    it('[U00460] should clear newBuildingTypes set', () => {
       gameState.newBuildingTypes = new Set(['powerPlant'])
 
       setupBenchmarkScenario()
@@ -473,7 +473,7 @@ describe('benchmarkScenario.js', () => {
   })
 
   describe('error handling', () => {
-    it('should handle empty mapGrid gracefully', () => {
+    it('[U00461] should handle empty mapGrid gracefully', () => {
       // This tests that the code handles edge cases
       const mockGame = {
         resetGame: vi.fn(),
@@ -485,7 +485,7 @@ describe('benchmarkScenario.js', () => {
       expect(() => setupBenchmarkScenario()).not.toThrow()
     })
 
-    it('should handle building placement failures gracefully', () => {
+    it('[U00462] should handle building placement failures gracefully', () => {
       canPlaceBuilding.mockReturnValue(false)
 
       // Should not throw when buildings can't be placed

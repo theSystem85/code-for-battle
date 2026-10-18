@@ -25,7 +25,7 @@ function memoryStorage(initial = {}) {
 }
 
 describe('player profiles', () => {
-  it('creates, renames, deletes, and assigns a profile to each slot', () => {
+  it('[U03311] creates, renames, deletes, and assigns a profile to each slot', () => {
     const storage = memoryStorage()
     const store = loadGamepadProfileStore(storage)
     const alex = createPlayerProfile(store, 'Alex', 0, null)
@@ -47,7 +47,7 @@ describe('player profiles', () => {
     expect(getSlotPlayerProfileId(loaded, 0)).toBe('player2')
   })
 
-  it('resolves player, then controller type, then the device profile, then defaults', () => {
+  it('[U03312] resolves player, then controller type, then the device profile, then defaults', () => {
     const store = loadGamepadProfileStore(memoryStorage())
     createPlayerProfile(store, 'Alex', 0, { fire: { type: 'button', index: 1 } })
     createControllerTypeProfile(store, 'xbox', 'Paddles', { fire: { type: 'button', index: 7 }, jumpToLastEvent: { type: 'button', index: 17 } })
@@ -68,7 +68,7 @@ describe('player profiles', () => {
     expect(unbound.sources.fire).toBe('player')
   })
 
-  it('keeps two slots on different player profiles and classifies controller ids', () => {
+  it('[U03313] keeps two slots on different player profiles and classifies controller ids', () => {
     const store = loadGamepadProfileStore(memoryStorage())
     createPlayerProfile(store, 'Alex', 0, { fire: { type: 'button', index: 2 } })
     createPlayerProfile(store, 'Sam', 1, { fire: { type: 'button', index: 3 } })
@@ -79,7 +79,7 @@ describe('player profiles', () => {
     expect(controllerTypeFromId('Generic USB Joystick')).toBe('generic')
   })
 
-  it('writes a standard button to the player profile and a non-standard button to the controller type', () => {
+  it('[U03314] writes a standard button to the player profile and a non-standard button to the controller type', () => {
     const store = loadGamepadProfileStore(memoryStorage())
     const standard = placeGamepadBinding(store, {
       slot: 0,
@@ -103,7 +103,7 @@ describe('player profiles', () => {
     expect(resolved.sources.leftClick).toBe('player')
   })
 
-  it('keeps version 1 controller libraries when player profiles are added', () => {
+  it('[U03315] keeps version 1 controller libraries when player profiles are added', () => {
     const raw = JSON.stringify({
       version: GAMEPAD_PROFILE_VERSION_V1,
       assignments: [],

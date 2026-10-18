@@ -7,7 +7,7 @@ function input(tick, units, buildings = [], money = 1000, events = []) {
 const unit = (id, owner, x, health = 100) => ({ id, type: 'tank', owner, health, maxHealth: 100, tilePosition: { x, y: 2 } })
 
 describe('strategic incremental context', () => {
-  it('sends schema-once initial tables then ordered coalesced deltas', () => {
+  it('[U02357] sends schema-once initial tables then ordered coalesced deltas', () => {
     const tracker = createStrategicContextTracker()
     const initial = tracker.build(input(1, [unit('a', 'ai', 1), unit('seen', 'human', 4)]))
     expect(initial).toMatchObject({ contextVersion: '1.0', mode: 'initial', revision: 1 })
@@ -22,7 +22,7 @@ describe('strategic incremental context', () => {
     expect(delta.changes.events[0].id).toBe('ev2')
   })
 
-  it('does not reveal whether an enemy merely left visibility', () => {
+  it('[U02358] does not reveal whether an enemy merely left visibility', () => {
     const tracker = createStrategicContextTracker()
     tracker.build(input(1, [unit('own', 'ai', 1), unit('hidden-next', 'human', 8)]))
     const delta = tracker.build(input(2, [unit('own', 'ai', 1)]))
@@ -30,7 +30,7 @@ describe('strategic incremental context', () => {
     expect(tracker.query({ entityId: 'hidden-next' }).rows).toHaveLength(1)
   })
 
-  it('returns bounded region and entity queries', () => {
+  it('[U02359] returns bounded region and entity queries', () => {
     const tracker = createStrategicContextTracker()
     tracker.build(input(1, [unit('a', 'ai', 1), unit('b', 'ai', 8)]))
     expect(tracker.query({ region: { x: 0, y: 0, width: 4, height: 4 }, maxRows: 1 }).rows[0][0]).toBe('a')

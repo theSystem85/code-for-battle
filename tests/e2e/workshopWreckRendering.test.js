@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 
 test.describe('Workshop wreck rendering', () => {
-  test('renders F22 wreck sprite in workshop and rotates restored wrecks by 45 degrees', async({ page }) => {
+  test('[E00128] renders F22 wreck sprite in workshop and rotates restored wrecks by 45 degrees', async({ page }) => {
     await page.goto('/?seed=11')
     await page.waitForSelector('#gameCanvas', { state: 'visible', timeout: 30000 })
 

@@ -35,7 +35,7 @@ function policyWith(when, effect = { type: 'hold' }) {
 }
 
 describe('compare operators', () => {
-  it('supports ==, <=, >=, < and > against a measured value', () => {
+  it('[U03345] supports ==, <=, >=, < and > against a measured value', () => {
     const view = measureFrom({ fuel: 0.5 })
     const results = COMPARE_OPS.map(op => [op, evaluateCondition(compare('fuel', op, 0.5), view)])
     expect(Object.fromEntries(results)).toEqual({ '==': true, '<=': true, '>=': true, '<': false, '>': false })
@@ -43,19 +43,19 @@ describe('compare operators', () => {
     expect(evaluateCondition(compare('fuel', '>', 0.4), view)).toBe(true)
   })
 
-  it('treats == as equal within the field tolerance', () => {
+  it('[U03346] treats == as equal within the field tolerance', () => {
     expect(evaluateCondition(compare('hp', '==', 0.5), measureFrom({ hp: 0.503 }))).toBe(true)
     expect(evaluateCondition(compare('hp', '==', 0.5), measureFrom({ hp: 0.52 }))).toBe(false)
     expect(evaluateCondition(compare('ammo', '==', 0, { mode: 'absolute' }), measureFrom({ ammo: 0 }))).toBe(true)
     expect(evaluateCondition(compare('ammo', '==', 0, { mode: 'absolute' }), measureFrom({ ammo: 1 }))).toBe(false)
   })
 
-  it('compares angles across the 360 degree wrap for ==', () => {
+  it('[U03347] compares angles across the 360 degree wrap for ==', () => {
     expect(compareCondition(compare('rotation', '==', 359), 2)).toBe(true)
     expect(compareCondition(compare('rotation', '==', 90), 180)).toBe(false)
   })
 
-  it('never fires on a measurement that is unavailable', () => {
+  it('[U03348] never fires on a measurement that is unavailable', () => {
     const view = measureFrom({})
     expect(evaluateCondition(compare('fuel', '<', 0.9), view)).toBe(false)
     expect(evaluateCondition(compare('fuel', '==', 0), view)).toBe(false)
@@ -63,7 +63,7 @@ describe('compare operators', () => {
     expect(evaluateCondition({ type: 'not', of: check('airborne') }, view)).toBe(true)
   })
 
-  it('keeps the first-slice hp comparison working without a measure()', () => {
+  it('[U03349] keeps the first-slice hp comparison working without a measure()', () => {
     expect(evaluateCondition(compare('hp', '<', 0.25), { hp: 0.1 })).toBe(true)
     expect(evaluateCondition(compare('enemyDistance', '<=', 5), { enemyDistance: 3 })).toBe(true)
     expect(evaluateCondition(check('airborne'), { hp: 1 })).toBe(false)
@@ -71,13 +71,13 @@ describe('compare operators', () => {
 })
 
 describe('check leaves and nesting', () => {
-  it('reads yes/no checks from the world view', () => {
+  it('[U03350] reads yes/no checks from the world view', () => {
     const view = measureFrom({ airborne: true, moving: false })
     expect(evaluateCondition(check('airborne'), view)).toBe(true)
     expect(evaluateCondition(check('moving'), view)).toBe(false)
   })
 
-  it('evaluates NOT, AND and OR with nesting', () => {
+  it('[U03351] evaluates NOT, AND and OR with nesting', () => {
     const view = measureFrom({ airborne: true, moving: false, ammo: 0.1, hp: 0.9 })
     const lowAmmo = compare('ammo', '<', 0.25)
     const hurt = compare('hp', '<', 0.5)
@@ -97,7 +97,7 @@ describe('check leaves and nesting', () => {
 })
 
 describe('schema validation of the new conditions', () => {
-  it('accepts every catalogued numeric field and check with defaults', () => {
+  it('[U03352] accepts every catalogued numeric field and check with defaults', () => {
     Object.entries(NUMERIC_FIELDS).forEach(([field, meta]) => {
       if (meta.legacy || !(meta.variants || ['unit']).includes('unit')) return
       const mode = meta.modes[0]
@@ -111,7 +111,7 @@ describe('schema validation of the new conditions', () => {
     })
   })
 
-  it('rejects unknown fields, unknown checks, bad operators and bad values', () => {
+  it('[U03353] rejects unknown fields, unknown checks, bad operators and bad values', () => {
     expect(validatePolicy(policyWith(compare('mana', '<', 1))).valid).toBe(false)
     expect(validatePolicy(policyWith(check('invisible'))).valid).toBe(false)
     expect(validatePolicy(policyWith(compare('fuel', '!=', 0.5))).valid).toBe(false)
@@ -119,21 +119,21 @@ describe('schema validation of the new conditions', () => {
     expect(validatePolicy(policyWith(compare('fuel', '<', 1.5))).valid).toBe(false)
   })
 
-  it('rejects a comparison mode a field does not support and bad params', () => {
+  it('[U03354] rejects a comparison mode a field does not support and bad params', () => {
     expect(validatePolicy(policyWith(compare('money', '<', 0.5, { mode: 'relative' }))).valid).toBe(false)
     expect(validatePolicy(policyWith(compare('rank', '>=', 2, { mode: 'absolute' }))).valid).toBe(true)
     expect(validatePolicy(policyWith(check('inServiceRange', { building: 'castle' }))).valid).toBe(false)
     expect(validatePolicy(policyWith(check('inServiceRange', { building: 'hospital' }))).valid).toBe(true)
   })
 
-  it('validates nested combinators and caps their depth', () => {
+  it('[U03355] validates nested combinators and caps their depth', () => {
     const deep = [0, 1, 2, 3, 4, 5].reduce(inner => ({ type: 'not', of: inner }), check('airborne'))
     expect(validatePolicy(policyWith(deep)).valid).toBe(false)
     const ok = { type: 'and', of: [check('airborne'), { type: 'not', of: compare('fuel', '<', 0.2) }] }
     expect(validatePolicy(policyWith(ok)).valid).toBe(true)
   })
 
-  it('validates effect names and params', () => {
+  it('[U03356] validates effect names and params', () => {
     effectsForVariant('unit').forEach(type => {
       expect(validatePolicy(policyWith(check('moving'), { type })).errors, type).toEqual([])
     })
@@ -145,14 +145,14 @@ describe('schema validation of the new conditions', () => {
 })
 
 describe('descriptions and catalog', () => {
-  it('describes leaves in plain words', () => {
+  it('[U03357] describes leaves in plain words', () => {
     expect(describeLeaf(compare('hp', '<', 0.25))).toBe('HP < 25%')
     expect(describeLeaf(compare('ammo', '==', 0, { mode: 'absolute' }))).toBe('ammo (absolute) == 0')
     expect(describeLeaf(check('inServiceRange', { building: 'hospital' }))).toBe('the unit is in range of a hospital')
     expect(describeLeaf(check('enemyVisible', { targetType: 'apache' }))).toBe('an enemy Apache is visible')
   })
 
-  it('lists conditions the game cannot measure instead of faking them', () => {
+  it('[U03358] lists conditions the game cannot measure instead of faking them', () => {
     expect(UNSUPPORTED_CONDITIONS.length).toBeGreaterThan(0)
     UNSUPPORTED_CONDITIONS.forEach(item => {
       expect(item.reason.length).toBeGreaterThan(10)
@@ -161,7 +161,7 @@ describe('descriptions and catalog', () => {
     })
   })
 
-  it('maps every effect to a command and a repeat mode', () => {
+  it('[U03359] maps every effect to a command and a repeat mode', () => {
     Object.values(EFFECTS).forEach(effect => {
       expect(typeof effect.command).toBe('string')
       expect(['idle', 'tick']).toContain(effect.repeat)

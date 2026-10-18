@@ -20,7 +20,7 @@ describe('mouseCommands fallback defense-building targeting', () => {
     gameState.sellMode = false
   })
 
-  it('queues normal-click enemy target for selected defense buildings and promotes clicked target to active', () => {
+  it('[U02987] queues normal-click enemy target for selected defense buildings and promotes clicked target to active', () => {
     const existingQueuedTarget = { id: 'enemy-old', owner: 'enemy', health: 100, x: 0, y: 0 }
     const activeTarget = { id: 'enemy-active', owner: 'enemy', health: 100, x: 0, y: 0 }
     const clickedEnemy = {
@@ -70,7 +70,7 @@ describe('mouseCommands fallback defense-building targeting', () => {
     expect(selectedTurret.forcedAttack).toBe(true)
   })
 
-  it('routes supply-only right-click on friendly airstrip to movement command', () => {
+  it('[U02988] routes supply-only right-click on friendly airstrip to movement command', () => {
     const selectedSupply = {
       id: 'tanker-1',
       type: 'tankerTruck',

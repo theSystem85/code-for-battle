@@ -3,13 +3,13 @@ import { bindMixBalanceControl, formatMixBalance } from '../../src/ui/settingsMo
 import { getEffectsVolume, getMixBalance, getMusicVolume, setMasterVolume, setMixBalance } from '../../src/sound.js'
 
 describe('sound effects / music ratio setting', () => {
-  it('formats the balance compactly', () => {
+  it('[U02984] formats the balance compactly', () => {
     expect(formatMixBalance(50)).toBe('Equal')
     expect(formatMixBalance(75)).toBe('SFX 50% / Music 100%')
     expect(formatMixBalance(0)).toBe('SFX 100% / Music 0%')
   })
 
-  it('binds the slider, applies it live and uses no native title tooltip', () => {
+  it('[U02985] binds the slider, applies it live and uses no native title tooltip', () => {
     setMixBalance(50)
     setMasterVolume(1)
     const root = document.createElement('div')
@@ -30,7 +30,7 @@ describe('sound effects / music ratio setting', () => {
     setMixBalance(25)
   })
 
-  it('labels the default Music 50% / SFX 100%', () => {
+  it('[U02986] labels the default Music 50% / SFX 100%', () => {
     expect(formatMixBalance(25)).toBe('SFX 100% / Music 50%')
   })
 })

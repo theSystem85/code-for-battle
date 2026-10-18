@@ -15,7 +15,7 @@ function shareOf(phases, id) {
 }
 
 describe('bootProgress', () => {
-  it('preserves a startup error when parallel sprite preparation finishes later', () => {
+  it('[U00504] preserves a startup error when parallel sprite preparation finishes later', () => {
     const boot = beginBootProgress()
     boot.start('assets')
     document.body.innerHTML = '<div id="loadingScreen" data-phase="error"><p id="loadingScreenDetail">Startup failed</p><div id="loadingScreenBar"></div></div>'
@@ -28,7 +28,7 @@ describe('bootProgress', () => {
       document.body.innerHTML = ''
     }
   })
-  it('keeps an asymptotic phase inside its range until that phase finishes', () => {
+  it('[U00505] keeps an asymptotic phase inside its range until that phase finishes', () => {
     const fraction = asymptoticPhaseFraction(400, 400)
     expect(fraction).toBeGreaterThan(0.9)
     expect(fraction).toBeLessThan(1)
@@ -36,7 +36,7 @@ describe('bootProgress', () => {
     expect(asymptoticPhaseFraction(5000, 400)).toBeLessThan(1)
   })
 
-  it('weights WebGL boot time toward sprite and texture preparation', () => {
+  it('[U00506] weights WebGL boot time toward sprite and texture preparation', () => {
     const phases = bootPhasesForBackend('webgl')
     expect(shareOf(phases, 'assets')).toBeGreaterThan(0.7)
     expect(shareOf(phases, 'present')).toBeGreaterThan(0.1)
@@ -44,7 +44,7 @@ describe('bootProgress', () => {
     expect(phases.some(phase => phase.id === 'backend')).toBe(false)
   })
 
-  it('gives WebGPU presentation a share of the measured device and shader cost', () => {
+  it('[U00507] gives WebGPU presentation a share of the measured device and shader cost', () => {
     const phases = bootPhasesForBackend('webgpu')
     expect(shareOf(phases, 'assets')).toBeGreaterThan(0.4)
     expect(shareOf(phases, 'present')).toBeGreaterThan(0.35)
@@ -53,7 +53,7 @@ describe('bootProgress', () => {
     expect(gpuBootFraction(3)).toBe(1)
   })
 
-  it('moves with prepared-sprite work instead of sitting near 66 percent', () => {
+  it('[U00508] moves with prepared-sprite work instead of sitting near 66 percent', () => {
     const boot = createBootProgress(bootPhasesForBackend('webgl'), { floor: 0 })
     boot.finish('storage', 0)
     boot.start('assets', 0)
@@ -74,7 +74,7 @@ describe('bootProgress', () => {
     expect(nextSprite).toBeGreaterThan(halfway)
   })
 
-  it('does not move backwards when a later report is lower', () => {
+  it('[U00509] does not move backwards when a later report is lower', () => {
     const boot = createBootProgress(bootPhasesForBackend('webgl'), { floor: 0.04 })
     boot.finish('storage', 0)
     boot.start('assets', 0)
@@ -85,7 +85,7 @@ describe('bootProgress', () => {
     expect(high).toBeGreaterThanOrEqual(0.04)
   })
 
-  it('reaches 100 percent only when loading is finished', () => {
+  it('[U00510] reaches 100 percent only when loading is finished', () => {
     const boot = createBootProgress(bootPhasesForBackend('webgl'), { floor: 0 })
     boot.finish('storage', 0)
     boot.finish('assets', 1)
@@ -98,7 +98,7 @@ describe('bootProgress', () => {
     expect(boot.sample(6)).toBe(1)
   })
 
-  it('keeps WebGL progress monotonic when the WebGPU tail is removed', () => {
+  it('[U00511] keeps WebGL progress monotonic when the WebGPU tail is removed', () => {
     const boot = createBootProgress(bootPhasesForBackend('webgpu'), { floor: 0 })
     boot.finish('storage', 0)
     boot.start('backend', 0)
@@ -109,7 +109,7 @@ describe('bootProgress', () => {
     expect(boot.hasPart('present', 'gpu')).toBe(false)
   })
 
-  it('tracks the slower parallel asset instead of averaging past it', () => {
+  it('[U00512] tracks the slower parallel asset instead of averaging past it', () => {
     const boot = createBootProgress(bootPhasesForBackend('webgl'), { floor: 0 })
     boot.finish('storage', 0)
     boot.start('assets', 0)

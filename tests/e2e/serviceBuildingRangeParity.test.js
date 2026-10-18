@@ -23,7 +23,7 @@ test.describe('Service building range parity', () => {
     })
   })
 
-  test('gas stations and ammunition factories service tanks at hospital-range distance', async({ page }) => {
+  test('[E00105] gas stations and ammunition factories service tanks at hospital-range distance', async({ page }) => {
     test.setTimeout(120000)
 
     await page.goto('/?seed=21')

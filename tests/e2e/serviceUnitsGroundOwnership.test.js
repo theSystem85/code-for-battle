@@ -23,7 +23,7 @@ test.describe('Service units only affect friendly grounded units', () => {
     })
   })
 
-  test('enemy support vehicles do not service airborne aircraft while friendly ground units still can be serviced', async({ page }) => {
+  test('[E00106] enemy support vehicles do not service airborne aircraft while friendly ground units still can be serviced', async({ page }) => {
     test.setTimeout(120000)
 
     await page.goto('/?seed=17')

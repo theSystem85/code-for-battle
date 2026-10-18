@@ -5,7 +5,7 @@ const RUN_REPAIR_HUD_PERF = process.env.PERF_BUILDING_REPAIR_HUD === '1'
 test.describe('Building repair countdown HUD performance', () => {
   test.skip(!RUN_REPAIR_HUD_PERF, 'Set PERF_BUILDING_REPAIR_HUD=1 to run this benchmark.')
 
-  test('stays within the frame budget with many active countdown bars', async({ page, baseURL }) => {
+  test('[E00017] stays within the frame budget with many active countdown bars', async({ page, baseURL }) => {
     await page.goto(`${baseURL || 'http://localhost:5173'}?seed=31&size=64&players=2&oreFields=8`)
     await page.waitForFunction(() => Boolean(window.gameInstance?.gameLoop && window.gameState?.gameStarted), null, { timeout: 45000 })
 

@@ -23,7 +23,7 @@ test.describe('Enemy F22 runway discipline and targeting priorities', () => {
     })
   })
 
-  test('enemy F22 stays on airstrip while grounded, prioritizes ore-field harvesters, then unprotected defenses', async({ page }) => {
+  test('[E00027] enemy F22 stays on airstrip while grounded, prioritizes ore-field harvesters, then unprotected defenses', async({ page }) => {
     test.setTimeout(120000)
 
     await page.goto('/?seed=19')

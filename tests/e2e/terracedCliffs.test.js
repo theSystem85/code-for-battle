@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 
 test.use({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 2 })
 
-test('dense cliff scrolling performance at DPR 2', async({ page }, testInfo) => {
+test('[E00120] dense cliff scrolling performance at DPR 2', async({ page }, testInfo) => {
   test.skip(process.env.CLIFF_BENCHMARK !== '1', 'Opt in with CLIFF_BENCHMARK=1')
   await page.route('**/__cliff-benchmark', route => route.fulfill({ contentType: 'text/html', body: '<html><body style="margin:0"></body></html>' }))
   await page.goto('/__cliff-benchmark')
@@ -45,7 +45,7 @@ test('dense cliff scrolling performance at DPR 2', async({ page }, testInfo) => 
   if (process.env.CLIFF_BASELINE_FPS) expect(report.fps).toBeGreaterThanOrEqual(Number(process.env.CLIFF_BASELINE_FPS) * 0.8)
 })
 
-test('terraced cliff preview and alpha atlas', async({ page }, testInfo) => {
+test('[E00121] terraced cliff preview and alpha atlas', async({ page }, testInfo) => {
   await page.route('**/__cliff-preview', route => route.fulfill({ contentType: 'text/html', body: '<html><body style="margin:0;background:#262921"></body></html>' }))
   await page.goto('/__cliff-preview')
   const result = await page.evaluate(async() => {
@@ -147,7 +147,7 @@ test('terraced cliff preview and alpha atlas', async({ page }, testInfo) => {
   await page.screenshot({ path: testInfo.outputPath('terraced-cliffs-preview.png') })
 })
 
-test('plateau ground stays on rock while its irregular face fringe blends into adjacent land', async({ page }) => {
+test('[E00122] plateau ground stays on rock while its irregular face fringe blends into adjacent land', async({ page }) => {
   await page.route('**/__cliff-ownership', route => route.fulfill({ contentType: 'text/html', body: '<html></html>' }))
   await page.goto('/__cliff-ownership')
   const result = await page.evaluate(async() => {
@@ -178,7 +178,7 @@ test('plateau ground stays on rock while its irregular face fringe blends into a
   expect(result.centerAlpha).toBeGreaterThan(0)
 })
 
-test('narrow chains render only the ordinary boulder pool', async({ page }) => {
+test('[E00123] narrow chains render only the ordinary boulder pool', async({ page }) => {
   await page.route('**/__cliff-boulders', route => route.fulfill({ contentType: 'text/html', body: '<html></html>' }))
   await page.goto('/__cliff-boulders')
   const result = await page.evaluate(async() => {

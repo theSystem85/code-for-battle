@@ -103,7 +103,7 @@ function createMovementLoopHandle() {
 }
 
 describe('unifiedMovement.js', () => {
-  it('settles a carrier permanently when its bow reaches the final target tile', () => {
+  it('[U04517] settles a carrier permanently when its bow reaches the final target tile', () => {
     const mapGrid = Array.from({ length: 20 }, () =>
       Array.from({ length: 20 }, () => ({ type: 'water', building: null, seedCrystal: false })))
     const occupancyMap = Array.from({ length: 20 }, () => Array(20).fill(0))
@@ -157,7 +157,7 @@ describe('unifiedMovement.js', () => {
   it.each([
     ['battleship', 'battleshipCruise'],
     ['hovercraft', 'hovercraftMoving']
-  ])('loops %s audio while moving and stops it when idle', async(unitType, soundName) => {
+  ])('[U04518] loops %s audio while moving and stops it when idle', async(unitType, soundName) => {
     const handle = createMovementLoopHandle()
     soundMock.playPositionalSound.mockClear()
     soundMock.playPositionalSound.mockImplementation(() => Promise.resolve(handle))
@@ -227,7 +227,7 @@ describe('unifiedMovement.js', () => {
   })
 
   describe('hasFriendlyUnitOnTile', () => {
-    it('should return false if no units on tile', () => {
+    it('[U04519] should return false if no units on tile', () => {
       const unit = { owner: 1, id: 'u1' }
       const units = []
 
@@ -236,7 +236,7 @@ describe('unifiedMovement.js', () => {
       expect(result).toBe(false)
     })
 
-    it('should return true if friendly unit on tile', () => {
+    it('[U04520] should return true if friendly unit on tile', () => {
       const unit = { owner: 1, id: 'u1' }
       // Function uses x,y coordinates (pixel) to calculate tile positions
       // Tile 10 = position 10 * 32 + 16 = 336 (center of tile)
@@ -248,7 +248,7 @@ describe('unifiedMovement.js', () => {
       expect(result).toBe(true)
     })
 
-    it('should return false if enemy unit on tile', () => {
+    it('[U04521] should return false if enemy unit on tile', () => {
       const unit = { owner: 1, id: 'u1' }
       const enemyUnit = { owner: 2, id: 'u2', tileX: 10, tileY: 10, health: 100 }
       const units = [enemyUnit]
@@ -258,7 +258,7 @@ describe('unifiedMovement.js', () => {
       expect(result).toBe(false)
     })
 
-    it('should exclude the unit itself', () => {
+    it('[U04522] should exclude the unit itself', () => {
       const unit = { owner: 1, id: 'u1', tileX: 10, tileY: 10 }
       const units = [unit]
 
@@ -267,7 +267,7 @@ describe('unifiedMovement.js', () => {
       expect(result).toBe(false)
     })
 
-    it('should return false if unit is dead', () => {
+    it('[U04523] should return false if unit is dead', () => {
       const unit = { owner: 1, id: 'u1' }
       const deadUnit = { owner: 1, id: 'u2', tileX: 10, tileY: 10, health: 0 }
       const units = [deadUnit]
@@ -277,7 +277,7 @@ describe('unifiedMovement.js', () => {
       expect(result).toBe(false)
     })
 
-    it('should handle units without tileX/tileY', () => {
+    it('[U04524] should handle units without tileX/tileY', () => {
       const unit = { owner: 1, id: 'u1' }
       const invalidUnit = { owner: 1, id: 'u2', health: 100 }
       const units = [invalidUnit]
@@ -287,7 +287,7 @@ describe('unifiedMovement.js', () => {
       expect(result).toBe(false)
     })
 
-    it('should handle multiple units on different tiles', () => {
+    it('[U04525] should handle multiple units on different tiles', () => {
       const unit = { owner: 1, id: 'u1' }
       // Function uses x,y coordinates (pixel) to calculate tile positions
       const units = [
@@ -303,7 +303,7 @@ describe('unifiedMovement.js', () => {
   })
 
   describe('initializeUnitMovement', () => {
-    it('should initialize movement properties for unit', () => {
+    it('[U04526] should initialize movement properties for unit', () => {
       const unit = {
         id: 'u1',
         type: 'tank',
@@ -320,7 +320,7 @@ describe('unifiedMovement.js', () => {
       expect(unit.movement.isMoving).toBe(false)
     })
 
-    it('should not overwrite existing movement properties', () => {
+    it('[U04527] should not overwrite existing movement properties', () => {
       const unit = {
         id: 'u1',
         type: 'tank',
@@ -341,7 +341,7 @@ describe('unifiedMovement.js', () => {
       expect(unit.movement.isMoving).toBe(true)
     })
 
-    it('should initialize Apache-specific properties', () => {
+    it('[U04528] should initialize Apache-specific properties', () => {
       const unit = {
         id: 'u1',
         type: 'apache',
@@ -359,7 +359,7 @@ describe('unifiedMovement.js', () => {
       expect(unit.movement.targetVelocity).toEqual({ x: 0, y: 0 })
     })
 
-    it('should handle unit without type', () => {
+    it('[U04529] should handle unit without type', () => {
       const unit = {
         id: 'u1',
         x: 100,
@@ -373,7 +373,7 @@ describe('unifiedMovement.js', () => {
   })
 
   describe('stopUnitMovement', () => {
-    it('preserves empty paths and velocity objects over repeated combat stops', () => {
+    it('[U04530] preserves empty paths and velocity objects over repeated combat stops', () => {
       const unit = { path: [{ x: 2, y: 1 }], movement: { velocity: { x: 2, y: 1 }, targetVelocity: { x: 3, y: 1 }, isMoving: true, currentSpeed: 2 } }
       stopUnitMovement(unit)
       const path = unit.path
@@ -394,7 +394,7 @@ describe('unifiedMovement.js', () => {
       { type: 'harvester', harvesting: true },
       { type: 'harvester', unloadingAtRefinery: true },
       { type: 'tank_v1', repairingAtWorkshop: true }
-    ])('keeps blocked-unit movement state stable: %j', reason => {
+    ])('[U04531] keeps blocked-unit movement state stable: %j', reason => {
       const unit = { ...reason, x: 32, y: 32, path: [{ x: 2, y: 1 }], moveTarget: { x: 2, y: 1 } }
       updateUnitPosition(unit, [], [], 0)
       const path = unit.path
@@ -413,7 +413,7 @@ describe('unifiedMovement.js', () => {
       expect(movement.isMoving).toBe(false)
     })
 
-    it('should stop unit movement', () => {
+    it('[U04532] should stop unit movement', () => {
       const unit = {
         id: 'u1',
         movement: {
@@ -434,7 +434,7 @@ describe('unifiedMovement.js', () => {
       expect(unit.movement.isMoving).toBe(false)
     })
 
-    it('should clear path but not moveTarget', () => {
+    it('[U04533] should clear path but not moveTarget', () => {
       const unit = {
         id: 'u1',
         moveTarget: { x: 200, y: 200 },
@@ -454,7 +454,7 @@ describe('unifiedMovement.js', () => {
       expect(unit.path).toEqual([])
     })
 
-    it('should handle unit without movement property', () => {
+    it('[U04534] should handle unit without movement property', () => {
       const unit = {
         id: 'u1',
         moveTarget: { x: 200, y: 200 },
@@ -470,7 +470,7 @@ describe('unifiedMovement.js', () => {
       expect(unit.path).toEqual([])
     })
 
-    it('should handle unit without movement.targetVelocity', () => {
+    it('[U04535] should handle unit without movement.targetVelocity', () => {
       const unit = {
         id: 'u1',
         movement: {
@@ -490,7 +490,7 @@ describe('unifiedMovement.js', () => {
   })
 
   describe('cancelUnitMovement', () => {
-    it('should cancel unit movement', () => {
+    it('[U04536] should cancel unit movement', () => {
       const unit = {
         id: 'u1',
         moveTarget: { x: 200, y: 200 },
@@ -503,7 +503,7 @@ describe('unifiedMovement.js', () => {
       expect(unit.path).toEqual([])
     })
 
-    it('should clear targetVelocity and isMoving', () => {
+    it('[U04537] should clear targetVelocity and isMoving', () => {
       const unit = {
         id: 'u1',
         moveTarget: { x: 200, y: 200 },
@@ -528,7 +528,7 @@ describe('unifiedMovement.js', () => {
   })
 
   describe('resetUnitVelocityForNewPath', () => {
-    it('should reset velocity for new path', () => {
+    it('[U04538] should reset velocity for new path', () => {
       const unit = {
         id: 'u1',
         movement: {
@@ -550,7 +550,7 @@ describe('unifiedMovement.js', () => {
       expect(unit.movement.targetVelocity.y).toBe(10)
     })
 
-    it('should preserve isMoving state', () => {
+    it('[U04539] should preserve isMoving state', () => {
       const unit = {
         id: 'u1',
         movement: {
@@ -566,7 +566,7 @@ describe('unifiedMovement.js', () => {
       expect(unit.movement.isMoving).toBe(true)
     })
 
-    it('should handle unit without movement property', () => {
+    it('[U04540] should handle unit without movement property', () => {
       const unit = {
         id: 'u1'
       }
@@ -578,7 +578,7 @@ describe('unifiedMovement.js', () => {
   })
 
   describe('isUnitMoving', () => {
-    it('should return true if unit is moving', () => {
+    it('[U04541] should return true if unit is moving', () => {
       const unit = {
         movement: {
           isMoving: true,
@@ -591,7 +591,7 @@ describe('unifiedMovement.js', () => {
       expect(result).toBe(true)
     })
 
-    it('should return false if unit is not moving', () => {
+    it('[U04542] should return false if unit is not moving', () => {
       const unit = {
         movement: {
           isMoving: false,
@@ -604,7 +604,7 @@ describe('unifiedMovement.js', () => {
       expect(result).toBe(false)
     })
 
-    it('should return false if unit has no movement property', () => {
+    it('[U04543] should return false if unit has no movement property', () => {
       const unit = {
         id: 'u1'
       }
@@ -614,7 +614,7 @@ describe('unifiedMovement.js', () => {
       expect(result).toBe(false)
     })
 
-    it('should check current speed as fallback', () => {
+    it('[U04544] should check current speed as fallback', () => {
       const unit = {
         movement: {
           currentSpeed: 5
@@ -626,7 +626,7 @@ describe('unifiedMovement.js', () => {
       expect(result).toBe(true)
     })
 
-    it('should return false if currentSpeed is zero', () => {
+    it('[U04545] should return false if currentSpeed is zero', () => {
       const unit = {
         movement: {
           currentSpeed: 0
@@ -640,7 +640,7 @@ describe('unifiedMovement.js', () => {
   })
 
   describe('rotateUnitInPlace', () => {
-    it('should rotate unit to target direction', () => {
+    it('[U04546] should rotate unit to target direction', () => {
       const unit = {
         id: 'u1',
         direction: 0,
@@ -653,7 +653,7 @@ describe('unifiedMovement.js', () => {
       expect(unit.rotation).toBeGreaterThan(0)
     })
 
-    it('should use random rotation if no direction provided', () => {
+    it('[U04547] should use random rotation if no direction provided', () => {
       const unit = {
         id: 'u1',
         direction: 0,
@@ -669,7 +669,7 @@ describe('unifiedMovement.js', () => {
       expect(unit.movement.targetRotation).toBe(Math.PI)
     })
 
-    it('should not rotate if no target direction', () => {
+    it('[U04548] should not rotate if no target direction', () => {
       const unit = {
         id: 'u1',
         direction: 0
@@ -680,7 +680,7 @@ describe('unifiedMovement.js', () => {
       expect(unit.direction).toBe(0)
     })
 
-    it('should handle unit without direction property', () => {
+    it('[U04549] should handle unit without direction property', () => {
       const unit = {
         id: 'u1'
       }
@@ -692,7 +692,7 @@ describe('unifiedMovement.js', () => {
   })
 
   describe('checkMineDetonation', () => {
-    it('should not detonate if no mine at tile', async() => {
+    it('[U04550] should not detonate if no mine at tile', async() => {
       const mineSystem = await import('../../src/game/mineSystem.js')
       mineSystem.getMineAtTile.mockReturnValue(null)
 
@@ -705,7 +705,7 @@ describe('unifiedMovement.js', () => {
       expect(mineSystem.detonateMine).not.toHaveBeenCalled()
     })
 
-    it('should not detonate inactive mine', async() => {
+    it('[U04551] should not detonate inactive mine', async() => {
       const mineSystem = await import('../../src/game/mineSystem.js')
       mineSystem.getMineAtTile.mockReturnValue({ active: false })
 
@@ -718,7 +718,7 @@ describe('unifiedMovement.js', () => {
       expect(mineSystem.detonateMine).not.toHaveBeenCalled()
     })
 
-    it('should detonate active mine when unit center is inside trigger radius', async() => {
+    it('[U04552] should detonate active mine when unit center is inside trigger radius', async() => {
       const mineSystem = await import('../../src/game/mineSystem.js')
       mineSystem.getMineAtTile.mockReturnValue({ active: true })
       mineSystem.detonateMine.mockReturnValue(true)
@@ -732,7 +732,7 @@ describe('unifiedMovement.js', () => {
       expect(mineSystem.detonateMine).toHaveBeenCalledWith({ active: true }, units, buildings)
     })
 
-    it('should handle mine sweeper sweeping mines', async() => {
+    it('[U04553] should handle mine sweeper sweeping mines', async() => {
       const mineSystem = await import('../../src/game/mineSystem.js')
       mineSystem.getMineAtTile.mockReturnValue({ active: true })
       mineSystem.detonateMine.mockReturnValue(true)
@@ -746,7 +746,7 @@ describe('unifiedMovement.js', () => {
       expect(mineSystem.detonateMine).toHaveBeenCalledWith({ active: true }, units, buildings)
     })
 
-    it('should handle null unit', async() => {
+    it('[U04554] should handle null unit', async() => {
       const mineSystem = await import('../../src/game/mineSystem.js')
       mineSystem.getMineAtTile.mockReturnValue({ active: true })
       mineSystem.detonateMine.mockClear()
@@ -758,12 +758,12 @@ describe('unifiedMovement.js', () => {
   })
 
   describe('isUnitCenterInsideMineCircle', () => {
-    it('should return false for null unit', () => {
+    it('[U04555] should return false for null unit', () => {
       const result = isUnitCenterInsideMineCircle(null, 5, 5)
       expect(result).toBe(false)
     })
 
-    it('should return false for invalid coordinates', () => {
+    it('[U04556] should return false for invalid coordinates', () => {
       const unit = { x: 160, y: 160 }
       expect(isUnitCenterInsideMineCircle(unit, null, 5)).toBe(false)
       expect(isUnitCenterInsideMineCircle(unit, 5, null)).toBe(false)
@@ -771,21 +771,21 @@ describe('unifiedMovement.js', () => {
       expect(isUnitCenterInsideMineCircle(unit, 5, NaN)).toBe(false)
     })
 
-    it('should return true when unit center is inside mine trigger radius', () => {
+    it('[U04557] should return true when unit center is inside mine trigger radius', () => {
       const unit = { x: 160, y: 160 } // Center at (176, 176)
       // Mine at tile (5,5) center at (176, 176) - exactly at center
       const result = isUnitCenterInsideMineCircle(unit, 5, 5)
       expect(result).toBe(true)
     })
 
-    it('should return false when unit center is outside mine trigger radius', () => {
+    it('[U04558] should return false when unit center is outside mine trigger radius', () => {
       const unit = { x: 160 + 50, y: 160 } // Center at (226, 176)
       // Mine at tile (5,5) center at (176, 176) - 50 pixels away
       const result = isUnitCenterInsideMineCircle(unit, 5, 5)
       expect(result).toBe(false)
     })
 
-    it('should handle edge case at exact trigger radius', () => {
+    it('[U04559] should handle edge case at exact trigger radius', () => {
       // MINE_TRIGGER_RADIUS = TILE_SIZE * 0.45 = 32 * 0.45 = 14.4
       // Unit at x: 160 + 14 = 174, center at 174 + 16 = 190
       // Mine center at 176, dx = 14, which is within 14.4
@@ -796,7 +796,7 @@ describe('unifiedMovement.js', () => {
   })
 
   describe('normalizeAngle', () => {
-    it('should return angle unchanged if within -π to π', () => {
+    it('[U04560] should return angle unchanged if within -π to π', () => {
       expect(normalizeAngle(0)).toBe(0)
       expect(normalizeAngle(Math.PI / 2)).toBe(Math.PI / 2)
       expect(normalizeAngle(-Math.PI / 2)).toBe(-Math.PI / 2)
@@ -804,115 +804,115 @@ describe('unifiedMovement.js', () => {
       expect(normalizeAngle(-Math.PI)).toBe(-Math.PI)
     })
 
-    it('should normalize angle greater than π', () => {
+    it('[U04561] should normalize angle greater than π', () => {
       expect(normalizeAngle(Math.PI + 0.1)).toBeCloseTo(-Math.PI + 0.1, 10)
       expect(normalizeAngle(2 * Math.PI)).toBeCloseTo(0, 10)
       expect(normalizeAngle(3 * Math.PI)).toBeCloseTo(Math.PI, 10)
     })
 
-    it('should normalize angle less than -π', () => {
+    it('[U04562] should normalize angle less than -π', () => {
       expect(normalizeAngle(-Math.PI - 0.1)).toBeCloseTo(Math.PI - 0.1, 10)
       expect(normalizeAngle(-2 * Math.PI)).toBeCloseTo(0, 10)
       expect(normalizeAngle(-3 * Math.PI)).toBeCloseTo(-Math.PI, 10)
     })
 
-    it('should handle large positive angles', () => {
+    it('[U04563] should handle large positive angles', () => {
       expect(normalizeAngle(10 * Math.PI)).toBeCloseTo(0, 10)
       expect(normalizeAngle(5 * Math.PI + Math.PI / 2)).toBeCloseTo(-Math.PI / 2, 10)
     })
 
-    it('should handle large negative angles', () => {
+    it('[U04564] should handle large negative angles', () => {
       expect(normalizeAngle(-10 * Math.PI)).toBeCloseTo(0, 10)
       expect(normalizeAngle(-5 * Math.PI - Math.PI / 2)).toBeCloseTo(Math.PI / 2, 10)
     })
   })
 
   describe('isAirborneUnit', () => {
-    it('should return false for null unit', () => {
+    it('[U04565] should return false for null unit', () => {
       expect(isAirborneUnit(null)).toBe(false)
     })
 
-    it('should return false for ground units', () => {
+    it('[U04566] should return false for ground units', () => {
       expect(isAirborneUnit({ type: 'tank' })).toBe(false)
       expect(isAirborneUnit({ type: 'harvester' })).toBe(false)
       expect(isAirborneUnit({ type: 'ambulance' })).toBe(false)
     })
 
-    it('should return true for Apache helicopters', () => {
+    it('[U04567] should return true for Apache helicopters', () => {
       expect(isAirborneUnit({ type: 'apache' })).toBe(true)
     })
 
-    it('should return true for air units not grounded', () => {
+    it('[U04568] should return true for air units not grounded', () => {
       expect(isAirborneUnit({ isAirUnit: true, flightState: 'airborne' })).toBe(true)
       expect(isAirborneUnit({ isAirUnit: true, flightState: 'takeoff' })).toBe(true)
       expect(isAirborneUnit({ isAirUnit: true, flightState: 'landing' })).toBe(true)
     })
 
-    it('should return false for air units that are grounded', () => {
+    it('[U04569] should return false for air units that are grounded', () => {
       expect(isAirborneUnit({ isAirUnit: true, flightState: 'grounded' })).toBe(false)
     })
 
-    it('should return false for Apache helicopters that are grounded', () => {
+    it('[U04570] should return false for Apache helicopters that are grounded', () => {
       expect(isAirborneUnit({ type: 'apache', flightState: 'grounded' })).toBe(false)
     })
   })
 
   describe('isGroundUnit', () => {
-    it('should return false for null unit', () => {
+    it('[U04571] should return false for null unit', () => {
       expect(isGroundUnit(null)).toBe(false)
     })
 
-    it('should return true for ground units', () => {
+    it('[U04572] should return true for ground units', () => {
       expect(isGroundUnit({ type: 'tank' })).toBe(true)
       expect(isGroundUnit({ type: 'harvester' })).toBe(true)
       expect(isGroundUnit({ type: 'ambulance' })).toBe(true)
     })
 
-    it('should return false for Apache helicopters', () => {
+    it('[U04573] should return false for Apache helicopters', () => {
       expect(isGroundUnit({ type: 'apache' })).toBe(false)
     })
 
-    it('should return false for air units not grounded', () => {
+    it('[U04574] should return false for air units not grounded', () => {
       expect(isGroundUnit({ isAirUnit: true, flightState: 'airborne' })).toBe(false)
       expect(isGroundUnit({ isAirUnit: true, flightState: 'takeoff' })).toBe(false)
     })
 
-    it('should return true for air units that are grounded', () => {
+    it('[U04575] should return true for air units that are grounded', () => {
       expect(isGroundUnit({ isAirUnit: true, flightState: 'grounded' })).toBe(true)
     })
 
-    it('should return true for Apache helicopters that are grounded', () => {
+    it('[U04576] should return true for Apache helicopters that are grounded', () => {
       expect(isGroundUnit({ type: 'apache', flightState: 'grounded' })).toBe(true)
     })
   })
 
   describe('ownersAreEnemies', () => {
-    it('should return false for null owners', () => {
+    it('[U04577] should return false for null owners', () => {
       expect(ownersAreEnemies(null, 'player')).toBe(false)
       expect(ownersAreEnemies('player', null)).toBe(false)
       expect(ownersAreEnemies(null, null)).toBe(false)
     })
 
-    it('should return false for same owner', () => {
+    it('[U04578] should return false for same owner', () => {
       expect(ownersAreEnemies('player', 'player')).toBe(false)
       expect(ownersAreEnemies('player1', 'player1')).toBe(false)
       expect(ownersAreEnemies('enemy', 'enemy')).toBe(false)
     })
 
-    it('should return true for different owners', () => {
+    it('[U04579] should return true for different owners', () => {
       expect(ownersAreEnemies('player', 'enemy')).toBe(true)
       expect(ownersAreEnemies('player1', 'player2')).toBe(true)
       expect(ownersAreEnemies('enemy', 'player')).toBe(true)
     })
 
-    it('should normalize player to player1', () => {
+    it('[U04580] should normalize player to player1', () => {
       expect(ownersAreEnemies('player', 'player1')).toBe(false)
       expect(ownersAreEnemies('player', 'enemy')).toBe(true)
     })
   })
 
   describe('isValidDodgePosition', () => {
-    it('should return false for positions blocked by terrain', () => {
+    it('[U04581] should return false for positions blocked by terrain', () => {
       const mapGrid = [
         [{ type: 'rock' }]
       ]
@@ -922,7 +922,7 @@ describe('unifiedMovement.js', () => {
       expect(result).toBe(false)
     })
 
-    it('should return false for positions blocked by buildings', () => {
+    it('[U04582] should return false for positions blocked by buildings', () => {
       const mapGrid = [
         [{ building: { id: 'b1' } }]
       ]
@@ -932,7 +932,7 @@ describe('unifiedMovement.js', () => {
       expect(result).toBe(false)
     })
 
-    it('should return false for positions blocked by other units', () => {
+    it('[U04583] should return false for positions blocked by other units', () => {
       const mapGrid = [
         [{}]
       ]
@@ -942,7 +942,7 @@ describe('unifiedMovement.js', () => {
       expect(result).toBe(false)
     })
 
-    it('should return true for valid positions', () => {
+    it('[U04584] should return true for valid positions', () => {
       const mapGrid = [
         [{}]
       ]
@@ -952,7 +952,7 @@ describe('unifiedMovement.js', () => {
       expect(result).toBe(true)
     })
 
-    it('should handle out of bounds positions', () => {
+    it('[U04585] should handle out of bounds positions', () => {
       const mapGrid = [
         [{}]
       ]
@@ -962,7 +962,7 @@ describe('unifiedMovement.js', () => {
       expect(isValidDodgePosition(1, 1, mapGrid, units)).toBe(false)
     })
 
-    it('should handle null mapGrid', () => {
+    it('[U04586] should handle null mapGrid', () => {
       const result = isValidDodgePosition(0, 0, null, [])
       expect(result).toBe(false)
     })

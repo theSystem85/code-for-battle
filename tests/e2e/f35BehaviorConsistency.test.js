@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 
 test.describe('F35 behavior consistency', () => {
-  test('enforces airborne-only bombing, no move autoland, slot reservation, and bomb no-trail', async({ page }) => {
+  test('[E00044] enforces airborne-only bombing, no move autoland, slot reservation, and bomb no-trail', async({ page }) => {
     test.setTimeout(180000)
 
     await page.addInitScript(() => {

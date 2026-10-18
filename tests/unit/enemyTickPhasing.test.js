@@ -33,7 +33,7 @@ function tick(game, index) {
 describe('deterministic AI player phases', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it('spreads three enemies across ticks without reducing any player cadence', () => {
+  it('[U01428] spreads three enemies across ticks without reducing any player cadence', () => {
     const game = state()
     const calls = []
     for (let index = 1; index <= 60; index++) {
@@ -48,7 +48,7 @@ describe('deterministic AI player phases', () => {
     expect(updateLlmStrategicAI).toHaveBeenCalledTimes(20)
   })
 
-  it('restores the same phase and decisions after a save, independent of other games and render calls', () => {
+  it('[U01429] restores the same phase and decisions after a save, independent of other games and render calls', () => {
     const original = state()
     tick(original, 100)
     const saved = JSON.parse(JSON.stringify(original))
@@ -61,7 +61,7 @@ describe('deterministic AI player phases', () => {
     expect(updateAIPlayer.mock.calls.map(args => [args[0], args[7]])).toEqual(expected)
   })
 
-  it('never runs authoritative AI on clients or during replay', () => {
+  it('[U01430] never runs authoritative AI on clients or during replay', () => {
     isHost.mockReturnValueOnce(false)
     tick(state(), 1)
     isReplayModeActive.mockReturnValueOnce(true)

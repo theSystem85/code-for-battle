@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-test('expired attack notification history focuses the original unit with mouse or keyboard', async({ page }) => {
+test('[E00080] expired attack notification history focuses the original unit with mouse or keyboard', async({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem('tutorial-settings', JSON.stringify({ showTutorial: false, speechEnabled: false }))
     localStorage.setItem('tutorial-progress', JSON.stringify({ completed: true, stepIndex: 0 }))

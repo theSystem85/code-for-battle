@@ -54,7 +54,7 @@ describe('background music playlist', () => {
     vi.unstubAllGlobals()
   })
 
-  it('picks a random file and never repeats the previous one when alternatives exist', () => {
+  it('[U00322] picks a random file and never repeats the previous one when alternatives exist', () => {
     const files = ['music01.mp3', 'music02.mp3', 'music03.mp3']
     expect(sound.pickBackgroundMusicFile(files, null, () => 0)).toBe('music01.mp3')
     expect(sound.pickBackgroundMusicFile(files, null, () => 0.99)).toBe('music03.mp3')
@@ -64,7 +64,7 @@ describe('background music playlist', () => {
     expect(sound.pickBackgroundMusicFile([], null)).toBeNull()
   })
 
-  it('plays the next random track when one ends instead of looping', async() => {
+  it('[U00323] plays the next random track when one ends instead of looping', async() => {
     await sound.toggleBackgroundMusic()
     await flush()
 
@@ -95,7 +95,7 @@ describe('background music playlist', () => {
     expect(FakeAudio.instances).toHaveLength(2)
   })
 
-  it('keeps toggle, volume and terminate behavior on the current track', async() => {
+  it('[U00324] keeps toggle, volume and terminate behavior on the current track', async() => {
     await sound.toggleBackgroundMusic()
     await flush()
     sound.bgMusicAudio.finish()
@@ -116,7 +116,7 @@ describe('background music playlist', () => {
     expect(current.currentTime).toBe(0)
   })
 
-  it('ignores ended events from tracks that are no longer current', async() => {
+  it('[U00325] ignores ended events from tracks that are no longer current', async() => {
     await sound.toggleBackgroundMusic()
     await flush()
     const first = sound.bgMusicAudio
@@ -130,7 +130,7 @@ describe('background music playlist', () => {
     expect(sound.bgMusicAudio).toBe(second)
     expect(second.paused).toBe(false)
   })
-  it('fades the current track out completely before the next starts at full volume', async() => {
+  it('[U00326] fades the current track out completely before the next starts at full volume', async() => {
     await sound.toggleBackgroundMusic()
     await flush()
     const normal = sound.bgMusicAudio
@@ -158,7 +158,7 @@ describe('background music playlist', () => {
     expect(sad.loop).toBe(true)
   })
 
-  it('pauses the fade-out with the game and stops everything on terminate', async() => {
+  it('[U00327] pauses the fade-out with the game and stops everything on terminate', async() => {
     await sound.toggleBackgroundMusic()
     await flush()
     const normal = sound.bgMusicAudio
@@ -178,7 +178,7 @@ describe('background music playlist', () => {
     expect(FakeAudio.instances.every(audio => audio.paused)).toBe(true)
   })
 
-  it('fades out the playlist track near its end, then starts the next without overlap', async() => {
+  it('[U00328] fades out the playlist track near its end, then starts the next without overlap', async() => {
     await sound.toggleBackgroundMusic()
     await flush()
     const first = sound.bgMusicAudio

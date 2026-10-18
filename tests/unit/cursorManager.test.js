@@ -69,7 +69,7 @@ describe('CursorManager', () => {
     vi.restoreAllMocks()
   })
 
-  it('reuses existing range cursor elements when present', () => {
+  it('[U01107] reuses existing range cursor elements when present', () => {
     const existing = document.createElement('div')
     existing.className = 'range-cursor-info'
     const text = document.createElement('div')
@@ -83,7 +83,7 @@ describe('CursorManager', () => {
     expect(manager.rangeCursorElements.rangeText).toBe(text)
   })
 
-  it('formats range values with a single decimal when needed', () => {
+  it('[U01108] formats range values with a single decimal when needed', () => {
     const manager = new CursorManager()
 
     expect(manager.formatRangeValue(2)).toBe('2')
@@ -91,7 +91,7 @@ describe('CursorManager', () => {
     expect(manager.formatRangeValue(2.05)).toBe('2.1')
   })
 
-  it('updates range cursor display position and text when visible', () => {
+  it('[U01109] updates range cursor display position and text when visible', () => {
     const manager = new CursorManager()
     manager.setRangeCursorInfo({
       distance: TILE_SIZE * 2,
@@ -111,7 +111,7 @@ describe('CursorManager', () => {
   })
 
 
-  it('renders custom range cursor text when provided', () => {
+  it('[U01110] renders custom range cursor text when provided', () => {
     const manager = new CursorManager()
     manager.setRangeCursorInfo({ displayText: '123m' })
 
@@ -121,7 +121,7 @@ describe('CursorManager', () => {
     expect(rangeText.textContent).toBe('123m')
   })
 
-  it('hides range cursor display when not showing', () => {
+  it('[U01111] hides range cursor display when not showing', () => {
     const manager = new CursorManager()
     manager.setRangeCursorInfo({
       distance: TILE_SIZE * 2,
@@ -135,7 +135,7 @@ describe('CursorManager', () => {
     expect(container.classList.contains('visible')).toBe(false)
   })
 
-  it('applies cursor styles and filters allowed cursor classes', () => {
+  it('[U01112] applies cursor styles and filters allowed cursor classes', () => {
     const canvas = createCanvas()
     const manager = new CursorManager()
 
@@ -146,7 +146,7 @@ describe('CursorManager', () => {
     expect(canvas.classList.contains('unknown-mode')).toBe(false)
   })
 
-  it('removes obsolete cursor classes when applying new styles', () => {
+  it('[U01113] removes obsolete cursor classes when applying new styles', () => {
     const canvas = createCanvas()
     canvas.classList.add('move-mode')
     const manager = new CursorManager()
@@ -156,7 +156,7 @@ describe('CursorManager', () => {
     expect(canvas.classList.contains('move-mode')).toBe(false)
   })
 
-  it('detects blocked terrain based on map bounds and occupancy', () => {
+  it('[U01114] detects blocked terrain based on map bounds and occupancy', () => {
     const manager = new CursorManager()
     const mapGrid = createTestMapGrid(2, 2)
 
@@ -175,7 +175,7 @@ describe('CursorManager', () => {
     expect(manager.isBlockedTerrain(1, 0, mapGrid)).toBeTruthy()
   })
 
-  it('defaults to the game cursor when outside the canvas', () => {
+  it('[U01115] defaults to the game cursor when outside the canvas', () => {
     const manager = new CursorManager()
     const canvas = createCanvas({ left: 0, top: 0, right: 100, bottom: 100 })
     const mapGrid = createTestMapGrid(2, 2)
@@ -185,7 +185,7 @@ describe('CursorManager', () => {
     expect(canvas.style.cursor).toBe(GAME_DEFAULT_CURSOR)
   })
 
-  it('uses repair cursor when hovering a repairable factory in repair mode', () => {
+  it('[U01116] uses repair cursor when hovering a repairable factory in repair mode', () => {
     const manager = new CursorManager()
     const canvas = createCanvas()
     const mapGrid = createTestMapGrid(5, 5)
@@ -207,7 +207,7 @@ describe('CursorManager', () => {
     expect(canvas.classList.contains('repair-mode')).toBe(true)
   })
 
-  it('uses repair-blocked cursor when hovering a fully repaired factory', () => {
+  it('[U01117] uses repair-blocked cursor when hovering a fully repaired factory', () => {
     const manager = new CursorManager()
     const canvas = createCanvas()
     const mapGrid = createTestMapGrid(5, 5)
@@ -229,7 +229,7 @@ describe('CursorManager', () => {
     expect(canvas.classList.contains('repair-blocked-mode')).toBe(true)
   })
 
-  it('uses sell cursor when hovering a sellable building in sell mode', () => {
+  it('[U01118] uses sell cursor when hovering a sellable building in sell mode', () => {
     const manager = new CursorManager()
     const canvas = createCanvas()
     const mapGrid = createTestMapGrid(5, 5)
@@ -251,7 +251,7 @@ describe('CursorManager', () => {
     expect(canvas.classList.contains('sell-mode')).toBe(true)
   })
 
-  it('uses move-blocked cursor for blocked terrain with selected units', () => {
+  it('[U01119] uses move-blocked cursor for blocked terrain with selected units', () => {
     const manager = new CursorManager()
     const canvas = createCanvas()
     const mapGrid = createTestMapGrid(5, 5)
@@ -265,7 +265,7 @@ describe('CursorManager', () => {
     expect(canvas.classList.contains('move-blocked-mode')).toBe(true)
   })
 
-  it('shows blocked cursor and tooltip for harvesters hovering over ore above their XP level', () => {
+  it('[U01120] shows blocked cursor and tooltip for harvesters hovering over ore above their XP level', () => {
     const manager = new CursorManager()
     const canvas = createCanvas()
     const mapGrid = createTestMapGrid(5, 5)
@@ -281,7 +281,7 @@ describe('CursorManager', () => {
     expect(manager.rangeCursorElements.container.classList.contains('visible')).toBe(true)
   })
 
-  it('uses move cursor (not blocked) for supply-only selection on friendly airstrip tile', () => {
+  it('[U01121] uses move cursor (not blocked) for supply-only selection on friendly airstrip tile', () => {
     const manager = new CursorManager()
     const canvas = createCanvas()
     const mapGrid = createTestMapGrid(8, 8)
@@ -312,7 +312,7 @@ describe('CursorManager', () => {
   })
 
 
-  it('shows move cursor air distance text below cursor', () => {
+  it('[U01122] shows move cursor air distance text below cursor', () => {
     const manager = new CursorManager()
     createCanvas()
     const mapGrid = createTestMapGrid(8, 8)
@@ -326,7 +326,7 @@ describe('CursorManager', () => {
     expect(rangeText.textContent).toMatch(/^\d+m$/)
   })
 
-  it('uses out-of-range attack cursor in force-attack mode', () => {
+  it('[U01123] uses out-of-range attack cursor in force-attack mode', () => {
     const manager = new CursorManager()
     const canvas = createCanvas()
     const mapGrid = createTestMapGrid(5, 5)
@@ -341,7 +341,7 @@ describe('CursorManager', () => {
     expect(canvas.classList.contains('attack-out-of-range-mode')).toBe(true)
   })
 
-  it('shows guard cursor when guard mode is active', () => {
+  it('[U01124] shows guard cursor when guard mode is active', () => {
     const manager = new CursorManager()
     const canvas = createCanvas()
     const mapGrid = createTestMapGrid(5, 5)
@@ -355,7 +355,7 @@ describe('CursorManager', () => {
     expect(canvas.classList.contains('guard-mode')).toBe(true)
   })
 
-  it('uses move-into cursor when hovering a recoverable wreck', () => {
+  it('[U01125] uses move-into cursor when hovering a recoverable wreck', () => {
     const manager = new CursorManager()
     const canvas = createCanvas()
     const mapGrid = createTestMapGrid(5, 5)
@@ -374,7 +374,7 @@ describe('CursorManager', () => {
     expect(canvas.classList.contains('move-into-mode')).toBe(true)
   })
 
-  it('uses move-into cursor for ground vehicle and transport boarding in both selection directions', () => {
+  it('[U01126] uses move-into cursor for ground vehicle and transport boarding in both selection directions', () => {
     const manager = new CursorManager()
     const canvas = createCanvas({ left: 0, top: 0, right: 400, bottom: 400 })
     const mapGrid = createTestMapGrid(12, 12)
@@ -392,7 +392,7 @@ describe('CursorManager', () => {
     expect(canvas.classList.contains('move-into-mode')).toBe(true)
   })
 
-  it('shows the move cursor for a selected hovercraft over passable land and water', () => {
+  it('[U01127] shows the move cursor for a selected hovercraft over passable land and water', () => {
     const manager = new CursorManager()
     const canvas = createCanvas({ left: 0, top: 0, right: 400, bottom: 400 })
     const mapGrid = createTestMapGrid(12, 12)
@@ -409,7 +409,7 @@ describe('CursorManager', () => {
     expect(canvas.classList.contains('move-mode')).toBe(true)
   })
 
-  it('uses carrier move-into cursor for F22, F35, and Apache while weighted deck space remains', () => {
+  it('[U01128] uses carrier move-into cursor for F22, F35, and Apache while weighted deck space remains', () => {
     const manager = new CursorManager()
     const canvas = createCanvas({ left: 0, top: 0, right: 500, bottom: 500 })
     const mapGrid = createTestMapGrid(16, 16)
@@ -436,7 +436,7 @@ describe('CursorManager', () => {
   })
 
 
-  it('uses move-blocked cursor for F22 in landing sequence on the hovered airstrip', () => {
+  it('[U01129] uses move-blocked cursor for F22 in landing sequence on the hovered airstrip', () => {
     const manager = new CursorManager()
     const canvas = createCanvas()
     const mapGrid = createTestMapGrid(12, 12)
@@ -470,7 +470,7 @@ describe('CursorManager', () => {
     expect(canvas.classList.contains('move-blocked-mode')).toBe(true)
   })
 
-  it('uses move-blocked cursor for F22 parked on the hovered airstrip', () => {
+  it('[U01130] uses move-blocked cursor for F22 parked on the hovered airstrip', () => {
     const manager = new CursorManager()
     const canvas = createCanvas()
     const mapGrid = createTestMapGrid(12, 12)
@@ -503,7 +503,7 @@ describe('CursorManager', () => {
     expect(canvas.classList.contains('move-blocked-mode')).toBe(true)
   })
 
-  it('keeps move-into cursor for F22 parked on another airstrip', () => {
+  it('[U01131] keeps move-into cursor for F22 parked on another airstrip', () => {
     const manager = new CursorManager()
     const canvas = createCanvas()
     const mapGrid = createTestMapGrid(12, 12)
@@ -536,7 +536,7 @@ describe('CursorManager', () => {
     expect(canvas.classList.contains('move-into-mode')).toBe(true)
   })
 
-  it('refreshes cursor with the last known mouse event', () => {
+  it('[U01132] refreshes cursor with the last known mouse event', () => {
     const manager = new CursorManager()
     const mapGrid = createTestMapGrid(2, 2)
     createCanvas()
@@ -550,7 +550,7 @@ describe('CursorManager', () => {
     expect(spy).toHaveBeenCalledWith(event, mapGrid, [], [], [])
   })
 
-  it('logs when guard mode toggles', () => {
+  it('[U01133] logs when guard mode toggles', () => {
     const manager = new CursorManager()
     const loggerSpy = vi.spyOn(window, 'logger')
 

@@ -23,7 +23,7 @@ test.describe('F22 crash momentum and burning smoke', () => {
     })
   })
 
-  test('destroyed airborne F22 keeps forward movement and emits burning smoke before impact', async({ page }) => {
+  test('[E00035] destroyed airborne F22 keeps forward movement and emits burning smoke before impact', async({ page }) => {
     test.setTimeout(120000)
 
     await page.goto('/?seed=11')

@@ -14,13 +14,13 @@ const unitsDir = resolve(__dirname, '../../public/images/map/units')
 const tankConfig = JSON.parse(readFileSync(resolve(__dirname, '../../src/tankImageConfig.json'), 'utf8')).tankImageConfig
 
 describe('unit sprite facing metadata', () => {
-  it('declares a facing for every unit map asset', () => {
+  it('[U04803] declares a facing for every unit map asset', () => {
     const files = readdirSync(unitsDir).filter(name => name.endsWith('.webp')).sort()
     expect(files.filter(name => !UNIT_SPRITE_FACING[name])).toEqual([])
     expect(Object.keys(UNIT_SPRITE_FACING).filter(name => !files.includes(name))).toEqual([])
   })
 
-  it('only allows the frozen legacy set to deviate from the canonical south facing', () => {
+  it('[U04804] only allows the frozen legacy set to deviate from the canonical south facing', () => {
     const nonSouth = Object.entries(UNIT_SPRITE_FACING)
       .filter(([, facing]) => facing !== CANONICAL_UNIT_FACING && facing !== 'symmetric')
       .map(([name]) => name)
@@ -29,7 +29,7 @@ describe('unit sprite facing metadata', () => {
     expect(nonSouth).toEqual([...LEGACY_NON_SOUTH_UNIT_SPRITES].sort())
   })
 
-  it('keeps every layered tank part (wagon, turret, barrel) south-facing', () => {
+  it('[U04805] keeps every layered tank part (wagon, turret, barrel) south-facing', () => {
     for (const variant of Object.keys(tankConfig)) {
       for (const part of ['wagon', 'turret', 'barrel']) {
         const facing = UNIT_SPRITE_FACING[`${variant}_${part}.webp`]
@@ -38,12 +38,12 @@ describe('unit sprite facing metadata', () => {
     }
   })
 
-  it('maps facings to the renderer rotation offset', () => {
+  it('[U04806] maps facings to the renderer rotation offset', () => {
     expect(facingRotationOffset('south')).toBeCloseTo(-Math.PI / 2)
     expect(facingRotationOffset('north')).toBeCloseTo(Math.PI / 2)
   })
 
-  it('mounts the light tank barrel so it extends from the front (bottom) of the turret', () => {
+  it('[U04807] mounts the light tank barrel so it extends from the front (bottom) of the turret', () => {
     const { barrelMountPoint, turretMountPoint } = tankConfig.lightTank
     // Barrel centre sits below the turret image (turret is 101 px tall) -> muzzle points south.
     expect(barrelMountPoint.y).toBeGreaterThan(101)

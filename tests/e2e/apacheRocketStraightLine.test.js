@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 
 test.describe('Apache rocket straight-line regression', () => {
-  test('apache leads a steadily moving tank without homing and kills it in one precise burst', async({ page }) => {
+  test('[E00005] apache leads a steadily moving tank without homing and kills it in one precise burst', async({ page }) => {
     test.setTimeout(90000)
 
     await page.addInitScript(() => {

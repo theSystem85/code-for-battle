@@ -15,7 +15,7 @@ describe('completion wait authoring', () => {
     ['control unit', 'attackNearestEnemy()', 'done'],
     ['control unit', 'takeoff()', 'done']
   ]) {
-    it(`round-trips ${action} wait until ${kind} through CFBL and the machine`, () => {
+    it(`[U00274] round-trips ${action} wait until ${kind} through CFBL and the machine`, () => {
       const parsed = parseCFBL(source(category, action, ` wait until ${kind}`))
       expect(parsed.diagnostics).toEqual([])
       expect(parsed.ast.states[0].effect.waitForCompletion).toBe(true)
@@ -28,14 +28,14 @@ describe('completion wait authoring', () => {
       expect(parseCFBL(canonical).ast.states[0].effect.waitForCompletion).toBe(true)
     })
   }
-  it('preserves the source and behavior of actions without the optional wait', () => {
+  it('[U00275] preserves the source and behavior of actions without the optional wait', () => {
     const ast = parseCFBL(source('control unit', 'moveForward(tiles=2)')).ast
     const canonical = printCFBL(ast)
     expect(canonical).not.toContain('until')
     ast.states[0].effect.waitForCompletion = false
     expect(printCFBL(ast)).toBe(canonical)
   })
-  it('rejects wrong completion modes, idle waits and actions without a finite objective', () => {
+  it('[U00276] rejects wrong completion modes, idle waits and actions without a finite objective', () => {
     for (const text of [
       source('build unit', 'buildUnits()', ' wait until done'),
       source('control unit', 'moveForward()', ' wait until produced'),
@@ -45,7 +45,7 @@ describe('completion wait authoring', () => {
     ]) expect(parseCFBL(text).diagnostics.length).toBeGreaterThan(0)
     expect(completionWaitKind('protectNearestFriendly', 'unit')).toBeNull()
   })
-  it('offers an atomic legal wait insertion and removal through fuzzy completion', () => {
+  it('[U00277] offers an atomic legal wait insertion and removal through fuzzy completion', () => {
     const original = printCFBL(parseCFBL(source('control unit', 'moveForward(tiles=2)')).ast)
     const at = original.indexOf(';', original.indexOf('moveForward'))
     const context = completionContext(original, at)

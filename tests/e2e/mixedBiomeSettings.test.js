@@ -12,7 +12,7 @@ async function applyMapSettings(page) {
   await expect(button).toBeDisabled({ timeout: 60000 })
 }
 
-test('mixed biome controls regenerate the map on Apply', async({ page }) => {
+test('[E00070] mixed biome controls regenerate the map on Apply', async({ page }) => {
   await page.goto('/?seed=41&size=64')
   await page.waitForFunction(() => window.gameInstance && window.gameState?.mapGrid?.length === 64)
   await page.locator('#mapSettingsToggle').click()

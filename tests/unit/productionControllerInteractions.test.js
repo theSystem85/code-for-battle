@@ -47,7 +47,7 @@ describe('production button pointer activation', () => {
     attachMobileDragHandlers(controller, button, { kind: 'unit', type: 'destroyer' })
   })
 
-  it('emits every rapid tap immediately with its release coordinate', () => {
+  it('[U03464] emits every rapid tap immediately with its release coordinate', () => {
     const activations = []
     button.addEventListener('production-button-activate', event => activations.push(event.detail.clientY))
 
@@ -62,7 +62,7 @@ describe('production button pointer activation', () => {
     expect(isUpperHalfClick(null, { detail: { clientY: activations[1] } }, button)).toBe(false)
   })
 
-  it('does not activate after action-bar movement or scrolling', () => {
+  it('[U03465] does not activate after action-bar movement or scrolling', () => {
     const activation = vi.fn()
     button.addEventListener('production-button-activate', activation)
 
@@ -76,7 +76,7 @@ describe('production button pointer activation', () => {
     expect(activation).not.toHaveBeenCalled()
   })
 
-  it('leaves mouse pointers to native desktop click and drag handling', () => {
+  it('[U03466] leaves mouse pointers to native desktop click and drag handling', () => {
     const activation = vi.fn()
     button.addEventListener('production-button-activate', activation)
 
@@ -87,7 +87,7 @@ describe('production button pointer activation', () => {
     expect(activation).not.toHaveBeenCalled()
   })
 
-  it('does not activate when release displacement proves a coalesced scroll drag', () => {
+  it('[U03467] does not activate when release displacement proves a coalesced scroll drag', () => {
     const activation = vi.fn()
     button.addEventListener('production-button-activate', activation)
 
@@ -126,7 +126,7 @@ describe('production button pointer activation', () => {
     return production
   }
 
-  it('does not activate when portrait scroll position changes without move or scroll events', () => {
+  it('[U03468] does not activate when portrait scroll position changes without move or scroll events', () => {
     const production = moveButtonToPortraitProductionBar()
     const activation = vi.fn()
     button.addEventListener('production-button-activate', activation)
@@ -140,7 +140,7 @@ describe('production button pointer activation', () => {
     expect(activation).not.toHaveBeenCalled()
   })
 
-  it('keeps consecutive portrait upper and lower taps immediately responsive', () => {
+  it('[U03469] keeps consecutive portrait upper and lower taps immediately responsive', () => {
     moveButtonToPortraitProductionBar()
     const activations = []
     button.addEventListener('production-button-activate', event => activations.push(event.detail.clientY))
@@ -155,7 +155,7 @@ describe('production button pointer activation', () => {
     expect(isUpperHalfClick(null, { detail: { clientY: activations[1] } }, button)).toBe(false)
   })
 
-  it('cancels a landscape tap when vertical scrolling arrives after pointerup', () => {
+  it('[U03470] cancels a landscape tap when vertical scrolling arrives after pointerup', () => {
     const production = moveButtonToLandscapeProductionBar()
     const pendingTimers = []
     const setTimer = vi.spyOn(window, 'setTimeout')
@@ -175,7 +175,7 @@ describe('production button pointer activation', () => {
     setTimer.mockRestore()
   })
 
-  it('keeps consecutive landscape taps lossless after scroll classification', () => {
+  it('[U03471] keeps consecutive landscape taps lossless after scroll classification', () => {
     moveButtonToLandscapeProductionBar()
     const pendingTimers = []
     const setTimer = vi.spyOn(window, 'setTimeout')

@@ -12,7 +12,7 @@ function formControlCount(row) {
 }
 
 describe('expanded left sidebar markup', () => {
-  it('collapses multiplayer and save game with the map settings accordion pattern', () => {
+  it('[U01489] collapses multiplayer and save game with the map settings accordion pattern', () => {
     const sidebar = document.querySelector('#sidebar.expanded-left-sidebar')
     expect(sidebar).toBeTruthy()
 
@@ -32,7 +32,7 @@ describe('expanded left sidebar markup', () => {
     }
   })
 
-  it('orders Save, Multiplayer, then Map Settings as adjacent sections', () => {
+  it('[U01490] orders Save, Multiplayer, then Map Settings as adjacent sections', () => {
     const children = [...document.getElementById('sidebarScroll').children]
     const indexOf = (id) => children.findIndex((element) => element.id === id)
     const saveIndex = indexOf('saveLoadMenu')
@@ -44,11 +44,11 @@ describe('expanded left sidebar markup', () => {
     expect(document.getElementById('stats').contains(document.getElementById('mapSettingsAccordion'))).toBe(false)
   })
 
-  it('shows a Statistics headline', () => {
+  it('[U01491] shows a Statistics headline', () => {
     expect(document.querySelector('#stats #statsHeading')?.textContent).toBe('Statistics')
   })
 
-  it('keeps form rows on a two-column grid, including the biome controls', () => {
+  it('[U01492] keeps form rows on a two-column grid, including the biome controls', () => {
     const biomeRow = document.getElementById('mapBiomeRegionCount')?.closest('.sidebar-form-row')
     expect(biomeRow).toBeTruthy()
     expect(formControlCount(biomeRow)).toBe(3)

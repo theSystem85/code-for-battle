@@ -7,7 +7,7 @@ import { executeUnitCommand } from '../../src/policies/unitCommandApi.js'
 const unit = id => ({ id, type: 'tank', owner: 'player1', health: 100, x: 32, y: 32, tileX: 1, tileY: 1 })
 
 describe('automation sensing reuse', () => {
-  it('shares a negative enemy result through command validation and issuance, and invalidates at the next entity scope', () => {
+  it('[U00298] shares a negative enemy result through command validation and issuance, and invalidates at the next entity scope', () => {
     const controlled = unit('controlled')
     let reads = 0
     const friendly = { ...unit('friend'), get health() { reads++; return 100 } }
@@ -23,7 +23,7 @@ describe('automation sensing reuse', () => {
     expect(getScopeEnemy()).toBeNull()
     expect(reads).toBeGreaterThan(firstReads)
   })
-  it('breaks equal-distance ties by stable ID regardless of candidate order', () => {
+  it('[U00299] breaks equal-distance ties by stable ID regardless of candidate order', () => {
     const controlled = unit('controlled')
     const a = { ...unit('a'), owner: 'player2', x: 64 }
     const b = { ...unit('b'), owner: 'player2', x: 0 }

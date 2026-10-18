@@ -17,7 +17,7 @@ describe('I20 rendering pipeline integration', () => {
     resetRenderingPipelineForTests()
   })
 
-  it('shares the mutation revision store with terrain cache state', () => {
+  it('[U03744] shares the mutation revision store with terrain cache state', () => {
     const grid = Array.from({ length: 8 }, () => Array.from({ length: 8 }, () => ({ type: 'land' })))
     const transaction = beginMapMutationTransaction(grid, { replace: true })
     commitMapMutationTransaction(transaction)
@@ -35,7 +35,7 @@ describe('I20 rendering pipeline integration', () => {
     pending.store.dispose()
   })
 
-  it('keeps CPU water topology independent from animation time', () => {
+  it('[U03745] keeps CPU water topology independent from animation time', () => {
     const grid = [
       [{ type: 'water' }, { type: 'water' }],
       [{ type: 'land' }, { type: 'water' }]
@@ -49,7 +49,7 @@ describe('I20 rendering pipeline integration', () => {
     expect(pass.runLength).toBe(firstRuns)
   })
 
-  it('binds density generation events once', () => {
+  it('[U03746] binds density generation events once', () => {
     const listeners = []
     globalThis.document = {
       addEventListener(type, handler) {

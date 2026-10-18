@@ -72,7 +72,7 @@ describe('mineSystem', () => {
   })
 
   describe('createMine()', () => {
-    it('should create a mine with correct properties', () => {
+    it('[U02897] should create a mine with correct properties', () => {
       const mine = createMine(5, 10, 'player', 1000)
 
       expect(mine.tileX).toBe(5)
@@ -84,21 +84,21 @@ describe('mineSystem', () => {
       expect(mine.active).toBe(false)
     })
 
-    it('should generate unique id', () => {
+    it('[U02898] should generate unique id', () => {
       const mine1 = createMine(5, 10, 'player')
       const mine2 = createMine(5, 10, 'player')
 
       expect(mine1.id).not.toBe(mine2.id)
     })
 
-    it('should set armedAt to deployTime + ARM_DELAY', () => {
+    it('[U02899] should set armedAt to deployTime + ARM_DELAY', () => {
       const deployTime = 5000
       const mine = createMine(5, 10, 'player', deployTime)
 
       expect(mine.armedAt).toBe(deployTime + MINE_ARM_DELAY)
     })
 
-    it('should default deployTime to simulation time when not provided', () => {
+    it('[U02900] should default deployTime to simulation time when not provided', () => {
       gameState.simulationTime = 1337
       const mine = createMine(5, 10, 'player')
       expect(mine.deployTime).toBe(1337)
@@ -106,13 +106,13 @@ describe('mineSystem', () => {
   })
 
   describe('deployMine()', () => {
-    it('should add mine to gameState.mines', () => {
+    it('[U02901] should add mine to gameState.mines', () => {
       const mine = deployMine(5, 10, 'player')
 
       expect(gameState.mines).toContain(mine)
     })
 
-    it('should return the deployed mine', () => {
+    it('[U02902] should return the deployed mine', () => {
       const mine = deployMine(5, 10, 'player')
 
       expect(mine).not.toBeNull()
@@ -120,7 +120,7 @@ describe('mineSystem', () => {
       expect(mine.tileY).toBe(10)
     })
 
-    it('should not deploy mine on existing mine', () => {
+    it('[U02903] should not deploy mine on existing mine', () => {
       deployMine(5, 10, 'player')
       const secondMine = deployMine(5, 10, 'enemy')
 
@@ -128,7 +128,7 @@ describe('mineSystem', () => {
       expect(gameState.mines.length).toBe(1)
     })
 
-    it('should deploy mines at different positions', () => {
+    it('[U02904] should deploy mines at different positions', () => {
       const mine1 = deployMine(5, 10, 'player')
       const mine2 = deployMine(6, 10, 'player')
       const mine3 = deployMine(5, 11, 'player')
@@ -141,7 +141,7 @@ describe('mineSystem', () => {
   })
 
   describe('updateMines()', () => {
-    it('should activate mine after arm delay', () => {
+    it('[U02905] should activate mine after arm delay', () => {
       const deployTime = 1000
       const mine = createMine(5, 10, 'player', deployTime)
       gameState.mines.push(mine)
@@ -155,7 +155,7 @@ describe('mineSystem', () => {
       expect(mine.active).toBe(true)
     })
 
-    it('should update multiple mines', () => {
+    it('[U02906] should update multiple mines', () => {
       const deployTime = 1000
       const mine1 = createMine(5, 10, 'player', deployTime)
       const mine2 = createMine(6, 10, 'player', deployTime + 500)
@@ -172,7 +172,7 @@ describe('mineSystem', () => {
       expect(mine2.active).toBe(true)
     })
 
-    it('should not deactivate already active mines', () => {
+    it('[U02907] should not deactivate already active mines', () => {
       const deployTime = 1000
       const mine = createMine(5, 10, 'player', deployTime)
       mine.active = true
@@ -185,7 +185,7 @@ describe('mineSystem', () => {
   })
 
   describe('getMineAtTile()', () => {
-    it('should return mine at specified tile', () => {
+    it('[U02908] should return mine at specified tile', () => {
       const mine = deployMine(5, 10, 'player')
 
       const result = getMineAtTile(5, 10)
@@ -193,13 +193,13 @@ describe('mineSystem', () => {
       expect(result).toBe(mine)
     })
 
-    it('should return null for empty tile', () => {
+    it('[U02909] should return null for empty tile', () => {
       const result = getMineAtTile(5, 10)
 
       expect(result).toBeNull()
     })
 
-    it('should return correct mine from multiple mines', () => {
+    it('[U02910] should return correct mine from multiple mines', () => {
       const mine1 = deployMine(5, 10, 'player')
       const mine2 = deployMine(6, 11, 'enemy')
 
@@ -209,18 +209,18 @@ describe('mineSystem', () => {
   })
 
   describe('hasActiveMine()', () => {
-    it('should return false for empty tile', () => {
+    it('[U02911] should return false for empty tile', () => {
       expect(hasActiveMine(5, 10)).toBe(false)
     })
 
-    it('should return false for inactive mine', () => {
+    it('[U02912] should return false for inactive mine', () => {
       const mine = deployMine(5, 10, 'player')
       mine.active = false
 
       expect(hasActiveMine(5, 10)).toBe(false)
     })
 
-    it('should return true for active mine', () => {
+    it('[U02913] should return true for active mine', () => {
       const mine = deployMine(5, 10, 'player')
       mine.active = true
 
@@ -229,7 +229,7 @@ describe('mineSystem', () => {
   })
 
   describe('detonateMine()', () => {
-    it('should remove mine from gameState.mines', () => {
+    it('[U02914] should remove mine from gameState.mines', () => {
       const mine = deployMine(5, 10, 'player')
       mine.active = true
 
@@ -238,7 +238,7 @@ describe('mineSystem', () => {
       expect(gameState.mines).not.toContain(mine)
     })
 
-    it('should create explosion effect', () => {
+    it('[U02915] should create explosion effect', () => {
       const mine = deployMine(5, 10, 'player')
       mine.active = true
 
@@ -247,7 +247,7 @@ describe('mineSystem', () => {
       expect(gameState.explosions.length).toBeGreaterThan(0)
     })
 
-    it('should damage units on same tile', () => {
+    it('[U02916] should damage units on same tile', () => {
       const mine = deployMine(5, 10, 'player')
       mine.active = true
 
@@ -263,7 +263,7 @@ describe('mineSystem', () => {
       expect(unit.health).toBeLessThan(100)
     })
 
-    it('should damage buildings on same tile', () => {
+    it('[U02917] should damage buildings on same tile', () => {
       const mine = deployMine(5, 10, 'player')
       mine.active = true
 
@@ -287,11 +287,11 @@ describe('mineSystem', () => {
       )
     })
 
-    it('should not throw for null mine', () => {
+    it('[U02918] should not throw for null mine', () => {
       expect(() => detonateMine(null, [], [])).not.toThrow()
     })
 
-    it('should damage entities within explosion radius', () => {
+    it('[U02919] should damage entities within explosion radius', () => {
       const mine = deployMine(5, 10, 'player')
       mine.active = true
 
@@ -313,7 +313,7 @@ describe('mineSystem', () => {
   })
 
   describe('removeMine()', () => {
-    it('should remove mine from gameState.mines', () => {
+    it('[U02920] should remove mine from gameState.mines', () => {
       const mine = deployMine(5, 10, 'player')
 
       removeMine(mine)
@@ -321,7 +321,7 @@ describe('mineSystem', () => {
       expect(gameState.mines).not.toContain(mine)
     })
 
-    it('should update mine lookup', () => {
+    it('[U02921] should update mine lookup', () => {
       const mine = deployMine(5, 10, 'player')
 
       removeMine(mine)
@@ -329,7 +329,7 @@ describe('mineSystem', () => {
       expect(getMineAtTile(5, 10)).toBeNull()
     })
 
-    it('should not throw for mine not in array', () => {
+    it('[U02922] should not throw for mine not in array', () => {
       const mine = createMine(5, 10, 'player')
 
       expect(() => removeMine(mine)).not.toThrow()
@@ -337,7 +337,7 @@ describe('mineSystem', () => {
   })
 
   describe('safeSweeperDetonation()', () => {
-    it('should remove mine', () => {
+    it('[U02923] should remove mine', () => {
       const mine = deployMine(5, 10, 'player')
       mine.active = true
 
@@ -346,7 +346,7 @@ describe('mineSystem', () => {
       expect(gameState.mines).not.toContain(mine)
     })
 
-    it('should create explosion effect', () => {
+    it('[U02924] should create explosion effect', () => {
       const mine = deployMine(5, 10, 'player')
       mine.active = true
 
@@ -355,7 +355,7 @@ describe('mineSystem', () => {
       expect(gameState.explosions.length).toBeGreaterThan(0)
     })
 
-    it('should grant immunity to sweeping Mine Sweepers', () => {
+    it('[U02925] should grant immunity to sweeping Mine Sweepers', () => {
       const mine = deployMine(5, 10, 'player')
       mine.active = true
 
@@ -373,7 +373,7 @@ describe('mineSystem', () => {
       expect(sweeper.health).toBe(100) // Should not take damage
     })
 
-    it('should damage non-sweeping units', () => {
+    it('[U02926] should damage non-sweeping units', () => {
       const mine = deployMine(5, 10, 'player')
       mine.active = true
 
@@ -390,7 +390,7 @@ describe('mineSystem', () => {
       expect(tank.health).toBeLessThan(100)
     })
 
-    it('should damage Mine Sweeper that is not sweeping', () => {
+    it('[U02927] should damage Mine Sweeper that is not sweeping', () => {
       const mine = deployMine(5, 10, 'player')
       mine.active = true
 
@@ -410,17 +410,17 @@ describe('mineSystem', () => {
   })
 
   describe('distributeMineLayerPayload()', () => {
-    it('should not throw for non-mineLayer unit', () => {
+    it('[U02928] should not throw for non-mineLayer unit', () => {
       const unit = { type: 'tank', remainingMines: 5 }
       expect(() => distributeMineLayerPayload(unit, [], [])).not.toThrow()
     })
 
-    it('should not throw for mineLayer with no mines', () => {
+    it('[U02929] should not throw for mineLayer with no mines', () => {
       const unit = { type: 'mineLayer', remainingMines: 0 }
       expect(() => distributeMineLayerPayload(unit, [], [])).not.toThrow()
     })
 
-    it('should create explosion effects', () => {
+    it('[U02930] should create explosion effects', () => {
       const unit = {
         type: 'mineLayer',
         remainingMines: 3,
@@ -433,7 +433,7 @@ describe('mineSystem', () => {
       expect(gameState.explosions.length).toBeGreaterThan(0)
     })
 
-    it('should damage surrounding units', () => {
+    it('[U02931] should damage surrounding units', () => {
       const unit = {
         type: 'mineLayer',
         remainingMines: 5,
@@ -455,29 +455,29 @@ describe('mineSystem', () => {
   })
 
   describe('isFriendlyMineBlocking()', () => {
-    it('should return false for null owner', () => {
+    it('[U02932] should return false for null owner', () => {
       expect(isFriendlyMineBlocking(5, 10, null)).toBe(false)
     })
 
-    it('should return false for tile without mine', () => {
+    it('[U02933] should return false for tile without mine', () => {
       expect(isFriendlyMineBlocking(5, 10, 'player')).toBe(false)
     })
 
-    it('should return false for inactive mine', () => {
+    it('[U02934] should return false for inactive mine', () => {
       const mine = deployMine(5, 10, 'player')
       mine.active = false
 
       expect(isFriendlyMineBlocking(5, 10, 'player')).toBe(false)
     })
 
-    it('should return false for enemy mine', () => {
+    it('[U02935] should return false for enemy mine', () => {
       const mine = deployMine(5, 10, 'enemy')
       mine.active = true
 
       expect(isFriendlyMineBlocking(5, 10, 'player')).toBe(false)
     })
 
-    it('should return true for active friendly mine', () => {
+    it('[U02936] should return true for active friendly mine', () => {
       const mine = deployMine(5, 10, 'player')
       mine.active = true
 
@@ -486,7 +486,7 @@ describe('mineSystem', () => {
   })
 
   describe('rebuildMineLookup()', () => {
-    it('should rebuild lookup after clearing mines', () => {
+    it('[U02937] should rebuild lookup after clearing mines', () => {
       const mine = deployMine(5, 10, 'player')
 
       // Manual clear (simulating desync)
@@ -498,19 +498,19 @@ describe('mineSystem', () => {
       expect(getMineAtTile(5, 10)).toBe(mine)
     })
 
-    it('should handle empty mines array', () => {
+    it('[U02938] should handle empty mines array', () => {
       gameState.mines = []
 
       expect(() => rebuildMineLookup()).not.toThrow()
     })
 
-    it('should handle non-array mines', () => {
+    it('[U02939] should handle non-array mines', () => {
       gameState.mines = null
 
       expect(() => rebuildMineLookup()).not.toThrow()
     })
 
-    it('should skip mines with invalid coordinates', () => {
+    it('[U02940] should skip mines with invalid coordinates', () => {
       gameState.mines = [
         { tileX: NaN, tileY: 5, owner: 'player' },
         { tileX: 5, tileY: Infinity, owner: 'player' },
@@ -525,7 +525,7 @@ describe('mineSystem', () => {
   })
 
   describe('chain reactions', () => {
-    it('should trigger chain reaction with adjacent mines', () => {
+    it('[U02941] should trigger chain reaction with adjacent mines', () => {
       // Deploy two adjacent mines
       const mine1 = deployMine(5, 10, 'player')
       const mine2 = deployMine(6, 10, 'player')
@@ -540,7 +540,7 @@ describe('mineSystem', () => {
       expect(gameState.mines.length).toBe(0)
     })
 
-    it('should not trigger chain reaction with non-adjacent mines', () => {
+    it('[U02942] should not trigger chain reaction with non-adjacent mines', () => {
       const mine1 = deployMine(5, 10, 'player')
       const mine2 = deployMine(8, 10, 'player') // 3 tiles away
       mine1.active = true
@@ -554,7 +554,7 @@ describe('mineSystem', () => {
   })
 
   describe('damage falloff', () => {
-    it('should apply full damage at center', () => {
+    it('[U02943] should apply full damage at center', () => {
       const mine = deployMine(5, 10, 'player')
       mine.active = true
 
@@ -571,7 +571,7 @@ describe('mineSystem', () => {
       expect(1000 - unit.health).toBeGreaterThan(0)
     })
 
-    it('should apply reduced damage at edge of radius', () => {
+    it('[U02944] should apply reduced damage at edge of radius', () => {
       if (MINE_EXPLOSION_RADIUS <= 0) return // Skip if no radius
 
       const mine = deployMine(5, 10, 'player')

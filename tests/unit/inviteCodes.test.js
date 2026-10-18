@@ -24,7 +24,7 @@ function sequentialRandom(start = 0) {
 }
 
 describe('invite short codes', () => {
-  it('generates a 6 character code from the unambiguous alphabet', () => {
+  it('[U02160] generates a 6 character code from the unambiguous alphabet', () => {
     const code = generateShortCode(() => 0)
     expect(code).toHaveLength(SHORT_CODE_LENGTH)
     expect(code).toBe('AAAAAA')
@@ -33,7 +33,7 @@ describe('invite short codes', () => {
     expect(SHORT_CODE_ALPHABET).not.toMatch(/[0O1IL]/)
   })
 
-  it('normalizes case, spaces, and dashes and rejects ambiguous or wrong-length input', () => {
+  it('[U02161] normalizes case, spaces, and dashes and rejects ambiguous or wrong-length input', () => {
     expect(normalizeShortCode(' ab c-def ')).toBe('ABCDEF')
     expect(normalizeShortCode('K7M–Q4P')).toBe('K7MQ4P')
     expect(normalizeShortCode('K7M—Q4P')).toBe('K7MQ4P')
@@ -47,7 +47,7 @@ describe('invite short codes', () => {
     expect(normalizeShortCode(TOKEN)).toBeNull()
   })
 
-  it('gives each party its own code and drops the previous code when that party is reissued', async() => {
+  it('[U02162] gives each party its own code and drops the previous code when that party is reissued', async() => {
     const storage = createMemoryInviteCodeStorage()
     const random = sequentialRandom()
     const red = await issueStoredInviteCode(storage, {
@@ -86,7 +86,7 @@ describe('invite short codes', () => {
     expect((await resolveStoredInviteCode(storage, blue.shortCode, 1_000)).partyId).toBe('player3')
   })
 
-  it('regenerates when a candidate collides with another active invite', async() => {
+  it('[U02163] regenerates when a candidate collides with another active invite', async() => {
     const storage = createMemoryInviteCodeStorage()
     let calls = 0
     const random = () => {
@@ -115,7 +115,7 @@ describe('invite short codes', () => {
     expect((await resolveStoredInviteCode(storage, issued.shortCode, 1_000)).partyId).toBe('player2')
   })
 
-  it('stops resolving a code once it expires with the invite', async() => {
+  it('[U02164] stops resolving a code once it expires with the invite', async() => {
     const storage = createMemoryInviteCodeStorage()
     const issued = await issueStoredInviteCode(storage, {
       instanceId: 'game',
@@ -130,7 +130,7 @@ describe('invite short codes', () => {
     expect(await resolveStoredInviteCode(storage, issued.shortCode, 1_050)).toBeNull()
   })
 
-  it('throws when every attempt collides', async() => {
+  it('[U02165] throws when every attempt collides', async() => {
     await expect(allocateShortCode(async() => true, () => 0, 3)).rejects.toThrow(/unique invite code/)
   })
 })

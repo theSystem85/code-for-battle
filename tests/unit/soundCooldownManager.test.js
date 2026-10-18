@@ -17,25 +17,25 @@ describe('soundCooldownManager', () => {
   })
 
   describe('canPlayCriticalDamageSound', () => {
-    it('returns true for unit that has never played sound', () => {
+    it('[U04090] returns true for unit that has never played sound', () => {
       const unit = { id: 'unit1' }
       expect(canPlayCriticalDamageSound(unit, 1000)).toBe(true)
     })
 
-    it('returns false for null unit', () => {
+    it('[U04091] returns false for null unit', () => {
       expect(canPlayCriticalDamageSound(null, 1000)).toBe(false)
     })
 
-    it('returns false for undefined unit', () => {
+    it('[U04092] returns false for undefined unit', () => {
       expect(canPlayCriticalDamageSound(undefined, 1000)).toBe(false)
     })
 
-    it('returns false for unit without id', () => {
+    it('[U04093] returns false for unit without id', () => {
       const unit = { type: 'tank' }
       expect(canPlayCriticalDamageSound(unit, 1000)).toBe(false)
     })
 
-    it('returns false if cooldown has not elapsed', () => {
+    it('[U04094] returns false if cooldown has not elapsed', () => {
       const unit = { id: 'unit1' }
       const initialTime = 1000
 
@@ -46,7 +46,7 @@ describe('soundCooldownManager', () => {
       expect(canPlayCriticalDamageSound(unit, initialTime + 3000)).toBe(false)
     })
 
-    it('returns true if cooldown has elapsed', () => {
+    it('[U04095] returns true if cooldown has elapsed', () => {
       const unit = { id: 'unit1' }
       const initialTime = 1000
 
@@ -57,7 +57,7 @@ describe('soundCooldownManager', () => {
       expect(canPlayCriticalDamageSound(unit, initialTime + 5000)).toBe(true)
     })
 
-    it('returns true if more than cooldown has elapsed', () => {
+    it('[U04096] returns true if more than cooldown has elapsed', () => {
       const unit = { id: 'unit1' }
       const initialTime = 1000
 
@@ -68,7 +68,7 @@ describe('soundCooldownManager', () => {
       expect(canPlayCriticalDamageSound(unit, initialTime + 10000)).toBe(true)
     })
 
-    it('tracks different units independently', () => {
+    it('[U04097] tracks different units independently', () => {
       const unit1 = { id: 'unit1' }
       const unit2 = { id: 'unit2' }
       const initialTime = 1000
@@ -83,7 +83,7 @@ describe('soundCooldownManager', () => {
   })
 
   describe('recordCriticalDamageSoundPlayed', () => {
-    it('records sound for valid unit', () => {
+    it('[U04098] records sound for valid unit', () => {
       const unit = { id: 'unit1' }
 
       recordCriticalDamageSoundPlayed(unit, 1000)
@@ -92,20 +92,20 @@ describe('soundCooldownManager', () => {
       expect(canPlayCriticalDamageSound(unit, 1500)).toBe(false)
     })
 
-    it('does nothing for null unit', () => {
+    it('[U04099] does nothing for null unit', () => {
       expect(() => recordCriticalDamageSoundPlayed(null, 1000)).not.toThrow()
     })
 
-    it('does nothing for undefined unit', () => {
+    it('[U04100] does nothing for undefined unit', () => {
       expect(() => recordCriticalDamageSoundPlayed(undefined, 1000)).not.toThrow()
     })
 
-    it('does nothing for unit without id', () => {
+    it('[U04101] does nothing for unit without id', () => {
       const unit = { type: 'tank' }
       expect(() => recordCriticalDamageSoundPlayed(unit, 1000)).not.toThrow()
     })
 
-    it('updates timestamp when sound is played again', () => {
+    it('[U04102] updates timestamp when sound is played again', () => {
       const unit = { id: 'unit1' }
 
       // First recording
@@ -124,7 +124,7 @@ describe('soundCooldownManager', () => {
   })
 
   describe('cleanupSoundCooldowns', () => {
-    it('clears all entries when given empty array', () => {
+    it('[U04103] clears all entries when given empty array', () => {
       const unit = { id: 'unit1' }
 
       // Record a sound
@@ -140,7 +140,7 @@ describe('soundCooldownManager', () => {
       expect(canPlayCriticalDamageSound(unit, 1500)).toBe(true)
     })
 
-    it('clears all entries when given null', () => {
+    it('[U04104] clears all entries when given null', () => {
       const unit = { id: 'unit1' }
 
       recordCriticalDamageSoundPlayed(unit, 1000)
@@ -149,7 +149,7 @@ describe('soundCooldownManager', () => {
       expect(canPlayCriticalDamageSound(unit, 1500)).toBe(true)
     })
 
-    it('clears all entries when given undefined', () => {
+    it('[U04105] clears all entries when given undefined', () => {
       const unit = { id: 'unit1' }
 
       recordCriticalDamageSoundPlayed(unit, 1000)
@@ -158,7 +158,7 @@ describe('soundCooldownManager', () => {
       expect(canPlayCriticalDamageSound(unit, 1500)).toBe(true)
     })
 
-    it('keeps entries for units that still exist', () => {
+    it('[U04106] keeps entries for units that still exist', () => {
       const unit1 = { id: 'unit1' }
       const unit2 = { id: 'unit2' }
 
@@ -173,7 +173,7 @@ describe('soundCooldownManager', () => {
       expect(canPlayCriticalDamageSound(unit2, 1500)).toBe(true)
     })
 
-    it('removes entries for destroyed units', () => {
+    it('[U04107] removes entries for destroyed units', () => {
       const unit1 = { id: 'unit1' }
       const unit2 = { id: 'unit2' }
       const unit3 = { id: 'unit3' }
@@ -190,7 +190,7 @@ describe('soundCooldownManager', () => {
       expect(canPlayCriticalDamageSound(unit3, 1500)).toBe(true)
     })
 
-    it('handles units without id in the active units array', () => {
+    it('[U04108] handles units without id in the active units array', () => {
       const unit1 = { id: 'unit1' }
       const unitWithoutId = { type: 'tank' }
 

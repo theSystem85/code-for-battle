@@ -6,7 +6,7 @@ import { buildCliffDepth, cliffContourMask, cliffHeightClass, cliffMacroRect, cl
 const plateau = (size, margin = 1) => Array.from({ length: size }, (_, y) => Array.from({ length: size }, (_, x) => ({ type: x >= margin && y >= margin && x < size - margin && y < size - margin ? 'rock' : 'land' })))
 
 describe('terraced cliff elevation', () => {
-  it('joins every straight macro direction with equal depth, silhouette and lighting', () => {
+  it('[U00880] joins every straight macro direction with equal depth, silhouette and lighting', () => {
     for (const mask of [3, 6, 9, 12]) for (let variant = 0; variant < 8; variant++) {
       const start = cliffMacroProfile(mask, 0, variant)
       const end = cliffMacroProfile(mask, 1, variant)
@@ -18,13 +18,13 @@ describe('terraced cliff elevation', () => {
       expect(Math.abs(before.strataPhase - after.strataPhase)).toBeLessThan(.001)
     }
   })
-  it('ships a cliff atlas without abrupt horizontal strip-join bands', async() => {
+  it('[U00881] ships a cliff atlas without abrupt horizontal strip-join bands', async() => {
     const result = await measureCliffJoins('public/images/terrain/terraced-cliffs.webp')
     expect(result.samples).toBe(10752)
     expect(result.meanPremultipliedRGBJump).toBeLessThan(3)
     expect(result.maxJump).toBeLessThan(60)
   })
-  it('raises wider interiors with three contour levels and never changes gameplay tiles', () => {
+  it('[U00882] raises wider interiors with three contour levels and never changes gameplay tiles', () => {
     const grid = plateau(17), before = JSON.stringify(grid)
     const depth = buildCliffDepth(grid, 0, 0, 17, 17)
     const value = (x, y) => depth.values[(y - depth.top) * depth.width + x - depth.left]
@@ -34,7 +34,7 @@ describe('terraced cliff elevation', () => {
     expect(cliffContourMask(depth, 7, 7, 5)).toBe(15)
     expect(JSON.stringify(grid)).toBe(before)
   })
-  it('requires a solid three-tile width before classifying rocks as plateau', () => {
+  it('[U00883] requires a solid three-tile width before classifying rocks as plateau', () => {
     const narrow = Array.from({ length: 9 }, (_, y) => Array.from({ length: 9 }, (_, x) => ({ type: x === 4 || y === 4 ? 'rock' : 'land' })))
     const wide = plateau(9, 3)
     const narrowDepth = buildCliffDepth(narrow, 0, 0, 9, 9)
@@ -45,7 +45,7 @@ describe('terraced cliff elevation', () => {
     }
     expect(cliffContourMask(wideDepth, 2, 2, 1)).not.toBe(0)
   })
-  it('leaves cardinal and diagonal narrow chains outside plateau classification', () => {
+  it('[U00884] leaves cardinal and diagonal narrow chains outside plateau classification', () => {
     const cardinal = Array.from({ length: 7 }, (_, y) => Array.from({ length: 9 }, (_, x) => ({ type: y === 3 && x >= 2 && x <= 6 ? 'rock' : 'land' })))
     const diagonal = Array.from({ length: 7 }, (_, y) => Array.from({ length: 9 }, (_, x) => ({ type: x === y + 1 && y >= 1 && y <= 5 ? 'rock' : 'land' })))
     const cardinalDepth = buildCliffDepth(cardinal, 0, 0, 9, 7)
@@ -53,7 +53,7 @@ describe('terraced cliff elevation', () => {
     expect(cardinal.flatMap((row, y) => row.map((tile, x) => tile.type === 'rock' && isPlateauTile(cardinalDepth, x, y))).some(Boolean)).toBe(false)
     expect(diagonal.flatMap((row, y) => row.map((tile, x) => tile.type === 'rock' && isPlateauTile(diagonalDepth, x, y))).some(Boolean)).toBe(false)
   })
-  it('maps every 1-4-cell macro direction into a two-tile-deep atlas rectangle', () => {
+  it('[U00885] maps every 1-4-cell macro direction into a two-tile-deep atlas rectangle', () => {
     for (let variant = 0; variant < 8; variant++) for (const mask of [3, 6, 9, 12]) for (const length of [1, 2, 3, 4]) {
       const rect = cliffMacroRect(mask, length, variant)
       expect(rect).not.toBeNull()
@@ -61,7 +61,7 @@ describe('terraced cliff elevation', () => {
       expect(mask === 3 || mask === 12 ? rect.width : rect.height).toBe(length * 64 + 96)
     }
   })
-  it('uses one height class around each outer plateau contour and a separate short inner tier', () => {
+  it('[U00886] uses one height class around each outer plateau contour and a separate short inner tier', () => {
     const depth = buildCliffDepth(plateau(13), 0, 0, 13, 13)
     for (let y = 0; y < 12; y++) for (let x = 0; x < 12; x++) {
       const mask = cliffContourMask(depth, x, y, 1)
@@ -70,7 +70,7 @@ describe('terraced cliff elevation', () => {
     expect(cliffHeightClass(depth, 5, 5, 3)).toBe(1)
     expect(cliffTallRect(14, 7)).toEqual({ x: 3136, y: 5152, width: 224, height: 224 })
   })
-  it('gives identical terrace contours when baked from neighboring chunk patches', () => {
+  it('[U00887] gives identical terrace contours when baked from neighboring chunk patches', () => {
     const grid = plateau(48)
     grid[19][20].type = 'land'
     const a = buildCliffDepth(grid, 0, 0, 24, 24)
@@ -79,7 +79,7 @@ describe('terraced cliff elevation', () => {
       expect(cliffContourMask(a, x, y, level)).toBe(cliffContourMask(b, x, y, level))
     }
   })
-  it('responds to holes and map boundaries without stale elevation state', () => {
+  it('[U00888] responds to holes and map boundaries without stale elevation state', () => {
     const grid = plateau(17, 0)
     const before = buildCliffDepth(grid, 0, 0, 17, 17)
     grid[8][8].type = 'water'
@@ -89,7 +89,7 @@ describe('terraced cliff elevation', () => {
     expect(cliffContourMask(after, -1, -1, 1)).toBe(4)
   })
 
-  it('retains one generation-tagged cliff descriptor with explicit native bytes', () => {
+  it('[U00889] retains one generation-tagged cliff descriptor with explicit native bytes', () => {
     const descriptor = prepareCliffDescriptor(plateau(17), 0, 0, 17, 17, 9)
     expect(descriptor.generation).toBe(9)
     expect(descriptor.byteLength).toBe(
@@ -101,7 +101,7 @@ describe('terraced cliff elevation', () => {
     expect(Object.isFrozen(descriptor)).toBe(true)
   })
 
-  it('never classifies a non-rock tile as part of a plateau', () => {
+  it('[U00890] never classifies a non-rock tile as part of a plateau', () => {
     const grid = plateau(11)
     grid[5][5].type = 'land'
     const depth = buildCliffDepth(grid, 0, 0, 11, 11)

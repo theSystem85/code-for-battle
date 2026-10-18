@@ -27,20 +27,20 @@ describe('hitZoneDebug.js', () => {
   })
 
   describe('testHitZoneCalculations', () => {
-    it('should be a callable function', () => {
+    it('[U01970] should be a callable function', () => {
       expect(typeof testHitZoneCalculations).toBe('function')
     })
 
-    it('should not throw when called', () => {
+    it('[U01971] should not throw when called', () => {
       expect(() => testHitZoneCalculations()).not.toThrow()
     })
 
-    it('should log hit zone information', () => {
+    it('[U01972] should log hit zone information', () => {
       testHitZoneCalculations()
       expect(window.logger).toHaveBeenCalled()
     })
 
-    it('should provide visual debug information', () => {
+    it('[U01973] should provide visual debug information', () => {
       // The function is a debug utility for checking hit zone calculations
       // It logs information about how damage multipliers are calculated based on hit location
       const result = testHitZoneCalculations()
@@ -52,26 +52,26 @@ describe('hitZoneDebug.js', () => {
   describe('hit zone concepts', () => {
     // These tests document the expected hit zone behavior
 
-    it('should understand front armor is strongest', () => {
+    it('[U01974] should understand front armor is strongest', () => {
       // Front hits should do reduced damage (best armor)
       const frontMultiplier = 0.8
       expect(frontMultiplier).toBeLessThan(1)
     })
 
-    it('should understand rear armor is weakest', () => {
+    it('[U01975] should understand rear armor is weakest', () => {
       // Rear hits should do increased damage (weak armor)
       const rearMultiplier = 1.5
       expect(rearMultiplier).toBeGreaterThan(1)
     })
 
-    it('should understand side armor is intermediate', () => {
+    it('[U01976] should understand side armor is intermediate', () => {
       // Side hits should do normal to slightly increased damage
       const sideMultiplier = 1.2
       expect(sideMultiplier).toBeGreaterThan(0.8)
       expect(sideMultiplier).toBeLessThan(1.5)
     })
 
-    it('should calculate hit angle from direction vectors', () => {
+    it('[U01977] should calculate hit angle from direction vectors', () => {
       // Hit angle is calculated from the difference between
       // unit facing direction and the angle from attacker to target
       const unitDirection = 0 // Facing right
@@ -85,7 +85,7 @@ describe('hitZoneDebug.js', () => {
       expect(Math.abs(diff)).toBe(Math.PI) // Direct rear hit
     })
 
-    it('should identify front arc correctly', () => {
+    it('[U01978] should identify front arc correctly', () => {
       // Front arc is typically within 45-60 degrees of facing direction
       const frontArcThreshold = Math.PI / 4 // 45 degrees each side
 
@@ -101,7 +101,7 @@ describe('hitZoneDebug.js', () => {
       })
     })
 
-    it('should identify rear arc correctly', () => {
+    it('[U01979] should identify rear arc correctly', () => {
       // Rear arc is typically the opposite of front
       const rearArcThreshold = Math.PI * 3 / 4 // 135 degrees
 
@@ -118,7 +118,7 @@ describe('hitZoneDebug.js', () => {
       })
     })
 
-    it('should identify side arcs correctly', () => {
+    it('[U01980] should identify side arcs correctly', () => {
       // Side arcs are between front and rear
       const frontThreshold = Math.PI / 4
       const rearThreshold = Math.PI * 3 / 4
@@ -140,23 +140,23 @@ describe('hitZoneDebug.js', () => {
   describe('damage multiplier calculations', () => {
     // Document expected multiplier ranges
 
-    it('should have valid multiplier for front hits', () => {
+    it('[U01981] should have valid multiplier for front hits', () => {
       const frontMultiplier = 0.75 // 25% reduction
       expect(frontMultiplier).toBeGreaterThan(0)
       expect(frontMultiplier).toBeLessThanOrEqual(1)
     })
 
-    it('should have valid multiplier for rear hits', () => {
+    it('[U01982] should have valid multiplier for rear hits', () => {
       const rearMultiplier = 1.5 // 50% increase
       expect(rearMultiplier).toBeGreaterThanOrEqual(1)
     })
 
-    it('should have valid multiplier for side hits', () => {
+    it('[U01983] should have valid multiplier for side hits', () => {
       const sideMultiplier = 1.0 // No change
       expect(sideMultiplier).toBeGreaterThan(0)
     })
 
-    it('should apply multiplier to base damage correctly', () => {
+    it('[U01984] should apply multiplier to base damage correctly', () => {
       const baseDamage = 100
       const frontMult = 0.75
       const sideMult = 1.0
@@ -169,7 +169,7 @@ describe('hitZoneDebug.js', () => {
   })
 
   describe('tank-specific hit zones', () => {
-    it('should support different tank types with different zones', () => {
+    it('[U01985] should support different tank types with different zones', () => {
       // Different tanks might have different armor configurations
       const tankConfigs = {
         tank: { front: 0.75, side: 1.0, rear: 1.5 },
@@ -183,7 +183,7 @@ describe('hitZoneDebug.js', () => {
       })
     })
 
-    it('should handle turret orientation separately from hull', () => {
+    it('[U01986] should handle turret orientation separately from hull', () => {
       // Some tanks have rotating turrets that affect hit zone calculations
       const hullDirection = 0 // Hull facing right
       const turretDirection = Math.PI / 2 // Turret facing down
@@ -194,17 +194,17 @@ describe('hitZoneDebug.js', () => {
   })
 
   describe('edge cases', () => {
-    it('should handle exact front hit', () => {
+    it('[U01987] should handle exact front hit', () => {
       const hitAngle = 0
       expect(hitAngle).toBe(0)
     })
 
-    it('should handle exact rear hit', () => {
+    it('[U01988] should handle exact rear hit', () => {
       const hitAngle = Math.PI
       expect(hitAngle).toBeCloseTo(Math.PI)
     })
 
-    it('should handle angle normalization', () => {
+    it('[U01989] should handle angle normalization', () => {
       // Angles should be normalized to [-PI, PI]
       let angle = 3 * Math.PI // Over 360 degrees
       while (angle > Math.PI) angle -= 2 * Math.PI
@@ -214,7 +214,7 @@ describe('hitZoneDebug.js', () => {
       expect(angle).toBeLessThanOrEqual(Math.PI)
     })
 
-    it('should handle negative angles', () => {
+    it('[U01990] should handle negative angles', () => {
       let angle = -3 * Math.PI
       while (angle > Math.PI) angle -= 2 * Math.PI
       while (angle < -Math.PI) angle += 2 * Math.PI
@@ -223,7 +223,7 @@ describe('hitZoneDebug.js', () => {
       expect(angle).toBeLessThanOrEqual(Math.PI)
     })
 
-    it('should handle zero-length attack vector', () => {
+    it('[U01991] should handle zero-length attack vector', () => {
       // When attacker and target are at same position
       const attackerX = 100, attackerY = 100
       const targetX = 100, targetY = 100
@@ -238,13 +238,13 @@ describe('hitZoneDebug.js', () => {
   })
 
   describe('debug output format', () => {
-    it('should provide readable output', () => {
+    it('[U01992] should provide readable output', () => {
       testHitZoneCalculations()
       // Check that window.logger was called with structured data
       expect(window.logger).toHaveBeenCalled()
     })
 
-    it('should include all hit zones in output', () => {
+    it('[U01993] should include all hit zones in output', () => {
       testHitZoneCalculations()
       // The debug function should test all major hit zones
     })

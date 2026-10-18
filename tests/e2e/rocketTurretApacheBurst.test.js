@@ -117,7 +117,7 @@ test.describe('Rocket turret anti-air Apache damage', () => {
     return resultHandle.jsonValue()
   }
 
-  test('grounded and airborne Apaches both die to three direct rocket turret rockets', async({ page }) => {
+  test('[E00099] grounded and airborne Apaches both die to three direct rocket turret rockets', async({ page }) => {
     test.setTimeout(120000)
 
     await page.goto('/?seed=11')
@@ -148,7 +148,7 @@ test.describe('Rocket turret anti-air Apache damage', () => {
 test.describe('Rocket turret anti-air performance', () => {
   test.skip(!RUN_ROCKET_TURRET_PERF, 'Set PERF_ROCKET_TURRET_AIR=1 to run this benchmark.')
 
-  test('keeps 120 homing rockets tracking airborne targets within the frame budget', async({ page }) => {
+  test('[E00100] keeps 120 homing rockets tracking airborne targets within the frame budget', async({ page }) => {
     await page.goto('/?seed=11')
     await page.waitForFunction(() => Boolean(window.gameState?.gameStarted && window.gameInstance?.units))
 

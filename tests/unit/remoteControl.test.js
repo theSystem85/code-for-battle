@@ -77,7 +77,7 @@ vi.mock('../../src/utils/layoutMetrics.js', () => ({
 }))
 
 describe('remoteControl.js', () => {
-  it('ramps a ship to full throttle with up and brakes it to zero with down', () => {
+  it('[U03646] ramps a ship to full throttle with up and brakes it to zero with down', () => {
     const ship = {
       id: 'ship-1', type: 'destroyer', isNaval: true, direction: 0,
       speed: 2, speedModifier: 1, rotationSpeed: 0.02, path: [],
@@ -186,13 +186,13 @@ describe('remoteControl.js', () => {
   })
 
   describe('updateRemoteControlledUnits', () => {
-    it('should return early if no remoteControl state exists', () => {
+    it('[U03647] should return early if no remoteControl state exists', () => {
       gameState.remoteControl = null
       const result = updateRemoteControlledUnits(mockUnits, mockBullets, mockMapGrid, mockOccupancyMap)
       expect(result).toBeUndefined()
     })
 
-    it('should return early if no units are selected', () => {
+    it('[U03648] should return early if no units are selected', () => {
       gameState.remoteControl = { forward: 0, backward: 0, turnLeft: 0, turnRight: 0 }
       selectedUnits.length = 0
 
@@ -200,7 +200,7 @@ describe('remoteControl.js', () => {
       expect(result).toBeUndefined()
     })
 
-    it('should not process non-controllable unit types', () => {
+    it('[U03649] should not process non-controllable unit types', () => {
       gameState.remoteControl = { forward: 1, backward: 0, turnLeft: 0, turnRight: 0 }
       const tank = {
         id: 3,
@@ -222,7 +222,7 @@ describe('remoteControl.js', () => {
       expect(tank.x).toBe(initialPos.x)
     })
 
-    it('should process apache units when selected', () => {
+    it('[U03650] should process apache units when selected', () => {
       gameState.remoteControl = { forward: 1, backward: 0, turnLeft: 0, turnRight: 0, fire: 0 }
       selectedUnits.push(mockApache)
 
@@ -230,7 +230,7 @@ describe('remoteControl.js', () => {
       expect(() => updateRemoteControlledUnits(mockUnits, mockBullets, mockMapGrid, mockOccupancyMap)).not.toThrow()
     })
 
-    it('should process rocket tank units when selected', () => {
+    it('[U03651] should process rocket tank units when selected', () => {
       gameState.remoteControl = { forward: 1, backward: 0, turnLeft: 0, turnRight: 0, fire: 0 }
       selectedUnits.push(mockRocketTank)
 
@@ -240,7 +240,7 @@ describe('remoteControl.js', () => {
   })
 
   describe('remote control state', () => {
-    it('should handle forward movement input', () => {
+    it('[U03652] should handle forward movement input', () => {
       gameState.remoteControl = { forward: 1, backward: 0, turnLeft: 0, turnRight: 0, fire: 0 }
       selectedUnits.push(mockApache)
 
@@ -248,7 +248,7 @@ describe('remoteControl.js', () => {
       // Function should execute without error
     })
 
-    it('should handle backward movement input', () => {
+    it('[U03653] should handle backward movement input', () => {
       gameState.remoteControl = { forward: 0, backward: 1, turnLeft: 0, turnRight: 0, fire: 0 }
       selectedUnits.push(mockApache)
 
@@ -256,7 +256,7 @@ describe('remoteControl.js', () => {
       // Function should execute without error
     })
 
-    it('should handle turn left input', () => {
+    it('[U03654] should handle turn left input', () => {
       gameState.remoteControl = { forward: 0, backward: 0, turnLeft: 1, turnRight: 0, fire: 0 }
       selectedUnits.push(mockApache)
 
@@ -264,7 +264,7 @@ describe('remoteControl.js', () => {
       // Function should execute without error
     })
 
-    it('should handle turn right input', () => {
+    it('[U03655] should handle turn right input', () => {
       gameState.remoteControl = { forward: 0, backward: 0, turnLeft: 0, turnRight: 1, fire: 0 }
       selectedUnits.push(mockApache)
 
@@ -272,7 +272,7 @@ describe('remoteControl.js', () => {
       // Function should execute without error
     })
 
-    it('should handle combined inputs', () => {
+    it('[U03656] should handle combined inputs', () => {
       gameState.remoteControl = { forward: 1, backward: 0, turnLeft: 1, turnRight: 0, fire: 0 }
       selectedUnits.push(mockApache)
 
@@ -282,21 +282,21 @@ describe('remoteControl.js', () => {
   })
 
   describe('suspendRemoteControlAutoFocus', () => {
-    it('should be a callable function', () => {
+    it('[U03657] should be a callable function', () => {
       expect(typeof suspendRemoteControlAutoFocus).toBe('function')
     })
 
-    it('should not throw when called', () => {
+    it('[U03658] should not throw when called', () => {
       expect(() => suspendRemoteControlAutoFocus()).not.toThrow()
     })
 
-    it('should handle case when no camera follow unit is set', () => {
+    it('[U03659] should handle case when no camera follow unit is set', () => {
       gameState.cameraFollowUnitId = null
       suspendRemoteControlAutoFocus()
       // Should not throw
     })
 
-    it('clears camera follow when auto focus was set by remote control', () => {
+    it('[U03660] clears camera follow when auto focus was set by remote control', () => {
       const toggleAutoFocus = vi.fn((units) => {
         gameState.cameraFollowUnitId = units[0].id
       })
@@ -316,7 +316,7 @@ describe('remoteControl.js', () => {
   })
 
   describe('enemy unit handling', () => {
-    it('should not allow remote control of enemy units by default', () => {
+    it('[U03661] should not allow remote control of enemy units by default', () => {
       gameState.remoteControl = { forward: 1, backward: 0, turnLeft: 0, turnRight: 0, fire: 0 }
       const enemyApache = {
         id: 10,
@@ -336,7 +336,7 @@ describe('remoteControl.js', () => {
   })
 
   describe('player unit identification', () => {
-    it('should recognize player1 units as player units', () => {
+    it('[U03662] should recognize player1 units as player units', () => {
       gameState.humanPlayer = 'player1'
       gameState.remoteControl = { forward: 0, backward: 0, turnLeft: 0, turnRight: 0, fire: 0 }
       mockApache.owner = 'player1'
@@ -346,7 +346,7 @@ describe('remoteControl.js', () => {
       expect(() => updateRemoteControlledUnits(mockUnits, mockBullets, mockMapGrid, mockOccupancyMap)).not.toThrow()
     })
 
-    it('should recognize player units as player units', () => {
+    it('[U03663] should recognize player units as player units', () => {
       gameState.humanPlayer = 'player1'
       gameState.remoteControl = { forward: 0, backward: 0, turnLeft: 0, turnRight: 0, fire: 0 }
       mockApache.owner = 'player'
@@ -358,7 +358,7 @@ describe('remoteControl.js', () => {
   })
 
   describe('absolute controls', () => {
-    it('should handle absolute wagon direction', () => {
+    it('[U03664] should handle absolute wagon direction', () => {
       gameState.remoteControl = { forward: 0, backward: 0, turnLeft: 0, turnRight: 0, fire: 0 }
       gameState.remoteControlAbsolute = { wagonDirection: Math.PI / 4, wagonSpeed: 1 }
       selectedUnits.push(mockApache)
@@ -366,7 +366,7 @@ describe('remoteControl.js', () => {
       expect(() => updateRemoteControlledUnits(mockUnits, mockBullets, mockMapGrid, mockOccupancyMap)).not.toThrow()
     })
 
-    it('should handle absolute turret direction', () => {
+    it('[U03665] should handle absolute turret direction', () => {
       gameState.remoteControl = { forward: 0, backward: 0, turnLeft: 0, turnRight: 0, fire: 0 }
       gameState.remoteControlAbsolute = { turretDirection: Math.PI / 2, turretTurnFactor: 1 }
       selectedUnits.push(mockRocketTank)
@@ -376,7 +376,7 @@ describe('remoteControl.js', () => {
   })
 
   describe('unit without movement property', () => {
-    it('should skip units without movement property', () => {
+    it('[U03666] should skip units without movement property', () => {
       gameState.remoteControl = { forward: 1, backward: 0, turnLeft: 0, turnRight: 0, fire: 0 }
       const unitWithoutMovement = {
         id: 99,
@@ -392,7 +392,7 @@ describe('remoteControl.js', () => {
   })
 
   describe('turret aiming and firing behavior', () => {
-    it('aims turret at selected target when manual override is not active', () => {
+    it('[U03667] aims turret at selected target when manual override is not active', () => {
       gameState.remoteControl = { forward: 0, backward: 0, turnLeft: 0, turnRight: 0, fire: 0 }
       mockRocketTank.target = { id: 'enemy-1', x: 300, y: 200, tileX: 9, tileY: 6, health: 100 }
       selectedUnits.push(mockRocketTank)
@@ -403,7 +403,7 @@ describe('remoteControl.js', () => {
       expect(mockRocketTank.turretDirection).toBeDefined()
     })
 
-    it('fires a rocket burst when remote fire is engaged and facing target', () => {
+    it('[U03668] fires a rocket burst when remote fire is engaged and facing target', () => {
       // Rocket tank fire rate is 12000ms, so we need now > 12000 to pass cooldown check
       const nowSpy = vi.spyOn(performance, 'now').mockReturnValue(15000)
       gameState.remoteControl = { forward: 0, backward: 0, turnLeft: 0, turnRight: 0, fire: 1 }
@@ -440,7 +440,7 @@ describe('remoteControl.js', () => {
   })
 
   describe('naval controls', () => {
-    it('drives every ship type forward and turns it with angular inertia', () => {
+    it('[U03669] drives every ship type forward and turns it with angular inertia', () => {
       const shipTypes = [
         'destroyer',
         'supplyShip',
@@ -485,7 +485,7 @@ describe('remoteControl.js', () => {
       })
     })
 
-    it('gives every remotely controlled ship the autonomous naval top speed', () => {
+    it('[U03670] gives every remotely controlled ship the autonomous naval top speed', () => {
       const shipTypes = [
         'destroyer',
         'supplyShip',
@@ -530,7 +530,7 @@ describe('remoteControl.js', () => {
       })
     })
 
-    it('fires armed ships straight ahead with space while leaving steering independent', () => {
+    it('[U03671] fires armed ships straight ahead with space while leaving steering independent', () => {
       const destroyer = {
         id: 'remote-destroyer',
         type: 'destroyer',

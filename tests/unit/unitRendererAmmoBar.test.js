@@ -71,7 +71,7 @@ describe('UnitRenderer ammo HUD consistency', () => {
     globalThis.window = { logger: { warn: vi.fn() } }
   })
 
-  it('uses apache rocketAmmo for the selected ammo bar even while landed on a helipad', () => {
+  it('[U04788] uses apache rocketAmmo for the selected ammo bar even while landed on a helipad', () => {
     const renderer = new UnitRenderer()
     const drawHudEdgeBar = vi.spyOn(renderer, 'drawHudEdgeBar').mockImplementation(() => {})
     const unit = {
@@ -92,7 +92,7 @@ describe('UnitRenderer ammo HUD consistency', () => {
     expect(drawHudEdgeBar).toHaveBeenCalledWith(expect.anything(), expect.anything(), 'left', 0.5, '#FFA500')
   })
 
-  it('skips an offscreen battleship range perimeter instead of filling the viewport', () => {
+  it('[U04789] skips an offscreen battleship range perimeter instead of filling the viewport', () => {
     const renderer = new UnitRenderer()
     const ctx = {
       canvas: {
@@ -120,7 +120,7 @@ describe('UnitRenderer ammo HUD consistency', () => {
     expect(ctx.stroke).not.toHaveBeenCalled()
   })
 
-  it('renders a visible naval range boundary as a stroke without a large alpha fill', () => {
+  it('[U04790] renders a visible naval range boundary as a stroke without a large alpha fill', () => {
     const renderer = new UnitRenderer()
     const ctx = {
       canvas: {
@@ -148,7 +148,7 @@ describe('UnitRenderer ammo HUD consistency', () => {
     expect(ctx.setLineDash).not.toHaveBeenCalled()
   })
 
-  it('sizes the Destroyer HUD beyond the full rendered ship length', () => {
+  it('[U04791] sizes the Destroyer HUD beyond the full rendered ship length', () => {
     const renderer = new UnitRenderer()
     const standardBounds = renderer.getSelectedHudBounds(100, 100, { type: 'tank_v1' })
     const destroyerBounds = renderer.getSelectedHudBounds(100, 100, { type: 'destroyer' })
@@ -158,7 +158,7 @@ describe('UnitRenderer ammo HUD consistency', () => {
     expect(destroyerBounds.width).toBeGreaterThan(standardBounds.width)
   })
 
-  it('summarizes embarked vehicle types in the transport loading tooltip', () => {
+  it('[U04792] summarizes embarked vehicle types in the transport loading tooltip', () => {
     const renderer = new UnitRenderer()
     const ferry = {
       type: 'vehicleFerry',
@@ -170,7 +170,7 @@ describe('UnitRenderer ammo HUD consistency', () => {
     expect(renderer.getHudAbsoluteTooltipText(ferry, 'cargo')).toBe('loaded 3/10\n1× ambulance\n2× tank-v1')
   })
 
-  it('uses F22 rocketAmmo for the selected ammo bar even while parked on an airstrip', () => {
+  it('[U04793] uses F22 rocketAmmo for the selected ammo bar even while parked on an airstrip', () => {
     const renderer = new UnitRenderer()
     const drawHudEdgeBar = vi.spyOn(renderer, 'drawHudEdgeBar').mockImplementation(() => {})
     const unit = {
@@ -193,7 +193,7 @@ describe('UnitRenderer ammo HUD consistency', () => {
     expect(drawHudEdgeBar).toHaveBeenCalledWith(expect.anything(), expect.anything(), 'left', 0.25, '#FFA500')
   })
 
-  it('keeps units renderable during destruction freeze delay even at 0 HP', () => {
+  it('[U04794] keeps units renderable during destruction freeze delay even at 0 HP', () => {
     const renderer = new UnitRenderer()
     const result = renderer.shouldRenderUnit(
       {
@@ -211,7 +211,7 @@ describe('UnitRenderer ammo HUD consistency', () => {
     expect(result).toBe(true)
   })
 
-  it('does not render a health bar while a destroyed unit is in freeze delay', () => {
+  it('[U04795] does not render a health bar while a destroyed unit is in freeze delay', () => {
     const renderer = new UnitRenderer()
     const drawHudEdgeBar = vi.spyOn(renderer, 'drawHudEdgeBar').mockImplementation(() => {})
     const ctx = {
@@ -239,7 +239,7 @@ describe('UnitRenderer ammo HUD consistency', () => {
     expect(ctx.strokeRect).not.toHaveBeenCalled()
   })
 
-  it('prioritizes active harvester harvest progress over XP in the selected bottom HUD slot', () => {
+  it('[U04796] prioritizes active harvester harvest progress over XP in the selected bottom HUD slot', () => {
     const renderer = new UnitRenderer()
     const drawHudEdgeBar = vi.spyOn(renderer, 'drawHudEdgeBar').mockImplementation(() => {})
 
@@ -263,7 +263,7 @@ describe('UnitRenderer ammo HUD consistency', () => {
     expect(drawHudEdgeBar).toHaveBeenCalledWith(expect.anything(), expect.anything(), 'bottom', 0.5, '#32CD32')
   })
 
-  it('splits the Supply Ship donut supply quarter into ammo, fuel, and repair arcs', () => {
+  it('[U04797] splits the Supply Ship donut supply quarter into ammo, fuel, and repair arcs', () => {
     const renderer = new UnitRenderer()
     const strokes = []
     const ctx = {
@@ -313,7 +313,7 @@ describe('UnitRenderer ammo HUD consistency', () => {
     })
   })
 
-  it('renders the selected Supply Ship support radius from its configured tile range', () => {
+  it('[U04798] renders the selected Supply Ship support radius from its configured tile range', () => {
     const renderer = new UnitRenderer()
     const ctx = {
       save: vi.fn(),
@@ -335,7 +335,7 @@ describe('UnitRenderer ammo HUD consistency', () => {
     expect(ctx.arc).toHaveBeenCalledWith(100, 120, 64, 0, Math.PI * 2)
   })
 
-  it('draws an inward party-colored glow for the circular selected-unit HUD', () => {
+  it('[U04799] draws an inward party-colored glow for the circular selected-unit HUD', () => {
     gameState.selectionHudMode = 'modern-donut'
     const renderer = new UnitRenderer()
     const gradient = { addColorStop: vi.fn() }
@@ -375,7 +375,7 @@ describe('UnitRenderer ammo HUD consistency', () => {
     expect(alphas[1]).toBeLessThan(alphas[3])
   })
 
-  it('does not draw the inward glow unless the circular HUD is selected', () => {
+  it('[U04800] does not draw the inward glow unless the circular HUD is selected', () => {
     gameState.selectionHudMode = 'modern'
     const renderer = new UnitRenderer()
     const ctx = {
@@ -421,7 +421,7 @@ describe('UnitRenderer policy-control icon', () => {
     globalThis.window = { logger: { warn: vi.fn() } }
   })
 
-  it('draws only for own, living, actively controlled units', () => {
+  it('[U04801] draws only for own, living, actively controlled units', () => {
     const renderer = new UnitRenderer()
     const base = { type: 'tank_v1', x: 64, y: 64, health: 10, owner: 'player1', policyActive: true }
 
@@ -436,7 +436,7 @@ describe('UnitRenderer policy-control icon', () => {
     })
   })
 
-  it('reuses one hit rect so hover tests allocate nothing per frame', () => {
+  it('[U04802] reuses one hit rect so hover tests allocate nothing per frame', () => {
     const renderer = new UnitRenderer()
     const unit = { type: 'tank_v1', x: 64, y: 64 }
     const first = renderer.getPolicyIconRect(unit, scroll)

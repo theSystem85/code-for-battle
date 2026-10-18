@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 
 test.describe('F35 bomb run timing', () => {
-  test('drops bombs over target with staggered cadence', async({ page }) => {
+  test('[E00045] drops bombs over target with staggered cadence', async({ page }) => {
     test.setTimeout(180000)
 
     await page.addInitScript(() => {

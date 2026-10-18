@@ -6,7 +6,7 @@ import { createIdleAssetQueue } from '../../src/utils/idleAssetQueue.js'
 afterEach(() => vi.useRealTimers())
 
 describe('bounded asset operations', () => {
-  it('rejects an operation that never settles', async() => {
+  it('[U00200] rejects an operation that never settles', async() => {
     vi.useFakeTimers()
     const result = expect(withTimeout(new Promise(() => {}), 10)).rejects.toThrow('timed out')
     await vi.advanceTimersByTimeAsync(10)
@@ -14,14 +14,14 @@ describe('bounded asset operations', () => {
     expect(vi.getTimerCount()).toBe(0)
   })
 
-  it('clears the deadline on success and preserves failures', async() => {
+  it('[U00201] clears the deadline on success and preserves failures', async() => {
     vi.useFakeTimers()
     expect(await withTimeout(Promise.resolve('ready'))).toBe('ready')
     await expect(withTimeout(Promise.reject(new Error('decode failed')))).rejects.toThrow('decode failed')
     expect(vi.getTimerCount()).toBe(0)
   })
 
-  it('aborts timed out JSON requests and rejects HTML fallback responses', async() => {
+  it('[U00202] aborts timed out JSON requests and rejects HTML fallback responses', async() => {
     vi.useFakeTimers()
     let signal
     const pending = fetchAssetJson('/missing.json', { timeoutMs: 10, fetchImpl: (_url, options) => {
@@ -36,7 +36,7 @@ describe('bounded asset operations', () => {
     await expect(fetchAssetJson('/missing.json', { fetchImpl: async() => ({ ok: false, status: 404 }) })).rejects.toThrow('404')
   })
 
-  it.each(['network', 'decode'])('bounds a hanging image %s and removes handlers', async stage => {
+  it.each(['network', 'decode'])('[U00203] bounds a hanging image %s and removes handlers', async stage => {
     vi.useFakeTimers()
     const image = { naturalWidth: 32, naturalHeight: 32, decode: () => new Promise(() => {}) }
     const pending = loadPreparedImage('/hang.webp', { imageFactory: () => image, timeoutMs: 10 })
@@ -49,7 +49,7 @@ describe('bounded asset operations', () => {
     await vi.runAllTimersAsync()
   })
 
-  it('rejects image errors so callers can use their fallback', async() => {
+  it('[U00204] rejects image errors so callers can use their fallback', async() => {
     const image = {}
     const pending = loadPreparedImage('/404.webp', { imageFactory: () => image })
     image.onerror()
@@ -58,7 +58,7 @@ describe('bounded asset operations', () => {
 })
 
 describe('idle asset queue', () => {
-  it('deduplicates work, caps concurrency and promotes on-demand images', async() => {
+  it('[U00205] deduplicates work, caps concurrency and promotes on-demand images', async() => {
     const turns = []
     const releases = []
     const started = []

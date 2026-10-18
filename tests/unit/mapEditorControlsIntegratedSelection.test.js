@@ -103,7 +103,7 @@ describe('mapEditorControls integrated sheet selection list', () => {
     }))
   })
 
-  it('regenerates changed topology once and preserves topology during restore', async() => {
+  it('[U02643] regenerates changed topology once and preserves topology during restore', async() => {
     const { gameState } = await import('../../src/gameState.js')
     const { applyIntegratedSpriteSheetRuntime, setTopologyRegenerator } = await import('../../src/ui/mapEditorControls.js')
     const regenerate = vi.fn()
@@ -125,7 +125,7 @@ describe('mapEditorControls integrated sheet selection list', () => {
     gameState.useIntegratedSpriteSheetMode = true
   })
 
-  it('awaits persisted startup sheets without regenerating or applying the editor selection', async() => {
+  it('[U02644] awaits persisted startup sheets without regenerating or applying the editor selection', async() => {
     const { gameState } = await import('../../src/gameState.js')
     const { initMapEditorControls, setTopologyRegenerator } = await import('../../src/ui/mapEditorControls.js')
     const regenerate = vi.fn()
@@ -146,7 +146,7 @@ describe('mapEditorControls integrated sheet selection list', () => {
     setTopologyRegenerator(null)
   })
 
-  it('enables custom sprite sheets by default and respects a stored opt-out', async() => {
+  it('[U02645] enables custom sprite sheets by default and respects a stored opt-out', async() => {
     const { gameState } = await import('../../src/gameState.js')
     const { initMapEditorControls } = await import('../../src/ui/mapEditorControls.js')
     gameState.useIntegratedSpriteSheetMode = false
@@ -158,7 +158,7 @@ describe('mapEditorControls integrated sheet selection list', () => {
     gameState.useIntegratedSpriteSheetMode = true
   })
 
-  it('migrates an old whitelist with retired sheets to every default sheet enabled', async() => {
+  it('[U02646] migrates an old whitelist with retired sheets to every default sheet enabled', async() => {
     const { gameState } = await import('../../src/gameState.js')
     const { initMapEditorControls } = await import('../../src/ui/mapEditorControls.js')
     const { DEFAULT_SSE_SHEETS } = await import('../../src/ui/spriteSheetRegistry.js')
@@ -184,7 +184,7 @@ describe('mapEditorControls integrated sheet selection list', () => {
     expect(JSON.parse(localStorage.getItem('rts-integrated-spritesheet-disabled-sheets'))).toEqual([])
   })
 
-  it('stores unchecked sheets as opt-outs and keeps new defaults enabled', async() => {
+  it('[U02647] stores unchecked sheets as opt-outs and keeps new defaults enabled', async() => {
     const { gameState } = await import('../../src/gameState.js')
     const { initMapEditorControls } = await import('../../src/ui/mapEditorControls.js')
     const { DEFAULT_SSE_SHEETS } = await import('../../src/ui/spriteSheetRegistry.js')
@@ -202,7 +202,7 @@ describe('mapEditorControls integrated sheet selection list', () => {
     expect(document.querySelector(`input[data-sheet-path="${city}"]`).checked).toBe(false)
   })
 
-  it('filters unknown runtime selections before fetching sheet metadata', async() => {
+  it('[U02648] filters unknown runtime selections before fetching sheet metadata', async() => {
     const { gameState } = await import('../../src/gameState.js')
     const { applyIntegratedSpriteSheetRuntime } = await import('../../src/ui/mapEditorControls.js')
     gameState.availableStaticSpriteSheets = ['images/map/sprite_sheets/default.webp']
@@ -212,7 +212,7 @@ describe('mapEditorControls integrated sheet selection list', () => {
     expect(mockSetIntegratedSpriteSheetConfig.mock.calls.at(-1)[0].sheets).toEqual([])
   })
 
-  it('adds applied uploaded sheets to the checkbox list and runtime selected sheets', async() => {
+  it('[U02649] adds applied uploaded sheets to the checkbox list and runtime selected sheets', async() => {
     const { initMapEditorControls } = await import('../../src/ui/mapEditorControls.js')
     initMapEditorControls()
 

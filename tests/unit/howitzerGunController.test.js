@@ -41,7 +41,7 @@ describe('howitzerGunController', () => {
   })
 
   describe('initializeHowitzerGun', () => {
-    it('sets initial properties correctly', () => {
+    it('[U02019] sets initial properties correctly', () => {
       initializeHowitzerGun(unit)
 
       expect(unit.barrelElevation).toBe(0)
@@ -61,7 +61,7 @@ describe('howitzerGunController', () => {
       unit.lastBarrelUpdateTime = NOW // Override to use test time
     })
 
-    it('resets gun when there is no target', () => {
+    it('[U02020] resets gun when there is no target', () => {
       // Set gun to some elevated state
       unit.barrelElevation = 0.5
       unit.targetBarrelElevation = 0.5
@@ -74,7 +74,7 @@ describe('howitzerGunController', () => {
       expect(unit.barrelElevation).toBeLessThan(0.5)
     })
 
-    it('calculates desired world angle and elevation when target is present', () => {
+    it('[U02021] calculates desired world angle and elevation when target is present', () => {
       // Target at some distance
       // Unit is at 100, 100. TILE_SIZE is 32. Center is 116, 116.
       // Target at 200, 100. Center is 216, 116.
@@ -105,7 +105,7 @@ describe('howitzerGunController', () => {
       expect(unit.targetBarrelElevation).toBeCloseTo(MAX_ELEVATION_RAD)
     })
 
-    it('updates barrel elevation smoothly over time', () => {
+    it('[U02022] updates barrel elevation smoothly over time', () => {
       unit.target = {
         x: 100 + 400, // +400 pixels East
         y: 100,
@@ -123,7 +123,7 @@ describe('howitzerGunController', () => {
       expect(unit.barrelElevation).toBeTopLessThan(unit.targetBarrelElevation) // But not jump instantly
     })
 
-    it('updates howitzerGunReady correctly based on elevation error', () => {
+    it('[U02023] updates howitzerGunReady correctly based on elevation error', () => {
       unit.direction = 0
       unit.target = { x: 300, y: 100, width: 1, height: 1, health: 100, tileX: 1 } // Target East
       // Desired Angle 0. Unit Direction 0.
@@ -142,7 +142,7 @@ describe('howitzerGunController', () => {
       expect(unit.howitzerGunReady).toBe(false)
     })
 
-    it('sets howitzerMovementLock correctly', () => {
+    it('[U02024] sets howitzerMovementLock correctly', () => {
       // Force moving state
       unit.barrelElevation = 0
       unit.targetBarrelElevation = 1.0 // Big diff
@@ -163,12 +163,12 @@ describe('howitzerGunController', () => {
   })
 
   describe('isHowitzerGunReadyToFire', () => {
-    it('returns true if not howitzer', () => {
+    it('[U02025] returns true if not howitzer', () => {
       expect(isHowitzerGunReadyToFire({ type: 'tank' })).toBe(true)
       expect(isHowitzerGunReadyToFire(null)).toBe(true)
     })
 
-    it('returns the ready state for howitzer', () => {
+    it('[U02026] returns the ready state for howitzer', () => {
       unit.howitzerGunReady = false
       expect(isHowitzerGunReadyToFire(unit)).toBe(false)
 
@@ -178,11 +178,11 @@ describe('howitzerGunController', () => {
   })
 
   describe('getHowitzerLaunchAngle', () => {
-    it('returns unit direction for non-howitzer', () => {
+    it('[U02027] returns unit direction for non-howitzer', () => {
       expect(getHowitzerLaunchAngle({ type: 'tank', direction: 1.2 })).toBe(1.2)
     })
 
-    it('returns barrelWorldAngle for howitzer', () => {
+    it('[U02028] returns barrelWorldAngle for howitzer', () => {
       unit.barrelWorldAngle = 0.5
       expect(getHowitzerLaunchAngle(unit)).toBe(0.5)
     })

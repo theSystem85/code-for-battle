@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 
 test.describe('F22 restored landing recovery', () => {
-  test('rebinds missing-airstrip restored F22 and lands on nearest friendly airstrip', async({ page }) => {
+  test('[E00040] rebinds missing-airstrip restored F22 and lands on nearest friendly airstrip', async({ page }) => {
     test.setTimeout(180000)
 
     await page.addInitScript(() => {

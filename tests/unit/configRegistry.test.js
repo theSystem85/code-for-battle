@@ -23,12 +23,12 @@ describe('configRegistry.js', () => {
   })
 
   describe('configRegistry structure', () => {
-    it('should have valid registry structure', () => {
+    it('[U01048] should have valid registry structure', () => {
       expect(configRegistry).toBeDefined()
       expect(typeof configRegistry).toBe('object')
     })
 
-    it('should have entries with required properties', () => {
+    it('[U01049] should have entries with required properties', () => {
       const entries = Object.values(configRegistry)
       expect(entries.length).toBeGreaterThan(0)
 
@@ -45,7 +45,7 @@ describe('configRegistry.js', () => {
       })
     })
 
-    it('should have valid config types', () => {
+    it('[U01050] should have valid config types', () => {
       const validTypes = ['number', 'boolean', 'string']
       const entries = Object.values(configRegistry)
 
@@ -54,7 +54,7 @@ describe('configRegistry.js', () => {
       })
     })
 
-    it('should have min/max/step for numeric configs', () => {
+    it('[U01051] should have min/max/step for numeric configs', () => {
       const entries = Object.values(configRegistry)
       const numericEntries = entries.filter(e => e.type === 'number' && e.set)
 
@@ -73,7 +73,7 @@ describe('configRegistry.js', () => {
       })
     })
 
-    it('should have known config keys', () => {
+    it('[U01052] should have known config keys', () => {
       const knownKeys = [
         'xpMultiplier',
         'crewKillChance',
@@ -95,28 +95,28 @@ describe('configRegistry.js', () => {
   })
 
   describe('getConfigCategories', () => {
-    it('should return array of category names', () => {
+    it('[U01053] should return array of category names', () => {
       const categories = getConfigCategories()
 
       expect(Array.isArray(categories)).toBe(true)
       expect(categories.length).toBeGreaterThan(0)
     })
 
-    it('should return sorted categories', () => {
+    it('[U01054] should return sorted categories', () => {
       const categories = getConfigCategories()
       const sorted = [...categories].sort()
 
       expect(categories).toEqual(sorted)
     })
 
-    it('should have no duplicate categories', () => {
+    it('[U01055] should have no duplicate categories', () => {
       const categories = getConfigCategories()
       const unique = [...new Set(categories)]
 
       expect(categories).toEqual(unique)
     })
 
-    it('should include known categories', () => {
+    it('[U01056] should include known categories', () => {
       const categories = getConfigCategories()
       const knownCategories = [
         'Game Balance',
@@ -133,7 +133,7 @@ describe('configRegistry.js', () => {
   })
 
   describe('getConfigsByCategory', () => {
-    it('should return configs for valid category', () => {
+    it('[U01057] should return configs for valid category', () => {
       const categories = getConfigCategories()
       const firstCategory = categories[0]
 
@@ -143,7 +143,7 @@ describe('configRegistry.js', () => {
       expect(Object.keys(configs).length).toBeGreaterThan(0)
     })
 
-    it('should return only configs from specified category', () => {
+    it('[U01058] should return only configs from specified category', () => {
       const configs = getConfigsByCategory('Game Balance')
 
       Object.values(configs).forEach(entry => {
@@ -151,20 +151,20 @@ describe('configRegistry.js', () => {
       })
     })
 
-    it('should return empty object for non-existent category', () => {
+    it('[U01059] should return empty object for non-existent category', () => {
       const configs = getConfigsByCategory('NonExistentCategory')
 
       expect(configs).toEqual({})
     })
 
-    it('should return xpMultiplier in Game Balance category', () => {
+    it('[U01060] should return xpMultiplier in Game Balance category', () => {
       const configs = getConfigsByCategory('Game Balance')
 
       expect(configs).toHaveProperty('xpMultiplier')
       expect(configs.xpMultiplier.name).toBe('XP Multiplier')
     })
 
-    it('should return combat configs in Combat category', () => {
+    it('[U01061] should return combat configs in Combat category', () => {
       const configs = getConfigsByCategory('Combat')
 
       expect(Object.keys(configs).length).toBeGreaterThan(0)
@@ -175,26 +175,26 @@ describe('configRegistry.js', () => {
   })
 
   describe('getConfigValue', () => {
-    it('should return value for valid config', () => {
+    it('[U01062] should return value for valid config', () => {
       const value = getConfigValue('xpMultiplier')
 
       expect(value).toBeDefined()
       expect(typeof value).toBe('number')
     })
 
-    it('should return boolean value for boolean configs', () => {
+    it('[U01063] should return boolean value for boolean configs', () => {
       const value = getConfigValue('oreSpreadEnabled')
 
       expect(typeof value).toBe('boolean')
     })
 
-    it('should return null for non-existent config', () => {
+    it('[U01064] should return null for non-existent config', () => {
       const value = getConfigValue('nonExistentConfig')
 
       expect(value).toBeNull()
     })
 
-    it('should call getter function of the config entry', () => {
+    it('[U01065] should call getter function of the config entry', () => {
       const mockEntry = {
         name: 'Test Config',
         description: 'Test',
@@ -213,7 +213,7 @@ describe('configRegistry.js', () => {
       delete configRegistry.testConfig
     })
 
-    it('should return current runtime values', () => {
+    it('[U01066] should return current runtime values', () => {
       const categories = getConfigCategories()
       const firstCategory = categories[0]
       const configs = getConfigsByCategory(firstCategory)
@@ -227,19 +227,19 @@ describe('configRegistry.js', () => {
   })
 
   describe('setConfigValue', () => {
-    it('should return false for non-existent config', () => {
+    it('[U01067] should return false for non-existent config', () => {
       const result = setConfigValue('nonExistentConfig', 100)
 
       expect(result).toBe(false)
     })
 
-    it('should return false for read-only config', () => {
+    it('[U01068] should return false for read-only config', () => {
       const result = setConfigValue('safeRangeEnabled', true)
 
       expect(result).toBe(false)
     })
 
-    it('should call setter function for mutable config', () => {
+    it('[U01069] should call setter function for mutable config', () => {
       const mockSetter = vi.fn()
       const mockEntry = {
         name: 'Test Config',
@@ -263,7 +263,7 @@ describe('configRegistry.js', () => {
       delete configRegistry.testMutableConfig
     })
 
-    it('should handle setter errors gracefully', () => {
+    it('[U01070] should handle setter errors gracefully', () => {
       const mockSetter = vi.fn(() => {
         throw new Error('Setter error')
       })
@@ -287,25 +287,25 @@ describe('configRegistry.js', () => {
   })
 
   describe('isConfigMutable', () => {
-    it('should return true for configs with setter', () => {
+    it('[U01071] should return true for configs with setter', () => {
       const result = isConfigMutable('xpMultiplier')
 
       expect(result).toBe(true)
     })
 
-    it('should return false for read-only configs', () => {
+    it('[U01072] should return false for read-only configs', () => {
       const result = isConfigMutable('safeRangeEnabled')
 
       expect(result).toBe(false)
     })
 
-    it('should return false for non-existent config', () => {
+    it('[U01073] should return false for non-existent config', () => {
       const result = isConfigMutable('nonExistentConfig')
 
       expect(result).toBe(false)
     })
 
-    it('should correctly identify all mutable configs', () => {
+    it('[U01074] should correctly identify all mutable configs', () => {
       const allConfigs = Object.keys(configRegistry)
 
       allConfigs.forEach(configId => {
@@ -322,7 +322,7 @@ describe('configRegistry.js', () => {
   })
 
   describe('config value boundaries', () => {
-    it('should respect numeric config ranges', () => {
+    it('[U01075] should respect numeric config ranges', () => {
       const numericConfigs = Object.entries(configRegistry)
         .filter(([, entry]) => entry.type === 'number' && entry.set)
 
@@ -347,7 +347,7 @@ describe('configRegistry.js', () => {
       })
     })
 
-    it('should have valid step values', () => {
+    it('[U01076] should have valid step values', () => {
       const numericConfigs = Object.entries(configRegistry)
         .filter(([, entry]) => entry.type === 'number' && entry.set)
 
@@ -359,7 +359,7 @@ describe('configRegistry.js', () => {
   })
 
   describe('category consistency', () => {
-    it('should have all configs in valid categories', () => {
+    it('[U01077] should have all configs in valid categories', () => {
       const categories = getConfigCategories()
       const allConfigs = Object.values(configRegistry)
 
@@ -368,7 +368,7 @@ describe('configRegistry.js', () => {
       })
     })
 
-    it('should have balanced category distribution', () => {
+    it('[U01078] should have balanced category distribution', () => {
       const categories = getConfigCategories()
 
       categories.forEach(category => {
@@ -379,7 +379,7 @@ describe('configRegistry.js', () => {
   })
 
   describe('special config types', () => {
-    it('should handle mobile joystick mapping configs', () => {
+    it('[U01079] should handle mobile joystick mapping configs', () => {
       const tankMapping = getConfigValue('mobileTankJoystickMapping')
       const vehicleMapping = getConfigValue('mobileVehicleJoystickMapping')
       const apacheMapping = getConfigValue('mobileApacheJoystickMapping')
@@ -394,7 +394,7 @@ describe('configRegistry.js', () => {
       expect(() => JSON.parse(apacheMapping)).not.toThrow()
     })
 
-    it('should handle boolean configs', () => {
+    it('[U01080] should handle boolean configs', () => {
       const booleanConfigs = Object.entries(configRegistry)
         .filter(([, entry]) => entry.type === 'boolean')
 
@@ -408,7 +408,7 @@ describe('configRegistry.js', () => {
   })
 
   describe('Howitzer configuration group', () => {
-    it('should have all Howitzer configs in Howitzer category', () => {
+    it('[U01081] should have all Howitzer configs in Howitzer category', () => {
       const howitzerConfigs = getConfigsByCategory('Howitzer')
 
       const expectedHowitzerKeys = [
@@ -430,7 +430,7 @@ describe('configRegistry.js', () => {
       })
     })
 
-    it('should have valid Howitzer config values', () => {
+    it('[U01082] should have valid Howitzer config values', () => {
       const howitzerConfigs = getConfigsByCategory('Howitzer')
 
       Object.entries(howitzerConfigs).forEach(([configId, entry]) => {
@@ -445,7 +445,7 @@ describe('configRegistry.js', () => {
   })
 
   describe('config name and description quality', () => {
-    it('should have non-empty names and descriptions', () => {
+    it('[U01083] should have non-empty names and descriptions', () => {
       const allConfigs = Object.values(configRegistry)
 
       allConfigs.forEach(entry => {
@@ -454,7 +454,7 @@ describe('configRegistry.js', () => {
       })
     })
 
-    it('should have descriptive names', () => {
+    it('[U01084] should have descriptive names', () => {
       const allConfigs = Object.values(configRegistry)
 
       allConfigs.forEach(entry => {

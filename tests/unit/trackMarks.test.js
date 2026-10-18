@@ -33,7 +33,7 @@ function addSegment(store, x, birth) {
 }
 
 describe('TrackMarkStore ring buffer', () => {
-  it('evicts the oldest batch when full and keeps chunk counts consistent', () => {
+  it('[U04476] evicts the oldest batch when full and keeps chunk counts consistent', () => {
     const store = new TrackMarkStore(1024)
     store.configureMap(64, 8)
     for (let i = 0; i < 1024; i++) addSegment(store, (i % 2000) + 0.5, i)
@@ -47,7 +47,7 @@ describe('TrackMarkStore ring buffer', () => {
     expect(store.chunkDirty[0]).toBe(1)
   })
 
-  it('rejects marks off the map or without a trackable surface', () => {
+  it('[U04477] rejects marks off the map or without a trackable surface', () => {
     const store = new TrackMarkStore(16)
     store.configureMap(8, 8)
     expect(store.add(TRACK_KIND.segment, -50, -50, -40, -40, 0, 0, TRACK_SURFACE.grass, 0, 8, 4)).toBe(-1)
@@ -62,7 +62,7 @@ describe('fading and memory release', () => {
     trackMarkSettings.fadeDelayS = 10
   })
 
-  it('computes alpha from the delay and removes fully faded marks', () => {
+  it('[U04478] computes alpha from the delay and removes fully faded marks', () => {
     expect(getTrackMarkAlpha(5000)).toBe(1)
     expect(getTrackMarkAlpha(10000 + TRACK_FADE_OUT_MS / 2)).toBeCloseTo(0.5)
     const store = new TrackMarkStore(64)
@@ -81,7 +81,7 @@ describe('fading and memory release', () => {
     expect(store.count).toBe(0)
   })
 
-  it('never expires when fading is off', () => {
+  it('[U04479] never expires when fading is off', () => {
     trackMarkSettings.fade = false
     const store = new TrackMarkStore(8)
     store.configureMap(8, 8)
@@ -93,7 +93,7 @@ describe('fading and memory release', () => {
 })
 
 describe('surface detection', () => {
-  it('maps tiles to surfaces and identifies tracked units', () => {
+  it('[U04480] maps tiles to surfaces and identifies tracked units', () => {
     expect(getTileTrackSurface({ type: 'land', biome: 'sand' })).toBe(TRACK_SURFACE.sand)
     expect(getTileTrackSurface({ type: 'land', biome: 'snow' })).toBe(TRACK_SURFACE.snow)
     expect(getTileTrackSurface({ type: 'land' })).toBe(TRACK_SURFACE.grass)
@@ -123,7 +123,7 @@ describe('emission', () => {
     return t
   }
 
-  it('merges collinear movement into few segments and follows turns', () => {
+  it('[U04481] merges collinear movement into few segments and follows turns', () => {
     const grid = makeGrid(40, 4, () => ({ type: 'land', biome: 'grass' }))
     const store = new TrackMarkStore(256)
     store.configureMap(40, 4)
@@ -143,7 +143,7 @@ describe('emission', () => {
     expect(store.count - before).toBeGreaterThanOrEqual(6)
   })
 
-  it('emits scuff arcs when pivoting in place', () => {
+  it('[U04482] emits scuff arcs when pivoting in place', () => {
     const grid = makeGrid(8, 8, () => ({ type: 'land', biome: 'snow' }))
     const store = new TrackMarkStore(64)
     store.configureMap(8, 8)
@@ -158,7 +158,7 @@ describe('emission', () => {
     expect(store.surface[store.slotAt(0)]).toBe(TRACK_SURFACE.snow)
   })
 
-  it('draws only a short decaying ramp mark on streets', () => {
+  it('[U04483] draws only a short decaying ramp mark on streets', () => {
     // x < 10 tiles: sand, then street
     const grid = makeGrid(40, 4, x => (x < 10 ? { type: 'land', biome: 'sand' } : { type: 'street' }))
     const store = new TrackMarkStore(512)
@@ -182,7 +182,7 @@ describe('emission', () => {
     expect(maxStreetX).toBeLessThan(TILE_SIZE * 14)
   })
 
-  it('skips wheeled units and clears everything when disabled', () => {
+  it('[U04484] skips wheeled units and clears everything when disabled', () => {
     resetTrackMarksForTests()
     const grid = makeGrid(16, 4, () => ({ type: 'land', biome: 'grass' }))
     const tank = { type: 'tank_v1', x: 0, y: 32, direction: 0, health: 100 }

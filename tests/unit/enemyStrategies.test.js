@@ -128,7 +128,7 @@ beforeEach(() => {
 })
 
 describe('enemyStrategies manageAIRepairs', () => {
-  it('queues critical repairs when budget is low', () => {
+  it('[U01392] queues critical repairs when budget is low', () => {
     const now = 50000
     const critical = createBuilding({ id: 'b1', type: 'vehicleFactory', health: 80, maxHealth: 200 })
     const nonCritical = createBuilding({ id: 'b2', type: 'barracks', health: 50, maxHealth: 200 })
@@ -142,7 +142,7 @@ describe('enemyStrategies manageAIRepairs', () => {
     expect(gameState.buildingsAwaitingRepair[0].lastAttackedTime).toBeLessThanOrEqual(now)
   })
 
-  it('skips buildings already awaiting repair', () => {
+  it('[U01393] skips buildings already awaiting repair', () => {
     const building = createBuilding({ id: 'b3', type: 'powerPlant', health: 100, maxHealth: 200 })
     gameState.buildings = [building]
     gameState.buildingsAwaitingRepair = [{ building }]
@@ -152,7 +152,7 @@ describe('enemyStrategies manageAIRepairs', () => {
     expect(gameState.buildingsAwaitingRepair).toHaveLength(1)
   })
 
-  it('skips repairs when repair cost is invalid', () => {
+  it('[U01394] skips repairs when repair cost is invalid', () => {
     const building = createBuilding({ id: 'b4', type: 'powerPlant', health: 120, maxHealth: 200 })
     gameState.buildings = [building]
     calculateRepairCostMock.mockReturnValueOnce(0)
@@ -164,14 +164,14 @@ describe('enemyStrategies manageAIRepairs', () => {
 })
 
 describe('enemyStrategies shouldConductGroupAttack', () => {
-  it('blocks attacks until AI has core infrastructure', () => {
+  it('[U01395] blocks attacks until AI has core infrastructure', () => {
     const unit = createUnit({ owner: 'enemy' })
     const target = { owner: 'player1', type: 'powerPlant', tileX: 10, tileY: 10, x: 10, y: 10, width: 2, height: 2 }
 
     expect(shouldConductGroupAttack(unit, [unit], gameState, target)).toBe(false)
   })
 
-  it('allows harvester strikes even with small group', () => {
+  it('[U01396] allows harvester strikes even with small group', () => {
     gameState.buildings = [
       createBuilding({ owner: 'enemy', type: 'hospital' }),
       createBuilding({ owner: 'enemy', type: 'vehicleFactory' }),
@@ -183,7 +183,7 @@ describe('enemyStrategies shouldConductGroupAttack', () => {
     expect(shouldConductGroupAttack(unit, [unit], gameState, target)).toBe(true)
   })
 
-  it('requires group size when danger is high', () => {
+  it('[U01397] requires group size when danger is high', () => {
     gameState.buildings = [
       createBuilding({ owner: 'enemy', type: 'hospital' }),
       createBuilding({ owner: 'enemy', type: 'vehicleFactory' }),
@@ -199,7 +199,7 @@ describe('enemyStrategies shouldConductGroupAttack', () => {
     expect(shouldConductGroupAttack(unit, [unit], gameState, target)).toBe(false)
   })
 
-  it('allows attack when unit is in player base', () => {
+  it('[U01398] allows attack when unit is in player base', () => {
     gameState.buildings = [
       createBuilding({ owner: 'enemy', type: 'hospital' }),
       createBuilding({ owner: 'enemy', type: 'vehicleFactory' }),
@@ -213,7 +213,7 @@ describe('enemyStrategies shouldConductGroupAttack', () => {
     expect(shouldConductGroupAttack(unit, [unit], gameState, target)).toBe(true)
   })
 
-  it('allows attacks when already in firing range', () => {
+  it('[U01399] allows attacks when already in firing range', () => {
     gameState.buildings = [
       createBuilding({ owner: 'enemy', type: 'hospital' }),
       createBuilding({ owner: 'enemy', type: 'vehicleFactory' }),
@@ -237,12 +237,12 @@ describe('enemyStrategies shouldConductGroupAttack', () => {
 })
 
 describe('enemyStrategies retreat behaviors', () => {
-  it('identifies low health retreat threshold', () => {
+  it('[U01400] identifies low health retreat threshold', () => {
     expect(shouldRetreatLowHealth(createUnit({ health: 20, maxHealth: 100 }))).toBe(true)
     expect(shouldRetreatLowHealth(createUnit({ health: 80, maxHealth: 100 }))).toBe(false)
   })
 
-  it('routes retreating units to base', () => {
+  it('[U01401] routes retreating units to base', () => {
     const unit = createUnit({ tileX: 6, tileY: 6 })
     const mapGrid = createMapGrid(12, 12)
     gameState.buildings = [createBuilding({ owner: 'enemy', type: 'turretGunV1', x: 2, y: 2, width: 2, height: 2 })]
@@ -255,7 +255,7 @@ describe('enemyStrategies retreat behaviors', () => {
     expect(unit.path).toEqual([{ x: 1, y: 1 }])
   })
 
-  it('routes harvester retreat and clears harvest state', () => {
+  it('[U01402] routes harvester retreat and clears harvest state', () => {
     const harvester = createUnit({ type: 'harvester', tileX: 7, tileY: 7, oreField: { id: 'ore' }, harvesting: true })
     const mapGrid = createMapGrid(12, 12)
     gameState.buildings = [createBuilding({ owner: 'enemy', type: 'turretGunV1', x: 2, y: 2, width: 2, height: 2 })]
@@ -268,7 +268,7 @@ describe('enemyStrategies retreat behaviors', () => {
     expect(harvester.harvesting).toBe(false)
   })
 
-  it('stops retreating when safe near base', () => {
+  it('[U01403] stops retreating when safe near base', () => {
     const unit = createUnit({ isRetreating: true, health: 60, maxHealth: 100 })
     gameState.buildings = [createBuilding({ owner: 'enemy', x: 5, y: 5 })]
 
@@ -277,14 +277,14 @@ describe('enemyStrategies retreat behaviors', () => {
 })
 
 describe('enemyStrategies harvester protection', () => {
-  it('detects nearby threats or recent damage', () => {
+  it('[U01404] detects nearby threats or recent damage', () => {
     const harvester = createUnit({ type: 'harvester', x: 100, y: 100, lastDamageTime: performance.now() - 5000 })
     const threats = [createUnit({ owner: 'player1', type: 'tank', x: 110, y: 110 })]
 
     expect(shouldHarvesterSeekProtection(harvester, threats)).toBe(true)
   })
 
-  it('ignores harvesters with no nearby threats', () => {
+  it('[U01405] ignores harvesters with no nearby threats', () => {
     const harvester = createUnit({ type: 'harvester', x: 50, y: 50, lastDamageTime: null })
     const threats = [createUnit({ owner: 'player1', type: 'tank', x: 400, y: 400 })]
 
@@ -293,7 +293,7 @@ describe('enemyStrategies harvester protection', () => {
 })
 
 describe('enemyStrategies applyEnemyStrategies', () => {
-  it('sends retreating units to workshop when safe', () => {
+  it('[U01406] sends retreating units to workshop when safe', () => {
     const unit = createUnit({
       isRetreating: true,
       needsWorkshopRepair: true,
@@ -314,7 +314,7 @@ describe('enemyStrategies applyEnemyStrategies', () => {
 })
 
 describe('enemyStrategies attack coordination', () => {
-  it('assigns rotating directions for solo units', () => {
+  it('[U01407] assigns rotating directions for solo units', () => {
     resetAttackDirections()
     const unit = createUnit({ id: 'solo', owner: 'enemy' })
     gameState.buildings = [createBuilding({ owner: 'player1', type: 'constructionYard', id: 'base' })]
@@ -324,7 +324,7 @@ describe('enemyStrategies attack coordination', () => {
     expect(direction.name).toBe('north')
   })
 
-  it('calculates approach positions on valid tiles', () => {
+  it('[U01408] calculates approach positions on valid tiles', () => {
     const mapGrid = createMapGrid(20, 20)
     mapGrid[5][13].type = 'water'
     gameState.buildings = [createBuilding({ owner: 'player1', type: 'turretGunV2', x: 5, y: 5 })]
@@ -341,7 +341,7 @@ describe('enemyStrategies attack coordination', () => {
     expect(mapGrid[position.y][position.x].type).not.toBe('water')
   })
 
-  it('clears approach positions when reached', () => {
+  it('[U01409] clears approach positions when reached', () => {
     const unit = createUnit({
       allowedToAttack: true,
       approachPosition: { x: 5, y: 5 },
@@ -358,7 +358,7 @@ describe('enemyStrategies attack coordination', () => {
     expect(unit.approachDirection).toBeNull()
   })
 
-  it('recalculates paths while approaching attack positions', () => {
+  it('[U01410] recalculates paths while approaching attack positions', () => {
     const unit = createUnit({
       allowedToAttack: true,
       approachPosition: { x: 8, y: 8 },
@@ -376,7 +376,7 @@ describe('enemyStrategies attack coordination', () => {
     expect(unit.lastAttackPathCalcTime).toBe(12000)
   })
 
-  it('uses global attack points when set', () => {
+  it('[U01411] uses global attack points when set', () => {
     const unit = createUnit({ allowedToAttack: true, tileX: 2, tileY: 2 })
     const mapGrid = createMapGrid(12, 12)
     gameState.globalAttackPoint = { x: 8, y: 8 }
@@ -391,7 +391,7 @@ describe('enemyStrategies attack coordination', () => {
 })
 
 describe('enemyStrategies attack direction state', () => {
-  it('resets attack direction tracking', () => {
+  it('[U01412] resets attack direction tracking', () => {
     resetAttackDirections()
 
     const stats = getAttackDirectionStats()
@@ -402,7 +402,7 @@ describe('enemyStrategies attack direction state', () => {
 })
 
 describe('enemyStrategies crew management', () => {
-  it('requests ambulance support for missing crew', () => {
+  it('[U01413] requests ambulance support for missing crew', () => {
     const unit = createUnit({ owner: 'player2', crew: { driver: true, commander: true, loader: false } })
     const ambulance = createUnit({ owner: 'player2', type: 'ambulance', medics: 4 })
     gameState.buildings = [createBuilding({ owner: 'player2', type: 'hospital' })]
@@ -413,7 +413,7 @@ describe('enemyStrategies crew management', () => {
     expect(ambulance.criticalHealing).toBe(true)
   })
 
-  it('refills ambulances at hospitals', () => {
+  it('[U01414] refills ambulances at hospitals', () => {
     const unit = createUnit({ owner: 'player2', crew: { driver: true, commander: true, loader: false } })
     const ambulance = createUnit({ owner: 'player2', type: 'ambulance', medics: 2, tileX: 2, tileY: 2 })
     const hospital = createBuilding({ owner: 'player2', type: 'hospital', x: 4, y: 4 })
@@ -427,7 +427,7 @@ describe('enemyStrategies crew management', () => {
     expect(ambulance.moveTarget).toEqual({ x: 5 * 32, y: 7 * 32 })
   })
 
-  it('queues ambulance support when all ambulances are busy', () => {
+  it('[U01415] queues ambulance support when all ambulances are busy', () => {
     const unit = createUnit({ owner: 'player2', id: 'unit-queued', crew: { driver: true, commander: true, loader: false } })
     const ambulance = createUnit({ owner: 'player2', type: 'ambulance', medics: 4 })
     ambulance.healingTarget = { id: 'someone-else' }
@@ -440,7 +440,7 @@ describe('enemyStrategies crew management', () => {
     ])
   })
 
-  it('responds to crew loss events', () => {
+  it('[U01416] responds to crew loss events', () => {
     const unit = createUnit({ owner: 'player2', crew: { driver: true, commander: true, loader: false } })
     const ambulance = createUnit({ owner: 'player2', type: 'ambulance', medics: 4 })
 
@@ -451,7 +451,7 @@ describe('enemyStrategies crew management', () => {
 })
 
 describe('enemyStrategies recovery and logistics', () => {
-  it('assigns recovery tanks to closest wrecks', () => {
+  it('[U01417] assigns recovery tanks to closest wrecks', () => {
     const recoveryTank = createUnit({ id: 'tank-1', type: 'recoveryTank', owner: 'player2', tileX: 2, tileY: 2 })
     const wreck = { id: 'wreck-1', tileX: 3, tileY: 3 }
     gameState.unitWrecks = [wreck]
@@ -469,7 +469,7 @@ describe('enemyStrategies recovery and logistics', () => {
     expect(recoveryTank.recoveryTask.wreckId).toBe('wreck-1')
   })
 
-  it('skips recovery commands when handler is unavailable', () => {
+  it('[U01418] skips recovery commands when handler is unavailable', () => {
     const recoveryTank = createUnit({ id: 'tank-2', type: 'recoveryTank', owner: 'player2', tileX: 2, tileY: 2 })
     getUnitCommandsHandlerMock.mockReturnValue(null)
 
@@ -478,7 +478,7 @@ describe('enemyStrategies recovery and logistics', () => {
     expect(recoveryTank.lastRecoveryCommandTime).toBeUndefined()
   })
 
-  it('sends tankers to gas stations when low on fuel', () => {
+  it('[U01419] sends tankers to gas stations when low on fuel', () => {
     const tanker = createUnit({ type: 'tankerTruck', owner: 'player2', tileX: 2, tileY: 2, gas: 5, maxGas: 100 })
     const gasStation = createBuilding({ owner: 'player2', type: 'gasStation', x: 4, y: 4, width: 2, height: 2 })
     gameState.buildings = [gasStation]
@@ -491,7 +491,7 @@ describe('enemyStrategies recovery and logistics', () => {
     expect(tanker.guardTarget).toBeNull()
   })
 
-  it('dispatches tankers to critical units immediately', () => {
+  it('[U01420] dispatches tankers to critical units immediately', () => {
     const tanker = createUnit({ type: 'tankerTruck', owner: 'player2', tileX: 2, tileY: 2, gas: 80, maxGas: 100 })
     const criticalUnit = createUnit({ id: 'critical-1', owner: 'player2', type: 'tank', tileX: 4, tileY: 4, gas: 0, maxGas: 100 })
     const unitCommands = {
@@ -509,7 +509,7 @@ describe('enemyStrategies recovery and logistics', () => {
     expect(tanker.refuelTarget).toBe(criticalUnit)
   })
 
-  it('routes ammo trucks back to factory when low', () => {
+  it('[U01421] routes ammo trucks back to factory when low', () => {
     const truck = createUnit({ type: 'ammunitionTruck', owner: 'player2', tileX: 2, tileY: 2, ammoCargo: 1, maxAmmoCargo: 100 })
     const factory = createBuilding({ owner: 'player2', type: 'ammunitionFactory', x: 4, y: 4, width: 2, height: 2 })
     gameState.buildings = [factory]
@@ -519,7 +519,7 @@ describe('enemyStrategies recovery and logistics', () => {
     expect(truck.moveTarget).toEqual({ x: 5, y: 7 })
   })
 
-  it('leaves empty aircraft to their pad return logic instead of dispatching ground ammo trucks', () => {
+  it('[U01422] leaves empty aircraft to their pad return logic instead of dispatching ground ammo trucks', () => {
     const truck = createUnit({
       id: 'ammo-truck-1',
       type: 'ammunitionTruck',
@@ -547,7 +547,7 @@ describe('enemyStrategies recovery and logistics', () => {
     expect(findPathMock).not.toHaveBeenCalled()
   })
 
-  it('triggers ammo retreats when ammunition is low', () => {
+  it('[U01423] triggers ammo retreats when ammunition is low', () => {
     const unit = createUnit({ owner: 'player2', type: 'tank', tileX: 2, tileY: 2, ammunition: 1, maxAmmunition: 100 })
     const factory = createBuilding({ owner: 'player2', type: 'ammunitionFactory', x: 4, y: 4, width: 2, height: 2 })
     gameState.buildings = [factory]
@@ -558,7 +558,7 @@ describe('enemyStrategies recovery and logistics', () => {
     expect(unit.moveTarget).toEqual({ x: 5, y: 7 })
   })
 
-  it('clears retreat state after ammo refills', () => {
+  it('[U01424] clears retreat state after ammo refills', () => {
     const unit = createUnit({ owner: 'player2', type: 'tank', ammunition: 90, maxAmmunition: 100, retreatingForAmmo: true })
 
     manageAIAmmunitionMonitoring([unit], gameState, createMapGrid(12, 12))
@@ -568,7 +568,7 @@ describe('enemyStrategies recovery and logistics', () => {
 })
 
 describe('enemyStrategies targeting helpers', () => {
-  it('validates AI attack readiness based on buildings', () => {
+  it('[U01425] validates AI attack readiness based on buildings', () => {
     gameState.buildings = [
       createBuilding({ owner: 'enemy', type: 'hospital' }),
       createBuilding({ owner: 'enemy', type: 'vehicleFactory' }),
@@ -578,7 +578,7 @@ describe('enemyStrategies targeting helpers', () => {
     expect(shouldAIStartAttacking('enemy', gameState)).toBe(true)
   })
 
-  it('selects least dangerous attack point near player base', () => {
+  it('[U01426] selects least dangerous attack point near player base', () => {
     const map = Array.from({ length: 5 }, () => Array.from({ length: 5 }, () => 10))
     map[2][2] = 1
     gameState.dangerZoneMaps = { player2: map }
@@ -587,7 +587,7 @@ describe('enemyStrategies targeting helpers', () => {
     expect(computeLeastDangerAttackPoint(gameState, 'player2')).toEqual({ x: 2, y: 2 })
   })
 
-  it('returns null when danger map data is missing', () => {
+  it('[U01427] returns null when danger map data is missing', () => {
     gameState.dangerZoneMaps = {}
     gameState.buildings = [createBuilding({ owner: 'player1' })]
 

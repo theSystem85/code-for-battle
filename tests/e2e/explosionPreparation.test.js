@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test'
 test.use({ deviceScaleFactor: 2 })
 
 for (const fallback of [false, true]) {
-  test(`explosion sheets are ready before combat with ${fallback ? 'startup fallback' : 'worker preparation'}`, async({ page }) => {
+  test(`[E00031] explosion sheets are ready before combat with ${fallback ? 'startup fallback' : 'worker preparation'}`, async({ page }) => {
     const errors = []
     page.on('pageerror', error => errors.push(error.message))
     await page.addInitScript(({ fallback }) => {

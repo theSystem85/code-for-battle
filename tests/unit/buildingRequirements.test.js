@@ -4,7 +4,7 @@ import { getBuildingRequirements, getMissingBuildingRequirements } from '../../s
 const missing = (type, owned) => getMissingBuildingRequirements(type, new Set(owned))
 
 describe('shared sidebar building requirements', () => {
-  it('preserves conditional build-order messages and each phase of base construction', () => {
+  it('[U00568] preserves conditional build-order messages and each phase of base construction', () => {
     expect(missing('oreRefinery', ['constructionYard'])).toEqual(['Power Plant'])
     expect(missing('oreRefinery', ['constructionYard', 'powerPlant'])).toEqual([])
     expect(missing('vehicleFactory', ['constructionYard'])).toEqual(['Power Plant'])
@@ -14,7 +14,7 @@ describe('shared sidebar building requirements', () => {
     expect(missing('hospital', ['constructionYard', 'powerPlant', 'oreRefinery', 'vehicleFactory'])).toEqual([])
   })
 
-  it('preserves radar/factory flags, special yard/street rules and message order', () => {
+  it('[U00569] preserves radar/factory flags, special yard/street rules and message order', () => {
     expect(missing('helipad', ['constructionYard', 'powerPlant', 'oreRefinery', 'vehicleFactory'])).toEqual(['Radar Station'])
     expect(missing('shipyard', [])).toEqual(['Construction Yard', 'Radar Station', 'Vehicle Factory', 'Power Plant'])
     expect(missing('ammunitionFactory', ['constructionYard', 'powerPlant', 'oreRefinery'])).toEqual(['Vehicle Factory'])
@@ -24,7 +24,7 @@ describe('shared sidebar building requirements', () => {
     expect(missing('powerPlant', [])).toEqual(['Construction Yard'])
   })
 
-  it('reuses prepared requirement definitions', () => {
+  it('[U00570] reuses prepared requirement definitions', () => {
     expect(getBuildingRequirements('shipyard')).toBe(getBuildingRequirements('shipyard'))
   })
 })

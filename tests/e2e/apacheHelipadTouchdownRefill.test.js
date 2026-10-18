@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 
 test.describe('Apache helipad touchdown refill gating', () => {
-  test('does not refill on touchdown and only starts rearming after a settled landing stop', async({ page }) => {
+  test('[E00004] does not refill on touchdown and only starts rearming after a settled landing stop', async({ page }) => {
     test.setTimeout(120000)
 
     await page.addInitScript(() => {

@@ -29,27 +29,27 @@ describe('isHeadlessAudioMuted', () => {
     delete globalThis.__PLAYWRIGHT_MUTE_AUDIO__
   })
 
-  it('returns true for automated headless chrome', () => {
+  it('[U01899] returns true for automated headless chrome', () => {
     setNavigatorValue('webdriver', true)
     setNavigatorValue('userAgent', 'Mozilla/5.0 HeadlessChrome/124.0.0.0 Safari/537.36')
 
     expect(isHeadlessAudioMuted()).toBe(true)
   })
 
-  it('returns false for non-headless browsers', () => {
+  it('[U01900] returns false for non-headless browsers', () => {
     setNavigatorValue('webdriver', false)
     setNavigatorValue('userAgent', 'Mozilla/5.0 Chrome/124.0.0.0 Safari/537.36')
 
     expect(isHeadlessAudioMuted()).toBe(false)
   })
 
-  it('supports an explicit global mute override', () => {
+  it('[U01901] supports an explicit global mute override', () => {
     globalThis.__PLAYWRIGHT_MUTE_AUDIO__ = true
 
     expect(isHeadlessAudioMuted()).toBe(true)
   })
 
-  it('supports an explicit Vite env mute flag', () => {
+  it('[U01902] supports an explicit Vite env mute flag', () => {
     const previousValue = import.meta.env.VITE_HEADLESS_E2E_MUTE_AUDIO
     import.meta.env.VITE_HEADLESS_E2E_MUTE_AUDIO = '1'
 

@@ -31,52 +31,52 @@ describe('enemyUtils', () => {
   })
 
   describe('areEnemies', () => {
-    it('should return true when players are different', () => {
+    it('[U01460] should return true when players are different', () => {
       expect(areEnemies('player1', 'player2')).toBe(true)
     })
 
-    it('should return false when players are the same', () => {
+    it('[U01461] should return false when players are the same', () => {
       expect(areEnemies('player1', 'player1')).toBe(false)
     })
 
-    it('should treat null/undefined players as non-hostile', () => {
+    it('[U01462] should treat null/undefined players as non-hostile', () => {
       expect(areEnemies(null, 'player1')).toBe(false)
       expect(areEnemies('player1', null)).toBe(false)
       expect(areEnemies(null, null)).toBe(false)
       expect(areEnemies(undefined, undefined)).toBe(false)
     })
 
-    it('should treat empty strings as same player', () => {
+    it('[U01463] should treat empty strings as same player', () => {
       expect(areEnemies('', '')).toBe(false)
     })
   })
 
   describe('getEnemyPlayers', () => {
-    it('should return all other players for player1 in 2-player game', () => {
+    it('[U01464] should return all other players for player1 in 2-player game', () => {
       gameState.playerCount = 2
       const enemies = getEnemyPlayers('player1')
       expect(enemies).toEqual(['player2'])
     })
 
-    it('should return all other players for player2 in 2-player game', () => {
+    it('[U01465] should return all other players for player2 in 2-player game', () => {
       gameState.playerCount = 2
       const enemies = getEnemyPlayers('player2')
       expect(enemies).toEqual(['player1'])
     })
 
-    it('should return multiple enemies in 4-player game', () => {
+    it('[U01466] should return multiple enemies in 4-player game', () => {
       gameState.playerCount = 4
       const enemies = getEnemyPlayers('player1')
       expect(enemies).toEqual(['player2', 'player3', 'player4'])
     })
 
-    it('should handle 3-player game', () => {
+    it('[U01467] should handle 3-player game', () => {
       gameState.playerCount = 3
       const enemies = getEnemyPlayers('player2')
       expect(enemies).toEqual(['player1', 'player3'])
     })
 
-    it('should default to 2 players when playerCount is undefined', () => {
+    it('[U01468] should default to 2 players when playerCount is undefined', () => {
       gameState.playerCount = undefined
       const enemies = getEnemyPlayers('player1')
       expect(enemies).toEqual(['player2'])
@@ -84,17 +84,17 @@ describe('enemyUtils', () => {
   })
 
   describe('isEnemyTo', () => {
-    it('should return true when unit belongs to different player', () => {
+    it('[U01469] should return true when unit belongs to different player', () => {
       const unit = { owner: 'player2' }
       expect(isEnemyTo(unit, 'player1')).toBe(true)
     })
 
-    it('should return false when unit belongs to same player', () => {
+    it('[U01470] should return false when unit belongs to same player', () => {
       const unit = { owner: 'player1' }
       expect(isEnemyTo(unit, 'player1')).toBe(false)
     })
 
-    it('should treat units without owner property as non-hostile', () => {
+    it('[U01471] should treat units without owner property as non-hostile', () => {
       const unit = {}
       expect(isEnemyTo(unit, 'player1')).toBe(false)
     })
@@ -114,20 +114,20 @@ describe('enemyUtils', () => {
       height
     })
 
-    it('should return null when factories is undefined', () => {
+    it('[U01472] should return null when factories is undefined', () => {
       const unit = createUnit(10, 10)
       const result = getClosestEnemyFactory(unit, undefined, 'player1')
       expect(result).toBeNull()
       expect(window.logger.warn).toHaveBeenCalled()
     })
 
-    it('should return null when factories is not an array', () => {
+    it('[U01473] should return null when factories is not an array', () => {
       const unit = createUnit(10, 10)
       const result = getClosestEnemyFactory(unit, 'not-an-array', 'player1')
       expect(result).toBeNull()
     })
 
-    it('should return null when no enemy factories exist', () => {
+    it('[U01474] should return null when no enemy factories exist', () => {
       const unit = createUnit(10, 10)
       const factories = [
         createFactory('player1', 5, 5)
@@ -136,7 +136,7 @@ describe('enemyUtils', () => {
       expect(result).toBeNull()
     })
 
-    it('should return the closest enemy factory', () => {
+    it('[U01475] should return the closest enemy factory', () => {
       const unit = createUnit(10, 10)
       const factories = [
         createFactory('player2', 50, 50), // Far
@@ -147,7 +147,7 @@ describe('enemyUtils', () => {
       expect(result).toEqual(factories[1])
     })
 
-    it('should ignore friendly factories', () => {
+    it('[U01476] should ignore friendly factories', () => {
       const unit = createUnit(10, 10)
       const factories = [
         createFactory('player1', 11, 11), // Very close but friendly
@@ -157,13 +157,13 @@ describe('enemyUtils', () => {
       expect(result).toEqual(factories[1])
     })
 
-    it('should handle empty factories array', () => {
+    it('[U01477] should handle empty factories array', () => {
       const unit = createUnit(10, 10)
       const result = getClosestEnemyFactory(unit, [], 'player1')
       expect(result).toBeNull()
     })
 
-    it('should calculate distance from factory center', () => {
+    it('[U01478] should calculate distance from factory center', () => {
       const unit = createUnit(0, 0)
       const factories = [
         createFactory('player2', 10, 10, 2, 2), // Center at (11, 11)
@@ -182,45 +182,45 @@ describe('enemyUtils', () => {
       height
     })
 
-    it('should return true when position is inside factory', () => {
+    it('[U01479] should return true when position is inside factory', () => {
       const factories = [createFactory(10, 10, 3, 3)]
       expect(isPartOfFactory(11, 11, factories)).toBe(true)
     })
 
-    it('should return true at factory origin', () => {
+    it('[U01480] should return true at factory origin', () => {
       const factories = [createFactory(10, 10, 3, 3)]
       expect(isPartOfFactory(10, 10, factories)).toBe(true)
     })
 
-    it('should return true at factory edge', () => {
+    it('[U01481] should return true at factory edge', () => {
       const factories = [createFactory(10, 10, 3, 3)]
       expect(isPartOfFactory(12, 12, factories)).toBe(true)
     })
 
-    it('should return false outside factory bounds', () => {
+    it('[U01482] should return false outside factory bounds', () => {
       const factories = [createFactory(10, 10, 3, 3)]
       expect(isPartOfFactory(13, 13, factories)).toBe(false)
     })
 
-    it('should return false just outside factory', () => {
+    it('[U01483] should return false just outside factory', () => {
       const factories = [createFactory(10, 10, 3, 3)]
       expect(isPartOfFactory(9, 10, factories)).toBe(false)
       expect(isPartOfFactory(10, 9, factories)).toBe(false)
     })
 
-    it('should return false when factories is undefined', () => {
+    it('[U01484] should return false when factories is undefined', () => {
       expect(isPartOfFactory(10, 10, undefined)).toBe(false)
     })
 
-    it('should return false when factories is null', () => {
+    it('[U01485] should return false when factories is null', () => {
       expect(isPartOfFactory(10, 10, null)).toBe(false)
     })
 
-    it('should return false for empty factories array', () => {
+    it('[U01486] should return false for empty factories array', () => {
       expect(isPartOfFactory(10, 10, [])).toBe(false)
     })
 
-    it('should check against multiple factories', () => {
+    it('[U01487] should check against multiple factories', () => {
       const factories = [
         createFactory(0, 0, 3, 3),
         createFactory(50, 50, 3, 3)
@@ -229,7 +229,7 @@ describe('enemyUtils', () => {
       expect(isPartOfFactory(25, 25, factories)).toBe(false)
     })
 
-    it('should handle factories with different dimensions', () => {
+    it('[U01488] should handle factories with different dimensions', () => {
       const factories = [createFactory(10, 10, 5, 2)]
       expect(isPartOfFactory(14, 10, factories)).toBe(true)
       expect(isPartOfFactory(14, 12, factories)).toBe(false)

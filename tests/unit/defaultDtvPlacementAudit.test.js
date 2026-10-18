@@ -6,7 +6,7 @@ const BIOMES = ['grass', 'soil', 'sand', 'snow', 'universal']
 const CATEGORIES = ['trees', 'shrubs', 'rocks', 'stones', 'farm', 'landmark', 'ruins', 'roadside', 'rare', 'shore', 'ground_detail', 'city', 'decorative']
 
 describe('default dtv generator catalog', () => {
-  it('gives every tile and multi-tile group a generator placement path', () => {
+  it('[U01220] gives every tile and multi-tile group a generator placement path', () => {
     const offenders = []
     for (const sheetPath of DEFAULT_SSE_SHEETS.filter(path => /\/dtv[23]_/.test(path))) {
       const metadata = JSON.parse(readFileSync(`public/${sheetPath.replace('.webp', '.json')}`, 'utf8'))

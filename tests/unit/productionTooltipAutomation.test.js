@@ -44,7 +44,7 @@ describe('production tooltip: automation status per unit', () => {
 
   const chip = id => document.querySelector(`[data-unit-id="${id}"] .production-tooltip__automation`)
 
-  it('shows in-control, waiting and manual status on each live unit row', () => {
+  it('[U03583] shows in-control, waiting and manual status on each live unit row', () => {
     expect(chip('a').dataset.automation).toBe('controlling')
     expect(chip('a').textContent).toContain('⚡')
     expect(chip('b').dataset.automation).toBe('enabled')
@@ -52,13 +52,13 @@ describe('production tooltip: automation status per unit', () => {
     expect(chip('c').dataset.automation).toBe('none')
   })
 
-  it('marks wrecks as inactive', () => {
+  it('[U03584] marks wrecks as inactive', () => {
     const wreckChip = document.querySelector('[data-wreck-id="w1"] .production-tooltip__automation')
     expect(wreckChip.dataset.automation).toBe('none')
     expect(wreckChip.textContent).toContain('inactive')
   })
 
-  it('refreshes the status in place while the panel is open', () => {
+  it('[U03585] refreshes the status in place while the panel is open', () => {
     const before = chip('c')
     gameState.units[2].policyBindings = [{ policyId: 'p1', active: true }]
     vi.advanceTimersByTime(tooltip.AUTOMATION_REFRESH_MS + 10)
@@ -66,7 +66,7 @@ describe('production tooltip: automation status per unit', () => {
     expect(chip('c').dataset.automation).toBe('controlling')
   })
 
-  it('uses no native title attributes', () => {
+  it('[U03586] uses no native title attributes', () => {
     expect(document.querySelectorAll('#productionTooltip [title]').length).toBe(0)
   })
 })

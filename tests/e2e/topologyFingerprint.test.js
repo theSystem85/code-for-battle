@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 
-test('applied optional sheet tags regenerate topology with the same seed', async({ page }) => {
+test('[E00124] applied optional sheet tags regenerate topology with the same seed', async({ page }) => {
   await page.goto('/')
   await page.waitForFunction(() => window.gameState?.mapGrid?.length > 0)
   const result = await page.evaluate(async() => {

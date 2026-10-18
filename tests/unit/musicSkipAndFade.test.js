@@ -20,7 +20,7 @@ FakeAudio.instances = []
 const flush = () => new Promise(resolve => setTimeout(resolve, 0))
 
 describe('music skip order', () => {
-  it('walks all five tracks in a fixed order and wraps around', () => {
+  it('[U03122] walks all five tracks in a fixed order and wraps around', () => {
     expect(MUSIC_SKIP_ORDER).toEqual([
       'music01.mp3', 'music02.mp3', 'music_attack_motivational.mp3',
       'music_under_attack_danger.mp3', 'music_defeat_sad.mp3'
@@ -48,7 +48,7 @@ describe('music skip, tooltip and fade', () => {
     vi.unstubAllGlobals()
   })
 
-  it('fades over the full 3 s with a gradual, monotonic curve', () => {
+  it('[U03123] fades over the full 3 s with a gradual, monotonic curve', () => {
     expect(sound.MUSIC_FADE_OUT_MS).toBe(3000)
     const samples = Array.from({ length: 31 }, (_, i) => sound.musicFadeGain(i / 30))
     expect(samples[0]).toBe(1)
@@ -59,7 +59,7 @@ describe('music skip, tooltip and fade', () => {
     expect(sound.musicFadeGain(0.9)).toBeLessThan(0.02)
   })
 
-  it('keeps the old track audible for the whole fade before a mood change', async() => {
+  it('[U03124] keeps the old track audible for the whole fade before a mood change', async() => {
     await sound.toggleBackgroundMusic()
     await flush()
     const normal = sound.bgMusicAudio
@@ -76,7 +76,7 @@ describe('music skip, tooltip and fade', () => {
     expect(normal.paused).toBe(true)
   })
 
-  it('skips in order with a fade, plays the manual pick once, then resumes the mood', async() => {
+  it('[U03125] skips in order with a fade, plays the manual pick once, then resumes the mood', async() => {
     await sound.toggleBackgroundMusic()
     await flush()
     expect(sound.bgMusicAudio.src).toBe('sound/music/music01.mp3')
@@ -99,7 +99,7 @@ describe('music skip, tooltip and fade', () => {
     expect(sound.bgMusicAudio.paused).toBe(false)
   })
 
-  it('turns music on when next is pressed while music is off', async() => {
+  it('[U03126] turns music on when next is pressed while music is off', async() => {
     expect(sound.getMusicTooltipText('toggle')).toBe('Music off')
     await sound.skipToNextMusic()
     await flush()

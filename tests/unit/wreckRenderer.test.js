@@ -114,7 +114,7 @@ describe('WreckRenderer workshop restoration previews', () => {
     mockGetCachedPreparedSingleImageWreckSprite.mockClear()
   })
 
-  it('uses the F22 wreck sprite and rotates restored wrecks by 45 degrees', () => {
+  it('[U05169] uses the F22 wreck sprite and rotates restored wrecks by 45 degrees', () => {
     const renderer = new WreckRenderer()
 
     const f22Ctx = createMockContext()
@@ -147,7 +147,7 @@ describe('WreckRenderer workshop restoration previews', () => {
     expect(harvesterCtx.rotateCalls[0]).toBeCloseTo(Math.PI / 4)
   })
 
-  it('renders a lateral sinking mode by progressively cropping from the selected side', () => {
+  it('[U05170] renders a lateral sinking mode by progressively cropping from the selected side', () => {
     mockGameState.simulationTime = 3000
     const renderer = new WreckRenderer()
     const ctx = createMockContext()
@@ -165,7 +165,7 @@ describe('WreckRenderer workshop restoration previews', () => {
     expect(ctx.drawImageArgs[0][3]).toBeLessThan(109)
   })
 
-  it('renders front-down sinking by progressively cropping the south-facing bow', () => {
+  it('[U05171] renders front-down sinking by progressively cropping the south-facing bow', () => {
     mockGameState.simulationTime = 3000
     const renderer = new WreckRenderer()
     const ctx = createMockContext()
@@ -183,7 +183,7 @@ describe('WreckRenderer workshop restoration previews', () => {
     expect(ctx.drawImageArgs[0][4]).toBeLessThan(256)
   })
 
-  it('culls distant wrecks with expanded bounds before drawing', () => {
+  it('[U05172] culls distant wrecks with expanded bounds before drawing', () => {
     const renderer = new WreckRenderer()
     const ctx = {
       ...createMockContext(),

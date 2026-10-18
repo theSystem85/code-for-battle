@@ -137,7 +137,7 @@ describe('buildingRepairHandler.js', () => {
   })
 
   describe('Repair Mode - Building Detection', () => {
-    it('should do nothing when repair mode is not active', () => {
+    it('[U00551] should do nothing when repair mode is not active', () => {
       gameState.repairMode = false
       const building = createTestBuilding('powerPlant', 10, 10, 'player1', mapGrid)
       building.health = 200 // Damaged
@@ -149,7 +149,7 @@ describe('buildingRepairHandler.js', () => {
       expect(showNotification).not.toHaveBeenCalled()
     })
 
-    it('should show notification when no building found at click location', () => {
+    it('[U00552] should show notification when no building found at click location', () => {
       gameState.repairMode = true
 
       const event = createClickEvent(25, 25) // Empty location
@@ -158,7 +158,7 @@ describe('buildingRepairHandler.js', () => {
       expect(showNotification).toHaveBeenCalledWith('No player building found to repair.')
     })
 
-    it('should not repair enemy buildings', () => {
+    it('[U00553] should not repair enemy buildings', () => {
       gameState.repairMode = true
       const enemyBuilding = createTestBuilding('powerPlant', 10, 10, 'enemy', mapGrid)
       enemyBuilding.health = 200
@@ -170,7 +170,7 @@ describe('buildingRepairHandler.js', () => {
       expect(showNotification).toHaveBeenCalledWith('No player building found to repair.')
     })
 
-    it('should detect player building within its bounds', () => {
+    it('[U00554] should detect player building within its bounds', () => {
       gameState.repairMode = true
       const building = createTestBuilding('powerPlant', 10, 10, 'player1', mapGrid)
       building.health = 200
@@ -187,7 +187,7 @@ describe('buildingRepairHandler.js', () => {
   })
 
   describe('Repair Mode - Full Health Buildings', () => {
-    it('should not repair buildings at full health', () => {
+    it('[U00555] should not repair buildings at full health', () => {
       gameState.repairMode = true
       const building = createTestBuilding('powerPlant', 10, 10, 'player1', mapGrid)
       building.health = 300
@@ -202,7 +202,7 @@ describe('buildingRepairHandler.js', () => {
   })
 
   describe('Repair Mode - Concrete Walls', () => {
-    it('should not allow repairing concrete walls', () => {
+    it('[U00556] should not allow repairing concrete walls', () => {
       gameState.repairMode = true
       const wall = createTestBuilding('concreteWall', 10, 10, 'player1', mapGrid)
       wall.type = 'concreteWall'
@@ -218,7 +218,7 @@ describe('buildingRepairHandler.js', () => {
   })
 
   describe('Repair Mode - Repair Initiation', () => {
-    it('should add building to awaiting repair list', () => {
+    it('[U00557] should add building to awaiting repair list', () => {
       gameState.repairMode = true
       const building = createTestBuilding('powerPlant', 10, 10, 'player1', mapGrid)
       building.health = 200
@@ -234,7 +234,7 @@ describe('buildingRepairHandler.js', () => {
       expect(gameState.buildingsAwaitingRepair[0].healthToRepair).toBe(100)
     })
 
-    it('should calculate repair cost correctly', () => {
+    it('[U00558] should calculate repair cost correctly', () => {
       gameState.repairMode = true
       const building = createTestBuilding('powerPlant', 10, 10, 'player1', mapGrid)
       building.health = 200
@@ -247,7 +247,7 @@ describe('buildingRepairHandler.js', () => {
       expect(calculateRepairCost).toHaveBeenCalledWith(building)
     })
 
-    it('should not add building already in awaiting repair list', () => {
+    it('[U00559] should not add building already in awaiting repair list', () => {
       gameState.repairMode = true
       const building = createTestBuilding('powerPlant', 10, 10, 'player1', mapGrid)
       building.health = 200
@@ -266,7 +266,7 @@ describe('buildingRepairHandler.js', () => {
   })
 
   describe('Repair Mode - Under Attack Cooldown', () => {
-    it('should delay repair if building was attacked within 10 seconds', () => {
+    it('[U00560] should delay repair if building was attacked within 10 seconds', () => {
       gameState.repairMode = true
       const building = createTestBuilding('powerPlant', 10, 10, 'player1', mapGrid)
       building.health = 200
@@ -282,7 +282,7 @@ describe('buildingRepairHandler.js', () => {
       expect(showNotification).toHaveBeenCalledWith(expect.stringContaining('waiting'))
     })
 
-    it('should allow immediate repair if building was attacked over 10 seconds ago', () => {
+    it('[U00561] should allow immediate repair if building was attacked over 10 seconds ago', () => {
       gameState.repairMode = true
       const building = createTestBuilding('powerPlant', 10, 10, 'player1', mapGrid)
       building.health = 200
@@ -299,7 +299,7 @@ describe('buildingRepairHandler.js', () => {
   })
 
   describe('Repair Mode - Cancellation', () => {
-    it('should cancel repair if building is already under repair', () => {
+    it('[U00562] should cancel repair if building is already under repair', () => {
       gameState.repairMode = true
       const building = createTestBuilding('powerPlant', 10, 10, 'player1', mapGrid)
       building.health = 200
@@ -320,7 +320,7 @@ describe('buildingRepairHandler.js', () => {
       expect(playSound).toHaveBeenCalledWith('repairCancelled', 1.0, 0, true)
     })
 
-    it('should call updateMoneyBar after cancellation refund', () => {
+    it('[U00563] should call updateMoneyBar after cancellation refund', () => {
       gameState.repairMode = true
       const building = createTestBuilding('powerPlant', 10, 10, 'player1', mapGrid)
       building.health = 200
@@ -337,7 +337,7 @@ describe('buildingRepairHandler.js', () => {
   })
 
   describe('Scroll Offset Handling', () => {
-    it('should correctly account for scroll offset when detecting buildings', () => {
+    it('[U00564] should correctly account for scroll offset when detecting buildings', () => {
       gameState.repairMode = true
       // Test with no scroll offset (simpler case)
       gameState.scrollOffset = { x: 0, y: 0 }
@@ -356,7 +356,7 @@ describe('buildingRepairHandler.js', () => {
   })
 
   describe('Multiple Buildings', () => {
-    it('should repair the first matching building found', () => {
+    it('[U00565] should repair the first matching building found', () => {
       gameState.repairMode = true
 
       const building1 = createTestBuilding('powerPlant', 10, 10, 'player1', mapGrid)
@@ -380,7 +380,7 @@ describe('buildingRepairHandler.js', () => {
   })
 
   describe('Edge Cases', () => {
-    it('should initialize buildingsAwaitingRepair array if undefined', () => {
+    it('[U00566] should initialize buildingsAwaitingRepair array if undefined', () => {
       gameState.repairMode = true
       gameState.buildingsAwaitingRepair = undefined
 
@@ -395,7 +395,7 @@ describe('buildingRepairHandler.js', () => {
       expect(Array.isArray(gameState.buildingsAwaitingRepair)).toBe(true)
     })
 
-    it('should handle buildings with zero lastAttackedTime', () => {
+    it('[U00567] should handle buildings with zero lastAttackedTime', () => {
       gameState.repairMode = true
       const building = createTestBuilding('powerPlant', 10, 10, 'player1', mapGrid)
       building.health = 200

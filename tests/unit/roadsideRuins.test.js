@@ -13,7 +13,7 @@ function group(id, tags = [], width = 1, height = width) {
 const anchors = layout => layout.cells.filter(cell => cell && cell.offsetX === 0 && cell.offsetY === 0)
 
 describe('roadside, ruins and rare props', () => {
-  it('places roadside props only directly next to roads, sparsely and deterministically', () => {
+  it('[U03836] places roadside props only directly next to roads, sparsely and deterministically', () => {
     const map = grid()
     for (let i = 0; i < 96; i++) { map[48][i].type = 'street'; map[i][20].type = 'street' }
     const pools = buildDecorationPools([group('wreck', ['roadside', 'passable']), group('barrels', ['roadside', 'passable']), group('bush', ['trees', 'passable'])])
@@ -28,7 +28,7 @@ describe('roadside, ruins and rare props', () => {
     expect(anchors(again).map(c => `${c.anchorX},${c.anchorY}`)).toEqual(anchors(layout).map(c => `${c.anchorX},${c.anchorY}`))
   })
 
-  it('places a rare prop at most once per map', () => {
+  it('[U03837] places a rare prop at most once per map', () => {
     const map = grid(128)
     const pools = buildDecorationPools([group('tower', ['ruins', 'rare', 'impassable']), group('wall', ['ruins', 'impassable'])])
     const layout = buildDecorationLayout(map, pools, { salt: 3, ruinSeeds: 6, ruinClusterSize: 12, citySeeds: 0 })
@@ -38,7 +38,7 @@ describe('roadside, ruins and rare props', () => {
     expect(walls.length).toBeGreaterThan(towers.length)
   })
 
-  it('retags dtv2_universal into ruins plus roadside, with the water tower and fuel depot rare', () => {
+  it('[U03838] retags dtv2_universal into ruins plus roadside, with the water tower and fuel depot rare', () => {
     const sheet = JSON.parse(readFileSync('public/images/map/sprite_sheets/dtv2_universal.json', 'utf8'))
     const byId = Object.fromEntries(sheet.propLayout.map(prop => [prop.id, prop.tags]))
     for (const tags of Object.values(byId)) expect(tags.includes('ruins') !== tags.includes('roadside')).toBe(true)

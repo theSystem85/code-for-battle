@@ -38,7 +38,7 @@ The repository has two long-lived branches: `main` (production, https://code-for
 
 There is no CI on `dev` and deploys are not gated, so the agent that pushes is the safety net. Before **every** push (any branch, both modes) run locally and fix all failures:
 
-1. `npm run lint`
+1. `npm run lint` (ESLint plus the test ID check)
 2. `npm run test` (unit and integration tests)
 3. `npm run test:e2e` (Playwright, Chromium). If the full suite cannot run in your environment, run the e2e tests that cover the changed area and say exactly what was skipped in the PR description.
 
@@ -85,6 +85,20 @@ The shown version is computed with semver from `package.json` plus the unrelease
 Classify entries the same way as `docs/changes/` notes: a bug is something broken or contrary to intended behaviour, an improvement is polish of something that exists, a feature is a new capability.
 
 The app bundles the released files and the unreleased entries for offline access and uses the same release-digest component in the loading screen and User Manual (`src/ui/releaseDigest.js`): unreleased entries count as part of the current build version. Loading prioritizes features, displays only improvement/bugfix counts when features exist, and falls back to improvement/bugfix descriptions when there are no new features. These entries are required in addition to `docs/changes/`, specs, and prompt history.
+
+## Test IDs
+
+Every test has a stable ID at the start of its title: `U00001` style for unit and integration tests (`tests/unit`, `tests/integration`) and `E00001` style for Playwright e2e tests (`tests/e2e`), always a letter plus five digits with leading zeros, in square brackets followed by a space:
+
+```js
+it('[U00042] clears track marks on restart', () => { ... })
+test('[E00007] skirmish map loads', async({ page }) => { ... })
+```
+
+- Write new tests without an ID, then run `npm run test:ids:assign`. It gives every declaration without an ID the next free number. Never renumber or reuse IDs; a deleted test retires its ID.
+- `npm run lint` runs `npm run test:ids`, which fails on missing, malformed, wrong-prefix or duplicate IDs.
+- An ID belongs to the source declaration, so `it.each` or a test declared in a loop shares one ID across its cases.
+- `npm run test:ids:list -- <path or substring> [--markdown|--json]` prints the IDs per test file, for the test plan table. Run a single test with `npx vitest run -t U00042` or `npx playwright test -g E00007`.
 
 ## Pull request descriptions
 

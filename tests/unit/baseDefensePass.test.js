@@ -20,7 +20,7 @@ const makeState = () => ({ buildings: [{ owner: 'player2', x: 5, y: 5, width: 1,
 afterEach(endBaseDefensePass)
 
 describe('AI base defense player pass', () => {
-  it('fills only the required defenders as decisions change within the same pass', () => {
+  it('[U00329] fills only the required defenders as decisions change within the same pass', () => {
     const threat = makeUnit('threat', 'player1', 6)
     const defenders = Array.from({ length: 4 }, (_, index) => makeUnit(`d${index}`, 'player2', 7 + index))
     const units = [threat, ...defenders]
@@ -35,7 +35,7 @@ describe('AI base defense player pass', () => {
     expect(defenders.filter(unit => unit.defendingBase)).toHaveLength(2)
   })
 
-  it('separates airborne threats by the defending weapon and keeps target tie order', () => {
+  it('[U00330] separates airborne threats by the defending weapon and keeps target tie order', () => {
     const tank = makeUnit('tank', 'player2', 5)
     const rocket = makeUnit('rocket', 'player2', 5, 'rocketTank')
     const apache = { ...makeUnit('air', 'player1', 6, 'apache'), flightState: 'airborne' }
@@ -54,7 +54,7 @@ describe('AI base defense player pass', () => {
     expect(findBaseDefenseTarget(tank, tiedUnits, state, 'player2')).toBe(first)
   })
 
-  it('refreshes moved threats and destroyed buildings on the next pass', () => {
+  it('[U00331] refreshes moved threats and destroyed buildings on the next pass', () => {
     const tank = makeUnit('tank', 'player2', 5)
     const threat = makeUnit('threat', 'player1', 6)
     const units = [tank, threat]
@@ -72,7 +72,7 @@ describe('AI base defense player pass', () => {
     expect(findBaseDefenseTarget(tank, units, state, 'player2')).toBeNull()
   })
 
-  it('does not scan buildings or all units again for each defender', () => {
+  it('[U00332] does not scan buildings or all units again for each defender', () => {
     const tank = makeUnit('tank', 'player2', 5)
     const threat = makeUnit('threat', 'player1', 6)
     const units = [tank, threat]

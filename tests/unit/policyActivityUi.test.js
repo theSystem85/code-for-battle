@@ -35,7 +35,7 @@ describe('policy activity UI', () => {
     gameState.units = []
   })
 
-  it('shows enabled and in-control counts on each policy card and keeps them fresh', async() => {
+  it('[U03325] shows enabled and in-control counts on each policy card and keeps them fresh', async() => {
     const panel = await import('../../src/ui/policies/policyPanel.js')
     panel.installPolicyPanel()
     panel.openPolicyPanel()
@@ -52,7 +52,7 @@ describe('policy activity UI', () => {
     expect(card.querySelector('[data-role="active-count"]').textContent).toBe('2')
   })
 
-  it('uses custom tooltips only: no native title attribute anywhere in the panel', async() => {
+  it('[U03326] uses custom tooltips only: no native title attribute anywhere in the panel', async() => {
     const panel = await import('../../src/ui/policies/policyPanel.js')
     panel.installPolicyPanel()
     panel.openPolicyPanel()

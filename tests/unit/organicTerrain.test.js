@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { BLOB_MASKS, biomeTransitionCoverage, normalizeBlobMask, terrainMask, terrainHash, OrganicTerrain, roadVisualMask, roadFringeMask, isCliffChain, cliffConnections, cliffVariant, getSotDrawBounds } from '../../src/rendering/organicTerrain.js'
 
 describe('organic terrain topology', () => {
-  it('publishes terrain readiness once after every required asset has decoded', async() => {
+  it('[U03197] publishes terrain readiness once after every required asset has decoded', async() => {
     const ready = vi.fn()
     const resolvers = new Map()
     const terrain = new OrganicTerrain(ready, null, {
@@ -23,7 +23,7 @@ describe('organic terrain topology', () => {
     expect(ready).toHaveBeenCalledOnce()
   })
 
-  it('covers all 256 neighborhoods with exactly 47 canonical masks', () => {
+  it('[U03198] covers all 256 neighborhoods with exactly 47 canonical masks', () => {
     expect(BLOB_MASKS).toHaveLength(47)
     for (let mask = 0; mask < 256; mask++) {
       const result = normalizeBlobMask(mask)
@@ -34,7 +34,7 @@ describe('organic terrain topology', () => {
       }
     }
   })
-  it('does not connect diagonals across missing sides or runways', () => {
+  it('[U03199] does not connect diagonals across missing sides or runways', () => {
     const grid = Array.from({ length: 3 }, () => Array.from({ length: 3 }, () => ({ type: 'street' })))
     grid[0][1].airstripStreet = true
     const snapshot = JSON.stringify(grid)
@@ -42,7 +42,7 @@ describe('organic terrain topology', () => {
     expect(JSON.stringify(grid)).toBe(snapshot)
     expect(terrainMask(grid, 0, 0, 'rock')).toBe(0)
   })
-  it('selects stable variants at negative and large coordinates', () => {
+  it('[U03200] selects stable variants at negative and large coordinates', () => {
     const samples = new Set()
     for (let x = -100; x < 100; x++) {
       expect(terrainHash(x, 10000)).toBe(terrainHash(x, 10000))
@@ -50,7 +50,7 @@ describe('organic terrain topology', () => {
     }
     expect(samples.size).toBe(4)
   })
-  it('draws the selected biome source material as a continuously addressed base tile', () => {
+  it('[U03201] draws the selected biome source material as a continuously addressed base tile', () => {
     const source = { complete: true, naturalWidth: 1024, naturalHeight: 1024 }
     const terrain = Object.create(OrganicTerrain.prototype)
     terrain.textureManager = { integratedBiomeTag: 'snow' }
@@ -61,7 +61,7 @@ describe('organic terrain topology', () => {
 
     expect(drawImage).toHaveBeenCalledWith(source, 544, 608, 32, 32, 64, 96, 32, 32)
   })
-  it('uses the oriented SOT alpha as the biome transition mask', () => {
+  it('[U03202] uses the oriented SOT alpha as the biome transition mask', () => {
     const terrain = Object.create(OrganicTerrain.prototype)
     terrain.details = { id: 'details' }
     terrain.drawBiome = vi.fn()
@@ -86,7 +86,7 @@ describe('organic terrain topology', () => {
     expect(sotContext.globalCompositeOperation).toBe('source-over')
     createElement.mockRestore()
   })
-  it('reuses cached biome SOT composites after the first draw', () => {
+  it('[U03203] reuses cached biome SOT composites after the first draw', () => {
     const terrain = Object.create(OrganicTerrain.prototype)
     terrain.biomeSotTileCache = new Map([['32|3|7|bottom-right|sand', { id: 'cached-sot' }]])
     const output = { drawImage: vi.fn() }
@@ -95,7 +95,7 @@ describe('organic terrain topology', () => {
 
     expect(output.drawImage).toHaveBeenCalledWith({ id: 'cached-sot' }, 0, 0, 32, 32, 95, 223, 33, 33)
   })
-  it('stitches the exposed side of every outward and inward SOT corner', () => {
+  it('[U03204] stitches the exposed side of every outward and inward SOT corner', () => {
     expect(['top-left', 'top-right', 'bottom-right', 'bottom-left'].map(orientation =>
       getSotDrawBounds(100, 200, 32, orientation)
     )).toEqual([
@@ -105,7 +105,7 @@ describe('organic terrain topology', () => {
       { x: 100, y: 199, size: 33 }
     ])
   })
-  it('uses cliffs for chains in all eight directions, preserving every blocked cell', () => {
+  it('[U03205] uses cliffs for chains in all eight directions, preserving every blocked cell', () => {
     for (const [dx, dy] of [[1, 0], [0, 1], [1, 1], [1, -1]]) {
       const grid = Array.from({ length: 9 }, () => Array.from({ length: 9 }, () => ({ type: 'land' })))
       for (let n = -2; n <= 2; n++) grid[4 + dy * n][4 + dx * n].type = 'rock'
@@ -121,12 +121,12 @@ describe('organic terrain topology', () => {
       expect(JSON.stringify(grid)).toBe(before)
     }
   })
-  it('keeps isolated pairs as boulders', () => {
+  it('[U03206] keeps isolated pairs as boulders', () => {
     const grid = [[{ type: 'rock' }, { type: 'rock' }]]
     expect(isCliffChain(grid, 0, 0)).toBe(false)
     expect(isCliffChain(grid, 1, 0)).toBe(false)
   })
-  it('renders long narrow rock chains exclusively as ordinary boulders', () => {
+  it('[U03207] renders long narrow rock chains exclusively as ordinary boulders', () => {
     const grid = Array.from({ length: 5 }, (_, y) => Array.from({ length: 7 }, (_, x) => ({
       type: y === 2 && x >= 2 && x <= 4 ? 'rock' : 'land'
     })))
@@ -146,7 +146,7 @@ describe('organic terrain topology', () => {
     expect(calls).toHaveLength(3)
     expect(calls.every(call => call[0] === terrain.details)).toBe(true)
   })
-  it('keeps a small L-shaped rock cluster in the boulder pool', () => {
+  it('[U03208] keeps a small L-shaped rock cluster in the boulder pool', () => {
     const grid = Array.from({ length: 6 }, () => Array.from({ length: 6 }, () => ({ type: 'land' })))
     for (const [x, y] of [[2, 2], [2, 3], [2, 4], [3, 4], [4, 4]]) grid[y][x].type = 'rock'
     const terrain = Object.create(OrganicTerrain.prototype)
@@ -165,7 +165,7 @@ describe('organic terrain topology', () => {
     expect(calls).toHaveLength(5)
     expect(calls.every(call => call[0] === terrain.details)).toBe(true)
   })
-  it('uses a continuous macro sprite for aligned two-tile-deep straight runs', () => {
+  it('[U03209] uses a continuous macro sprite for aligned two-tile-deep straight runs', () => {
     const grid = Array.from({ length: 9 }, (_, y) => Array.from({ length: 12 }, (_, x) => ({
       type: y >= 3 && y <= 5 && x >= 3 && x <= 6 ? 'rock' : 'land'
     })))
@@ -185,7 +185,7 @@ describe('organic terrain topology', () => {
     expect(calls.some(call => call[0] === terrain.cliffs && call[2] >= 8 * 160 && (call[3] > 160 || call[4] > 160))).toBe(true)
     expect(calls.some(call => call[0] === terrain.cliffs && call[2] >= 8 * 160 && call[3] === 160 && call[4] === 224)).toBe(true)
   })
-  it('uses macro artwork for straight segments on every terrace level', () => {
+  it('[U03210] uses macro artwork for straight segments on every terrace level', () => {
     const grid = Array.from({ length: 15 }, (_, y) => Array.from({ length: 15 }, (_, x) => ({
       type: x >= 2 && x <= 12 && y >= 2 && y <= 12 ? 'rock' : 'land'
     })))
@@ -206,7 +206,7 @@ describe('organic terrain topology', () => {
     const condensedStraightCalls = calls.filter(call => call[0] === terrain.cliffs && call[2] < 1280 && straightCellXs.has(call[1]))
     expect(condensedStraightCalls).toHaveLength(0)
   })
-  it('enlarges plateau crack details while retaining the plateau clip', () => {
+  it('[U03211] enlarges plateau crack details while retaining the plateau clip', () => {
     const grid = Array.from({ length: 7 }, (_, y) => Array.from({ length: 7 }, (_, x) => ({
       type: x >= 2 && x <= 4 && y >= 2 && y <= 4 ? 'rock' : 'land'
     })))
@@ -228,20 +228,20 @@ describe('organic terrain topology', () => {
       calls.findIndex(call => call[0] === terrain.cliffs && call !== plateauDetail)
     )
   })
-  it('keeps cliff palettes constant inside broad geological regions', () => {
+  it('[U03212] keeps cliff palettes constant inside broad geological regions', () => {
     const variants = new Set()
     for (let y = 20; y < 40; y++) for (let x = 20; x < 40; x++) variants.add(cliffVariant(x, y))
     expect(variants.size).toBe(1)
     expect(cliffVariant(25, 25, 1)).toBe(cliffVariant(25, 25, 5))
   })
-  it('connects full roads to the legs of neighboring SOT wedges', () => {
+  it('[U03213] connects full roads to the legs of neighboring SOT wedges', () => {
     const grid = Array.from({ length: 3 }, () => Array.from({ length: 3 }, () => ({ type: 'land' })))
     grid[0][0].type = grid[0][1].type = grid[1][0].type = 'street'
     expect(roadFringeMask(grid, 1, 1) & 1).toBe(1)
     expect(roadVisualMask(grid, 1, 0) & 4).toBe(4)
     expect(roadVisualMask(grid, 0, 1) & 2).toBe(2)
   })
-  it('keeps legacy road fringes on oriented corner triangles', () => {
+  it('[U03214] keeps legacy road fringes on oriented corner triangles', () => {
     const grid = Array.from({ length: 3 }, () => Array.from({ length: 3 }, () => ({ type: 'land' })))
     grid[0][0].type = grid[0][1].type = grid[1][0].type = 'street'
     const terrain = Object.create(OrganicTerrain.prototype)
@@ -249,7 +249,7 @@ describe('organic terrain topology', () => {
     terrain.drawRoadFringe({}, grid, 1, 1, 32, 32, 32)
     expect(terrain.drawTriangle).toHaveBeenCalledWith({}, 1, 1, 32, 32, 32, 'top-left', 'street')
   })
-  it('shares biome transition endpoints across turned land boundaries', () => {
+  it('[U03215] shares biome transition endpoints across turned land boundaries', () => {
     const center = [0, 0.5, 0.75, 0]
     const right = [0.5, 1, 1, 0.75]
     const below = [0, 0.75, 1, 0]
@@ -260,7 +260,7 @@ describe('organic terrain topology', () => {
     expect(biomeTransitionCoverage(center, 1, 1)).toBeGreaterThan(0)
     expect(biomeTransitionCoverage(center, 1, 1)).toBeLessThan(1)
   })
-  it('does not place a ground lip across a connected water SOT leg', () => {
+  it('[U03216] does not place a ground lip across a connected water SOT leg', () => {
     const grid = Array.from({ length: 3 }, () => Array.from({ length: 3 }, () => ({ type: 'water' })))
     grid[1][2].type = 'land'
     const sot = Array.from({ length: 3 }, () => Array(3).fill(null))

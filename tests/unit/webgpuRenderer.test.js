@@ -6,7 +6,7 @@ import {
 } from '../../src/rendering/webgpuRenderer.js'
 
 describe('GameWebGPURenderer', () => {
-  it('samples both atlases before any per-fragment branch', () => {
+  it('[U05111] samples both atlases before any per-fragment branch', () => {
     const fragment = WEBGPU_TERRAIN_SHADER.slice(WEBGPU_TERRAIN_SHADER.indexOf('@fragment'))
     const firstBranch = fragment.search(/\bif\s*\(/)
     const sampleIndexes = [...fragment.matchAll(/textureSample\s*\(/g)].map(match => match.index)
@@ -16,7 +16,7 @@ describe('GameWebGPURenderer', () => {
     expect(fragment).not.toMatch(/return\s+textureSample\s*\(/)
   })
 
-  it('packs the WebGL-compatible tile instance layout for WebGPU instancing', () => {
+  it('[U05112] packs the WebGL-compatible tile instance layout for WebGPU instancing', () => {
     const renderer = new GameWebGPURenderer({}, null)
     const packed = renderer.packInstances([{
       translation: [2, 3],
@@ -36,14 +36,14 @@ describe('GameWebGPURenderer', () => {
     expect([...packed.slice(10)]).toEqual([2, 1, 0, 1, 0, 3, 1])
   })
 
-  it('returns the fallback signal while WebGPU is unavailable', () => {
+  it('[U05113] returns the fallback signal while WebGPU is unavailable', () => {
     const renderer = new GameWebGPURenderer({}, null)
     renderer.status = 'failed'
 
     expect(renderer.render([[{ type: 'land' }]], { x: 0, y: 0 }, {}, {})).toBe(false)
   })
 
-  it('builds instances for every terrain asset class', () => {
+  it('[U05114] builds instances for every terrain asset class', () => {
     const textureManager = {
       allTexturesLoaded: true,
       primarySpriteSheetImage: {},
@@ -69,7 +69,7 @@ describe('GameWebGPURenderer', () => {
     expect(counts.secondaryAtlas).toBe(1)
   })
 
-  it('does not activate WebGPU until a submitted frame validates', () => {
+  it('[U05115] does not activate WebGPU until a submitted frame validates', () => {
     const renderer = new GameWebGPURenderer({}, null)
     renderer.validationPending = true
 
@@ -77,7 +77,7 @@ describe('GameWebGPURenderer', () => {
     expect(renderer.getStatus()).toMatchObject({ validationPending: true, validationComplete: false })
   })
 
-  it('uploads atlas images with the usage copyExternalImageToTexture requires', () => {
+  it('[U05116] uploads atlas images with the usage copyExternalImageToTexture requires', () => {
     const renderer = new GameWebGPURenderer({}, null)
     const created = []
     renderer.device = {
@@ -106,7 +106,7 @@ describe('GameWebGPURenderer', () => {
     expect(created[1].uploaded).toBe(uploaded.texture)
   })
 
-  it('logs the full frame-validation message in the console', async() => {
+  it('[U05117] logs the full frame-validation message in the console', async() => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const renderer = new GameWebGPURenderer({}, null)
     renderer.validationPending = true
@@ -126,7 +126,7 @@ describe('GameWebGPURenderer', () => {
     warn.mockRestore()
   })
 
-  it('falls back when frame submission never settles', async() => {
+  it('[U05118] falls back when frame submission never settles', async() => {
     vi.useFakeTimers()
     const renderer = new GameWebGPURenderer({}, null)
     renderer.validationPending = true
@@ -170,7 +170,7 @@ describe('GameWebGPURenderer', () => {
     return { device, created, writes }
   }
 
-  it('binds one placeholder atlas when the default map has no sprite sheet', () => {
+  it('[U05119] binds one placeholder atlas when the default map has no sprite sheet', () => {
     const renderer = new GameWebGPURenderer({}, null)
     const { device, created, writes } = placeholderDevice()
     renderer.device = device
@@ -192,7 +192,7 @@ describe('GameWebGPURenderer', () => {
     expect(renderer.bindGroup.descriptor.entries[2].resource).toBe(renderer.bindGroup.descriptor.entries[3].resource)
   })
 
-  it('replaces the placeholder once a sprite sheet image exists', () => {
+  it('[U05120] replaces the placeholder once a sprite sheet image exists', () => {
     const renderer = new GameWebGPURenderer({}, null)
     const { device } = placeholderDevice()
     renderer.device = device
@@ -208,7 +208,7 @@ describe('GameWebGPURenderer', () => {
     expect(renderer.uploadedPrimaryImage).toBe(renderer.textureManager.primarySpriteSheetImage)
   })
 
-  it('does not leave validation pending when texture sync cannot start', () => {
+  it('[U05121] does not leave validation pending when texture sync cannot start', () => {
     const renderer = new GameWebGPURenderer({}, null)
     renderer.status = 'ready'
     renderer.syncTextures = () => false
@@ -220,7 +220,7 @@ describe('GameWebGPURenderer', () => {
     expect(renderer.device.pushErrorScope).not.toHaveBeenCalled()
   })
 
-  it('names a validation-pending frame without opening another scope', () => {
+  it('[U05122] names a validation-pending frame without opening another scope', () => {
     const renderer = new GameWebGPURenderer({}, null)
     renderer.status = 'ready'
     renderer.validationPending = true
@@ -231,7 +231,7 @@ describe('GameWebGPURenderer', () => {
     expect(renderer.device.pushErrorScope).not.toHaveBeenCalled()
   })
 
-  it('names restore, not-ready, and empty-instance skips', () => {
+  it('[U05123] names restore, not-ready, and empty-instance skips', () => {
     const restoring = new GameWebGPURenderer({}, null)
     restoring.needsRestore = true
     restoring.restore = () => {}
@@ -256,7 +256,7 @@ describe('GameWebGPURenderer', () => {
     expect(empty.device.pushErrorScope).not.toHaveBeenCalled()
   })
 
-  it('schedules only one completion check for a pending validation frame', () => {
+  it('[U05124] schedules only one completion check for a pending validation frame', () => {
     let completionChecks = 0
     const renderer = new GameWebGPURenderer({}, null)
     renderer.validationPending = true

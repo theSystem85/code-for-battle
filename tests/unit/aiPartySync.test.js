@@ -33,14 +33,14 @@ describe('aiPartySync', () => {
     cleanupAiPartySync()
   })
 
-  it('reports when a party is AI controlled', () => {
+  it('[U00098] reports when a party is AI controlled', () => {
     getPartyState.mockReturnValue({ aiActive: true })
 
     expect(isPartyAiControlled('party-1')).toBe(true)
     expect(getPartyState).toHaveBeenCalledWith('party-1')
   })
 
-  it('returns false when a party is missing or inactive', () => {
+  it('[U00099] returns false when a party is missing or inactive', () => {
     getPartyState.mockReturnValue(undefined)
     expect(isPartyAiControlled('missing')).toBe(false)
 
@@ -48,7 +48,7 @@ describe('aiPartySync', () => {
     expect(isPartyAiControlled('party-2')).toBe(false)
   })
 
-  it('filters AI-controlled parties from game state', () => {
+  it('[U00100] filters AI-controlled parties from game state', () => {
     gameState.partyStates = [
       { id: 'p1', aiActive: true },
       { id: 'p2', aiActive: false },
@@ -61,13 +61,13 @@ describe('aiPartySync', () => {
     ])
   })
 
-  it('returns an empty list when partyStates is not an array', () => {
+  it('[U00101] returns an empty list when partyStates is not an array', () => {
     gameState.partyStates = null
 
     expect(getAiControlledParties()).toEqual([])
   })
 
-  it('identifies AI-controlled units while excluding the human player', () => {
+  it('[U00102] identifies AI-controlled units while excluding the human player', () => {
     getPartyState.mockImplementation((partyId) => (partyId === 'enemy-ai' ? { aiActive: true } : { aiActive: false }))
 
     expect(isUnitAiControlled(null)).toBe(false)
@@ -75,7 +75,7 @@ describe('aiPartySync', () => {
     expect(isUnitAiControlled({ owner: 'enemy-ai' })).toBe(true)
   })
 
-  it('identifies AI-controlled buildings while excluding the human player', () => {
+  it('[U00103] identifies AI-controlled buildings while excluding the human player', () => {
     getPartyState.mockImplementation((partyId) => (partyId === 'enemy-ai' ? { aiActive: true } : { aiActive: false }))
 
     expect(isBuildingAiControlled(undefined)).toBe(false)
@@ -83,7 +83,7 @@ describe('aiPartySync', () => {
     expect(isBuildingAiControlled({ owner: 'enemy-ai' })).toBe(true)
   })
 
-  it('does not reinitialize units when the party is not AI controlled', () => {
+  it('[U00104] does not reinitialize units when the party is not AI controlled', () => {
     gameState.units = [
       {
         id: 'unit-1',
@@ -107,7 +107,7 @@ describe('aiPartySync', () => {
     expect(window.logger).not.toHaveBeenCalled()
   })
 
-  it('clears pending commands for AI-controlled party units on reinitialization', () => {
+  it('[U00105] clears pending commands for AI-controlled party units on reinitialization', () => {
     gameState.units = [
       {
         id: 'unit-1',
@@ -143,7 +143,7 @@ describe('aiPartySync', () => {
     expect(window.logger).toHaveBeenCalledWith('AI reinitialized for party party-1')
   })
 
-  it('registers the AI reactivation observer and handles disconnect events', () => {
+  it('[U00106] registers the AI reactivation observer and handles disconnect events', () => {
     const cleanup = vi.fn()
     let capturedCallback
     observeAiReactivation.mockImplementation((callback) => {
@@ -177,7 +177,7 @@ describe('aiPartySync', () => {
     expect(gameState.units[0].utilityQueue.targets).toEqual([])
   })
 
-  it('replaces prior observers when initializing more than once', () => {
+  it('[U00107] replaces prior observers when initializing more than once', () => {
     const cleanupOne = vi.fn()
     const cleanupTwo = vi.fn()
     observeAiReactivation

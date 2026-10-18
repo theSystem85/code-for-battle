@@ -10,7 +10,7 @@ const AIR = new Set(['apache', 'f22Raptor', 'f35'])
 describe('demo builtin save', () => {
   const state = JSON.parse(demoSave.state)
 
-  it('is a locked builtin save with localized labels and no intro clip', () => {
+  it('[U02954] is a locked builtin save with localized labels and no intro clip', () => {
     expect(getBuiltinMissionById('demo')).toBe(demoSave)
     expect(demoSave.id).toBe('demo')
     expect(demoSave.introVideo).toBeUndefined()
@@ -22,7 +22,7 @@ describe('demo builtin save', () => {
     expect(demoSave.focus.tileY).toBeGreaterThan(0)
   })
 
-  it('stores the generated terrain, including water, rock, and several biomes', () => {
+  it('[U02955] stores the generated terrain, including water, rock, and several biomes', () => {
     const tiles = state.mapTileState.flat()
     const types = new Set(tiles.map(tile => tile.type))
     const biomes = new Set(tiles.map(tile => tile.biome).filter(Boolean))
@@ -36,7 +36,7 @@ describe('demo builtin save', () => {
     expect(state.mapGridTypes.length).toBe(state.mapTileState.length)
   })
 
-  it('fields land, air, and naval units for both sides around finished bases', () => {
+  it('[U02956] fields land, air, and naval units for both sides around finished bases', () => {
     const owners = ['player1', 'player2']
     owners.forEach(owner => {
       const units = state.units.filter(unit => unit.owner === owner)

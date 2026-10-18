@@ -21,7 +21,7 @@ describe('storage key prefix', () => {
     delete process.env.REDIS_KEY_PREFIX
   })
 
-  it('accepts dev-style prefixes, treats empty as unprefixed and rejects malformed values', () => {
+  it('[U05193] accepts dev-style prefixes, treats empty as unprefixed and rejects malformed values', () => {
     expect(normalizeStorageKeyPrefix('dev:')).toBe('dev:')
     expect(normalizeStorageKeyPrefix('  dev: ')).toBe('dev:')
     expect(normalizeStorageKeyPrefix('')).toBe('')
@@ -31,7 +31,7 @@ describe('storage key prefix', () => {
     expect(normalizeStorageKeyPrefix('a'.repeat(40) + ':')).toBeNull()
   })
 
-  it('reads the prefix from the explicit env bag, Netlify.env and process.env, and throws on a typo', () => {
+  it('[U05194] reads the prefix from the explicit env bag, Netlify.env and process.env, and throws on a typo', () => {
     expect(readStorageKeyPrefix({})).toBe('')
     expect(readStorageKeyPrefix({ REDIS_KEY_PREFIX: 'dev:' })).toBe('dev:')
     globalThis.Netlify = { env: { get: key => (key === 'REDIS_KEY_PREFIX' ? 'dev:' : undefined) } }
@@ -42,7 +42,7 @@ describe('storage key prefix', () => {
     expect(() => readStorageKeyPrefix({ REDIS_KEY_PREFIX: 'dev' })).toThrow(/REDIS_KEY_PREFIX/)
   })
 
-  it('stores every Netlify Blobs key under the prefix and lists keys without it', async() => {
+  it('[U05195] stores every Netlify Blobs key under the prefix and lists keys without it', async() => {
     const raw = netlifyStore()
     const store = prefixBlobStore(raw, 'dev:')
     await store.setJSON('offer:a:b', { offer: 1 })
@@ -58,7 +58,7 @@ describe('storage key prefix', () => {
     expect(raw.blobs.has('offer:prod')).toBe(true)
   })
 
-  it('supports string-prefix list stores and returns the store unchanged without a prefix', async() => {
+  it('[U05196] supports string-prefix list stores and returns the store unchanged without a prefix', async() => {
     const keys = new Map([['dev:mp-stats:open:a', 1], ['mp-stats:open:b', 2]])
     const adapted = { list: async prefix => [...keys.keys()].filter(key => key.startsWith(prefix)) }
     expect(await prefixBlobStore(adapted, 'dev:').list('mp-stats:open:')).toEqual(['mp-stats:open:a'])

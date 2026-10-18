@@ -55,14 +55,14 @@ function run(policy, views, options = {}) {
 }
 
 describe('validatePolicy', () => {
-  it('accepts the shipped templates and a blank draft', () => {
+  it('[U03417] accepts the shipped templates and a blank draft', () => {
     POLICY_TEMPLATES.forEach(template => {
       expect(validatePolicy(template.create('x')).valid).toBe(true)
     })
     expect(validatePolicy(createBlankPolicy('draft')).valid).toBe(true)
   })
 
-  it('rejects more than 7 states and says why', () => {
+  it('[U03418] rejects more than 7 states and says why', () => {
     const policy = retreatIf()
     for (let i = 0; i < MAX_POLICY_STATES; i++) {
       policy.states.push({ id: `extra${i}`, name: `Extra ${i}`, effect: null, transitions: [] })
@@ -73,7 +73,7 @@ describe('validatePolicy', () => {
     expect(describePolicyProblem(validation)).toMatch(/More than 7 states/)
   })
 
-  it('accepts exactly 7 states', () => {
+  it('[U03419] accepts exactly 7 states', () => {
     const policy = retreatIf()
     for (let i = 0; i < MAX_POLICY_STATES - 2; i++) {
       policy.states.push({ id: `extra${i}`, name: `Extra ${i}`, effect: null, transitions: [] })
@@ -82,7 +82,7 @@ describe('validatePolicy', () => {
     expect(validatePolicy(policy).valid).toBe(true)
   })
 
-  it('rejects a build policy that is not global, a missing scope, unknown targets and bad conditions', () => {
+  it('[U03420] rejects a build policy that is not global, a missing scope, unknown targets and bad conditions', () => {
     expect(validatePolicy({ ...retreatIf(), variant: 'build' }).errors.map(e => e.code)).toContain('build_scope')
     expect(validatePolicy({ ...retreatIf(), variant: undefined }).errors.map(e => e.code)).toContain('variant_missing')
     expect(validatePolicy({ ...retreatIf(), scope: undefined }).errors.map(e => e.code)).toContain('scope_missing')
@@ -102,7 +102,7 @@ describe('validatePolicy', () => {
 })
 
 describe('stepPolicy', () => {
-  it('"if" fires once when the condition becomes true and never again', () => {
+  it('[U03421] "if" fires once when the condition becomes true and never again', () => {
     const policy = { ...retreatIf(), execution: 'continuous' }
     policy.states[1].transitions = [{ id: 't2', kind: 'if', when: { type: 'compare', field: 'hp', op: '>=', value: 0.6 }, to: 'watch' }]
     const { log } = run(policy, [view(1), view(0.2), view(0.2), view(0.1), view(0.7), view(0.2)])
@@ -112,13 +112,13 @@ describe('stepPolicy', () => {
     expect(log[1].trace.event).toBe('fired')
   })
 
-  it('a one-time "if" policy finishes after it fired', () => {
+  it('[U03422] a one-time "if" policy finishes after it fired', () => {
     const { runtime, log } = run(retreatIf(), [view(1), view(0.2), view(0.2)])
     expect(runtime.finished).toBe(true)
     expect(log[2].trace.event).toBe('finished')
   })
 
-  it('"while" enters on the rising edge, keeps asserting, and ends when the condition stops', () => {
+  it('[U03423] "while" enters on the rising edge, keeps asserting, and ends when the condition stops', () => {
     const { log, runtime } = run(retreatWhile(), [view(1), view(0.2), view(0.2), view(0.2), view(0.5)])
     expect(log[1].effects[0]).toMatchObject({ phase: 'enter', kind: 'while' })
     expect(log[2].effects[0]).toMatchObject({ phase: 'hold', kind: 'while' })
@@ -129,7 +129,7 @@ describe('stepPolicy', () => {
     expect(runtime.hold).toBeNull()
   })
 
-  it('supports an explicit end condition for hysteresis', () => {
+  it('[U03424] supports an explicit end condition for hysteresis', () => {
     const policy = retreatWhile()
     policy.states[0].transitions[0].until = { type: 'compare', field: 'hp', op: '>=', value: 0.6 }
     const { log } = run(policy, [view(0.2), view(0.4), view(0.5), view(0.7)])
@@ -138,12 +138,12 @@ describe('stepPolicy', () => {
     expect(log[3].trace.event).toBe('holdEnded')
   })
 
-  it('starts the "while" hold at once when the condition already holds on apply', () => {
+  it('[U03425] starts the "while" hold at once when the condition already holds on apply', () => {
     const { log } = run(retreatWhile(), [view(0.1)])
     expect(log[0].trace.event).toBe('holdStarted')
   })
 
-  it('freezes "if" rules while a direct order runs but still lets a newly true "while" take over', () => {
+  it('[U03426] freezes "if" rules while a direct order runs but still lets a newly true "while" take over', () => {
     const open = { gate: STEP_GATE.orderRunning }
     const ifRun = run(retreatIf(), [view(1), view(0.2), view(0.1)], open)
     expect(ifRun.log.every(r => r.effects.length === 0)).toBe(true)
@@ -153,7 +153,7 @@ describe('stepPolicy', () => {
     expect(whileRun.log[1].effects[0]).toMatchObject({ phase: 'enter', kind: 'while' })
   })
 
-  it('an "if" that became true during a direct order fires once the order is done', () => {
+  it('[U03427] an "if" that became true during a direct order fires once the order is done', () => {
     const policy = retreatIf()
     let runtime = createPolicyRuntime(policy)
     runtime = stepPolicy(policy, runtime, view(1), { gate: STEP_GATE.open }).runtime
@@ -163,7 +163,7 @@ describe('stepPolicy', () => {
     expect(resumed.effects).toHaveLength(1)
   })
 
-  it('suspends hold re-assertion during an order, but still ends the hold', () => {
+  it('[U03428] suspends hold re-assertion during an order, but still ends the hold', () => {
     const policy = retreatWhile()
     let runtime = stepPolicy(policy, createPolicyRuntime(policy), view(0.2)).runtime
     const during = stepPolicy(policy, runtime, view(0.2), { gate: STEP_GATE.orderRunning })
@@ -174,7 +174,7 @@ describe('stepPolicy', () => {
     expect(ended.trace.event).toBe('holdEnded')
   })
 
-  it('does nothing while paused by the owner', () => {
+  it('[U03429] does nothing while paused by the owner', () => {
     const policy = retreatWhile()
     const runtime = createPolicyRuntime(policy)
     const result = stepPolicy(policy, runtime, view(0.1), { gate: STEP_GATE.paused })
@@ -183,7 +183,7 @@ describe('stepPolicy', () => {
     expect(result.trace.event).toBe('paused')
   })
 
-  it('is deterministic and does not mutate its inputs', () => {
+  it('[U03430] is deterministic and does not mutate its inputs', () => {
     const policy = retreatWhile()
     const frozen = JSON.stringify(policy)
     const runtime = createPolicyRuntime(policy)
@@ -195,7 +195,7 @@ describe('stepPolicy', () => {
     expect(JSON.stringify(runtime)).toBe(runtimeSnapshot)
   })
 
-  it('evaluates and / or / not and enemy conditions', () => {
+  it('[U03431] evaluates and / or / not and enemy conditions', () => {
     const policy = retreatIf()
     policy.states[0].transitions[0].when = {
       type: 'and',

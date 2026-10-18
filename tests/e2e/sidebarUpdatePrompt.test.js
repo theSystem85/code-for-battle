@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-test('available update stays in the sidebar immediately before Online/Offline', async({ page }) => {
+test('[E00108] available update stays in the sidebar immediately before Online/Offline', async({ page }) => {
   await page.goto('/?seed=41&size=64&players=2&oreFields=8')
   await page.waitForFunction(() => window.gameState?.gameStarted && window.gameInstance?.gameLoop)
   await page.evaluate(async() => {

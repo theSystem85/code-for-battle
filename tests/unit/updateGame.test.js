@@ -224,11 +224,11 @@ describe('updateGame.js', () => {
   })
 
   describe('updateGame', () => {
-    it('should export updateGame function', () => {
+    it('[U04947] should export updateGame function', () => {
       expect(typeof updateGameModule.updateGame).toBe('function')
     })
 
-    it('should do nothing when game is paused', async() => {
+    it('[U04948] should do nothing when game is paused', async() => {
       const { updateGameTime } = await import('../../src/game/gameStateManager.js')
 
       const gameState = {
@@ -242,7 +242,7 @@ describe('updateGame.js', () => {
       expect(updateGameTime).not.toHaveBeenCalled()
     })
 
-    it('should call cleanup functions when game is running', async() => {
+    it('[U04949] should call cleanup functions when game is running', async() => {
       const { cleanupDestroyedSelectedUnits } = await import('../../src/inputHandler.js')
       const { rebuildSpatialQuadtree } = await import('../../src/game/spatialQuadtree.js')
 
@@ -260,7 +260,7 @@ describe('updateGame.js', () => {
       expect(rebuildSpatialQuadtree).toHaveBeenCalled()
     })
 
-    it('should update unit movement speeds based on speed multiplier', async() => {
+    it('[U04950] should update unit movement speeds based on speed multiplier', async() => {
       const gameState = {
         gamePaused: false,
         speedMultiplier: 2,
@@ -281,7 +281,7 @@ describe('updateGame.js', () => {
       expect(units[1].effectiveSpeed).toBe(50)
     })
 
-    it('should initialize smokeParticles array if not present', async() => {
+    it('[U04951] should initialize smokeParticles array if not present', async() => {
       const gameState = {
         gamePaused: false,
         occupancyMap: [],
@@ -294,7 +294,7 @@ describe('updateGame.js', () => {
       expect(gameState.smokeParticles).toBeInstanceOf(Array)
     })
 
-    it('should call game system updates when host', async() => {
+    it('[U04952] should call game system updates when host', async() => {
       const { updateUnitMovement } = await import('../../src/game/unitMovement.js')
       const { updateUnitCombat } = await import('../../src/game/unitCombat.js')
       const { updateBullets } = await import('../../src/game/bulletSystem.js')
@@ -318,7 +318,7 @@ describe('updateGame.js', () => {
       expect(updateEnemyAI).toHaveBeenCalled()
     })
 
-    it('should update camera follow for UI regardless of host status', async() => {
+    it('[U04953] should update camera follow for UI regardless of host status', async() => {
       const { updateMapScrolling, updateCameraFollow } = await import('../../src/game/gameStateManager.js')
 
       const gameState = {
@@ -335,7 +335,7 @@ describe('updateGame.js', () => {
       expect(updateCameraFollow).toHaveBeenCalled()
     })
 
-    it('should update visual effects (explosions, smoke, dust)', async() => {
+    it('[U04954] should update visual effects (explosions, smoke, dust)', async() => {
       const { updateExplosions, updateSmokeParticles, updateDustParticles } = await import('../../src/game/gameStateManager.js')
 
       const gameState = {
@@ -353,7 +353,7 @@ describe('updateGame.js', () => {
       expect(updateDustParticles).toHaveBeenCalled()
     })
 
-    it('should update shadow of war visibility', async() => {
+    it('[U04955] should update shadow of war visibility', async() => {
       const { updateShadowOfWar } = await import('../../src/game/shadowOfWar.js')
 
       const gameState = {
@@ -369,7 +369,7 @@ describe('updateGame.js', () => {
       expect(updateShadowOfWar).toHaveBeenCalled()
     })
 
-    it('should handle errors gracefully without crashing', async() => {
+    it('[U04956] should handle errors gracefully without crashing', async() => {
       const { updateUnitMovement } = await import('../../src/game/unitMovement.js')
       updateUnitMovement.mockImplementation(() => {
         throw new Error('Test error')
@@ -392,7 +392,7 @@ describe('updateGame.js', () => {
       updateUnitMovement.mockImplementation(vi.fn())
     })
 
-    it('should process remote commands when host', async() => {
+    it('[U04957] should process remote commands when host', async() => {
       const { processPendingRemoteCommands, isHost } = await import('../../src/network/gameCommandSync.js')
       isHost.mockReturnValue(true)
       processPendingRemoteCommands.mockReturnValue([])
@@ -410,7 +410,7 @@ describe('updateGame.js', () => {
       expect(processPendingRemoteCommands).toHaveBeenCalled()
     })
 
-    it('should apply BUILDING_PLACE commands from clients', async() => {
+    it('[U04958] should apply BUILDING_PLACE commands from clients', async() => {
       const { processPendingRemoteCommands, isHost, COMMAND_TYPES } = await import('../../src/network/gameCommandSync.js')
       const { createBuilding, placeBuilding, updatePowerSupply } = await import('../../src/buildings.js')
       const { updateDangerZoneMaps } = await import('../../src/game/dangerZoneMap.js')
@@ -444,7 +444,7 @@ describe('updateGame.js', () => {
       expect(updatePowerSupply).toHaveBeenCalledWith(gameState.buildings, gameState)
     })
 
-    it('should apply UNIT_MOVE commands with tile targets', async() => {
+    it('[U04959] should apply UNIT_MOVE commands with tile targets', async() => {
       const { processPendingRemoteCommands, isHost, COMMAND_TYPES } = await import('../../src/network/gameCommandSync.js')
       const { units: mainUnits } = await import('../../src/main.js')
 
@@ -474,7 +474,7 @@ describe('updateGame.js', () => {
       expect(mainUnits[0].guardPosition).toBeNull()
     })
 
-    it('rejects remote movement orders while a vehicle is inside the garage', async() => {
+    it('[U04960] rejects remote movement orders while a vehicle is inside the garage', async() => {
       const { processPendingRemoteCommands, isHost, COMMAND_TYPES } = await import('../../src/network/gameCommandSync.js')
       const { units: mainUnits } = await import('../../src/main.js')
       isHost.mockReturnValue(true)
@@ -487,7 +487,7 @@ describe('updateGame.js', () => {
       expect(unit.moveTarget).toBeNull()
     })
 
-    it('should apply UNIT_ATTACK commands with target entity', async() => {
+    it('[U04961] should apply UNIT_ATTACK commands with target entity', async() => {
       const { processPendingRemoteCommands, isHost, COMMAND_TYPES } = await import('../../src/network/gameCommandSync.js')
       const { units: mainUnits } = await import('../../src/main.js')
 
@@ -518,7 +518,7 @@ describe('updateGame.js', () => {
       expect(mainUnits[0].path).toBeNull()
     })
 
-    it('should apply UNIT_STOP commands to clear attack state', async() => {
+    it('[U04962] should apply UNIT_STOP commands to clear attack state', async() => {
       const { processPendingRemoteCommands, isHost, COMMAND_TYPES } = await import('../../src/network/gameCommandSync.js')
       const { units: mainUnits } = await import('../../src/main.js')
 
@@ -564,7 +564,7 @@ describe('updateGame.js', () => {
       expect(mainUnits[0].attackGroupTargets).toEqual([])
     })
 
-    it('should apply UNIT_GUARD commands', async() => {
+    it('[U04963] should apply UNIT_GUARD commands', async() => {
       const { processPendingRemoteCommands, isHost, COMMAND_TYPES } = await import('../../src/network/gameCommandSync.js')
       const { units: mainUnits } = await import('../../src/main.js')
 
@@ -593,7 +593,7 @@ describe('updateGame.js', () => {
       expect(mainUnits[0].attackTarget).toBeNull()
     })
 
-    it('should spawn units on UNIT_SPAWN commands', async() => {
+    it('[U04964] should spawn units on UNIT_SPAWN commands', async() => {
       const { processPendingRemoteCommands, isHost, COMMAND_TYPES } = await import('../../src/network/gameCommandSync.js')
       const { spawnUnit } = await import('../../src/units.js')
       const { units: mainUnits } = await import('../../src/main.js')
@@ -630,7 +630,7 @@ describe('updateGame.js', () => {
       expect(mainUnits).toEqual(expect.arrayContaining([expect.objectContaining({ id: 'spawned-1' })]))
     })
 
-    it('should skip game logic for remote clients', async() => {
+    it('[U04965] should skip game logic for remote clients', async() => {
       const { isHost, updateUnitInterpolation } = await import('../../src/network/gameCommandSync.js')
 
       isHost.mockReturnValue(false)
@@ -652,7 +652,7 @@ describe('updateGame.js', () => {
       // But should still update visuals
     })
 
-    it('should emit smoke for heavily damaged tanks', async() => {
+    it('[U04966] should emit smoke for heavily damaged tanks', async() => {
       const { emitSmokeParticles } = await import('../../src/utils/smokeUtils.js')
 
       const gameState = {
@@ -680,7 +680,7 @@ describe('updateGame.js', () => {
       expect(emitSmokeParticles).toHaveBeenCalled()
     })
 
-    it('should emit darker/heavier smoke during destruction freeze delay', async() => {
+    it('[U04967] should emit darker/heavier smoke during destruction freeze delay', async() => {
       const { emitSmokeParticles } = await import('../../src/utils/smokeUtils.js')
 
       const gameState = {
@@ -716,7 +716,7 @@ describe('updateGame.js', () => {
       )
     })
 
-    it('should not emit smoke for healthy units', async() => {
+    it('[U04968] should not emit smoke for healthy units', async() => {
       const { emitSmokeParticles } = await import('../../src/utils/smokeUtils.js')
 
       const gameState = {
@@ -743,7 +743,7 @@ describe('updateGame.js', () => {
       expect(emitSmokeParticles).not.toHaveBeenCalled()
     })
 
-    it('should update mines and mine layer behavior', async() => {
+    it('[U04969] should update mines and mine layer behavior', async() => {
       const { updateMines } = await import('../../src/game/mineSystem.js')
       const { updateMineLayerBehavior } = await import('../../src/game/mineLayerBehavior.js')
       const { updateMineSweeperBehavior } = await import('../../src/game/mineSweeperBehavior.js')
@@ -763,7 +763,7 @@ describe('updateGame.js', () => {
       expect(updateMineSweeperBehavior).toHaveBeenCalled()
     })
 
-    it('should check game end conditions', async() => {
+    it('[U04970] should check game end conditions', async() => {
       const { checkGameEndConditions } = await import('../../src/game/gameStateManager.js')
 
       const gameState = {
@@ -779,7 +779,7 @@ describe('updateGame.js', () => {
       expect(checkGameEndConditions).toHaveBeenCalled()
     })
 
-    it('should log unit status for units with logging enabled', async() => {
+    it('[U04971] should log unit status for units with logging enabled', async() => {
       const { logUnitStatus } = await import('../../src/utils/logger.js')
 
       const gameState = {
@@ -802,17 +802,17 @@ describe('updateGame.js', () => {
   })
 
   describe('updateTeslaCoilEffects', () => {
-    it('should re-export updateTeslaCoilEffects', () => {
+    it('[U04972] should re-export updateTeslaCoilEffects', () => {
       expect(typeof updateGameModule.updateTeslaCoilEffects).toBe('function')
     })
   })
 
   describe('Module exports', () => {
-    it('should export updateGame function', () => {
+    it('[U04973] should export updateGame function', () => {
       expect(typeof updateGameModule.updateGame).toBe('function')
     })
 
-    it('should export updateTeslaCoilEffects function', () => {
+    it('[U04974] should export updateTeslaCoilEffects function', () => {
       expect(typeof updateGameModule.updateTeslaCoilEffects).toBe('function')
     })
   })

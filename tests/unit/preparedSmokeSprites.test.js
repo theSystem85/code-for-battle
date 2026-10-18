@@ -16,7 +16,7 @@ function context() {
 }
 
 describe('PreparedSmokeBatch', () => {
-  it('prepares fixed sprites once and reuses them', () => {
+  it('[U03444] prepares fixed sprites once and reuses them', () => {
     const batch = new PreparedSmokeBatch()
     expect(batch.ensure()).toBe(true)
     const sprites = batch.sprites
@@ -28,7 +28,7 @@ describe('PreparedSmokeBatch', () => {
     expect(batch.backend).toBe('prepared-sprite')
   })
 
-  it('draws one smoke sprite per visible puff and skips culled ones', () => {
+  it('[U03445] draws one smoke sprite per visible puff and skips culled ones', () => {
     const batch = new PreparedSmokeBatch()
     const ctx = context()
     const hiddenRow = []
@@ -60,7 +60,7 @@ describe('PreparedSmokeBatch', () => {
     expect(batch.lastDrawCount).toBe(1)
   })
 
-  it('draws flame and shade only for puffs that need them', () => {
+  it('[U03446] draws flame and shade only for puffs that need them', () => {
     const batch = new PreparedSmokeBatch()
     const ctx = context()
     batch.render(ctx, [
@@ -75,7 +75,7 @@ describe('PreparedSmokeBatch', () => {
     expect(ctx.drawImage.mock.calls[0][3]).toBeCloseTo(flameRadius * 2)
   })
 
-  it('samples a full chimney budget from the same sprite without rebuilding it', () => {
+  it('[U03447] samples a full chimney budget from the same sprite without rebuilding it', () => {
     const batch = new PreparedSmokeBatch()
     const particles = Array.from({ length: 300 }, (_, index) => ({
       x: 20 + (index % 20) * 12,
@@ -105,7 +105,7 @@ describe('PreparedSmokeBatch', () => {
     expect(perFrame).toBeLessThan(2)
   })
 
-  it('uses prepared sprites from the effects renderer and keeps the gradient fallback', () => {
+  it('[U03448] uses prepared sprites from the effects renderer and keeps the gradient fallback', () => {
     const renderer = new EffectsRenderer()
     const ctx = context()
     renderer.renderSmoke(ctx, {

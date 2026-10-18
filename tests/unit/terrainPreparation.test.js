@@ -31,7 +31,7 @@ const assets = [
 ]
 
 describe('terrain preparation lifecycle', () => {
-  it('waits for image decode rather than publishing at load', async() => {
+  it('[U04435] waits for image decode rather than publishing at load', async() => {
     let finishDecode
     const decode = vi.fn(() => new Promise(resolve => { finishDecode = resolve }))
     const image = { naturalWidth: 16, naturalHeight: 8, decode }
@@ -57,7 +57,7 @@ describe('terrain preparation lifecycle', () => {
     expect(settled).toBe(true)
   })
 
-  it('publishes one complete generation and reports byte classes separately', async() => {
+  it('[U04436] publishes one complete generation and reports byte classes separately', async() => {
     const publish = vi.fn()
     const pipeline = new TerrainPreparationPipeline({
       byteBudget: createTerrainByteBudget(limits()),
@@ -107,7 +107,7 @@ describe('terrain preparation lifecycle', () => {
     })
   })
 
-  it('cancels stale work, exposes failure, and retries without partial publication', async() => {
+  it('[U04437] cancels stale work, exposes failure, and retries without partial publication', async() => {
     let shouldFail = true
     const publish = vi.fn()
     const pipeline = new TerrainPreparationPipeline({
@@ -147,7 +147,7 @@ describe('terrain preparation lifecycle', () => {
     expect(publish).toHaveBeenCalledOnce()
   })
 
-  it('reuses one descriptor generation and releases the previous generation budget', async() => {
+  it('[U04438] reuses one descriptor generation and releases the previous generation budget', async() => {
     const budget = createTerrainByteBudget(limits())
     const pipeline = new TerrainPreparationPipeline({
       byteBudget: budget,
@@ -174,7 +174,7 @@ describe('terrain preparation lifecycle', () => {
     expect(Object.values(budget.getUsage()).every(bytes => bytes === 0)).toBe(true)
   })
 
-  it('prepares canonical masks at the requested backing density', async() => {
+  it('[U04439] prepares canonical masks at the requested backing density', async() => {
     const createdSizes = []
     const pipeline = new TerrainPreparationPipeline({
       byteBudget: createTerrainByteBudget(limits()),
@@ -212,7 +212,7 @@ describe('terrain preparation lifecycle', () => {
     expect(prepared.byteUsage.preparedRasterBytes).toBe(2 * 64 * 64 * 4)
   })
 
-  it('keeps a 200x200 DPR-2 map in retained-descriptor mode under the raster limit', async() => {
+  it('[U04440] keeps a 200x200 DPR-2 map in retained-descriptor mode under the raster limit', async() => {
     const pipeline = new TerrainPreparationPipeline({
       byteBudget: createTerrainByteBudget(limits()),
       assetLoader: async() => ({ naturalWidth: 4, naturalHeight: 4 }),
@@ -235,7 +235,7 @@ describe('terrain preparation lifecycle', () => {
     expect(prepared.resources.rasterPages).toBeNull()
   })
 
-  it('rejects decoded images with unusable dimensions', async() => {
+  it('[U04441] rejects decoded images with unusable dimensions', async() => {
     await expect(decodePreparedImage({
       naturalWidth: 0,
       naturalHeight: 0,

@@ -110,20 +110,20 @@ describe('workshopLogic.js', () => {
   })
 
   describe('workshop initialization', () => {
-    it('should initialize repair slots around workshop', () => {
+    it('[U05145] should initialize repair slots around workshop', () => {
       updateWorkshopLogic(mockUnits, mockBuildings, mockMapGrid, 16)
       expect(workshop.repairSlots).toBeDefined()
       expect(Array.isArray(workshop.repairSlots)).toBe(true)
       expect(workshop.repairSlots.length).toBeGreaterThan(0)
     })
 
-    it('should initialize repair queue as empty array', () => {
+    it('[U05146] should initialize repair queue as empty array', () => {
       updateWorkshopLogic(mockUnits, mockBuildings, mockMapGrid, 16)
       expect(workshop.repairQueue).toBeDefined()
       expect(Array.isArray(workshop.repairQueue)).toBe(true)
     })
 
-    it('should create repair slots around the workshop perimeter', () => {
+    it('[U05147] should create repair slots around the workshop perimeter', () => {
       updateWorkshopLogic(mockUnits, mockBuildings, mockMapGrid, 16)
       // Repair slots should be on the perimeter (not inside the workshop)
       workshop.repairSlots.forEach(slot => {
@@ -138,7 +138,7 @@ describe('workshopLogic.js', () => {
   })
 
   describe('unit queuing', () => {
-    it('should add damaged units within service radius to repair queue', () => {
+    it('[U05148] should add damaged units within service radius to repair queue', () => {
       // Workshop is at x:5, y:5, width:3, height:3
       // The function should process units within the service radius
       // This test verifies the function executes without error when a damaged unit is nearby
@@ -168,7 +168,7 @@ describe('workshopLogic.js', () => {
       expect(Array.isArray(workshop.repairQueue)).toBe(true)
     })
 
-    it('should not add fully healed units to queue', () => {
+    it('[U05149] should not add fully healed units to queue', () => {
       const healthyUnit = {
         id: 2,
         type: 'tank',
@@ -186,7 +186,7 @@ describe('workshopLogic.js', () => {
       expect(workshop.repairQueue).not.toContain(healthyUnit)
     })
 
-    it('should not add enemy units to queue', () => {
+    it('[U05150] should not add enemy units to queue', () => {
       const enemyUnit = {
         id: 3,
         type: 'tank',
@@ -204,7 +204,7 @@ describe('workshopLogic.js', () => {
       expect(workshop.repairQueue).not.toContain(enemyUnit)
     })
 
-    it('should not add moving units to queue', () => {
+    it('[U05151] should not add moving units to queue', () => {
       const movingUnit = {
         id: 4,
         type: 'tank',
@@ -225,7 +225,7 @@ describe('workshopLogic.js', () => {
   })
 
   describe('repair process', () => {
-    it('should heal unit when in repair slot', () => {
+    it('[U05152] should heal unit when in repair slot', () => {
       const damagedUnit = {
         id: 1,
         type: 'tank',
@@ -251,7 +251,7 @@ describe('workshopLogic.js', () => {
       expect(damagedUnit.health).toBeGreaterThan(initialHealth)
     })
 
-    it('should complete repair and release unit when fully healed', () => {
+    it('[U05153] should complete repair and release unit when fully healed', () => {
       // Unit is already at max health - should be released immediately
       const unit = {
         id: 1,
@@ -279,7 +279,7 @@ describe('workshopLogic.js', () => {
       expect(unit.repairingAtWorkshop).toBe(false)
     })
 
-    it('should charge money for repairs', () => {
+    it('[U05154] should charge money for repairs', () => {
       gameState.money = 10000
 
       const unit = {
@@ -308,7 +308,7 @@ describe('workshopLogic.js', () => {
       expect(gameState.money).toBeLessThanOrEqual(10000)
     })
 
-    it('charges repair costs from AI factory budgets', () => {
+    it('[U05155] charges repair costs from AI factory budgets', () => {
       const aiFactory = { id: 'ai1', owner: 'ai1', budget: 60 }
       gameState.factories = [aiFactory]
 
@@ -338,7 +338,7 @@ describe('workshopLogic.js', () => {
       expect(aiFactory.budget).toBeLessThan(60)
     })
 
-    it('should handle dead units in repair slots', () => {
+    it('[U05156] should handle dead units in repair slots', () => {
       const deadUnit = {
         id: 1,
         type: 'tank',
@@ -360,20 +360,20 @@ describe('workshopLogic.js', () => {
   })
 
   describe('restoration process', () => {
-    it('should initialize restoration queue', () => {
+    it('[U05157] should initialize restoration queue', () => {
       updateWorkshopLogic(mockUnits, mockBuildings, mockMapGrid, 16)
       expect(workshop.restorationQueue).toBeDefined()
       expect(Array.isArray(workshop.restorationQueue)).toBe(true)
     })
 
-    it('should process restoration queue when empty', () => {
+    it('[U05158] should process restoration queue when empty', () => {
       workshop.restorationQueue = []
       workshop.currentRestoration = null
       updateWorkshopLogic(mockUnits, mockBuildings, mockMapGrid, 16)
       expect(workshop.currentRestoration).toBeNull()
     })
 
-    it('should start restoration from queue', () => {
+    it('[U05159] should start restoration from queue', () => {
       const mockWreck = {
         id: 'wreck1',
         type: 'tank',
@@ -396,7 +396,7 @@ describe('workshopLogic.js', () => {
       expect(workshop.currentRestoration).not.toBeNull()
     })
 
-    it('should update restoration progress over time', () => {
+    it('[U05160] should update restoration progress over time', () => {
       const mockWreck = {
         id: 'wreck1',
         type: 'tank',
@@ -421,7 +421,7 @@ describe('workshopLogic.js', () => {
       expect(workshop.restorationProgress).toBeCloseTo(0.6, 1)
     })
 
-    it('should cancel restoration if wreck is destroyed', () => {
+    it('[U05161] should cancel restoration if wreck is destroyed', () => {
       vi.mocked(getWreckById).mockReturnValue(null) // Wreck no longer exists
 
       workshop.repairSlots = []
@@ -439,7 +439,7 @@ describe('workshopLogic.js', () => {
       expect(workshop.restorationProgress).toBe(0)
     })
 
-    it('should complete restoration and create unit', () => {
+    it('[U05162] should complete restoration and create unit', () => {
       const mockWreck = {
         id: 'wreck1',
         type: 'tank',
@@ -467,7 +467,7 @@ describe('workshopLogic.js', () => {
       expect(removeWreckById).toHaveBeenCalledWith(expect.anything(), 'wreck1')
     })
 
-    it('restores units at fallback spawn origin when no tiles are passable', () => {
+    it('[U05163] restores units at fallback spawn origin when no tiles are passable', () => {
       const mockWreck = {
         id: 'wreck2',
         type: 'tank',
@@ -511,7 +511,7 @@ describe('workshopLogic.js', () => {
   })
 
   describe('slot assignment', () => {
-    it('should assign units to available slots', () => {
+    it('[U05164] should assign units to available slots', () => {
       vi.mocked(findPath).mockReturnValue([{ x: 4, y: 5 }, { x: 4, y: 5 }])
 
       const unit = {
@@ -534,7 +534,7 @@ describe('workshopLogic.js', () => {
       // Unit should be assigned to slot
     })
 
-    it('should not assign to occupied slots', () => {
+    it('[U05165] should not assign to occupied slots', () => {
       const existingUnit = { id: 999, health: 50 }
       const newUnit = {
         id: 1,
@@ -555,7 +555,7 @@ describe('workshopLogic.js', () => {
   })
 
   describe('unit movement interruption', () => {
-    it('should cancel repair if unit starts moving', () => {
+    it('[U05166] should cancel repair if unit starts moving', () => {
       const unit = {
         id: 1,
         type: 'tank',
@@ -584,7 +584,7 @@ describe('workshopLogic.js', () => {
   })
 
   describe('rally point', () => {
-    it('should set rally point for completed units', () => {
+    it('[U05167] should set rally point for completed units', () => {
       const mockWreck = {
         id: 'wreck1',
         type: 'tank',
@@ -611,7 +611,7 @@ describe('workshopLogic.js', () => {
       expect(createUnit).toHaveBeenCalled()
     })
 
-    it('selects rally point from base structures when current point is invalid', () => {
+    it('[U05168] selects rally point from base structures when current point is invalid', () => {
       const mockWreck = {
         id: 'wreck3',
         type: 'tank',

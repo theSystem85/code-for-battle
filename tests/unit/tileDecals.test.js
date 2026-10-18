@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { setTileDecal, setWorldDecal, setBuildingDebrisDecals, isDecalBlockedTile, setDecalSurfaceBlocker } from '../../src/game/tileDecals.js'
 
 describe('tileDecals', () => {
-  it('sets a deterministic decal variant from map seed and tile coordinate', () => {
+  it('[U04467] sets a deterministic decal variant from map seed and tile coordinate', () => {
     const mapGridA = [[{ type: 'land' }]]
     const mapGridB = [[{ type: 'land' }]]
     const gameState = { mapSeed: 'abc-seed' }
@@ -14,7 +14,7 @@ describe('tileDecals', () => {
     expect(mapGridA[0][0].decalCounter).toBe(1)
   })
 
-  it('replaces an existing tile decal when a new event occurs', () => {
+  it('[U04468] replaces an existing tile decal when a new event occurs', () => {
     const mapGrid = [[{ type: 'land' }]]
     const gameState = { mapSeed: '42' }
 
@@ -27,7 +27,7 @@ describe('tileDecals', () => {
     expect(mapGrid[0][0].decalCounter).toBe(2)
   })
 
-  it('preserves an existing crater when a later impact hits the same tile', () => {
+  it('[U04469] preserves an existing crater when a later impact hits the same tile', () => {
     const mapGrid = [[{ type: 'land' }]]
     const gameState = { mapSeed: '42' }
 
@@ -39,7 +39,7 @@ describe('tileDecals', () => {
     expect(mapGrid[0][0].decalCounter).toBe(1)
   })
 
-  it('applies debris decals to every tile of a building footprint', () => {
+  it('[U04470] applies debris decals to every tile of a building footprint', () => {
     const mapGrid = [
       [{ type: 'land' }, { type: 'land' }, { type: 'land' }],
       [{ type: 'land' }, { type: 'land' }, { type: 'land' }]
@@ -59,7 +59,7 @@ describe('tileDecals', () => {
     expect(mapGrid[0][0].decal).toBeUndefined()
   })
 
-  it('supports world-coordinate impact placement', () => {
+  it('[U04471] supports world-coordinate impact placement', () => {
     const mapGrid = [
       [{ type: 'land' }, { type: 'land' }],
       [{ type: 'land' }, { type: 'land' }]
@@ -70,7 +70,7 @@ describe('tileDecals', () => {
     expect(mapGrid[0][0].decal?.tag).toBe('impact')
   })
 
-  it('does not place impact or crater decals on water tiles', () => {
+  it('[U04472] does not place impact or crater decals on water tiles', () => {
     const mapGrid = [[{ type: 'water' }]]
     const gameState = { mapSeed: '17' }
 
@@ -83,7 +83,7 @@ describe('tileDecals', () => {
     expect(mapGrid[0][0].decalCounter).toBeUndefined()
   })
 
-  it('still allows debris decals on water tiles', () => {
+  it('[U04473] still allows debris decals on water tiles', () => {
     const mapGrid = [[{ type: 'water' }]]
     const gameState = { mapSeed: '17' }
 
@@ -94,7 +94,7 @@ describe('tileDecals', () => {
     expect(mapGrid[0][0].decalCounter).toBe(1)
   })
 
-  it('only places impact and crater decals on passable tiles', () => {
+  it('[U04474] only places impact and crater decals on passable tiles', () => {
     const mapGrid = [[{ type: 'rock' }, { type: 'land', building: { type: 'powerPlant' } }, { type: 'land', seedCrystal: true }, { type: 'land' }, { type: 'land', building: { type: 'airstrip' }, buildOnlyOccupied: true }]]
     const gameState = { mapSeed: '9' }
     for (const x of [0, 1, 2]) {
@@ -109,7 +109,7 @@ describe('tileDecals', () => {
     expect(setTileDecal(mapGrid, gameState, 1, 0, 'debris')?.tag).toBe('debris')
   })
 
-  it('consults registered surface blockers for impassable decorations', () => {
+  it('[U04475] consults registered surface blockers for impassable decorations', () => {
     const mapGrid = [[{ type: 'land' }, { type: 'land' }]]
     setDecalSurfaceBlocker('test', (_grid, x) => x === 1)
     try {

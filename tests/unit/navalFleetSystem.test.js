@@ -90,7 +90,7 @@ describe('six-ship naval fleet systems', () => {
     rebuildWaterMineLookup()
   })
 
-  it('keeps transport and capital-ship balance relationships realistic', () => {
+  it('[U03130] keeps transport and capital-ship balance relationships realistic', () => {
     expect(UNIT_PROPERTIES.hovercraft.transportCapacity).toBe(4)
     expect(UNIT_PROPERTIES.vehicleFerry.transportCapacity).toBe(10)
     expect(UNIT_PROPERTIES.hovercraft.speed).toBeGreaterThan(UNIT_PROPERTIES.vehicleFerry.speed)
@@ -98,11 +98,11 @@ describe('six-ship naval fleet systems', () => {
     expect(getNavalRenderLengthTiles('aircraftCarrier') / getNavalRenderLengthTiles('destroyer')).toBeCloseTo(2.4, 5)
   })
 
-  it('raises F22 rocket damage by approximately fifty percent', () => {
+  it('[U03131] raises F22 rocket damage by approximately fifty percent', () => {
     expect(getDamageForUnitType('f22Raptor')).toBe(37.5)
   })
 
-  it('routes a friendly land vehicle to a shoreline transport without using land occupancy as the ship tile', () => {
+  it('[U03132] routes a friendly land vehicle to a shoreline transport without using land occupancy as the ship tile', () => {
     const map = createMap(20, 20, 'land')
     for (let y = 0; y < map.length; y++) {
       for (let x = 10; x < map[y].length; x++) map[y][x].type = 'water'
@@ -120,7 +120,7 @@ describe('six-ship naval fleet systems', () => {
     expect(['land', 'street']).toContain(map[tank.moveTarget.y][tank.moveTarget.x].type)
   })
 
-  it('supports ground-selected boarding commands and completes loading at the coastal rendezvous', () => {
+  it('[U03133] supports ground-selected boarding commands and completes loading at the coastal rendezvous', () => {
     const map = createMap(20, 20, 'land')
     for (let y = 0; y < map.length; y++) {
       for (let x = 10; x < map[y].length; x++) map[y][x].type = 'water'
@@ -181,7 +181,7 @@ describe('six-ship naval fleet systems', () => {
     expect(ferry.pendingLoadUnitIds).toEqual([])
   })
 
-  it('supports the inverse transport-selected boarding command even when the hull overlaps the cargo hit area', () => {
+  it('[U03134] supports the inverse transport-selected boarding command even when the hull overlaps the cargo hit area', () => {
     const map = createMap(20, 20, 'land')
     for (let y = 0; y < map.length; y++) {
       for (let x = 10; x < map[y].length; x++) map[y][x].type = 'water'
@@ -204,7 +204,7 @@ describe('six-ship naval fleet systems', () => {
     expect(hovercraft.pendingLoadUnitIds).toEqual([tank.id])
   })
 
-  it('preserves every cargo slot across sequential boarding clicks', () => {
+  it('[U03135] preserves every cargo slot across sequential boarding clicks', () => {
     const map = createMap(24, 20, 'land')
     for (let y = 0; y < map.length; y++) {
       for (let x = 12; x < map[y].length; x++) map[y][x].type = 'water'
@@ -233,7 +233,7 @@ describe('six-ship naval fleet systems', () => {
     expect(second.guardMode).toBe(false)
   })
 
-  it('resolves overlapping clicks by embarkation role before generic friendly targeting', () => {
+  it('[U03136] resolves overlapping clicks by embarkation role before generic friendly targeting', () => {
     const map = createMap(20, 20, 'land')
     for (let y = 0; y < map.length; y++) {
       for (let x = 10; x < map[y].length; x++) map[y][x].type = 'water'
@@ -290,7 +290,7 @@ describe('six-ship naval fleet systems', () => {
     expect(secondFerry.guardTarget).toBeNull()
   })
 
-  it('prepares a land-based hovercraft to load four of five boxed tanks through its bow', () => {
+  it('[U03137] prepares a land-based hovercraft to load four of five boxed tanks through its bow', () => {
     const map = createMap(24, 20, 'land')
     for (let y = 0; y < map.length; y++) {
       for (let x = 16; x < map[y].length; x++) map[y][x].type = 'water'
@@ -319,7 +319,7 @@ describe('six-ship naval fleet systems', () => {
     expect(hovercraft.pendingLoadRendezvous.navigationTile).toEqual({ x: 8, y: 8 })
   })
 
-  it('aligns a hovercraft bow-first and transfers cargo through its front ramp', () => {
+  it('[U03138] aligns a hovercraft bow-first and transfers cargo through its front ramp', () => {
     const map = createMap(20, 20, 'land')
     for (let y = 0; y < map.length; y++) {
       for (let x = 10; x < map[y].length; x++) map[y][x].type = 'water'
@@ -356,7 +356,7 @@ describe('six-ship naval fleet systems', () => {
     expect(tank.transportTransfer).toMatchObject({ kind: 'load', transportId: hovercraft.id })
   })
 
-  it('disembarks at the shoreline and sends cargo onward to the clicked land destination', () => {
+  it('[U03139] disembarks at the shoreline and sends cargo onward to the clicked land destination', () => {
     const map = createMap(20, 20, 'land')
     for (let y = 0; y < map.length; y++) {
       for (let x = 10; x < map[y].length; x++) map[y][x].type = 'water'
@@ -428,7 +428,7 @@ describe('six-ship naval fleet systems', () => {
     expect(overlappingCoastFerry.pendingUnloadTile).toMatchObject({ x: 9, y: 8 })
   })
 
-  it('cancels an active load from either participant without dangling transfer state', () => {
+  it('[U03140] cancels an active load from either participant without dangling transfer state', () => {
     const map = createMap(20, 20, 'land')
     for (let y = 0; y < map.length; y++) {
       for (let x = 10; x < map[y].length; x++) map[y][x].type = 'water'
@@ -480,7 +480,7 @@ describe('six-ship naval fleet systems', () => {
     expect(requestTransportLoad(ferry, tank, map, occupancyMap, units)).toBe(true)
   })
 
-  it('restores active disembarking cargo aboard when S-style cancellation occurs', () => {
+  it('[U03141] restores active disembarking cargo aboard when S-style cancellation occurs', () => {
     const map = createMap(20, 20, 'land')
     for (let y = 0; y < map.length; y++) {
       for (let x = 10; x < map[y].length; x++) map[y][x].type = 'water'
@@ -528,7 +528,7 @@ describe('six-ship naval fleet systems', () => {
     expect(requestTransportUnload(ferry, 6, 8, map)).toBe(true)
   })
 
-  it('enforces four weighted carrier deck slots and services fuel/ammo without repairing HP', () => {
+  it('[U03142] enforces four weighted carrier deck slots and services fuel/ammo without repairing HP', () => {
     const carrier = {
       ...createShip('aircraftCarrier', 'carrier', 'player1'),
       deckSlotCapacity: 4,
@@ -561,7 +561,7 @@ describe('six-ship naval fleet systems', () => {
     expect(f35a.health).toBe(damagedHealth)
   })
 
-  it('accepts Apache VTOL recovery as a two-slot carrier aircraft', () => {
+  it('[U03143] accepts Apache VTOL recovery as a two-slot carrier aircraft', () => {
     const carrier = {
       ...createShip('aircraftCarrier', 'carrier', 'player1'),
       deckSlotCapacity: 4,
@@ -579,7 +579,7 @@ describe('six-ship naval fleet systems', () => {
     expect(requestCarrierLanding(apacheC, carrier, units, 100)).toBe(false)
   })
 
-  it('eases fixed-wing taxi and launch through continuous carrier-relative stages', () => {
+  it('[U03144] eases fixed-wing taxi and launch through continuous carrier-relative stages', () => {
     const carrier = {
       ...createShip('aircraftCarrier', 'carrier', 'player1'),
       deckSlotCapacity: 4,
@@ -628,7 +628,7 @@ describe('six-ship naval fleet systems', () => {
     expect(f22.f22AssignedDestination.destinationTile).toEqual({ x: 20, y: 8 })
   })
 
-  it('holds F35 altitude until directly above its reserved carrier parking position', () => {
+  it('[U03145] holds F35 altitude until directly above its reserved carrier parking position', () => {
     const carrier = {
       ...createShip('aircraftCarrier', 'carrier', 'player1'),
       deckSlotCapacity: 4,
@@ -666,7 +666,7 @@ describe('six-ship naval fleet systems', () => {
     expect(f35.y).toBeCloseTo(touchdownY, 5)
   })
 
-  it('stages an F22 fourteen tiles astern and descends before the rear runway threshold', () => {
+  it('[U03146] stages an F22 fourteen tiles astern and descends before the rear runway threshold', () => {
     const carrier = {
       ...createShip('aircraftCarrier', 'carrier', 'player1'),
       deckSlotCapacity: 4,
@@ -714,7 +714,7 @@ describe('six-ship naval fleet systems', () => {
     expect(f22.altitude).toBeCloseTo(TILE_SIZE * 0.8)
   })
 
-  it('launches partially armed carrier F22s and recovers them after target loss or ammo exhaustion', () => {
+  it('[U03147] launches partially armed carrier F22s and recovers them after target loss or ammo exhaustion', () => {
     const carrier = {
       ...createShip('aircraftCarrier', 'carrier', 'player1'),
       deckSlotCapacity: 4,
@@ -772,7 +772,7 @@ describe('six-ship naval fleet systems', () => {
     })
   })
 
-  it('keeps a carrier stopped while its aircraft cycle through strike, recovery, and relaunch', () => {
+  it('[U03148] keeps a carrier stopped while its aircraft cycle through strike, recovery, and relaunch', () => {
     const carrier = {
       ...createShip('aircraftCarrier', 'carrier', 'player1'),
       deckSlotCapacity: 4,
@@ -825,7 +825,7 @@ describe('six-ship naval fleet systems', () => {
     expect(f35.carrierOperation.state).toBe('launch')
   })
 
-  it('places bow wakes ahead of the hull and suppresses all submerged-submarine wakes', () => {
+  it('[U03149] places bow wakes ahead of the hull and suppresses all submerged-submarine wakes', () => {
     const destroyer = createShip('destroyer', 'destroyer', 'player1')
     destroyer.movement.currentSpeed = 1
     destroyer.movement.isMoving = true
@@ -847,7 +847,7 @@ describe('six-ship naval fleet systems', () => {
     expect(wakeState.shipWakes.some(wake => wake.sourceUnitId === submarine.id)).toBe(false)
   })
 
-  it('lets all four battleship turrets target independently and staggers every barrel in an eight-second broadside cycle', () => {
+  it('[U03150] lets all four battleship turrets target independently and staggers every barrel in an eight-second broadside cycle', () => {
     const battleship = {
       ...createShip('battleship', 'battle', 'player1'),
       selectedTurret: null,
@@ -887,7 +887,7 @@ describe('six-ship naval fleet systems', () => {
     expect(bullets).toHaveLength(9)
   })
 
-  it('hydrates battleship turret state once and preserves every hot-loop object identity', () => {
+  it('[U03151] hydrates battleship turret state once and preserves every hot-loop object identity', () => {
     const battleship = {
       ...createShip('battleship', 'stable-batteries', 'player1'),
       batteries: {
@@ -911,7 +911,7 @@ describe('six-ship naval fleet systems', () => {
     })
   })
 
-  it('turns the hull side-on for a hull-issued target and exposes tower-blocked turret arcs', () => {
+  it('[U03152] turns the hull side-on for a hull-issued target and exposes tower-blocked turret arcs', () => {
     const battleship = {
       ...createShip('battleship', 'battle', 'player1'),
       selectedTurret: null,
@@ -932,7 +932,7 @@ describe('six-ship naval fleet systems', () => {
     expect(isBattleshipTurretAngleBlocked(battleship, 'foreInner', blockedArc.centerAngle + Math.PI / 2)).toBe(false)
   })
 
-  it('keeps a commanded battleship path and fires only tower-clear turrets at its retained target', () => {
+  it('[U03153] keeps a commanded battleship path and fires only tower-clear turrets at its retained target', () => {
     const battleship = {
       ...createShip('battleship', 'mobile-battle', 'player1'),
       selectedTurret: null,
@@ -959,7 +959,7 @@ describe('six-ship naval fleet systems', () => {
     expect(battleship.batteries.aftOuter.scheduledAt).toBeNull()
   })
 
-  it('lets remote helm control override broadside turning while turrets continue attacking', () => {
+  it('[U03154] lets remote helm control override broadside turning while turrets continue attacking', () => {
     const battleship = {
       ...createShip('battleship', 'remote-battle', 'player1'),
       selectedTurret: null,
@@ -979,7 +979,7 @@ describe('six-ship naval fleet systems', () => {
     expect(bullets[0].id).toContain('-foreOuter-0-')
   })
 
-  it('clears every battleship target and pending barrel when fire control is stopped', () => {
+  it('[U03155] clears every battleship target and pending barrel when fire control is stopped', () => {
     const battleship = {
       ...createShip('battleship', 'stopped-battle', 'player1'),
       selectedTurret: null,
@@ -1004,7 +1004,7 @@ describe('six-ship naval fleet systems', () => {
     expect(bullets).toEqual([])
   })
 
-  it('uses the expanded battleship range and limits submarines to ships and partly-water Shipyards', () => {
+  it('[U03156] uses the expanded battleship range and limits submarines to ships and partly-water Shipyards', () => {
     const battleship = createShip('battleship', 'battle', 'player1')
     expect(getEffectiveFireRange(battleship)).toBe(TILE_SIZE * 36)
 
@@ -1016,7 +1016,7 @@ describe('six-ship naval fleet systems', () => {
     expect(canUnitTargetEntity(battleship, landUnit)).toBe(true)
   })
 
-  it('lets surface battleships shell land buildings and submarines torpedo eligible yard buildings', () => {
+  it('[U03157] lets surface battleships shell land buildings and submarines torpedo eligible yard buildings', () => {
     const landBuilding = { id: 'plant', type: 'powerPlant', owner: 'player2', x: 18, y: 8, width: 2, height: 2, health: 200 }
     const shipyard = { id: 'yard', type: 'shipyard', owner: 'player2', x: 12, y: 8, width: 4, height: 4, health: 1000 }
     gameState.buildings = [landBuilding, shipyard]
@@ -1060,7 +1060,7 @@ describe('six-ship naval fleet systems', () => {
     expect(torpedoes).toHaveLength(1)
   })
 
-  it('assigns a hull-selected battleship target to all four turrets', () => {
+  it('[U03158] assigns a hull-selected battleship target to all four turrets', () => {
     const battleship = {
       ...createShip('battleship', 'battle', 'player1'),
       selectedTurret: null,
@@ -1081,7 +1081,7 @@ describe('six-ship naval fleet systems', () => {
     })
   })
 
-  it('disables a random remaining turret at each 20% damage threshold and restores them in reverse order', () => {
+  it('[U03159] disables a random remaining turret at each 20% damage threshold and restores them in reverse order', () => {
     const battleship = {
       ...createShip('battleship', 'battle', 'player1'),
       selectedTurret: null,
@@ -1116,7 +1116,7 @@ describe('six-ship naval fleet systems', () => {
     expect(BATTLESHIP_TURRET_NAMES.every(name => battleship.batteries[name].enabled)).toBe(true)
   })
 
-  it('surfaces gradually before launching a ship-only torpedo', () => {
+  it('[U03160] surfaces gradually before launching a ship-only torpedo', () => {
     const submarine = {
       ...createShip('submarine', 'sub', 'player1'),
       depthState: 'submerged',
@@ -1145,7 +1145,7 @@ describe('six-ship naval fleet systems', () => {
     expect(playPositionalSound).toHaveBeenCalledWith('submarineTorpedo', expect.any(Number), expect.any(Number), 0.7)
   })
 
-  it('plays the diving sound when a surfaced submarine finishes submerging', () => {
+  it('[U03161] plays the diving sound when a surfaced submarine finishes submerging', () => {
     const submarine = {
       ...createShip('submarine', 'sub-dive', 'player1'),
       depthState: 'surfaced',
@@ -1163,7 +1163,7 @@ describe('six-ship naval fleet systems', () => {
     expect(playPositionalSound).toHaveBeenCalledWith('submarineDiving', submarine.x, submarine.y, 0.7)
   })
 
-  it('lets surfaced submarines torpedo enemy yards with strict target collision', () => {
+  it('[U03162] lets surfaced submarines torpedo enemy yards with strict target collision', () => {
     const submarine = {
       ...createShip('submarine', 'sub', 'player1', 8, 8),
       depthState: 'surfaced',
@@ -1201,7 +1201,7 @@ describe('six-ship naval fleet systems', () => {
     })
   })
 
-  it('allows close Destroyers to damage submerged submarines only with delayed depth charges', () => {
+  it('[U03163] allows close Destroyers to damage submerged submarines only with delayed depth charges', () => {
     const submarine = {
       ...createShip('submarine', 'sub', 'player2', 9, 8),
       depthState: 'submerged',
@@ -1231,7 +1231,7 @@ describe('water mine system', () => {
     rebuildWaterMineLookup()
   })
 
-  it('uses larger naval trigger/blast radii, ignores land and submerged units, and supports safe clearing', () => {
+  it('[U03164] uses larger naval trigger/blast radii, ignores land and submerged units, and supports safe clearing', () => {
     expect(WATER_MINE_DAMAGE_RADIUS).toBeGreaterThan(WATER_MINE_TRIGGER_RADIUS)
     const map = createMap()
     expect(deployWaterMine(5, 5, 'player1', createMap(10, 10, 'land'), 0)).toBeNull()
@@ -1252,7 +1252,7 @@ describe('water mine system', () => {
   })
 })
 
-it('rejects garage vehicles as combat targets for land and naval shooters', () => {
+it('[U03165] rejects garage vehicles as combat targets for land and naval shooters', () => {
   const target = { type: 'tank', owner: 'player2', health: 100, factoryExit: { phase: 'moving' } }
   expect(canUnitTargetEntity({ type: 'tank' }, target)).toBe(false)
   expect(canUnitTargetEntity({ type: 'battleship' }, target)).toBe(false)

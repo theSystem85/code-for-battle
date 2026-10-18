@@ -34,21 +34,21 @@ afterEach(() => {
 })
 
 describe('device pixel snapping', () => {
-  it('snaps logical coordinates to whole device pixels for each DPR', () => {
+  it('[U04338] snaps logical coordinates to whole device pixels for each DPR', () => {
     expect(snapToDevicePixel(10.4, 1)).toBe(10)
     expect(snapToDevicePixel(10.3, 2)).toBe(10.5)
     expect(snapToDevicePixel(10.2, 3)).toBeCloseTo(10 + 1 / 3, 10)
     expect(snapToDevicePixel(10.2, 3) * 3).toBeCloseTo(31, 10)
   })
 
-  it('falls back to 1x for invalid densities', () => {
+  it('[U04339] falls back to 1x for invalid densities', () => {
     expect(snapToDevicePixel(4.6, 0)).toBe(5)
     expect(snapToDevicePixel(4.6, NaN)).toBe(5)
   })
 })
 
 describe('tank rotation cache', () => {
-  it('maps angles to the nearest of 64 steps, wrapping negatives and full turns', () => {
+  it('[U04340] maps angles to the nearest of 64 steps, wrapping negatives and full turns', () => {
     const step = Math.PI * 2 / TANK_ROTATION_STEPS
     expect(getRotationStepIndex(0)).toBe(0)
     expect(getRotationStepIndex(step * 0.49)).toBe(0)
@@ -58,13 +58,13 @@ describe('tank rotation cache', () => {
     expect(getRotationStepIndex(Math.PI)).toBe(32)
   })
 
-  it('uses even square cells that hold the sprite at any angle', () => {
+  it('[U04341] uses even square cells that hold the sprite at any angle', () => {
     const size = getRotatedCellSize(66, 96)
     expect(size % 2).toBe(0)
     expect(size).toBeGreaterThanOrEqual(Math.hypot(66, 96))
   })
 
-  it('pre-renders every part at every step and serves frames for the published sprites only', async() => {
+  it('[U04342] pre-renders every part at every step and serves frames for the published sprites only', async() => {
     const sprites = {
       'tankV1:wagon': fakeSprite(66, 96),
       'tankV1:turret': fakeSprite(54, 70),
@@ -99,12 +99,12 @@ describe('tank rotation cache', () => {
     expect(getTankRotationFrame('tankV1', 'wagon', 0, fakeSprite(66, 96))).toBeNull()
   })
 
-  it('returns null and keeps the live-rotation fallback while no cache exists', () => {
+  it('[U04343] returns null and keeps the live-rotation fallback while no cache exists', () => {
     expect(getTankRotationFrame('tankV2', 'wagon', 0)).toBeNull()
     expect(getTankRotationCacheStats().ready).toBe(false)
   })
 
-  it('abandons a running build when the cache is reset (density swap)', async() => {
+  it('[U04344] abandons a running build when the cache is reset (density swap)', async() => {
     let release
     const gate = new Promise(resolve => { release = resolve })
     const promise = buildTankRotationCache({
@@ -123,7 +123,7 @@ describe('tank rotation cache', () => {
 })
 
 describe('DPR variant selection', () => {
-  it('reads the overlay pixel ratio from canvas-density-changed events', () => {
+  it('[U04345] reads the overlay pixel ratio from canvas-density-changed events', () => {
     expect(resolveSpriteDensityFromEvent({ pixelRatio: 2, overlayPixelRatio: 3, rawPixelRatio: 3 })).toBe(3)
     expect(resolveSpriteDensityFromEvent({ pixelRatio: 1.5 })).toBe(1.5)
     expect(Number.isNaN(resolveSpriteDensityFromEvent({}))).toBe(true)
@@ -166,18 +166,18 @@ describe('DPR variant selection', () => {
     return requested.filter(Boolean)
   }
 
-  it('fetches only the prepared variant matching the device pixel ratio', async() => {
+  it('[U04346] fetches only the prepared variant matching the device pixel ratio', async() => {
     expect(await prepareWith(1)).toEqual(['/images/prepared/unit/tankV1/wagon@1x.webp?v=v-test'])
     expect(await prepareWith(2)).toEqual(['/images/prepared/unit/tankV1/wagon@2x.webp?v=v-test'])
     expect(await prepareWith(3)).toEqual(['/images/prepared/unit/tankV1/wagon@3x.webp?v=v-test'])
   })
 
-  it('uses the nearest higher prepared variant (never the full-size source) for fractional DPRs', async() => {
+  it('[U04347] uses the nearest higher prepared variant (never the full-size source) for fractional DPRs', async() => {
     expect(await prepareWith(2.625)).toEqual(['/images/prepared/unit/tankV1/wagon@3x.webp?v=v-test'])
     expect(await prepareWith(1.5)).toEqual(['/images/prepared/unit/tankV1/wagon@2x.webp?v=v-test'])
   })
 
-  it('ships @1x/@2x/@3x prepared variants for every tank part', async() => {
+  it('[U04348] ships @1x/@2x/@3x prepared variants for every tank part', async() => {
     const root = path.resolve(import.meta.dirname, '../..')
     const manifest = JSON.parse(await readFile(path.join(root, 'public/images/prepared/sprite-manifest.json'), 'utf8'))
     for (const variant of ['tankV1', 'tankV2', 'tankV3']) {

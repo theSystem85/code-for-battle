@@ -30,7 +30,7 @@ describe('smokeUtils', () => {
   })
 
   describe('removeSmokeParticle', () => {
-    it('removes particle at specified index', () => {
+    it('[U04058] removes particle at specified index', () => {
       gameState.smokeParticles = [
         { x: 0, y: 0 },
         { x: 10, y: 10 },
@@ -44,7 +44,7 @@ describe('smokeUtils', () => {
       expect(gameState.smokeParticles[1].x).toBe(20)
     })
 
-    it('recycles removed particle to pool', () => {
+    it('[U04059] recycles removed particle to pool', () => {
       gameState.smokeParticles = [{ x: 10, y: 10, alpha: 0.5 }]
 
       removeSmokeParticle(gameState, 0)
@@ -53,7 +53,7 @@ describe('smokeUtils', () => {
       expect(gameState.smokeParticlePool[0].alpha).toBe(0)
     })
 
-    it('handles negative index gracefully', () => {
+    it('[U04060] handles negative index gracefully', () => {
       gameState.smokeParticles = [{ x: 0, y: 0 }]
 
       removeSmokeParticle(gameState, -1)
@@ -61,7 +61,7 @@ describe('smokeUtils', () => {
       expect(gameState.smokeParticles).toHaveLength(1)
     })
 
-    it('handles index beyond length gracefully', () => {
+    it('[U04061] handles index beyond length gracefully', () => {
       gameState.smokeParticles = [{ x: 0, y: 0 }]
 
       removeSmokeParticle(gameState, 5)
@@ -69,7 +69,7 @@ describe('smokeUtils', () => {
       expect(gameState.smokeParticles).toHaveLength(1)
     })
 
-    it('initializes arrays if missing', () => {
+    it('[U04062] initializes arrays if missing', () => {
       const emptyState = {}
 
       removeSmokeParticle(emptyState, 0)
@@ -78,7 +78,7 @@ describe('smokeUtils', () => {
       expect(emptyState.smokeParticlePool).toEqual([])
     })
 
-    it('resets particle fields when recycling', () => {
+    it('[U04063] resets particle fields when recycling', () => {
       const particle = { x: 10, y: 10, originalSize: 8, alpha: 0.7, size: 5 }
       gameState.smokeParticles = [particle]
 
@@ -92,7 +92,7 @@ describe('smokeUtils', () => {
   })
 
   describe('enforceSmokeParticleCapacity', () => {
-    it('removes oldest particles when over capacity', () => {
+    it('[U04064] removes oldest particles when over capacity', () => {
       // Create 15 particles (over MAX_SMOKE_PARTICLES of 10)
       for (let i = 0; i < 15; i++) {
         gameState.smokeParticles.push({ x: i, y: i })
@@ -105,7 +105,7 @@ describe('smokeUtils', () => {
       expect(gameState.smokeParticles[0].x).toBe(5)
     })
 
-    it('does nothing when under capacity', () => {
+    it('[U04065] does nothing when under capacity', () => {
       gameState.smokeParticles = [{ x: 0 }, { x: 1 }, { x: 2 }]
 
       enforceSmokeParticleCapacity(gameState)
@@ -113,7 +113,7 @@ describe('smokeUtils', () => {
       expect(gameState.smokeParticles).toHaveLength(3)
     })
 
-    it('initializes arrays if missing', () => {
+    it('[U04066] initializes arrays if missing', () => {
       const emptyState = {}
 
       enforceSmokeParticleCapacity(emptyState)
@@ -122,7 +122,7 @@ describe('smokeUtils', () => {
       expect(emptyState.smokeParticlePool).toEqual([])
     })
 
-    it('recycles removed particles to pool', () => {
+    it('[U04067] recycles removed particles to pool', () => {
       for (let i = 0; i < 12; i++) {
         gameState.smokeParticles.push({ x: i, y: i })
       }
@@ -134,7 +134,7 @@ describe('smokeUtils', () => {
   })
 
   describe('emitSmokeParticles', () => {
-    it('creates particle at specified position', () => {
+    it('[U04068] creates particle at specified position', () => {
       emitSmokeParticles(gameState, 100, 200, 1000, 1)
 
       expect(gameState.smokeParticles).toHaveLength(1)
@@ -143,19 +143,19 @@ describe('smokeUtils', () => {
       expect(gameState.smokeParticles[0].y).toBe(200)
     })
 
-    it('creates multiple particles', () => {
+    it('[U04069] creates multiple particles', () => {
       emitSmokeParticles(gameState, 100, 200, 1000, 5)
 
       expect(gameState.smokeParticles).toHaveLength(5)
     })
 
-    it('defaults to 1 particle', () => {
+    it('[U04070] defaults to 1 particle', () => {
       emitSmokeParticles(gameState, 100, 200, 1000)
 
       expect(gameState.smokeParticles).toHaveLength(1)
     })
 
-    it('sets particle properties', () => {
+    it('[U04071] sets particle properties', () => {
       emitSmokeParticles(gameState, 100, 200, 1000, 1)
 
       const particle = gameState.smokeParticles[0]
@@ -169,7 +169,7 @@ describe('smokeUtils', () => {
       expect(particle.originalSize).toBe(particle.size)
     })
 
-    it('respects max particle capacity', () => {
+    it('[U04072] respects max particle capacity', () => {
       // Fill up to capacity
       for (let i = 0; i < 10; i++) {
         gameState.smokeParticles.push({ x: i })
@@ -181,7 +181,7 @@ describe('smokeUtils', () => {
       expect(gameState.smokeParticles.length).toBeLessThanOrEqual(10)
     })
 
-    it('reuses particles from pool', () => {
+    it('[U04073] reuses particles from pool', () => {
       const recycledParticle = { x: 0, y: 0, recycled: true }
       gameState.smokeParticlePool = [recycledParticle]
 
@@ -191,55 +191,55 @@ describe('smokeUtils', () => {
       expect(gameState.smokeParticles[0].recycled).toBe(true)
     })
 
-    it('ignores invalid count (negative)', () => {
+    it('[U04074] ignores invalid count (negative)', () => {
       emitSmokeParticles(gameState, 100, 200, 1000, -1)
 
       expect(gameState.smokeParticles).toHaveLength(0)
     })
 
-    it('ignores invalid count (zero)', () => {
+    it('[U04075] ignores invalid count (zero)', () => {
       emitSmokeParticles(gameState, 100, 200, 1000, 0)
 
       expect(gameState.smokeParticles).toHaveLength(0)
     })
 
-    it('ignores invalid count (NaN)', () => {
+    it('[U04076] ignores invalid count (NaN)', () => {
       emitSmokeParticles(gameState, 100, 200, 1000, NaN)
 
       expect(gameState.smokeParticles).toHaveLength(0)
     })
 
-    it('ignores invalid count (Infinity)', () => {
+    it('[U04077] ignores invalid count (Infinity)', () => {
       emitSmokeParticles(gameState, 100, 200, 1000, Infinity)
 
       expect(gameState.smokeParticles).toHaveLength(0)
     })
 
-    it('ignores NaN x coordinate', () => {
+    it('[U04078] ignores NaN x coordinate', () => {
       emitSmokeParticles(gameState, NaN, 200, 1000, 1)
 
       expect(gameState.smokeParticles).toHaveLength(0)
     })
 
-    it('ignores NaN y coordinate', () => {
+    it('[U04079] ignores NaN y coordinate', () => {
       emitSmokeParticles(gameState, 100, NaN, 1000, 1)
 
       expect(gameState.smokeParticles).toHaveLength(0)
     })
 
-    it('ignores Infinity x coordinate', () => {
+    it('[U04080] ignores Infinity x coordinate', () => {
       emitSmokeParticles(gameState, Infinity, 200, 1000, 1)
 
       expect(gameState.smokeParticles).toHaveLength(0)
     })
 
-    it('ignores Infinity y coordinate', () => {
+    it('[U04081] ignores Infinity y coordinate', () => {
       emitSmokeParticles(gameState, 100, -Infinity, 1000, 1)
 
       expect(gameState.smokeParticles).toHaveLength(0)
     })
 
-    it('initializes arrays if missing', () => {
+    it('[U04082] initializes arrays if missing', () => {
       const emptyState = {}
 
       emitSmokeParticles(emptyState, 100, 200, 1000, 1)
@@ -248,7 +248,7 @@ describe('smokeUtils', () => {
       expect(emptyState.smokeParticlePool).toBeDefined()
     })
 
-    it('particle has upward velocity', () => {
+    it('[U04083] particle has upward velocity', () => {
       emitSmokeParticles(gameState, 100, 200, 1000, 1)
 
       // vy should be negative (upward)

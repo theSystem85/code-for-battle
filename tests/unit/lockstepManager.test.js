@@ -49,7 +49,7 @@ describe('lockstepManager', () => {
     lockstepManager.initialize('seed-1', 'local-peer', ['local-peer', 'peer-a'])
   })
 
-  it('initializes session state and peer tracking', () => {
+  it('[U02386] initializes session state and peer tracking', () => {
     const nowSpy = vi.spyOn(performance, 'now').mockReturnValue(500)
 
     lockstepManager.initialize('seed-42', 'local-peer', ['local-peer', 'peer-a', 'peer-b'])
@@ -74,7 +74,7 @@ describe('lockstepManager', () => {
     nowSpy.mockRestore()
   })
 
-  it('toggles deterministic RNG when enabling and disabling', () => {
+  it('[U02387] toggles deterministic RNG when enabling and disabling', () => {
     lockstepManager.enable()
     expect(deterministicRNG.enable).toHaveBeenCalled()
     expect(lockstepManager.isEnabled()).toBe(true)
@@ -84,7 +84,7 @@ describe('lockstepManager', () => {
     expect(lockstepManager.isEnabled()).toBe(false)
   })
 
-  it('buffers local inputs with delay and broadcasts them', () => {
+  it('[U02388] buffers local inputs with delay and broadcasts them', () => {
     const broadcastSpy = vi.fn()
     lockstepManager.setOnBroadcastInput(broadcastSpy)
 
@@ -110,7 +110,7 @@ describe('lockstepManager', () => {
     })
   })
 
-  it('records remote inputs and notifies listeners', () => {
+  it('[U02389] records remote inputs and notifies listeners', () => {
     const onInputReceived = vi.fn()
     lockstepManager.setOnInputReceived(onInputReceived)
 
@@ -136,7 +136,7 @@ describe('lockstepManager', () => {
     expect(peerState.lastReceivedTick).toBe(4)
   })
 
-  it('advances ticks, syncs RNG, and broadcasts hashes on interval', () => {
+  it('[U02390] advances ticks, syncs RNG, and broadcasts hashes on interval', () => {
     const broadcastHash = vi.fn()
     const onTickAdvanced = vi.fn()
 
@@ -163,7 +163,7 @@ describe('lockstepManager', () => {
     expect(deterministicRNG.getState).toHaveBeenCalled()
   })
 
-  it('waits for lagging peers before advancing ticks', () => {
+  it('[U02391] waits for lagging peers before advancing ticks', () => {
     lockstepManager.enable()
     lockstepManager._currentTick = 5
     lockstepManager._accumulator = MS_PER_TICK
@@ -179,7 +179,7 @@ describe('lockstepManager', () => {
     expect(syncRNGForTick).not.toHaveBeenCalled()
   })
 
-  it('flags desyncs and clears them when hashes match', () => {
+  it('[U02392] flags desyncs and clears them when hashes match', () => {
     const onDesyncDetected = vi.fn()
     lockstepManager.setOnDesyncDetected(onDesyncDetected)
 
@@ -211,7 +211,7 @@ describe('lockstepManager', () => {
     expect(peerState.lastConfirmedTick).toBe(11)
   })
 
-  it('rolls back to a saved snapshot when available', () => {
+  it('[U02393] rolls back to a saved snapshot when available', () => {
     const nowSpy = vi.spyOn(performance, 'now').mockReturnValue(200)
 
     lockstepManager._currentTick = 2
@@ -231,7 +231,7 @@ describe('lockstepManager', () => {
     nowSpy.mockRestore()
   })
 
-  it('adds/removes peers and tracks connection state', () => {
+  it('[U02394] adds/removes peers and tracks connection state', () => {
     lockstepManager.addPeer('peer-b')
     lockstepManager.addPeer('peer-b')
 
@@ -251,13 +251,13 @@ describe('lockstepManager', () => {
     expect(peerStates.some(peer => peer.peerId === 'peer-b')).toBe(false)
   })
 
-  it('ignores remote input from unknown peers', () => {
+  it('[U02395] ignores remote input from unknown peers', () => {
     lockstepManager.receiveRemoteInput('unknown-peer', 5, { type: 'noop' })
     const inputs = lockstepManager.getInputsForTick(5)
     expect(inputs).toEqual([])
   })
 
-  it('advances ticks in single-player sessions', () => {
+  it('[U02396] advances ticks in single-player sessions', () => {
     lockstepManager._peers.clear()
     lockstepManager.enable()
     lockstepManager._currentTick = 0

@@ -15,25 +15,25 @@ const entries = [
 ]
 
 describe('release digest', () => {
-  it('includes all skipped releases, excluding the previous and future versions', () => {
+  it('[U03640] includes all skipped releases, excluding the previous and future versions', () => {
     const digest = getReleaseDigest('0.9.0', '0.11.0', entries)
     expect(digest.features).toEqual(['First', 'Second', 'Third'])
     expect(digest.improvements).toEqual(['Faster'])
     expect(digest.bugfixes).toEqual(['Fixed', 'Another fix'])
   })
 
-  it('prioritizes features and falls back to improvements and fixes', () => {
+  it('[U03641] prioritizes features and falls back to improvements and fixes', () => {
     const digest = getReleaseDigest('0.9.0', '0.11.0', entries)
     expect(getLoadingHighlights(digest)).toEqual(digest.features)
     expect(getLoadingHighlights({ ...digest, features: [] })).toEqual(['Faster', 'Fixed', 'Another fix'])
   })
 
-  it('distributes rows evenly over the previous measured loading duration', () => {
+  it('[U03642] distributes rows evenly over the previous measured loading duration', () => {
     expect([0, 999, 1000, 2000, 3000, 9000].map(ms => getHighlightIndex(ms, 3000, 3))).toEqual([0, 0, 1, 2, 2, 2])
     expect(getHighlightIndex(100, 3000, 0)).toBe(-1)
   })
 
-  it('uses the same component for full category lists and a single loading line', () => {
+  it('[U03643] uses the same component for full category lists and a single loading line', () => {
     const digest = getReleaseDigest('0.9.0', '0.11.0', entries)
     const full = createReleaseDigest(digest).root
     expect(full.querySelectorAll('li')).toHaveLength(6)
@@ -47,7 +47,7 @@ describe('release digest', () => {
     expect(compact.root.querySelectorAll('li')).toHaveLength(0)
   })
 
-  it('records successful device loading duration and retains the diff in the manual', () => {
+  it('[U03644] records successful device loading duration and retains the diff in the manual', () => {
     localStorage.setItem(LAST_VERSION_KEY, '0.46.0')
     const digest = getBootReleaseDigest()
     expect(digest.fromVersion).toBe('0.46.0')
@@ -58,7 +58,7 @@ describe('release digest', () => {
     expect(getManualReleaseDigest().fromVersion).toBe('0.46.0')
   })
 
-  it('works when persistent storage is denied', () => {
+  it('[U03645] works when persistent storage is denied', () => {
     const spy = vi.spyOn(window.Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('denied') })
     expect(() => completeBoot(2000, null)).not.toThrow()
     spy.mockRestore()
@@ -66,7 +66,7 @@ describe('release digest', () => {
 })
 
 describe('unreleased release-note entries', () => {
-  it('collects one file per change into the build version by category', () => {
+  it('[U05185] collects one file per change into the build version by category', () => {
     const release = buildUnreleasedRelease({
       '../../features/unreleased/improvements/b.json': { description: 'Second' },
       '../../features/unreleased/improvements/a.json': { description: 'First' },
@@ -77,7 +77,7 @@ describe('unreleased release-note entries', () => {
     expect(buildUnreleasedRelease({}, '0.62.1')).toBeNull()
   })
 
-  it('shows released plus unreleased notes in the update digest', () => {
+  it('[U05186] shows released plus unreleased notes in the update digest', () => {
     const merged = mergeReleaseEntries(entries.slice(0, 3), { version: '0.11.1', features: [], improvements: ['Unreleased'], bugfixes: [] })
     const digest = getReleaseDigest('0.10.0', '0.11.1', merged)
     expect(digest.features).toEqual(['Third'])

@@ -46,22 +46,22 @@ describe('renderer backend selection', () => {
   })
 
   describe('migrateRendererBackendChoice', () => {
-    it('treats a missing record as automatic', () => {
+    it('[U03687] treats a missing record as automatic', () => {
       expect(migrateRendererBackendChoice(null)).toBe('auto')
       expect(migrateRendererBackendChoice(undefined)).toBe('auto')
     })
 
-    it('treats a legacy webgl value as automatic', () => {
+    it('[U03688] treats a legacy webgl value as automatic', () => {
       expect(migrateRendererBackendChoice({ rendererBackend: 'webgl' })).toBe('auto')
       expect(migrateRendererBackendChoice({ useProceduralWaterRendering: true })).toBe('auto')
       expect(migrateRendererBackendChoice({ rendererBackend: 'webgl2' })).toBe('auto')
     })
 
-    it('treats a legacy webgpu value as an explicit choice', () => {
+    it('[U03689] treats a legacy webgpu value as an explicit choice', () => {
       expect(migrateRendererBackendChoice({ rendererBackend: 'webgpu' })).toBe('webgpu')
     })
 
-    it('keeps a stored explicit choice, including explicit webgl', () => {
+    it('[U03690] keeps a stored explicit choice, including explicit webgl', () => {
       expect(migrateRendererBackendChoice({
         rendererBackend: 'webgl',
         rendererBackendChoice: 'webgl'
@@ -77,20 +77,20 @@ describe('renderer backend selection', () => {
   })
 
   describe('resolveRequestedRendererBackend', () => {
-    it('uses webgpu for automatic and explicit webgpu only when a device is available', () => {
+    it('[U03691] uses webgpu for automatic and explicit webgpu only when a device is available', () => {
       expect(resolveRequestedRendererBackend('auto', true)).toBe('webgpu')
       expect(resolveRequestedRendererBackend('auto', false)).toBe('webgl')
       expect(resolveRequestedRendererBackend('webgpu', true)).toBe('webgpu')
       expect(resolveRequestedRendererBackend('webgpu', false)).toBe('webgl')
     })
 
-    it('keeps an explicit webgl choice even when webgpu is available', () => {
+    it('[U03692] keeps an explicit webgl choice even when webgpu is available', () => {
       expect(resolveRequestedRendererBackend('webgl', true)).toBe('webgl')
     })
   })
 
   describe('describeRendererBackendStatus', () => {
-    it('describes the backend actually in use without hiding an explicit choice', () => {
+    it('[U03693] describes the backend actually in use without hiding an explicit choice', () => {
       expect(describeRendererBackendStatus({ choice: 'auto', requested: 'webgpu', active: null })).toBe('WebGPU starting…')
       expect(describeRendererBackendStatus({ choice: 'auto', requested: 'webgl', active: 'webgl' })).toBe('Using WebGL. WebGPU is not available in this browser.')
       expect(describeRendererBackendStatus({ choice: 'webgl', requested: 'webgl', active: 'webgl' })).toBe('Using WebGL.')
@@ -128,7 +128,7 @@ describe('renderer backend selection', () => {
       })).toBe('WebGPU fällt auf WebGL zurück: Textursynchronisierung fehlgeschlagen')
     })
 
-    it('uses the same fallback reason in the performance widget row', () => {
+    it('[U03694] uses the same fallback reason in the performance widget row', () => {
       const frame = { phase: 'fallback', drawing: 'webgl', reasonCode: 'no-instances' }
       expect(formatRendererOverlayBackend(frame, 'en')).toBe('Renderer: WebGL (no instances)')
       expect(formatRendererOverlayBackend(frame, 'de')).toBe('Renderer: WebGL (keine Instanzen)')
@@ -142,7 +142,7 @@ describe('renderer backend selection', () => {
   })
 
   describe('summarizeWebGPUFailure', () => {
-    it('maps shader, pipeline, adapter, and device failures to a short settings reason', () => {
+    it('[U03695] maps shader, pipeline, adapter, and device failures to a short settings reason', () => {
       expect(summarizeWebGPUFailure(
         "WebGPU pipeline validation failed: Error while parsing WGSL: :91:45 error: 'textureSample' must only be called from uniform control flow"
       )).toBe('shader validation')
@@ -157,7 +157,7 @@ describe('renderer backend selection', () => {
   })
 
   describe('probeWebGPUAvailability', () => {
-    it('rejects a missing gpu object, a missing adapter, and a failed device request', async() => {
+    it('[U03696] rejects a missing gpu object, a missing adapter, and a failed device request', async() => {
       await expect(probeWebGPUAvailability(undefined)).resolves.toBe(false)
       await expect(probeWebGPUAvailability({ requestAdapter: async() => null })).resolves.toBe(false)
       await expect(probeWebGPUAvailability({
@@ -165,7 +165,7 @@ describe('renderer backend selection', () => {
       })).resolves.toBe(false)
     })
 
-    it('accepts webgpu only after a device is created and then releases that device', async() => {
+    it('[U03697] accepts webgpu only after a device is created and then releases that device', async() => {
       const destroy = vi.fn()
       const available = await probeWebGPUAvailability({
         requestAdapter: async() => ({ requestDevice: async() => ({ destroy }) })
@@ -174,7 +174,7 @@ describe('renderer backend selection', () => {
       expect(destroy).toHaveBeenCalledTimes(1)
     })
 
-    it('treats a hung adapter request as unavailable', async() => {
+    it('[U03698] treats a hung adapter request as unavailable', async() => {
       const started = Date.now()
       await expect(probeWebGPUAvailability({
         requestAdapter: () => new Promise(() => {})
@@ -182,7 +182,7 @@ describe('renderer backend selection', () => {
       expect(Date.now() - started).toBeLessThan(500)
     })
 
-    it('releases a device that arrives after the probe times out', async() => {
+    it('[U03699] releases a device that arrives after the probe times out', async() => {
       let resolveDevice
       const device = { destroy: vi.fn() }
       const pending = probeWebGPUAvailability({
@@ -201,7 +201,7 @@ describe('renderer backend selection', () => {
   })
 
   describe('persisted graphics settings', () => {
-    it('selects webgpu for a fresh profile when the probe succeeds and does not store that as an explicit choice', async() => {
+    it('[U03700] selects webgpu for a fresh profile when the probe succeeds and does not store that as an explicit choice', async() => {
       loadGraphicsSettingsFromIndexedDb()
       expect(getRendererBackendChoice()).toBe('auto')
 
@@ -212,14 +212,14 @@ describe('renderer backend selection', () => {
       expect(storedGraphics()).toBeNull()
     })
 
-    it('falls back to webgl when webgpu cannot create a device', async() => {
+    it('[U03701] falls back to webgl when webgpu cannot create a device', async() => {
       await expect(resolveRendererBackendAvailability(async() => false)).resolves.toBe('webgl')
       expect(getRendererBackendChoice()).toBe('auto')
       expect(RENDERER_BACKEND).toBe('webgl')
       expect(getRendererBackendStatusText()).toBe('Using WebGL. WebGPU is not available in this browser.')
     })
 
-    it('migrates a legacy default webgl record to automatic and can then use webgpu', async() => {
+    it('[U03702] migrates a legacy default webgl record to automatic and can then use webgpu', async() => {
       storeGraphics({
         useProceduralWaterRendering: true,
         waterEffectTone: 0.35,
@@ -233,7 +233,7 @@ describe('renderer backend selection', () => {
       expect(getRendererBackendChoice()).toBe('auto')
     })
 
-    it('does not turn an automatic choice into explicit webgl when another graphics setting is saved', () => {
+    it('[U03703] does not turn an automatic choice into explicit webgl when another graphics setting is saved', () => {
       const originalTone = WATER_EFFECT_TONE
       storeGraphics({ rendererBackend: 'webgl', useProceduralWaterRendering: true })
       loadGraphicsSettingsFromIndexedDb()
@@ -250,7 +250,7 @@ describe('renderer backend selection', () => {
       }
     })
 
-    it('keeps an explicit webgl choice ahead of a successful webgpu probe', async() => {
+    it('[U03704] keeps an explicit webgl choice ahead of a successful webgpu probe', async() => {
       storeGraphics({
         rendererBackend: 'webgl',
         rendererBackendChoice: 'webgl'
@@ -263,7 +263,7 @@ describe('renderer backend selection', () => {
       expect(getRendererBackendStatusText()).toBe('Using WebGL.')
     })
 
-    it('keeps an explicit webgpu choice and falls back when initialization is unavailable', async() => {
+    it('[U03705] keeps an explicit webgpu choice and falls back when initialization is unavailable', async() => {
       storeGraphics({ rendererBackend: 'webgpu' })
       loadGraphicsSettingsFromIndexedDb()
       expect(getRendererBackendChoice()).toBe('webgpu')
@@ -281,7 +281,7 @@ describe('renderer backend selection', () => {
       })
     })
 
-    it('persists an explicit webgl selection from the settings registry', async() => {
+    it('[U03706] persists an explicit webgl selection from the settings registry', async() => {
       expect(getConfigValue('rendererBackend')).toBe('auto')
       expect(setConfigValue('rendererBackend', 'webgl')).toBe(true)
       await resolveRendererBackendAvailability(async() => true)
@@ -290,7 +290,7 @@ describe('renderer backend selection', () => {
       expect(storedGraphics().rendererBackendChoice).toBe('webgl')
     })
 
-    it('ignores a late successful probe after the user switches to webgl', async() => {
+    it('[U03707] ignores a late successful probe after the user switches to webgl', async() => {
       let finishProbe
       const pending = resolveRendererBackendAvailability(() => new Promise(resolve => {
         finishProbe = resolve
@@ -305,7 +305,7 @@ describe('renderer backend selection', () => {
       expect(RENDERER_BACKEND).toBe('webgl')
     })
 
-    it('records the backend that actually drew and ignores unrelated names', () => {
+    it('[U03708] records the backend that actually drew and ignores unrelated names', () => {
       noteActiveRendererBackend('webgpu')
       expect(getActiveRendererBackend()).toBe('webgpu')
       noteActiveRendererBackend('cpu')
@@ -314,7 +314,7 @@ describe('renderer backend selection', () => {
       expect(getActiveRendererBackend()).toBe('webgl')
     })
 
-    it('updates the open settings status when WebGPU initialization fails after a successful probe', async() => {
+    it('[U03709] updates the open settings status when WebGPU initialization fails after a successful probe', async() => {
       document.body.innerHTML = '<span id="settingsRendererBackendStatus"></span>'
       await resolveRendererBackendAvailability(async() => true)
       noteActiveRendererBackend('webgl')
@@ -322,7 +322,7 @@ describe('renderer backend selection', () => {
       expect(getRendererBackendChoice()).toBe('auto')
     })
 
-    it('logs each WebGPU fallback reason once and lets a later WebGPU frame clear it', () => {
+    it('[U03710] logs each WebGPU fallback reason once and lets a later WebGPU frame clear it', () => {
       const warn = vi.fn()
       expect(recordRendererFrame({
         drawing: 'webgl',
@@ -363,7 +363,7 @@ describe('renderer backend selection', () => {
       expect(warn).toHaveBeenCalledTimes(3)
     })
 
-    it('keeps settings and the recorded frame on the backend that just drew', async() => {
+    it('[U03711] keeps settings and the recorded frame on the backend that just drew', async() => {
       document.body.innerHTML = '<span id="settingsRendererBackendStatus"></span>'
       await resolveRendererBackendAvailability(async() => true)
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
@@ -394,7 +394,7 @@ describe('renderer backend selection', () => {
       warn.mockRestore()
     })
 
-    it('shows the short WebGPU failure reason in the settings status', async() => {
+    it('[U03712] shows the short WebGPU failure reason in the settings status', async() => {
       document.body.innerHTML = '<span id="settingsRendererBackendStatus"></span>'
       await resolveRendererBackendAvailability(async() => true)
       setRendererBackendFailureSummary('shader validation')

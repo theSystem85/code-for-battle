@@ -57,7 +57,7 @@ describe('ammunitionTruckLogic.js', () => {
   })
 
   describe('updateAmmunitionTruckLogic', () => {
-    it('should do nothing if no ammo trucks exist', () => {
+    it('[U00161] should do nothing if no ammo trucks exist', () => {
       const units = [
         { id: 'u1', type: 'tank', health: 100 }
       ]
@@ -68,7 +68,7 @@ describe('ammunitionTruckLogic.js', () => {
       expect(true).toBe(true)
     })
 
-    it('should skip dead ammo trucks', () => {
+    it('[U00162] should skip dead ammo trucks', () => {
       const units = [
         { id: 'a1', type: 'ammunitionTruck', health: 0, tileX: 10, tileY: 10 },
         { id: 'a2', type: 'ammunitionTruck', health: 100, tileX: 10, tileY: 10 }
@@ -80,7 +80,7 @@ describe('ammunitionTruckLogic.js', () => {
       expect(units[1].ammoCargo).toBeDefined()
     })
 
-    it('should initialize ammo cargo properties if undefined', () => {
+    it('[U00163] should initialize ammo cargo properties if undefined', () => {
       const ammoTruck = {
         id: 'a1',
         type: 'ammunitionTruck',
@@ -96,7 +96,7 @@ describe('ammunitionTruckLogic.js', () => {
       expect(ammoTruck.maxAmmoCargo).toBe(500)
     })
 
-    it('should clear resupply target if target does not exist', () => {
+    it('[U00164] should clear resupply target if target does not exist', () => {
       const ammoTruck = {
         id: 'a1',
         type: 'ammunitionTruck',
@@ -116,7 +116,7 @@ describe('ammunitionTruckLogic.js', () => {
       expect(ammoTruck.ammoResupplyTimer).toBe(0)
     })
 
-    it('should clear resupply target if target is dead', () => {
+    it('[U00165] should clear resupply target if target is dead', () => {
       const target = {
         id: 'u1',
         type: 'tank',
@@ -144,7 +144,7 @@ describe('ammunitionTruckLogic.js', () => {
       expect(ammoTruck.ammoResupplyTarget).toBe(null)
     })
 
-    it('should clear resupply target if unit has full ammunition', () => {
+    it('[U00166] should clear resupply target if unit has full ammunition', () => {
       const target = {
         id: 'u1',
         type: 'tank',
@@ -172,7 +172,7 @@ describe('ammunitionTruckLogic.js', () => {
       expect(ammoTruck.ammoResupplyTarget).toBe(null)
     })
 
-    it('should clear resupply target if apache has full rocket ammo', () => {
+    it('[U00167] should clear resupply target if apache has full rocket ammo', () => {
       const target = {
         id: 'u1',
         type: 'apache',
@@ -200,7 +200,7 @@ describe('ammunitionTruckLogic.js', () => {
       expect(ammoTruck.ammoResupplyTarget).toBe(null)
     })
 
-    it('should resupply unit when in range and not moving', () => {
+    it('[U00168] should resupply unit when in range and not moving', () => {
       const target = {
         id: 'u1',
         type: 'tank',
@@ -231,7 +231,7 @@ describe('ammunitionTruckLogic.js', () => {
       expect(ammoTruck.ammoCargo).toBeLessThan(500)
     })
 
-    it('should resupply apache rocket ammo', () => {
+    it('[U00169] should resupply apache rocket ammo', () => {
       const target = {
         id: 'u1',
         type: 'apache',
@@ -261,7 +261,7 @@ describe('ammunitionTruckLogic.js', () => {
       expect(target.rocketAmmo).toBeGreaterThan(initialAmmo)
     })
 
-    it('should resupply building ammo', () => {
+    it('[U00170] should resupply building ammo', () => {
       const building = {
         id: 'b1',
         type: 'turret',
@@ -295,7 +295,7 @@ describe('ammunitionTruckLogic.js', () => {
       expect(building.ammo).toBeGreaterThan(initialAmmo)
     })
 
-    it('should stop resupplying when truck runs out of cargo', () => {
+    it('[U00171] should stop resupplying when truck runs out of cargo', () => {
       const target = {
         id: 'u1',
         type: 'tank',
@@ -323,7 +323,7 @@ describe('ammunitionTruckLogic.js', () => {
       expect(ammoTruck.ammoResupplyTarget).toBe(null)
     })
 
-    it('should stop resupplying when target is full', () => {
+    it('[U00172] should stop resupplying when target is full', () => {
       const target = {
         id: 'u1',
         type: 'tank',
@@ -354,7 +354,7 @@ describe('ammunitionTruckLogic.js', () => {
       expect(target.ammunition).toBeLessThanOrEqual(100)
     })
 
-    it('should not resupply when ammo truck is moving', () => {
+    it('[U00173] should not resupply when ammo truck is moving', () => {
       const target = {
         id: 'u1',
         type: 'tank',
@@ -386,7 +386,7 @@ describe('ammunitionTruckLogic.js', () => {
       expect(target.ammunition).toBe(initialAmmo)
     })
 
-    it('should handle utility queue for ammo resupply', () => {
+    it('[U00174] should handle utility queue for ammo resupply', () => {
       const mockCommands = {
         advanceUtilityQueue: vi.fn()
       }
@@ -414,7 +414,7 @@ describe('ammunitionTruckLogic.js', () => {
       expect(mockCommands.advanceUtilityQueue).toHaveBeenCalled()
     })
 
-    it('should check adjacency for building resupply', () => {
+    it('[U00175] should check adjacency for building resupply', () => {
       const building = {
         id: 'b1',
         type: 'turret',
@@ -451,24 +451,24 @@ describe('ammunitionTruckLogic.js', () => {
   })
 
   describe('detonateAmmunitionTruck', () => {
-    it('should return false if unit is null', () => {
+    it('[U00176] should return false if unit is null', () => {
       const result = detonateAmmunitionTruck(null, [], [])
       expect(result).toBe(false)
     })
 
-    it('should return false if unit has health', () => {
+    it('[U00177] should return false if unit has health', () => {
       const unit = { id: 'a1', health: 100 }
       const result = detonateAmmunitionTruck(unit, [], [])
       expect(result).toBe(false)
     })
 
-    it('should return false if already detonated', () => {
+    it('[U00178] should return false if already detonated', () => {
       const unit = { id: 'a1', health: 0, _ammoTruckDetonated: true }
       const result = detonateAmmunitionTruck(unit, [], [])
       expect(result).toBe(false)
     })
 
-    it('should trigger primary explosion', () => {
+    it('[U00179] should trigger primary explosion', () => {
       const unit = {
         id: 'a1',
         type: 'ammunitionTruck',
@@ -482,7 +482,7 @@ describe('ammunitionTruckLogic.js', () => {
       expect(triggerExplosion).toHaveBeenCalled()
     })
 
-    it('should trigger distortion effect when gameState provided', () => {
+    it('[U00180] should trigger distortion effect when gameState provided', () => {
       const unit = {
         id: 'a1',
         type: 'ammunitionTruck',
@@ -496,7 +496,7 @@ describe('ammunitionTruckLogic.js', () => {
       expect(triggerDistortionEffect).toHaveBeenCalled()
     })
 
-    it('should trigger multiple secondary explosions', () => {
+    it('[U00181] should trigger multiple secondary explosions', () => {
       const unit = {
         id: 'a1',
         type: 'ammunitionTruck',
@@ -511,7 +511,7 @@ describe('ammunitionTruckLogic.js', () => {
       expect(triggerExplosion).toHaveBeenCalledTimes(11)
     })
 
-    it('should mark unit as detonated', () => {
+    it('[U00182] should mark unit as detonated', () => {
       const unit = {
         id: 'a1',
         type: 'ammunitionTruck',
@@ -525,7 +525,7 @@ describe('ammunitionTruckLogic.js', () => {
       expect(unit._ammoTruckDetonated).toBe(true)
     })
 
-    it('should stop unit movement', () => {
+    it('[U00183] should stop unit movement', () => {
       const unit = {
         id: 'a1',
         type: 'ammunitionTruck',
@@ -550,7 +550,7 @@ describe('ammunitionTruckLogic.js', () => {
       expect(unit.movement.currentSpeed).toBe(0)
     })
 
-    it('should set health to 0 and clear ammo cargo', () => {
+    it('[U00184] should set health to 0 and clear ammo cargo', () => {
       const unit = {
         id: 'a1',
         type: 'ammunitionTruck',
@@ -566,7 +566,7 @@ describe('ammunitionTruckLogic.js', () => {
       expect(unit.ammoCargo).toBe(0)
     })
 
-    it('should return true on successful detonation', () => {
+    it('[U00185] should return true on successful detonation', () => {
       const unit = {
         id: 'a1',
         type: 'ammunitionTruck',
@@ -580,7 +580,7 @@ describe('ammunitionTruckLogic.js', () => {
       expect(result).toBe(true)
     })
 
-    it('should pass units and factories to explosion', () => {
+    it('[U00186] should pass units and factories to explosion', () => {
       const unit = {
         id: 'a1',
         type: 'ammunitionTruck',
@@ -599,7 +599,7 @@ describe('ammunitionTruckLogic.js', () => {
       expect(firstCall[4]).toBe(factories)
     })
 
-    it('should use correct explosion center position', () => {
+    it('[U00187] should use correct explosion center position', () => {
       const unit = {
         id: 'a1',
         type: 'ammunitionTruck',
@@ -617,7 +617,7 @@ describe('ammunitionTruckLogic.js', () => {
       expect(firstCall[2]).toBe(80) // primary damage
     })
 
-    it('should handle unit without movement property', () => {
+    it('[U00188] should handle unit without movement property', () => {
       const unit = {
         id: 'a1',
         type: 'ammunitionTruck',

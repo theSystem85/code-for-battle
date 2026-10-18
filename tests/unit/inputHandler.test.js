@@ -171,15 +171,15 @@ import {
 describe('inputHandler.js', () => {
   describe('exported constants', () => {
     describe('selectedUnits', () => {
-      it('should be an array', () => {
+      it('[U02094] should be an array', () => {
         expect(Array.isArray(selectedUnits)).toBe(true)
       })
 
-      it('should initially be empty', () => {
+      it('[U02095] should initially be empty', () => {
         expect(selectedUnits.length).toBe(0)
       })
 
-      it('should be mutable', () => {
+      it('[U02096] should be mutable', () => {
         const originalLength = selectedUnits.length
         selectedUnits.push({ id: 'test-unit' })
         expect(selectedUnits.length).toBe(originalLength + 1)
@@ -188,78 +188,78 @@ describe('inputHandler.js', () => {
     })
 
     describe('selectionActive', () => {
-      it('should be a boolean', () => {
+      it('[U02097] should be a boolean', () => {
         expect(typeof selectionActive).toBe('boolean')
       })
 
-      it('should initially be false', () => {
+      it('[U02098] should initially be false', () => {
         expect(selectionActive).toBe(false)
       })
     })
 
     describe('selectionStartExport', () => {
-      it('should be an object', () => {
+      it('[U02099] should be an object', () => {
         expect(typeof selectionStartExport).toBe('object')
       })
 
-      it('should have x property', () => {
+      it('[U02100] should have x property', () => {
         expect(selectionStartExport).toHaveProperty('x')
       })
 
-      it('should have y property', () => {
+      it('[U02101] should have y property', () => {
         expect(selectionStartExport).toHaveProperty('y')
       })
 
-      it('should have initial x value of 0', () => {
+      it('[U02102] should have initial x value of 0', () => {
         expect(selectionStartExport.x).toBe(0)
       })
 
-      it('should have initial y value of 0', () => {
+      it('[U02103] should have initial y value of 0', () => {
         expect(selectionStartExport.y).toBe(0)
       })
     })
 
     describe('selectionEndExport', () => {
-      it('should be an object', () => {
+      it('[U02104] should be an object', () => {
         expect(typeof selectionEndExport).toBe('object')
       })
 
-      it('should have x property', () => {
+      it('[U02105] should have x property', () => {
         expect(selectionEndExport).toHaveProperty('x')
       })
 
-      it('should have y property', () => {
+      it('[U02106] should have y property', () => {
         expect(selectionEndExport).toHaveProperty('y')
       })
 
-      it('should have initial x value of 0', () => {
+      it('[U02107] should have initial x value of 0', () => {
         expect(selectionEndExport.x).toBe(0)
       })
 
-      it('should have initial y value of 0', () => {
+      it('[U02108] should have initial y value of 0', () => {
         expect(selectionEndExport.y).toBe(0)
       })
     })
   })
 
   describe('setRenderScheduler()', () => {
-    it('should be a function', () => {
+    it('[U02109] should be a function', () => {
       expect(typeof setRenderScheduler).toBe('function')
     })
 
-    it('should not throw when called with a callback', () => {
+    it('[U02110] should not throw when called with a callback', () => {
       expect(() => setRenderScheduler(() => {})).not.toThrow()
     })
 
-    it('should not throw when called with null', () => {
+    it('[U02111] should not throw when called with null', () => {
       expect(() => setRenderScheduler(null)).not.toThrow()
     })
 
-    it('should not throw when called with undefined', () => {
+    it('[U02112] should not throw when called with undefined', () => {
       expect(() => setRenderScheduler(undefined)).not.toThrow()
     })
 
-    it('should forward scheduler to mouse and keyboard handlers', () => {
+    it('[U02113] should forward scheduler to mouse and keyboard handlers', () => {
       setupInputHandlers([], [], [])
       const scheduler = () => {}
 
@@ -276,27 +276,27 @@ describe('inputHandler.js', () => {
   })
 
   describe('cleanupDestroyedSelectedUnits()', () => {
-    it('should be a function', () => {
+    it('[U02114] should be a function', () => {
       expect(typeof cleanupDestroyedSelectedUnits).toBe('function')
     })
 
-    it('should not throw when called', () => {
+    it('[U02115] should not throw when called', () => {
       expect(() => cleanupDestroyedSelectedUnits()).not.toThrow()
     })
 
-    it('should handle empty selectedUnits array', () => {
+    it('[U02116] should handle empty selectedUnits array', () => {
       selectedUnits.length = 0
       expect(() => cleanupDestroyedSelectedUnits()).not.toThrow()
     })
 
-    it('should handle selectedUnits with alive units', () => {
+    it('[U02117] should handle selectedUnits with alive units', () => {
       selectedUnits.length = 0
       selectedUnits.push({ id: 'unit-1', health: 100 })
       expect(() => cleanupDestroyedSelectedUnits()).not.toThrow()
       selectedUnits.length = 0
     })
 
-    it('should delegate cleanup to selection manager', () => {
+    it('[U02118] should delegate cleanup to selection manager', () => {
       setupInputHandlers([], [], [])
       selectedUnits.length = 0
       selectedUnits.push({ id: 'unit-1', health: 100 })
@@ -312,34 +312,34 @@ describe('inputHandler.js', () => {
   })
 
   describe('getKeyboardHandler()', () => {
-    it('should be a function', () => {
+    it('[U02119] should be a function', () => {
       expect(typeof getKeyboardHandler).toBe('function')
     })
 
-    it('should return an object', () => {
+    it('[U02120] should return an object', () => {
       const handler = getKeyboardHandler()
       expect(typeof handler).toBe('object')
     })
 
-    it('should return the same handler on multiple calls', () => {
+    it('[U02121] should return the same handler on multiple calls', () => {
       const handler1 = getKeyboardHandler()
       const handler2 = getKeyboardHandler()
       expect(handler1).toBe(handler2)
     })
 
-    it('should return handler with setRenderScheduler method', () => {
+    it('[U02122] should return handler with setRenderScheduler method', () => {
       const handler = getKeyboardHandler()
       expect(handler).toHaveProperty('setRenderScheduler')
     })
 
-    it('should return handler with setupKeyboardEvents method', () => {
+    it('[U02123] should return handler with setupKeyboardEvents method', () => {
       const handler = getKeyboardHandler()
       expect(handler).toHaveProperty('setupKeyboardEvents')
     })
   })
 
   describe('setupInputHandlers()', () => {
-    it('should configure the keyboard handler with player factory', () => {
+    it('[U02124] should configure the keyboard handler with player factory', () => {
       const factories = [{ id: 'player1' }, { id: 'player' }]
 
       setupInputHandlers([], factories, [])
@@ -350,14 +350,14 @@ describe('inputHandler.js', () => {
       }
     })
 
-    it('should expose the cheat system globally', () => {
+    it('[U02125] should expose the cheat system globally', () => {
       setupInputHandlers([], [], [])
 
       // Verify cheat system is exposed (may be set during import or this call)
       expect(window.cheatSystem).toBeTruthy()
     })
 
-    it('should register mouse and keyboard listeners', () => {
+    it('[U02126] should register mouse and keyboard listeners', () => {
       setupInputHandlers([], [], [])
 
       const eventTypes = document.addEventListener.mock.calls.map(call => call[0])
@@ -366,7 +366,7 @@ describe('inputHandler.js', () => {
       expect(eventTypes).toContain('keyup')
     })
 
-    it('should update cursor manager on mouse movement', () => {
+    it('[U02127] should update cursor manager on mouse movement', () => {
       setupInputHandlers([], [], [])
 
       const mouseMoveHandler = document.addEventListener.mock.calls.find(([type]) => type === 'mousemove')[1]
@@ -389,7 +389,7 @@ describe('inputHandler.js', () => {
   })
 
   describe('remote cheat guard', () => {
-    it('should block cheat hotkey for remote clients', async() => {
+    it('[U02128] should block cheat hotkey for remote clients', async() => {
       vi.resetModules()
 
       const { observeMultiplayerSession } = await import('../../src/network/multiplayerSessionEvents.js')
@@ -417,16 +417,16 @@ describe('inputHandler.js', () => {
   })
 
   describe('getUnitCommandsHandler()', () => {
-    it('should be a function', () => {
+    it('[U02129] should be a function', () => {
       expect(typeof getUnitCommandsHandler).toBe('function')
     })
 
-    it('should return an object', () => {
+    it('[U02130] should return an object', () => {
       const handler = getUnitCommandsHandler()
       expect(typeof handler).toBe('object')
     })
 
-    it('should return the same handler on multiple calls', () => {
+    it('[U02131] should return the same handler on multiple calls', () => {
       const handler1 = getUnitCommandsHandler()
       const handler2 = getUnitCommandsHandler()
       expect(handler1).toBe(handler2)

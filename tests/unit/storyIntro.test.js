@@ -73,7 +73,7 @@ describe('story intro', () => {
     gameState.gamePaused = false
   })
 
-  it('walks the newspaper sections in reading order', () => {
+  it('[U04308] walks the newspaper sections in reading order', () => {
     expect(STORY_SEGMENTS.map(s => s.id)).toEqual([
       'headline', 'photo', 'global-powers', 'front-lines',
       'kyronite-power', 'ai-war-machines', 'voices-of-concern', 'ticker'
@@ -83,7 +83,7 @@ describe('story intro', () => {
     expect(total).toBeLessThan(85000)
   })
 
-  it('advances each segment after its measured clip duration and plays its own clip without further gestures', async() => {
+  it('[U04309] advances each segment after its measured clip duration and plays its own clip without further gestures', async() => {
     const { deps, timers, audios, ducks } = fakeDeps()
     const seen = []
     playStoryIntro({ fromGesture: true, deps, gapMs: 400, onSegment: segment => seen.push(segment.id) })
@@ -110,7 +110,7 @@ describe('story intro', () => {
     expect(gameState.gamePaused).toBe(false)
   })
 
-  it('skips with Escape, the skip button or a tap and remembers it', () => {
+  it('[U04310] skips with Escape, the skip button or a tap and remembers it', () => {
     const run = trigger => {
       resetGameStorageForTests({})
       const { deps } = fakeDeps()
@@ -125,7 +125,7 @@ describe('story intro', () => {
     run(root => root.querySelector('.story-intro__stage').click())
   })
 
-  it('only autoplays on a fresh first play outside automation', () => {
+  it('[U04311] only autoplays on a fresh first play outside automation', () => {
     const base = { search: '', webdriver: false, remote: false, status: null }
     expect(shouldAutoPlayStoryIntro(base)).toBe(true)
     expect(shouldAutoPlayStoryIntro({ ...base, status: 'seen' })).toBe(false)
@@ -136,7 +136,7 @@ describe('story intro', () => {
     expect(STORY_INTRO_STORAGE_KEY).toMatch(/story-intro/)
   })
 
-  it('waits on a Start intro button while audio is locked; pressing it starts narration and music together', async() => {
+  it('[U04312] waits on a Start intro button while audio is locked; pressing it starts narration and music together', async() => {
     const { deps, timers, audios, music, ducks } = fakeDeps({ unlocked: false })
     playStoryIntro({ deps, withMusic: true })
     await flush()
@@ -175,7 +175,7 @@ describe('story intro', () => {
     expect(isStoryIntroOpen()).toBe(false)
   })
 
-  it('keeps Skip and Escape available while waiting for Start', () => {
+  it('[U04313] keeps Skip and Escape available while waiting for Start', () => {
     const { deps } = fakeDeps({ unlocked: false })
     playStoryIntro({ deps, withMusic: true })
     document.querySelector('.story-intro__skip').click()
@@ -185,7 +185,7 @@ describe('story intro', () => {
     expect(isStoryIntroOpen()).toBe(false)
   })
 
-  it('replays from a sidebar click straight away, without the button', async() => {
+  it('[U04314] replays from a sidebar click straight away, without the button', async() => {
     const { deps, audios } = fakeDeps()
     playStoryIntro({ fromGesture: true, deps })
     await flush()
@@ -194,7 +194,7 @@ describe('story intro', () => {
     expect(audios).toHaveLength(1)
   })
 
-  it('always shows the Start intro button on the automatic intro, even when audio looks unlocked', async() => {
+  it('[U04315] always shows the Start intro button on the automatic intro, even when audio looks unlocked', async() => {
     const { deps, timers, audios, music } = fakeDeps({ unlocked: true })
     playStoryIntro({ deps, withMusic: true })
     await flush()
@@ -208,7 +208,7 @@ describe('story intro', () => {
     expect(audios).toHaveLength(1)
   })
 
-  it('keeps music a quiet bed and swells it to full level over the last seconds of narration', async() => {
+  it('[U04316] keeps music a quiet bed and swells it to full level over the last seconds of narration', async() => {
     const { deps, timers, ducks } = fakeDeps()
     const ramps = []
     deps.rampDuck = (target, ms) => ramps.push({ target, ms })
@@ -226,7 +226,7 @@ describe('story intro', () => {
     expect(ramps).toEqual([{ target: 1, ms: STORY_INTRO_MUSIC_RAMP_MS }])
   })
 
-  it('fits and centers the focus rectangle', () => {
+  it('[U04317] fits and centers the focus rectangle', () => {
     const { scale, tx, ty } = focusTransform({ x: 100, y: 200, w: 400, h: 100 }, 800, 600, 1)
     expect(scale).toBe(2)
     expect(tx + 300 * scale).toBeCloseTo(400)
@@ -235,7 +235,7 @@ describe('story intro', () => {
 })
 
 describe('story intro hand-off', () => {
-  it('announces closing so the tutorial can start afterwards', () => {
+  it('[U04318] announces closing so the tutorial can start afterwards', () => {
     resetGameStorageForTests({})
     const { deps } = fakeDeps()
     const listener = vi.fn()

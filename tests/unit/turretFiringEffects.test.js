@@ -26,21 +26,21 @@ function context() {
 beforeEach(() => vi.clearAllMocks())
 
 describe('shared turret firing effects', () => {
-  it('accepts simulation time zero and ignores missing, expired and future shots', () => {
+  it('[U04486] accepts simulation time zero and ignores missing, expired and future shots', () => {
     expect(getRecoilOffset(0, 0, 6)).toBe(6)
     expect(getRecoilOffset(0, RECOIL_DURATION / 2, 6)).toBeCloseTo(0.75)
     for (const start of [null, undefined, NaN, 100]) expect(getRecoilOffset(start, 0)).toBe(0)
     expect(getRecoilOffset(0, RECOIL_DURATION + 1)).toBe(0)
   })
 
-  it('preserves parent opacity when drawing a flash', () => {
+  it('[U04487] preserves parent opacity when drawing a flash', () => {
     const ctx = context()
     renderTurretMuzzleFlash(ctx, 0, 11, 0, 0)
     expect(ctx.globalAlpha).toBe(0.4)
     expect(ctx.arc).toHaveBeenCalledOnce()
   })
 
-  it.each([1, 2, 3])('renders V%i with the correct barrel count and fixed foundation/housing', version => {
+  it.each([1, 2, 3])('[U04488] renders V%i with the correct barrel count and fixed foundation/housing', version => {
     gameState.simulationTime = 1000
     const ctx = context()
     renderTurretWithImages(ctx, { type: `turretGunV${version}`, turretDirection: 0 }, 20, 40, 32, 32)
@@ -51,7 +51,7 @@ describe('shared turret firing effects', () => {
     expect(ctx.arc).not.toHaveBeenCalled()
   })
 
-  it('retains overlapping burst recoil on individual barrels without moving the armor', () => {
+  it('[U04489] retains overlapping burst recoil on individual barrels without moving the armor', () => {
     gameState.simulationTime = 150
     const shotTimes = [0, 150, null]
     const building = { type: 'turretGunV3', barrelShotTimes: shotTimes, muzzleFlashIndex: 1 }

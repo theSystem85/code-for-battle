@@ -33,7 +33,7 @@ describe('master volume preview', () => {
     getMasterVolume.mockReturnValue(0.5)
   })
 
-  it('updates volume while dragging and plays the sample only on release', () => {
+  it('[U05082] updates volume while dragging and plays the sample only on release', () => {
     const { slider, label } = mountSlider('50')
     initMasterVolumeControl()
 
@@ -56,7 +56,7 @@ describe('master volume preview', () => {
     expect(playSound).toHaveBeenCalledTimes(1)
   })
 
-  it('plays once when the change event is the release signal', () => {
+  it('[U05083] plays once when the change event is the release signal', () => {
     const { slider } = mountSlider('40')
     initMasterVolumeControl()
     playSound.mockClear()
@@ -69,7 +69,7 @@ describe('master volume preview', () => {
     expect(playSound).toHaveBeenCalledTimes(1)
   })
 
-  it('does not preview when the released volume is zero', () => {
+  it('[U05084] does not preview when the released volume is zero', () => {
     const { slider } = mountSlider('20')
     initMasterVolumeControl()
     playSound.mockClear()

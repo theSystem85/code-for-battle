@@ -176,7 +176,7 @@ describe('Recovery Tank System', () => {
   })
 
   describe('updateRecoveryTankLogic', () => {
-    it('should skip processing when no recovery tanks exist', () => {
+    it('[U03601] should skip processing when no recovery tanks exist', () => {
       const unit = createTestUnit('tank1')
       units.push(unit)
 
@@ -184,7 +184,7 @@ describe('Recovery Tank System', () => {
       updateRecoveryTankLogic(units, gameState, delta)
     })
 
-    it('should update speed when towing a unit', () => {
+    it('[U03602] should update speed when towing a unit', () => {
       const recoveryTank = createTestRecoveryTank('rt1')
       recoveryTank.towedUnit = createTestUnit('tank1')
       units.push(recoveryTank)
@@ -194,7 +194,7 @@ describe('Recovery Tank System', () => {
       expect(recoveryTank.speed).toBe(0.33)
     })
 
-    it('should update speed when towing a wreck', () => {
+    it('[U03603] should update speed when towing a wreck', () => {
       const recoveryTank = createTestRecoveryTank('rt1')
       const wreck = createTestWreck('wreck1')
       recoveryTank.towedWreck = wreck
@@ -205,7 +205,7 @@ describe('Recovery Tank System', () => {
       expect(recoveryTank.speed).toBe(0.33)
     })
 
-    it('should restore normal speed when not towing', () => {
+    it('[U03604] should restore normal speed when not towing', () => {
       const recoveryTank = createTestRecoveryTank('rt1')
       recoveryTank.speed = 0.33 // Was towing before
       units.push(recoveryTank)
@@ -216,7 +216,7 @@ describe('Recovery Tank System', () => {
     })
 
 
-    it('should not auto-repair enemy or airborne units', () => {
+    it('[U03605] should not auto-repair enemy or airborne units', () => {
       const recoveryTank = createTestRecoveryTank('rt1', 6, 6, 'player1')
       const enemyTarget = createTestUnit('enemy1', 6, 6, 'player2')
       enemyTarget.health = 50
@@ -243,7 +243,7 @@ describe('Recovery Tank System', () => {
       expect(airborneApache.health).toBe(50)
     })
 
-    it('should update towed unit position', () => {
+    it('[U03606] should update towed unit position', () => {
       const recoveryTank = createTestRecoveryTank('rt1', 8, 8)
       const towedUnit = createTestUnit('tank1', 0, 0)
       recoveryTank.towedUnit = towedUnit
@@ -257,7 +257,7 @@ describe('Recovery Tank System', () => {
   })
 
   describe('Crew Requirements', () => {
-    it('should clear repair state when tank has no loader', () => {
+    it('[U03607] should clear repair state when tank has no loader', () => {
       const recoveryTank = createTestRecoveryTank('rt1')
       recoveryTank.crew.loader = false
       recoveryTank.repairTarget = createTestUnit('tank1')
@@ -269,7 +269,7 @@ describe('Recovery Tank System', () => {
       expect(recoveryTank.repairData).toBeNull()
     })
 
-    it('should not start repairs without loader', () => {
+    it('[U03608] should not start repairs without loader', () => {
       const recoveryTank = createTestRecoveryTank('rt1', 6, 6)
       recoveryTank.crew.loader = false
       const target = createTestUnit('tank1', 6, 6)
@@ -282,7 +282,7 @@ describe('Recovery Tank System', () => {
   })
 
   describe('Tow Task Handling', () => {
-    it('should clear recovery task when wreck no longer exists', () => {
+    it('[U03609] should clear recovery task when wreck no longer exists', () => {
       const recoveryTank = createTestRecoveryTank('rt1')
       recoveryTank.recoveryTask = {
         wreckId: 'nonexistent',
@@ -297,7 +297,7 @@ describe('Recovery Tank System', () => {
       expect(recoveryTank.towedWreck).toBeNull()
     })
 
-    it('should attach wreck when close enough during tow task', () => {
+    it('[U03610] should attach wreck when close enough during tow task', () => {
       const recoveryTank = createTestRecoveryTank('rt1', 10, 10)
       const wreck = createTestWreck('wreck1', 10, 10)
       const workshop = createTestWorkshop(15, 15)
@@ -321,7 +321,7 @@ describe('Recovery Tank System', () => {
       expect(recoveryTank.recoveryTask.state).toBe('towingToWorkshop')
     })
 
-    it('should not attach wreck already towed by another tank', () => {
+    it('[U03611] should not attach wreck already towed by another tank', () => {
       const recoveryTank = createTestRecoveryTank('rt1', 10, 10)
       const wreck = createTestWreck('wreck1', 10, 10)
       wreck.towedBy = 'other_tank'
@@ -340,7 +340,7 @@ describe('Recovery Tank System', () => {
       expect(recoveryTank.towedWreck).toBeNull()
     })
 
-    it('should cancel tow task when no path to workshop exists', () => {
+    it('[U03612] should cancel tow task when no path to workshop exists', () => {
       const recoveryTank = createTestRecoveryTank('rt1', 10, 10)
       const wreck = createTestWreck('wreck1', 10, 10)
       const workshop = createTestWorkshop(15, 15)
@@ -367,7 +367,7 @@ describe('Recovery Tank System', () => {
       expect(playSound).toHaveBeenCalledWith('repairCancelled', 0.6)
     })
 
-    it('should cancel towing when workshop is destroyed', () => {
+    it('[U03613] should cancel towing when workshop is destroyed', () => {
       const recoveryTank = createTestRecoveryTank('rt1', 15, 18)
       const wreck = createTestWreck('wreck1', 12, 12)
       const workshop = createTestWorkshop(15, 15)
@@ -395,7 +395,7 @@ describe('Recovery Tank System', () => {
       expect(playSound).toHaveBeenCalledWith('repairCancelled', 0.6)
     })
 
-    it('should finalize restoration when reaching workshop entry', () => {
+    it('[U03614] should finalize restoration when reaching workshop entry', () => {
       const recoveryTank = createTestRecoveryTank('rt1', 15, 18)
       const wreck = createTestWreck('wreck1', 12, 12)
       const workshop = createTestWorkshop(15, 15)
@@ -428,7 +428,7 @@ describe('Recovery Tank System', () => {
   })
 
   describe('Recycle Task Handling', () => {
-    it('should start recycling when close to wreck', () => {
+    it('[U03615] should start recycling when close to wreck', () => {
       const recoveryTank = createTestRecoveryTank('rt1', 10, 10)
       const wreck = createTestWreck('wreck1', 10, 10)
       gameState.unitWrecks.push(wreck)
@@ -447,7 +447,7 @@ describe('Recovery Tank System', () => {
       expect(wreck.isBeingRecycled).toBe(true)
     })
 
-    it('should update recycling progress over time', () => {
+    it('[U03616] should update recycling progress over time', () => {
       const recoveryTank = createTestRecoveryTank('rt1', 10, 10)
       const wreck = createTestWreck('wreck1', 10, 10)
       gameState.unitWrecks.push(wreck)
@@ -469,7 +469,7 @@ describe('Recovery Tank System', () => {
       expect(recoveryTank.recoveryProgress).toBeCloseTo(0.016, 2)
     })
 
-    it('should complete recycling and add money', () => {
+    it('[U03617] should complete recycling and add money', () => {
       const recoveryTank = createTestRecoveryTank('rt1', 10, 10)
       const wreck = createTestWreck('wreck1', 10, 10)
       wreck.cost = 1000
@@ -495,7 +495,7 @@ describe('Recovery Tank System', () => {
       expect(recoveryTank.recoveryTask).toBeNull()
     })
 
-    it('should remove wreck after recycling', () => {
+    it('[U03618] should remove wreck after recycling', () => {
       const recoveryTank = createTestRecoveryTank('rt1', 10, 10)
       const wreck = createTestWreck('wreck1', 10, 10)
       gameState.unitWrecks.push(wreck)
@@ -518,7 +518,7 @@ describe('Recovery Tank System', () => {
   })
 
   describe('Auto-Repair Logic', () => {
-    it('should auto-acquire nearby damaged units', () => {
+    it('[U03619] should auto-acquire nearby damaged units', () => {
       const recoveryTank = createTestRecoveryTank('rt1', 6, 6)
       const target = createTestUnit('tank1', 6, 6)
       target.health = 50
@@ -531,7 +531,7 @@ describe('Recovery Tank System', () => {
       expect(recoveryTank.repairStarted).toBe(true)
     })
 
-    it('should calculate repair costs based on unit value', () => {
+    it('[U03620] should calculate repair costs based on unit value', () => {
       const recoveryTank = createTestRecoveryTank('rt1', 6, 6)
       const target = createTestUnit('tank1', 6, 6)
       target.health = 50
@@ -544,7 +544,7 @@ describe('Recovery Tank System', () => {
       expect(recoveryTank.repairData.totalCost).toBe(250) // 25% of 1000
     })
 
-    it('should heal target over time', () => {
+    it('[U03621] should heal target over time', () => {
       const recoveryTank = createTestRecoveryTank('rt1', 6, 6)
       const target = createTestUnit('tank1', 6, 6)
       target.health = 50
@@ -568,7 +568,7 @@ describe('Recovery Tank System', () => {
       expect(target.health).toBeGreaterThan(initialHealth)
     })
 
-    it('should deduct money during repairs', () => {
+    it('[U03622] should deduct money during repairs', () => {
       const recoveryTank = createTestRecoveryTank('rt1', 6, 6)
       const target = createTestUnit('tank1', 6, 6)
       target.health = 50
@@ -592,7 +592,7 @@ describe('Recovery Tank System', () => {
       expect(gameState.money).toBeLessThan(initialMoney)
     })
 
-    it('should stop repair when target moves', () => {
+    it('[U03623] should stop repair when target moves', () => {
       const recoveryTank = createTestRecoveryTank('rt1', 6, 6)
       const target = createTestUnit('tank1', 6, 6)
       target.health = 50
@@ -605,7 +605,7 @@ describe('Recovery Tank System', () => {
       expect(recoveryTank.repairTarget).toBeNull()
     })
 
-    it('should stop repair when target moves out of range', () => {
+    it('[U03624] should stop repair when target moves out of range', () => {
       const recoveryTank = createTestRecoveryTank('rt1', 6, 6)
       const target = createTestUnit('tank1', 20, 20) // Too far
       target.health = 50
@@ -617,7 +617,7 @@ describe('Recovery Tank System', () => {
       expect(recoveryTank.repairTarget).toBeNull()
     })
 
-    it('should complete repair when target reaches full health', () => {
+    it('[U03625] should complete repair when target reaches full health', () => {
       const recoveryTank = createTestRecoveryTank('rt1', 6, 6)
       const target = createTestUnit('tank1', 6, 6)
       target.health = 99.9
@@ -639,7 +639,7 @@ describe('Recovery Tank System', () => {
       expect(target.health).toBe(100)
     })
 
-    it('should pause repair when out of money', () => {
+    it('[U03626] should pause repair when out of money', () => {
       const recoveryTank = createTestRecoveryTank('rt1', 6, 6)
       const target = createTestUnit('tank1', 6, 6)
       target.health = 50
@@ -666,7 +666,7 @@ describe('Recovery Tank System', () => {
   })
 
   describe('Alert Mode', () => {
-    it('should clear alert state when not in alert mode', () => {
+    it('[U03627] should clear alert state when not in alert mode', () => {
       const recoveryTank = createTestRecoveryTank('rt1')
       recoveryTank.alertMode = false
       recoveryTank.alertActiveService = true
@@ -679,7 +679,7 @@ describe('Recovery Tank System', () => {
       expect(recoveryTank.alertAssignmentId).toBeNull()
     })
 
-    it('should scan for damaged units in alert mode', () => {
+    it('[U03628] should scan for damaged units in alert mode', () => {
       const recoveryTank = createTestRecoveryTank('rt1')
       recoveryTank.alertMode = true
       recoveryTank.nextUtilityScanTime = 0
@@ -692,7 +692,7 @@ describe('Recovery Tank System', () => {
       expect(recoveryTank.alertActiveService).toBe(true)
     })
 
-    it('should scan for wrecks in alert mode', () => {
+    it('[U03629] should scan for wrecks in alert mode', () => {
       const recoveryTank = createTestRecoveryTank('rt1')
       recoveryTank.alertMode = true
       recoveryTank.nextUtilityScanTime = 0
@@ -705,7 +705,7 @@ describe('Recovery Tank System', () => {
       expect(recoveryTank.alertActiveService).toBe(true)
     })
 
-    it('should prefer damaged units over wrecks', () => {
+    it('[U03630] should prefer damaged units over wrecks', () => {
       const recoveryTank = createTestRecoveryTank('rt1')
       recoveryTank.alertMode = true
       recoveryTank.nextUtilityScanTime = 0
@@ -723,7 +723,7 @@ describe('Recovery Tank System', () => {
   })
 
   describe('Utility Queue Integration', () => {
-    it('should track wreck in utility queue during recovery task', () => {
+    it('[U03631] should track wreck in utility queue during recovery task', () => {
       const recoveryTank = createTestRecoveryTank('rt1', 10, 10)
       recoveryTank.utilityQueue = {
         mode: 'repair',
@@ -753,7 +753,7 @@ describe('Recovery Tank System', () => {
       expect(recoveryTank.utilityQueue.currentTargetType).toBe('wreck')
     })
 
-    it('should track unit in utility queue during repair', () => {
+    it('[U03632] should track unit in utility queue during repair', () => {
       const recoveryTank = createTestRecoveryTank('rt1', 6, 6)
       recoveryTank.utilityQueue = {
         mode: 'repair',
@@ -775,7 +775,7 @@ describe('Recovery Tank System', () => {
   })
 
   describe('Alert State Tracking', () => {
-    it('should update alert state when service starts', () => {
+    it('[U03633] should update alert state when service starts', () => {
       const recoveryTank = createTestRecoveryTank('rt1', 6, 6)
       recoveryTank.alertMode = true
       recoveryTank._alertWasServing = false
@@ -789,7 +789,7 @@ describe('Recovery Tank System', () => {
       expect(recoveryTank.alertActiveService).toBe(true)
     })
 
-    it('should clear alert state when service ends', () => {
+    it('[U03634] should clear alert state when service ends', () => {
       const recoveryTank = createTestRecoveryTank('rt1')
       recoveryTank.alertMode = true
       recoveryTank._alertWasServing = true
@@ -806,7 +806,7 @@ describe('Recovery Tank System', () => {
   })
 
   describe('Recovery Task Priority', () => {
-    it('should clear repair state when recovery task is active', () => {
+    it('[U03635] should clear repair state when recovery task is active', () => {
       const recoveryTank = createTestRecoveryTank('rt1', 10, 10)
       recoveryTank.repairTarget = createTestUnit('tank1')
       recoveryTank.repairData = { totalCost: 100 }

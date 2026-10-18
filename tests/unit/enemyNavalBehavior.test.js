@@ -27,7 +27,7 @@ function createDestroyer(overrides = {}) {
 }
 
 describe('enemy naval behavior', () => {
-  it('returns below 20% health, waits in the service zone, and resumes its saved target', () => {
+  it('[U01377] returns below 20% health, waits in the service zone, and resumes its saved target', () => {
     const mapGrid = createWaterMap(40, 30)
     const shipyard = { id: 'yard-ai', type: 'shipyard', owner: 'player2', x: 5, y: 5, width: 5, height: 5, health: 450 }
     const enemyShip = createDestroyer({ id: 'enemy-ship', owner: 'player1', x: 30 * TILE_SIZE, tileX: 30 })
@@ -56,7 +56,7 @@ describe('enemy naval behavior', () => {
     expect(unit.allowedToAttack).toBe(true)
   })
 
-  it('prioritizes enemy ships and stages on water within firing range', () => {
+  it('[U01378] prioritizes enemy ships and stages on water within firing range', () => {
     const mapGrid = createWaterMap(70, 30)
     const unit = createDestroyer({ x: 60 * TILE_SIZE, tileX: 60 })
     const enemyShip = createDestroyer({ id: 'enemy-ship', owner: 'player1', x: 5 * TILE_SIZE, tileX: 5 })
@@ -73,7 +73,7 @@ describe('enemy naval behavior', () => {
     expect(Math.hypot(destination.x - enemyShip.tileX, destination.y - enemyShip.tileY)).toBeLessThanOrEqual(18)
   })
 
-  it('routes depleted ships to a capable supply ship and resumes combat after replenishment', () => {
+  it('[U01379] routes depleted ships to a capable supply ship and resumes combat after replenishment', () => {
     const mapGrid = createWaterMap(40, 30)
     const enemyShip = createDestroyer({ id: 'enemy-ship', owner: 'player1', x: 30 * TILE_SIZE, tileX: 30 })
     const supplyShip = createDestroyer({
@@ -102,7 +102,7 @@ describe('enemy naval behavior', () => {
     expect(unit.allowedToAttack).toBe(true)
   })
 
-  it('deploys supply ships toward needy fleet members without acquiring attack targets', () => {
+  it('[U01380] deploys supply ships toward needy fleet members without acquiring attack targets', () => {
     const mapGrid = createWaterMap(40, 30)
     const supplyShip = createDestroyer({
       id: 'supply', type: 'supplyShip', x: 5 * TILE_SIZE, tileX: 5,
@@ -121,7 +121,7 @@ describe('enemy naval behavior', () => {
     expect(supplyShip.path.length).toBeGreaterThan(0)
   })
 
-  it('throttles retries when an attack target is unreachable across disconnected water', () => {
+  it('[U01381] throttles retries when an attack target is unreachable across disconnected water', () => {
     const mapGrid = Array.from({ length: 20 }, () =>
       Array.from({ length: 30 }, () => ({ type: 'land', building: null, seedCrystal: false })))
     for (let y = 8; y <= 12; y++) {

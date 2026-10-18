@@ -51,7 +51,7 @@ describe('remoteControlState', () => {
     vi.mocked(getActiveRemoteConnection).mockReturnValue(null)
   })
 
-  it('throws when setting an unsupported action or missing source', () => {
+  it('[U03672] throws when setting an unsupported action or missing source', () => {
     expect(() => setRemoteControlAction('not-real', 'source', true)).toThrow(
       'Unsupported remote control action'
     )
@@ -60,7 +60,7 @@ describe('remoteControlState', () => {
     )
   })
 
-  it('clamps intensities and broadcasts when remote session is active', () => {
+  it('[U03673] clamps intensities and broadcasts when remote session is active', () => {
     gameState.multiplayerSession = { ...defaultMultiplayerSession, isRemote: true }
     vi.mocked(getActiveRemoteConnection).mockReturnValue(mockConnection)
 
@@ -76,7 +76,7 @@ describe('remoteControlState', () => {
     )
   })
 
-  it('removes sources when intensity is zero and recomputes max intensity', () => {
+  it('[U03674] removes sources when intensity is zero and recomputes max intensity', () => {
     setRemoteControlAction('fire', 'alpha', true, 0.4)
     setRemoteControlAction('fire', 'beta', true, 0.9)
 
@@ -90,7 +90,7 @@ describe('remoteControlState', () => {
     expect(gameState.remoteControlSources.fire).toEqual({})
   })
 
-  it('clears a source across actions and broadcasts once', () => {
+  it('[U03675] clears a source across actions and broadcasts once', () => {
     setRemoteControlAction('forward', 'pad', true, 0.6)
     setRemoteControlAction('backward', 'pad', true, 0.4)
 
@@ -105,7 +105,7 @@ describe('remoteControlState', () => {
     expect(mockConnection.send).toHaveBeenCalledTimes(1)
   })
 
-  it('selects the strongest absolute sources and clamps inputs', () => {
+  it('[U03676] selects the strongest absolute sources and clamps inputs', () => {
     setRemoteControlAbsolute('pilot-a', {
       wagonDirection: 90,
       wagonSpeed: 0.4,
@@ -127,7 +127,7 @@ describe('remoteControlState', () => {
     })
   })
 
-  it('removes empty absolute sources and resets defaults', () => {
+  it('[U03677] removes empty absolute sources and resets defaults', () => {
     setRemoteControlAbsolute('pilot', {
       wagonDirection: 45,
       wagonSpeed: 0.5
@@ -149,7 +149,7 @@ describe('remoteControlState', () => {
     })
   })
 
-  it('clears absolute sources and broadcasts when remote', () => {
+  it('[U03678] clears absolute sources and broadcasts when remote', () => {
     gameState.multiplayerSession = { ...defaultMultiplayerSession, isRemote: true }
     vi.mocked(getActiveRemoteConnection).mockReturnValue(mockConnection)
 
@@ -170,7 +170,7 @@ describe('remoteControlState', () => {
     })
   })
 
-  it('applies snapshots, ignoring unsupported actions', () => {
+  it('[U03679] applies snapshots, ignoring unsupported actions', () => {
     setRemoteControlAction('forward', 'sync', true, 0.7)
 
     applyRemoteControlSnapshot('sync', {
@@ -196,7 +196,7 @@ describe('remoteControlState', () => {
     })
   })
 
-  it('releases action and absolute sources together', () => {
+  it('[U03680] releases action and absolute sources together', () => {
     setRemoteControlAction('turnRight', 'release', true, 0.5)
     setRemoteControlAbsolute('release', {
       wagonDirection: 120,

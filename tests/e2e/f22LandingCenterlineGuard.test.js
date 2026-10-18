@@ -8,7 +8,7 @@ test.describe('F22 landing centerline guard', () => {
     })
   })
 
-  test('landing roll softly recenters F22 away from non-passable airstrip edge tiles', async({ page }) => {
+  test('[E00037] landing roll softly recenters F22 away from non-passable airstrip edge tiles', async({ page }) => {
     test.setTimeout(180000)
 
     await page.goto('/?seed=41')

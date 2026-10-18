@@ -45,7 +45,7 @@ test.describe('Basic Game Flow', () => {
     })
   })
 
-  test('should build a base and produce units without errors', async({ page }) => {
+  test('[E00013] should build a base and produce units without errors', async({ page }) => {
     // =======================
     // 0. DISABLE TUTORIAL BEFORE PAGE LOAD
     // =======================

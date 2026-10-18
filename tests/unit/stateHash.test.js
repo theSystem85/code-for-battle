@@ -9,7 +9,7 @@ import {
 } from '../../src/network/stateHash.js'
 
 describe('stateHash', () => {
-  it('computes ordered hashes deterministically', () => {
+  it('[U04211] computes ordered hashes deterministically', () => {
     const hashFn = (value) => value * 31
 
     const hashA = hashArrayOrdered([1, 2, 3], hashFn)
@@ -20,7 +20,7 @@ describe('stateHash', () => {
     expect(hashA).not.toBe(hashC)
   })
 
-  it('hashes ore tiles in the map grid', () => {
+  it('[U04212] hashes ore tiles in the map grid', () => {
     const mapGrid = [
       [{ type: 'land' }, { type: 'land', ore: true }],
       [{ type: 'land', ore: true, seedCrystal: true }, { type: 'land' }]
@@ -31,7 +31,7 @@ describe('stateHash', () => {
     expect(hash).not.toBe(0)
   })
 
-  it('computes deterministic state hashes', () => {
+  it('[U04213] computes deterministic state hashes', () => {
     const gameState = {
       units: [
         { id: 'u1', type: 'tank', owner: 'player1', x: 10, y: 20, tileX: 0, tileY: 1, health: 50, maxHealth: 100, direction: 0 },
@@ -58,7 +58,7 @@ describe('stateHash', () => {
     expect(compareHashes(hash, differentHash)).toBe(false)
   })
 
-  it('computes quick hash based on counts and totals', () => {
+  it('[U04214] computes quick hash based on counts and totals', () => {
     const gameState = {
       units: [{ health: 50 }, { health: 25 }],
       buildings: [{ health: 100 }],
@@ -70,7 +70,7 @@ describe('stateHash', () => {
     expect(hash).toMatch(/^[0-9a-f]{8}$/)
   })
 
-  it('creates a hash report with component hashes', () => {
+  it('[U04215] creates a hash report with component hashes', () => {
     const gameState = {
       units: [{ id: 'u1', type: 'tank', owner: 'player1', x: 0, y: 0, tileX: 0, tileY: 0, health: 100, maxHealth: 100, direction: 0 }],
       buildings: [],

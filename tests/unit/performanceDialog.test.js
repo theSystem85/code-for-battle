@@ -19,7 +19,7 @@ describe('PerformanceDialog', () => {
     resetFunctionTimingForTests()
   })
 
-  it('toggles and persists function timing without starting a recording', () => {
+  it('[U03305] toggles and persists function timing without starting a recording', () => {
     const dialog = new PerformanceDialog()
     const checkbox = document.getElementById('perfFunctionTimings')
     checkbox.checked = true
@@ -31,7 +31,7 @@ describe('PerformanceDialog', () => {
     expect(dialog.intervalId).toBeNull()
   })
 
-  it('does not snapshot, sort, or update table DOM while hidden or disabled', () => {
+  it('[U03306] does not snapshot, sort, or update table DOM while hidden or disabled', () => {
     const dialog = new PerformanceDialog()
     const snapshotSpy = vi.spyOn(renderProfiler, 'getSnapshot')
 
@@ -44,7 +44,7 @@ describe('PerformanceDialog', () => {
     expect(document.getElementById('perfContent').textContent).toContain('Function timings are off')
   })
 
-  it('refreshes at four hertz only while visible', () => {
+  it('[U03307] refreshes at four hertz only while visible', () => {
     vi.useFakeTimers()
     const dialog = new PerformanceDialog()
     const renderSpy = vi.spyOn(dialog, 'render')

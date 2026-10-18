@@ -8,19 +8,19 @@ afterEach(() => {
 })
 
 describe('milestone video presentation', () => {
-  it.each(['sidebar-condensed', 'sidebar-collapsed'])('anchors compact portrait video at the screen corner for %s', mode => {
+  it.each(['sidebar-condensed', 'sidebar-collapsed'])('[U02799] anchors compact portrait video at the screen corner for %s', mode => {
     document.body.className = `mobile-portrait ${mode}`
     expect(milestoneVideoPlacement(document.body, null)).toEqual({ left: 0, top: 0, width: 160, height: 120 })
   })
 
-  it.each(['', 'mobile-portrait', 'mobile-landscape'])('uses the minimap bounds in expanded layout %s', mode => {
+  it.each(['', 'mobile-portrait', 'mobile-landscape'])('[U02800] uses the minimap bounds in expanded layout %s', mode => {
     document.body.className = mode
     const rect = { left: 12, top: 24, width: 240, height: 160 }
     expect(milestoneVideoPlacement(document.body, rect)).toEqual(rect)
     expect(milestoneVideoPlacement(document.body, { width: 0, height: 0 })).toBeNull()
   })
 
-  it('configures inline muted autoplay with buffered preload', () => {
+  it('[U02801] configures inline muted autoplay with buffered preload', () => {
     const video = document.createElement('video')
     configureMilestoneVideo(video)
     for (const attribute of ['muted', 'autoplay', 'playsinline', 'webkit-playsinline']) {
@@ -30,7 +30,7 @@ describe('milestone video presentation', () => {
     expect(video.preload).toBe('auto')
   })
 
-  it('reveals only the active playing video and ignores late playing events during fade-out', () => {
+  it('[U02802] reveals only the active playing video and ignores late playing events during fade-out', () => {
     vi.useFakeTimers()
     const overlay = new VideoOverlay()
     const video = overlay.overlayElement.querySelector('video')
@@ -49,7 +49,7 @@ describe('milestone video presentation', () => {
     overlay.destroy()
   })
 
-  it('keeps the playing element until the opacity fade finishes', () => {
+  it('[U02803] keeps the playing element until the opacity fade finishes', () => {
     vi.useFakeTimers()
     const overlay = new VideoOverlay()
     const video = overlay.overlayElement.querySelector('video')

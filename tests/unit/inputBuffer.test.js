@@ -40,7 +40,7 @@ describe('inputBuffer', () => {
   })
 
   describe('InputBuffer.addInput', () => {
-    it('stores inputs by tick and exposes them via getInputsForTick', () => {
+    it('[U02077] stores inputs by tick and exposes them via getInputsForTick', () => {
       const input = buildInput()
 
       buffer.addInput(input.tick, input)
@@ -48,7 +48,7 @@ describe('inputBuffer', () => {
       expect(buffer.getInputsForTick(input.tick)).toEqual([input])
     })
 
-    it('prevents duplicates with same peer, type, and payload', () => {
+    it('[U02078] prevents duplicates with same peer, type, and payload', () => {
       const input = buildInput()
       const duplicate = buildInput({ timestamp: 2000 })
 
@@ -58,14 +58,14 @@ describe('inputBuffer', () => {
       expect(buffer.getInputsForTick(input.tick)).toHaveLength(1)
     })
 
-    it('allows different payloads from same peer and type', () => {
+    it('[U02079] allows different payloads from same peer and type', () => {
       buffer.addInput(3, buildInput({ tick: 3, payload: { unitIds: ['u1'], targetX: 2, targetY: 3 } }))
       buffer.addInput(3, buildInput({ tick: 3, payload: { unitIds: ['u1'], targetX: 5, targetY: 6 } }))
 
       expect(buffer.getInputsForTick(3)).toHaveLength(2)
     })
 
-    it('allows same payload from different peers', () => {
+    it('[U02080] allows same payload from different peers', () => {
       buffer.addInput(4, buildInput({ tick: 4, peerId: 'peer-a' }))
       buffer.addInput(4, buildInput({ tick: 4, peerId: 'peer-b' }))
 
@@ -74,17 +74,17 @@ describe('inputBuffer', () => {
   })
 
   describe('tick queries', () => {
-    it('hasInputsForTick returns false when no inputs exist', () => {
+    it('[U02081] hasInputsForTick returns false when no inputs exist', () => {
       expect(buffer.hasInputsForTick(1)).toBe(false)
     })
 
-    it('hasInputsForTick returns true when inputs exist', () => {
+    it('[U02082] hasInputsForTick returns true when inputs exist', () => {
       buffer.addInput(2, buildInput({ tick: 2 }))
 
       expect(buffer.hasInputsForTick(2)).toBe(true)
     })
 
-    it('confirmTick marks ticks as confirmed', () => {
+    it('[U02083] confirmTick marks ticks as confirmed', () => {
       buffer.confirmTick(7)
 
       expect(buffer.isTickConfirmed(7)).toBe(true)
@@ -93,7 +93,7 @@ describe('inputBuffer', () => {
   })
 
   describe('buffer management', () => {
-    it('clearBefore removes older ticks and confirmations', () => {
+    it('[U02084] clearBefore removes older ticks and confirmations', () => {
       buffer.addInput(1, buildInput({ tick: 1 }))
       buffer.addInput(2, buildInput({ tick: 2 }))
       buffer.addInput(3, buildInput({ tick: 3 }))
@@ -111,7 +111,7 @@ describe('inputBuffer', () => {
       expect(buffer._oldestTick).toBe(3)
     })
 
-    it('clear resets buffer state', () => {
+    it('[U02085] clear resets buffer state', () => {
       buffer.addInput(1, buildInput({ tick: 1 }))
       buffer.confirmTick(1)
 
@@ -125,14 +125,14 @@ describe('inputBuffer', () => {
   })
 
   describe('buffer stats', () => {
-    it('reports buffered tick count', () => {
+    it('[U02086] reports buffered tick count', () => {
       buffer.addInput(1, buildInput({ tick: 1 }))
       buffer.addInput(3, buildInput({ tick: 3 }))
 
       expect(buffer.getBufferedTickCount()).toBe(2)
     })
 
-    it('calculates tick ranges with data and without', () => {
+    it('[U02087] calculates tick ranges with data and without', () => {
       expect(buffer.getTickRange()).toEqual({ min: 0, max: 0 })
 
       buffer.addInput(5, buildInput({ tick: 5 }))
@@ -141,7 +141,7 @@ describe('inputBuffer', () => {
       expect(buffer.getTickRange()).toEqual({ min: 5, max: 10 })
     })
 
-    it('counts total inputs across ticks', () => {
+    it('[U02088] counts total inputs across ticks', () => {
       buffer.addInput(1, buildInput({ tick: 1 }))
       buffer.addInput(1, buildInput({ tick: 1, peerId: 'peer-b' }))
       buffer.addInput(2, buildInput({ tick: 2 }))
@@ -149,7 +149,7 @@ describe('inputBuffer', () => {
       expect(buffer.getTotalInputCount()).toBe(3)
     })
 
-    it('exports a debug state summary', () => {
+    it('[U02089] exports a debug state summary', () => {
       buffer.addInput(1, buildInput({ tick: 1, peerId: 'alpha', type: LOCKSTEP_INPUT_TYPES.UNIT_STOP }))
       buffer.addInput(2, buildInput({ tick: 2, peerId: 'beta', type: LOCKSTEP_INPUT_TYPES.BUILD_PLACE }))
 
@@ -161,7 +161,7 @@ describe('inputBuffer', () => {
   })
 
   describe('input factories', () => {
-    it('createLockstepInput builds a lockstep-ready command with timestamp and id', () => {
+    it('[U02090] createLockstepInput builds a lockstep-ready command with timestamp and id', () => {
       vi.spyOn(globalThis.performance, 'now').mockReturnValue(1234)
       vi.spyOn(Math, 'random').mockReturnValue(0.123456789)
 
@@ -178,7 +178,7 @@ describe('inputBuffer', () => {
       expect(input.id).toBe(`peer-x-9-${LOCKSTEP_INPUT_TYPES.UNIT_MOVE}-${suffix}`)
     })
 
-    it('creates specific input payloads', () => {
+    it('[U02091] creates specific input payloads', () => {
       expect(createMoveInput(['u1', 'u2'], 4, 7, true)).toEqual({
         type: LOCKSTEP_INPUT_TYPES.UNIT_MOVE,
         payload: { unitIds: ['u1', 'u2'], targetX: 4, targetY: 7, queued: true }
@@ -227,7 +227,7 @@ describe('inputBuffer', () => {
   })
 
   describe('serialization helpers', () => {
-    it('serializes and deserializes inputs', () => {
+    it('[U02092] serializes and deserializes inputs', () => {
       const input = buildInput({ tick: 11 })
 
       const serialized = serializeInput(input)
@@ -236,7 +236,7 @@ describe('inputBuffer', () => {
       expect(parsed).toEqual(input)
     })
 
-    it('returns null and logs a warning when deserialization fails', () => {
+    it('[U02093] returns null and logs a warning when deserialization fails', () => {
       const warnSpy = vi.spyOn(window.logger, 'warn').mockImplementation(() => {})
 
       const result = deserializeInput('{not-json')

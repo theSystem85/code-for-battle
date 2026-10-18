@@ -169,7 +169,7 @@ describe('Harvester Logic', () => {
   })
 
   describe('Ore Detection and Harvesting', () => {
-    it('should start harvesting when harvester is near ore tile', () => {
+    it('[U01849] should start harvesting when harvester is near ore tile', () => {
       const harvester = createTestHarvester('harv1', 5, 5)
       units.push(harvester)
 
@@ -182,7 +182,7 @@ describe('Harvester Logic', () => {
       expect(harvester.harvestTimer).toBe(now)
     })
 
-    it('should complete harvesting after 10 seconds', () => {
+    it('[U01850] should complete harvesting after 10 seconds', () => {
       const harvester = createTestHarvester('harv1', 5, 5)
       harvester.harvesting = true
       harvester.harvestTimer = now - 10001 // Started 10+ seconds ago
@@ -196,7 +196,7 @@ describe('Harvester Logic', () => {
       expect(harvester.harvesting).toBe(false)
     })
 
-    it('uses ore density for harvested value and decreases density', () => {
+    it('[U01851] uses ore density for harvested value and decreases density', () => {
       const harvester = createTestHarvester('harv1', 5, 5)
       harvester.level = 3
       harvester.harvesting = true
@@ -212,7 +212,7 @@ describe('Harvester Logic', () => {
       expect(mapGrid[5][5].oreDensity).toBe(4)
     })
 
-    it('prevents level 0 harvester from harvesting density 3 ore', () => {
+    it('[U01852] prevents level 0 harvester from harvesting density 3 ore', () => {
       const harvester = createTestHarvester('harv1', 5, 5)
       mapGrid[5][5].ore = true
       mapGrid[5][5].oreDensity = 3
@@ -223,7 +223,7 @@ describe('Harvester Logic', () => {
       expect(harvester.harvesting).toBe(false)
     })
 
-    it('shows a promotion notification with a quicklink when a player harvester levels up', () => {
+    it('[U01853] shows a promotion notification with a quicklink when a player harvester levels up', () => {
       const harvester = createTestHarvester('harv1', 5, 5)
       harvester.unloadingAtRefinery = true
       harvester.unloadStartTime = now - 5001
@@ -245,7 +245,7 @@ describe('Harvester Logic', () => {
       )
     })
 
-    it('should deplete ore tile after harvesting', () => {
+    it('[U01854] should deplete ore tile after harvesting', () => {
       const harvester = createTestHarvester('harv1', 5, 5)
       harvester.harvesting = true
       harvester.harvestTimer = now - 10001
@@ -259,7 +259,7 @@ describe('Harvester Logic', () => {
       expect(mapGrid[5][5].ore).toBe(false)
     })
 
-    it('should not harvest seed crystals', () => {
+    it('[U01855] should not harvest seed crystals', () => {
       const harvester = createTestHarvester('harv1', 5, 5)
       units.push(harvester)
 
@@ -272,7 +272,7 @@ describe('Harvester Logic', () => {
       expect(harvester.harvesting).toBe(false)
     })
 
-    it('should not harvest when at capacity', () => {
+    it('[U01856] should not harvest when at capacity', () => {
       const harvester = createTestHarvester('harv1', 5, 5)
       harvester.oreCarried = 1000 // At capacity (HARVESTER_CAPPACITY = 1)
       units.push(harvester)
@@ -284,7 +284,7 @@ describe('Harvester Logic', () => {
       expect(harvester.harvesting).toBe(false)
     })
 
-    it('clears invalid manual target and assigns new ore', async() => {
+    it('[U01857] clears invalid manual target and assigns new ore', async() => {
       const harvester = createTestHarvester('harv1', 5, 5)
       harvester.manualOreTarget = { x: 0, y: 0 }
       units.push(harvester)
@@ -303,7 +303,7 @@ describe('Harvester Logic', () => {
       expect(targetedTiles['2,2']).toBe(harvester.id)
     })
 
-    it('does not let auto targeting override recent harvester remote control input', () => {
+    it('[U01858] does not let auto targeting override recent harvester remote control input', () => {
       const harvester = createTestHarvester('harv1', 5, 5)
       harvester.lastRemoteControlTime = now - 1500
       harvester.moveTarget = { x: 8, y: 5 }
@@ -318,7 +318,7 @@ describe('Harvester Logic', () => {
       expect(harvester.moveTarget).toEqual({ x: 8, y: 5 })
     })
 
-    it('starts harvesting immediately when a manual ore target is reached', () => {
+    it('[U01859] starts harvesting immediately when a manual ore target is reached', () => {
       const harvester = createTestHarvester('harv1', 5, 5)
       harvester.manualOreTarget = { x: 5, y: 5 }
       units.push(harvester)
@@ -331,7 +331,7 @@ describe('Harvester Logic', () => {
       expect(harvester.oreField).toEqual({ x: 5, y: 5 })
     })
 
-    it('keeps moving toward the exact manual ore tile instead of harvesting from an adjacent ore tile', () => {
+    it('[U01860] keeps moving toward the exact manual ore tile instead of harvesting from an adjacent ore tile', () => {
       const harvester = createTestHarvester('harv1', 6, 5)
       harvester.manualOreTarget = { x: 5, y: 5 }
       units.push(harvester)
@@ -347,7 +347,7 @@ describe('Harvester Logic', () => {
       expect(harvester.path).toEqual([{ x: 5, y: 5 }])
     })
 
-    it('keeps manual-hold harvesters idle on non-ore move destinations', () => {
+    it('[U01861] keeps manual-hold harvesters idle on non-ore move destinations', () => {
       const harvester = createTestHarvester('harv1', 5, 5)
       harvester.manualHoldPosition = { x: 5, y: 5 }
       units.push(harvester)
@@ -363,7 +363,7 @@ describe('Harvester Logic', () => {
   })
 
   describe('Refinery Unloading', () => {
-    it('should find refinery when harvester is full', () => {
+    it('[U01862] should find refinery when harvester is full', () => {
       const harvester = createTestHarvester('harv1', 5, 5)
       harvester.oreCarried = 1000
       units.push(harvester)
@@ -376,7 +376,7 @@ describe('Harvester Logic', () => {
       expect(harvester.targetRefinery).toBe(refinery.id)
     })
 
-    it('should start unloading when at refinery', async() => {
+    it('[U01863] should start unloading when at refinery', async() => {
       const harvester = createTestHarvester('harv1', 11, 13)
       harvester.oreCarried = 1000
       harvester.targetRefinery = 'refinery_10_10'
@@ -394,7 +394,7 @@ describe('Harvester Logic', () => {
       expect(harvester.unloadingAtRefinery).toBe(true)
     })
 
-    it('should complete unloading and add money', () => {
+    it('[U01864] should complete unloading and add money', () => {
       const harvester = createTestHarvester('harv1', 11, 13)
       harvester.oreCarried = 1000
       harvester.unloadingAtRefinery = true
@@ -411,7 +411,7 @@ describe('Harvester Logic', () => {
       expect(gameState.money).toBe(initialMoney + 1000)
     })
 
-    it('should track total money earned from harvesting', () => {
+    it('[U01865] should track total money earned from harvesting', () => {
       const harvester = createTestHarvester('harv1', 11, 13)
       harvester.oreCarried = 1000
       harvester.unloadingAtRefinery = true
@@ -424,7 +424,7 @@ describe('Harvester Logic', () => {
       expect(gameState.totalMoneyEarned).toBe(1000)
     })
 
-    it('awards star level after 10k delivered', () => {
+    it('[U01866] awards star level after 10k delivered', () => {
       const harvester = createTestHarvester('harv1', 11, 13)
       harvester.oreCarried = 10000
       harvester.unloadingAtRefinery = true
@@ -438,7 +438,7 @@ describe('Harvester Logic', () => {
       expect(harvester.cargoCapacity).toBe(1500)
     })
 
-    it('uses 10 full unload equivalents for later star promotions too', () => {
+    it('[U01867] uses 10 full unload equivalents for later star promotions too', () => {
       const harvester = createTestHarvester('harv1', 11, 13)
       harvester.level = 1
       harvester.experience = 9
@@ -456,7 +456,7 @@ describe('Harvester Logic', () => {
       expect(harvester.cargoCapacity).toBe(2000)
     })
 
-    it('should take longer to unload when power is negative', () => {
+    it('[U01868] should take longer to unload when power is negative', () => {
       const harvester = createTestHarvester('harv1', 11, 13)
       harvester.oreCarried = 1000
       harvester.unloadingAtRefinery = true
@@ -475,7 +475,7 @@ describe('Harvester Logic', () => {
   })
 
   describe('Refinery Queue Management', () => {
-    it('should assign harvester to refinery queue when near buildings', () => {
+    it('[U01869] should assign harvester to refinery queue when near buildings', () => {
       // Simple test: just verify queue functions exist and work
       const harvester = createTestHarvester('harv1', 11, 13)
       harvester.oreCarried = 1000
@@ -492,7 +492,7 @@ describe('Harvester Logic', () => {
       expect(harvester.targetRefinery).toBeDefined()
     })
 
-    it('should handle multiple refineries', () => {
+    it('[U01870] should handle multiple refineries', () => {
       const harvester = createTestHarvester('harv_multi', 5, 5)
       harvester.oreCarried = 1000
       units.push(harvester)
@@ -509,12 +509,12 @@ describe('Harvester Logic', () => {
   })
 
   describe('getHarvesterDistribution', () => {
-    it('should return empty object when no refineries exist', () => {
+    it('[U01871] should return empty object when no refineries exist', () => {
       const distribution = getHarvesterDistribution(gameState)
       expect(distribution).toEqual({})
     })
 
-    it('should return distribution for each refinery', () => {
+    it('[U01872] should return distribution for each refinery', () => {
       const refinery1 = createTestRefinery(10, 10)
       const refinery2 = createTestRefinery(20, 20)
       gameState.buildings.push(refinery1, refinery2)
@@ -528,7 +528,7 @@ describe('Harvester Logic', () => {
       expect(typeof distribution[refinery1.id].isInUse).toBe('number')
     })
 
-    it('should track queue length and usage', () => {
+    it('[U01873] should track queue length and usage', () => {
       const refinery = createTestRefinery(10, 10)
       gameState.buildings.push(refinery)
       gameState.refineryStatus[refinery.id] = 'harv1'
@@ -540,13 +540,13 @@ describe('Harvester Logic', () => {
   })
 
   describe('assignHarvesterToOptimalRefinery', () => {
-    it('should return null when no refineries exist', () => {
+    it('[U01874] should return null when no refineries exist', () => {
       const harvester = createTestHarvester('harv1', 5, 5)
       const result = assignHarvesterToOptimalRefinery(harvester, gameState)
       expect(result).toBeNull()
     })
 
-    it('should assign to refinery with minimum load', () => {
+    it('[U01875] should assign to refinery with minimum load', () => {
       const harvester = createTestHarvester('harv1', 5, 5)
       const refinery1 = createTestRefinery(10, 10)
       const refinery2 = createTestRefinery(20, 20)
@@ -561,13 +561,13 @@ describe('Harvester Logic', () => {
       expect(harvester.assignedRefinery).toBe(refinery2.id)
     })
 
-    it('should handle undefined gameState gracefully', () => {
+    it('[U01876] should handle undefined gameState gracefully', () => {
       const harvester = createTestHarvester('harv1', 5, 5)
       const result = assignHarvesterToOptimalRefinery(harvester, undefined)
       expect(result).toBeNull()
     })
 
-    it('should handle gameState with no buildings', () => {
+    it('[U01877] should handle gameState with no buildings', () => {
       const harvester = createTestHarvester('harv1', 5, 5)
       const result = assignHarvesterToOptimalRefinery(harvester, { buildings: undefined })
       expect(result).toBeNull()
@@ -575,7 +575,7 @@ describe('Harvester Logic', () => {
   })
 
   describe('forceHarvesterUnloadPriority', () => {
-    it('should add forced harvester to queue', () => {
+    it('[U01878] should add forced harvester to queue', () => {
       const harvester = createTestHarvester('harv_force_test', 5, 5)
       harvester.oreCarried = 1000
       units.push(harvester)
@@ -592,7 +592,7 @@ describe('Harvester Logic', () => {
       expect(harvester.targetRefinery).toBe(refinery.id)
     })
 
-    it('should mark harvester as forced unload', () => {
+    it('[U01879] should mark harvester as forced unload', () => {
       const harvester = createTestHarvester('harv1', 5, 5)
       units.push(harvester)
 
@@ -607,7 +607,7 @@ describe('Harvester Logic', () => {
   })
 
   describe('clearStuckHarvesterOreField', () => {
-    it('should clear ore field and targeting for stuck harvester', () => {
+    it('[U01880] should clear ore field and targeting for stuck harvester', () => {
       const harvester = createTestHarvester('harv1', 5, 5)
       harvester.oreField = { x: 10, y: 10 }
       units.push(harvester)
@@ -622,7 +622,7 @@ describe('Harvester Logic', () => {
       expect(targetedTiles['10,10']).toBeUndefined()
     })
 
-    it('should only clear targeting if harvester owns it', () => {
+    it('[U01881] should only clear targeting if harvester owns it', () => {
       const harvester = createTestHarvester('harv1', 5, 5)
       harvester.oreField = { x: 10, y: 10 }
 
@@ -635,7 +635,7 @@ describe('Harvester Logic', () => {
       expect(targetedTiles['10,10']).toBe('different_harvester')
     })
 
-    it('should ignore non-harvester units', () => {
+    it('[U01882] should ignore non-harvester units', () => {
       const unit = {
         id: 'tank1',
         type: 'tank_v1',
@@ -649,21 +649,21 @@ describe('Harvester Logic', () => {
   })
 
   describe('getHarvestedTiles', () => {
-    it('should return set of currently being harvested tiles', () => {
+    it('[U01883] should return set of currently being harvested tiles', () => {
       const tiles = getHarvestedTiles()
       expect(tiles instanceof Set).toBe(true)
     })
   })
 
   describe('getTargetedOreTiles', () => {
-    it('should return object mapping tile keys to harvester IDs', () => {
+    it('[U01884] should return object mapping tile keys to harvester IDs', () => {
       const tiles = getTargetedOreTiles()
       expect(typeof tiles).toBe('object')
     })
   })
 
   describe('Workshop Repair After Unloading', () => {
-    it('should not auto-harvest when heading to workshop for repair', () => {
+    it('[U01885] should not auto-harvest when heading to workshop for repair', () => {
       const harvester = createTestHarvester('harv1', 5, 5)
       harvester.targetWorkshop = { x: 15, y: 15 }
       units.push(harvester)
@@ -675,7 +675,7 @@ describe('Harvester Logic', () => {
       expect(harvester.harvesting).toBe(false)
     })
 
-    it('should not auto-harvest when in repair queue', () => {
+    it('[U01886] should not auto-harvest when in repair queue', () => {
       const workshop = { x: 15, y: 15, repairQueue: [] }
       const harvester = createTestHarvester('harv1', 5, 5)
       harvester.targetWorkshop = workshop
@@ -691,7 +691,7 @@ describe('Harvester Logic', () => {
   })
 
   describe('Enemy Harvester Economics', () => {
-    it('should credit AI factory budget on unloading', () => {
+    it('[U01887] should credit AI factory budget on unloading', () => {
       const harvester = createTestHarvester('harv1', 11, 13, 'ai_enemy')
       harvester.oreCarried = 1000
       harvester.unloadingAtRefinery = true
@@ -709,7 +709,7 @@ describe('Harvester Logic', () => {
   })
 
   describe('Productivity Check', () => {
-    it('should periodically check harvester productivity', () => {
+    it('[U01888] should periodically check harvester productivity', () => {
       const harvester = createTestHarvester('harv1', 5, 5)
       harvester.lastProductivityCheck = now - 600 // More than 500ms ago
       units.push(harvester)
@@ -721,7 +721,7 @@ describe('Harvester Logic', () => {
   })
 
   describe('Destroyed Refinery Cleanup', () => {
-    it('should clear harvester assignments when refinery is destroyed', () => {
+    it('[U01889] should clear harvester assignments when refinery is destroyed', () => {
       const harvester = createTestHarvester('harv1', 5, 5)
       harvester.assignedRefinery = 'destroyed_refinery'
       harvester.targetRefinery = 'destroyed_refinery'
@@ -740,7 +740,7 @@ describe('Harvester Logic', () => {
   })
 
   describe('Stuck Harvester Recovery', () => {
-    it('bounds alternative ore path searches to one ranked batch', () => {
+    it('[U01890] bounds alternative ore path searches to one ranked batch', () => {
       const harvester = createTestHarvester('harv1', 5, 5)
       const oreTiles = [
         [15, 15], [16, 15], [17, 15], [18, 15],
@@ -759,7 +759,7 @@ describe('Harvester Logic', () => {
       expect(pathCallCount).toBe(8)
     })
 
-    it('does not interrupt manually commanded harvesters', () => {
+    it('[U01891] does not interrupt manually commanded harvesters', () => {
       const harvester = createTestHarvester('harv1', 5, 5)
       harvester.manualOreTarget = { x: 8, y: 8 }
       harvester.oreField = { x: 8, y: 8 }
@@ -770,7 +770,7 @@ describe('Harvester Logic', () => {
       expect(harvester.oreField).toEqual({ x: 8, y: 8 })
     })
 
-    it('starts harvesting when stuck on ore', () => {
+    it('[U01892] starts harvesting when stuck on ore', () => {
       const harvester = createTestHarvester('harv1', 5, 5)
       mapGrid[5][5].ore = true
 
@@ -780,7 +780,7 @@ describe('Harvester Logic', () => {
       expect(harvester.oreField).toEqual({ x: 5, y: 5 })
     })
 
-    it('preserves assigned refinery when a full harvester needs a stuck recovery route', () => {
+    it('[U01893] preserves assigned refinery when a full harvester needs a stuck recovery route', () => {
       const harvester = createTestHarvester('harv1', 5, 5)
       const assignedRefinery = createTestRefinery(10, 10)
       const otherRefinery = createTestRefinery(15, 15)
@@ -796,7 +796,7 @@ describe('Harvester Logic', () => {
   })
 
   describe('Unreachable ore retry throttling', () => {
-    it('releases the failed reservation and waits before trying the same route again', () => {
+    it('[U01894] releases the failed reservation and waits before trying the same route again', () => {
       const harvester = createTestHarvester('harv1', 2, 2)
       mapGrid[15][15].ore = true
       units.push(harvester)
@@ -817,7 +817,7 @@ describe('Harvester Logic', () => {
   })
 
   describe('Player Overrides', () => {
-    it('interruptHarvesterAutomation clears active harvest and unload state for player commands', () => {
+    it('[U01895] interruptHarvesterAutomation clears active harvest and unload state for player commands', () => {
       const harvester = createTestHarvester('harv1', 5, 5)
       harvester.harvesting = true
       harvester.harvestTimer = now - 1000
@@ -840,7 +840,7 @@ describe('Harvester Logic', () => {
   })
 
   describe('Long-Term Productivity Recovery', () => {
-    it('reroutes stagnant harvesters to a different ore tile after one minute without progress', () => {
+    it('[U01896] reroutes stagnant harvesters to a different ore tile after one minute without progress', () => {
       const harvester = createTestHarvester('harv1', 1, 1)
       harvester.oreField = { x: 8, y: 8 }
       harvester.moveTarget = { x: 8, y: 8 }
@@ -864,7 +864,7 @@ describe('Harvester Logic', () => {
   })
 
   describe('Stale Reservations', () => {
-    it('clears reservations for missing harvesters', () => {
+    it('[U01897] clears reservations for missing harvesters', () => {
       const targetedTiles = getTargetedOreTiles()
       targetedTiles['4,4'] = 'ghost-harvester'
 
@@ -875,7 +875,7 @@ describe('Harvester Logic', () => {
   })
 
   describe('Enemy Repairs After Unload', () => {
-    it('sends damaged enemy harvester to workshop after unloading', () => {
+    it('[U01898] sends damaged enemy harvester to workshop after unloading', () => {
       const harvester = createTestHarvester('harv1', 11, 13, 'ai_enemy')
       harvester.oreCarried = 1000
       harvester.unloadingAtRefinery = true

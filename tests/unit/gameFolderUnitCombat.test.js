@@ -128,7 +128,7 @@ describe('unitCombat.js', () => {
   })
 
   describe('updateUnitCombat', () => {
-    it('should skip harvester units', () => {
+    it('[U01605] should skip harvester units', () => {
       const harvester = {
         type: 'harvester',
         health: 100,
@@ -140,7 +140,7 @@ describe('unitCombat.js', () => {
       expect(bullets.length).toBe(0)
     })
 
-    it('should handle tesla disabled effects', () => {
+    it('[U01606] should handle tesla disabled effects', () => {
       const now = performance.now()
       const unit = {
         type: 'tank',
@@ -155,7 +155,7 @@ describe('unitCombat.js', () => {
       expect(unit.canFire).toBe(false)
     })
 
-    it('should clear tesla effects when time expires', () => {
+    it('[U01607] should clear tesla effects when time expires', () => {
       const now = performance.now()
       const unit = {
         type: 'tank',
@@ -172,7 +172,7 @@ describe('unitCombat.js', () => {
       expect(unit.teslaSlowed).toBe(false)
     })
 
-    it('should not fire without ammunition', () => {
+    it('[U01608] should not fire without ammunition', () => {
       const target = {
         x: 64,
         y: 32,
@@ -201,7 +201,7 @@ describe('unitCombat.js', () => {
     it.each([
       ['a player command', 'player1', undefined],
       ['enemy AI permission', 'player2', true]
-    ])('fires an aimed Destroyer for %s', (_scenario, owner, allowedToAttack) => {
+    ])('[U01609] fires an aimed Destroyer for %s', (_scenario, owner, allowedToAttack) => {
       const target = {
         id: 'naval-target',
         owner: owner === 'player1' ? 'player2' : 'player1',
@@ -238,7 +238,7 @@ describe('unitCombat.js', () => {
       expect(destroyer.ammunition).toBe(59)
     })
 
-    it('should process attack queue', () => {
+    it('[U01610] should process attack queue', () => {
       const target1 = { id: 1, x: 64, y: 32, tileX: 2, health: 100 }
       const target2 = { id: 2, x: 96, y: 32, tileX: 3, health: 100 }
       const unit = {
@@ -256,7 +256,7 @@ describe('unitCombat.js', () => {
       expect(unit.target).toBe(target1)
     })
 
-    it('should remove dead targets from attack queue', () => {
+    it('[U01611] should remove dead targets from attack queue', () => {
       const target1 = { id: 1, x: 64, y: 32, tileX: 2, health: 0 }
       const target2 = { id: 2, x: 96, y: 32, tileX: 3, health: 100 }
       const unit = {
@@ -274,7 +274,7 @@ describe('unitCombat.js', () => {
       expect(unit.attackQueue).not.toContain(target1)
     })
 
-    it('fires a bullet when a human tank is in range and aimed', () => {
+    it('[U01612] fires a bullet when a human tank is in range and aimed', () => {
       const target = {
         id: 'enemy-1',
         x: 64,
@@ -313,7 +313,7 @@ describe('unitCombat.js', () => {
       expect(bullets[0].shooter).toBe(unit)
     })
 
-    it('notifies when player unit is out of ammo', () => {
+    it('[U01613] notifies when player unit is out of ammo', () => {
       const target = {
         id: 'enemy-1',
         x: 64,
@@ -351,7 +351,7 @@ describe('unitCombat.js', () => {
       expect(unit.noAmmoNotificationShown).toBe(true)
     })
 
-    it('fires rocket tank burst rockets after the initial burst setup', () => {
+    it('[U01614] fires rocket tank burst rockets after the initial burst setup', () => {
       const target = {
         id: 'enemy-2',
         x: 96,
@@ -394,7 +394,7 @@ describe('unitCombat.js', () => {
   })
 
   describe('tank combat', () => {
-    it('should clear target if destroyed', () => {
+    it('[U01615] should clear target if destroyed', () => {
       const unit = {
         type: 'tank',
         health: 100,
@@ -408,7 +408,7 @@ describe('unitCombat.js', () => {
       expect(unit.type).toBe('tank')
     })
 
-    it('should handle tank-v2 alert mode', () => {
+    it('[U01616] should handle tank-v2 alert mode', () => {
       const enemy = {
         type: 'tank',
         owner: 'enemy',
@@ -436,7 +436,7 @@ describe('unitCombat.js', () => {
       // In alert mode, unit should acquire target without chasing
     })
 
-    it('should handle tank-v3 burst fire', () => {
+    it('[U01617] should handle tank-v3 burst fire', () => {
       const target = {
         x: 64,
         y: 32,
@@ -465,7 +465,7 @@ describe('unitCombat.js', () => {
   })
 
   describe('rocket tank combat', () => {
-    it('should clear target and burst if target destroyed', () => {
+    it('[U01618] should clear target and burst if target destroyed', () => {
       const unit = {
         type: 'rocketTank',
         health: 100,
@@ -480,7 +480,7 @@ describe('unitCombat.js', () => {
       expect(unit.burstState).toBeNull()
     })
 
-    it('should rotate body towards target for rocket tank', () => {
+    it('[U01619] should rotate body towards target for rocket tank', () => {
       const target = {
         x: 128,
         y: 32,
@@ -508,7 +508,7 @@ describe('unitCombat.js', () => {
   })
 
   describe('apache combat', () => {
-    it('should clear volley state when target dies', () => {
+    it('[U01620] should clear volley state when target dies', () => {
       const unit = {
         type: 'apache',
         health: 100,
@@ -522,7 +522,7 @@ describe('unitCombat.js', () => {
       expect(unit.volleyState).toBeNull()
     })
 
-    it('should skip combat when remote control is active', () => {
+    it('[U01621] should skip combat when remote control is active', () => {
       const target = { health: 100, x: 64, y: 32 }
       const unit = {
         type: 'apache',
@@ -539,7 +539,7 @@ describe('unitCombat.js', () => {
       expect(bullets.length).toBe(0)
     })
 
-    it('should set apacheAmmoEmpty when out of rockets', () => {
+    it('[U01622] should set apacheAmmoEmpty when out of rockets', () => {
       const target = { health: 100, x: 64, y: 32, tileX: 2, tileY: 1 }
       const unit = {
         type: 'apache',
@@ -558,7 +558,7 @@ describe('unitCombat.js', () => {
   })
 
   describe('howitzer combat', () => {
-    it('should not fire if target is within minimum range', () => {
+    it('[U01623] should not fire if target is within minimum range', () => {
       const target = {
         x: 48, // Very close
         y: 32,
@@ -585,7 +585,7 @@ describe('unitCombat.js', () => {
       expect(bullets.length).toBe(0)
     })
 
-    it('should not fire without loader crew', () => {
+    it('[U01624] should not fire without loader crew', () => {
       const target = {
         x: 224, // Outside min range
         y: 32,
@@ -614,7 +614,7 @@ describe('unitCombat.js', () => {
   })
 
   describe('cleanupAttackGroupTargets', () => {
-    it('should remove dead targets from attack group', async() => {
+    it('[U01625] should remove dead targets from attack group', async() => {
       const { gameState } = await import('../../src/gameState.js')
       gameState.attackGroupTargets = [
         { id: 1, health: 100 },
@@ -626,13 +626,13 @@ describe('unitCombat.js', () => {
       expect(gameState.attackGroupTargets.every(t => t.health > 0)).toBe(true)
     })
 
-    it('should handle empty attack group targets', async() => {
+    it('[U01626] should handle empty attack group targets', async() => {
       const { gameState } = await import('../../src/gameState.js')
       gameState.attackGroupTargets = []
       expect(() => cleanupAttackGroupTargets()).not.toThrow()
     })
 
-    it('should handle undefined attack group targets', async() => {
+    it('[U01627] should handle undefined attack group targets', async() => {
       const { gameState } = await import('../../src/gameState.js')
       gameState.attackGroupTargets = undefined
       expect(() => cleanupAttackGroupTargets()).not.toThrow()
@@ -640,7 +640,7 @@ describe('unitCombat.js', () => {
   })
 
   describe('guard mode', () => {
-    it('should acquire targets within range in guard mode', async() => {
+    it('[U01628] should acquire targets within range in guard mode', async() => {
       const enemy = {
         type: 'tank',
         owner: 'enemy',
@@ -667,7 +667,7 @@ describe('unitCombat.js', () => {
       // Guard mode should acquire nearby targets
     })
 
-    it('should clear target if enemy moves out of guard range', () => {
+    it('[U01629] should clear target if enemy moves out of guard range', () => {
       const enemy = {
         type: 'tank',
         owner: 'enemy',
@@ -694,7 +694,7 @@ describe('unitCombat.js', () => {
   })
 
   describe('crew restrictions', () => {
-    it('should not fire turret without gunner', () => {
+    it('[U01630] should not fire turret without gunner', () => {
       const target = {
         x: 64,
         y: 32,
@@ -721,7 +721,7 @@ describe('unitCombat.js', () => {
       updateUnitCombat([unit], bullets, mockMapGrid, mockGameState, performance.now())
     })
 
-    it('should not fire without loader', () => {
+    it('[U01631] should not fire without loader', () => {
       const target = {
         x: 64,
         y: 32,
@@ -750,7 +750,7 @@ describe('unitCombat.js', () => {
   })
 
   describe('multiplayer unit ownership', () => {
-    it('should allow human-controlled party units to attack', async() => {
+    it('[U01632] should allow human-controlled party units to attack', async() => {
       const { gameState } = await import('../../src/gameState.js')
       gameState.partyStates = [
         { partyId: 'player2', aiActive: false }
@@ -783,7 +783,7 @@ describe('unitCombat.js', () => {
       // Human-controlled party should be able to fire
     })
 
-    it('should require allowedToAttack for AI units', () => {
+    it('[U01633] should require allowedToAttack for AI units', () => {
       const target = {
         x: 64,
         y: 32,
@@ -811,7 +811,7 @@ describe('unitCombat.js', () => {
       expect(bullets.length).toBe(0)
     })
 
-    it('should keep reposition path when target is in range but line of sight is blocked', () => {
+    it('[U01634] should keep reposition path when target is in range but line of sight is blocked', () => {
       vi.mocked(hasClearShot).mockReturnValue(false)
       vi.mocked(findPositionWithClearShot).mockImplementation((unit) => {
         unit.path = [{ x: 3, y: 2 }]
@@ -899,7 +899,7 @@ describe('unitCombat.js', () => {
       }
     }
 
-    it('keeps the remaining volley outside weapon range and does not yaw into the target', () => {
+    it('[U01635] keeps the remaining volley outside weapon range and does not yaw into the target', () => {
       const jet = egressingF22()
       const volley = jet.volleyState
       const bullets = []
@@ -912,7 +912,7 @@ describe('unitCombat.js', () => {
       expect(bullets).toHaveLength(0)
     })
 
-    it('clears the volley when ammo is empty so return-to-base can start', () => {
+    it('[U01636] clears the volley when ammo is empty so return-to-base can start', () => {
       const jet = egressingF22()
       jet.rocketAmmo = 0
 

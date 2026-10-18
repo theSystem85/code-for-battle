@@ -53,7 +53,7 @@ describe('policy applied from the radial menu', () => {
     engine.updateUnitPolicies(units, context, now)
   }
 
-  it('counts the unit as in control as soon as the policy takes hold, and as enabled right away', () => {
+  it('[U03389] counts the unit as in control as soon as the policy takes hold, and as enabled right away', () => {
     const unit = makeUnit()
     pick(unit, 'p-while')
     expect(activity.countPolicyActivity([unit]).get('p-while')).toEqual({ enabled: 1, active: 0 })
@@ -64,14 +64,14 @@ describe('policy applied from the radial menu', () => {
     expect(activity.shouldShowPolicyIndicator(unit, 'player1')).toBe(true)
   })
 
-  it('shows the indicator for the legacy "player" owner and hides it for other owners', () => {
+  it('[U03390] shows the indicator for the legacy "player" owner and hides it for other owners', () => {
     const unit = makeUnit('player')
     unit.policyActive = true
     expect(activity.shouldShowPolicyIndicator(unit, 'player1')).toBe(true)
     expect(activity.shouldShowPolicyIndicator(makeUnit('player2'), 'player1')).toBe(false)
   })
 
-  it('clears the indicator immediately when the policy is removed again', () => {
+  it('[U03391] clears the indicator immediately when the policy is removed again', () => {
     const unit = makeUnit()
     pick(unit, 'p-while')
     stepEngine(unit, 1000)
@@ -82,7 +82,7 @@ describe('policy applied from the radial menu', () => {
     expect(unit.policyActiveCount).toBe(0)
   })
 
-  it('updates the policy panel "in control" chip for a per-unit policy', () => {
+  it('[U03392] updates the policy panel "in control" chip for a per-unit policy', () => {
     vi.useFakeTimers()
     const unit = makeUnit()
     gameState.units = [unit]
@@ -98,7 +98,7 @@ describe('policy applied from the radial menu', () => {
     vi.useRealTimers()
   })
 
-  it('offers a state machine toggle in the unit menu and opens the view', async() => {
+  it('[U03393] offers a state machine toggle in the unit menu and opens the view', async() => {
     const unit = makeUnit()
     pick(unit, 'p-while')
     const items = radial.buildUnitPolicyItems(unit)

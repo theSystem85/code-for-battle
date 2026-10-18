@@ -31,7 +31,7 @@ function policy(id = 'defence', kind = 'while', scope = 'perUnit', effect = 'hol
 beforeEach(() => { localStorage.clear(); resetPolicyStore(); gameState.replayMode = false; gameState.replay = { recordingActive: false, commands: [] } })
 
 describe('defence capabilities and commands', () => {
-  it.each(Object.keys(DEFENCE_CAPABILITIES))('offers only real %s capabilities and accepts its supported actions', type => {
+  it.each(Object.keys(DEFENCE_CAPABILITIES))('[U01222] offers only real %s capabilities and accepts its supported actions', type => {
     const building = turret(type)
     const enemy = { id: 'enemy', type: 'tank', owner: 'player2', health: 100, x: 12 * TILE_SIZE, y: 10 * TILE_SIZE }
     const ctx = { ...context([building], [enemy]), nearestEnemy: () => enemy, targetById: () => enemy, canTarget: () => true }
@@ -44,7 +44,7 @@ describe('defence capabilities and commands', () => {
     if (!type.startsWith('turretGun')) expect(executeDefenceCommand(building, { type: 'fireForward' }, ctx).reason).toBe('unsupported-capability')
   })
 
-  it('refuses owner, dead/construction, cooldown, power, ammo and unavailable target atomically', () => {
+  it('[U01223] refuses owner, dead/construction, cooldown, power, ammo and unavailable target atomically', () => {
     const b = turret('rocketTurret')
     const target = { id: 'enemy', health: 10 }
     const ctx = { ...context(), targetById: () => target, canTarget: () => true }
@@ -65,7 +65,7 @@ describe('defence capabilities and commands', () => {
     expect(executeDefenceCommand(b, { type: 'resumeFire' }, ctx).reason).toBe('manual-hold-fire')
   })
 
-  it('never grants hidden, airborne or submerged targets; uses deterministic centers and locks', () => {
+  it('[U01224] never grants hidden, airborne or submerged targets; uses deterministic centers and locks', () => {
     const b = turret()
     const near = { id: 'a', type: 'tank', owner: 'player2', health: 100, x: 12 * TILE_SIZE, y: 11 * TILE_SIZE }
     const same = { ...near, id: 'b' }
@@ -86,7 +86,7 @@ describe('defence capabilities and commands', () => {
 })
 
 describe('compiled defence machine lifecycle', () => {
-  it('runs WHILE at simulation cadence and clears only its temporary owned intent on return', () => {
+  it('[U01225] runs WHILE at simulation cadence and clears only its temporary owned intent on return', () => {
     const b = turret(); b.health = 20
     policy()
     expect(applyPolicyToBuilding('player1', b, 'defence').ok).toBe(true)
@@ -103,7 +103,7 @@ describe('compiled defence machine lifecycle', () => {
     expect(getDefencePolicySummary(b)[0].stateIndex).toBe(1)
   })
 
-  it('supports IF/ELSE and simulation-time AFTER without executing initial actions', () => {
+  it('[U01226] supports IF/ELSE and simulation-time AFTER without executing initial actions', () => {
     const b = turret()
     const doc = policy('paired', 'if')
     const changed = JSON.parse(JSON.stringify(doc))
@@ -125,7 +125,7 @@ describe('compiled defence machine lifecycle', () => {
     expect(delayed.automationIntent.action).toBe('holdFire')
   })
 
-  it('binds only completed owner defences globally including newly completed buildings and tears down sale/death', () => {
+  it('[U01227] binds only completed owner defences globally including newly completed buildings and tears down sale/death', () => {
     policy('global', 'if', 'global')
     setPolicyEnabled('player1', 'global', true)
     const b = turret(); b.health = 20
@@ -147,7 +147,7 @@ describe('compiled defence machine lifecycle', () => {
     expect(isDefenceReady(b)).toBe(false)
   })
 
-  it('manual hold is persistent; manual attacks win immediately; explicit release allows fresh WHILE takeovers', () => {
+  it('[U01228] manual hold is persistent; manual attacks win immediately; explicit release allows fresh WHILE takeovers', () => {
     const b = turret(); b.health = 20
     policy(); applyPolicyToBuilding('player1', b, 'defence')
     const ctx = context([b])
@@ -163,7 +163,7 @@ describe('compiled defence machine lifecycle', () => {
     expect(b.policyBindings[0].active).toBe(false)
   })
 
-  it('retains terminal one-time command ownership, serializes typed intent/runtime, clears revision/delete and skips replay', () => {
+  it('[U01229] retains terminal one-time command ownership, serializes typed intent/runtime, clears revision/delete and skips replay', () => {
     const b = turret(); b.health = 20
     const doc = policy('terminal', 'if')
     expect(savePolicy('player1', { ...doc, execution: 'oneTime' }).ok).toBe(true)
@@ -188,7 +188,7 @@ describe('compiled defence machine lifecycle', () => {
     expect(restored.policyBindings).toBeNull()
   })
 
-  it('records accepted final intents and replays them without a live engine', () => {
+  it('[U01230] records accepted final intents and replays them without a live engine', () => {
     const b = turret()
     b.automationIntent = { issuerId: 'p', owner: 'player1', action: 'holdFire', revision: 1, temporary: false }
     gameState.replay = { recordingActive: true, recordingStartedAt: 0, commands: [] }
@@ -200,7 +200,7 @@ describe('compiled defence machine lifecycle', () => {
     expect(applyRecordedAutomationDefenceIntent(command, () => turret('turretGunV1', 'player2'))).toBe(false)
   })
 
-  it('newer transitions dominate older held reassertions even when the new action resumes normal fire', () => {
+  it('[U01231] newer transitions dominate older held reassertions even when the new action resumes normal fire', () => {
     const b = turret(); b.health = 20
     policy('old', 'while'); policy('new', 'if', 'perUnit', 'resumeFire')
     applyPolicyToBuilding('player1', b, 'old'); applyPolicyToBuilding('player1', b, 'new')
@@ -213,7 +213,7 @@ describe('compiled defence machine lifecycle', () => {
     expect(b.automationControl).toBe('new')
   })
 
-  it('re-enabling resets global runtimes and ownership changes remove old owner bindings/intents', () => {
+  it('[U01232] re-enabling resets global runtimes and ownership changes remove old owner bindings/intents', () => {
     const b = turret(); b.health = 20
     policy('global-restart', 'if', 'global'); setPolicyEnabled('player1', 'global-restart', true)
     const ctx = context([b])

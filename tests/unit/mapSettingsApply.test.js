@@ -25,7 +25,7 @@ function setup(onApply = vi.fn()) {
 }
 
 describe('map settings Apply button', () => {
-  it('starts disabled and enables once a value changes', () => {
+  it('[U02710] starts disabled and enables once a value changes', () => {
     const { $, edit } = setup()
     expect($('apply').disabled).toBe(true)
     edit('seed', '5')
@@ -33,7 +33,7 @@ describe('map settings Apply button', () => {
     expect($('apply').getAttribute('aria-disabled')).toBe('false')
   })
 
-  it('disables again when every edit is reverted', () => {
+  it('[U02711] disables again when every edit is reverted', () => {
     const { $, edit } = setup()
     edit('lake', false)
     expect($('apply').disabled).toBe(false)
@@ -41,7 +41,7 @@ describe('map settings Apply button', () => {
     expect($('apply').disabled).toBe(true)
   })
 
-  it('does not regenerate on change; only the click applies, then disables', async() => {
+  it('[U02712] does not regenerate on change; only the click applies, then disables', async() => {
     const onApply = vi.fn(async() => true)
     const { $, edit, controller } = setup(onApply)
     edit('biome', 'snow')
@@ -54,13 +54,13 @@ describe('map settings Apply button', () => {
     expect(controller.isDirty()).toBe(false)
   })
 
-  it('ignores clicks while nothing changed', async() => {
+  it('[U02713] ignores clicks while nothing changed', async() => {
     const { controller, onApply } = setup()
     expect(await controller.apply()).toBe(false)
     expect(onApply).not.toHaveBeenCalled()
   })
 
-  it('keeps edits pending when the apply is refused', async() => {
+  it('[U02714] keeps edits pending when the apply is refused', async() => {
     const { $, edit, controller } = setup(vi.fn(() => false))
     edit('seed', '9')
     expect(await controller.apply()).toBe(false)
@@ -68,7 +68,7 @@ describe('map settings Apply button', () => {
     expect(controller.isDirty()).toBe(true)
   })
 
-  it('keeps edits made while the map regenerates pending after Apply settles', async() => {
+  it('[U02715] keeps edits made while the map regenerates pending after Apply settles', async() => {
     let finish
     const { $, controller, edit } = setup(vi.fn(() => new Promise(resolve => { finish = resolve })))
     edit('seed', '5')

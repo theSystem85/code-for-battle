@@ -122,7 +122,7 @@ describe('remoteConnection (peerConnection task)', () => {
     vi.useRealTimers()
   })
 
-  it('requires an invite token and trims the alias', () => {
+  it('[U03293] requires an invite token and trims the alias', () => {
     expect(() => createRemoteConnection({ alias: 'Player' })).toThrow('Invite token is required')
 
     const connection = createConnection()
@@ -130,7 +130,7 @@ describe('remoteConnection (peerConnection task)', () => {
     expect(connection.connectionState).toBe(RemoteConnectionStatus.IDLE)
   })
 
-  it('starts a connection and publishes the offer', async() => {
+  it('[U03294] starts a connection and publishes the offer', async() => {
     const onStatusChange = vi.fn()
     const onDataChannelOpen = vi.fn()
 
@@ -161,7 +161,7 @@ describe('remoteConnection (peerConnection task)', () => {
     expect(emitMultiplayerSessionChange).toHaveBeenCalled()
   })
 
-  it('sends payloads over an open data channel and tracks bytes', () => {
+  it('[U03295] sends payloads over an open data channel and tracks bytes', () => {
     const connection = createConnection()
     connection.dataChannel = new MockRTCDataChannel()
     connection.dataChannel.readyState = 'open'
@@ -175,7 +175,7 @@ describe('remoteConnection (peerConnection task)', () => {
     expect(updateNetworkStats).toHaveBeenCalledWith('hello'.length, 0)
   })
 
-  it('applies answers and processes remote candidates', async() => {
+  it('[U03296] applies answers and processes remote candidates', async() => {
     const connection = createConnection()
     connection.peerId = 'peer-1'
     connection.pc = new MockRTCPeerConnection()
@@ -197,7 +197,7 @@ describe('remoteConnection (peerConnection task)', () => {
     expect(connection.pc.addIceCandidate).toHaveBeenCalledTimes(2)
   })
 
-  it('applies host ICE candidates even when the candidate cursor was cleared', async() => {
+  it('[U03297] applies host ICE candidates even when the candidate cursor was cleared', async() => {
     const connection = createConnection()
     expect(connection.remoteCandidateIndex).toBe(0)
     connection.remoteCandidateIndex = undefined
@@ -224,7 +224,7 @@ describe('remoteConnection (peerConnection task)', () => {
     expect(connection.remoteCandidateIndex).toBe(2)
   })
 
-  it('posts ICE candidates and updates status on connection state changes', () => {
+  it('[U03298] posts ICE candidates and updates status on connection state changes', () => {
     const connection = createConnection()
     connection.peerId = 'peer-1'
     connection.pc = new MockRTCPeerConnection()
@@ -250,7 +250,7 @@ describe('remoteConnection (peerConnection task)', () => {
     expect(connection.connectionState).toBe(RemoteConnectionStatus.FAILED)
   })
 
-  it('stops connections and clears the active instance', async() => {
+  it('[U03299] stops connections and clears the active instance', async() => {
     const connection = createConnection()
     connection.dataChannel = new MockRTCDataChannel()
     connection.pc = new MockRTCPeerConnection()
@@ -268,7 +268,7 @@ describe('remoteConnection (peerConnection task)', () => {
     })
   })
 
-  it('skips invalid ICE candidates when synchronizing', async() => {
+  it('[U03300] skips invalid ICE candidates when synchronizing', async() => {
     const connection = createConnection()
     connection.peerId = 'peer-1'
     connection.pc = new MockRTCPeerConnection()
@@ -279,7 +279,7 @@ describe('remoteConnection (peerConnection task)', () => {
     expect(connection.pc.addIceCandidate).not.toHaveBeenCalled()
   })
 
-  it('stops polling after repeated synchronization failures', async() => {
+  it('[U03301] stops polling after repeated synchronization failures', async() => {
     vi.useFakeTimers()
     const connection = createConnection({ pollInterval: 100 })
     connection._synchronizeSession = vi.fn().mockRejectedValue(new Error('fail'))
@@ -299,7 +299,7 @@ describe('remoteConnection (peerConnection task)', () => {
     vi.useRealTimers()
   })
 
-  it('marks the client connected from ICE state when connectionState has not caught up', async() => {
+  it('[U03302] marks the client connected from ICE state when connectionState has not caught up', async() => {
     const connection = createConnection()
     await connection.start()
     connection.pc.connectionState = 'connecting'
@@ -308,7 +308,7 @@ describe('remoteConnection (peerConnection task)', () => {
     expect(connection.connectionState).toBe(RemoteConnectionStatus.CONNECTED)
   })
 
-  it('uses TURN servers returned by signalling', async() => {
+  it('[U03303] uses TURN servers returned by signalling', async() => {
     fetchIceServers.mockResolvedValueOnce({
       iceServers: [
         { urls: ['stun:stun.l.google.com:19302'] },
@@ -329,7 +329,7 @@ describe('remoteConnection (peerConnection task)', () => {
     expect(connection.pc.config.bundlePolicy).toBe('max-bundle')
   })
 
-  it('restarts ICE once and posts the next offer revision', async() => {
+  it('[U03304] restarts ICE once and posts the next offer revision', async() => {
     const connection = createConnection()
     await connection.start()
     connection.answerApplied = true

@@ -34,14 +34,14 @@ describe('shadowOfWar.js', () => {
   })
 
   describe('initializeShadowOfWar', () => {
-    it('should create visibility map matching grid dimensions', () => {
+    it('[U03986] should create visibility map matching grid dimensions', () => {
       initializeShadowOfWar(gameState, mapGrid)
       expect(gameState.visibilityMap).toBeDefined()
       expect(gameState.visibilityMap.length).toBe(10)
       expect(gameState.visibilityMap[0].length).toBe(10)
     })
 
-    it('should initialize all cells as not visible and not discovered', () => {
+    it('[U03987] should initialize all cells as not visible and not discovered', () => {
       initializeShadowOfWar(gameState, mapGrid)
       for (let y = 0; y < 10; y++) {
         for (let x = 0; x < 10; x++) {
@@ -51,16 +51,16 @@ describe('shadowOfWar.js', () => {
       }
     })
 
-    it('should handle null gameState gracefully', () => {
+    it('[U03988] should handle null gameState gracefully', () => {
       expect(() => initializeShadowOfWar(null, mapGrid)).not.toThrow()
     })
 
-    it('should handle empty map grid', () => {
+    it('[U03989] should handle empty map grid', () => {
       initializeShadowOfWar(gameState, [])
       expect(gameState.visibilityMap).toEqual([])
     })
 
-    it('should mark initial base discovery around construction yard', () => {
+    it('[U03990] should mark initial base discovery around construction yard', () => {
       gameState.buildings = [{
         type: 'constructionYard',
         owner: 'player1',
@@ -85,7 +85,7 @@ describe('shadowOfWar.js', () => {
       initializeShadowOfWar(gameState, mapGrid)
     })
 
-    it('should reset all visibility flags before updating', () => {
+    it('[U03991] should reset all visibility flags before updating', () => {
       gameState.visibilityMap[0][0].visible = true
       updateShadowOfWar(gameState, [], mapGrid)
       // All cells should start as not visible (then buildings/units apply)
@@ -93,7 +93,7 @@ describe('shadowOfWar.js', () => {
       expect(gameState.visibilityMap[0][0].visible).toBe(false)
     })
 
-    it('should make friendly building tiles visible', () => {
+    it('[U03992] should make friendly building tiles visible', () => {
       gameState.buildings = [{
         type: 'vehicleFactory',
         owner: 'player1',
@@ -107,7 +107,7 @@ describe('shadowOfWar.js', () => {
       expect(gameState.visibilityMap[2][2].visible).toBe(true)
     })
 
-    it('should not make enemy building tiles visible', () => {
+    it('[U03993] should not make enemy building tiles visible', () => {
       gameState.buildings = [{
         type: 'vehicleFactory',
         owner: 'enemy',
@@ -120,7 +120,7 @@ describe('shadowOfWar.js', () => {
       expect(gameState.visibilityMap[2][2].visible).toBe(false)
     })
 
-    it('should make tiles around friendly units visible', () => {
+    it('[U03994] should make tiles around friendly units visible', () => {
       const units = [{
         type: 'tank',
         owner: 'player1',
@@ -134,7 +134,7 @@ describe('shadowOfWar.js', () => {
       expect(gameState.visibilityMap[unitTileY][unitTileX].visible).toBe(true)
     })
 
-    it('should not make tiles visible for enemy units', () => {
+    it('[U03995] should not make tiles visible for enemy units', () => {
       const units = [{
         type: 'tank',
         owner: 'enemy',
@@ -149,7 +149,7 @@ describe('shadowOfWar.js', () => {
       expect(gameState.visibilityMap[unitTileY][unitTileX].visible).toBe(false)
     })
 
-    it('should handle additional structures parameter', () => {
+    it('[U03996] should handle additional structures parameter', () => {
       const additionalStructures = [{
         type: 'turretGunV1',
         owner: 'player1',
@@ -163,11 +163,11 @@ describe('shadowOfWar.js', () => {
       expect(gameState.visibilityMap[3][3].visible).toBe(true)
     })
 
-    it('should handle null gameState', () => {
+    it('[U03997] should handle null gameState', () => {
       expect(() => updateShadowOfWar(null, [], mapGrid)).not.toThrow()
     })
 
-    it('should give harvesters reduced vision range', () => {
+    it('[U03998] should give harvesters reduced vision range', () => {
       const units = [{
         type: 'harvester',
         owner: 'player1',
@@ -181,7 +181,7 @@ describe('shadowOfWar.js', () => {
       expect(gameState.visibilityMap[tileY][tileX].visible).toBe(true)
     })
 
-    it('should give rocket tanks extended vision range', () => {
+    it('[U03999] should give rocket tanks extended vision range', () => {
       const units = [{
         type: 'rocketTank',
         owner: 'player1',
@@ -194,7 +194,7 @@ describe('shadowOfWar.js', () => {
       expect(gameState.visibilityMap[tileY][tileX].visible).toBe(true)
     })
 
-    it('should give howitzer extended vision range', () => {
+    it('[U04000] should give howitzer extended vision range', () => {
       const units = [{
         type: 'howitzer',
         owner: 'player1',
@@ -213,7 +213,7 @@ describe('shadowOfWar.js', () => {
       initializeShadowOfWar(gameState, mapGrid)
     })
 
-    it('should mark all cells as visible and discovered', () => {
+    it('[U04001] should mark all cells as visible and discovered', () => {
       markAllVisible(gameState)
       for (let y = 0; y < 10; y++) {
         for (let x = 0; x < 10; x++) {
@@ -223,11 +223,11 @@ describe('shadowOfWar.js', () => {
       }
     })
 
-    it('should handle null gameState', () => {
+    it('[U04002] should handle null gameState', () => {
       expect(() => markAllVisible(null)).not.toThrow()
     })
 
-    it('should handle missing visibilityMap', () => {
+    it('[U04003] should handle missing visibilityMap', () => {
       gameState.visibilityMap = null
       expect(() => markAllVisible(gameState)).not.toThrow()
     })
@@ -238,32 +238,32 @@ describe('shadowOfWar.js', () => {
       initializeShadowOfWar(gameState, mapGrid)
     })
 
-    it('should return true when shadowOfWar is disabled', () => {
+    it('[U04004] should return true when shadowOfWar is disabled', () => {
       gameState.shadowOfWarEnabled = false
       expect(isPositionVisibleToPlayer(gameState, mapGrid, 100, 100)).toBe(true)
     })
 
-    it('should return false for hidden positions', () => {
+    it('[U04005] should return false for hidden positions', () => {
       // No buildings or units, so everything is hidden
       expect(isPositionVisibleToPlayer(gameState, mapGrid, 100, 100)).toBe(false)
     })
 
-    it('should return true for visible positions', () => {
+    it('[U04006] should return true for visible positions', () => {
       gameState.visibilityMap[3][3].visible = true
       // Position at tile (3,3) = pixel (96-127, 96-127)
       expect(isPositionVisibleToPlayer(gameState, mapGrid, 100, 100)).toBe(true)
     })
 
-    it('should return false for positions outside map bounds', () => {
+    it('[U04007] should return false for positions outside map bounds', () => {
       expect(isPositionVisibleToPlayer(gameState, mapGrid, -100, -100)).toBe(false)
       expect(isPositionVisibleToPlayer(gameState, mapGrid, 10000, 10000)).toBe(false)
     })
 
-    it('should handle null gameState', () => {
+    it('[U04008] should handle null gameState', () => {
       expect(isPositionVisibleToPlayer(null, mapGrid, 100, 100)).toBe(true)
     })
 
-    it('should return false for unexplored areas when visibilityMap is reset', () => {
+    it('[U04009] should return false for unexplored areas when visibilityMap is reset', () => {
       // When visibilityMap is empty/reset, ensureVisibilityMap reinitializes it
       // New cells default to not visible, so unexplored areas return false
       gameState.visibilityMap = []
@@ -276,7 +276,7 @@ describe('shadowOfWar.js', () => {
       initializeShadowOfWar(gameState, mapGrid)
     })
 
-    it('should give turrets visibility based on fire range', () => {
+    it('[U04010] should give turrets visibility based on fire range', () => {
       gameState.buildings = [{
         type: 'turretGunV1',
         owner: 'player1',
@@ -290,7 +290,7 @@ describe('shadowOfWar.js', () => {
       expect(gameState.visibilityMap[5][5].visible).toBe(true)
     })
 
-    it('should give tesla coil visibility based on fire range', () => {
+    it('[U04011] should give tesla coil visibility based on fire range', () => {
       gameState.buildings = [{
         type: 'teslaCoil',
         owner: 'player1',
@@ -310,7 +310,7 @@ describe('shadowOfWar.js', () => {
       initializeShadowOfWar(gameState, mapGrid)
     })
 
-    it('should mark cells as discovered when unit moves through', () => {
+    it('[U04012] should mark cells as discovered when unit moves through', () => {
       const units = [{
         type: 'tank',
         owner: 'player1',
@@ -325,7 +325,7 @@ describe('shadowOfWar.js', () => {
       expect(gameState.visibilityMap[tileY][tileX].visible).toBe(true)
     })
 
-    it('should keep cells discovered after unit moves away', () => {
+    it('[U04013] should keep cells discovered after unit moves away', () => {
       const units = [{
         type: 'tank',
         owner: 'player1',

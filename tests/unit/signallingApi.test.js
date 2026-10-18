@@ -37,7 +37,7 @@ describe('signalling API', () => {
     delete globalThis.Netlify
   })
 
-  it('keeps concurrent ICE candidates and reports them with the offer', async() => {
+  it('[U04051] keeps concurrent ICE candidates and reports them with the offer', async() => {
     const logs = []
     const spy = vi.spyOn(console, 'log').mockImplementation((line) => logs.push(String(line)))
     const offer = await handler(request('POST', '/api/signalling/offer', {
@@ -85,7 +85,7 @@ describe('signalling API', () => {
     spy.mockRestore()
   })
 
-  it('returns STUN-only config and does not log a TURN secret', async() => {
+  it('[U04052] returns STUN-only config and does not log a TURN secret', async() => {
     const logs = []
     const spy = vi.spyOn(console, 'log').mockImplementation((line) => logs.push(String(line)))
     globalThis.Netlify = {
@@ -109,7 +109,7 @@ describe('signalling API', () => {
     spy.mockRestore()
   })
 
-  it('wires TURN from ICE_SERVERS without logging the credential', async() => {
+  it('[U04053] wires TURN from ICE_SERVERS without logging the credential', async() => {
     const logs = []
     const spy = vi.spyOn(console, 'log').mockImplementation((line) => logs.push(String(line)))
     globalThis.Netlify = {
@@ -137,7 +137,7 @@ describe('signalling API', () => {
     spy.mockRestore()
   })
 
-  it('echoes the answer revision so an ICE restart can ignore a stale answer', async() => {
+  it('[U04054] echoes the answer revision so an ICE restart can ignore a stale answer', async() => {
     const logs = []
     const spy = vi.spyOn(console, 'log').mockImplementation((line) => logs.push(String(line)))
     await handler(request('POST', '/api/signalling/offer', {
@@ -162,7 +162,7 @@ describe('signalling API', () => {
     spy.mockRestore()
   })
 
-  it('issues a distinct short code per party and resolves it case-insensitively', async() => {
+  it('[U04055] issues a distinct short code per party and resolves it case-insensitively', async() => {
     const red = await handler(request('POST', '/api/game-instance/game-1/invite-regenerate', { partyId: 'player2' }))
     const blue = await handler(request('POST', '/api/game-instance/game-1/invite-regenerate', { partyId: 'player3' }))
     const redBody = await red.json()
@@ -184,7 +184,7 @@ describe('signalling API', () => {
     })
   })
 
-  it('stores a short code for an existing token and resolves it from a later invocation', async() => {
+  it('[U04056] stores a short code for an existing token and resolves it from a later invocation', async() => {
     const created = await handler(request('POST', '/api/signalling/invite-code', {
       instanceId: 'game-7',
       partyId: 'player2',
@@ -203,7 +203,7 @@ describe('signalling API', () => {
     })
   })
 
-  it('expires a short code with the invite and replaces it when that party is regenerated', async() => {
+  it('[U04057] expires a short code with the invite and replaces it when that party is regenerated', async() => {
     const first = await handler(request('POST', '/api/game-instance/game-9/invite-regenerate', { partyId: 'player2' }))
     const firstBody = await first.json()
     blobs.set(`invite-code:${firstBody.shortCode}`, {
@@ -229,7 +229,7 @@ describe('signalling API', () => {
     const afterRelease = await handler(request('GET', `/api/signalling/invite-code/${secondBody.shortCode}`))
     expect(afterRelease.status).toBe(404)
   })
-  it('keeps every signalling and invite key under dev: on the dev branch deploy', async() => {
+  it('[U05192] keeps every signalling and invite key under dev: on the dev branch deploy', async() => {
     globalThis.Netlify = { env: { get: key => (key === 'REDIS_KEY_PREFIX' ? 'dev:' : undefined) } }
     blobs.set('offer:prod-token-aaaa:peer-9', { offer: 'production' })
     const offer = await handler(request('POST', '/api/signalling/offer', {

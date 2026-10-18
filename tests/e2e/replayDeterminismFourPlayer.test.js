@@ -351,7 +351,7 @@ async function pauseGameAndWaitForStableTime(page, label) {
 }
 
 test.describe('Replay determinism in four-player AI match', () => {
-  test('replay export reproduces the original saved end state', async({ page }) => {
+  test('[E00097] replay export reproduces the original saved end state', async({ page }) => {
     test.setTimeout(360000)
 
     await page.addInitScript(() => {

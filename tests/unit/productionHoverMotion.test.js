@@ -43,7 +43,7 @@ describe('production hover motion contract', () => {
     targets = [...document.querySelectorAll('.production-button, .production-button *')]
   })
 
-  it('keeps transform/opacity transitions at 300ms normally and 200ms with reduced motion', () => {
+  it('[U03484] keeps transform/opacity transitions at 300ms normally and 200ms with reduced motion', () => {
     expect(duration(false)).toBe('300ms')
     expect(duration(true)).toBe('200ms')
     const transitions = []
@@ -62,7 +62,7 @@ describe('production hover motion contract', () => {
     }
   })
 
-  it('uses ease-in on hover/focus entry for all animated layers', () => {
+  it('[U03485] uses ease-in on hover/focus entry for all animated layers', () => {
     for (const state of [':hover', ':focus-visible']) {
       for (const target of targets.filter(element => !element.matches('button, .production-hover-stats span'))) {
         const entryRules = []
@@ -75,7 +75,7 @@ describe('production hover motion contract', () => {
     }
   })
 
-  it('has no reduced-motion transition reset matching the hover sheet or its layers in any stylesheet', () => {
+  it('[U03486] has no reduced-motion transition reset matching the hover sheet or its layers in any stylesheet', () => {
     for (const root of styles) {
       root.walkRules(rule => {
         if (!reducedMotion(rule) || !matchesTarget(rule, targets)) return

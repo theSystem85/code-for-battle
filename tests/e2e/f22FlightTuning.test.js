@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 
 test.describe('F22 tuning regression', () => {
-  test('applies updated F22 turn/top speed and faster F22 rockets', async({ page }) => {
+  test('[E00036] applies updated F22 turn/top speed and faster F22 rockets', async({ page }) => {
     test.setTimeout(90000)
 
     await page.addInitScript(() => {

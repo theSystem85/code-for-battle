@@ -5,7 +5,7 @@ const RUN_PERF = process.env.PERF_DESTROYER_COMBAT === '1'
 test.describe('Destroyer combat tracking performance', () => {
   test.skip(!RUN_PERF, 'Set PERF_DESTROYER_COMBAT=1 to run this opt-in performance benchmark.')
 
-  test('tracks 120 active Destroyer targets without exceeding the frame budget', async({ page }, testInfo) => {
+  test('[E00020] tracks 120 active Destroyer targets without exceeding the frame budget', async({ page }, testInfo) => {
     await page.goto('/')
     const result = await page.evaluate(async() => {
       const [{ updateUnitMovement }, { TILE_SIZE }] = await Promise.all([

@@ -30,7 +30,7 @@ describe('layoutMetrics.js', () => {
   })
 
   describe('getSidebarWidth', () => {
-    it('should return default width when no root style is available', () => {
+    it('[U02315] should return default width when no root style is available', () => {
       const originalDocumentElement = document.documentElement
       Object.defineProperty(document, 'documentElement', {
         value: null,
@@ -49,7 +49,7 @@ describe('layoutMetrics.js', () => {
       })
     })
 
-    it('should return custom sidebar width from CSS variable', () => {
+    it('[U02316] should return custom sidebar width from CSS variable', () => {
       const mockGetComputedStyle = vi.spyOn(window, 'getComputedStyle')
       mockGetComputedStyle.mockReturnValue({
         getPropertyValue: (prop) => {
@@ -63,7 +63,7 @@ describe('layoutMetrics.js', () => {
       expect(width).toBe(300)
     })
 
-    it('should return default when CSS variable is invalid', () => {
+    it('[U02317] should return default when CSS variable is invalid', () => {
       const mockGetComputedStyle = vi.spyOn(window, 'getComputedStyle')
       mockGetComputedStyle.mockReturnValue({
         getPropertyValue: (prop) => {
@@ -77,7 +77,7 @@ describe('layoutMetrics.js', () => {
       expect(width).toBe(250)
     })
 
-    it('should return default when CSS variable is zero', () => {
+    it('[U02318] should return default when CSS variable is zero', () => {
       const mockGetComputedStyle = vi.spyOn(window, 'getComputedStyle')
       mockGetComputedStyle.mockReturnValue({
         getPropertyValue: (prop) => {
@@ -93,7 +93,7 @@ describe('layoutMetrics.js', () => {
   })
 
   describe('getSafeAreaInset', () => {
-    it('should return 0 when body is not available', () => {
+    it('[U02319] should return 0 when body is not available', () => {
       const originalBody = document.body
       Object.defineProperty(document, 'body', {
         value: null,
@@ -112,7 +112,7 @@ describe('layoutMetrics.js', () => {
       })
     })
 
-    it('should return safe area inset for top', () => {
+    it('[U02320] should return safe area inset for top', () => {
       const mockGetComputedStyle = vi.spyOn(window, 'getComputedStyle')
       mockGetComputedStyle.mockReturnValue({
         getPropertyValue: (prop) => {
@@ -126,7 +126,7 @@ describe('layoutMetrics.js', () => {
       expect(inset).toBe(44)
     })
 
-    it('should return safe area inset for all sides', () => {
+    it('[U02321] should return safe area inset for all sides', () => {
       const mockGetComputedStyle = vi.spyOn(window, 'getComputedStyle')
       mockGetComputedStyle.mockReturnValue({
         getPropertyValue: (prop) => {
@@ -148,7 +148,7 @@ describe('layoutMetrics.js', () => {
   })
 
   describe('getMobileActionBarWidth', () => {
-    it('should return 0 when document is undefined', () => {
+    it('[U02322] should return 0 when document is undefined', () => {
       const originalDocument = globalThis.document
       Object.defineProperty(globalThis, 'document', {
         value: undefined,
@@ -167,7 +167,7 @@ describe('layoutMetrics.js', () => {
       })
     })
 
-    it('should return 0 when not in mobile landscape mode', () => {
+    it('[U02323] should return 0 when not in mobile landscape mode', () => {
       document.body.classList.remove('mobile-landscape')
 
       const width = getMobileActionBarWidth()
@@ -175,7 +175,7 @@ describe('layoutMetrics.js', () => {
       expect(width).toBe(0)
     })
 
-    it('should return 0 when controls element does not exist', () => {
+    it('[U02324] should return 0 when controls element does not exist', () => {
       document.body.classList.add('mobile-landscape')
 
       const width = getMobileActionBarWidth()
@@ -183,7 +183,7 @@ describe('layoutMetrics.js', () => {
       expect(width).toBe(0)
     })
 
-    it('should return 0 when controls are hidden', () => {
+    it('[U02325] should return 0 when controls are hidden', () => {
       document.body.classList.add('mobile-landscape')
       const controls = document.createElement('div')
       controls.id = 'mobileSidebarControls'
@@ -195,7 +195,7 @@ describe('layoutMetrics.js', () => {
       expect(width).toBe(0)
     })
 
-    it('should return width of visible controls in mobile landscape', () => {
+    it('[U02326] should return width of visible controls in mobile landscape', () => {
       document.body.classList.add('mobile-landscape')
       const controls = document.createElement('div')
       controls.id = 'mobileSidebarControls'
@@ -212,7 +212,7 @@ describe('layoutMetrics.js', () => {
   })
 
   describe('getCanvasLogicalWidth', () => {
-    it('should return canvas style width if available', () => {
+    it('[U02327] should return canvas style width if available', () => {
       const canvas = document.createElement('canvas')
       canvas.style.width = '1024px'
 
@@ -221,7 +221,7 @@ describe('layoutMetrics.js', () => {
       expect(width).toBe(1024)
     })
 
-    it('should return canvas clientWidth if style width not available', () => {
+    it('[U02328] should return canvas clientWidth if style width not available', () => {
       const canvas = document.createElement('canvas')
       Object.defineProperty(canvas, 'clientWidth', {
         value: 800,
@@ -233,7 +233,7 @@ describe('layoutMetrics.js', () => {
       expect(width).toBe(800)
     })
 
-    it('should return canvas bounding rect width as fallback', () => {
+    it('[U02329] should return canvas bounding rect width as fallback', () => {
       const canvas = document.createElement('canvas')
       Object.defineProperty(canvas, 'clientWidth', { value: 0 })
       Object.defineProperty(canvas, 'getBoundingClientRect', {
@@ -245,7 +245,7 @@ describe('layoutMetrics.js', () => {
       expect(width).toBe(900)
     })
 
-    it('should calculate from window width minus sidebar when no canvas provided', () => {
+    it('[U02330] should calculate from window width minus sidebar when no canvas provided', () => {
       Object.defineProperty(window, 'innerWidth', {
         value: 1920,
         writable: true,
@@ -260,7 +260,7 @@ describe('layoutMetrics.js', () => {
   })
 
   describe('getCanvasLogicalHeight', () => {
-    it('should return canvas style height if available', () => {
+    it('[U02331] should return canvas style height if available', () => {
       const canvas = document.createElement('canvas')
       canvas.style.height = '768px'
 
@@ -269,7 +269,7 @@ describe('layoutMetrics.js', () => {
       expect(height).toBe(768)
     })
 
-    it('should return canvas clientHeight if style height not available', () => {
+    it('[U02332] should return canvas clientHeight if style height not available', () => {
       const canvas = document.createElement('canvas')
       Object.defineProperty(canvas, 'clientHeight', {
         value: 600,
@@ -281,7 +281,7 @@ describe('layoutMetrics.js', () => {
       expect(height).toBe(600)
     })
 
-    it('should return canvas bounding rect height as fallback', () => {
+    it('[U02333] should return canvas bounding rect height as fallback', () => {
       const canvas = document.createElement('canvas')
       Object.defineProperty(canvas, 'clientHeight', { value: 0 })
       Object.defineProperty(canvas, 'getBoundingClientRect', {
@@ -293,7 +293,7 @@ describe('layoutMetrics.js', () => {
       expect(height).toBe(768)
     })
 
-    it('should return window innerHeight when no canvas provided', () => {
+    it('[U02334] should return window innerHeight when no canvas provided', () => {
       Object.defineProperty(window, 'innerHeight', {
         value: 1080,
         writable: true,
@@ -307,7 +307,7 @@ describe('layoutMetrics.js', () => {
   })
 
   describe('getMobileLandscapeRightUiWidth', () => {
-    it('should return 0 when not in mobile landscape mode', () => {
+    it('[U02335] should return 0 when not in mobile landscape mode', () => {
       document.body.classList.remove('mobile-landscape')
 
       const width = getMobileLandscapeRightUiWidth()
@@ -315,7 +315,7 @@ describe('layoutMetrics.js', () => {
       expect(width).toBe(0)
     })
 
-    it('should return 0 when build menu does not exist', () => {
+    it('[U02336] should return 0 when build menu does not exist', () => {
       document.body.classList.add('mobile-landscape')
 
       const width = getMobileLandscapeRightUiWidth()
@@ -323,7 +323,7 @@ describe('layoutMetrics.js', () => {
       expect(width).toBe(0)
     })
 
-    it('should return 0 when build menu is hidden', () => {
+    it('[U02337] should return 0 when build menu is hidden', () => {
       document.body.classList.add('mobile-landscape')
       const buildMenu = document.createElement('div')
       buildMenu.id = 'mobileBuildMenuContainer'
@@ -335,7 +335,7 @@ describe('layoutMetrics.js', () => {
       expect(width).toBe(0)
     })
 
-    it('should return width of visible build menu', () => {
+    it('[U02338] should return width of visible build menu', () => {
       document.body.classList.add('mobile-landscape')
       const buildMenu = document.createElement('div')
       buildMenu.id = 'mobileBuildMenuContainer'
@@ -352,7 +352,7 @@ describe('layoutMetrics.js', () => {
   })
 
   describe('getPlayableViewportWidth', () => {
-    it('should return 0 when logical width is 0', () => {
+    it('[U02339] should return 0 when logical width is 0', () => {
       const canvas = document.createElement('canvas')
       Object.defineProperty(canvas, 'clientWidth', { value: 0 })
       Object.defineProperty(window, 'innerWidth', { value: 0, writable: true, configurable: true })
@@ -362,7 +362,7 @@ describe('layoutMetrics.js', () => {
       expect(width).toBe(0)
     })
 
-    it('should subtract safe area insets from logical width', () => {
+    it('[U02340] should subtract safe area insets from logical width', () => {
       const canvas = document.createElement('canvas')
       canvas.style.width = '1920px'
 
@@ -380,7 +380,7 @@ describe('layoutMetrics.js', () => {
       expect(width).toBe(1920 - 20 - 20)
     })
 
-    it('should use maximum of safe area and UI width for right obstruction', () => {
+    it('[U02341] should use maximum of safe area and UI width for right obstruction', () => {
       const canvas = document.createElement('canvas')
       canvas.style.width = '1920px'
 
@@ -410,7 +410,7 @@ describe('layoutMetrics.js', () => {
   })
 
   describe('getPlayableViewportHeight', () => {
-    it('should return 0 when logical height is 0', () => {
+    it('[U02342] should return 0 when logical height is 0', () => {
       const canvas = document.createElement('canvas')
       Object.defineProperty(canvas, 'clientHeight', { value: 0 })
       Object.defineProperty(window, 'innerHeight', { value: 0, writable: true, configurable: true })
@@ -420,7 +420,7 @@ describe('layoutMetrics.js', () => {
       expect(height).toBe(0)
     })
 
-    it('should subtract safe area insets from logical height', () => {
+    it('[U02343] should subtract safe area insets from logical height', () => {
       const canvas = document.createElement('canvas')
       canvas.style.height = '1080px'
 
@@ -438,7 +438,7 @@ describe('layoutMetrics.js', () => {
       expect(height).toBe(1080 - 44 - 34)
     })
 
-    it('should not go below 0', () => {
+    it('[U02344] should not go below 0', () => {
       const canvas = document.createElement('canvas')
       canvas.style.height = '50px'
 

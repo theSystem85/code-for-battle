@@ -9,7 +9,7 @@ describe('build-only occupation', () => {
     resetGameState()
   })
 
-  it('prevents placing buildings on build-only occupied tiles', () => {
+  it('[U00513] prevents placing buildings on build-only occupied tiles', () => {
     const mapGrid = createTestMapGrid(20, 20)
     mapGrid[5][5].buildOnlyOccupied = 1
 
@@ -28,7 +28,7 @@ describe('build-only occupation', () => {
     expect(canPlace).toBe(false)
   })
 
-  it('treats the top-left section of the airstrip footprint as blocked', () => {
+  it('[U00514] treats the top-left section of the airstrip footprint as blocked', () => {
     expect(isAirstripBlockedLocalTile(0, 0, 12, 6)).toBe(true)
     expect(isAirstripBlockedLocalTile(0, 5, 12, 6)).toBe(false)
     expect(isAirstripBlockedLocalTile(7, 1, 12, 6)).toBe(false)

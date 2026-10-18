@@ -14,7 +14,7 @@ import {
 
 describe('dangerZoneMap', () => {
   describe('computeBuildingDps', () => {
-    it('should calculate DPS for single shot building', () => {
+    it('[U01145] should calculate DPS for single shot building', () => {
       const building = {
         damage: 10,
         fireCooldown: 1000 // 1 second
@@ -25,7 +25,7 @@ describe('dangerZoneMap', () => {
       expect(dps).toBe(10) // 10 damage per second
     })
 
-    it('should calculate DPS for burst fire building', () => {
+    it('[U01146] should calculate DPS for burst fire building', () => {
       const building = {
         damage: 5,
         fireCooldown: 1000,
@@ -38,7 +38,7 @@ describe('dangerZoneMap', () => {
       expect(dps).toBe(15) // 5 damage * 3 bursts per second
     })
 
-    it('should handle missing fireCooldown (default 1000)', () => {
+    it('[U01147] should handle missing fireCooldown (default 1000)', () => {
       const building = {
         damage: 20
       }
@@ -48,7 +48,7 @@ describe('dangerZoneMap', () => {
       expect(dps).toBe(20)
     })
 
-    it('should handle missing burstCount in burst fire mode', () => {
+    it('[U01148] should handle missing burstCount in burst fire mode', () => {
       const building = {
         damage: 10,
         fireCooldown: 500,
@@ -61,7 +61,7 @@ describe('dangerZoneMap', () => {
       expect(dps).toBe(20)
     })
 
-    it('should calculate DPS with fast fire rate', () => {
+    it('[U01149] should calculate DPS with fast fire rate', () => {
       const building = {
         damage: 5,
         fireCooldown: 250 // 4 shots per second
@@ -72,7 +72,7 @@ describe('dangerZoneMap', () => {
       expect(dps).toBe(20) // 5 * 4 = 20 DPS
     })
 
-    it('should handle zero damage', () => {
+    it('[U01150] should handle zero damage', () => {
       const building = {
         damage: 0,
         fireCooldown: 1000
@@ -101,22 +101,22 @@ describe('dangerZoneMap', () => {
       }
     })
 
-    it('should return empty array for invalid mapGrid', () => {
+    it('[U01151] should return empty array for invalid mapGrid', () => {
       const result = generateDangerZoneMapForPlayer('player1', null, [], gameState)
       expect(result).toEqual([])
     })
 
-    it('should return empty array for empty mapGrid', () => {
+    it('[U01152] should return empty array for empty mapGrid', () => {
       const result = generateDangerZoneMapForPlayer('player1', [], [], gameState)
       expect(result).toEqual([])
     })
 
-    it('should return empty array for mapGrid with empty first row', () => {
+    it('[U01153] should return empty array for mapGrid with empty first row', () => {
       const result = generateDangerZoneMapForPlayer('player1', [[]], [], gameState)
       expect(result).toEqual([])
     })
 
-    it('should create a map of zeros when no buildings exist', () => {
+    it('[U01154] should create a map of zeros when no buildings exist', () => {
       const result = generateDangerZoneMapForPlayer('player1', mapGrid, [], gameState)
 
       expect(result).toHaveLength(10)
@@ -124,7 +124,7 @@ describe('dangerZoneMap', () => {
       expect(result[5][5]).toBe(0)
     })
 
-    it('should ignore buildings without fireRange', () => {
+    it('[U01155] should ignore buildings without fireRange', () => {
       const buildings = [{
         type: 'powerPlant',
         owner: 'player2',
@@ -144,7 +144,7 @@ describe('dangerZoneMap', () => {
       expect(result[5][5]).toBe(0)
     })
 
-    it('should ignore buildings with zero or negative health', () => {
+    it('[U01156] should ignore buildings with zero or negative health', () => {
       const buildings = [{
         type: 'turretGun',
         owner: 'player2',
@@ -163,7 +163,7 @@ describe('dangerZoneMap', () => {
       expect(result[5][5]).toBe(0)
     })
 
-    it('should ignore friendly buildings', () => {
+    it('[U01157] should ignore friendly buildings', () => {
       const buildings = [{
         type: 'turretGun',
         owner: 'player1', // Same as playerId
@@ -182,7 +182,7 @@ describe('dangerZoneMap', () => {
       expect(result[5][5]).toBe(0)
     })
 
-    it('should add DPS value within turret range', () => {
+    it('[U01158] should add DPS value within turret range', () => {
       const buildings = [{
         type: 'turretGun1',
         owner: 'player2',
@@ -204,7 +204,7 @@ describe('dangerZoneMap', () => {
       expect(result[5][6]).toBe(10)
     })
 
-    it('should not add DPS outside turret range', () => {
+    it('[U01159] should not add DPS outside turret range', () => {
       const buildings = [{
         type: 'turretGun1',
         owner: 'player2',
@@ -225,7 +225,7 @@ describe('dangerZoneMap', () => {
       expect(result[9][9]).toBe(0)
     })
 
-    it('should handle minFireRange (blind spot)', () => {
+    it('[U01160] should handle minFireRange (blind spot)', () => {
       const buildings = [{
         type: 'turretGun1',
         owner: 'player2',
@@ -246,7 +246,7 @@ describe('dangerZoneMap', () => {
       expect(result[5][5]).toBe(0)
     })
 
-    it('should accumulate DPS from multiple turrets', () => {
+    it('[U01161] should accumulate DPS from multiple turrets', () => {
       const buildings = [
         {
           type: 'turretGun1',
@@ -280,7 +280,7 @@ describe('dangerZoneMap', () => {
       expect(result[5][5]).toBe(25) // 10 + 15
     })
 
-    it('should handle rocketTurret with no power', () => {
+    it('[U01162] should handle rocketTurret with no power', () => {
       gameState.enemyPowerSupply = -10 // No power
 
       const buildings = [{
@@ -302,7 +302,7 @@ describe('dangerZoneMap', () => {
       expect(result[5][5]).toBe(0)
     })
 
-    it('should handle teslaCoil with no power', () => {
+    it('[U01163] should handle teslaCoil with no power', () => {
       gameState.enemyPowerSupply = -10 // No power
 
       const buildings = [{
@@ -323,7 +323,7 @@ describe('dangerZoneMap', () => {
       expect(result[5][5]).toBe(0)
     })
 
-    it('should handle artilleryTurret type', () => {
+    it('[U01164] should handle artilleryTurret type', () => {
       const buildings = [{
         type: 'artilleryTurret',
         owner: 'player2',
@@ -342,7 +342,7 @@ describe('dangerZoneMap', () => {
       expect(result[5][5]).toBe(15) // 30 / 2 = 15 DPS
     })
 
-    it('should ignore non-turret buildings', () => {
+    it('[U01165] should ignore non-turret buildings', () => {
       const buildings = [{
         type: 'powerPlant',
         owner: 'player2',
@@ -361,7 +361,7 @@ describe('dangerZoneMap', () => {
       expect(result[5][5]).toBe(0)
     })
 
-    it('should handle multi-tile buildings correctly', () => {
+    it('[U01166] should handle multi-tile buildings correctly', () => {
       const buildings = [{
         type: 'turretGun1',
         owner: 'player2',
@@ -381,7 +381,7 @@ describe('dangerZoneMap', () => {
       expect(result[5][5]).toBe(10)
     })
 
-    it('should handle null buildings array', () => {
+    it('[U01167] should handle null buildings array', () => {
       const result = generateDangerZoneMapForPlayer('player1', mapGrid, null, gameState)
 
       expect(result).toHaveLength(10)
@@ -406,37 +406,37 @@ describe('dangerZoneMap', () => {
       }
     })
 
-    it('should not update when gameState is null', () => {
+    it('[U01168] should not update when gameState is null', () => {
       updateDangerZoneMaps(null)
       // Should not throw
     })
 
-    it('should not update when mapGrid is invalid', () => {
+    it('[U01169] should not update when mapGrid is invalid', () => {
       gameState.mapGrid = null
       updateDangerZoneMaps(gameState)
       expect(gameState.dangerZoneMaps).toEqual({})
     })
 
-    it('should not update when mapGrid is empty', () => {
+    it('[U01170] should not update when mapGrid is empty', () => {
       gameState.mapGrid = []
       updateDangerZoneMaps(gameState)
       expect(gameState.dangerZoneMaps).toEqual({})
     })
 
-    it('should not update when mapGrid first row is invalid', () => {
+    it('[U01171] should not update when mapGrid first row is invalid', () => {
       gameState.mapGrid = [null]
       updateDangerZoneMaps(gameState)
       expect(gameState.dangerZoneMaps).toEqual({})
     })
 
-    it('should create danger maps for all players in 2-player game', () => {
+    it('[U01172] should create danger maps for all players in 2-player game', () => {
       updateDangerZoneMaps(gameState)
 
       expect(gameState.dangerZoneMaps).toHaveProperty('player1')
       expect(gameState.dangerZoneMaps).toHaveProperty('player2')
     })
 
-    it('should create danger maps for all players in 4-player game', () => {
+    it('[U01173] should create danger maps for all players in 4-player game', () => {
       gameState.playerCount = 4
       updateDangerZoneMaps(gameState)
 
@@ -446,21 +446,21 @@ describe('dangerZoneMap', () => {
       expect(gameState.dangerZoneMaps).toHaveProperty('player4')
     })
 
-    it('should default to 2 players when playerCount is undefined', () => {
+    it('[U01174] should default to 2 players when playerCount is undefined', () => {
       gameState.playerCount = undefined
       updateDangerZoneMaps(gameState)
 
       expect(Object.keys(gameState.dangerZoneMaps)).toHaveLength(2)
     })
 
-    it('should populate danger maps with correct dimensions', () => {
+    it('[U01175] should populate danger maps with correct dimensions', () => {
       updateDangerZoneMaps(gameState)
 
       expect(gameState.dangerZoneMaps.player1).toHaveLength(5)
       expect(gameState.dangerZoneMaps.player1[0]).toHaveLength(5)
     })
 
-    it('should handle missing buildings array', () => {
+    it('[U01176] should handle missing buildings array', () => {
       gameState.buildings = undefined
       updateDangerZoneMaps(gameState)
 

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { FRAME_PHASE, FramePhaseTracker } from '../../src/performance/framePhases.js'
 
 describe('frame phase tracker', () => {
-  it('records average and p95 without allocating per frame', () => {
+  it('[U01598] records average and p95 without allocating per frame', () => {
     let clock = 0
     const tracker = new FramePhaseTracker({
       now: () => clock,
@@ -29,7 +29,7 @@ describe('frame phase tracker', () => {
     expect(tracker.samples).toBeInstanceOf(Float64Array)
   })
 
-  it('accumulates split spans and closes a span left open at frame end', () => {
+  it('[U01599] accumulates split spans and closes a span left open at frame end', () => {
     let clock = 0
     const tracker = new FramePhaseTracker({ now: () => clock, windowSize: 4 })
     tracker.begin(FRAME_PHASE.entities)
@@ -44,7 +44,7 @@ describe('frame phase tracker', () => {
     expect(tracker.openMask[FRAME_PHASE.entities]).toBe(0)
   })
 
-  it('resets the ring', () => {
+  it('[U01600] resets the ring', () => {
     let clock = 0
     const tracker = new FramePhaseTracker({ now: () => clock, windowSize: 4 })
     tracker.begin(FRAME_PHASE.effects)

@@ -8,7 +8,7 @@ describe('mobile sidebar tutorial guidance', () => {
     document.body.innerHTML = ''
   })
 
-  it('describes both sidebar gestures and both build-stack button regions', () => {
+  it('[U04497] describes both sidebar gestures and both build-stack button regions', () => {
     const step = buildTutorialSteps().find(candidate => candidate.id === 'mobile-sidebar-gestures')
 
     expect(step.mobileOnly).toBe(true)
@@ -19,7 +19,7 @@ describe('mobile sidebar tutorial guidance', () => {
     expect(step.visual).toBe('mobile-build-gestures')
   })
 
-  it('creates an initially hidden animated gesture guide in the tutorial card', () => {
+  it('[U04498] creates an initially hidden animated gesture guide in the tutorial card', () => {
     const tutorial = {
       settings: { showTutorial: true },
       progress: { completed: false },

@@ -8,7 +8,7 @@ import {
 } from '../../src/rendering/spriteSheetAnimation.js'
 
 describe('spriteSheetAnimation', () => {
-  it('parses sprite sheet metadata from filename segments', () => {
+  it('[U04150] parses sprite sheet metadata from filename segments', () => {
     const metadata = parseSpriteSheetMetadataFromFilename(
       'images/map/animations/64x64_9x9_generic.webp'
     )
@@ -22,12 +22,12 @@ describe('spriteSheetAnimation', () => {
     })
   })
 
-  it('throws for invalid filename conventions', () => {
+  it('[U04151] throws for invalid filename conventions', () => {
     expect(() => parseSpriteSheetMetadataFromFilename('images/map/animations/explosion.webp'))
       .toThrow(/Invalid sprite sheet filename format/)
   })
 
-  it('advances frame index by elapsed time, independent of fps', () => {
+  it('[U04152] advances frame index by elapsed time, independent of fps', () => {
     const animation = createSpriteSheetAnimationInstance({
       assetPath: 'images/map/animations/64x64_9x9_generic.webp',
       x: 0,
@@ -43,7 +43,7 @@ describe('spriteSheetAnimation', () => {
     expect(getAnimationFrameIndex(animation, 3000)).toBe(80)
   })
 
-  it('supports non-filename asset paths (e.g. dropped blob urls) when frame rects are provided', () => {
+  it('[U04153] supports non-filename asset paths (e.g. dropped blob urls) when frame rects are provided', () => {
     const animation = createSpriteSheetAnimationInstance({
       assetPath: 'blob:https://example.com/1234-5678',
       x: 0,
@@ -66,7 +66,7 @@ describe('spriteSheetAnimation', () => {
     expect(getAnimationFrameIndex(animation, 1000)).toBe(2)
   })
 
-  it('defaults sprite-sheet animations to black-key blending and allows alpha override', () => {
+  it('[U04154] defaults sprite-sheet animations to black-key blending and allows alpha override', () => {
     const defaultAnimation = createSpriteSheetAnimationInstance({
       assetPath: 'images/map/animations/64x64_2x1_generic.webp',
       x: 0,
@@ -85,7 +85,7 @@ describe('spriteSheetAnimation', () => {
     expect(alphaAnimation.blendMode).toBe('alpha')
   })
 
-  it('returns native image textures unchanged for alpha mode', () => {
+  it('[U04155] returns native image textures unchanged for alpha mode', () => {
     const image = {
       complete: true,
       naturalWidth: 8,
@@ -95,7 +95,7 @@ describe('spriteSheetAnimation', () => {
     expect(getImageTextureWithBlendMode(image, 'alpha')).toBe(image)
   })
 
-  it('supports sheet-specific black-key thresholds for dark decal textures', () => {
+  it('[U04156] supports sheet-specific black-key thresholds for dark decal textures', () => {
     const originalCreateElement = document.createElement.bind(document)
     const image = {
       complete: true,

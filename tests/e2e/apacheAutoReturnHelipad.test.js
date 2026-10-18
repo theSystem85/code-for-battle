@@ -23,7 +23,7 @@ test.describe('Apache helipad auto-return regression', () => {
     })
   })
 
-  test('cheat-spawned apache attacks with low ammo, auto-returns to helipad, refills, and resumes attack', async({ page }) => {
+  test('[E00002] cheat-spawned apache attacks with low ammo, auto-returns to helipad, refills, and resumes attack', async({ page }) => {
     await page.goto('/?seed=11')
 
     await page.waitForSelector('#gameCanvas', { state: 'visible', timeout: 30000 })

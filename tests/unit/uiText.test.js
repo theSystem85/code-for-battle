@@ -3,13 +3,13 @@ import { uiText } from '../../src/ui/uiText.js'
 import { formatHeavyBattlePhases, showHeavyBattleResults } from '../../src/ui/benchmarkModal.js'
 
 describe('settings benchmark copy', () => {
-  it('returns English and German benchmark labels', () => {
+  it('[U04514] returns English and German benchmark labels', () => {
     expect(uiText('settings.benchmark.heavy', 'en')).toBe('Heavy battle (320 units)')
     expect(uiText('settings.benchmark.heavy', 'de')).toBe('Schwere Schlacht (320 Einheiten)')
     expect(uiText('settings.benchmark.standard', 'de')).toBe('Karten-Scroll-Benchmark')
   })
 
-  it('names the multiplayer join field for a code or a link', () => {
+  it('[U04515] names the multiplayer join field for a code or a link', () => {
     expect(uiText('multiplayer.joinLabel', 'en')).toBe('Invite code or link')
     expect(uiText('multiplayer.joinLabel', 'de')).toBe('Einladungscode oder Link')
     expect(uiText('multiplayer.joinInvalid', 'en')).toBe('Enter a valid invite code or link.')
@@ -23,7 +23,7 @@ describe('settings benchmark copy', () => {
     expect(uiText('multiplayer.lookingForPlayers', 'de')).toBe('Sucht Mitspieler')
   })
 
-  it('stacks heavy-battle phases in the existing results dialog', () => {
+  it('[U04516] stacks heavy-battle phases in the existing results dialog', () => {
     document.body.innerHTML = `
       <div id="benchmarkModal">
         <p id="benchmarkModalStatus"></p>

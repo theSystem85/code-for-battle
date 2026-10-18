@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { expandCompactSpriteSheetMetadata } from '../../src/utils/spriteSheetMetadata.js'
 
 describe('spriteSheetMetadata', () => {
-  it('expands deduped compact entries with logical tile coordinates and shared source rects', () => {
+  it('[U04161] expands deduped compact entries with logical tile coordinates and shared source rects', () => {
     const metadata = expandCompactSpriteSheetMetadata({
       schemaVersion: 2,
       tileSize: 64,

@@ -15,7 +15,7 @@ async function loadReadyGame(page) {
 }
 
 test.describe('Game speed control', () => {
-  test('updates simulation rate from the sidebar input without freezing render cadence', async({ page }) => {
+  test('[E00048] updates simulation rate from the sidebar input without freezing render cadence', async({ page }) => {
     await loadReadyGame(page)
 
     const speedInput = page.locator('#speedMultiplier')

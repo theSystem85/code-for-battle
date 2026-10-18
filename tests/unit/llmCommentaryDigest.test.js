@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { buildCompactCommentaryInput, hasInterestingCommentaryEvents } from '../../src/ai/llmCommentaryDigest.js'
 
 describe('llmCommentaryDigest', () => {
-  it('builds a compact commentary payload with owner context and anti-repeat memory', () => {
+  it('[U02354] builds a compact commentary payload with owner context and anti-repeat memory', () => {
     const rawInput = {
       protocolVersion: '1.0',
       playerId: 'player2',
@@ -69,14 +69,14 @@ describe('llmCommentaryDigest', () => {
     expect(digest.antiRepeat.recentComments).toEqual(['You call that artillery?', 'My tanks smell fear.'])
   })
 
-  it('recognizes the actual transition collector event types as commentary-worthy', () => {
+  it('[U02355] recognizes the actual transition collector event types as commentary-worthy', () => {
     expect(hasInterestingCommentaryEvents([{ type: 'damage' }])).toBe(true)
     expect(hasInterestingCommentaryEvents([{ type: 'destroyed' }])).toBe(true)
     expect(hasInterestingCommentaryEvents([{ type: 'building_completed' }])).toBe(true)
     expect(hasInterestingCommentaryEvents([{ type: 'unknown_noise' }])).toBe(false)
   })
 
-  it('keeps the compact commentary payload smaller than the raw input', () => {
+  it('[U02356] keeps the compact commentary payload smaller than the raw input', () => {
     const rawInput = {
       protocolVersion: '1.0',
       playerId: 'player2',

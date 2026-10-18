@@ -19,7 +19,7 @@ describe('Automation hardware classification', () => {
     [{ coarsePointer: true, maxTouchPoints: 0, screenWidth: 390, screenHeight: 844 }, 'desktop'],
     [{ coarsePointer: true, maxTouchPoints: 5 }, 'desktop'],
     [{ screenWidth: 390, screenHeight: 844 }, 'desktop']
-  ])('classifies %j as %s', (signals, expected) => expect(classifyAutomationDevice(signals)).toBe(expected))
+  ])('[U00317] classifies %j as %s', (signals, expected) => expect(classifyAutomationDevice(signals)).toBe(expected))
 })
 
 describe('Automation viewport lifecycle', () => {
@@ -50,7 +50,7 @@ describe('Automation viewport lifecycle', () => {
     return { viewport, win, scrollTo, backdrop, dialog }
   }
 
-  it('fits the visual viewport across keyboard opening and landscape rotation without changing device', () => {
+  it('[U00318] fits the visual viewport across keyboard opening and landscape rotation without changing device', () => {
     const { viewport, backdrop } = mount()
     expect(backdrop.classList.contains('automation-phone')).toBe(true)
     expect(backdrop.style.getPropertyValue('--automation-viewport-height')).toBe('844px')
@@ -65,7 +65,7 @@ describe('Automation viewport lifecycle', () => {
     expect(backdrop.style.getPropertyValue('--automation-viewport-width')).toBe('844px')
   })
 
-  it('never gives tablets phone styling even with a narrow keyboard viewport', () => {
+  it('[U00319] never gives tablets phone styling even with a narrow keyboard viewport', () => {
     const { viewport, backdrop } = mount('tablet')
     Object.assign(viewport, { width: 320, height: 200 })
     viewport.dispatchEvent(new Event('resize'))
@@ -73,7 +73,7 @@ describe('Automation viewport lifecycle', () => {
     expect(backdrop.style.getPropertyValue('--automation-viewport-height')).toBe('200px')
   })
 
-  it('traps keyboard and programmatic focus and preserves background inert flags', () => {
+  it('[U00320] traps keyboard and programmatic focus and preserves background inert flags', () => {
     mount()
     const first = document.getElementById('first')
     const last = document.getElementById('last')
@@ -87,7 +87,7 @@ describe('Automation viewport lifecycle', () => {
     expect(document.getElementById('opener').hasAttribute('inert')).toBe(true)
   })
 
-  it('restores focus, scroll, inline styles and removes listeners and viewport state on teardown', () => {
+  it('[U00321] restores focus, scroll, inline styles and removes listeners and viewport state on teardown', () => {
     const { viewport, backdrop, win, scrollTo } = mount()
     cleanup()
     expect(document.activeElement.id).toBe('opener')

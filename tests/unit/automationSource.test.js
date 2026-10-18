@@ -14,7 +14,7 @@ const machine = id => { const policy = POLICY_TEMPLATES[0].create(id); policy.sc
 beforeEach(() => { localStorage.clear(); resetPolicyStore() })
 
 describe('authoritative source and shared drafts', () => {
-  it('DAV-only save persists source without an independently editable machine', () => {
+  it('[U00300] DAV-only save persists source without an independently editable machine', () => {
     expect(savePolicy('player', machine('source')).ok).toBe(true)
     const entry = getPolicyEntry('source')
     expect(entry.ownerId).toBe('player1')
@@ -26,7 +26,7 @@ describe('authoritative source and shared drafts', () => {
     expect(getPolicyEntry('source').source).toBe(entry.source)
   })
 
-  it('switches views, undo and redo synchronously without executing the draft', () => {
+  it('[U00301] switches views, undo and redo synchronously without executing the draft', () => {
     savePolicy('player1', machine('draft'))
     const original = getPolicyEntry('draft').source
     const draft = createAutomationDraft('player1', 'draft')
@@ -48,7 +48,7 @@ describe('authoritative source and shared drafts', () => {
     expect(revisions).toContain(1)
   })
 
-  it('rejects invalid text and stale saves; cancel never changes the store', () => {
+  it('[U00302] rejects invalid text and stale saves; cancel never changes the store', () => {
     savePolicy('player1', machine('stale'))
     const draft = createAutomationDraft('player1', 'stale')
     const original = draft.getSnapshot().source
@@ -63,7 +63,7 @@ describe('authoritative source and shared drafts', () => {
     expect(getPolicyEntry('stale').source).toBe(current)
   })
 
-  it('metadata rename and canonical no-op preserve bound runtime; behavior resets it without cancelling manual orders', () => {
+  it('[U00303] metadata rename and canonical no-op preserve bound runtime; behavior resets it without cancelling manual orders', () => {
     const policy = machine('bound')
     policy.scope = 'perUnit'
     savePolicy('player1', policy)
@@ -85,7 +85,7 @@ describe('authoritative source and shared drafts', () => {
 })
 
 describe('migration and resumable session', () => {
-  it('retains legacy source, non-first initial state, enablement, opt-ins and corrupt entry recovery idempotently', () => {
+  it('[U00304] retains legacy source, non-first initial state, enablement, opt-ins and corrupt entry recovery idempotently', () => {
     const policy = machine('legacy')
     policy.initialStateId = policy.states.at(-1).id
     const legacy = { documents: [{ ownerId: 'player', policy }, { ownerId: 'player1', policy: { id: 'corrupt' } }],
@@ -104,7 +104,7 @@ describe('migration and resumable session', () => {
     expect(getAutomationRecovery()[0].id).toBe('corrupt')
   })
 
-  it('full storage preserves a usable in-memory migration and old recovery backup', () => {
+  it('[U00305] full storage preserves a usable in-memory migration and old recovery backup', () => {
     const raw = JSON.stringify({ documents: [{ ownerId: 'player1', policy: machine('full') }] })
     localStorage.setItem('cfb-unit-policies-v1', raw)
     const write = vi.spyOn(localStorage, 'setItem').mockImplementation(() => { throw new Error('Quota exceeded') })
@@ -115,7 +115,7 @@ describe('migration and resumable session', () => {
     write.mockRestore()
   })
 
-  it('restores matching mid-delay and finished runtimes, keeps identities and rejects mismatched revisions', () => {
+  it('[U00306] restores matching mid-delay and finished runtimes, keeps identities and rejects mismatched revisions', () => {
     const policy = machine('resume')
     policy.scope = 'perUnit'
     savePolicy('player1', policy)
@@ -137,7 +137,7 @@ describe('migration and resumable session', () => {
     expect(restored.policyBindings).toEqual([])
   })
 
-  it('rejects foreign owner edits and suppresses duplicate per-unit applies', () => {
+  it('[U00307] rejects foreign owner edits and suppresses duplicate per-unit applies', () => {
     const policy = machine('network')
     policy.scope = 'perUnit'
     savePolicy('player1', policy)
@@ -151,7 +151,7 @@ describe('migration and resumable session', () => {
     expect(applyAutomationMutation({ ...command, actorId: 'player2', sequence: 51 }, [unit])).toMatchObject({ ok: false, reason: 'not-owner' })
   })
 
-  it('source alone grants neither enablement nor production opt-in', () => {
+  it('[U00308] source alone grants neither enablement nor production opt-in', () => {
     savePolicy('player1', machine('isolated'))
     const saved = exportAutomationSession()
     setPolicyEnabled('player1', 'isolated', true)
@@ -164,7 +164,7 @@ describe('migration and resumable session', () => {
   })
 })
 
-it('remembers the view independently of source and rejects saved category changes', () => {
+it('[U00309] remembers the view independently of source and rejects saved category changes', () => {
   savePolicy('player1', machine('category'))
   const draft = createAutomationDraft('player1', 'category')
   draft.setView('atv')
@@ -174,7 +174,7 @@ it('remembers the view independently of source and rejects saved category change
   expect(draft.setSource(printCFBL(parsed.ast)).ok).toBe(false)
 })
 
-it('text insertions, deletions and reordering preserve old identities, and new nodes receive distinct IDs', () => {
+it('[U00310] text insertions, deletions and reordering preserve old identities, and new nodes receive distinct IDs', () => {
   const policy = machine('identity')
   savePolicy('player1', policy)
   const draft = createAutomationDraft('player1', 'identity')
@@ -208,7 +208,7 @@ it('text insertions, deletions and reordering preserve old identities, and new n
   expect(draft.getSnapshot().identityMap.states).toEqual([...original.identityMap.states].reverse())
 })
 
-it('repeated runtime-only snapshots preserve compiled artifact identity and never restore another executor’s producer', async() => {
+it('[U00311] repeated runtime-only snapshots preserve compiled artifact identity and never restore another executor’s producer', async() => {
   const { getCompiledPolicyProgram, registerAutomationRuntimeProvider, getPolicyStoreVersion } = await import('../../src/policies/policyStore.js')
   savePolicy('player1', machine('prepared'))
   const exportRuntime = vi.fn(() => [{ ownerId: 'player1', runtime: { steps: 7 } }])
@@ -228,7 +228,7 @@ it('repeated runtime-only snapshots preserve compiled artifact identity and neve
   unregister()
 })
 
-it('detects a stale metadata-only rename without resetting behavior', () => {
+it('[U00312] detects a stale metadata-only rename without resetting behavior', () => {
   savePolicy('player1', machine('rename-conflict'))
   const draft = createAutomationDraft('player1', 'rename-conflict')
   savePolicy('player1', { ...getPolicyDocument('rename-conflict'), name: 'Other title' })
@@ -236,7 +236,7 @@ it('detects a stale metadata-only rename without resetting behavior', () => {
   expect(draft.save()).toMatchObject({ ok: false, reason: 'stale-version' })
 })
 
-it('typed session bindings never target a building with the same ID as a unit', () => {
+it('[U00313] typed session bindings never target a building with the same ID as a unit', () => {
   const policy = machine('collision')
   policy.scope = 'perUnit'
   savePolicy('player1', policy)
@@ -253,7 +253,7 @@ it('typed session bindings never target a building with the same ID as a unit', 
   expect(building.policyBindings).toEqual([])
 })
 
-it('resumes active AFTER and WHILE progression rather than restarting the program', async() => {
+it('[U00314] resumes active AFTER and WHILE progression rather than restarting the program', async() => {
   const { createPolicyRuntime, stepPolicy } = await import('../../src/policies/policyStep.js')
   for (const templateId of ['advance-after-delay', 'retreat-while-hurt']) {
     const policy = POLICY_TEMPLATES.find(template => template.id === templateId).create(templateId)
@@ -271,7 +271,7 @@ it('resumes active AFTER and WHILE progression rather than restarting the progra
   }
 })
 
-it('installs the sender’s agreed behavior revision on a new executing peer', async() => {
+it('[U00315] installs the sender’s agreed behavior revision on a new executing peer', async() => {
   const { getCompiledPolicyProgram } = await import('../../src/policies/policyStore.js')
   savePolicy('player1', machine('peer-source'))
   const record = exportAutomationSession().records[0]
@@ -288,7 +288,7 @@ it('installs the sender’s agreed behavior revision on a new executing peer', a
   expect(getCompiledPolicyProgram(record.id)).toBe(program)
 })
 
-it('restores the live manual attack reference and preserves its arbitration gate', async() => {
+it('[U00316] restores the live manual attack reference and preserves its arbitration gate', async() => {
   const { noteDirectOrder, isUnitIdle, updateUnitPolicies } = await import('../../src/policies/policyEngine.js')
   const policy = machine('manual-gate')
   policy.scope = 'perUnit'

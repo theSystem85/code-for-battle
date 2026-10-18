@@ -23,7 +23,7 @@ test.describe('Enemy F35 production parity and strike targeting', () => {
     })
   })
 
-  test('enemy AI adds an F35 to match planned F22 count and sends it to an anti-air-uncovered ground building', async({ page }) => {
+  test('[E00028] enemy AI adds an F35 to match planned F22 count and sends it to an anti-air-uncovered ground building', async({ page }) => {
     test.setTimeout(150000)
 
     await page.goto('/?seed=23')

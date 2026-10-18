@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { prepareRegressionScenario, observeSimulation, pollRegressionState } from './helpers/regressionScenario.js'
 
-test('gun turret and tank cannot shoot through buildings and both fire with a clear line', async({ page }) => {
+test('[E00016] gun turret and tank cannot shoot through buildings and both fire with a clear line', async({ page }) => {
   await prepareRegressionScenario(page, 211)
   await page.evaluate(() => {
     const r = window.__regression

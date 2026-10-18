@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 
 test.describe('Sprite Sheet Editor integration', () => {
-  test('opens SSE, paints tags, applies metadata, and toggles integrated mode', async({ page }) => {
+  test('[E00112] opens SSE, paints tags, applies metadata, and toggles integrated mode', async({ page }) => {
     await page.addInitScript(() => {
       localStorage.setItem('tutorial-settings', JSON.stringify({ showTutorial: false, speechEnabled: false }))
       localStorage.setItem('tutorial-progress', JSON.stringify({ completed: true, stepIndex: 0 }))

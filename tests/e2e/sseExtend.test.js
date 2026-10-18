@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 
-test('light SSE imports two ungridded source sprites, grows target and exports metadata', async({ page }) => {
+test('[E00113] light SSE imports two ungridded source sprites, grows target and exports metadata', async({ page }) => {
   const requests = []
   page.on('request', request => requests.push(request.url()))
   await page.goto('/sse')
@@ -77,7 +77,7 @@ test('light SSE imports two ungridded source sprites, grows target and exports m
   expect(cleared.occupied).toEqual(['0,1'])
 })
 
-test('new sheet, lossless export, clearing and viewport controls share the browser API', async({ page }) => {
+test('[E00114] new sheet, lossless export, clearing and viewport controls share the browser API', async({ page }) => {
   await page.goto('/sse')
   await page.waitForFunction(() => Boolean(window.__SSE__))
   await page.locator('#sseExtendToggle').click()
@@ -118,7 +118,7 @@ test('new sheet, lossless export, clearing and viewport controls share the brows
   expect(await page.locator('.sprite-sheet-editor__canvas-viewport').evaluate(el => el.style.transform)).not.toBe(before)
 })
 
-test('extract all, source masks, removal and compaction share UI and API actions', async({ page }) => {
+test('[E00115] extract all, source masks, removal and compaction share UI and API actions', async({ page }) => {
   await page.goto('/sse')
   await page.waitForFunction(() => Boolean(window.__SSE__))
   await page.evaluate(async() => {
@@ -172,7 +172,7 @@ test('extract all, source masks, removal and compaction share UI and API actions
   await expect.poll(() => page.evaluate(() => window.__SSE__.getState().importedSprites)).toBe(1)
 })
 
-test('anchor, ratio and shrink UI persist metadata and permit reimport on target changes', async({ page }) => {
+test('[E00116] anchor, ratio and shrink UI persist metadata and permit reimport on target changes', async({ page }) => {
   await page.goto('/sse')
   await page.waitForFunction(() => Boolean(window.__SSE__))
   const first = await page.evaluate(async() => {
@@ -234,7 +234,7 @@ test('anchor, ratio and shrink UI persist metadata and permit reimport on target
   expect(result.returned.ok).toBe(true)
 })
 
-test('multiple source clicks toggle imports, resize buttons grow and shrink, and mobile panes stay visible', async({ page }) => {
+test('[E00117] multiple source clicks toggle imports, resize buttons grow and shrink, and mobile panes stay visible', async({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/sse')
   await page.waitForFunction(() => Boolean(window.__SSE__))
@@ -276,7 +276,7 @@ test('multiple source clicks toggle imports, resize buttons grow and shrink, and
   }
 })
 
-test('Extract all imports both source sheets in order with independent segmentation and shared accordion controls', async({ page }) => {
+test('[E00118] Extract all imports both source sheets in order with independent segmentation and shared accordion controls', async({ page }) => {
   await page.goto('/sse')
   await page.waitForFunction(() => Boolean(window.__SSE__))
   const ids = await page.evaluate(async() => {

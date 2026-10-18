@@ -46,7 +46,7 @@ async function sampleAnimationFrames(page, durationMs) {
 test.describe('Battleship render performance', () => {
   test.skip(!RUN_BATTLESHIP_PERF, 'Set PERF_BATTLESHIP_RENDER=1 to run the battleship render benchmark.')
 
-  test('keeps the selected battleship and occupied carrier deck near the baseline frame rate', async({ page, context, baseURL }) => {
+  test('[E00014] keeps the selected battleship and occupied carrier deck near the baseline frame rate', async({ page, context, baseURL }) => {
     await page.goto(`${baseURL || 'http://localhost:5173'}?seed=17&size=64&players=2&oreFields=8`)
     await page.waitForFunction(() => Boolean(window.gameInstance?.gameLoop && window.gameState?.gameStarted), null, { timeout: 45000 })
 

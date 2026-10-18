@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-test('arrow keys accelerate, auto-brake and expose live runtime Controls tuning', async({ page }) => {
+test('[E00056] arrow keys accelerate, auto-brake and expose live runtime Controls tuning', async({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem('rts_tutorial_settings', JSON.stringify({ showTutorial: false, speechEnabled: false }))
   })

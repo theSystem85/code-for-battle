@@ -9,7 +9,7 @@ vi.mock('../../src/game/unitCombat/combatHelpers.js', () => ({
 import { getF22SafeApproachWaypoint } from '../../src/ai/enemyAirTargeting.js'
 
 describe('F22 anti-air-safe approach performance', () => {
-  it('bounds CPU work when a large map is split by an impassable threat barrier', () => {
+  it('[U01356] bounds CPU work when a large map is split by an impassable threat barrier', () => {
     const mapGrid = Array.from({ length: 200 }, () => Array(200).fill('land'))
     const seeker = { x: 10 * TILE_SIZE, y: 100 * TILE_SIZE }
     const target = { id: 'blocked-target', tileX: 190, tileY: 100 }

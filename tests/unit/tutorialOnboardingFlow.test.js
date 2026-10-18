@@ -31,7 +31,7 @@ beforeEach(() => {
 afterEach(() => { tutorial?.stop(); vi.clearAllTimers(); vi.useRealTimers() })
 
 describe('tutorial input onboarding flow', () => {
-  it('requires a choice, persists it, opens settings, then continues to the original welcome', () => {
+  it('[U04509] requires a choice, persists it, opens settings, then continues to the original welcome', () => {
     tutorial = initTutorialSystem()
     tutorial.start({ reset: true, manual: true })
     expect(tutorial.stepTitle.textContent).toBe('Choose your controls')
@@ -47,7 +47,7 @@ describe('tutorial input onboarding flow', () => {
     expect(tutorial.inputGuide.element.hidden).toBe(true)
     expect(JSON.parse(storage.get('rts_tutorial_progress'))).toMatchObject({ version: 2, stepId: 'welcome', stepIndex: 1 })
   })
-  it('shows onboarding to returning users, then resumes their original saved step', () => {
+  it('[U04510] shows onboarding to returning users, then resumes their original saved step', () => {
     storage.set('rts_tutorial_progress', JSON.stringify({ completed: false, stepIndex: 1 }))
     tutorial = initTutorialSystem()
     tutorial.start({ resume: true })
@@ -59,7 +59,7 @@ describe('tutorial input onboarding flow', () => {
     expect(JSON.parse(storage.get('rts_tutorial_progress')).stepId).toBe('resources')
     expect(JSON.parse(storage.get('rts_tutorial_progress')).resumeAfterInputStepId).toBeUndefined()
   })
-  it('keeps completed and disabled tutorials off', () => {
+  it('[U04511] keeps completed and disabled tutorials off', () => {
     storage.set('rts_tutorial_progress', JSON.stringify({ completed: true, stepIndex: 5 }))
     tutorial = initTutorialSystem()
     expect(tutorial.active).toBe(false)
@@ -73,7 +73,7 @@ describe('tutorial input onboarding flow', () => {
     expect(tutorial.active).toBe(false)
     expect(tutorial.overlay.hidden).toBe(true)
   })
-  it('refreshes current mappings when control settings close', async() => {
+  it('[U04512] refreshes current mappings when control settings close', async() => {
     tutorial = initTutorialSystem()
     tutorial.start({ reset: true, manual: true })
     document.querySelector('[data-input-method="trackpad"]').click()
@@ -85,7 +85,7 @@ describe('tutorial input onboarding flow', () => {
     expect(tutorial.inputGuide.element.textContent).toContain('q / Secondary click')
   })
 
-  it('uses one visibility state for minimize, stop, skip, completion and layout updates', () => {
+  it('[U04513] uses one visibility state for minimize, stop, skip, completion and layout updates', () => {
     tutorial = initTutorialSystem()
     tutorial.start({ reset: true })
     expect(tutorial.dockButton.hidden).toBe(true)

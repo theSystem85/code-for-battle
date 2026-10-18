@@ -6,7 +6,7 @@ import { formatSignedAxis } from '../../src/input/gamepad/axisReadout.js'
 describe('gamepad edge scroll', () => {
   const out = { x: 0, y: 0 }
 
-  it('is zero at the 20px margin and full at the edge, including corners', () => {
+  it('[U01802] is zero at the 20px margin and full at the edge, including corners', () => {
     writeGamepadEdgeScroll(out, 20, 100, 800, 600)
     expect(out).toEqual({ x: 0, y: 0 })
     writeGamepadEdgeScroll(out, 0, 300, 800, 600)
@@ -22,14 +22,14 @@ describe('gamepad edge scroll', () => {
     expect(out.y).toBeCloseTo(-0.5)
   })
 
-  it('stays inside the map when the view is smaller than both margins', () => {
+  it('[U01803] stays inside the map when the view is smaller than both margins', () => {
     writeGamepadEdgeScroll(out, 0, 0, 30, 30)
     expect(out).toEqual({ x: 0, y: 0 })
   })
 })
 
 describe('remote stick toggle', () => {
-  it('toggles only while a target is alive and drops when the target is gone', () => {
+  it('[U01804] toggles only while a target is alive and drops when the target is gone', () => {
     expect(nextRemoteStickToggle(false, true, true)).toBe(true)
     expect(nextRemoteStickToggle(true, false, true)).toBe(true)
     expect(nextRemoteStickToggle(true, true, true)).toBe(false)
@@ -39,7 +39,7 @@ describe('remote stick toggle', () => {
 })
 
 describe('signed axis readout', () => {
-  it('prints the sign and two decimals', () => {
+  it('[U01805] prints the sign and two decimals', () => {
     expect(formatSignedAxis(-0.734)).toBe('-0.73')
     expect(formatSignedAxis(0.416)).toBe('+0.42')
     expect(formatSignedAxis(0)).toBe('0.00')

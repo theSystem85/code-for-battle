@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 
 test.describe('Multiplayer sidebar defeated state', () => {
-  test('shows Defeated status when a party is defeated', async({ page }) => {
+  test('[E00076] shows Defeated status when a party is defeated', async({ page }) => {
     await page.goto('/')
 
     await page.waitForSelector('#multiplayerPartyList', { state: 'visible' })

@@ -8,7 +8,7 @@ import {
 } from '../../src/rendering/gpuMemory.js'
 
 describe('gpu memory accounting', () => {
-  it('formats WebGPU maxBufferSize like 4.0 GB', () => {
+  it('[U01831] formats WebGPU maxBufferSize like 4.0 GB', () => {
     expect(formatGpuBytes(4294967292)).toBe('4.0 GB')
     expect(formatGpuBytes(1024 ** 3)).toBe('1.0 GB')
     expect(formatGpuBytes(12.4 * 1024 * 1024)).toBe('12.4 MB')
@@ -16,7 +16,7 @@ describe('gpu memory accounting', () => {
     expect(formatGpuBytes(Number.NaN)).toBe('n/a')
   })
 
-  it('labels VRAM from maxBufferSize and resident bytes', () => {
+  it('[U01832] labels VRAM from maxBufferSize and resident bytes', () => {
     expect(formatVramLabel(4294967292)).toBe('VRAM: 4.0 GB')
     expect(formatVramLabel(null)).toBe('VRAM: n/a')
     expect(formatVramInUse(12.4 * 1024 * 1024, 4294967292)).toBe('VRAM in use: 12.4 MB / 4.0 GB (0.3%)')
@@ -24,12 +24,12 @@ describe('gpu memory accounting', () => {
     expect(formatVramInUse(2048, null)).toBe('VRAM in use: 2.0 KB')
   })
 
-  it('estimates texture bytes from width, height, texel size, mips, and layers', () => {
+  it('[U01833] estimates texture bytes from width, height, texel size, mips, and layers', () => {
     expect(estimateTextureBytes({ width: 64, height: 32 })).toBe(64 * 32 * 4)
     expect(estimateTextureBytes({ width: 8, height: 8, bytesPerPixel: 4, mipLevels: 2, layers: 3 })).toBe(8 * 8 * 4 * 2 * 3)
   })
 
-  it('tracks, replaces, and releases resident GPU resources without double counting', () => {
+  it('[U01834] tracks, replaces, and releases resident GPU resources without double counting', () => {
     const tracker = new GpuMemoryTracker()
     const uniform = { id: 'uniform' }
     const texture = { id: 'texture' }

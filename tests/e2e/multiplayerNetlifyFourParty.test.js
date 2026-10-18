@@ -1010,11 +1010,11 @@ test.describe('Netlify multiplayer 4-party sync', () => {
   test.describe.configure({ mode: 'serial' })
   test.setTimeout(420000)
 
-  test('host setup + invite flow → 3-party build/combat with blue AI', async({ browser }) => {
+  test('[E00074] host setup + invite flow → 3-party build/combat with blue AI', async({ browser }) => {
     await runMultiplayerScenario(browser, { fullAssault: false })
   })
 
-  test('extended full assault → 2 tanks each + immediate AGF wipe blue structures', async({ browser }) => {
+  test('[E00075] extended full assault → 2 tanks each + immediate AGF wipe blue structures', async({ browser }) => {
     test.setTimeout(900000)
     await runMultiplayerScenario(browser, { fullAssault: true })
   })

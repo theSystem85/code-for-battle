@@ -6,7 +6,7 @@ import {
 } from '../../src/game/unitCommandHistory.js'
 
 describe('unitCommandHistory', () => {
-  it('tracks move, attack, and retreat command signals and caps history', () => {
+  it('[U04675] tracks move, attack, and retreat command signals and caps history', () => {
     const unit = {
       id: 'u1',
       owner: 'player1',
@@ -34,7 +34,7 @@ describe('unitCommandHistory', () => {
     expect(getUnitCommandHistory(unit.id)).toEqual([])
   })
 
-  it('does not spam move logs for small intermediate sub-path changes', () => {
+  it('[U04676] does not spam move logs for small intermediate sub-path changes', () => {
     const unit = {
       id: 'u2',
       owner: 'player1',
@@ -57,7 +57,7 @@ describe('unitCommandHistory', () => {
     clearUnitCommandHistory(unit.id)
   })
 
-  it('records reroute entries when path changes but move target stays the same', () => {
+  it('[U04677] records reroute entries when path changes but move target stays the same', () => {
     const unit = {
       id: 'u3',
       owner: 'player1',

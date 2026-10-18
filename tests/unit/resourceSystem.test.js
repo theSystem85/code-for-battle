@@ -58,26 +58,26 @@ describe('Resource & Economy System', () => {
   })
 
   describe('Money Tracking', () => {
-    it('should initialize with correct starting money', () => {
+    it('[U03756] should initialize with correct starting money', () => {
       expect(gameState.money).toBe(12000)
     })
 
-    it('should track money additions correctly', () => {
+    it('[U03757] should track money additions correctly', () => {
       gameState.money += 5000
       expect(gameState.money).toBe(17000)
     })
 
-    it('should track money deductions correctly', () => {
+    it('[U03758] should track money deductions correctly', () => {
       gameState.money -= 3000
       expect(gameState.money).toBe(9000)
     })
 
-    it('should allow money to go negative', () => {
+    it('[U03759] should allow money to go negative', () => {
       gameState.money -= 15000
       expect(gameState.money).toBe(-3000)
     })
 
-    it('should track total money earned separately', () => {
+    it('[U03760] should track total money earned separately', () => {
       gameState.totalMoneyEarned = 0
       const earned = 8000
       gameState.money += earned
@@ -86,7 +86,7 @@ describe('Resource & Economy System', () => {
       expect(gameState.money).toBe(20000)
     })
 
-    it('should maintain accurate money after multiple transactions', () => {
+    it('[U03761] should maintain accurate money after multiple transactions', () => {
       gameState.money += 1000  // 13000
       gameState.money -= 500   // 12500
       gameState.money += 2500  // 15000
@@ -96,13 +96,13 @@ describe('Resource & Economy System', () => {
   })
 
   describe('Power Supply Calculation', () => {
-    it('should return 0 power with no buildings or factories', () => {
+    it('[U03762] should return 0 power with no buildings or factories', () => {
       const result = updatePowerSupply([], gameState)
       expect(result).toBe(0)
       expect(gameState.playerPowerSupply).toBe(0)
     })
 
-    it('should add construction yard power (+50) from factories', () => {
+    it('[U03763] should add construction yard power (+50) from factories', () => {
       gameState.factories = [{
         owner: 'player',
         health: 100,
@@ -113,7 +113,7 @@ describe('Resource & Economy System', () => {
       expect(gameState.playerTotalPowerProduction).toBe(buildingData.constructionYard.power)
     })
 
-    it('should not count dead construction yards', () => {
+    it('[U03764] should not count dead construction yards', () => {
       gameState.factories = [{
         owner: 'player',
         health: 0,
@@ -123,7 +123,7 @@ describe('Resource & Economy System', () => {
       expect(result).toBe(0)
     })
 
-    it('should add power from power plants', () => {
+    it('[U03765] should add power from power plants', () => {
       const powerPlant = {
         owner: 'player',
         type: 'powerPlant',
@@ -135,7 +135,7 @@ describe('Resource & Economy System', () => {
       expect(gameState.playerTotalPowerProduction).toBe(buildingData.powerPlant.power)
     })
 
-    it('should subtract power for consuming buildings', () => {
+    it('[U03766] should subtract power for consuming buildings', () => {
       // Ore refinery consumes power (-150)
       const refinery = {
         owner: 'player',
@@ -148,7 +148,7 @@ describe('Resource & Economy System', () => {
       expect(gameState.playerPowerConsumption).toBe(Math.abs(buildingData.oreRefinery.power))
     })
 
-    it('should calculate net power correctly with mixed buildings', () => {
+    it('[U03767] should calculate net power correctly with mixed buildings', () => {
       gameState.factories = [{
         owner: 'player',
         health: 100,
@@ -167,7 +167,7 @@ describe('Resource & Economy System', () => {
       expect(result).toBe(expectedPower)
     })
 
-    it('should track production and consumption separately', () => {
+    it('[U03768] should track production and consumption separately', () => {
       const buildings = [
         { owner: 'player', type: 'powerPlant', power: 200, health: 100 },
         { owner: 'player', type: 'oreRefinery', power: -150, health: 100 }
@@ -179,7 +179,7 @@ describe('Resource & Economy System', () => {
       expect(gameState.playerPowerSupply).toBe(50)
     })
 
-    it('should skip buildings with no owner', () => {
+    it('[U03769] should skip buildings with no owner', () => {
       const buildings = [
         { type: 'powerPlant', power: 200, health: 100 }, // No owner
         { owner: 'player', type: 'powerPlant', power: 200, health: 100 }
@@ -191,7 +191,7 @@ describe('Resource & Economy System', () => {
   })
 
   describe('Enemy Power Tracking', () => {
-    it('should track enemy power separately from player', () => {
+    it('[U03770] should track enemy power separately from player', () => {
       const buildings = [
         { owner: 'player', type: 'powerPlant', power: 200, health: 100 },
         { owner: 'enemy', type: 'powerPlant', power: 300, health: 100 }
@@ -202,7 +202,7 @@ describe('Resource & Economy System', () => {
       expect(gameState.enemyPowerSupply).toBe(300)
     })
 
-    it('should track enemy production and consumption', () => {
+    it('[U03771] should track enemy production and consumption', () => {
       const buildings = [
         { owner: 'enemy', type: 'powerPlant', power: 200, health: 100 },
         { owner: 'enemy', type: 'oreRefinery', power: -150, health: 100 }
@@ -214,7 +214,7 @@ describe('Resource & Economy System', () => {
       expect(gameState.enemyPowerSupply).toBe(50)
     })
 
-    it('should add enemy construction yard power', () => {
+    it('[U03772] should add enemy construction yard power', () => {
       gameState.factories = [{
         owner: 'enemy',
         health: 100,
@@ -227,7 +227,7 @@ describe('Resource & Economy System', () => {
   })
 
   describe('Build Speed Modifier', () => {
-    it('should set normal build speed (1.0) when power is positive', () => {
+    it('[U03773] should set normal build speed (1.0) when power is positive', () => {
       const buildings = [
         { owner: 'player', type: 'powerPlant', power: 200, health: 100 }
       ]
@@ -236,7 +236,7 @@ describe('Resource & Economy System', () => {
       expect(gameState.playerBuildSpeedModifier).toBe(1.0)
     })
 
-    it('should calculate reduced build speed when power is negative', () => {
+    it('[U03774] should calculate reduced build speed when power is negative', () => {
       const buildings = [
         { owner: 'player', type: 'powerPlant', power: 100, health: 100 },
         { owner: 'player', type: 'oreRefinery', power: -150, health: 100 }
@@ -249,7 +249,7 @@ describe('Resource & Economy System', () => {
       expect(gameState.playerBuildSpeedModifier).toBeCloseTo(100 / 150, 2)
     })
 
-    it('should set modifier to 0 when consumption is 0 but power is negative', () => {
+    it('[U03775] should set modifier to 0 when consumption is 0 but power is negative', () => {
       // Edge case - shouldn't normally happen
       gameState.playerPowerSupply = -50
       const buildings = [
@@ -262,7 +262,7 @@ describe('Resource & Economy System', () => {
       expect(gameState.playerBuildSpeedModifier).toBe(0)
     })
 
-    it('should calculate enemy build speed modifier correctly', () => {
+    it('[U03776] should calculate enemy build speed modifier correctly', () => {
       const buildings = [
         { owner: 'enemy', type: 'powerPlant', power: 100, health: 100 },
         { owner: 'enemy', type: 'oreRefinery', power: -200, health: 100 }
@@ -273,7 +273,7 @@ describe('Resource & Economy System', () => {
       expect(gameState.enemyBuildSpeedModifier).toBeCloseTo(0.5, 2)
     })
 
-    it('should set enemy build speed to 1.0 when power is positive', () => {
+    it('[U03777] should set enemy build speed to 1.0 when power is positive', () => {
       const buildings = [
         { owner: 'enemy', type: 'powerPlant', power: 200, health: 100 }
       ]
@@ -284,7 +284,7 @@ describe('Resource & Economy System', () => {
   })
 
   describe('Low Energy Mode', () => {
-    it('should enable low energy mode when power is negative', () => {
+    it('[U03778] should enable low energy mode when power is negative', () => {
       const buildings = [
         { owner: 'player', type: 'oreRefinery', power: -150, health: 100 }
       ]
@@ -293,7 +293,7 @@ describe('Resource & Economy System', () => {
       expect(gameState.lowEnergyMode).toBe(true)
     })
 
-    it('should disable low energy mode when power is positive', () => {
+    it('[U03779] should disable low energy mode when power is positive', () => {
       gameState.lowEnergyMode = true // Start with it enabled
       const buildings = [
         { owner: 'player', type: 'powerPlant', power: 200, health: 100 }
@@ -303,7 +303,7 @@ describe('Resource & Economy System', () => {
       expect(gameState.lowEnergyMode).toBe(false)
     })
 
-    it('should disable low energy mode when power is exactly 0', () => {
+    it('[U03780] should disable low energy mode when power is exactly 0', () => {
       const buildings = [
         { owner: 'player', type: 'powerPlant', power: 150, health: 100 },
         { owner: 'player', type: 'oreRefinery', power: -150, health: 100 }
@@ -315,7 +315,7 @@ describe('Resource & Economy System', () => {
   })
 
   describe('Radar Station', () => {
-    it('should activate radar when player has radar station and positive power', () => {
+    it('[U03781] should activate radar when player has radar station and positive power', () => {
       const buildings = [
         { owner: 'player', type: 'powerPlant', power: 200, health: 100 },
         { owner: 'player', type: 'radarStation', power: -50, health: 100 }
@@ -325,7 +325,7 @@ describe('Resource & Economy System', () => {
       expect(gameState.radarActive).toBe(true)
     })
 
-    it('should deactivate radar when power is negative', () => {
+    it('[U03782] should deactivate radar when power is negative', () => {
       const buildings = [
         { owner: 'player', type: 'radarStation', power: -50, health: 100 }
       ]
@@ -334,7 +334,7 @@ describe('Resource & Economy System', () => {
       expect(gameState.radarActive).toBe(false)
     })
 
-    it('should deactivate radar when radar station health is 0', () => {
+    it('[U03783] should deactivate radar when radar station health is 0', () => {
       const buildings = [
         { owner: 'player', type: 'powerPlant', power: 200, health: 100 },
         { owner: 'player', type: 'radarStation', power: -50, health: 0 }
@@ -344,7 +344,7 @@ describe('Resource & Economy System', () => {
       expect(gameState.radarActive).toBe(false)
     })
 
-    it('should deactivate radar when no radar station exists', () => {
+    it('[U03784] should deactivate radar when no radar station exists', () => {
       const buildings = [
         { owner: 'player', type: 'powerPlant', power: 200, health: 100 }
       ]
@@ -355,7 +355,7 @@ describe('Resource & Economy System', () => {
   })
 
   describe('Backward Compatibility Fields', () => {
-    it('should update legacy power supply field', () => {
+    it('[U03785] should update legacy power supply field', () => {
       const buildings = [
         { owner: 'player', type: 'powerPlant', power: 200, health: 100 }
       ]
@@ -364,7 +364,7 @@ describe('Resource & Economy System', () => {
       expect(gameState.powerSupply).toBe(200)
     })
 
-    it('should update legacy production and consumption fields', () => {
+    it('[U03786] should update legacy production and consumption fields', () => {
       const buildings = [
         { owner: 'player', type: 'powerPlant', power: 200, health: 100 },
         { owner: 'player', type: 'oreRefinery', power: -150, health: 100 }
@@ -377,7 +377,7 @@ describe('Resource & Economy System', () => {
   })
 
   describe('Building Repair Cost Calculation', () => {
-    it('should return 0 for undamaged building', () => {
+    it('[U03787] should return 0 for undamaged building', () => {
       const building = {
         type: 'powerPlant',
         health: buildingData.powerPlant.health,
@@ -387,7 +387,7 @@ describe('Resource & Economy System', () => {
       expect(cost).toBe(0)
     })
 
-    it('should calculate repair cost based on damage percentage', () => {
+    it('[U03788] should calculate repair cost based on damage percentage', () => {
       const building = {
         type: 'powerPlant',
         health: buildingData.powerPlant.health * 0.5, // 50% health
@@ -400,7 +400,7 @@ describe('Resource & Economy System', () => {
       expect(cost).toBe(expected)
     })
 
-    it('should calculate max repair cost for fully damaged building', () => {
+    it('[U03789] should calculate max repair cost for fully damaged building', () => {
       const building = {
         type: 'powerPlant',
         health: 0,
@@ -413,7 +413,7 @@ describe('Resource & Economy System', () => {
       expect(cost).toBe(expected)
     })
 
-    it('should calculate proportional repair cost for partial damage', () => {
+    it('[U03790] should calculate proportional repair cost for partial damage', () => {
       const building = {
         type: 'oreRefinery',
         health: buildingData.oreRefinery.health * 0.75, // 75% health = 25% damage
@@ -425,7 +425,7 @@ describe('Resource & Economy System', () => {
       expect(cost).toBe(expected)
     })
 
-    it('should handle different building types correctly', () => {
+    it('[U03791] should handle different building types correctly', () => {
       const cheapBuilding = {
         type: 'powerPlant',
         health: 50,
@@ -446,7 +446,7 @@ describe('Resource & Economy System', () => {
   })
 
   describe('Multiple Player Power Isolation', () => {
-    it('should not mix player and enemy power', () => {
+    it('[U03792] should not mix player and enemy power', () => {
       gameState.factories = [
         { owner: 'player', health: 100, type: 'constructionYard' },
         { owner: 'enemy', health: 100, type: 'constructionYard' }
@@ -465,7 +465,7 @@ describe('Resource & Economy System', () => {
       expect(gameState.enemyPowerSupply).toBe(350)
     })
 
-    it('should handle multiple enemy players as single enemy', () => {
+    it('[U03793] should handle multiple enemy players as single enemy', () => {
       const buildings = [
         { owner: 'enemy1', type: 'powerPlant', power: 100, health: 100 },
         { owner: 'enemy2', type: 'powerPlant', power: 150, health: 100 }
@@ -478,12 +478,12 @@ describe('Resource & Economy System', () => {
   })
 
   describe('Edge Cases', () => {
-    it('should handle empty buildings array', () => {
+    it('[U03794] should handle empty buildings array', () => {
       const result = updatePowerSupply([], gameState)
       expect(result).toBe(0)
     })
 
-    it('should handle null factories array', () => {
+    it('[U03795] should handle null factories array', () => {
       gameState.factories = null
       const buildings = [
         { owner: 'player', type: 'powerPlant', power: 200, health: 100 }
@@ -492,7 +492,7 @@ describe('Resource & Economy System', () => {
       expect(result).toBe(200)
     })
 
-    it('should handle undefined factories array', () => {
+    it('[U03796] should handle undefined factories array', () => {
       gameState.factories = undefined
       const buildings = [
         { owner: 'player', type: 'powerPlant', power: 200, health: 100 }
@@ -501,7 +501,7 @@ describe('Resource & Economy System', () => {
       expect(result).toBe(200)
     })
 
-    it('should handle buildings with 0 power', () => {
+    it('[U03797] should handle buildings with 0 power', () => {
       const buildings = [
         { owner: 'player', type: 'custom', power: 0, health: 100 }
       ]
@@ -511,7 +511,7 @@ describe('Resource & Economy System', () => {
       expect(gameState.playerPowerConsumption).toBe(0)
     })
 
-    it('should handle very large power values', () => {
+    it('[U03798] should handle very large power values', () => {
       const buildings = [
         { owner: 'player', type: 'megaPlant', power: 1000000, health: 100 }
       ]
@@ -519,7 +519,7 @@ describe('Resource & Economy System', () => {
       expect(gameState.playerPowerSupply).toBe(1000000)
     })
 
-    it('should handle many buildings efficiently', () => {
+    it('[U03799] should handle many buildings efficiently', () => {
       const buildings = []
       for (let i = 0; i < 100; i++) {
         buildings.push({

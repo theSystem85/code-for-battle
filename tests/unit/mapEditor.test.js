@@ -80,20 +80,20 @@ describe('mapEditor - Registration and Setup', () => {
     vi.clearAllMocks()
   })
 
-  it('should register rendering functions', () => {
+  it('[U02570] should register rendering functions', () => {
     const getter = vi.fn()
     const notifier = vi.fn()
     mapEditor.registerMapEditorRendering(getter, notifier)
     expect(() => mapEditor.registerMapEditorRendering(getter, notifier)).not.toThrow()
   })
 
-  it('should set render scheduler', () => {
+  it('[U02571] should set render scheduler', () => {
     const scheduler = vi.fn()
     mapEditor.setMapEditorRenderScheduler(scheduler)
     expect(() => mapEditor.setMapEditorRenderScheduler(scheduler)).not.toThrow()
   })
 
-  it('should set production controller', () => {
+  it('[U02572] should set production controller', () => {
     const controller = {
       forceUnlockUnitType: vi.fn(),
       forceUnlockBuildingType: vi.fn(),
@@ -112,7 +112,7 @@ describe('mapEditor - State Management', () => {
     mapEditor.deactivateMapEditMode()
   })
 
-  it('should get map editor state', () => {
+  it('[U02573] should get map editor state', () => {
     const state = mapEditor.getMapEditorState()
     expect(state).toBeDefined()
     expect(state).toHaveProperty('active')
@@ -120,7 +120,7 @@ describe('mapEditor - State Management', () => {
     expect(state).toHaveProperty('brushKind')
   })
 
-  it('should activate map edit mode', () => {
+  it('[U02574] should activate map edit mode', () => {
     mapEditor.activateMapEditMode()
     const state = mapEditor.getMapEditorState()
     expect(state.active).toBe(true)
@@ -128,7 +128,7 @@ describe('mapEditor - State Management', () => {
     expect(gameState.gamePaused).toBe(true)
   })
 
-  it('should deactivate map edit mode', () => {
+  it('[U02575] should deactivate map edit mode', () => {
     mapEditor.activateMapEditMode()
     mapEditor.deactivateMapEditMode()
     const state = mapEditor.getMapEditorState()
@@ -136,7 +136,7 @@ describe('mapEditor - State Management', () => {
     expect(gameState.mapEditMode).toBe(false)
   })
 
-  it('should toggle random mode', () => {
+  it('[U02576] should toggle random mode', () => {
     mapEditor.toggleRandomMode(true)
     let state = mapEditor.getMapEditorState()
     expect(state.randomMode).toBe(true)
@@ -148,14 +148,14 @@ describe('mapEditor - State Management', () => {
     expect(gameState.mapEditRandomMode).toBe(false)
   })
 
-  it('should ensure map edit is paused when active', () => {
+  it('[U02577] should ensure map edit is paused when active', () => {
     mapEditor.activateMapEditMode()
     gameState.gamePaused = false // Manually unpause
     mapEditor.ensureMapEditPaused()
     expect(gameState.gamePaused).toBe(true)
   })
 
-  it('should not pause game when map editor is inactive', () => {
+  it('[U02578] should not pause game when map editor is inactive', () => {
     mapEditor.deactivateMapEditMode()
     gameState.gamePaused = false
     mapEditor.ensureMapEditPaused()
@@ -169,35 +169,35 @@ describe('mapEditor - Brush Management', () => {
     mapEditor.resetBrush()
   })
 
-  it('should set tile brush by ID', () => {
+  it('[U02579] should set tile brush by ID', () => {
     mapEditor.setTileBrushById('grass')
     const state = mapEditor.getMapEditorState()
     expect(state.brushKind).toBe('tile')
     expect(state.currentTileIndex).toBe(0)
   })
 
-  it('should set tile brush to rock', () => {
+  it('[U02580] should set tile brush to rock', () => {
     mapEditor.setTileBrushById('rock')
     const state = mapEditor.getMapEditorState()
     expect(state.brushKind).toBe('tile')
     expect(state.currentTileIndex).toBeGreaterThanOrEqual(0)
   })
 
-  it('should set brush from production for buildings', () => {
+  it('[U02581] should set brush from production for buildings', () => {
     mapEditor.setBrushFromProduction('building', 'powerPlant')
     const state = mapEditor.getMapEditorState()
     expect(state.brushKind).toBe('building')
     expect(state.brushPayload).toBe('powerPlant')
   })
 
-  it('should set brush from production for units', () => {
+  it('[U02582] should set brush from production for units', () => {
     mapEditor.setBrushFromProduction('unit', 'lightTank')
     const state = mapEditor.getMapEditorState()
     expect(state.brushKind).toBe('unit')
     expect(state.brushPayload).toBe('lightTank')
   })
 
-  it('should reset brush to tile mode', () => {
+  it('[U02583] should reset brush to tile mode', () => {
     mapEditor.setBrushFromProduction('building', 'powerPlant')
     mapEditor.resetBrush()
     const state = mapEditor.getMapEditorState()
@@ -205,20 +205,20 @@ describe('mapEditor - Brush Management', () => {
     expect(state.brushPayload).toBe(null)
   })
 
-  it('should describe tile brush', () => {
+  it('[U02584] should describe tile brush', () => {
     mapEditor.setTileBrushById('grass')
     const description = mapEditor.describeBrush()
     expect(description).toContain('Grass')
   })
 
-  it('should describe building brush', () => {
+  it('[U02585] should describe building brush', () => {
     mapEditor.setBrushFromProduction('building', 'powerPlant')
     const description = mapEditor.describeBrush()
     expect(description).toContain('Building')
     expect(description).toContain('powerPlant')
   })
 
-  it('should describe unit brush', () => {
+  it('[U02586] should describe unit brush', () => {
     mapEditor.setBrushFromProduction('unit', 'lightTank')
     const description = mapEditor.describeBrush()
     expect(description).toContain('Unit')
@@ -232,18 +232,18 @@ describe('mapEditor - Lock Mechanism', () => {
     mapEditor.unlockMapEditor()
   })
 
-  it('should lock map editor with reason', () => {
+  it('[U02587] should lock map editor with reason', () => {
     mapEditor.lockMapEditor('multiplayer active')
     expect(mapEditor.isMapEditorLocked()).toBe(true)
   })
 
-  it('should unlock map editor', () => {
+  it('[U02588] should unlock map editor', () => {
     mapEditor.lockMapEditor('test reason')
     mapEditor.unlockMapEditor()
     expect(mapEditor.isMapEditorLocked()).toBe(false)
   })
 
-  it('should report unlocked state initially', () => {
+  it('[U02589] should report unlocked state initially', () => {
     expect(mapEditor.isMapEditorLocked()).toBe(false)
   })
 })
@@ -265,7 +265,7 @@ describe('mapEditor - Pipette Tool', () => {
     ]
   })
 
-  it('should pipette grass tile', () => {
+  it('[U02590] should pipette grass tile', () => {
     const result = mapEditor.pipetteTile(0, 0)
     expect(result).toBe(true)
     const state = mapEditor.getMapEditorState()
@@ -273,40 +273,40 @@ describe('mapEditor - Pipette Tool', () => {
     expect(state.pipetteOverride).toBe(true)
   })
 
-  it('should pipette street tile', () => {
+  it('[U02591] should pipette street tile', () => {
     const result = mapEditor.pipetteTile(1, 0)
     expect(result).toBe(true)
     const state = mapEditor.getMapEditorState()
     expect(state.brushKind).toBe('tile')
   })
 
-  it('should pipette rock tile', () => {
+  it('[U02592] should pipette rock tile', () => {
     const result = mapEditor.pipetteTile(2, 0)
     expect(result).toBe(true)
     const state = mapEditor.getMapEditorState()
     expect(state.brushKind).toBe('tile')
   })
 
-  it('should pipette water tile', () => {
+  it('[U02593] should pipette water tile', () => {
     const result = mapEditor.pipetteTile(0, 1)
     expect(result).toBe(true)
     const state = mapEditor.getMapEditorState()
     expect(state.brushKind).toBe('tile')
   })
 
-  it('should pipette ore tile', () => {
+  it('[U02594] should pipette ore tile', () => {
     const result = mapEditor.pipetteTile(1, 1)
     expect(result).toBe(true)
     const state = mapEditor.getMapEditorState()
     expect(state.brushKind).toBe('tile')
   })
 
-  it('should return false for invalid tile coordinates', () => {
+  it('[U02595] should return false for invalid tile coordinates', () => {
     const result = mapEditor.pipetteTile(10, 10)
     expect(result).toBe(false)
   })
 
-  it('should disable pipette override when selecting tile manually', () => {
+  it('[U02596] should disable pipette override when selecting tile manually', () => {
     mapEditor.pipetteTile(0, 0)
     const state1 = mapEditor.getMapEditorState()
     expect(state1.pipetteOverride).toBe(true)
@@ -333,34 +333,34 @@ describe('mapEditor - Pointer Interactions', () => {
     ]
   })
 
-  it('should handle pointer down', () => {
+  it('[U02597] should handle pointer down', () => {
     mapEditor.handlePointerDown(5, 5, { button: 0 })
     const state = mapEditor.getMapEditorState()
     expect(state.dragging).toBe(true)
     expect(state.hoverTile).toEqual({ x: 5, y: 5 })
   })
 
-  it('should start box selection with shift key', () => {
+  it('[U02598] should start box selection with shift key', () => {
     mapEditor.handlePointerDown(5, 5, { button: 0, shiftKey: true })
     const state = mapEditor.getMapEditorState()
     expect(state.dragging).toBe(true)
     expect(state.boxStart).toEqual({ x: 5, y: 5 })
   })
 
-  it('should handle pointer move', () => {
+  it('[U02599] should handle pointer move', () => {
     mapEditor.handlePointerDown(5, 5, { button: 0 })
     mapEditor.handlePointerMove(6, 6, 1)
     const state = mapEditor.getMapEditorState()
     expect(state.hoverTile).toEqual({ x: 6, y: 6 })
   })
 
-  it('should not paint when not dragging', () => {
+  it('[U02600] should not paint when not dragging', () => {
     mapEditor.handlePointerMove(5, 5, 0)
     const state = mapEditor.getMapEditorState()
     expect(state.lastPaintKey).toBeNull()
   })
 
-  it('should handle pointer up', () => {
+  it('[U02601] should handle pointer up', () => {
     mapEditor.handlePointerDown(5, 5, { button: 0 })
     mapEditor.handlePointerUp(5, 5, { button: 0 })
     const state = mapEditor.getMapEditorState()
@@ -368,14 +368,14 @@ describe('mapEditor - Pointer Interactions', () => {
     expect(state.boxStart).toBeNull()
   })
 
-  it('should complete box fill on pointer up', () => {
+  it('[U02602] should complete box fill on pointer up', () => {
     mapEditor.handlePointerDown(0, 0, { button: 0, shiftKey: true })
     mapEditor.handlePointerUp(1, 1, { button: 0, shiftKey: true })
     const state = mapEditor.getMapEditorState()
     expect(state.boxStart).toBeNull()
   })
 
-  it('should do nothing when editor is inactive', () => {
+  it('[U02603] should do nothing when editor is inactive', () => {
     mapEditor.deactivateMapEditMode()
     mapEditor.handlePointerDown(5, 5, { button: 0 })
     const state = mapEditor.getMapEditorState()
@@ -390,14 +390,14 @@ describe('mapEditor - Wheel Control', () => {
     mapEditor.setTileBrushById('grass')
   })
 
-  it('should cycle tile forward with negative wheel delta', () => {
+  it('[U02604] should cycle tile forward with negative wheel delta', () => {
     const initialIndex = mapEditor.getMapEditorState().currentTileIndex
     mapEditor.handleWheel(-1)
     const newIndex = mapEditor.getMapEditorState().currentTileIndex
     expect(newIndex).not.toBe(initialIndex)
   })
 
-  it('should cycle tile backward with positive wheel delta', () => {
+  it('[U02605] should cycle tile backward with positive wheel delta', () => {
     mapEditor.setTileBrushById('rock')
     const initialIndex = mapEditor.getMapEditorState().currentTileIndex
     mapEditor.handleWheel(1)
@@ -405,7 +405,7 @@ describe('mapEditor - Wheel Control', () => {
     expect(newIndex).not.toBe(initialIndex)
   })
 
-  it('should not cycle when editor is inactive', () => {
+  it('[U02606] should not cycle when editor is inactive', () => {
     mapEditor.deactivateMapEditMode()
     const initialIndex = mapEditor.getMapEditorState().currentTileIndex
     mapEditor.handleWheel(-1)
@@ -420,7 +420,7 @@ describe('mapEditor - Rendering', () => {
     mapEditor.activateMapEditMode()
   })
 
-  it('should render overlay when active', () => {
+  it('[U02607] should render overlay when active', () => {
     const ctx = {
       save: vi.fn(),
       restore: vi.fn(),
@@ -442,7 +442,7 @@ describe('mapEditor - Rendering', () => {
     expect(() => mapEditor.renderMapEditorOverlay(ctx, scrollOffset)).not.toThrow()
   })
 
-  it('should not render when inactive', () => {
+  it('[U02608] should not render when inactive', () => {
     mapEditor.deactivateMapEditMode()
     const ctx = {
       save: vi.fn(),
@@ -453,7 +453,7 @@ describe('mapEditor - Rendering', () => {
     expect(ctx.save).not.toHaveBeenCalled()
   })
 
-  it('should render building preview', () => {
+  it('[U02609] should render building preview', () => {
     mapEditor.setBrushFromProduction('building', 'powerPlant')
     const ctx = {
       save: vi.fn(),
@@ -475,7 +475,7 @@ describe('mapEditor - Rendering', () => {
     expect(ctx.restore).toHaveBeenCalled()
   })
 
-  it('should render unit preview', () => {
+  it('[U02610] should render unit preview', () => {
     mapEditor.setBrushFromProduction('unit', 'lightTank')
     const ctx = {
       save: vi.fn(),
@@ -505,7 +505,7 @@ describe('mapEditor - Tech Tree Management', () => {
     gameState.availableBuildingTypes = new Set(['powerPlant'])
   })
 
-  it('should unlock all units and buildings when activating', () => {
+  it('[U02611] should unlock all units and buildings when activating', () => {
     const controller = {
       forceUnlockUnitType: vi.fn(),
       forceUnlockBuildingType: vi.fn(),
@@ -522,7 +522,7 @@ describe('mapEditor - Tech Tree Management', () => {
     expect(controller.updateBuildingButtonStates).toHaveBeenCalled()
   })
 
-  it('should restore tech tree state when deactivating', () => {
+  it('[U02612] should restore tech tree state when deactivating', () => {
     const controller = {
       forceUnlockUnitType: vi.fn(),
       forceUnlockBuildingType: vi.fn(),
@@ -546,7 +546,7 @@ describe('mapEditor - Tech Tree Management', () => {
     expect(controller.updateBuildingButtonStates).toHaveBeenCalled()
   })
 
-  it('should not crash when deactivating without production controller', () => {
+  it('[U02613] should not crash when deactivating without production controller', () => {
     mapEditor.setMapEditorProductionController(null)
     mapEditor.activateMapEditMode()
     expect(() => mapEditor.deactivateMapEditMode()).not.toThrow()
@@ -564,7 +564,7 @@ describe('mapEditor - Building Placement', () => {
     gameState.occupancyMap = Array(10).fill(null).map(() => Array(10).fill(0))
   })
 
-  it('should place building when brush is set to building', async() => {
+  it('[U02614] should place building when brush is set to building', async() => {
     const { createBuilding, placeBuilding, updatePowerSupply } = await import('../../src/buildings.js')
     const { updateDangerZoneMaps } = await import('../../src/game/dangerZoneMap.js')
 
@@ -577,7 +577,7 @@ describe('mapEditor - Building Placement', () => {
     expect(updateDangerZoneMaps).toHaveBeenCalled()
   })
 
-  it('should not place building when canPlaceBuilding returns false', async() => {
+  it('[U02615] should not place building when canPlaceBuilding returns false', async() => {
     const { canPlaceBuilding, createBuilding } = await import('../../src/buildings.js')
     canPlaceBuilding.mockReturnValueOnce(false)
 
@@ -589,7 +589,7 @@ describe('mapEditor - Building Placement', () => {
     expect(gameState.buildings.length).toBe(initialLength)
   })
 
-  it('should initialize buildings array if not present', () => {
+  it('[U02616] should initialize buildings array if not present', () => {
     gameState.buildings = undefined
     mapEditor.setBrushFromProduction('building', 'powerPlant')
     mapEditor.handlePointerDown(5, 5, { button: 0 })
@@ -608,7 +608,7 @@ describe('mapEditor - Unit Placement', () => {
     gameState.units = []
   })
 
-  it('should place unit when brush is set to unit', async() => {
+  it('[U02617] should place unit when brush is set to unit', async() => {
     const { createUnit } = await import('../../src/units.js')
 
     mapEditor.setBrushFromProduction('unit', 'lightTank')
@@ -624,7 +624,7 @@ describe('mapEditor - Unit Placement', () => {
     expect(gameState.units.length).toBeGreaterThan(0)
   })
 
-  it('should not place unit on water tile', () => {
+  it('[U02618] should not place unit on water tile', () => {
     gameState.mapGrid[5][5].type = 'water'
 
     mapEditor.setBrushFromProduction('unit', 'lightTank')
@@ -634,7 +634,7 @@ describe('mapEditor - Unit Placement', () => {
     expect(gameState.units.length).toBe(initialLength)
   })
 
-  it('should not place unit on rock tile', () => {
+  it('[U02619] should not place unit on rock tile', () => {
     gameState.mapGrid[5][5].type = 'rock'
 
     mapEditor.setBrushFromProduction('unit', 'lightTank')
@@ -644,7 +644,7 @@ describe('mapEditor - Unit Placement', () => {
     expect(gameState.units.length).toBe(initialLength)
   })
 
-  it('should remove existing unit at position before placing new one', async() => {
+  it('[U02620] should remove existing unit at position before placing new one', async() => {
     const { createUnit } = await import('../../src/units.js')
     createUnit.mockReturnValue({
       id: 'unit-1',
@@ -670,7 +670,7 @@ describe('mapEditor - Unit Placement', () => {
     expect(gameState.units.length).toBe(1)
   })
 
-  it('should initialize units array if not present', () => {
+  it('[U02621] should initialize units array if not present', () => {
     gameState.units = undefined
     mapEditor.setBrushFromProduction('unit', 'lightTank')
     mapEditor.handlePointerDown(5, 5, { button: 0 })
@@ -693,7 +693,7 @@ describe('mapEditor - Tile Painting', () => {
     gameState.occupancyMap = Array(10).fill(null).map(() => Array(10).fill(0))
   })
 
-  it('should paint grass tile', () => {
+  it('[U02622] should paint grass tile', () => {
     mapEditor.setTileBrushById('grass')
     mapEditor.handlePointerDown(5, 5, { button: 0 })
 
@@ -701,7 +701,7 @@ describe('mapEditor - Tile Painting', () => {
     expect(tile.type).toBe('land')
   })
 
-  it('should paint street tile', () => {
+  it('[U02623] should paint street tile', () => {
     mapEditor.setTileBrushById('street')
     mapEditor.handlePointerDown(5, 5, { button: 0 })
 
@@ -709,7 +709,7 @@ describe('mapEditor - Tile Painting', () => {
     expect(tile.type).toBe('street')
   })
 
-  it('should paint rock tile', () => {
+  it('[U02624] should paint rock tile', () => {
     mapEditor.setTileBrushById('rock')
     mapEditor.handlePointerDown(5, 5, { button: 0 })
 
@@ -717,7 +717,7 @@ describe('mapEditor - Tile Painting', () => {
     expect(tile.type).toBe('rock')
   })
 
-  it('should paint water tile', () => {
+  it('[U02625] should paint water tile', () => {
     mapEditor.setTileBrushById('water')
     mapEditor.handlePointerDown(5, 5, { button: 0 })
 
@@ -725,7 +725,7 @@ describe('mapEditor - Tile Painting', () => {
     expect(tile.type).toBe('water')
   })
 
-  it('should paint ore on existing tile', () => {
+  it('[U02626] should paint ore on existing tile', () => {
     mapEditor.setTileBrushById('ore')
     mapEditor.handlePointerDown(5, 5, { button: 0 })
 
@@ -733,7 +733,7 @@ describe('mapEditor - Tile Painting', () => {
     expect(tile.ore).toBe(true)
   })
 
-  it('should not paint ore on tile with building', () => {
+  it('[U02627] should not paint ore on tile with building', () => {
     // Reset tile to ensure no ore
     gameState.mapGrid[5][5] = { type: 'land', ore: false, seedCrystal: false }
     gameState.buildings = [{
@@ -754,7 +754,7 @@ describe('mapEditor - Tile Painting', () => {
     expect(tile.type).toBe('land')
   })
 
-  it('should not paint ore on tile with factory', () => {
+  it('[U02628] should not paint ore on tile with factory', () => {
     gameState.factories = [{
       x: 5,
       y: 5,
@@ -769,7 +769,7 @@ describe('mapEditor - Tile Painting', () => {
     expect(tile.ore).toBe(false)
   })
 
-  it('should not paint ore on occupied tile', () => {
+  it('[U02629] should not paint ore on occupied tile', () => {
     gameState.occupancyMap[5][5] = 1
 
     mapEditor.setTileBrushById('ore')
@@ -779,7 +779,7 @@ describe('mapEditor - Tile Painting', () => {
     expect(tile.ore).toBe(false)
   })
 
-  it('notifies tile updates and schedules renders for painted tiles', () => {
+  it('[U02630] notifies tile updates and schedules renders for painted tiles', () => {
     const notifier = vi.fn()
     const scheduler = vi.fn()
     const textureManager = {}
@@ -802,7 +802,7 @@ describe('mapEditor - Tile Painting', () => {
     globalThis.requestAnimationFrame = originalRaf
   })
 
-  it('should erase with shift + right-click', () => {
+  it('[U02631] should erase with shift + right-click', () => {
     gameState.mapGrid[5][5].type = 'rock'
 
     const tile = gameState.mapGrid[5][5]
@@ -811,7 +811,7 @@ describe('mapEditor - Tile Painting', () => {
     expect(tile.type).toBeTruthy()
   })
 
-  it('should erase with cmd/ctrl + left-click', () => {
+  it('[U02632] should erase with cmd/ctrl + left-click', () => {
     gameState.mapGrid[5][5].type = 'rock'
     mapEditor.handlePointerDown(5, 5, { button: 0, metaKey: true })
 
@@ -846,7 +846,7 @@ describe('mapEditor - Building Removal', () => {
     }
   })
 
-  it('should remove building when erasing over it', () => {
+  it('[U02633] should remove building when erasing over it', () => {
     const initialCount = gameState.buildings.length
     mapEditor.handlePointerDown(5, 5, { button: 2, shiftKey: true })
 
@@ -855,7 +855,7 @@ describe('mapEditor - Building Removal', () => {
     expect(gameState.buildings.length).toBeLessThanOrEqual(initialCount)
   })
 
-  it('should clear occupancy map when removing building', () => {
+  it('[U02634] should clear occupancy map when removing building', () => {
 
 
     // Check that occupancy was cleared for the building area if building was removed
@@ -863,7 +863,7 @@ describe('mapEditor - Building Removal', () => {
     expect(gameState.occupancyMap[5][5]).toBeDefined()
   })
 
-  it('should remove building when clicking any tile within its bounds', () => {
+  it('[U02635] should remove building when clicking any tile within its bounds', () => {
     const initialCount = gameState.buildings.length
     mapEditor.handlePointerDown(6, 6, { button: 2, shiftKey: true })
     // Should remove building when clicking any tile within its bounds
@@ -877,29 +877,29 @@ describe('mapEditor - Edge Cases', () => {
     mapEditor.activateMapEditMode()
   })
 
-  it('should handle empty mapGrid gracefully', () => {
+  it('[U02636] should handle empty mapGrid gracefully', () => {
     gameState.mapGrid = []
     expect(() => mapEditor.handlePointerDown(5, 5, { button: 0 })).not.toThrow()
   })
 
-  it('should handle missing tile gracefully', () => {
+  it('[U02637] should handle missing tile gracefully', () => {
     gameState.mapGrid = [[]]
     expect(() => mapEditor.handlePointerDown(5, 5, { button: 0 })).not.toThrow()
   })
 
-  it('should handle null units array', () => {
+  it('[U02638] should handle null units array', () => {
     gameState.units = null
     mapEditor.setBrushFromProduction('unit', 'lightTank')
     expect(() => mapEditor.handlePointerDown(5, 5, { button: 0 })).not.toThrow()
   })
 
-  it('should handle undefined buildings array', () => {
+  it('[U02639] should handle undefined buildings array', () => {
     gameState.buildings = undefined
     mapEditor.setBrushFromProduction('building', 'powerPlant')
     expect(() => mapEditor.handlePointerDown(5, 5, { button: 0 })).not.toThrow()
   })
 
-  it('should not paint same tile twice in one stroke', () => {
+  it('[U02640] should not paint same tile twice in one stroke', () => {
     gameState.mapGrid = [[{ type: 'land', ore: false, seedCrystal: false }]]
 
     mapEditor.setTileBrushById('rock')
@@ -913,12 +913,12 @@ describe('mapEditor - Edge Cases', () => {
     expect(tile1).toBe(tile2)
   })
 
-  it('should handle brush without payload', () => {
+  it('[U02641] should handle brush without payload', () => {
     mapEditor.setBrushFromProduction('building', null)
     expect(() => mapEditor.handlePointerDown(5, 5, { button: 0 })).not.toThrow()
   })
 
-  it('should handle invalid building type', () => {
+  it('[U02642] should handle invalid building type', () => {
     mapEditor.setBrushFromProduction('building', 'nonExistentBuilding')
     expect(() => mapEditor.handlePointerDown(5, 5, { button: 0 })).not.toThrow()
   })

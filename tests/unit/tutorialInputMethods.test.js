@@ -20,17 +20,17 @@ afterEach(() => { keybindingManager.resetAll() })
 describe('tutorial progress migration', () => {
   const all = buildTutorialSteps()
   const desktop = all.filter(step => !step.mobileOnly)
-  it('starts fresh tutorials with the interactive chooser and retains the original welcome', () => {
+  it('[U04490] starts fresh tutorials with the interactive chooser and retains the original welcome', () => {
     expect(desktop[0]).toMatchObject({ id: 'input-method', interactive: true })
     expect(desktop[1].id).toBe('welcome')
     expect(migrateTutorialProgress(null, desktop).stepId).toBe('input-method')
   })
-  it('preserves the meaning of old desktop and mobile index-only progress', () => {
+  it('[U04491] preserves the meaning of old desktop and mobile index-only progress', () => {
     expect(migrateTutorialProgress({ stepIndex: 1, completed: false }, desktop)).toMatchObject({ stepId: 'resources', stepIndex: 2, version: 2 })
     expect(migrateTutorialProgress({ stepIndex: 1, completed: false }, all)).toMatchObject({ stepId: 'mobile-sidebar-gestures', stepIndex: 2, version: 2 })
     expect(migrateTutorialProgress({ stepIndex: 2, completed: false }, all)).toMatchObject({ stepId: 'resources', stepIndex: 3, version: 2 })
   })
-  it('uses stable IDs when switching layouts and does not reopen completed tutorials', () => {
+  it('[U04492] uses stable IDs when switching layouts and does not reopen completed tutorials', () => {
     expect(migrateTutorialProgress({ version: 2, stepId: 'resources', stepIndex: 3 }, desktop, all).stepIndex).toBe(2)
     expect(migrateTutorialProgress({ version: 2, stepId: 'mobile-sidebar-gestures', stepIndex: 2 }, desktop, all).stepId).toBe('resources')
     expect(migrateTutorialProgress({ version: 2, stepId: 'input-method', resumeAfterInputStepId: 'mobile-sidebar-gestures' }, desktop, all).resumeAfterInputStepId).toBe('resources')
@@ -39,7 +39,7 @@ describe('tutorial progress migration', () => {
 })
 
 describe('input method guide', () => {
-  it('offers four accessible large-button choices and settings without changing bindings', () => {
+  it('[U04493] offers four accessible large-button choices and settings without changing bindings', () => {
     const onChoose = vi.fn()
     const onOpenSettings = vi.fn()
     const before = JSON.parse(keybindingManager.exportBindings())
@@ -60,7 +60,7 @@ describe('input method guide', () => {
     expect(document.querySelector('.input-method-guide__schematic--gamepad')).not.toBeNull()
     expect(JSON.parse(keybindingManager.exportBindings()).bindings).toEqual(before.bindings)
   })
-  it('reads current keyboard mappings and refreshes the displayed guide', () => {
+  it('[U04494] reads current keyboard mappings and refreshes the displayed guide', () => {
     const guide = createInputMethodGuide({ selected: 'trackpad', onChoose: vi.fn(), onOpenSettings: vi.fn() })
     document.body.append(guide.element)
     keybindingManager.updateBinding('keyboard', 'escape', 'q')
@@ -70,7 +70,7 @@ describe('input method guide', () => {
     expect(document.body.textContent).toContain('fire with f')
     expect(inputAwareStepText({ id: 'deselect' }, 'trackpad')).toContain('Press q')
   })
-  it('resolves active gamepad overrides and labels unbound actions instead of inventing defaults', () => {
+  it('[U04495] resolves active gamepad overrides and labels unbound actions instead of inventing defaults', () => {
     const store = getGamepadStore()
     placeGamepadBinding(store, { slot: 0, commandId: 'leftClick', input: { type: 'button', index: 5 } })
     placeGamepadBinding(store, { slot: 0, commandId: 'rightClick', input: null })
@@ -79,7 +79,7 @@ describe('input method guide', () => {
     expect(data.rows.find(row => row[0] === 'Deselect / cancel')[1]).toContain('Unbound')
     expect(inputAwareStepText({ id: 'select-single' }, 'gamepad')).toContain('Button 5')
   })
-  it('adapts selection and command text to the chosen method rather than screen size', () => {
+  it('[U04496] adapts selection and command text to the chosen method rather than screen size', () => {
     const select = buildTutorialSteps().find(step => step.id === 'select-single')
     const deselect = buildTutorialSteps().find(step => step.id === 'deselect')
     expect(getTextForDevice(select, 'touch')).toContain('tap')

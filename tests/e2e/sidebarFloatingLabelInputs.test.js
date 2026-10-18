@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 
 test.describe('Sidebar floating label inputs', () => {
-  test('renders compact floating labels with non-gradient borderless styling', async({ page }) => {
+  test('[E00107] renders compact floating labels with non-gradient borderless styling', async({ page }) => {
     await page.goto('/')
 
     await page.waitForSelector('#sidebar', { state: 'visible' })

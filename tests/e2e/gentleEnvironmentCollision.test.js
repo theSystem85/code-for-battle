@@ -12,7 +12,7 @@ test.describe('Gentle environment collision response', () => {
     await page.waitForFunction(() => window.gameState?.gameStarted === true, { timeout: 30000 })
   })
 
-  test('ground units no longer get strongly shoved backwards when pressing into a building tile', async({ page }) => {
+  test('[E00049] ground units no longer get strongly shoved backwards when pressing into a building tile', async({ page }) => {
     const result = await page.evaluate(async() => {
       const { gameState } = await import('/src/gameState.js')
       const { createBuilding, placeBuilding } = await import('/src/buildings.js')

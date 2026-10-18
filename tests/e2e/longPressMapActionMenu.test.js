@@ -39,7 +39,7 @@ async function hold(page, point, ms = 500) {
   await page.mouse.up()
 }
 
-test('desktop hold opens, release is consumed, short click and movement do not open', async({ page }) => {
+test('[E00060] desktop hold opens, release is consumed, short click and movement do not open', async({ page }) => {
   const point = await prepare(page)
   await page.mouse.click(point.x, point.y)
   await expect(menu(page)).toBeHidden()
@@ -65,7 +65,7 @@ test('desktop hold opens, release is consumed, short click and movement do not o
   expect(await page.evaluate(() => ({ forced: window.__regression.tank.forcedAttack, ground: window.__regression.tank.target?.isGroundTarget }))).toEqual({ forced: true, ground: true })
 })
 
-test('hold and automation orders move units and take effect when they arrive', async({ page }) => {
+test('[E00061] hold and automation orders move units and take effect when they arrive', async({ page }) => {
   const point = await prepare(page)
   await hold(page, point)
   await choose(page, 'defendHoldAt')
@@ -81,7 +81,7 @@ test('hold and automation orders move units and take effect when they arrive', a
   await expect.poll(() => page.evaluate(() => window.__regression.tank.policyBindings?.some(b => b.policyId === 'map-arrival-test') || false), { timeout: 30000 }).toBe(true)
 })
 
-test('settings change hold duration and browser agent API exposes every action', async({ page }) => {
+test('[E00062] settings change hold duration and browser agent API exposes every action', async({ page }) => {
   const point = await prepare(page)
   await page.evaluate(async() => {
     const { openSettingsModal } = await import('/src/ui/settingsModal.js')
@@ -131,7 +131,7 @@ async function labelOverflow(page) {
   })
 }
 
-test('default hold is 1000 ms and every label fits inside its round button', async({ page }) => {
+test('[E00063] default hold is 1000 ms and every label fits inside its round button', async({ page }) => {
   const point = await prepare(page)
   await page.evaluate(async() => {
     const { DEFAULT_MAP_ACTION_LONG_PRESS_MS } = await import('/src/config.js')
@@ -163,7 +163,7 @@ test('default hold is 1000 ms and every label fits inside its round button', asy
 
 test.describe('mobile map holds', () => {
   test.use({ hasTouch: true, isMobile: true, viewport: { width: 900, height: 700 } })
-  test('touch hold opens and a two-finger gesture cancels', async({ page, context }) => {
+  test('[E00064] touch hold opens and a two-finger gesture cancels', async({ page, context }) => {
     const point = await prepare(page)
     const cdp = await context.newCDPSession(page)
     const first = { x: point.x, y: point.y, id: 1 }

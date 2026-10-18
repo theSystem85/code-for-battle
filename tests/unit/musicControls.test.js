@@ -30,7 +30,7 @@ describe('sidebar music controls', () => {
     el.dispatchEvent(event)
   }
 
-  it('uses the custom tooltip, never a native title attribute', () => {
+  it('[U03113] uses the custom tooltip, never a native title attribute', () => {
     const toggle = document.getElementById('musicControl')
     expect(toggle.hasAttribute('title')).toBe(false)
     expect(document.getElementById('musicNextButton').hasAttribute('title')).toBe(false)
@@ -42,7 +42,7 @@ describe('sidebar music controls', () => {
     expect(tip.hidden).toBe(true)
   })
 
-  it('shows the title on touch long-press without skipping', async() => {
+  it('[U03114] shows the title on touch long-press without skipping', async() => {
     vi.useFakeTimers()
     const next = document.getElementById('musicNextButton')
     pointer(next, 'pointerdown', 'touch')

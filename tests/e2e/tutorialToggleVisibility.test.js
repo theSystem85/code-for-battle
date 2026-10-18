@@ -30,7 +30,7 @@ for (const phone of [false, true]) {
     } : {})
 
     for (const path of ['skip', 'settings', 'completion']) {
-      test(`${path} hides the dock across layout changes and reload`, async({ page }) => {
+      test(`[E00127] ${path} hides the dock across layout changes and reload`, async({ page }) => {
         await page.addInitScript(() => {
           if (!sessionStorage.getItem('tutorial-toggle-seeded')) {
             localStorage.setItem('rts_tutorial_settings', JSON.stringify({ showTutorial: true, speechEnabled: false }))

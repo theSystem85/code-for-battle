@@ -102,7 +102,7 @@ async function collectRouteEvidence(page, route, speedPxPerFrame, durationMs) {
 test.describe('Rendering pipeline strict 75 FPS diagnostics', () => {
   test.skip(!RUN_BENCHMARK, 'Set PERF_RENDERING_PIPELINE=1 to run the opt-in rendering pipeline benchmark.')
 
-  test('captures cold traversal, repeat route, tails, capabilities and resize evidence', async({ browser, baseURL }, testInfo) => {
+  test('[E00095] captures cold traversal, repeat route, tails, capabilities and resize evidence', async({ browser, baseURL }, testInfo) => {
     testInfo.setTimeout(Math.max(180000, DURATION_MS * 20))
     const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 2 })
     const page = await context.newPage()

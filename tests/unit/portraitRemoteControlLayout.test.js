@@ -83,7 +83,7 @@ function pointer(type, pointerId, clientX, clientY) {
 }
 
 describe('portrait remote-control joystick layout', () => {
-  it('places both sticks above the action buttons and the build bar on a phone', () => {
+  it('[U03432] places both sticks above the action buttons and the build bar on a phone', () => {
     const layout = computePortraitRemoteJoystickLayout({
       ...IPHONE_PORTRAIT,
       sidebarMode: 'condensed'
@@ -105,7 +105,7 @@ describe('portrait remote-control joystick layout', () => {
     })
   })
 
-  it('drops the build bar offset when the portrait sidebar is collapsed', () => {
+  it('[U03433] drops the build bar offset when the portrait sidebar is collapsed', () => {
     const condensed = computePortraitRemoteJoystickLayout({
       ...IPHONE_PORTRAIT,
       sidebarMode: 'condensed'
@@ -123,7 +123,7 @@ describe('portrait remote-control joystick layout', () => {
     )
   })
 
-  it('keeps side-by-side sticks inside safe-area insets without overlapping', () => {
+  it('[U03434] keeps side-by-side sticks inside safe-area insets without overlapping', () => {
     const layout = computePortraitRemoteJoystickLayout({
       viewportWidth: 390,
       viewportHeight: 844,
@@ -139,7 +139,7 @@ describe('portrait remote-control joystick layout', () => {
     expect(left.left + left.width).toBeLessThanOrEqual(right.left)
   })
 
-  it('shrinks sticks that would otherwise overlap on a narrow portrait width', () => {
+  it('[U03435] shrinks sticks that would otherwise overlap on a narrow portrait width', () => {
     const layout = computePortraitRemoteJoystickLayout({
       viewportWidth: 200,
       viewportHeight: 400,
@@ -159,7 +159,7 @@ describe('portrait remote-control joystick layout', () => {
     expect(rectsOverlap(left, right)).toBe(false)
   })
 
-  it('stacks sticks in the map strip when the expanded portrait sidebar leaves no room', () => {
+  it('[U03436] stacks sticks in the map strip when the expanded portrait sidebar leaves no room', () => {
     const layout = computePortraitRemoteJoystickLayout({
       viewportWidth: 390,
       viewportHeight: 844,
@@ -180,7 +180,7 @@ describe('portrait remote-control joystick layout', () => {
     expect(upper.bottom).toBeGreaterThanOrEqual(lower.bottom + lower.height)
   })
 
-  it('keeps sticks below the top safe area when the viewport is short', () => {
+  it('[U03437] keeps sticks below the top safe area when the viewport is short', () => {
     const safeTop = 50
     const layout = computePortraitRemoteJoystickLayout({
       viewportWidth: 390,
@@ -193,7 +193,7 @@ describe('portrait remote-control joystick layout', () => {
     expect(stickTopFromTop).toBeGreaterThanOrEqual(safeTop + PORTRAIT_REMOTE_JOYSTICK_LIMITS.topClearance)
   })
 
-  it('maps a touch to the same vector in portrait and landscape positions', () => {
+  it('[U03438] maps a touch to the same vector in portrait and landscape positions', () => {
     const portrait = vectorFromJoystickCenter(
       { left: 16, top: 620, width: 80, height: 80 },
       16,
@@ -232,7 +232,7 @@ describe('portrait remote-control joystick input', () => {
     window.debugGetSelectedUnits = () => [unit]
   }
 
-  it('keeps sticks active when rotating from landscape to portrait and back', () => {
+  it('[U03439] keeps sticks active when rotating from landscape to portrait and back', () => {
     select({ id: 'tank-1', type: 'tank', owner: 'player1', movement: { speed: 1 } })
     const container = document.getElementById('mobileJoystickContainer')
 
@@ -260,7 +260,7 @@ describe('portrait remote-control joystick input', () => {
     expect(container.getAttribute('data-selection-active')).toBe('true')
   })
 
-  it('fires from a portrait left-stick tap and clears fire when the tap ends', () => {
+  it('[U03440] fires from a portrait left-stick tap and clears fire when the tap ends', () => {
     vi.useFakeTimers()
     select({ id: 'tank-1', type: 'tank', owner: 'player1', movement: { speed: 1 } })
     handleMobileJoystickLayoutChange({ mode: 'portrait', enabled: false })
@@ -274,7 +274,7 @@ describe('portrait remote-control joystick input', () => {
     expect(getRemoteControlActionState('fire')).toBe(0)
   })
 
-  it('drives a vehicle forward from the portrait left stick', () => {
+  it('[U03441] drives a vehicle forward from the portrait left stick', () => {
     select({ id: 'hv-1', type: 'harvester', owner: 'player1', movement: { speed: 1 } })
     handleMobileJoystickLayoutChange({ mode: 'portrait', enabled: false })
     const left = mockBaseRect('left', { left: 16, top: 640, width: 80, height: 80 })
@@ -287,7 +287,7 @@ describe('portrait remote-control joystick input', () => {
     expect(getRemoteControlActionState('forward')).toBe(0)
   })
 
-  it('turns portrait joysticks off outside mobile layouts', () => {
+  it('[U03442] turns portrait joysticks off outside mobile layouts', () => {
     select({ id: 'tank-1', type: 'tank', owner: 'player1', movement: { speed: 1 } })
     const container = document.getElementById('mobileJoystickContainer')
     handleMobileJoystickLayoutChange({ mode: 'portrait', enabled: false })
@@ -331,7 +331,7 @@ describe('applyMobileSidebarLayout joystick visibility', () => {
     Object.defineProperty(window, 'visualViewport', { configurable: true, value: null })
   })
 
-  it('enables portrait placement and leaves landscape on the stylesheet defaults', () => {
+  it('[U03443] enables portrait placement and leaves landscape on the stylesheet defaults', () => {
     document.body.classList.add('mobile-portrait', 'sidebar-condensed')
     document.body.style.setProperty('--safe-area-bottom', '34px')
     document.body.style.setProperty('--safe-area-top', '47px')

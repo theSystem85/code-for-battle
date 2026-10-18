@@ -23,7 +23,7 @@ test.describe('Airborne render layering', () => {
     })
   })
 
-  test('renders airborne units after buildings and grounded units in the live frame pipeline', async({ page }) => {
+  test('[E00001] renders airborne units after buildings and grounded units in the live frame pipeline', async({ page }) => {
     test.setTimeout(120000)
 
     await page.goto('/?seed=11')

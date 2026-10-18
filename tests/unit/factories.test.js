@@ -64,7 +64,7 @@ describe('factories.js', () => {
 
   describe('initFactories', () => {
     describe('Factory Creation', () => {
-      it('should create factories for 2 players by default', () => {
+      it('[U01507] should create factories for 2 players by default', () => {
         gameState.playerCount = 2
 
         initFactories(factories, mapGrid)
@@ -72,7 +72,7 @@ describe('factories.js', () => {
         expect(factories.length).toBe(2)
       })
 
-      it('should create factories for 3 players when playerCount is 3', () => {
+      it('[U01508] should create factories for 3 players when playerCount is 3', () => {
         gameState.playerCount = 3
 
         initFactories(factories, mapGrid)
@@ -80,7 +80,7 @@ describe('factories.js', () => {
         expect(factories.length).toBe(3)
       })
 
-      it('should create factories for 4 players when playerCount is 4', () => {
+      it('[U01509] should create factories for 4 players when playerCount is 4', () => {
         gameState.playerCount = 4
 
         initFactories(factories, mapGrid)
@@ -88,7 +88,7 @@ describe('factories.js', () => {
         expect(factories.length).toBe(4)
       })
 
-      it('should clear existing factories before creating new ones', () => {
+      it('[U01510] should clear existing factories before creating new ones', () => {
         factories.push({ id: 'old-factory', type: 'constructionYard' })
 
         initFactories(factories, mapGrid)
@@ -96,7 +96,7 @@ describe('factories.js', () => {
         expect(factories.find(f => f.id === 'old-factory')).toBeUndefined()
       })
 
-      it('should call createBuilding for each factory', () => {
+      it('[U01511] should call createBuilding for each factory', () => {
         gameState.playerCount = 2
 
         initFactories(factories, mapGrid)
@@ -107,7 +107,7 @@ describe('factories.js', () => {
     })
 
     describe('Factory Properties', () => {
-      it('should set factory owner to corresponding player id', () => {
+      it('[U01512] should set factory owner to corresponding player id', () => {
         gameState.playerCount = 2
 
         initFactories(factories, mapGrid)
@@ -116,7 +116,7 @@ describe('factories.js', () => {
         expect(factories[1].owner).toBe('player2')
       })
 
-      it('should set factory id to player id', () => {
+      it('[U01513] should set factory id to player id', () => {
         gameState.playerCount = 2
 
         initFactories(factories, mapGrid)
@@ -125,7 +125,7 @@ describe('factories.js', () => {
         expect(factories[1].id).toBe('player2')
       })
 
-      it('should mark factories as construction finished', () => {
+      it('[U01514] should mark factories as construction finished', () => {
         initFactories(factories, mapGrid)
 
         factories.forEach(factory => {
@@ -133,7 +133,7 @@ describe('factories.js', () => {
         })
       })
 
-      it('should set initial budget for each factory', () => {
+      it('[U01515] should set initial budget for each factory', () => {
         initFactories(factories, mapGrid)
 
         factories.forEach(factory => {
@@ -141,7 +141,7 @@ describe('factories.js', () => {
         })
       })
 
-      it('should set productionCountdown to 0', () => {
+      it('[U01516] should set productionCountdown to 0', () => {
         initFactories(factories, mapGrid)
 
         factories.forEach(factory => {
@@ -149,7 +149,7 @@ describe('factories.js', () => {
         })
       })
 
-      it('should mark human player factory correctly', () => {
+      it('[U01517] should mark human player factory correctly', () => {
         gameState.humanPlayer = 'player1'
         gameState.playerCount = 2
 
@@ -161,7 +161,7 @@ describe('factories.js', () => {
     })
 
     describe('Factory Positioning', () => {
-      it('should place player1 factory in bottom-left area', () => {
+      it('[U01518] should place player1 factory in bottom-left area', () => {
         gameState.playerCount = 2
 
         initFactories(factories, mapGrid)
@@ -172,7 +172,7 @@ describe('factories.js', () => {
         expect(factory.y).toBeGreaterThan(50)
       })
 
-      it('should place player2 factory in top-right area', () => {
+      it('[U01519] should place player2 factory in top-right area', () => {
         gameState.playerCount = 2
 
         initFactories(factories, mapGrid)
@@ -183,7 +183,7 @@ describe('factories.js', () => {
         expect(factory.y).toBeLessThan(50)
       })
 
-      it('should place player3 factory in top-left area', () => {
+      it('[U01520] should place player3 factory in top-left area', () => {
         gameState.playerCount = 3
 
         initFactories(factories, mapGrid)
@@ -194,7 +194,7 @@ describe('factories.js', () => {
         expect(factory.y).toBeLessThan(50)
       })
 
-      it('should place player4 factory in bottom-right area', () => {
+      it('[U01521] should place player4 factory in bottom-right area', () => {
         gameState.playerCount = 4
 
         initFactories(factories, mapGrid)
@@ -207,7 +207,7 @@ describe('factories.js', () => {
     })
 
     describe('Map Grid Updates', () => {
-      it('should mark factory tiles with building reference', () => {
+      it('[U01522] should mark factory tiles with building reference', () => {
         initFactories(factories, mapGrid)
 
         const factory = factories[0]
@@ -218,7 +218,7 @@ describe('factories.js', () => {
         }
       })
 
-      it('should store original tile types before marking', () => {
+      it('[U01523] should store original tile types before marking', () => {
         initFactories(factories, mapGrid)
 
         factories.forEach(factory => {
@@ -227,7 +227,7 @@ describe('factories.js', () => {
         })
       })
 
-      it('should remove ore from factory tiles', () => {
+      it('[U01524] should remove ore from factory tiles', () => {
         // Place ore where factory will go
         const factoryX = 10 - 1 // Centered around x: 10
         const factoryY = 10 - 1
@@ -252,7 +252,7 @@ describe('factories.js', () => {
         })
       })
 
-      it('should clear texture variation cache for tiles with ore', () => {
+      it('[U01525] should clear texture variation cache for tiles with ore', () => {
         // Place ore with texture variation
         // Initialize factory area with ore and textureVariation
         gameState.playerCount = 2
@@ -277,7 +277,7 @@ describe('factories.js', () => {
         })
       })
 
-      it('should set undefined tiles to street type', () => {
+      it('[U01526] should set undefined tiles to street type', () => {
         // Create sparse map grid
         const sparseMap = []
         for (let y = 0; y < 100; y++) {
@@ -304,7 +304,7 @@ describe('factories.js', () => {
     })
 
     describe('Street Network - Two Factories', () => {
-      it('should create L-shaped street connection between 2 factories', () => {
+      it('[U01527] should create L-shaped street connection between 2 factories', () => {
         gameState.playerCount = 2
 
         initFactories(factories, mapGrid)
@@ -322,7 +322,7 @@ describe('factories.js', () => {
         expect(streetCount).toBeGreaterThan(0)
       })
 
-      it('should create streets with 2-tile thickness', () => {
+      it('[U01528] should create streets with 2-tile thickness', () => {
         gameState.playerCount = 2
 
         initFactories(factories, mapGrid)
@@ -344,7 +344,7 @@ describe('factories.js', () => {
     })
 
     describe('Street Network - Multiple Factories', () => {
-      it('should not throw when processing 4 factories', () => {
+      it('[U01529] should not throw when processing 4 factories', () => {
         gameState.playerCount = 4
 
         // Should not throw even if factories are far apart
@@ -357,7 +357,7 @@ describe('factories.js', () => {
   })
 
   describe('clearFactoryFromMapGrid', () => {
-    it('should clear building reference from factory tiles', () => {
+    it('[U01530] should clear building reference from factory tiles', () => {
       initFactories(factories, mapGrid)
       const factory = factories[0]
 
@@ -370,7 +370,7 @@ describe('factories.js', () => {
       }
     })
 
-    it('should restore original tile types', () => {
+    it('[U01531] should restore original tile types', () => {
       // Set up original tile types
       for (let y = 5; y < 10; y++) {
         for (let x = 5; x < 10; x++) {
@@ -391,7 +391,7 @@ describe('factories.js', () => {
       }
     })
 
-    it('should default to land type when no original tiles saved', () => {
+    it('[U01532] should default to land type when no original tiles saved', () => {
       initFactories(factories, mapGrid)
       const factory = factories[0]
 
@@ -407,7 +407,7 @@ describe('factories.js', () => {
       }
     })
 
-    it('should ensure ore property exists when restoring tiles', () => {
+    it('[U01533] should ensure ore property exists when restoring tiles', () => {
       initFactories(factories, mapGrid)
       const factory = factories[0]
       factory.originalTiles = null
@@ -428,7 +428,7 @@ describe('factories.js', () => {
       }
     })
 
-    it('should handle missing map grid rows gracefully', () => {
+    it('[U01534] should handle missing map grid rows gracefully', () => {
       initFactories(factories, mapGrid)
       const factory = factories[0]
 
@@ -439,7 +439,7 @@ describe('factories.js', () => {
       expect(() => clearFactoryFromMapGrid(factory, mapGrid)).not.toThrow()
     })
 
-    it('should handle missing map grid cells gracefully', () => {
+    it('[U01535] should handle missing map grid cells gracefully', () => {
       initFactories(factories, mapGrid)
       const factory = factories[0]
 
@@ -452,7 +452,7 @@ describe('factories.js', () => {
   })
 
   describe('Edge Cases', () => {
-    it('should handle undefined playerCount by defaulting to 2', () => {
+    it('[U01536] should handle undefined playerCount by defaulting to 2', () => {
       gameState.playerCount = undefined
 
       initFactories(factories, mapGrid)
@@ -460,7 +460,7 @@ describe('factories.js', () => {
       expect(factories.length).toBe(2)
     })
 
-    it('should handle zero playerCount by defaulting to 2', () => {
+    it('[U01537] should handle zero playerCount by defaulting to 2', () => {
       gameState.playerCount = 0
 
       // 0 is falsy, should default to 2
@@ -469,7 +469,7 @@ describe('factories.js', () => {
       expect(factories.length).toBe(2)
     })
 
-    it('should clip playerCount to maximum of 4', () => {
+    it('[U01538] should clip playerCount to maximum of 4', () => {
       gameState.playerCount = 6
 
       initFactories(factories, mapGrid)

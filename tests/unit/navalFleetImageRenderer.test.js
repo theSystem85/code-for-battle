@@ -14,18 +14,18 @@ afterEach(() => {
 })
 
 describe('battleship layered turret rendering', () => {
-  it('renders complete turret assemblies 30% smaller', () => {
+  it('[U03127] renders complete turret assemblies 30% smaller', () => {
     expect(BATTLESHIP_TURRET_RENDER_SCALE).toBe(0.7)
   })
 
-  it('renders inner turrets after their outer turret so they appear mounted higher', () => {
+  it('[U03128] renders inner turrets after their outer turret so they appear mounted higher', () => {
     expect(BATTLESHIP_TURRET_RENDER_ORDER.indexOf('foreInner'))
       .toBeGreaterThan(BATTLESHIP_TURRET_RENDER_ORDER.indexOf('foreOuter'))
     expect(BATTLESHIP_TURRET_RENDER_ORDER.indexOf('aftInner'))
       .toBeGreaterThan(BATTLESHIP_TURRET_RENDER_ORDER.indexOf('aftOuter'))
   })
 
-  it('does not render per-turret firing arcs for a selected battleship hull', () => {
+  it('[U03129] does not render per-turret firing arcs for a selected battleship hull', () => {
     globalThis.Image = class {
       constructor() {
         this.complete = true

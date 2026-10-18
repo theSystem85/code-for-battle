@@ -27,7 +27,7 @@ async function sampleRuntime(page, label) {
 test.describe('Loaded southeast destroyer performance', () => {
   test.skip(!RUN_PERF, 'Set PERF_SAVEGAME_DESTROYERS=1 to run this opt-in performance benchmark.')
 
-  test('keeps the loaded southeast destroyers within the fixed update budget', async({ page }, testInfo) => {
+  test('[E00104] keeps the loaded southeast destroyers within the fixed update budget', async({ page }, testInfo) => {
     test.setTimeout(90_000)
     await page.goto('/?monitor')
     await page.waitForSelector('#saveLoadMenu', { state: 'visible' })

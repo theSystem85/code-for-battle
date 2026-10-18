@@ -11,7 +11,7 @@ function group(label, tags, width = 1, height = width) {
 const labels = list => list.map(g => g.groupLabel).sort()
 
 describe('strict snow decoration placement', () => {
-  it('keeps universal vegetation off snow but still offers it to other biomes', () => {
+  it('[U04084] keeps universal vegetation off snow but still offers it to other biomes', () => {
     const pools = buildDecorationPools([
       group('universal-shrub', ['decorative', 'passable', 'universal', 'trees']),
       group('universal-rock', ['decorative', 'impassable', 'universal', 'rocks']),
@@ -24,7 +24,7 @@ describe('strict snow decoration placement', () => {
     expect(labels(pools.grass.single)).toEqual(['grass-tree', 'universal-rock', 'universal-shrub'])
   })
 
-  it('accepts a new snow-tagged winter sheet group (trees and shrubs) on snow only', () => {
+  it('[U04085] accepts a new snow-tagged winter sheet group (trees and shrubs) on snow only', () => {
     const pools = buildDecorationPools([
       group('winter-shrubs', ['decorative', 'passable', 'snow', 'shrubs', 'winter']),
       group('winter-forest', ['decorative', 'impassable', 'snow', 'trees', 'winter'], 2)
@@ -35,7 +35,7 @@ describe('strict snow decoration placement', () => {
     expect(pools.grass.multi).toEqual([])
   })
 
-  it('classifies vegetation tags', () => {
+  it('[U04086] classifies vegetation tags', () => {
     expect(isVegetationGroup(new Set(['universal', 'shrubs']))).toBe(true)
     expect(isVegetationGroup(new Set(['universal', 'rocks']))).toBe(false)
     expect(groupAllowedOnBiome(new Set(['universal', 'farm']), 'snow')).toBe(false)
@@ -43,7 +43,7 @@ describe('strict snow decoration placement', () => {
     expect(groupAllowedOnBiome(new Set(['snow', 'trees']), 'snow')).toBe(true)
   })
 
-  it('auto-registers any additional bundled dtv sheet pair, such as a winter sheet', () => {
+  it('[U04087] auto-registers any additional bundled dtv sheet pair, such as a winter sheet', () => {
     const warn = vi.fn()
     const dir = '/public/images/map/sprite_sheets/'
     const files = {}
@@ -62,7 +62,7 @@ describe('strict snow decoration placement', () => {
     expect(warn).toHaveBeenCalledTimes(4)
   })
 
-  it('never draws the green fallback ground details on snow tiles', () => {
+  it('[U04088] never draws the green fallback ground details on snow tiles', () => {
     const renderer = Object.create(OrganicTerrain.prototype)
     renderer.details = {}
     const ctx = { drawImage: vi.fn() }
@@ -79,7 +79,7 @@ describe('strict snow decoration placement', () => {
 })
 
 describe('dtv3_winter sheet', () => {
-  it('is snow-only vegetation with the allowed tags and grouped multi-tile trees', async() => {
+  it('[U04089] is snow-only vegetation with the allowed tags and grouped multi-tile trees', async() => {
     const { readFileSync } = await import('node:fs')
     const sheet = JSON.parse(readFileSync('public/images/map/sprite_sheets/dtv3_winter.json', 'utf8'))
     expect(sheet.sheetPath).toBe('images/map/sprite_sheets/dtv3_winter.webp')

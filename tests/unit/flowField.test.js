@@ -42,26 +42,26 @@ describe('flowField.js', () => {
 
   describe('FlowFieldManager', () => {
     describe('constructor', () => {
-      it('should initialize with empty flow fields map', () => {
+      it('[U01555] should initialize with empty flow fields map', () => {
         expect(manager.flowFields).toBeInstanceOf(Map)
         expect(manager.flowFields.size).toBe(0)
       })
 
-      it('should initialize with empty chokepoints map', () => {
+      it('[U01556] should initialize with empty chokepoints map', () => {
         expect(manager.chokepoints).toBeInstanceOf(Map)
         expect(manager.chokepoints.size).toBe(0)
       })
     })
 
     describe('clear', () => {
-      it('should clear all flow fields', () => {
+      it('[U01557] should clear all flow fields', () => {
         manager.generateFlowField(5, 5, 10, 10, mapGrid)
         expect(manager.flowFields.size).toBeGreaterThan(0)
         manager.clear()
         expect(manager.flowFields.size).toBe(0)
       })
 
-      it('should clear all chokepoints', () => {
+      it('[U01558] should clear all chokepoints', () => {
         manager.chokepoints.set('test', { x: 5, y: 5 })
         manager.clear()
         expect(manager.chokepoints.size).toBe(0)
@@ -69,7 +69,7 @@ describe('flowField.js', () => {
     })
 
     describe('cleanup', () => {
-      it('should remove expired flow fields', () => {
+      it('[U01559] should remove expired flow fields', () => {
         const field = manager.generateFlowField(5, 5, 10, 10, mapGrid)
         // Manually set creation time to past
         field.createdAt = performance.now() - 10000 // 10 seconds ago
@@ -77,13 +77,13 @@ describe('flowField.js', () => {
         expect(manager.flowFields.size).toBe(0)
       })
 
-      it('should keep valid flow fields', () => {
+      it('[U01560] should keep valid flow fields', () => {
         manager.generateFlowField(5, 5, 10, 10, mapGrid)
         manager.cleanup()
         expect(manager.flowFields.size).toBe(1)
       })
 
-      it('should limit cache size', () => {
+      it('[U01561] should limit cache size', () => {
         // Generate many flow fields
         for (let i = 0; i < 15; i++) {
           manager.generateFlowField(i, i, 15, 15, mapGrid)
@@ -94,38 +94,38 @@ describe('flowField.js', () => {
     })
 
     describe('isTilePassable', () => {
-      it('should return true for grass tiles', () => {
+      it('[U01562] should return true for grass tiles', () => {
         expect(manager.isTilePassable(mapGrid, 5, 5)).toBe(true)
       })
 
-      it('should return false for water tiles', () => {
+      it('[U01563] should return false for water tiles', () => {
         mapGrid[5][5].type = 'water'
         expect(manager.isTilePassable(mapGrid, 5, 5)).toBe(false)
       })
 
-      it('should return false for rock tiles', () => {
+      it('[U01564] should return false for rock tiles', () => {
         mapGrid[5][5].type = 'rock'
         expect(manager.isTilePassable(mapGrid, 5, 5)).toBe(false)
       })
 
-      it('should return false for tiles with buildings', () => {
+      it('[U01565] should return false for tiles with buildings', () => {
         mapGrid[5][5].building = { type: 'factory' }
         expect(manager.isTilePassable(mapGrid, 5, 5)).toBe(false)
       })
 
-      it('should return false for tiles with seed crystals', () => {
+      it('[U01566] should return false for tiles with seed crystals', () => {
         mapGrid[5][5].seedCrystal = true
         expect(manager.isTilePassable(mapGrid, 5, 5)).toBe(false)
       })
 
-      it('should return false for out of bounds tiles', () => {
+      it('[U01567] should return false for out of bounds tiles', () => {
         expect(manager.isTilePassable(mapGrid, -1, 5)).toBe(false)
         expect(manager.isTilePassable(mapGrid, 5, -1)).toBe(false)
         expect(manager.isTilePassable(mapGrid, 100, 5)).toBe(false)
         expect(manager.isTilePassable(mapGrid, 5, 100)).toBe(false)
       })
 
-      it('should handle object tile types with different properties', () => {
+      it('[U01568] should handle object tile types with different properties', () => {
         // Test a tile with a building (should be impassable)
         mapGrid[5][5] = { type: 'grass', building: true }
         expect(manager.isTilePassable(mapGrid, 5, 5)).toBe(false)
@@ -141,7 +141,7 @@ describe('flowField.js', () => {
     })
 
     describe('detectChokepoint', () => {
-      it('should detect horizontal corridor', () => {
+      it('[U01569] should detect horizontal corridor', () => {
         // Create a narrow horizontal corridor (width <= 3 tiles)
         // Block all tiles except a narrow passage at y=5, x=9-11
         for (let y = 0; y < 20; y++) {
@@ -164,7 +164,7 @@ describe('flowField.js', () => {
         expect(chokepoint.type).toBe('horizontal')
       })
 
-      it('should detect vertical corridor', () => {
+      it('[U01570] should detect vertical corridor', () => {
         // Create a narrow vertical corridor (width <= 3 tiles)
         // Block all tiles except a narrow passage at x=5, y=9-11
         for (let y = 0; y < 20; y++) {
@@ -187,16 +187,16 @@ describe('flowField.js', () => {
         expect(chokepoint.type).toBe('vertical')
       })
 
-      it('should return null for impassable tiles', () => {
+      it('[U01571] should return null for impassable tiles', () => {
         mapGrid[5][5].type = 'water'
         expect(manager.detectChokepoint(5, 5, mapGrid)).toBeNull()
       })
 
-      it('should return null for open areas', () => {
+      it('[U01572] should return null for open areas', () => {
         expect(manager.detectChokepoint(10, 10, mapGrid)).toBeNull()
       })
 
-      it('should return null for wide corridors', () => {
+      it('[U01573] should return null for wide corridors', () => {
         // Create a wide corridor (wider than threshold)
         for (let x = 0; x < 20; x++) {
           mapGrid[2][x].type = 'rock'
@@ -207,7 +207,7 @@ describe('flowField.js', () => {
     })
 
     describe('generateFlowField', () => {
-      it('should create a flow field from center to destination', () => {
+      it('[U01574] should create a flow field from center to destination', () => {
         const flowField = manager.generateFlowField(5, 5, 10, 10, mapGrid)
         expect(flowField).toBeDefined()
         expect(flowField.centerX).toBe(5)
@@ -216,32 +216,32 @@ describe('flowField.js', () => {
         expect(flowField.destY).toBe(10)
       })
 
-      it('should cache generated flow fields', () => {
+      it('[U01575] should cache generated flow fields', () => {
         manager.generateFlowField(5, 5, 10, 10, mapGrid)
         expect(manager.flowFields.size).toBe(1)
       })
 
-      it('should return cached flow field if valid', () => {
+      it('[U01576] should return cached flow field if valid', () => {
         const field1 = manager.generateFlowField(5, 5, 10, 10, mapGrid)
         const field2 = manager.generateFlowField(5, 5, 10, 10, mapGrid)
         expect(field1).toBe(field2)
       })
 
-      it('should create entries for passable tiles', () => {
+      it('[U01577] should create entries for passable tiles', () => {
         const flowField = manager.generateFlowField(5, 5, 10, 10, mapGrid)
         const entry = flowField.getEntry(10, 10) // Destination
         expect(entry).toBeDefined()
         expect(entry.distance).toBe(0) // Destination has distance 0
       })
 
-      it('should set direction vectors pointing toward destination', () => {
+      it('[U01578] should set direction vectors pointing toward destination', () => {
         const flowField = manager.generateFlowField(5, 5, 10, 10, mapGrid)
         const entry = flowField.getEntry(9, 10) // One tile west of destination
         expect(entry).toBeDefined()
         expect(entry.dirX).toBeGreaterThan(0) // Should point east
       })
 
-      it('should handle occupancy map penalties', () => {
+      it('[U01579] should handle occupancy map penalties', () => {
         const occupancyMap = Array(20).fill(null).map(() => Array(20).fill(0))
         occupancyMap[7][7] = 1 // Occupied tile
 
@@ -251,7 +251,7 @@ describe('flowField.js', () => {
     })
 
     describe('getFlowDirectionForUnit', () => {
-      it('should return null when not in chokepoint', () => {
+      it('[U01580] should return null when not in chokepoint', () => {
         const unit = {
           x: 10 * 32 + 16,
           y: 10 * 32 + 16
@@ -260,7 +260,7 @@ describe('flowField.js', () => {
         expect(direction).toBeNull()
       })
 
-      it('should return direction when in chokepoint', () => {
+      it('[U01581] should return direction when in chokepoint', () => {
         // Create a narrow horizontal corridor (width <= 3 tiles)
         for (let y = 0; y < 20; y++) {
           for (let x = 0; x < 20; x++) {
@@ -289,7 +289,7 @@ describe('flowField.js', () => {
         expect(direction.dirY).toBeDefined()
       })
 
-      it('should use cached flow field', () => {
+      it('[U01582] should use cached flow field', () => {
         // Create a narrow corridor
         for (let x = 0; x < 20; x++) {
           mapGrid[4][x].type = 'rock'
@@ -307,12 +307,12 @@ describe('flowField.js', () => {
     })
 
     describe('isChokepointCrowded', () => {
-      it('should return false for empty area', () => {
+      it('[U01583] should return false for empty area', () => {
         const result = manager.isChokepointCrowded(10, 10, [])
         expect(result).toBe(false)
       })
 
-      it('should return false for few units', () => {
+      it('[U01584] should return false for few units', () => {
         const units = [
           { x: 10 * 32 + 16, y: 10 * 32 + 16 },
           { x: 11 * 32 + 16, y: 10 * 32 + 16 }
@@ -321,7 +321,7 @@ describe('flowField.js', () => {
         expect(result).toBe(false)
       })
 
-      it('should return true for many units nearby', () => {
+      it('[U01585] should return true for many units nearby', () => {
         const units = [
           { x: 10 * 32 + 16, y: 10 * 32 + 16 },
           { x: 11 * 32 + 16, y: 10 * 32 + 16 },
@@ -332,7 +332,7 @@ describe('flowField.js', () => {
         expect(result).toBe(true)
       })
 
-      it('should respect custom threshold', () => {
+      it('[U01586] should respect custom threshold', () => {
         const units = [
           { x: 10 * 32 + 16, y: 10 * 32 + 16 },
           { x: 11 * 32 + 16, y: 10 * 32 + 16 }
@@ -341,7 +341,7 @@ describe('flowField.js', () => {
         expect(result).toBe(true)
       })
 
-      it('should only count units within range', () => {
+      it('[U01587] should only count units within range', () => {
         const units = [
           { x: 10 * 32 + 16, y: 10 * 32 + 16 },
           { x: 50 * 32 + 16, y: 50 * 32 + 16 }, // Far away
@@ -354,7 +354,7 @@ describe('flowField.js', () => {
   })
 
   describe('FlowField class', () => {
-    it('should track creation time', () => {
+    it('[U01588] should track creation time', () => {
       const before = performance.now()
       const flowField = manager.generateFlowField(5, 5, 10, 10, mapGrid)
       const after = performance.now()
@@ -362,14 +362,14 @@ describe('flowField.js', () => {
       expect(flowField.createdAt).toBeLessThanOrEqual(after)
     })
 
-    it('should track last used time', () => {
+    it('[U01589] should track last used time', () => {
       const flowField = manager.generateFlowField(5, 5, 10, 10, mapGrid)
       const initialUsed = flowField.lastUsed
       flowField.touch()
       expect(flowField.lastUsed).toBeGreaterThanOrEqual(initialUsed)
     })
 
-    it('should check if flow field is valid', () => {
+    it('[U01590] should check if flow field is valid', () => {
       const flowField = manager.generateFlowField(5, 5, 10, 10, mapGrid)
       expect(flowField.isValid()).toBe(true)
 
@@ -377,7 +377,7 @@ describe('flowField.js', () => {
       expect(flowField.isValid()).toBe(false)
     })
 
-    it('should check if tile is contained', () => {
+    it('[U01591] should check if tile is contained', () => {
       const flowField = manager.generateFlowField(5, 5, 10, 10, mapGrid)
       expect(flowField.containsTile(5, 5)).toBe(true)
       expect(flowField.containsTile(10, 10)).toBe(true)
@@ -385,7 +385,7 @@ describe('flowField.js', () => {
       expect(flowField.containsTile(50, 50)).toBe(false) // Outside radius
     })
 
-    it('should get direction at pixel position', () => {
+    it('[U01592] should get direction at pixel position', () => {
       const flowField = manager.generateFlowField(5, 5, 10, 10, mapGrid)
       const direction = flowField.getDirectionAt(10 * 32 + 16, 10 * 32 + 16)
       expect(direction).toBeDefined()
@@ -394,7 +394,7 @@ describe('flowField.js', () => {
       expect(direction.distance).toBeDefined()
     })
 
-    it('should return null for positions outside flow field', () => {
+    it('[U01593] should return null for positions outside flow field', () => {
       const flowField = manager.generateFlowField(5, 5, 10, 10, mapGrid)
       const direction = flowField.getDirectionAt(100 * 32, 100 * 32)
       expect(direction).toBeNull()
@@ -402,20 +402,20 @@ describe('flowField.js', () => {
   })
 
   describe('getFlowFieldManager', () => {
-    it('should return singleton instance', () => {
+    it('[U01594] should return singleton instance', () => {
       const manager1 = getFlowFieldManager()
       const manager2 = getFlowFieldManager()
       expect(manager1).toBe(manager2)
     })
 
-    it('should be a FlowFieldManager instance', () => {
+    it('[U01595] should be a FlowFieldManager instance', () => {
       const instance = getFlowFieldManager()
       expect(instance).toBeInstanceOf(FlowFieldManager)
     })
   })
 
   describe('clearFlowFields', () => {
-    it('should clear the singleton instance', () => {
+    it('[U01596] should clear the singleton instance', () => {
       const instance = getFlowFieldManager()
       instance.generateFlowField(5, 5, 10, 10, mapGrid)
       expect(instance.flowFields.size).toBeGreaterThan(0)
@@ -424,7 +424,7 @@ describe('flowField.js', () => {
       expect(instance.flowFields.size).toBe(0)
     })
 
-    it('should handle case where manager not initialized', () => {
+    it('[U01597] should handle case where manager not initialized', () => {
       expect(() => clearFlowFields()).not.toThrow()
     })
   })

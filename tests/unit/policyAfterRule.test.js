@@ -38,7 +38,7 @@ function afterPolicy(overrides = {}) {
 const view = (now, hp) => ({ now, hp, enemyDistance: Infinity, enemyInRange: false, underFire: false })
 
 describe('policy delay helpers', () => {
-  it('splits, joins and formats whole seconds', () => {
+  it('[U03327] splits, joins and formats whole seconds', () => {
     expect(splitDelay(150)).toEqual({ minutes: 2, seconds: 30 })
     expect(joinDelay(2, 30)).toBe(150)
     expect(formatDelay(10)).toBe('10s')
@@ -48,11 +48,11 @@ describe('policy delay helpers', () => {
 })
 
 describe('after rule: schema', () => {
-  it('accepts an after rule with a whole-second delay', () => {
+  it('[U03328] accepts an after rule with a whole-second delay', () => {
     expect(validatePolicy(afterPolicy()).valid).toBe(true)
   })
 
-  it('rejects an after rule without a valid delay', () => {
+  it('[U03329] rejects an after rule without a valid delay', () => {
     const missing = afterPolicy()
     delete missing.states[0].transitions[0].delaySeconds
     const result = validatePolicy(missing)
@@ -66,13 +66,13 @@ describe('after rule: schema', () => {
     }
   })
 
-  it('rejects a delay on an if or while rule', () => {
+  it('[U03330] rejects a delay on an if or while rule', () => {
     const policy = afterPolicy()
     policy.states[0].transitions[0].kind = 'if'
     expect(validatePolicy(policy).valid).toBe(false)
   })
 
-  it('ships a valid after template', () => {
+  it('[U03331] ships a valid after template', () => {
     const template = POLICY_TEMPLATES.find(item => item.id === 'advance-after-delay')
     const doc = template.create('t')
     expect(validatePolicy(doc).valid).toBe(true)
@@ -81,7 +81,7 @@ describe('after rule: schema', () => {
 })
 
 describe('after rule: step', () => {
-  it('waits for the delay, then fires once', () => {
+  it('[U03332] waits for the delay, then fires once', () => {
     const policy = afterPolicy()
     let runtime = createPolicyRuntime(policy)
 
@@ -103,7 +103,7 @@ describe('after rule: step', () => {
     expect(result.runtime.pending).toBeNull()
   })
 
-  it('starts over when the condition stops being true during the delay', () => {
+  it('[U03333] starts over when the condition stops being true during the delay', () => {
     const policy = afterPolicy()
     let runtime = createPolicyRuntime(policy)
     runtime = stepPolicy(policy, runtime, view(1000, 0.4)).runtime
@@ -114,7 +114,7 @@ describe('after rule: step', () => {
     expect(runtime.currentStateId).toBe('watch')
   })
 
-  it('drops a running delay while a direct order runs and does not evaluate it when paused', () => {
+  it('[U03334] drops a running delay while a direct order runs and does not evaluate it when paused', () => {
     const policy = afterPolicy()
     let runtime = createPolicyRuntime(policy)
     runtime = stepPolicy(policy, runtime, view(1000, 0.4)).runtime
@@ -125,7 +125,7 @@ describe('after rule: step', () => {
     expect(paused.runtime.currentStateId).toBe('watch')
   })
 
-  it('counts how often each state was entered', () => {
+  it('[U03335] counts how often each state was entered', () => {
     const policy = {
       ...afterPolicy(),
       states: [
@@ -151,7 +151,7 @@ describe('after rule: step', () => {
 })
 
 describe('rule trigger text', () => {
-  it('shows the full condition inside the rule kind', () => {
+  it('[U03336] shows the full condition inside the rule kind', () => {
     const ammo = { type: 'compare', field: 'ammo', op: '==', value: 1 }
     expect(describeRuleTrigger({ kind: 'if', when: ammo })).toBe(`if(${describeCondition(ammo)})`)
     expect(describeRuleTrigger({ kind: 'if', when: ammo })).toMatch(/^if\(ammo == 100%\)$/)
@@ -159,7 +159,7 @@ describe('rule trigger text', () => {
     expect(describeRuleTrigger({ kind: 'while', when: ammo, until: hpBelow(0.5) })).toContain(' until(')
   })
 
-  it('labels the health field "HP" and never "hit points"', () => {
+  it('[U03337] labels the health field "HP" and never "hit points"', () => {
     expect(NUMERIC_FIELDS.hp.label).toBe('HP')
     expect(describeCondition(hpBelow(0.25)).toLowerCase()).not.toContain('hit point')
     POLICY_TEMPLATES.forEach(template => {
@@ -216,7 +216,7 @@ function world(unit) {
 describe('after rule: engine', () => {
   beforeEach(() => resetPolicyStore())
 
-  it('does nothing, then moves forward after the delay, and counts as in control while waiting', () => {
+  it('[U03338] does nothing, then moves forward after the delay, and counts as in control while waiting', () => {
     const doc = POLICY_TEMPLATES.find(item => item.id === 'advance-after-delay').create('adv')
     expect(savePolicy(ME, doc).ok).toBe(true)
     const unit = makeUnit()
@@ -238,7 +238,7 @@ describe('after rule: engine', () => {
     expect(Math.round((dx + dy) / TILE_SIZE)).toBe(2)
   })
 
-  it('a direct order during the delay cancels it and the delay restarts afterwards', () => {
+  it('[U03339] a direct order during the delay cancels it and the delay restarts afterwards', () => {
     const doc = POLICY_TEMPLATES.find(item => item.id === 'advance-after-delay').create('adv')
     savePolicy(ME, doc)
     const unit = makeUnit()

@@ -16,7 +16,7 @@ describe('SSE input-driven viewport', () => {
     bindSseViewport(element, () => view, value => { view = value })
     return { element, read: () => view }
   }
-  it('pans with wheel deltas and preserves the image coordinate under ctrl-wheel zoom', () => {
+  it('[U04199] pans with wheel deltas and preserves the image coordinate under ctrl-wheel zoom', () => {
     const { element, read } = viewport()
     element.dispatchEvent(new window.WheelEvent('wheel', { deltaX: 20, deltaY: 30, cancelable: true }))
     expect(read()).toEqual({ x: -20, y: -30, scale: 1 })
@@ -26,7 +26,7 @@ describe('SSE input-driven viewport', () => {
     expect((100 - read().x) / read().scale).toBeCloseTo((100 - before.x) / before.scale)
     expect((100 - read().y) / read().scale).toBeCloseTo((100 - before.y) / before.scale)
   })
-  it('normalizes line and page wheel deltas and prevents page scrolling', () => {
+  it('[U04200] normalizes line and page wheel deltas and prevents page scrolling', () => {
     const { element, read } = viewport()
     Object.defineProperty(element, 'clientHeight', { value: 400 })
     const lines = new window.WheelEvent('wheel', { deltaX: 2, deltaY: 3, deltaMode: 1, cancelable: true })
@@ -36,7 +36,7 @@ describe('SSE input-driven viewport', () => {
     element.dispatchEvent(new window.WheelEvent('wheel', { deltaY: 1, deltaMode: 2 }))
     expect(read()).toEqual({ x: -32, y: -448, scale: 1 })
   })
-  it('anchors pointer pinch zoom at the moving two-finger centre', () => {
+  it('[U04201] anchors pointer pinch zoom at the moving two-finger centre', () => {
     const { element, read } = viewport()
     pointer(element, 'pointerdown', 1, 60, 120)
     pointer(element, 'pointerdown', 2, 160, 120)
@@ -48,7 +48,7 @@ describe('SSE input-driven viewport', () => {
     pointer(element, 'pointermove', 2, 300, 200)
     expect(read()).toBe(finished)
   })
-  it('bounds and persists the separator ratio and handles touch dragging', () => {
+  it('[U04202] bounds and persists the separator ratio and handles touch dragging', () => {
     localStorage.removeItem('sse.splitRatio')
     const workspace = document.createElement('div')
     workspace.getBoundingClientRect = () => ({ top: 20, height: 400 })
@@ -70,7 +70,7 @@ describe('SSE input-driven viewport', () => {
 })
 
 describe('SSE zoom helpers and alternative gestures', () => {
-  it('clamps zoom while preserving the anchor and synchronizes input in both directions', async() => {
+  it('[U04203] clamps zoom while preserving the anchor and synchronizes input in both directions', async() => {
     const { zoomSseView, bindSseZoomInput } = await import('../../src/ui/sseViewport.js')
     const original = { x: 25, y: -40, scale: 2 }
     const zoomed = zoomSseView(original, 100, 80, 120)
@@ -95,7 +95,7 @@ describe('SSE zoom helpers and alternative gestures', () => {
     expect(calls).toBe(1)
   })
 
-  it('handles TouchEvent pinch and Safari relative gesture scales', () => {
+  it('[U04204] handles TouchEvent pinch and Safari relative gesture scales', () => {
     const element = document.createElement('div')
     element.getBoundingClientRect = () => ({ left: 0, top: 0 })
     let view = { x: 0, y: 0, scale: 1 }

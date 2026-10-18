@@ -20,13 +20,13 @@ describe('unit build policy command API', () => {
     }
   })
 
-  it('queues a validated stack with its delivery order', () => {
+  it('[U04587] queues a validated stack with its delivery order', () => {
     const args = { unitType: 'rocketTank', quantity: 3, delivery: 'attackHarvester' }
     expect(executeUnitBuildCommand('buildUnits', args, context)).toEqual({ ok: true, reason: null })
     expect(queued).toEqual([args])
   })
 
-  it('refuses invalid, locked, unavailable, and overflowing requests without changing the queue', () => {
+  it('[U04588] refuses invalid, locked, unavailable, and overflowing requests without changing the queue', () => {
     expect(getUnitBuildRefusal('buildUnits', { unitType: 'tank', quantity: 21, delivery: 'defendBase' }, context)).toContain('between 1 and 20')
     expect(executeUnitBuildCommand('buildUnits', { unitType: 'unknown', quantity: 1, delivery: 'defendBase' }, context).ok).toBe(false)
     context.unitBuild.lockReason = () => 'the game is paused'
@@ -38,7 +38,7 @@ describe('unit build policy command API', () => {
 describe('unit build policy documents and loss sensor', () => {
   beforeEach(() => resetBaseSensors())
 
-  it('ships valid production, delivery, and destroyed-unit replacement templates', () => {
+  it('[U04589] ships valid production, delivery, and destroyed-unit replacement templates', () => {
     const templates = templatesForVariant('unitBuild')
     expect(templates.map(item => item.id)).toEqual(expect.arrayContaining([
       'replace-lost-tank', 'harvester-escort-stack', 'harvester-raiders'
@@ -46,7 +46,7 @@ describe('unit build policy documents and loss sensor', () => {
     templates.forEach(template => expect(validatePolicy(template.create(`test-${template.id}`)).valid).toBe(true))
   })
 
-  it('reports a destroyed unit type for exactly the next base-policy pass', () => {
+  it('[U04590] reports a destroyed unit type for exactly the next base-policy pass', () => {
     const tank = { id: 'tank-1', type: 'tank', owner: 'player1', health: 100 }
     const context = { units: [tank], buildings: [] }
     const condition = { type: 'check', check: 'ownUnitDestroyed', unitType: 'tank_v1' }

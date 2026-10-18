@@ -76,7 +76,7 @@ describe('enemyBuilding.findBuildingPosition', () => {
     vi.restoreAllMocks()
   })
 
-  it('continues searching when the player placement validator rejects an AI candidate', () => {
+  it('[U01357] continues searching when the player placement validator rejects an AI candidate', () => {
     const mapGrid = createGrid(30, 30)
     const first = findBuildingPosition('powerPlant', mapGrid, [], [], [baseFactory], 'enemy')
     expect(first).not.toBeNull()
@@ -88,7 +88,7 @@ describe('enemyBuilding.findBuildingPosition', () => {
     expect(validate).toHaveBeenLastCalledWith(result.x, result.y)
   })
 
-  it('returns null and logs when buildingType is missing', () => {
+  it('[U01358] returns null and logs when buildingType is missing', () => {
     const mapGrid = createGrid(10, 10)
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
@@ -98,13 +98,13 @@ describe('enemyBuilding.findBuildingPosition', () => {
     expect(consoleSpy).toHaveBeenCalled()
   })
 
-  it('returns null when mapGrid is empty', () => {
+  it('[U01359] returns null when mapGrid is empty', () => {
     const result = findBuildingPosition('powerPlant', [], [], [], [baseFactory], 'enemy')
 
     expect(result).toBeNull()
   })
 
-  it('returns null and logs when buildingType is unknown', () => {
+  it('[U01360] returns null and logs when buildingType is unknown', () => {
     const mapGrid = createGrid(10, 10)
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
@@ -114,7 +114,7 @@ describe('enemyBuilding.findBuildingPosition', () => {
     expect(consoleSpy).toHaveBeenCalled()
   })
 
-  it('returns null when the AI factory cannot be found', () => {
+  it('[U01361] returns null when the AI factory cannot be found', () => {
     const mapGrid = createGrid(10, 10)
 
     const result = findBuildingPosition('powerPlant', mapGrid, [], [], [humanFactory], 'enemy')
@@ -122,7 +122,7 @@ describe('enemyBuilding.findBuildingPosition', () => {
     expect(result).toBeNull()
   })
 
-  it('uses a shoreline-specific validated position for Shipyards', () => {
+  it('[U01362] uses a shoreline-specific validated position for Shipyards', () => {
     const mapGrid = createGrid(20, 20)
     for (let y = 10; y < mapGrid.length; y++) {
       mapGrid[y].forEach(tile => { tile.type = 'water' })
@@ -144,7 +144,7 @@ describe('enemyBuilding.findBuildingPosition', () => {
     expect(mapGrid[result.y + 5][result.x + 2].type).toBe('water')
   })
 
-  it('places defensive buildings toward nearby ore', () => {
+  it('[U01363] places defensive buildings toward nearby ore', () => {
     const mapGrid = createGrid(20, 20)
     mapGrid[6][10].ore = true
 
@@ -161,7 +161,7 @@ describe('enemyBuilding.findBuildingPosition', () => {
     expect(isTileValid).toHaveBeenCalled()
   })
 
-  it('allows wall placement next to existing walls when spacing is enforced', () => {
+  it('[U01364] allows wall placement next to existing walls when spacing is enforced', () => {
     const mapGrid = createGrid(20, 20)
     mapGrid[6][10].ore = true
     mapGrid[5][7].building = { type: 'concreteWall' }
@@ -178,7 +178,7 @@ describe('enemyBuilding.findBuildingPosition', () => {
     expect(result).toEqual({ x: 8, y: 5 })
   })
 
-  it('places defensive buildings facing ore when positioned between factory and ore', () => {
+  it('[U01365] places defensive buildings facing ore when positioned between factory and ore', () => {
     const mapGrid = createGrid(25, 25)
     // Place ore field to the east of factory
     for (let i = 15; i < 20; i++) {
@@ -201,7 +201,7 @@ describe('enemyBuilding.findBuildingPosition', () => {
     expect(result.x).toBeGreaterThan(baseFactory.x)
   })
 
-  it('handles very small map grid', () => {
+  it('[U01366] handles very small map grid', () => {
     const mapGrid = createGrid(8, 8)
 
     const result = findBuildingPosition(
@@ -217,7 +217,7 @@ describe('enemyBuilding.findBuildingPosition', () => {
     expect(result === null || (typeof result.x === 'number' && typeof result.y === 'number')).toBe(true)
   })
 
-  it('avoids placing buildings on water tiles', () => {
+  it('[U01367] avoids placing buildings on water tiles', () => {
     const mapGrid = createGrid(20, 20)
     // Mark tiles around factory as water
     for (let y = 3; y < 9; y++) {
@@ -247,7 +247,7 @@ describe('enemyBuilding.findBuildingPosition', () => {
     }
   })
 
-  it('avoids placing buildings on seed crystals', () => {
+  it('[U01368] avoids placing buildings on seed crystals', () => {
     const mapGrid = createGrid(20, 20)
     mapGrid[7][7].seedCrystal = true
     mapGrid[8][7].ore = true
@@ -267,7 +267,7 @@ describe('enemyBuilding.findBuildingPosition', () => {
     }
   })
 
-  it('places refineries at larger distance', () => {
+  it('[U01369] places refineries at larger distance', () => {
     const mapGrid = createGrid(30, 30)
     mapGrid[10][15].ore = true
 
@@ -294,7 +294,7 @@ describe('enemyBuilding.findBuildingPosition', () => {
     ['gasStation', 'vehicleFactory'],
     ['ammunitionFactory', 'vehicleFactory']
   ])(
-    'places explosive %s at least six tiles from construction yards and %s buildings',
+    '[U01370] places explosive %s at least six tiles from construction yards and %s buildings',
     (buildingType, criticalBuildingType) => {
       const mapGrid = createGrid(40, 40)
       const factory = { id: 'enemy', owner: 'enemy', type: 'constructionYard', x: 15, y: 15, width: 3, height: 3 }
@@ -331,7 +331,7 @@ describe('enemyBuilding.findBuildingPosition', () => {
     }
   )
 
-  it('handles defensive turret gun placement', () => {
+  it('[U01371] handles defensive turret gun placement', () => {
     const mapGrid = createGrid(20, 20)
     mapGrid[5][15].ore = true
 
@@ -351,7 +351,7 @@ describe('enemyBuilding.findBuildingPosition', () => {
     }
   })
 
-  it('handles noBuild tiles', () => {
+  it('[U01372] handles noBuild tiles', () => {
     const mapGrid = createGrid(20, 20)
     mapGrid[7][7].noBuild = true
     mapGrid[8][8].ore = true
@@ -377,7 +377,7 @@ describe('enemyBuilding.findBuildingPosition', () => {
     }
   })
 
-  it('handles rock tiles', () => {
+  it('[U01373] handles rock tiles', () => {
     const mapGrid = createGrid(20, 20)
     mapGrid[7][7].type = 'rock'
     mapGrid[8][8].ore = true
@@ -400,7 +400,7 @@ describe('enemyBuilding.findBuildingPosition', () => {
     expect(result === null || (result.x !== 7 || result.y !== 7)).toBe(true)
   })
 
-  it('correctly handles fallback to player direction when no ore', () => {
+  it('[U01374] correctly handles fallback to player direction when no ore', () => {
     const mapGrid = createGrid(20, 20)
     // No ore on map
 
@@ -420,7 +420,7 @@ describe('enemyBuilding.findBuildingPosition', () => {
     }
   })
 
-  it('handles tesla coil as defensive building', () => {
+  it('[U01375] handles tesla coil as defensive building', () => {
     const mapGrid = createGrid(20, 20)
     mapGrid[10][10].ore = true
 
@@ -436,7 +436,7 @@ describe('enemyBuilding.findBuildingPosition', () => {
     expect(result === null || (typeof result.x === 'number' && typeof result.y === 'number')).toBe(true)
   })
 
-  it('handles artillery turret as defensive building', () => {
+  it('[U01376] handles artillery turret as defensive building', () => {
     const mapGrid = createGrid(20, 20)
     mapGrid[10][10].ore = true
 

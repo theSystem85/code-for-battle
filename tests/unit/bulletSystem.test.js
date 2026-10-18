@@ -234,7 +234,7 @@ describe('Bullet System', () => {
   })
 
   describe('Bullet Creation', () => {
-    it('should create bullet with correct properties', () => {
+    it('[U00699] should create bullet with correct properties', () => {
       const bullet = createMockBullet({
         x: 100,
         y: 100,
@@ -249,27 +249,27 @@ describe('Bullet System', () => {
       expect(bullet.active).toBe(true)
     })
 
-    it('should have shooter reference', () => {
+    it('[U00700] should have shooter reference', () => {
       const shooter = { id: 'tank-1', owner: 'player', type: 'tank_v1' }
       const bullet = createMockBullet({ shooter })
 
       expect(bullet.shooter).toBe(shooter)
     })
 
-    it('should support homing property', () => {
+    it('[U00701] should support homing property', () => {
       const bullet = createMockBullet({ homing: true })
 
       expect(bullet.homing).toBe(true)
     })
 
-    it('should support target reference', () => {
+    it('[U00702] should support target reference', () => {
       const target = createMockUnit({ owner: 'enemy' })
       const bullet = createMockBullet({ target })
 
       expect(bullet.target).toBe(target)
     })
 
-    it('should support target position', () => {
+    it('[U00703] should support target position', () => {
       const targetPosition = { x: 500, y: 300 }
       const bullet = createMockBullet({ targetPosition })
 
@@ -277,7 +277,7 @@ describe('Bullet System', () => {
       expect(bullet.targetPosition.y).toBe(300)
     })
 
-    it('should support different projectile types', () => {
+    it('[U00704] should support different projectile types', () => {
       const regularBullet = createMockBullet({ projectileType: 'bullet' })
       const rocketBullet = createMockBullet({ projectileType: 'rocket' })
       const artilleryBullet = createMockBullet({ projectileType: 'artillery' })
@@ -287,7 +287,7 @@ describe('Bullet System', () => {
       expect(artilleryBullet.projectileType).toBe('artillery')
     })
 
-    it('should support explosion radius for rockets', () => {
+    it('[U00705] should support explosion radius for rockets', () => {
       const rocket = createMockBullet({
         projectileType: 'rocket',
         explosionRadius: TILE_SIZE * 1.5
@@ -298,7 +298,7 @@ describe('Bullet System', () => {
   })
 
   describe('Air-to-air rocket damage', () => {
-    it('applies direct F22 rocket damage using the airborne target visual center', () => {
+    it('[U00706] applies direct F22 rocket damage using the airborne target visual center', () => {
       const target = createMockUnit({
         id: 'apache-1',
         type: 'apache',
@@ -346,14 +346,14 @@ describe('Bullet System', () => {
   })
 
   describe('Bullet Movement', () => {
-    it('should have velocity components', () => {
+    it('[U00707] should have velocity components', () => {
       const bullet = createMockBullet({ vx: 10, vy: 5 })
 
       expect(bullet.vx).toBe(10)
       expect(bullet.vy).toBe(5)
     })
 
-    it('should update position based on velocity', () => {
+    it('[U00708] should update position based on velocity', () => {
       const bullet = createMockBullet({ x: 100, y: 100, vx: 10, vy: 5 })
 
       // Simulate one frame of movement
@@ -364,7 +364,7 @@ describe('Bullet System', () => {
       expect(bullet.y).toBe(105)
     })
 
-    it('should calculate correct angle for velocity', () => {
+    it('[U00709] should calculate correct angle for velocity', () => {
       // Bullet moving east (angle = 0)
       const bulletEast = createMockBullet({ vx: 10, vy: 0 })
       const angleEast = Math.atan2(bulletEast.vy, bulletEast.vx)
@@ -381,7 +381,7 @@ describe('Bullet System', () => {
       expect(angleDiag).toBeCloseTo(Math.PI / 4)
     })
 
-    it('should track start time', () => {
+    it('[U00710] should track start time', () => {
       const startTime = 1000
       const bullet = createMockBullet({ startTime })
 
@@ -390,7 +390,7 @@ describe('Bullet System', () => {
   })
 
   describe('Unit Collision Detection', () => {
-    it('should detect collision when bullet hits unit', () => {
+    it('[U00711] should detect collision when bullet hits unit', () => {
       const unit = createMockUnit({ tileX: 5, tileY: 5, owner: 'enemy' })
       const unitCenterX = unit.x + TILE_SIZE / 2
       const unitCenterY = unit.y + TILE_SIZE / 2
@@ -405,7 +405,7 @@ describe('Bullet System', () => {
       expect(collides).toBe(true)
     })
 
-    it('should not detect collision when bullet misses unit', () => {
+    it('[U00712] should not detect collision when bullet misses unit', () => {
       const unit = createMockUnit({ tileX: 5, tileY: 5, owner: 'enemy' })
       const bullet = createMockBullet({
         x: unit.x + TILE_SIZE * 5, // Far from unit
@@ -417,7 +417,7 @@ describe('Bullet System', () => {
       expect(collides).toBe(false)
     })
 
-    it('should not collide with dead units', () => {
+    it('[U00713] should not collide with dead units', () => {
       const unit = createMockUnit({ health: 0, owner: 'enemy' })
       const bullet = createMockBullet({
         x: unit.x + TILE_SIZE / 2,
@@ -429,7 +429,7 @@ describe('Bullet System', () => {
       expect(collides).toBe(false)
     })
 
-    it('should not collide with friendly units', () => {
+    it('[U00714] should not collide with friendly units', () => {
       const friendlyUnit = createMockUnit({ owner: 'player' })
       const shooter = { id: 'tank-1', owner: 'player', type: 'tank_v1' }
       const bullet = createMockBullet({
@@ -443,7 +443,7 @@ describe('Bullet System', () => {
       expect(collides).toBe(false)
     })
 
-    it('should handle null bullet', () => {
+    it('[U00715] should handle null bullet', () => {
       const unit = createMockUnit()
 
       const collides = checkUnitCollision(null, unit)
@@ -451,7 +451,7 @@ describe('Bullet System', () => {
       expect(collides).toBe(false)
     })
 
-    it('should handle null unit', () => {
+    it('[U00716] should handle null unit', () => {
       const bullet = createMockBullet()
 
       const collides = checkUnitCollision(bullet, null)
@@ -459,7 +459,7 @@ describe('Bullet System', () => {
       expect(collides).toBe(false)
     })
 
-    it('should adjust collision for Apache altitude', () => {
+    it('[U00717] should adjust collision for Apache altitude', () => {
       const apache = createMockUnit({
         type: 'apache',
         isAirUnit: true,
@@ -481,7 +481,7 @@ describe('Bullet System', () => {
   })
 
   describe('Building Collision Detection', () => {
-    it('should detect collision when bullet hits building', () => {
+    it('[U00718] should detect collision when bullet hits building', () => {
       const building = createMockBuilding({ x: 10, y: 10, width: 2, height: 2, owner: 'enemy' })
       const buildingCenterX = building.x * TILE_SIZE + (building.width * TILE_SIZE) / 2
       const buildingCenterY = building.y * TILE_SIZE + (building.height * TILE_SIZE) / 2
@@ -496,7 +496,7 @@ describe('Bullet System', () => {
       expect(collides).toBe(true)
     })
 
-    it('should not detect collision when bullet misses building', () => {
+    it('[U00719] should not detect collision when bullet misses building', () => {
       const building = createMockBuilding({ x: 10, y: 10, owner: 'enemy' })
       const bullet = createMockBullet({
         x: 0, // Far from building
@@ -508,7 +508,7 @@ describe('Bullet System', () => {
       expect(collides).toBe(false)
     })
 
-    it('should not collide with dead buildings', () => {
+    it('[U00720] should not collide with dead buildings', () => {
       const building = createMockBuilding({ health: 0, owner: 'enemy' })
       const bullet = createMockBullet({
         x: building.x * TILE_SIZE + TILE_SIZE,
@@ -520,7 +520,7 @@ describe('Bullet System', () => {
       expect(collides).toBe(false)
     })
 
-    it('should not collide with friendly buildings', () => {
+    it('[U00721] should not collide with friendly buildings', () => {
       const friendlyBuilding = createMockBuilding({ owner: 'player' })
       const shooter = { id: 'tank-1', owner: 'player', type: 'tank_v1' }
       const bullet = createMockBullet({
@@ -534,7 +534,7 @@ describe('Bullet System', () => {
       expect(collides).toBe(false)
     })
 
-    it('should handle building bounds correctly', () => {
+    it('[U00722] should handle building bounds correctly', () => {
       const building = createMockBuilding({ x: 5, y: 5, width: 3, height: 2, owner: 'enemy' })
 
       // Test edge of building
@@ -548,7 +548,7 @@ describe('Bullet System', () => {
   })
 
   describe('Factory Collision Detection', () => {
-    it('should detect collision when bullet hits factory', () => {
+    it('[U00723] should detect collision when bullet hits factory', () => {
       const factory = createMockFactory({ x: 15, y: 15, width: 3, height: 3 })
       const factoryCenterX = factory.x * TILE_SIZE + (factory.width * TILE_SIZE) / 2
       const factoryCenterY = factory.y * TILE_SIZE + (factory.height * TILE_SIZE) / 2
@@ -563,7 +563,7 @@ describe('Bullet System', () => {
       expect(collides).toBe(true)
     })
 
-    it('should not detect collision when bullet misses factory', () => {
+    it('[U00724] should not detect collision when bullet misses factory', () => {
       const factory = createMockFactory({ x: 15, y: 15 })
       const bullet = createMockBullet({
         x: 0,
@@ -575,7 +575,7 @@ describe('Bullet System', () => {
       expect(collides).toBe(false)
     })
 
-    it('should not collide with destroyed factory', () => {
+    it('[U00725] should not collide with destroyed factory', () => {
       const factory = createMockFactory({ destroyed: true })
       const bullet = createMockBullet({
         x: factory.x * TILE_SIZE + TILE_SIZE,
@@ -587,7 +587,7 @@ describe('Bullet System', () => {
       expect(collides).toBe(false)
     })
 
-    it('should not collide with friendly factory', () => {
+    it('[U00726] should not collide with friendly factory', () => {
       const friendlyFactory = createMockFactory({ id: 'player' })
       const shooter = { id: 'tank-1', owner: 'player', type: 'tank_v1' }
       const bullet = createMockBullet({
@@ -603,7 +603,7 @@ describe('Bullet System', () => {
   })
 
   describe('Wreck Collision Detection', () => {
-    it('should detect collision when bullet hits wreck', () => {
+    it('[U00727] should detect collision when bullet hits wreck', () => {
       const wreck = createMockWreck({ x: 200, y: 200, health: 50 })
       const bullet = createMockBullet({
         x: wreck.x + TILE_SIZE / 2 + 5,
@@ -615,7 +615,7 @@ describe('Bullet System', () => {
       expect(collides).toBe(true)
     })
 
-    it('should not detect collision when bullet misses wreck', () => {
+    it('[U00728] should not detect collision when bullet misses wreck', () => {
       const wreck = createMockWreck({ x: 200, y: 200 })
       const bullet = createMockBullet({
         x: 0,
@@ -627,7 +627,7 @@ describe('Bullet System', () => {
       expect(collides).toBe(false)
     })
 
-    it('should not collide with destroyed wrecks', () => {
+    it('[U00729] should not collide with destroyed wrecks', () => {
       const wreck = createMockWreck({ health: 0 })
       const bullet = createMockBullet({
         x: wreck.x + TILE_SIZE / 2,
@@ -639,7 +639,7 @@ describe('Bullet System', () => {
       expect(collides).toBe(false)
     })
 
-    it('should handle null wreck', () => {
+    it('[U00730] should handle null wreck', () => {
       const bullet = createMockBullet()
 
       const collides = checkWreckCollision(bullet, null)
@@ -649,11 +649,11 @@ describe('Bullet System', () => {
   })
 
   describe('Damage Calculation', () => {
-    it('should have different base damages for unit types', () => {
+    it('[U00731] should have different base damages for unit types', () => {
       expect(BULLET_DAMAGES).toBeDefined()
     })
 
-    it('should apply base damage', () => {
+    it('[U00732] should apply base damage', () => {
       const bullet = createMockBullet({ baseDamage: 25 })
       const target = createMockUnit({ health: 100 })
 
@@ -662,7 +662,7 @@ describe('Bullet System', () => {
       expect(target.health).toBe(75)
     })
 
-    it('should apply damage multiplier', () => {
+    it('[U00733] should apply damage multiplier', () => {
       const baseDamage = 20
       const multiplier = 0.8 + Math.random() * 0.4 // 0.8 to 1.2
 
@@ -672,7 +672,7 @@ describe('Bullet System', () => {
       expect(actualDamage).toBeLessThanOrEqual(24)
     })
 
-    it('should calculate rocket damage multiplier for buildings', () => {
+    it('[U00734] should calculate rocket damage multiplier for buildings', () => {
       const baseDamage = 20
       const rocketBuildingMultiplier = 2
 
@@ -681,7 +681,7 @@ describe('Bullet System', () => {
       expect(actualDamage).toBe(40)
     })
 
-    it('should apply armor reduction', () => {
+    it('[U00735] should apply armor reduction', () => {
       const baseDamage = 20
       const armor = 2 // 50% damage reduction
 
@@ -690,7 +690,7 @@ describe('Bullet System', () => {
       expect(reducedDamage).toBe(10)
     })
 
-    it('should ensure minimum 1 damage with armor', () => {
+    it('[U00736] should ensure minimum 1 damage with armor', () => {
       const baseDamage = 1
       const armor = 10
 
@@ -701,7 +701,7 @@ describe('Bullet System', () => {
   })
 
   describe('Explosion Radius', () => {
-    it('should have explosion radius for rockets', () => {
+    it('[U00737] should have explosion radius for rockets', () => {
       const rocket = createMockBullet({
         projectileType: 'rocket',
         explosionRadius: TILE_SIZE * 1.5
@@ -710,7 +710,7 @@ describe('Bullet System', () => {
       expect(rocket.explosionRadius).toBe(TILE_SIZE * 1.5)
     })
 
-    it('should calculate distance from explosion center', () => {
+    it('[U00738] should calculate distance from explosion center', () => {
       const explosionX = 200
       const explosionY = 200
       const explosionRadius = TILE_SIZE * 2
@@ -725,7 +725,7 @@ describe('Bullet System', () => {
       expect(typeof withinRadius).toBe('boolean')
     })
 
-    it('should apply falloff damage based on distance', () => {
+    it('[U00739] should apply falloff damage based on distance', () => {
       const baseDamage = 50
       const explosionRadius = 100
       const distance = 50
@@ -737,7 +737,7 @@ describe('Bullet System', () => {
       expect(actualDamage).toBe(25)
     })
 
-    it('should deal zero damage outside radius', () => {
+    it('[U00740] should deal zero damage outside radius', () => {
       const baseDamage = 50
       const explosionRadius = 100
       const distance = 150 // Outside radius
@@ -751,13 +751,13 @@ describe('Bullet System', () => {
 
   describe('Projectile Types', () => {
     describe('Standard Bullets', () => {
-      it('should not be homing', () => {
+      it('[U00741] should not be homing', () => {
         const bullet = createMockBullet({ projectileType: 'bullet', homing: false })
 
         expect(bullet.homing).toBe(false)
       })
 
-      it('should travel in straight line', () => {
+      it('[U00742] should travel in straight line', () => {
         const bullet = createMockBullet({ x: 100, y: 100, vx: 10, vy: 0 })
 
         // After 5 frames
@@ -772,13 +772,13 @@ describe('Bullet System', () => {
     })
 
     describe('Homing Rockets', () => {
-      it('should be homing', () => {
+      it('[U00743] should be homing', () => {
         const rocket = createMockBullet({ projectileType: 'rocket', homing: true })
 
         expect(rocket.homing).toBe(true)
       })
 
-      it('should have target', () => {
+      it('[U00744] should have target', () => {
         const target = createMockUnit({ owner: 'enemy' })
         const rocket = createMockBullet({
           projectileType: 'rocket',
@@ -789,7 +789,7 @@ describe('Bullet System', () => {
         expect(rocket.target).toBe(target)
       })
 
-      it('should adjust velocity towards target', () => {
+      it('[U00745] should adjust velocity towards target', () => {
         const target = createMockUnit({ tileX: 10, tileY: 10, owner: 'enemy' })
         const rocket = createMockBullet({
           x: 100,
@@ -820,7 +820,7 @@ describe('Bullet System', () => {
     })
 
     describe('Ballistic Projectiles', () => {
-      it('should support ballistic arc', () => {
+      it('[U00746] should support ballistic arc', () => {
         const rocket = createMockBullet({
           projectileType: 'rocket',
           arcHeight: 100,
@@ -837,7 +837,7 @@ describe('Bullet System', () => {
     })
 
     describe('Artillery Shells', () => {
-      it('should support parabolic trajectory', () => {
+      it('[U00747] should support parabolic trajectory', () => {
         const artillery = createMockBullet({
           projectileType: 'artillery',
           startX: 100,
@@ -854,7 +854,7 @@ describe('Bullet System', () => {
         expect(artillery.arcHeight).toBe(150)
       })
 
-      it('should calculate position along parabolic arc', () => {
+      it('[U00748] should calculate position along parabolic arc', () => {
         const startX = 100
         const startY = 100
         const dx = 200
@@ -872,7 +872,7 @@ describe('Bullet System', () => {
   })
 
   describe('Bullet Lifetime', () => {
-    it('should track active state', () => {
+    it('[U00749] should track active state', () => {
       const bullet = createMockBullet({ active: true })
 
       expect(bullet.active).toBe(true)
@@ -881,14 +881,14 @@ describe('Bullet System', () => {
       expect(bullet.active).toBe(false)
     })
 
-    it('should have start time for timeout calculation', () => {
+    it('[U00750] should have start time for timeout calculation', () => {
       const startTime = 5000
       const bullet = createMockBullet({ startTime })
 
       expect(bullet.startTime).toBe(5000)
     })
 
-    it('should expire after max flight time', () => {
+    it('[U00751] should expire after max flight time', () => {
       const maxFlightTime = 3000
       const startTime = 1000
       const currentTime = 5000
@@ -899,7 +899,7 @@ describe('Bullet System', () => {
       expect(expired).toBe(true)
     })
 
-    it('should detect out of bounds bullets', () => {
+    it('[U00752] should detect out of bounds bullets', () => {
       const mapWidth = 100 * TILE_SIZE
       const mapHeight = 100 * TILE_SIZE
 
@@ -919,7 +919,7 @@ describe('Bullet System', () => {
   })
 
   describe('Trail Effects', () => {
-    it('should support trail array', () => {
+    it('[U00753] should support trail array', () => {
       const rocket = createMockBullet({ projectileType: 'rocket' })
       rocket.trail = []
 
@@ -930,7 +930,7 @@ describe('Bullet System', () => {
       expect(rocket.trail.length).toBe(3)
     })
 
-    it('should filter old trail points', () => {
+    it('[U00754] should filter old trail points', () => {
       const rocket = createMockBullet({ projectileType: 'rocket' })
       const now = 2000
       const maxTrailAge = 300
@@ -962,7 +962,7 @@ describe('Bullet System', () => {
       }
     }
 
-    it('direct projectiles hit neutral city footprints without adding auto-target buildings', () => {
+    it('[U00755] direct projectiles hit neutral city footprints without adding auto-target buildings', () => {
       const map = Array.from({ length: 8 }, () => Array.from({ length: 8 }, () => ({ type: 'land' })))
       const group = { width: 1, height: 1, tagSet: new Set(['city']) }
       const [city] = prepareCityBuildings(map, { width: 8, height: 8, cells: Array.from({ length: 64 }, (_, index) => index === 18 ? { group, anchorX: 2, anchorY: 2 } : null) })
@@ -975,20 +975,20 @@ describe('Bullet System', () => {
       expect(map[2][2].decal.tag).toBe('debris')
     })
 
-    it('removes inactive bullets from the array', () => {
+    it('[U00756] removes inactive bullets from the array', () => {
       const bullets = [createMockBullet({ active: false })]
       updateBullets(bullets, [], [], createGameState(), mapGrid)
       expect(bullets).toHaveLength(0)
     })
 
-    it('sets effective speed based on the game speed multiplier', () => {
+    it('[U00757] sets effective speed based on the game speed multiplier', () => {
       const bullet = createMockBullet({ speed: 10, vx: 0, vy: 0 })
       const bullets = [bullet]
       updateBullets(bullets, [], [], createGameState({ speedMultiplier: 2 }), mapGrid)
       expect(bullet.effectiveSpeed).toBe(10)
     })
 
-    it('detonates parabolic projectiles when their flight completes', () => {
+    it('[U00758] detonates parabolic projectiles when their flight completes', () => {
       const bullet = createMockBullet({
         parabolic: true,
         startTime: 1,
@@ -1022,7 +1022,7 @@ describe('Bullet System', () => {
       expect(bullets).toHaveLength(0)
     })
 
-    it('stamps a crater decal when a howitzer shell detonates', () => {
+    it('[U00759] stamps a crater decal when a howitzer shell detonates', () => {
       const bullet = createMockBullet({
         parabolic: true,
         startTime: 1,
@@ -1044,7 +1044,7 @@ describe('Bullet System', () => {
       expect(setWorldDecal).toHaveBeenCalledWith(mapGrid, gameState, 70, 90, 'crater')
     })
 
-    it('stamps a crater decal when an artillery turret shell detonates', () => {
+    it('[U00760] stamps a crater decal when an artillery turret shell detonates', () => {
       const bullet = createMockBullet({
         parabolic: true,
         startTime: 1,
@@ -1066,7 +1066,7 @@ describe('Bullet System', () => {
       expect(setWorldDecal).toHaveBeenCalledWith(mapGrid, gameState, 82, 104, 'crater')
     })
 
-    it('emits smoke and trails during ballistic ascent', () => {
+    it('[U00761] emits smoke and trails during ballistic ascent', () => {
       const bullet = createMockBullet({
         ballistic: true,
         startTime: 1,
@@ -1082,7 +1082,7 @@ describe('Bullet System', () => {
       expect(bullet.trail.length).toBe(1)
     })
 
-    it('retains trail storage and point order while expiring the exact 300 ms boundary', () => {
+    it('[U00762] retains trail storage and point order while expiring the exact 300 ms boundary', () => {
       const expired = { x: 1, y: 2, time: 700 }
       const retained = { x: 3, y: 4, time: 701 }
       const trail = [expired, retained]
@@ -1097,7 +1097,7 @@ describe('Bullet System', () => {
       expect(trail[1].time).toBe(1000)
     })
 
-    it('transitions ballistic projectiles into homing mode after ascent', () => {
+    it('[U00763] transitions ballistic projectiles into homing mode after ascent', () => {
       const target = createMockUnit({ x: 160, y: 200, tileX: 5, tileY: 6 })
       const bullet = createMockBullet({
         ballistic: true,
@@ -1118,7 +1118,7 @@ describe('Bullet System', () => {
       expect(bullet.y).toBe(150)
     })
 
-    it('explodes homing missiles that time out in flight', () => {
+    it('[U00764] explodes homing missiles that time out in flight', () => {
       const bullet = createMockBullet({
         homing: true,
         startTime: 1,
@@ -1132,7 +1132,7 @@ describe('Bullet System', () => {
       expect(bullets).toHaveLength(0)
     })
 
-    it('explodes non-homing projectiles when they exceed max flight time', () => {
+    it('[U00765] explodes non-homing projectiles when they exceed max flight time', () => {
       const bullet = createMockBullet({
         homing: false,
         startTime: 1,
@@ -1158,7 +1158,7 @@ describe('Bullet System', () => {
       expect(bullets).toHaveLength(0)
     })
 
-    it('expires ammunition particles after their lifetime', () => {
+    it('[U00766] expires ammunition particles after their lifetime', () => {
       const bullet = createMockBullet({
         projectileType: 'ammoParticle',
         expiryTime: 1500
@@ -1169,7 +1169,7 @@ describe('Bullet System', () => {
       expect(triggerExplosion).not.toHaveBeenCalled()
     })
 
-    it('applies damage and effects on unit collisions', () => {
+    it('[U00767] applies damage and effects on unit collisions', () => {
       const nowSpy = vi.spyOn(performance, 'now').mockReturnValue(1200)
       const unit = createMockUnit({ owner: 'enemy', health: 100 })
       const bullet = createMockBullet({
@@ -1187,7 +1187,7 @@ describe('Bullet System', () => {
       nowSpy.mockRestore()
     })
 
-    it('applies building damage and broadcasts repairs on impact', () => {
+    it('[U00768] applies building damage and broadcasts repairs on impact', () => {
       const nowSpy = vi.spyOn(performance, 'now').mockReturnValue(1400)
       const building = createMockBuilding({ owner: 'enemy', health: 200 })
       const bullet = createMockBullet({
@@ -1207,7 +1207,7 @@ describe('Bullet System', () => {
       nowSpy.mockRestore()
     })
 
-    it('routes bullet damage into wrecks and removes the projectile', () => {
+    it('[U00769] routes bullet damage into wrecks and removes the projectile', () => {
       const nowSpy = vi.spyOn(performance, 'now').mockReturnValue(1600)
       const wreck = createMockWreck({ health: 50 })
       const bullet = createMockBullet({
@@ -1225,7 +1225,7 @@ describe('Bullet System', () => {
       nowSpy.mockRestore()
     })
 
-    it('skips apache collisions from unsupported shooters', () => {
+    it('[U00770] skips apache collisions from unsupported shooters', () => {
       const nowSpy = vi.spyOn(performance, 'now').mockReturnValue(1000)
       const apache = createMockUnit({ type: 'apache', owner: 'enemy', altitude: 40 })
       const bullet = createMockBullet({
@@ -1243,7 +1243,7 @@ describe('Bullet System', () => {
       nowSpy.mockRestore()
     })
 
-    it('handles apache dodge maneuvers against rocket hits', () => {
+    it('[U00771] handles apache dodge maneuvers against rocket hits', () => {
       gameRandom.mockReturnValue(0)
       const apache = createMockUnit({
         type: 'apache',
@@ -1269,7 +1269,7 @@ describe('Bullet System', () => {
       expect(bullets).toHaveLength(1)
     })
 
-    it('plays critical damage audio and records crew losses', () => {
+    it('[U00772] plays critical damage audio and records crew losses', () => {
       gameRandom.mockReturnValue(0)
       canPlayCriticalDamageSound.mockReturnValue(true)
       calculateHitZoneDamageMultiplier.mockReturnValue({ multiplier: 1, isRearHit: true })
@@ -1294,7 +1294,7 @@ describe('Bullet System', () => {
       expect(recordCriticalDamageSoundPlayed).toHaveBeenCalledWith(playerUnit, 1800)
     })
 
-    it('applies extra explosion damage when rocket turret rockets hit airborne apaches', () => {
+    it('[U00773] applies extra explosion damage when rocket turret rockets hit airborne apaches', () => {
       const apache = createMockUnit({
         id: 'apache-air-1',
         type: 'apache',
@@ -1353,7 +1353,7 @@ describe('Bullet System', () => {
       ['apache', 90],
       ['f22Raptor', 120],
       ['f35', 110]
-    ])('detonates rocket turret rockets directly on airborne %s sprites', (type, altitude) => {
+    ])('[U00774] detonates rocket turret rockets directly on airborne %s sprites', (type, altitude) => {
       const aircraft = createMockUnit({
         id: `${type}-air-1`,
         type,
@@ -1400,7 +1400,7 @@ describe('Bullet System', () => {
       )
     })
 
-    it('explodes rocket tank homing missiles when they reach their target', () => {
+    it('[U00775] explodes rocket tank homing missiles when they reach their target', () => {
       const target = createMockUnit({ owner: 'enemy', x: 160, y: 160 })
       const bullet = createMockBullet({
         originType: 'rocketTank',
@@ -1435,7 +1435,7 @@ describe('Bullet System', () => {
       expect(bullets).toHaveLength(0)
     })
 
-    it('explodes rocket tank homing missiles at target positions when target is gone', () => {
+    it('[U00776] explodes rocket tank homing missiles at target positions when target is gone', () => {
       const bullet = createMockBullet({
         originType: 'rocketTank',
         homing: true,
@@ -1470,7 +1470,7 @@ describe('Bullet System', () => {
       expect(bullets).toHaveLength(0)
     })
 
-    it('applies direct damage when apache rockets hit airborne apaches', () => {
+    it('[U00777] applies direct damage when apache rockets hit airborne apaches', () => {
       const airborneApache = createMockUnit({
         id: 'apache-1',
         type: 'apache',
@@ -1505,7 +1505,7 @@ describe('Bullet System', () => {
     })
 
 
-    it('indexes homing targets once and observes earlier lethal impacts in the same pass', () => {
+    it('[U00778] indexes homing targets once and observes earlier lethal impacts in the same pass', () => {
       const target = createMockUnit({ id: 'shared-apache-target', type: 'apache', owner: 'enemy', altitude: 40, health: 1, armor: 1, flightState: 'flying' })
       const units = [target]
       const find = vi.spyOn(units, 'find')
@@ -1525,7 +1525,7 @@ describe('Bullet System', () => {
       expect(find).not.toHaveBeenCalled()
     })
 
-    it('keeps apache rockets on their original trajectory when the target moves', () => {
+    it('[U00779] keeps apache rockets on their original trajectory when the target moves', () => {
       const nowSpy = vi.spyOn(performance, 'now').mockReturnValue(2400)
       const airborneApache = createMockUnit({
         id: 'apache-1',
@@ -1566,7 +1566,7 @@ describe('Bullet System', () => {
       nowSpy.mockRestore()
     })
 
-    it('does not apply direct airborne damage when the apache target moved away from the original impact point', () => {
+    it('[U00780] does not apply direct airborne damage when the apache target moved away from the original impact point', () => {
       const nowSpy = vi.spyOn(performance, 'now').mockReturnValue(2400)
       const airborneApache = createMockUnit({
         id: 'apache-1',
@@ -1610,7 +1610,7 @@ describe('Bullet System', () => {
   })
 
   describe('fireBullet', () => {
-    it('fires a tank round with the correct stats and velocity', () => {
+    it('[U00781] fires a tank round with the correct stats and velocity', () => {
       const unit = createMockUnit({ type: 'tank_v1', owner: 'player', x: 0, y: 0 })
       const target = createMockUnit({ owner: 'enemy', tileX: 4, tileY: 2 })
       const bullets = []
@@ -1626,7 +1626,7 @@ describe('Bullet System', () => {
       expect(playPositionalSound).toHaveBeenCalledWith('shoot', bullet.x, bullet.y, 0.5)
     })
 
-    it('creates rocket tank rounds with ballistic homing settings', () => {
+    it('[U00782] creates rocket tank rounds with ballistic homing settings', () => {
       const unit = createMockUnit({ type: 'rocketTank', owner: 'player', x: 80, y: 80 })
       const target = createMockUnit({ owner: 'enemy', tileX: 6, tileY: 6 })
       const bullets = []
@@ -1639,7 +1639,7 @@ describe('Bullet System', () => {
       expect(bullet.originType).toBe('rocketTank')
     })
 
-    it('creates apache rockets with altitude-adjusted targeting', () => {
+    it('[U00783] creates apache rockets with altitude-adjusted targeting', () => {
       const unit = createMockUnit({ type: 'apache', owner: 'player', x: 100, y: 120 })
       const target = createMockUnit({
         owner: 'enemy',

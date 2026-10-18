@@ -7,13 +7,13 @@ const explosion = (profile = 'blasty', seed = 123) => ({ x: 100, y: 100, startTi
 const context = () => ({ globalAlpha: 0.7, globalCompositeOperation: 'source-over', fillStyle: 'red', strokeStyle: 'blue', lineWidth: 3, drawImage: vi.fn(), beginPath: vi.fn(), arc: vi.fn(), ellipse: vi.fn(), fill: vi.fn(), moveTo: vi.fn(), lineTo: vi.fn(), stroke: vi.fn() })
 
 describe('impact visuals', () => {
-  it.each(['tank', 'tank_v1', 'tank-v2', 'tank-v3'])('selects blasty for %s', type => {
+  it.each(['tank', 'tank_v1', 'tank-v2', 'tank-v3'])('[U02043] selects blasty for %s', type => {
     expect(selectImpactProfile(type)).toBe('blasty')
   })
-  it.each(['lightTank', 'm2', 'bradley', 'm2Bradley', 'bradleyM2'])('selects sparky for %s', type => {
+  it.each(['lightTank', 'm2', 'bradley', 'm2Bradley', 'bradleyM2'])('[U02044] selects sparky for %s', type => {
     expect(selectImpactProfile(type)).toBe('sparky')
   })
-  it('uses shooter profile for generic shells, actual travel direction and collision surface', () => {
+  it('[U02045] uses shooter profile for generic shells, actual travel direction and collision surface', () => {
     const projectile = { vx: 0, vy: 2, originType: 'shell', target: { width: 2 } }
     const visual = createImpactVisual(50, 60, 0, 64, { type: 'tank-v2' }, projectile, 'ground')
     expect(visual.impactProfile).toBe('blasty')
@@ -22,7 +22,7 @@ describe('impact visuals', () => {
     expect(projectile).toEqual({ vx: 0, vy: 2, originType: 'shell', target: { width: 2 } })
     expect(selectImpactProfile('unknown')).toBe('default')
   })
-  it('reads the configured profile and resolves actual Bradley projectile and shooter IDs', () => {
+  it('[U02046] reads the configured profile and resolves actual Bradley projectile and shooter IDs', () => {
     for (const type of ['tank', 'tank_v1', 'tank-v2', 'tank-v3', 'lightTank']) {
       expect(selectImpactProfile(type)).toBe(UNIT_PROPERTIES[type].impactVfxProfile)
     }
@@ -31,7 +31,7 @@ describe('impact visuals', () => {
     expect(createImpactVisual(0, 0, 0, 40, null, { originType: 'lightTank' }).impactProfile).toBe('sparky')
     expect(createImpactVisual(0, 0, 0, 40, { type: 'lightTank' }, { originType: 'shell' }).impactProfile).toBe('sparky')
   })
-  it('maintains a bright tank body beyond 300 ms at more than twice the old radius', () => {
+  it('[U02047] maintains a bright tank body beyond 300 ms at more than twice the old radius', () => {
     const pool = new ImpactVfx()
     pool.emit(explosion(), 0, false)
     const flash = pool.particles.find(p => p.kind === 4 && p.life)
@@ -41,7 +41,7 @@ describe('impact visuals', () => {
     pool.render(ctx, {}, { x: 0, y: 0 }, 310, 200, 200)
     expect(ctx.arc.mock.calls.some(call => call[2] > 80)).toBe(true)
   })
-  it('adds scorch, dirt and more dust on ground, with more sparks on metal', () => {
+  it('[U02048] adds scorch, dirt and more dust on ground, with more sparks on metal', () => {
     for (const profile of ['sparky', 'blasty']) {
       const ground = new ImpactVfx()
       const metal = new ImpactVfx()
@@ -54,7 +54,7 @@ describe('impact visuals', () => {
       expect(count(metal, 0)).toBeGreaterThan(count(ground, 0))
     }
   })
-  it('reuses preallocated slots under sustained overload and emits each impact only once', () => {
+  it('[U02049] reuses preallocated slots under sustained overload and emits each impact only once', () => {
     const pool = new ImpactVfx()
     const slots = pool.particles.slice()
     const exp = explosion()
@@ -66,7 +66,7 @@ describe('impact visuals', () => {
     expect(pool.particles).toHaveLength(MAX_IMPACT_PARTICLES)
     pool.particles.forEach((slot, i) => expect(slot).toBe(slots[i]))
   })
-  it('keeps M2 small and sparky, with no smoke, debris or fireball particles', () => {
+  it('[U02050] keeps M2 small and sparky, with no smoke, debris or fireball particles', () => {
     const pool = new ImpactVfx()
     pool.emit(explosion('sparky'), 0, false)
     const active = pool.particles.filter(p => p.life > 0)
@@ -76,7 +76,7 @@ describe('impact visuals', () => {
     expect(active.find(p => p.kind === 4).size).toBeLessThanOrEqual(4)
     expect(active.filter(p => p.kind === 0).every(p => p.vx < 0)).toBe(true)
   })
-  it('varies tank smoke, debris, size and timing from the visual seed', () => {
+  it('[U02051] varies tank smoke, debris, size and timing from the visual seed', () => {
     const a = new ImpactVfx()
     const b = new ImpactVfx()
     a.emit(explosion('blasty', 341), 0, false)
@@ -86,7 +86,7 @@ describe('impact visuals', () => {
     expect(a.particles.some(p => p.kind === 1 && p.life > 0)).toBe(true)
     expect(a.particles.some(p => p.kind === 2 && p.life > 0)).toBe(true)
   })
-  it('widens sparks on ground relative to hard surfaces', () => {
+  it('[U02052] widens sparks on ground relative to hard surfaces', () => {
     const ground = new ImpactVfx()
     const metal = new ImpactVfx()
     ground.emit({ ...explosion('sparky'), impactSurface: 'ground' }, 0, false)
@@ -96,7 +96,7 @@ describe('impact visuals', () => {
     expect(angles(ground).every(angle => angle <= 1.3)).toBe(true)
     expect(angles(metal).every(angle => angle <= 0.6)).toBe(true)
   })
-  it('scales mobile counts, suppresses the pulse, expires and culls particles, and restores canvas state', () => {
+  it('[U02053] scales mobile counts, suppresses the pulse, expires and culls particles, and restores canvas state', () => {
     const pool = new ImpactVfx()
     const ctx = context()
     for (let i = 0; i < 100; i++) pool.emit(explosion(), 0, true)
@@ -113,7 +113,7 @@ describe('impact visuals', () => {
     expect(ctx.fill).not.toHaveBeenCalled()
     expect(isLowImpactQuality({ graphicsQuality: 'low' })).toBe(true)
   })
-  it('does not consume gameplay randomness', () => {
+  it('[U02054] does not consume gameplay randomness', () => {
     const before = deterministicRNG.getState()
     const pool = new ImpactVfx()
     const exp = createImpactVisual(50, 50, 0, 32, { type: 'tank' })
@@ -121,7 +121,7 @@ describe('impact visuals', () => {
     pool.render(context(), {}, { x: 0, y: 0 }, 80, 200, 200)
     expect(deterministicRNG.getState()).toEqual(before)
   })
-  it('replays looping fixtures and clears pooled history on simulation rewind', () => {
+  it('[U02055] replays looping fixtures and clears pooled history on simulation rewind', () => {
     const pool = new ImpactVfx()
     const exp = { ...explosion(), loop: true, duration: 500 }
     pool.beginFrame(0)
@@ -135,7 +135,7 @@ describe('impact visuals', () => {
     pool.emit(exp, 0, false)
     expect(pool.cursor).toBe(firstCount * 3)
   })
-  it('shares an idempotent final-density gradient and swaps it only during preparation', () => {
+  it('[U02056] shares an idempotent final-density gradient and swaps it only during preparation', () => {
     const pool = new ImpactVfx()
     const sprite = pool.prepare(2)
     expect(sprite.width).toBe(96)
@@ -146,7 +146,7 @@ describe('impact visuals', () => {
     expect(pool.prepare(5)).toBeNull()
     pool.prepare(1)
   })
-  it.each(['blasty', 'sparky', 'default'])('never strokes a circle for %s', profile => {
+  it.each(['blasty', 'sparky', 'default'])('[U02057] never strokes a circle for %s', profile => {
     const pool = new ImpactVfx()
     const ctx = context()
     let circleInPath = false
@@ -159,7 +159,7 @@ describe('impact visuals', () => {
     expect(ctx.arc).toHaveBeenCalled()
     expect(ctx.stroke).toHaveBeenCalled()
   })
-  it('does not reveal pooled particles through fog', () => {
+  it('[U02058] does not reveal pooled particles through fog', () => {
     const pool = new ImpactVfx()
     const ctx = context()
     pool.emit(explosion(), 0, false)

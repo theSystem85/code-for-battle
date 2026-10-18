@@ -136,7 +136,7 @@ describe('control group handling (keyboardHandler)', () => {
     vi.clearAllMocks()
   })
 
-  it('assigns control groups to player-owned units and skips factories', () => {
+  it('[U01085] assigns control groups to player-owned units and skips factories', () => {
     const handler = new KeyboardHandler()
     handler.showNotification = vi.fn()
 
@@ -155,7 +155,7 @@ describe('control group handling (keyboardHandler)', () => {
     expect(handler.showNotification).toHaveBeenCalledWith('Group 1 assigned', 2000)
   })
 
-  it('selects only alive units in a control group and clears existing selection', () => {
+  it('[U01086] selects only alive units in a control group and clears existing selection', () => {
     const handler = new KeyboardHandler()
     const mapGrid = createTestMapGrid(8, 8)
 
@@ -180,7 +180,7 @@ describe('control group handling (keyboardHandler)', () => {
     expect(handler.lastGroupKeyPressTime).toBeGreaterThan(0)
   })
 
-  it('centers the camera when the same control group is double-pressed', () => {
+  it('[U01087] centers the camera when the same control group is double-pressed', () => {
     const handler = new KeyboardHandler()
     handler.requestRenderFrame = vi.fn()
 
@@ -207,7 +207,7 @@ describe('control group handling (keyboardHandler)', () => {
     expect(handler.lastGroupKeyPressTime).toBe(1200)
   })
 
-  it('rebuilds control groups from unit group numbers', () => {
+  it('[U01088] rebuilds control groups from unit group numbers', () => {
     const handler = new KeyboardHandler()
 
     const units = [
@@ -225,7 +225,7 @@ describe('control group handling (keyboardHandler)', () => {
     })
   })
 
-  it('handles invalid unit lists when rebuilding control groups', () => {
+  it('[U01089] handles invalid unit lists when rebuilding control groups', () => {
     const handler = new KeyboardHandler()
 
     handler.controlGroups = { 1: [createUnit({ id: 'old' })] }
@@ -234,7 +234,7 @@ describe('control group handling (keyboardHandler)', () => {
     expect(handler.controlGroups).toEqual({})
   })
 
-  it('handles control group assignment with empty selection', () => {
+  it('[U01090] handles control group assignment with empty selection', () => {
     const handler = new KeyboardHandler()
     handler.showNotification = vi.fn()
 
@@ -245,7 +245,7 @@ describe('control group handling (keyboardHandler)', () => {
     expect(playSound).not.toHaveBeenCalled()
   })
 
-  it('does not reassign same units to a group if already assigned', () => {
+  it('[U01091] does not reassign same units to a group if already assigned', () => {
     const handler = new KeyboardHandler()
     handler.showNotification = vi.fn()
 
@@ -259,7 +259,7 @@ describe('control group handling (keyboardHandler)', () => {
     expect(playSound).toHaveBeenCalledWith('unitSelection')
   })
 
-  it('overwrites previous control group assignment', () => {
+  it('[U01092] overwrites previous control group assignment', () => {
     const handler = new KeyboardHandler()
     handler.showNotification = vi.fn()
 
@@ -274,7 +274,7 @@ describe('control group handling (keyboardHandler)', () => {
     expect(oldUnit.groupNumber).toBe(5)
   })
 
-  it('handles control group selection with no units in group', () => {
+  it('[U01093] handles control group selection with no units in group', () => {
     const handler = new KeyboardHandler()
     const mapGrid = createTestMapGrid(8, 8)
     const selectedUnits = []
@@ -285,7 +285,7 @@ describe('control group handling (keyboardHandler)', () => {
     expect(playSound).not.toHaveBeenCalled()
   })
 
-  it('does not center camera on single-press', () => {
+  it('[U01094] does not center camera on single-press', () => {
     const handler = new KeyboardHandler()
     handler.requestRenderFrame = vi.fn()
 
@@ -311,7 +311,7 @@ describe('control group handling (keyboardHandler)', () => {
     expect(handler.lastGroupKeyPressed).toBe(4)
   })
 
-  it('filters buildings from control group assignment', () => {
+  it('[U01095] filters buildings from control group assignment', () => {
     const handler = new KeyboardHandler()
     handler.showNotification = vi.fn()
 
@@ -325,7 +325,7 @@ describe('control group handling (keyboardHandler)', () => {
     expect(building.groupNumber).toBeUndefined()
   })
 
-  it('rebuilds control groups from mixed unit types', () => {
+  it('[U01096] rebuilds control groups from mixed unit types', () => {
     const handler = new KeyboardHandler()
 
     const units = [
@@ -344,7 +344,7 @@ describe('control group handling (keyboardHandler)', () => {
     })
   })
 
-  it('rebuilds control groups with undefined array', () => {
+  it('[U01097] rebuilds control groups with undefined array', () => {
     const handler = new KeyboardHandler()
     handler.controlGroups = { 1: [createUnit()] }
 
@@ -353,7 +353,7 @@ describe('control group handling (keyboardHandler)', () => {
     expect(handler.controlGroups).toEqual({})
   })
 
-  it('handles control group selection time threshold for double-press', () => {
+  it('[U01098] handles control group selection time threshold for double-press', () => {
     const handler = new KeyboardHandler()
     handler.requestRenderFrame = vi.fn()
 

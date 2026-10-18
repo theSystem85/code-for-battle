@@ -15,7 +15,7 @@ async function newAutomation(page, variant = 'unit') {
   return page.locator('.policy-editor')
 }
 
-test('DAV and guided CFBL share changes, legal choices, history and persisted source', async({ page }) => {
+test('[E00008] DAV and guided CFBL share changes, legal choices, history and persisted source', async({ page }) => {
   const errors = []
   page.on('pageerror', error => errors.push(error.message))
   await startGame(page)
@@ -83,7 +83,7 @@ test('DAV and guided CFBL share changes, legal choices, history and persisted so
 })
 
 for (const [deviceName, fullScreen] of [['iPhone 13', true], ['iPad Pro 11', false]]) {
-  test(`${deviceName} uses the correct Automation modal and preserves source on rotation`, async({ browser }) => {
+  test(`[E00009] ${deviceName} uses the correct Automation modal and preserves source on rotation`, async({ browser }) => {
     const context = await browser.newContext({ ...devices[deviceName], defaultBrowserType: undefined })
     const page = await context.newPage()
     try {
@@ -116,7 +116,7 @@ for (const [variant, header, effect] of [
   ['unitBuild', 'build unit', 'buildUnits'],
   ['build', 'build building', 'buildBuilding']
 ]) {
-  test(`${header} can be authored in Buttons and saved as synchronized CFBL`, async({ page }) => {
+  test(`[E00010] ${header} can be authored in Buttons and saved as synchronized CFBL`, async({ page }) => {
     const errors = []
     page.on('pageerror', error => errors.push(error.message))
     await startGame(page)

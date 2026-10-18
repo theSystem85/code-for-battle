@@ -21,7 +21,7 @@ describe('CanvasManager adaptive DPR', () => {
     document.body.innerHTML = ''
   })
 
-  it('drops immediately to 1x while the camera is moving', () => {
+  it('[U00784] drops immediately to 1x while the camera is moving', () => {
     vi.spyOn(window, 'devicePixelRatio', 'get').mockReturnValue(3)
     const manager = createAdaptiveManager()
 
@@ -30,7 +30,7 @@ describe('CanvasManager adaptive DPR', () => {
     expect(manager.resizeCanvases).toHaveBeenCalledTimes(1)
   })
 
-  it('keeps density fixed during scrolling unless automatic adjustment is explicitly enabled', () => {
+  it('[U00785] keeps density fixed during scrolling unless automatic adjustment is explicitly enabled', () => {
     vi.spyOn(window, 'devicePixelRatio', 'get').mockReturnValue(3)
     const manager = createAdaptiveManager()
     manager.automaticDensityAdjustmentEnabled = false
@@ -40,14 +40,14 @@ describe('CanvasManager adaptive DPR', () => {
     expect(manager.resizeCanvases).not.toHaveBeenCalled()
   })
 
-  it('keeps the entity and UI overlay at native DPR when terrain is capped', () => {
+  it('[U00786] keeps the entity and UI overlay at native DPR when terrain is capped', () => {
     const manager = createAdaptiveManager(1)
 
     expect(manager.resolvePixelRatio(3)).toBe(1)
     expect(manager.resolveOverlayPixelRatio(3)).toBe(3)
   })
 
-  it('sizes terrain backing stores at the cap and the overlay at native DPR', () => {
+  it('[U00787] sizes terrain backing stores at the cap and the overlay at native DPR', () => {
     document.body.className = 'is-touch'
     document.body.innerHTML = `
       <canvas id="gameCanvasGPU"></canvas>
@@ -73,7 +73,7 @@ describe('CanvasManager adaptive DPR', () => {
     manager.dispose()
   })
 
-  it('publishes one coherent density generation after an explicit graphics change', () => {
+  it('[U00788] publishes one coherent density generation after an explicit graphics change', () => {
     document.body.innerHTML = `
       <canvas id="gameCanvasGPU"></canvas>
       <canvas id="gameCanvasGL"></canvas>
@@ -128,7 +128,7 @@ describe('CanvasManager adaptive DPR', () => {
     document.removeEventListener('canvas-density-changed', handleDensityChange)
   })
 
-  it('does not raise DPR until the camera and frame rate have stayed stable', () => {
+  it('[U00789] does not raise DPR until the camera and frame rate have stayed stable', () => {
     vi.spyOn(window, 'devicePixelRatio', 'get').mockReturnValue(3)
     const manager = createAdaptiveManager(1)
     manager.stableCameraSince = 1000
@@ -149,7 +149,7 @@ describe('CanvasManager adaptive DPR', () => {
       return manager
     }
 
-    it('keeps 2x while the frame rate meets the display-limited target', () => {
+    it('[U00790] keeps 2x while the frame rate meets the display-limited target', () => {
       vi.spyOn(window, 'devicePixelRatio', 'get').mockReturnValue(3)
       const manager = createGovernorManager()
       for (let t = 1000; t <= 10000; t += 1000) {
@@ -158,7 +158,7 @@ describe('CanvasManager adaptive DPR', () => {
       expect(manager.adaptivePixelRatioCap).toBe(2)
     })
 
-    it('steps down by 0.5 after three consecutive low samples and never below 1x', () => {
+    it('[U00791] steps down by 0.5 after three consecutive low samples and never below 1x', () => {
       vi.spyOn(window, 'devicePixelRatio', 'get').mockReturnValue(3)
       const manager = createGovernorManager()
       manager.updateTerrainDensityGovernor(120, 1000) // display can present 120 Hz -> target 75
@@ -171,7 +171,7 @@ describe('CanvasManager adaptive DPR', () => {
       expect(manager.resizeCanvases).toHaveBeenCalledTimes(2)
     })
 
-    it('does nothing on desktop layouts', () => {
+    it('[U00792] does nothing on desktop layouts', () => {
       vi.spyOn(window, 'devicePixelRatio', 'get').mockReturnValue(2)
       const manager = createGovernorManager()
       manager.isTouchLayout = () => false

@@ -25,7 +25,7 @@ describe('llmProviders openai request shaping', () => {
     })
   })
 
-  it('sends instructions without duplicating a system message in input', async() => {
+  it('[U02362] sends instructions without duplicating a system message in input', async() => {
     globalThis.fetch = vi.fn(async() => ({
       ok: true,
       json: async() => ({

@@ -41,18 +41,18 @@ describe('Building Placement Near Construction Yard', () => {
   })
 
   describe('Maximum Building Gap Configuration', () => {
-    it('should have MAX_BUILDING_GAP_TILES set to 3', () => {
+    it('[U00002] should have MAX_BUILDING_GAP_TILES set to 3', () => {
       expect(MAX_GAP).toBe(3)
     })
 
-    it('should have power plant as a valid building type', () => {
+    it('[U00003] should have power plant as a valid building type', () => {
       const powerPlantData = getBuildingData('powerPlant')
       expect(powerPlantData).toBeDefined()
       expect(powerPlantData.width).toBe(3)
       expect(powerPlantData.height).toBe(3)
     })
 
-    it('should have construction yard as a valid building type', () => {
+    it('[U00004] should have construction yard as a valid building type', () => {
       const cyData = getBuildingData('constructionYard')
       expect(cyData).toBeDefined()
       expect(cyData.width).toBe(3)
@@ -64,7 +64,7 @@ describe('Building Placement Near Construction Yard', () => {
     // Construction yard is at (20,20) to (22,22)
     // 1 tile gap means power plant at position that has 1 tile between CY and PP
 
-    it('should allow power plant placement 1 tile to the right of construction yard', async() => {
+    it('[U00005] should allow power plant placement 1 tile to the right of construction yard', async() => {
       // CY occupies x: 20-22, so x=23 is 1 tile gap from CY edge (x=22)
       // Power plant at x=24 would have 1 tile gap (tile 23 is free)
       const canPlace = ctx.canPlaceBuilding('powerPlant', 24, 20, 'player')
@@ -74,7 +74,7 @@ describe('Building Placement Near Construction Yard', () => {
       await ctx.runTicks(10)
     })
 
-    it('should allow power plant placement 1 tile below construction yard', async() => {
+    it('[U00006] should allow power plant placement 1 tile below construction yard', async() => {
       // CY occupies y: 20-22, so y=23 is 1 tile gap from CY edge (y=22)
       // Power plant at y=24 would have 1 tile gap (tile 23 is free)
       const canPlace = ctx.canPlaceBuilding('powerPlant', 20, 24, 'player')
@@ -83,7 +83,7 @@ describe('Building Placement Near Construction Yard', () => {
       await ctx.runTicks(10)
     })
 
-    it('should allow power plant placement 1 tile diagonally from construction yard', async() => {
+    it('[U00007] should allow power plant placement 1 tile diagonally from construction yard', async() => {
       // Diagonal placement with 1 tile gap
       // CY corner is at (22,22), power plant at (24,24) leaves 1 tile diagonal gap
       const canPlace = ctx.canPlaceBuilding('powerPlant', 24, 24, 'player')
@@ -92,7 +92,7 @@ describe('Building Placement Near Construction Yard', () => {
       await ctx.runTicks(10)
     })
 
-    it('should allow power plant placement 1 tile to the left of construction yard', async() => {
+    it('[U00008] should allow power plant placement 1 tile to the left of construction yard', async() => {
       // CY starts at x=20, power plant is 3 wide, so at x=16 it ends at x=18
       // Gap at tile 19, then CY at 20
       const canPlace = ctx.canPlaceBuilding('powerPlant', 16, 20, 'player')
@@ -101,7 +101,7 @@ describe('Building Placement Near Construction Yard', () => {
       await ctx.runTicks(10)
     })
 
-    it('should allow power plant placement 1 tile above construction yard', async() => {
+    it('[U00009] should allow power plant placement 1 tile above construction yard', async() => {
       // CY starts at y=20, power plant is 3 tall, so at y=16 it ends at y=18
       // Gap at tile 19, then CY at 20
       const canPlace = ctx.canPlaceBuilding('powerPlant', 20, 16, 'player')
@@ -112,7 +112,7 @@ describe('Building Placement Near Construction Yard', () => {
   })
 
   describe('Variation 2: 2 tiles free space around', () => {
-    it('should allow power plant placement 2 tiles to the right of construction yard', async() => {
+    it('[U00010] should allow power plant placement 2 tiles to the right of construction yard', async() => {
       // CY edge at x=22, 2 tile gap means power plant at x=25
       const canPlace = ctx.canPlaceBuilding('powerPlant', 25, 20, 'player')
       expect(canPlace).toBe(true)
@@ -120,7 +120,7 @@ describe('Building Placement Near Construction Yard', () => {
       await ctx.runTicks(10)
     })
 
-    it('should allow power plant placement 2 tiles below construction yard', async() => {
+    it('[U00011] should allow power plant placement 2 tiles below construction yard', async() => {
       // CY edge at y=22, 2 tile gap means power plant at y=25
       const canPlace = ctx.canPlaceBuilding('powerPlant', 20, 25, 'player')
       expect(canPlace).toBe(true)
@@ -128,7 +128,7 @@ describe('Building Placement Near Construction Yard', () => {
       await ctx.runTicks(10)
     })
 
-    it('should allow power plant placement 2 tiles diagonally from construction yard', async() => {
+    it('[U00012] should allow power plant placement 2 tiles diagonally from construction yard', async() => {
       // CY corner is at (22,22), power plant at (25,25) leaves 2 tile diagonal gap
       const canPlace = ctx.canPlaceBuilding('powerPlant', 25, 25, 'player')
       expect(canPlace).toBe(true)
@@ -136,7 +136,7 @@ describe('Building Placement Near Construction Yard', () => {
       await ctx.runTicks(10)
     })
 
-    it('should allow power plant placement 2 tiles to the left of construction yard', async() => {
+    it('[U00013] should allow power plant placement 2 tiles to the left of construction yard', async() => {
       // CY starts at x=20, power plant at x=15 ends at x=17
       // 2 tile gap at 18 and 19
       const canPlace = ctx.canPlaceBuilding('powerPlant', 15, 20, 'player')
@@ -145,7 +145,7 @@ describe('Building Placement Near Construction Yard', () => {
       await ctx.runTicks(10)
     })
 
-    it('should allow power plant placement 2 tiles above construction yard', async() => {
+    it('[U00014] should allow power plant placement 2 tiles above construction yard', async() => {
       // CY starts at y=20, power plant at y=15 ends at y=17
       // 2 tile gap at 18 and 19
       const canPlace = ctx.canPlaceBuilding('powerPlant', 20, 15, 'player')
@@ -156,7 +156,7 @@ describe('Building Placement Near Construction Yard', () => {
   })
 
   describe('Variation 3: 0 tiles free space (directly adjacent)', () => {
-    it('should allow power plant placement directly adjacent to the right of construction yard', async() => {
+    it('[U00015] should allow power plant placement directly adjacent to the right of construction yard', async() => {
       // CY edge at x=22, power plant at x=23 is directly adjacent
       const canPlace = ctx.canPlaceBuilding('powerPlant', 23, 20, 'player')
       expect(canPlace).toBe(true)
@@ -164,7 +164,7 @@ describe('Building Placement Near Construction Yard', () => {
       await ctx.runTicks(10)
     })
 
-    it('should allow power plant placement directly adjacent below construction yard', async() => {
+    it('[U00016] should allow power plant placement directly adjacent below construction yard', async() => {
       // CY edge at y=22, power plant at y=23 is directly adjacent
       const canPlace = ctx.canPlaceBuilding('powerPlant', 20, 23, 'player')
       expect(canPlace).toBe(true)
@@ -172,7 +172,7 @@ describe('Building Placement Near Construction Yard', () => {
       await ctx.runTicks(10)
     })
 
-    it('should allow power plant placement directly adjacent diagonally to construction yard', async() => {
+    it('[U00017] should allow power plant placement directly adjacent diagonally to construction yard', async() => {
       // CY corner at (22,22), power plant at (23,23) is directly diagonal
       const canPlace = ctx.canPlaceBuilding('powerPlant', 23, 23, 'player')
       expect(canPlace).toBe(true)
@@ -180,7 +180,7 @@ describe('Building Placement Near Construction Yard', () => {
       await ctx.runTicks(10)
     })
 
-    it('should allow power plant placement directly adjacent to the left of construction yard', async() => {
+    it('[U00018] should allow power plant placement directly adjacent to the left of construction yard', async() => {
       // CY starts at x=20, power plant at x=17 ends at x=19, adjacent to CY
       const canPlace = ctx.canPlaceBuilding('powerPlant', 17, 20, 'player')
       expect(canPlace).toBe(true)
@@ -188,7 +188,7 @@ describe('Building Placement Near Construction Yard', () => {
       await ctx.runTicks(10)
     })
 
-    it('should allow power plant placement directly adjacent above construction yard', async() => {
+    it('[U00019] should allow power plant placement directly adjacent above construction yard', async() => {
       // CY starts at y=20, power plant at y=17 ends at y=19, adjacent to CY
       const canPlace = ctx.canPlaceBuilding('powerPlant', 20, 17, 'player')
       expect(canPlace).toBe(true)
@@ -198,7 +198,7 @@ describe('Building Placement Near Construction Yard', () => {
   })
 
   describe('Negative tests: Too far from construction yard', () => {
-    it('should NOT allow power plant placement 4 tiles away to the right (beyond MAX_GAP)', async() => {
+    it('[U00020] should NOT allow power plant placement 4 tiles away to the right (beyond MAX_GAP)', async() => {
       // MAX_GAP is 3, so 4 tiles away should fail
       // CY edge at x=22, 4 tile gap means power plant at x=27
       // The closest tile of power plant (x=27) is distance 4 from CY edge (x=22+1=23..26..27 = 4 tiles)
@@ -211,7 +211,7 @@ describe('Building Placement Near Construction Yard', () => {
       await ctx.runTicks(10)
     })
 
-    it('should NOT allow power plant placement 4 tiles away below (beyond MAX_GAP)', async() => {
+    it('[U00021] should NOT allow power plant placement 4 tiles away below (beyond MAX_GAP)', async() => {
       // CY bottom edge at y=22, power plant at y=27
       const canPlace = ctx.canPlaceBuilding('powerPlant', 20, 27, 'player')
       expect(canPlace).toBe(false)
@@ -219,7 +219,7 @@ describe('Building Placement Near Construction Yard', () => {
       await ctx.runTicks(10)
     })
 
-    it('should NOT allow power plant placement 4 tiles away diagonally (beyond MAX_GAP)', async() => {
+    it('[U00022] should NOT allow power plant placement 4 tiles away diagonally (beyond MAX_GAP)', async() => {
       // Testing with significantly far distance
       const canPlace = ctx.canPlaceBuilding('powerPlant', 27, 27, 'player')
       expect(canPlace).toBe(false)
@@ -227,7 +227,7 @@ describe('Building Placement Near Construction Yard', () => {
       await ctx.runTicks(10)
     })
 
-    it('should NOT allow power plant placement far to the left (beyond MAX_GAP)', async() => {
+    it('[U00023] should NOT allow power plant placement far to the left (beyond MAX_GAP)', async() => {
       // CY starts at x=20, power plant at x=13 ends at x=15
       // Gap between 15 and 20 is 4 tiles (16,17,18,19) - too far
       const canPlace = ctx.canPlaceBuilding('powerPlant', 13, 20, 'player')
@@ -236,7 +236,7 @@ describe('Building Placement Near Construction Yard', () => {
       await ctx.runTicks(10)
     })
 
-    it('should NOT allow power plant placement far above (beyond MAX_GAP)', async() => {
+    it('[U00024] should NOT allow power plant placement far above (beyond MAX_GAP)', async() => {
       // CY starts at y=20, power plant at y=13 ends at y=15
       const canPlace = ctx.canPlaceBuilding('powerPlant', 20, 13, 'player')
       expect(canPlace).toBe(false)
@@ -244,7 +244,7 @@ describe('Building Placement Near Construction Yard', () => {
       await ctx.runTicks(10)
     })
 
-    it('should NOT allow power plant placement far from construction yard in corner of map', async() => {
+    it('[U00025] should NOT allow power plant placement far from construction yard in corner of map', async() => {
       // Place at far corner - definitely too far
       const canPlace = ctx.canPlaceBuilding('powerPlant', 5, 5, 'player')
       expect(canPlace).toBe(false)
@@ -255,7 +255,7 @@ describe('Building Placement Near Construction Yard', () => {
 
 
   describe('Non-expanding build area structures', () => {
-    it('should NOT allow a power plant to extend from a street tile alone', () => {
+    it('[U00026] should NOT allow a power plant to extend from a street tile alone', () => {
       ctx.addBuilding('street', 23, 20, 'player')
       ctx.addBuilding('street', 24, 20, 'player')
       ctx.addBuilding('street', 25, 20, 'player')
@@ -265,7 +265,7 @@ describe('Building Placement Near Construction Yard', () => {
       expect(canPlace).toBe(false)
     })
 
-    it('should allow streets to extend from other street tiles', () => {
+    it('[U00027] should allow streets to extend from other street tiles', () => {
       ctx.addBuilding('street', 23, 20, 'player')
       ctx.addBuilding('street', 24, 20, 'player')
       ctx.addBuilding('street', 25, 20, 'player')
@@ -275,7 +275,7 @@ describe('Building Placement Near Construction Yard', () => {
       expect(canPlace).toBe(true)
     })
 
-    it('should NOT allow a power plant to extend from a concrete wall tile alone', () => {
+    it('[U00028] should NOT allow a power plant to extend from a concrete wall tile alone', () => {
       ctx.addBuilding('concreteWall', 23, 20, 'player')
       ctx.addBuilding('concreteWall', 24, 20, 'player')
       ctx.addBuilding('concreteWall', 25, 20, 'player')
@@ -285,7 +285,7 @@ describe('Building Placement Near Construction Yard', () => {
       expect(canPlace).toBe(false)
     })
 
-    it('should allow concrete walls to extend from other concrete walls', () => {
+    it('[U00029] should allow concrete walls to extend from other concrete walls', () => {
       ctx.addBuilding('concreteWall', 23, 20, 'player')
       ctx.addBuilding('concreteWall', 24, 20, 'player')
       ctx.addBuilding('concreteWall', 25, 20, 'player')
@@ -297,7 +297,7 @@ describe('Building Placement Near Construction Yard', () => {
   })
 
   describe('Edge case: Maximum allowed distance (exactly 3 tiles)', () => {
-    it('should allow power plant at exactly MAX_GAP tiles distance to the right', async() => {
+    it('[U00030] should allow power plant at exactly MAX_GAP tiles distance to the right', async() => {
       // CY edge at x=22, MAX_GAP=3 means power plant at x=26 is at the edge
       // Power plant leftmost at x=26, CY rightmost at x=22, distance = 26-22 = 4
       // Wait, that's 4 tiles distance. Let's reconsider.
@@ -311,7 +311,7 @@ describe('Building Placement Near Construction Yard', () => {
       await ctx.runTicks(10)
     })
 
-    it('should NOT allow power plant at MAX_GAP+1 tiles distance to the right', async() => {
+    it('[U00031] should NOT allow power plant at MAX_GAP+1 tiles distance to the right', async() => {
       // x=26 gives distance of 4 from CY edge
       const canPlace = ctx.canPlaceBuilding('powerPlant', 26, 20, 'player')
       expect(canPlace).toBe(false)
@@ -319,14 +319,14 @@ describe('Building Placement Near Construction Yard', () => {
       await ctx.runTicks(10)
     })
 
-    it('should allow power plant at exactly MAX_GAP tiles distance below', async() => {
+    it('[U00032] should allow power plant at exactly MAX_GAP tiles distance below', async() => {
       const canPlace = ctx.canPlaceBuilding('powerPlant', 20, 25, 'player')
       expect(canPlace).toBe(true)
 
       await ctx.runTicks(10)
     })
 
-    it('should NOT allow power plant at MAX_GAP+1 tiles distance below', async() => {
+    it('[U00033] should NOT allow power plant at MAX_GAP+1 tiles distance below', async() => {
       const canPlace = ctx.canPlaceBuilding('powerPlant', 20, 26, 'player')
       expect(canPlace).toBe(false)
 
@@ -335,7 +335,7 @@ describe('Building Placement Near Construction Yard', () => {
   })
 
   describe('Integration: Game loop runs with building placement', () => {
-    it('should successfully run game loop for 60 ticks (1 second at 60fps)', async() => {
+    it('[U00034] should successfully run game loop for 60 ticks (1 second at 60fps)', async() => {
       let ticksExecuted = 0
 
       await ctx.runTicks(60, 16.67, (tick) => {
@@ -345,7 +345,7 @@ describe('Building Placement Near Construction Yard', () => {
       expect(ticksExecuted).toBe(60)
     })
 
-    it('should successfully run game loop for 300 ticks (5 seconds at 60fps)', async() => {
+    it('[U00035] should successfully run game loop for 300 ticks (5 seconds at 60fps)', async() => {
       // Place a power plant first
       ctx.addBuilding('powerPlant', 23, 20, 'player')
 
@@ -359,7 +359,7 @@ describe('Building Placement Near Construction Yard', () => {
       expect(ctx.buildings.length).toBe(2) // Factory + power plant
     })
 
-    it('should maintain correct game state after running ticks', async() => {
+    it('[U00036] should maintain correct game state after running ticks', async() => {
       // Add a power plant
       const powerPlant = ctx.addBuilding('powerPlant', 23, 20, 'player')
 
@@ -394,39 +394,39 @@ describe('Building Placement Validation - Direct Function Tests', () => {
       factories = [{ id: 'player', owner: 'player', x: 20, y: 20, width: 3, height: 3 }]
     })
 
-    it('should return false if buildingData is not found', () => {
+    it('[U00037] should return false if buildingData is not found', () => {
       const result = canPlaceBuilding('unknownBuilding', 10, 10, mapGrid, units, buildings, factories, 'player')
       expect(result).toBe(false)
     })
 
-    it('should return false if mapGrid is invalid (null)', () => {
+    it('[U00038] should return false if mapGrid is invalid (null)', () => {
       const result = canPlaceBuilding('powerPlant', 10, 10, null, units, buildings, factories, 'player')
       expect(result).toBe(false)
     })
 
-    it('should return false if mapGrid is invalid (empty array)', () => {
+    it('[U00039] should return false if mapGrid is invalid (empty array)', () => {
       const result = canPlaceBuilding('powerPlant', 10, 10, [], units, buildings, factories, 'player')
       expect(result).toBe(false)
     })
 
-    it('should return false if mapGrid has no rows', () => {
+    it('[U00040] should return false if mapGrid has no rows', () => {
       const result = canPlaceBuilding('powerPlant', 10, 10, [[]], units, buildings, factories, 'player')
       // This might fail because [[]] has length 1 but [0] is empty
       expect(result).toBe(false)
     })
 
-    it('should return false if building exceeds map boundaries', () => {
+    it('[U00041] should return false if building exceeds map boundaries', () => {
       // Try to place at far right edge
       const result = canPlaceBuilding('powerPlant', 48, 20, mapGrid, units, buildings, factories, 'player')
       expect(result).toBe(false)
     })
 
-    it('should return false if building exceeds bottom boundary', () => {
+    it('[U00042] should return false if building exceeds bottom boundary', () => {
       const result = canPlaceBuilding('powerPlant', 20, 48, mapGrid, units, buildings, factories, 'player')
       expect(result).toBe(false)
     })
 
-    it('should return false if building placed on water', () => {
+    it('[U00043] should return false if building placed on water', () => {
       // PowerPlant at (23, 20) covers x: 23-25, y: 20-22
       // Set water at one of those tiles using mapGrid[y][x] format
       mapGrid[21][24] = { type: 'water' }
@@ -434,28 +434,28 @@ describe('Building Placement Validation - Direct Function Tests', () => {
       expect(result).toBe(false)
     })
 
-    it('should return false if building placed on rock', () => {
+    it('[U00044] should return false if building placed on rock', () => {
       // PowerPlant at (23, 20) covers x: 23-25, y: 20-22
       mapGrid[21][24] = { type: 'rock' }
       const result = canPlaceBuilding('powerPlant', 23, 20, mapGrid, units, buildings, factories, 'player')
       expect(result).toBe(false)
     })
 
-    it('should return false if building placed on seedCrystal', () => {
+    it('[U00045] should return false if building placed on seedCrystal', () => {
       // PowerPlant at (23, 20) covers x: 23-25, y: 20-22
       mapGrid[21][24] = { type: 'grass', seedCrystal: true }
       const result = canPlaceBuilding('powerPlant', 23, 20, mapGrid, units, buildings, factories, 'player')
       expect(result).toBe(false)
     })
 
-    it('should return false if building placed on existing building tile', () => {
+    it('[U00046] should return false if building placed on existing building tile', () => {
       // PowerPlant at (23, 20) covers x: 23-25, y: 20-22
       mapGrid[21][24] = { type: 'grass', building: true }
       const result = canPlaceBuilding('powerPlant', 23, 20, mapGrid, units, buildings, factories, 'player')
       expect(result).toBe(false)
     })
 
-    it('should return false if building placed on noBuild tile (for non-factory buildings)', () => {
+    it('[U00047] should return false if building placed on noBuild tile (for non-factory buildings)', () => {
       // PowerPlant at (23, 20) covers x: 23-25, y: 20-22
       // Set noBuild at one of those tiles using mapGrid[y][x] format
       mapGrid[20][23] = { type: 'grass', noBuild: true }
@@ -463,7 +463,7 @@ describe('Building Placement Validation - Direct Function Tests', () => {
       expect(result).toBe(false)
     })
 
-    it('should allow factory placement on noBuild tiles', () => {
+    it('[U00048] should allow factory placement on noBuild tiles', () => {
       mapGrid[24][24] = { type: 'grass', noBuild: true }
       // First mark existing factory area to ensure proximity
       const result = canPlaceBuilding('vehicleFactory', 23, 23, mapGrid, units, buildings, factories, 'player')
@@ -471,13 +471,13 @@ describe('Building Placement Validation - Direct Function Tests', () => {
       expect(result).toBe(true)
     })
 
-    it('should return false if unit is at placement location', () => {
+    it('[U00049] should return false if unit is at placement location', () => {
       units = [{ x: 23 * 32, y: 20 * 32 }] // Unit at tile (23, 20)
       const result = canPlaceBuilding('powerPlant', 23, 20, mapGrid, units, buildings, factories, 'player')
       expect(result).toBe(false)
     })
 
-    it('should skip range check in mapEditMode', () => {
+    it('[U00050] should skip range check in mapEditMode', () => {
       // Try to place far from any existing building
       const result = canPlaceBuilding(
         'powerPlant',
@@ -491,7 +491,7 @@ describe('Building Placement Validation - Direct Function Tests', () => {
     })
 
     describe('Vehicle Factory protection areas', () => {
-      it('should check that space directly below factory is free', () => {
+      it('[U00051] should check that space directly below factory is free', () => {
         // Vehicle factory at (23, 20) has height 3, covers y: 20-22
         // Space below is y = 23, x = 23-25 (factory width is 3)
         // Set building tile below the factory
@@ -501,14 +501,14 @@ describe('Building Placement Validation - Direct Function Tests', () => {
         expect(result).toBe(false)
       })
 
-      it('should allow factory when space below is free', () => {
+      it('[U00052] should allow factory when space below is free', () => {
         const result = canPlaceBuilding('vehicleFactory', 23, 20, mapGrid, units, buildings, factories, 'player')
         expect(result).toBe(true)
       })
     })
 
     describe('Vehicle Workshop protection areas', () => {
-      it('should check waiting area (2 tiles below) for workshop', () => {
+      it('[U00053] should check waiting area (2 tiles below) for workshop', () => {
         // Workshop at (23, 20) has height 3, covers y: 20-22
         // Space directly below (belowY) is y = 23
         // Waiting area (waitingY) is y = 24 (belowY + 1)
@@ -520,7 +520,7 @@ describe('Building Placement Validation - Direct Function Tests', () => {
     })
 
     describe('Ore Refinery border checks', () => {
-      it('should require 1 tile border around ore refinery to be free', () => {
+      it('[U00054] should require 1 tile border around ore refinery to be free', () => {
         // Place a building within 1 tile border of where refinery would be
         // Refinery is 4x3, placing at (23, 23) means it occupies (23-26, 23-25)
         // Border check would look at (22, 22) to (27, 26)
@@ -530,12 +530,12 @@ describe('Building Placement Validation - Direct Function Tests', () => {
         expect(result).toBe(false)
       })
 
-      it('should allow refinery when border is clear', () => {
+      it('[U00055] should allow refinery when border is clear', () => {
         const result = canPlaceBuilding('oreRefinery', 23, 23, mapGrid, units, buildings, factories, 'player')
         expect(result).toBe(true)
       })
 
-      it('should skip out-of-bounds border checks for edge placements', () => {
+      it('[U00056] should skip out-of-bounds border checks for edge placements', () => {
         // Place refinery near map edge - this tests that out-of-bounds border tiles
         // are skipped rather than causing the placement to fail
         // Factory is at (20, 20), refinery at (23, 23) is within range
@@ -544,7 +544,7 @@ describe('Building Placement Validation - Direct Function Tests', () => {
         expect(result).toBe(true)
       })
 
-      it('should skip refinery building tiles themselves during border check', () => {
+      it('[U00057] should skip refinery building tiles themselves during border check', () => {
         // This verifies that the border check doesn't fail because of the refinery's own tiles
         const result = canPlaceBuilding('oreRefinery', 23, 23, mapGrid, units, buildings, factories, 'player')
         expect(result).toBe(true)
@@ -566,85 +566,85 @@ describe('Building Placement Validation - Direct Function Tests', () => {
       }
     })
 
-    it('should return true for valid grass tile', () => {
+    it('[U00058] should return true for valid grass tile', () => {
       const result = isTileValid(10, 10, mapGrid, [], [], [], null)
       expect(result).toBe(true)
     })
 
-    it('should return false for tile outside map bounds (negative x)', () => {
+    it('[U00059] should return false for tile outside map bounds (negative x)', () => {
       const result = isTileValid(-1, 10, mapGrid, [], [], [], null)
       expect(result).toBe(false)
     })
 
-    it('should return false for tile outside map bounds (negative y)', () => {
+    it('[U00060] should return false for tile outside map bounds (negative y)', () => {
       const result = isTileValid(10, -1, mapGrid, [], [], [], null)
       expect(result).toBe(false)
     })
 
-    it('should return false for tile outside map bounds (x too large)', () => {
+    it('[U00061] should return false for tile outside map bounds (x too large)', () => {
       const result = isTileValid(25, 10, mapGrid, [], [], [], null)
       expect(result).toBe(false)
     })
 
-    it('should return false for tile outside map bounds (y too large)', () => {
+    it('[U00062] should return false for tile outside map bounds (y too large)', () => {
       const result = isTileValid(10, 25, mapGrid, [], [], [], null)
       expect(result).toBe(false)
     })
 
-    it('should return false for water tile', () => {
+    it('[U00063] should return false for water tile', () => {
       mapGrid[10][10] = { type: 'water' }
       const result = isTileValid(10, 10, mapGrid, [], [], [], null)
       expect(result).toBe(false)
     })
 
-    it('should return false for rock tile', () => {
+    it('[U00064] should return false for rock tile', () => {
       mapGrid[10][10] = { type: 'rock' }
       const result = isTileValid(10, 10, mapGrid, [], [], [], null)
       expect(result).toBe(false)
     })
 
-    it('should return false for tile with seedCrystal', () => {
+    it('[U00065] should return false for tile with seedCrystal', () => {
       mapGrid[10][10] = { type: 'grass', seedCrystal: true }
       const result = isTileValid(10, 10, mapGrid, [], [], [], null)
       expect(result).toBe(false)
     })
 
-    it('should return false for tile with existing building', () => {
+    it('[U00066] should return false for tile with existing building', () => {
       mapGrid[10][10] = { type: 'grass', building: true }
       const result = isTileValid(10, 10, mapGrid, [], [], [], null)
       expect(result).toBe(false)
     })
 
-    it('should return false for noBuild tile for non-factory buildings', () => {
+    it('[U00067] should return false for noBuild tile for non-factory buildings', () => {
       mapGrid[10][10] = { type: 'grass', noBuild: true }
       const result = isTileValid(10, 10, mapGrid, [], [], [], 'powerPlant')
       expect(result).toBe(false)
     })
 
-    it('should allow noBuild tile for vehicleFactory', () => {
+    it('[U00068] should allow noBuild tile for vehicleFactory', () => {
       mapGrid[10][10] = { type: 'grass', noBuild: true }
       const result = isTileValid(10, 10, mapGrid, [], [], [], 'vehicleFactory')
       expect(result).toBe(true)
     })
 
-    it('should allow noBuild tile for oreRefinery', () => {
+    it('[U00069] should allow noBuild tile for oreRefinery', () => {
       mapGrid[10][10] = { type: 'grass', noBuild: true }
       const result = isTileValid(10, 10, mapGrid, [], [], [], 'oreRefinery')
       expect(result).toBe(true)
     })
 
-    it('should allow noBuild tile for vehicleWorkshop', () => {
+    it('[U00070] should allow noBuild tile for vehicleWorkshop', () => {
       mapGrid[10][10] = { type: 'grass', noBuild: true }
       const result = isTileValid(10, 10, mapGrid, [], [], [], 'vehicleWorkshop')
       expect(result).toBe(true)
     })
 
-    it('should handle edge case at map corner (0,0)', () => {
+    it('[U00071] should handle edge case at map corner (0,0)', () => {
       const result = isTileValid(0, 0, mapGrid, [], [], [], null)
       expect(result).toBe(true)
     })
 
-    it('should handle edge case at map corner (max,max)', () => {
+    it('[U00072] should handle edge case at map corner (max,max)', () => {
       const result = isTileValid(19, 19, mapGrid, [], [], [], null)
       expect(result).toBe(true)
     })
@@ -659,82 +659,82 @@ describe('Building Placement Validation - Direct Function Tests', () => {
       factories = [{ id: 'player', owner: 'player', x: 20, y: 20, width: 3, height: 3 }]
     })
 
-    it('should return true when tile is adjacent to factory', () => {
+    it('[U00073] should return true when tile is adjacent to factory', () => {
       const result = isNearExistingBuilding(23, 20, buildings, factories, 3, 'player')
       expect(result).toBe(true)
     })
 
-    it('should return true when tile is within max distance', () => {
+    it('[U00074] should return true when tile is within max distance', () => {
       const result = isNearExistingBuilding(25, 20, buildings, factories, 3, 'player')
       expect(result).toBe(true)
     })
 
-    it('should return false when tile is beyond max distance', () => {
+    it('[U00075] should return false when tile is beyond max distance', () => {
       const result = isNearExistingBuilding(30, 20, buildings, factories, 3, 'player')
       expect(result).toBe(false)
     })
 
-    it('should return false when no buildings or factories exist', () => {
+    it('[U00076] should return false when no buildings or factories exist', () => {
       const result = isNearExistingBuilding(10, 10, [], [], 3, 'player')
       expect(result).toBe(false)
     })
 
-    it('should check buildings array as well as factories', () => {
+    it('[U00077] should check buildings array as well as factories', () => {
       buildings = [{ owner: 'player', x: 10, y: 10, width: 3, height: 3 }]
       const result = isNearExistingBuilding(12, 10, buildings, [], 3, 'player')
       expect(result).toBe(true)
     })
 
-    it('should skip buildings not owned by the specified owner', () => {
+    it('[U00078] should skip buildings not owned by the specified owner', () => {
       buildings = [{ owner: 'enemy', x: 10, y: 10, width: 3, height: 3 }]
       const result = isNearExistingBuilding(12, 10, buildings, [], 3, 'player')
       expect(result).toBe(false)
     })
 
-    it('should check factory id as owner alias', () => {
+    it('[U00079] should check factory id as owner alias', () => {
       factories = [{ id: 'player', x: 10, y: 10, width: 3, height: 3 }]
       const result = isNearExistingBuilding(12, 10, [], factories, 3, 'player')
       expect(result).toBe(true)
     })
 
-    it('should check factory owner property', () => {
+    it('[U00080] should check factory owner property', () => {
       factories = [{ owner: 'player', x: 10, y: 10, width: 3, height: 3 }]
       const result = isNearExistingBuilding(12, 10, [], factories, 3, 'player')
       expect(result).toBe(true)
     })
 
-    it('should handle null factories array', () => {
+    it('[U00081] should handle null factories array', () => {
       // Should handle null gracefully and check buildings
       buildings = [{ owner: 'player', x: 10, y: 10, width: 3, height: 3 }]
       const result = isNearExistingBuilding(12, 10, buildings, null, 3, 'player')
       expect(result).toBe(true)
     })
 
-    it('should handle null buildings array', () => {
+    it('[U00082] should handle null buildings array', () => {
       const result = isNearExistingBuilding(22, 20, null, factories, 3, 'player')
       expect(result).toBe(true)
     })
 
 
-    it('should ignore street anchors for non-street placement types', () => {
+    it('[U00083] should ignore street anchors for non-street placement types', () => {
       buildings = [{ owner: 'player', type: 'street', x: 26, y: 20, width: 1, height: 1 }]
       const result = isNearExistingBuilding(27, 20, buildings, [], 3, 'player', 'powerPlant')
       expect(result).toBe(false)
     })
 
-    it('should allow street anchors for street placement types', () => {
+    it('[U00084] should allow street anchors for street placement types', () => {
       buildings = [{ owner: 'player', type: 'street', x: 26, y: 20, width: 1, height: 1 }]
       const result = isNearExistingBuilding(27, 20, buildings, [], 3, 'player', 'street')
       expect(result).toBe(true)
     })
 
-    it('should allow concrete wall anchors for concrete wall placement types', () => {
+    it('[U00085] should allow concrete wall anchors for concrete wall placement types', () => {
       buildings = [{ owner: 'player', type: 'concreteWall', x: 26, y: 20, width: 1, height: 1 }]
       const result = isNearExistingBuilding(27, 20, buildings, [], 3, 'player', 'concreteWall')
       expect(result).toBe(true)
     })
 
-    it('should use Chebyshev distance (max of x and y difference)', () => {
+    it('[U00086] should use Chebyshev distance (max of x and y difference)', () => {
       // Chebyshev distance allows diagonal movement at same cost as cardinal
       // Factory at (20,20) with size 3x3 means tiles (20-22, 20-22)
       // Tile at (23, 23) is distance 1 diagonally from corner (22, 22)

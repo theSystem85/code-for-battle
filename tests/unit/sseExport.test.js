@@ -3,7 +3,7 @@ import sharp from 'sharp'
 import { clearTargetTiles, compressionLabel, detectWebPCompression, encodeLosslessWebP, exportMetadata, exportOptions } from '../../src/ui/sseExport.js'
 
 describe('SSE exports', () => {
-  it('defaults to true lossless WebP and round-trips exact RGBA pixels', async() => {
+  it('[U04173] defaults to true lossless WebP and round-trips exact RGBA pixels', async() => {
     expect(exportOptions()).toEqual({ lossless: true })
     const data = new Uint8Array(17 * 9 * 4)
     for (let i = 0; i < data.length; i++) data[i] = (i * 71) % 256
@@ -12,7 +12,7 @@ describe('SSE exports', () => {
     const decoded = await sharp(encoded).ensureAlpha().raw().toBuffer()
     expect([...decoded]).toEqual([...data])
   })
-  it('exports grid, tile and pixel rectangles, tags and compression', () => {
+  it('[U04174] exports grid, tile and pixel rectangles, tags and compression', () => {
     const metadata = exportMetadata({ tileSize: 16, rowHeight: 24, columns: 2, rows: 3, tiles: { '1,2': { tags: ['rock'] } } }, 'rocks')
     expect(metadata.compression).toEqual({ lossless: true })
     expect(metadata.sprites[0]).toEqual({ tiles: { col: 1, row: 2, cols: 1, rows: 1 }, px: { x: 16, y: 48, width: 16, height: 24 }, tags: ['rock'] })
@@ -36,7 +36,7 @@ describe('SSE clearing', () => {
     }
     return { pixels, target: { image: { getContext: () => context }, tileSize: 8, rowHeight: 8, columns: 2, rows: 1, occupied: new Set(['0,0', '1,0']), data: { tiles: { '0,0': { tags: ['rock'] }, '1,0': { tags: ['tree'] } } }, imports: [{ placedAt: { column: 0, row: 0 }, tileSpan: { columns: 2, rows: 1 } }] } }
   }
-  it('overdraws the entire tile and removes intersecting sprite records and occupancy', () => {
+  it('[U04175] overdraws the entire tile and removes intersecting sprite records and occupancy', () => {
     const { pixels, target } = fixture()
     clearTargetTiles(target, [{ col: 0, row: 0 }, { col: 0, row: 0 }])
     for (let row = 0; row < 8; row++) {
@@ -46,7 +46,7 @@ describe('SSE clearing', () => {
     expect([...target.occupied]).toEqual(['1,0'])
     expect(target.data.tiles).toEqual({ '1,0': { tags: ['tree'] } })
   })
-  it('validates all coordinates before modifying any pixels or metadata', () => {
+  it('[U04176] validates all coordinates before modifying any pixels or metadata', () => {
     const { pixels, target } = fixture()
     expect(() => clearTargetTiles(target, [{ col: 0, row: 0 }, { col: 2, row: 0 }])).toThrow()
     expect([...pixels].every(value => value === 255)).toBe(true)
@@ -55,7 +55,7 @@ describe('SSE clearing', () => {
 })
 
 describe('SSE fitted placement metadata', () => {
-  it('exports fitted coordinates and merges sprite and tile tags after shrinking', () => {
+  it('[U04177] exports fitted coordinates and merges sprite and tile tags after shrinking', () => {
     const result = exportMetadata({ tileSize: 16, rowHeight: 16, tiles: { '1,2': { tags: ['forest'] } },
       extension: { imports: [{ id: 'sprite-1', anchor: 'bottom-right', bbox: { width: 100, height: 50 },
         placedAt: { column: 1, row: 2 }, tileSpan: { columns: 1, rows: 1 },

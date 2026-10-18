@@ -43,7 +43,7 @@ describe('attackNotifications', () => {
     const NOW = 70000 // Start later than 60s to ensure cooldown checks pass against 0 initialization
     const MINUTE = 60000
 
-    it('triggers "ourBaseIsUnderAttack" when player base building is attacked by enemy', () => {
+    it('[U00250] triggers "ourBaseIsUnderAttack" when player base building is attacked by enemy', () => {
       const target = { owner: 'player1', type: 'constructionYard' }
       const attacker = { owner: 'enemy' }
 
@@ -52,7 +52,7 @@ describe('attackNotifications', () => {
       expect(playSound).toHaveBeenCalledWith('ourBaseIsUnderAttack', 1.0, 0, true)
     })
 
-    it('triggers "ourHarvestersAreUnderAttack" when player harvester is attacked by enemy', () => {
+    it('[U00251] triggers "ourHarvestersAreUnderAttack" when player harvester is attacked by enemy', () => {
       const target = { owner: 'player1', type: 'harvester' }
       const attacker = { owner: 'enemy' }
 
@@ -61,7 +61,7 @@ describe('attackNotifications', () => {
       expect(playSound).toHaveBeenCalledWith('ourHarvestersAreUnderAttack', 1.0, 0, true)
     })
 
-    it('respects 60s cooldown for base attack notifications', () => {
+    it('[U00252] respects 60s cooldown for base attack notifications', () => {
       const target = { owner: 'player1', type: 'constructionYard' }
       const attacker = { owner: 'enemy' }
 
@@ -78,7 +78,7 @@ describe('attackNotifications', () => {
       expect(playSound).toHaveBeenCalledTimes(2)
     })
 
-    it('respects 60s cooldown for harvester attack notifications', () => {
+    it('[U00253] respects 60s cooldown for harvester attack notifications', () => {
       const target = { owner: 'player1', type: 'harvester' }
       const attacker = { owner: 'enemy' }
 
@@ -95,7 +95,7 @@ describe('attackNotifications', () => {
       expect(playSound).toHaveBeenCalledTimes(2)
     })
 
-    it('does NOT trigger if attacker is player owned', () => {
+    it('[U00254] does NOT trigger if attacker is player owned', () => {
       const target = { owner: 'player1', type: 'constructionYard' }
       const attacker = { owner: 'player1' } // Friendly fire
 
@@ -104,7 +104,7 @@ describe('attackNotifications', () => {
       expect(playSound).not.toHaveBeenCalled()
     })
 
-    it('does NOT trigger if target is not player owned', () => {
+    it('[U00255] does NOT trigger if target is not player owned', () => {
       const target = { owner: 'enemy', type: 'constructionYard' }
       const attacker = { owner: 'player1' } // Player attacking enemy base
 
@@ -113,7 +113,7 @@ describe('attackNotifications', () => {
       expect(playSound).not.toHaveBeenCalled()
     })
 
-    it('recognizes various base buildings', () => {
+    it('[U00256] recognizes various base buildings', () => {
       const buildings = [
         'powerPlant',
         'oreRefinery',
@@ -140,7 +140,7 @@ describe('attackNotifications', () => {
       })
     })
 
-    it('recognizes entity with ID matching humanPlayer as base', () => {
+    it('[U00257] recognizes entity with ID matching humanPlayer as base', () => {
       // Logic: if (entity.id && entity.id === gameState.humanPlayer) return true
       const target = { owner: 'player1', id: 'player1' }
       const attacker = { owner: 'enemy' }
@@ -150,7 +150,7 @@ describe('attackNotifications', () => {
       expect(playSound).toHaveBeenCalledWith('ourBaseIsUnderAttack', 1.0, 0, true)
     })
 
-    it('handles legacy owner "player" as player owned when humanPlayer is "player1"', () => {
+    it('[U00258] handles legacy owner "player" as player owned when humanPlayer is "player1"', () => {
       gameState.humanPlayer = 'player1'
       const target = { owner: 'player', type: 'constructionYard' }
       const attacker = { owner: 'enemy' }
@@ -169,7 +169,7 @@ describe('attackNotifications', () => {
       ['ourShipsGotAttacked', 'supplyShip'],
       ['ourShipsGotAttacked', 'vehicleFerry'],
       ['ourShipsGotAttacked', 'navalMineLayer']
-    ])('plays %s when a player %s is attacked', (soundName, unitType) => {
+    ])('[U00259] plays %s when a player %s is attacked', (soundName, unitType) => {
       const target = { id: `${unitType}-1`, owner: 'player1', type: unitType, isNaval: true, health: 100 }
       const attacker = { owner: 'enemy' }
 
@@ -179,7 +179,7 @@ describe('attackNotifications', () => {
       expect(showNotification).toHaveBeenCalled()
     })
 
-    it('keeps a separate 60s cooldown for each naval narration line', () => {
+    it('[U00260] keeps a separate 60s cooldown for each naval narration line', () => {
       const attacker = { owner: 'enemy' }
       const battleship = { id: 'bb-1', owner: 'player1', type: 'battleship', isNaval: true, health: 100 }
       const destroyer = { id: 'dd-1', owner: 'player1', type: 'destroyer', isNaval: true, health: 100 }
@@ -196,7 +196,7 @@ describe('attackNotifications', () => {
       expect(playSound).toHaveBeenLastCalledWith('ourBattleshipGotAttacked', 1.0, 0, true)
     })
 
-    it('does not narrate enemy naval units or non-naval units', () => {
+    it('[U00261] does not narrate enemy naval units or non-naval units', () => {
       handleAttackNotification(
         { id: 'enemy-bb', owner: 'enemy', type: 'battleship', isNaval: true, health: 100 },
         { owner: 'player1' },
@@ -211,7 +211,7 @@ describe('attackNotifications', () => {
       expect(playSound).not.toHaveBeenCalled()
     })
 
-    it('shows a unit under attack notification for player non-base non-harvester units', () => {
+    it('[U00262] shows a unit under attack notification for player non-base non-harvester units', () => {
       const target = { id: 'tank-1', owner: 'player1', type: 'tank_v1', health: 100 }
       const attacker = { owner: 'enemy' }
 
@@ -221,7 +221,7 @@ describe('attackNotifications', () => {
       expect(showNotification).toHaveBeenCalledWith('Tank is under attack!', 4500, expect.objectContaining({ historyMessage: 'Tank is under attack!' }))
     })
 
-    it('throttles unit under attack notifications per unit id', () => {
+    it('[U00263] throttles unit under attack notifications per unit id', () => {
       const target = { id: 'tank-1', owner: 'player1', type: 'tank_v1', health: 100 }
       const attacker = { owner: 'enemy' }
 
@@ -236,7 +236,7 @@ describe('attackNotifications', () => {
   })
 
   describe('resetAttackNotifications', () => {
-    it('resets the cooldowns so notifications can trigger immediately again', () => {
+    it('[U00264] resets the cooldowns so notifications can trigger immediately again', () => {
       const NOW = 70000
       const targetBase = { owner: 'player1', type: 'constructionYard' }
       const targetHarvester = { owner: 'player1', type: 'harvester' }

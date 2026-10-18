@@ -8,7 +8,7 @@ import { DEFAULT_SSE_SHEETS } from '../../src/ui/spriteSheetRegistry.js'
 // Generates real maps with every enabled-by-default dtv sheet and fails when
 // any sprite never reaches the decoration layout, i.e. it has no placement path.
 describe('default dtv sheets placement coverage', () => {
-  it('places every sprite of every default dtv sheet on generated maps', async() => {
+  it('[U01221] places every sprite of every default dtv sheet on generated maps', async() => {
     const manager = new TextureManager()
     vi.spyOn(manager, 'loadIntegratedSpriteSheetImage').mockResolvedValue({ width: 1024, height: 1024 })
     const sheets = DEFAULT_SSE_SHEETS.filter(path => /\/dtv\d+_/.test(path)).map(sheetPath => ({

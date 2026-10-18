@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`LLM Control API validation > accepts the example payloads 1`] = `
+exports[`LLM Control API validation > [U00087] accepts the example payloads 1`] = `
 {
   "combatInput": {
     "errors": [],

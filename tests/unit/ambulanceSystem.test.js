@@ -105,7 +105,7 @@ describe('Ambulance System', () => {
   })
 
   describe('canAmbulanceHealUnit', () => {
-    it('should return true when target has missing crew and ambulance has medics', () => {
+    it('[U00115] should return true when target has missing crew and ambulance has medics', () => {
       const ambulance = createTestAmbulance('amb1')
       const target = createTestUnit('tank1')
       target.crew.driver = false // One crew member down
@@ -113,7 +113,7 @@ describe('Ambulance System', () => {
       expect(canAmbulanceHealUnit(ambulance, target)).toBe(true)
     })
 
-    it('should return false when ambulance has no loader', () => {
+    it('[U00116] should return false when ambulance has no loader', () => {
       const ambulance = createTestAmbulance('amb1')
       ambulance.crew.loader = false
       const target = createTestUnit('tank1')
@@ -122,7 +122,7 @@ describe('Ambulance System', () => {
       expect(canAmbulanceHealUnit(ambulance, target)).toBe(false)
     })
 
-    it('should return false when target has no crew system', () => {
+    it('[U00117] should return false when target has no crew system', () => {
       const ambulance = createTestAmbulance('amb1')
       const target = createTestUnit('tank1')
       target.crew = null
@@ -130,7 +130,7 @@ describe('Ambulance System', () => {
       expect(canAmbulanceHealUnit(ambulance, target)).toBe(false)
     })
 
-    it('should return false when target crew is not an object', () => {
+    it('[U00118] should return false when target crew is not an object', () => {
       const ambulance = createTestAmbulance('amb1')
       const target = createTestUnit('tank1')
       target.crew = 'invalid'
@@ -138,7 +138,7 @@ describe('Ambulance System', () => {
       expect(canAmbulanceHealUnit(ambulance, target)).toBe(false)
     })
 
-    it('should return false when target is moving', () => {
+    it('[U00119] should return false when target is moving', () => {
       const ambulance = createTestAmbulance('amb1')
       const target = createTestUnit('tank1')
       target.crew.driver = false
@@ -147,7 +147,7 @@ describe('Ambulance System', () => {
       expect(canAmbulanceHealUnit(ambulance, target)).toBe(false)
     })
 
-    it('should return false when target has full crew', () => {
+    it('[U00120] should return false when target has full crew', () => {
       const ambulance = createTestAmbulance('amb1')
       const target = createTestUnit('tank1')
       // All crew members alive
@@ -156,7 +156,7 @@ describe('Ambulance System', () => {
     })
 
 
-    it('should not heal enemy or airborne units', () => {
+    it('[U00121] should not heal enemy or airborne units', () => {
       const ambulance = createTestAmbulance('amb1', 5, 5, 'player1')
       const enemyTarget = createTestUnit('enemy1', 5, 5, 'player2')
       enemyTarget.crew.driver = false
@@ -181,7 +181,7 @@ describe('Ambulance System', () => {
       expect(assignAmbulanceToHealUnit(ambulance, airborneApache, [])).toBe(false)
     })
 
-    it('should return false when ambulance has no medics', () => {
+    it('[U00122] should return false when ambulance has no medics', () => {
       const ambulance = createTestAmbulance('amb1')
       ambulance.medics = 0
       const target = createTestUnit('tank1')
@@ -192,7 +192,7 @@ describe('Ambulance System', () => {
   })
 
   describe('assignAmbulanceToHealUnit', () => {
-    it('should assign ambulance to heal target unit', () => {
+    it('[U00123] should assign ambulance to heal target unit', () => {
       const ambulance = createTestAmbulance('amb1')
       const target = createTestUnit('tank1')
       target.crew.driver = false
@@ -202,7 +202,7 @@ describe('Ambulance System', () => {
       expect(result).toBe(true)
     })
 
-    it('delegates to unit commands handler when available', () => {
+    it('[U00124] delegates to unit commands handler when available', () => {
       const ambulance = createTestAmbulance('amb1')
       const target = createTestUnit('tank1')
       target.crew.driver = false
@@ -224,7 +224,7 @@ describe('Ambulance System', () => {
       expect(ambulance.healingTarget).toBeNull()
     })
 
-    it('should return false when ambulance cannot heal unit', () => {
+    it('[U00125] should return false when ambulance cannot heal unit', () => {
       const ambulance = createTestAmbulance('amb1')
       ambulance.medics = 0
       const target = createTestUnit('tank1')
@@ -235,7 +235,7 @@ describe('Ambulance System', () => {
       expect(result).toBe(false)
     })
 
-    it('should return false when ambulance has no loader', () => {
+    it('[U00126] should return false when ambulance has no loader', () => {
       const ambulance = createTestAmbulance('amb1')
       ambulance.crew.loader = false
       const target = createTestUnit('tank1')
@@ -246,7 +246,7 @@ describe('Ambulance System', () => {
       expect(result).toBe(false)
     })
 
-    it('should return false when target is moving', () => {
+    it('[U00127] should return false when target is moving', () => {
       const ambulance = createTestAmbulance('amb1')
       const target = createTestUnit('tank1')
       target.crew.driver = false
@@ -257,7 +257,7 @@ describe('Ambulance System', () => {
       expect(result).toBe(false)
     })
 
-    it('clears movement targets when pathfinding returns empty result', () => {
+    it('[U00128] clears movement targets when pathfinding returns empty result', () => {
       const ambulance = createTestAmbulance('amb1')
       const target = {
         id: 'tank1',
@@ -284,7 +284,7 @@ describe('Ambulance System', () => {
   })
 
   describe('updateAmbulanceLogic', () => {
-    it('should reset beingServedByAmbulance markers at start of update', () => {
+    it('[U00129] should reset beingServedByAmbulance markers at start of update', () => {
       const unit = createTestUnit('tank1')
       unit.beingServedByAmbulance = true
       units.push(unit)
@@ -295,7 +295,7 @@ describe('Ambulance System', () => {
       expect(unit.beingServedByAmbulance).toBe(false)
     })
 
-    it('should skip processing when no ambulances exist', () => {
+    it('[U00130] should skip processing when no ambulances exist', () => {
       const unit = createTestUnit('tank1')
       units.push(unit)
 
@@ -303,7 +303,7 @@ describe('Ambulance System', () => {
       updateAmbulanceLogic(units, gameState, delta)
     })
 
-    it('should clear healing target when in hospital range', () => {
+    it('[U00131] should clear healing target when in hospital range', () => {
       const ambulance = createTestAmbulance('amb1', 10, 10)
       ambulance.healingTarget = createTestUnit('tank1')
       units.push(ambulance)
@@ -316,7 +316,7 @@ describe('Ambulance System', () => {
       expect(ambulance.healingTarget).toBeNull()
     })
 
-    it('should clear healing state when ambulance has no loader', () => {
+    it('[U00132] should clear healing state when ambulance has no loader', () => {
       const ambulance = createTestAmbulance('amb1')
       ambulance.crew.loader = false
       ambulance.healingTarget = createTestUnit('tank1')
@@ -328,7 +328,7 @@ describe('Ambulance System', () => {
       expect(ambulance.healingTimer).toBe(0)
     })
 
-    it('should clear healing target if target unit no longer exists', () => {
+    it('[U00133] should clear healing target if target unit no longer exists', () => {
       const ambulance = createTestAmbulance('amb1')
       // Reference to non-existent unit
       ambulance.healingTarget = { id: 'nonexistent', tileX: 6, tileY: 6 }
@@ -339,7 +339,7 @@ describe('Ambulance System', () => {
       expect(ambulance.healingTarget).toBeNull()
     })
 
-    it('should clear healing target when target starts moving', () => {
+    it('[U00134] should clear healing target when target starts moving', () => {
       const ambulance = createTestAmbulance('amb1')
       const target = createTestUnit('tank1')
       target.crew.driver = false
@@ -354,7 +354,7 @@ describe('Ambulance System', () => {
       expect(ambulance.healingTarget).toBeNull()
     })
 
-    it('should heal crew members over time', () => {
+    it('[U00135] should heal crew members over time', () => {
       const ambulance = createTestAmbulance('amb1', 6, 6)
       const target = createTestUnit('tank1', 6, 6)
       target.crew.driver = false
@@ -369,7 +369,7 @@ describe('Ambulance System', () => {
       expect(ambulance.medics).toBe(4)
     })
 
-    it('should heal crew in priority order: driver, commander, loader, gunner', () => {
+    it('[U00136] should heal crew in priority order: driver, commander, loader, gunner', () => {
       const ambulance = createTestAmbulance('amb1', 6, 6)
       const target = createTestUnit('tank1', 6, 6)
       target.crew = { driver: false, commander: false, gunner: false, loader: false }
@@ -385,7 +385,7 @@ describe('Ambulance System', () => {
       expect(target.crew.commander).toBe(false)
     })
 
-    it('should clear target when fully healed', () => {
+    it('[U00137] should clear target when fully healed', () => {
       const ambulance = createTestAmbulance('amb1', 6, 6)
       const target = createTestUnit('tank1', 6, 6)
       target.crew = { driver: true, commander: true, gunner: true, loader: true }
@@ -397,7 +397,7 @@ describe('Ambulance System', () => {
       expect(ambulance.healingTarget).toBeNull()
     })
 
-    it('should mark target as being served by ambulance', () => {
+    it('[U00138] should mark target as being served by ambulance', () => {
       const ambulance = createTestAmbulance('amb1', 6, 6)
       const target = createTestUnit('tank1', 6, 6)
       target.crew.driver = false
@@ -409,7 +409,7 @@ describe('Ambulance System', () => {
       expect(target.beingServedByAmbulance).toBe(true)
     })
 
-    it('should stop healing when ambulance runs out of medics', () => {
+    it('[U00139] should stop healing when ambulance runs out of medics', () => {
       const ambulance = createTestAmbulance('amb1', 6, 6)
       ambulance.medics = 0
       const target = createTestUnit('tank1', 6, 6)
@@ -424,7 +424,7 @@ describe('Ambulance System', () => {
   })
 
   describe('Alert Mode', () => {
-    it('should clear alert state when not in alert mode', () => {
+    it('[U00140] should clear alert state when not in alert mode', () => {
       const ambulance = createTestAmbulance('amb1')
       ambulance.alertMode = false
       ambulance.alertActiveService = true
@@ -437,7 +437,7 @@ describe('Ambulance System', () => {
       expect(ambulance.alertAssignmentId).toBeNull()
     })
 
-    it('should scan for wounded units in alert mode', () => {
+    it('[U00141] should scan for wounded units in alert mode', () => {
       const ambulance = createTestAmbulance('amb1')
       ambulance.alertMode = true
       ambulance.nextUtilityScanTime = 0
@@ -453,7 +453,7 @@ describe('Ambulance System', () => {
       expect(ambulance.alertActiveService).toBe(true)
     })
 
-    it('should update alert scan time after scan', () => {
+    it('[U00142] should update alert scan time after scan', () => {
       const ambulance = createTestAmbulance('amb1')
       ambulance.alertMode = true
       ambulance.nextUtilityScanTime = 0
@@ -467,7 +467,7 @@ describe('Ambulance System', () => {
   })
 
   describe('Pending Heal Queue', () => {
-    it('should process pending heal queue when not busy', () => {
+    it('[U00143] should process pending heal queue when not busy', () => {
       const ambulance = createTestAmbulance('amb1')
       const target = createTestUnit('tank1')
       target.crew.driver = false
@@ -480,7 +480,7 @@ describe('Ambulance System', () => {
       expect(ambulance.criticalHealing).toBe(true)
     })
 
-    it('should skip queue entries for units without crew', () => {
+    it('[U00144] should skip queue entries for units without crew', () => {
       const ambulance = createTestAmbulance('amb1')
       const target = createTestUnit('tank1')
       target.crew = null
@@ -494,7 +494,7 @@ describe('Ambulance System', () => {
       expect(ambulance.healingTarget).toBeNull()
     })
 
-    it('should skip queue entries for fully crewed units', () => {
+    it('[U00145] should skip queue entries for fully crewed units', () => {
       const ambulance = createTestAmbulance('amb1')
       const target = createTestUnit('tank1')
       // All crew alive
@@ -509,7 +509,7 @@ describe('Ambulance System', () => {
   })
 
   describe('Utility Queue Integration', () => {
-    it('should update utility queue state during healing', () => {
+    it('[U00146] should update utility queue state during healing', () => {
       const ambulance = createTestAmbulance('amb1', 6, 6)
       ambulance.utilityQueue = {
         mode: 'heal',
@@ -528,7 +528,7 @@ describe('Ambulance System', () => {
       expect(ambulance.utilityQueue.currentTargetType).toBe('unit')
     })
 
-    it('should advance queue when healing completes', () => {
+    it('[U00147] should advance queue when healing completes', () => {
       const ambulance = createTestAmbulance('amb1', 6, 6)
       ambulance.utilityQueue = {
         mode: 'heal',
@@ -548,7 +548,7 @@ describe('Ambulance System', () => {
   })
 
   describe('Alert State Tracking', () => {
-    it('should update alert state when service starts', () => {
+    it('[U00148] should update alert state when service starts', () => {
       const ambulance = createTestAmbulance('amb1', 6, 6)
       ambulance.alertMode = true
       ambulance._alertWasServing = false
@@ -562,7 +562,7 @@ describe('Ambulance System', () => {
       expect(ambulance.alertActiveService).toBe(true)
     })
 
-    it('should clear alert state when service ends', () => {
+    it('[U00149] should clear alert state when service ends', () => {
       const ambulance = createTestAmbulance('amb1', 6, 6)
       ambulance.alertMode = true
       ambulance._alertWasServing = true

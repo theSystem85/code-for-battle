@@ -31,7 +31,7 @@ function createOccupancyMap(width = 6, height = 6) {
 }
 
 describe('movementCollision environment response', () => {
-  it('detects coincident rotated naval hulls instead of allowing stacked ship images', () => {
+  it('[U03027] detects coincident rotated naval hulls instead of allowing stacked ship images', () => {
     const mapGrid = Array.from({ length: 20 }, () =>
       Array.from({ length: 20 }, () => ({ type: 'water', building: null })))
     const movement = () => ({
@@ -58,7 +58,7 @@ describe('movementCollision environment response', () => {
     expect(collision.data.overlap).toBeGreaterThan(0)
   })
 
-  it('pushes a broadside ship during rotating contact and applies greater side damage', () => {
+  it('[U03028] pushes a broadside ship during rotating contact and applies greater side damage', () => {
     const mapGrid = Array.from({ length: 30 }, () => Array.from({ length: 30 }, () => ({ type: 'water' })))
     const occupancyMap = createOccupancyMap(30, 30)
     const moving = {
@@ -82,7 +82,7 @@ describe('movementCollision environment response', () => {
     expect(struck.health).toBeLessThan(moving.health)
   })
 
-  it('stores a decaying repulsion force instead of abruptly rewriting the movement vector', () => {
+  it('[U03029] stores a decaying repulsion force instead of abruptly rewriting the movement vector', () => {
     const mapGrid = createMapGrid()
     const occupancyMap = createOccupancyMap()
     const unit = {
@@ -122,7 +122,7 @@ describe('movementCollision environment response', () => {
     expect(unit.x).toBeGreaterThan(30)
   })
 
-  it('keeps the same capped separation envelope while applying a softer immediate position correction', () => {
+  it('[U03030] keeps the same capped separation envelope while applying a softer immediate position correction', () => {
     const mapGrid = createMapGrid()
     const occupancyMap = createOccupancyMap()
 
@@ -213,7 +213,7 @@ describe('movementCollision environment response', () => {
     expect(staticDisplacement).toBeLessThanOrEqual(staticUnit.movement.currentSpeed)
   })
 
-  it('feeds stored static repulsion back through collision avoidance as a decaying force field', () => {
+  it('[U03031] feeds stored static repulsion back through collision avoidance as a decaying force field', () => {
     const mapGrid = createMapGrid()
     const occupancyMap = createOccupancyMap()
     const unit = {
@@ -250,7 +250,7 @@ describe('movementCollision environment response', () => {
     expect(Math.abs(secondAvoidance.x)).toBeLessThan(Math.abs(firstAvoidance.x))
   })
 
-  it('queues a one-tile yield move for an idle friendly unit when it gets pushed', () => {
+  it('[U03032] queues a one-tile yield move for an idle friendly unit when it gets pushed', () => {
     const mapGrid = createMapGrid()
     const occupancyMap = createOccupancyMap()
 
@@ -310,7 +310,7 @@ describe('movementCollision environment response', () => {
     expect(pushed.path).toEqual([{ x: 3, y: 1 }])
   })
 
-  it('does not queue a yield move when the pushed unit already has a move target', () => {
+  it('[U03033] does not queue a yield move when the pushed unit already has a move target', () => {
     const mapGrid = createMapGrid()
     const occupancyMap = createOccupancyMap()
 
@@ -370,7 +370,7 @@ describe('movementCollision environment response', () => {
     expect(pushed.path).toEqual([{ x: 4, y: 1 }])
   })
 
-  it('queues yield move when the pusher is remote-controlled even if slower', () => {
+  it('[U03034] queues yield move when the pusher is remote-controlled even if slower', () => {
     const mapGrid = createMapGrid()
     const occupancyMap = createOccupancyMap()
 
@@ -446,7 +446,7 @@ describe('naval image-footprint collision', () => {
     }
   }
 
-  it('uses quadtree candidates and oriented hull width to reject overlapping parallel ships', () => {
+  it('[U03035] uses quadtree candidates and oriented hull width to reject overlapping parallel ships', () => {
     const mapGrid = createWaterGrid()
     const first = createShip('first', 'destroyer', 10 * 32, 8 * 32)
     const second = createShip('second', 'destroyer', 10 * 32, 8 * 32 + 25)
@@ -459,7 +459,7 @@ describe('naval image-footprint collision', () => {
     expect(collision.other).toBe(second)
   })
 
-  it('rejects a carrier position when its bow footprint crosses the shoreline', () => {
+  it('[U03036] rejects a carrier position when its bow footprint crosses the shoreline', () => {
     const mapGrid = createWaterGrid()
     for (let y = 0; y < mapGrid.length; y++) mapGrid[y][3].type = 'land'
     const carrier = createShip('carrier', 'aircraftCarrier', 6 * 32, 8 * 32, Math.PI)
@@ -469,7 +469,7 @@ describe('naval image-footprint collision', () => {
     expect(checkUnitCollision(carrier, mapGrid, [], [carrier]).type).toBe('terrain')
   })
 
-  it('allows a ferry hull to overlap the coast only during an active transport approach', () => {
+  it('[U03037] allows a ferry hull to overlap the coast only during an active transport approach', () => {
     const mapGrid = createWaterGrid()
     for (let y = 0; y < mapGrid.length; y++) mapGrid[y][3].type = 'land'
     const ferry = {
@@ -487,7 +487,7 @@ describe('naval image-footprint collision', () => {
     expect(checkUnitCollision(ferry, mapGrid, [], [ferry]).type).toBe('terrain')
   })
 
-  it('pushes a rotated capital ship to the nearest clear-water hull position', () => {
+  it('[U03038] pushes a rotated capital ship to the nearest clear-water hull position', () => {
     const mapGrid = createWaterGrid()
     for (let y = 0; y < mapGrid.length; y++) {
       for (let x = 0; x <= 3; x++) mapGrid[y][x].type = 'land'
@@ -504,7 +504,7 @@ describe('naval image-footprint collision', () => {
     expect(checkUnitCollision(carrier, mapGrid, [], [carrier]).collided).toBe(false)
   })
 
-  it('does not collide or steer a carrier away from aircraft on its deck', () => {
+  it('[U03039] does not collide or steer a carrier away from aircraft on its deck', () => {
     const mapGrid = createWaterGrid()
     const carrier = createShip('carrier', 'aircraftCarrier', 10 * 32, 8 * 32)
     const f35 = {

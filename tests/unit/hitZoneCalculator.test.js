@@ -15,66 +15,66 @@ vi.mock('../../src/config.js', () => ({
 
 describe('hitZoneCalculator', () => {
   describe('isTankUnit', () => {
-    it('returns true for tank', () => {
+    it('[U01940] returns true for tank', () => {
       expect(isTankUnit({ type: 'tank' })).toBe(true)
     })
 
-    it('returns true for tank_v1', () => {
+    it('[U01941] returns true for tank_v1', () => {
       expect(isTankUnit({ type: 'tank_v1' })).toBe(true)
     })
 
-    it('returns true for tank_v2', () => {
+    it('[U01942] returns true for tank_v2', () => {
       expect(isTankUnit({ type: 'tank_v2' })).toBe(true)
     })
 
-    it('returns true for tank_v3', () => {
+    it('[U01943] returns true for tank_v3', () => {
       expect(isTankUnit({ type: 'tank_v3' })).toBe(true)
     })
 
-    it('returns true for tank-v2 (with hyphen)', () => {
+    it('[U01944] returns true for tank-v2 (with hyphen)', () => {
       expect(isTankUnit({ type: 'tank-v2' })).toBe(true)
     })
 
-    it('returns true for tank-v3 (with hyphen)', () => {
+    it('[U01945] returns true for tank-v3 (with hyphen)', () => {
       expect(isTankUnit({ type: 'tank-v3' })).toBe(true)
     })
 
-    it('returns true for rocketTank', () => {
+    it('[U01946] returns true for rocketTank', () => {
       expect(isTankUnit({ type: 'rocketTank' })).toBe(true)
     })
 
-    it('returns false for harvester', () => {
+    it('[U01947] returns false for harvester', () => {
       expect(isTankUnit({ type: 'harvester' })).toBe(false)
     })
 
-    it('returns false for infantry', () => {
+    it('[U01948] returns false for infantry', () => {
       expect(isTankUnit({ type: 'infantry' })).toBe(false)
     })
 
-    it('returns false for apache', () => {
+    it('[U01949] returns false for apache', () => {
       expect(isTankUnit({ type: 'apache' })).toBe(false)
     })
 
-    it('returns false for ambulance', () => {
+    it('[U01950] returns false for ambulance', () => {
       expect(isTankUnit({ type: 'ambulance' })).toBe(false)
     })
 
-    it('returns false for null unit', () => {
+    it('[U01951] returns false for null unit', () => {
       expect(isTankUnit(null)).toBe(false)
     })
 
-    it('returns false for undefined unit', () => {
+    it('[U01952] returns false for undefined unit', () => {
       expect(isTankUnit(undefined)).toBe(false)
     })
 
-    it('returns false for unit without type', () => {
+    it('[U01953] returns false for unit without type', () => {
       expect(isTankUnit({})).toBe(false)
     })
   })
 
   describe('calculateHitZoneDamageMultiplier', () => {
     describe('non-tank units', () => {
-      it('returns default multiplier for harvester', () => {
+      it('[U01954] returns default multiplier for harvester', () => {
         const bullet = { x: 0, y: 0 }
         const unit = { type: 'harvester', x: 10, y: 10, direction: 0 }
 
@@ -84,7 +84,7 @@ describe('hitZoneCalculator', () => {
         expect(result.isRearHit).toBe(false)
       })
 
-      it('returns default multiplier for null unit type', () => {
+      it('[U01955] returns default multiplier for null unit type', () => {
         const bullet = { x: 0, y: 0 }
         const unit = { type: null, x: 10, y: 10, direction: 0 }
 
@@ -96,7 +96,7 @@ describe('hitZoneCalculator', () => {
     })
 
     describe('front hits (0° to 45°)', () => {
-      it('returns front multiplier when bullet hits from directly ahead', () => {
+      it('[U01956] returns front multiplier when bullet hits from directly ahead', () => {
         // Unit at (32, 32) facing right (direction = 0)
         // Bullet coming from the right (ahead of unit)
         const unit = { type: 'tank', x: 16, y: 16, direction: 0 }
@@ -108,7 +108,7 @@ describe('hitZoneCalculator', () => {
         expect(result.isRearHit).toBe(false)
       })
 
-      it('returns front multiplier for slight angle to the front', () => {
+      it('[U01957] returns front multiplier for slight angle to the front', () => {
         // Unit facing right (direction = 0)
         // Bullet slightly above the center-right
         const unit = { type: 'tank', x: 16, y: 16, direction: 0 }
@@ -122,7 +122,7 @@ describe('hitZoneCalculator', () => {
     })
 
     describe('side hits (45° to 135°)', () => {
-      it('returns side multiplier when bullet hits from the side', () => {
+      it('[U01958] returns side multiplier when bullet hits from the side', () => {
         // Unit at (32, 32) facing right (direction = 0)
         // Bullet coming from above (perpendicular)
         const unit = { type: 'tank', x: 16, y: 16, direction: 0 }
@@ -134,7 +134,7 @@ describe('hitZoneCalculator', () => {
         expect(result.isRearHit).toBe(false)
       })
 
-      it('returns side multiplier when bullet hits from below', () => {
+      it('[U01959] returns side multiplier when bullet hits from below', () => {
         // Unit facing right (direction = 0)
         // Bullet coming from below
         const unit = { type: 'tank', x: 16, y: 16, direction: 0 }
@@ -148,7 +148,7 @@ describe('hitZoneCalculator', () => {
     })
 
     describe('rear hits (135° to 180°)', () => {
-      it('returns rear multiplier when bullet hits from directly behind', () => {
+      it('[U01960] returns rear multiplier when bullet hits from directly behind', () => {
         // Unit at (32, 32) facing right (direction = 0)
         // Bullet coming from the left (behind)
         const unit = { type: 'tank', x: 16, y: 16, direction: 0 }
@@ -160,7 +160,7 @@ describe('hitZoneCalculator', () => {
         expect(result.isRearHit).toBe(true)
       })
 
-      it('returns rear multiplier for angled rear hit', () => {
+      it('[U01961] returns rear multiplier for angled rear hit', () => {
         // Unit facing right (direction = 0)
         // Bullet from behind-left corner
         const unit = { type: 'tank', x: 16, y: 16, direction: 0 }
@@ -174,7 +174,7 @@ describe('hitZoneCalculator', () => {
     })
 
     describe('unit facing different directions', () => {
-      it('calculates correctly when unit faces up (direction = -PI/2)', () => {
+      it('[U01962] calculates correctly when unit faces up (direction = -PI/2)', () => {
         // Unit facing up, bullet from above = front hit
         const unit = { type: 'tank', x: 16, y: 16, direction: -Math.PI / 2 }
         const bullet = { x: 32, y: 0 } // Above
@@ -185,7 +185,7 @@ describe('hitZoneCalculator', () => {
         expect(result.isRearHit).toBe(false)
       })
 
-      it('calculates correctly when unit faces down (direction = PI/2)', () => {
+      it('[U01963] calculates correctly when unit faces down (direction = PI/2)', () => {
         // Unit facing down, bullet from below = front hit
         const unit = { type: 'tank', x: 16, y: 16, direction: Math.PI / 2 }
         const bullet = { x: 32, y: 64 } // Below
@@ -196,7 +196,7 @@ describe('hitZoneCalculator', () => {
         expect(result.isRearHit).toBe(false)
       })
 
-      it('uses turretDirection when direction is not set', () => {
+      it('[U01964] uses turretDirection when direction is not set', () => {
         // Unit with only turretDirection, facing right
         const unit = { type: 'tank', x: 16, y: 16, turretDirection: 0 }
         const bullet = { x: 48, y: 32 } // Right = front
@@ -207,7 +207,7 @@ describe('hitZoneCalculator', () => {
         expect(result.isRearHit).toBe(false)
       })
 
-      it('defaults to direction 0 when no direction set', () => {
+      it('[U01965] defaults to direction 0 when no direction set', () => {
         // Unit with no direction properties
         const unit = { type: 'tank', x: 16, y: 16 }
         const bullet = { x: 48, y: 32 } // Right = front
@@ -220,7 +220,7 @@ describe('hitZoneCalculator', () => {
     })
 
     describe('edge cases', () => {
-      it('handles bullet at exact unit center', () => {
+      it('[U01966] handles bullet at exact unit center', () => {
         const unit = { type: 'tank', x: 16, y: 16, direction: 0 }
         const bullet = { x: 32, y: 32 } // At unit center
 
@@ -231,7 +231,7 @@ describe('hitZoneCalculator', () => {
         expect(typeof result.multiplier).toBe('number')
       })
 
-      it('handles extreme positions', () => {
+      it('[U01967] handles extreme positions', () => {
         const unit = { type: 'tank', x: 1000, y: 1000, direction: 0 }
         const bullet = { x: 0, y: 0 }
 
@@ -241,7 +241,7 @@ describe('hitZoneCalculator', () => {
         expect(typeof result.multiplier).toBe('number')
       })
 
-      it('handles negative positions', () => {
+      it('[U01968] handles negative positions', () => {
         const unit = { type: 'tank', x: -100, y: -100, direction: 0 }
         const bullet = { x: 0, y: 0 }
 
@@ -256,7 +256,7 @@ describe('hitZoneCalculator', () => {
       const tankTypes = ['tank', 'tank_v1', 'tank_v2', 'tank_v3', 'tank-v2', 'tank-v3', 'rocketTank']
 
       tankTypes.forEach(tankType => {
-        it(`applies hit zone damage to ${tankType}`, () => {
+        it(`[U01969] applies hit zone damage to ${tankType}`, () => {
           const unit = { type: tankType, x: 16, y: 16, direction: 0 }
           const bullet = { x: 0, y: 32 } // Behind = rear hit
 

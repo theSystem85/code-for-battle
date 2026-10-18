@@ -72,7 +72,7 @@ beforeEach(() => {
 })
 
 describe('command registry', () => {
-  it('offers every command the spec lists', () => {
+  it('[U04645] offers every command the spec lists', () => {
     expect(UNIT_COMMAND_NAMES).toEqual(expect.arrayContaining([
       'moveForward', 'moveBackward', 'moveSidewaysLeft', 'moveSidewaysRight', 'turnLeft', 'turnRight',
       'turretLeft', 'turretRight', 'takeoff', 'land', 'aimAndLock', 'fireAtLocked', 'fireForward',
@@ -81,7 +81,7 @@ describe('command registry', () => {
     ]))
   })
 
-  it('refuses unknown commands and units that cannot take commands', () => {
+  it('[U04646] refuses unknown commands and units that cannot take commands', () => {
     const tank = unitAt('t', 'tank_v1', ME, 10, 10)
     expect(executeUnitCommand('dance', tank, {}, ctx)).toBe(false)
     expect(refuseUnitCommand('dance', tank, {}, ctx)).toMatch(/unknown/)
@@ -99,7 +99,7 @@ describe('command registry', () => {
 })
 
 describe('movement commands', () => {
-  it('moves forwards and backwards along the heading through the movement handler', () => {
+  it('[U04647] moves forwards and backwards along the heading through the movement handler', () => {
     const tank = unitAt('t', 'tank_v1', ME, 10, 10)
     expect(executeUnitCommand('moveForward', tank, { tiles: 3 }, ctx)).toBe(true)
     expect(ctx.commands.handleMovementCommand).toHaveBeenLastCalledWith(
@@ -113,7 +113,7 @@ describe('movement commands', () => {
     expect(isPolicyIssuingOrder()).toBe(false)
   })
 
-  it('refuses a move into water, rock, buildings or off the map', () => {
+  it('[U04648] refuses a move into water, rock, buildings or off the map', () => {
     const tank = unitAt('t', 'tank_v1', ME, 10, 10)
     ctx.mapGrid[10][12] = { type: 'water' }
     expect(executeUnitCommand('moveForward', tank, { tiles: 2 }, ctx)).toBe(false)
@@ -124,14 +124,14 @@ describe('movement commands', () => {
     expect(ctx.commands.handleMovementCommand).not.toHaveBeenCalled()
   })
 
-  it('refuses movement for a crewless or fuel-less unit and a grounded aircraft', () => {
+  it('[U04649] refuses movement for a crewless or fuel-less unit and a grounded aircraft', () => {
     expect(executeUnitCommand('moveForward', unitAt('a', 'tank_v1', ME, 10, 10, { crew: { driver: false, loader: true } }), {}, ctx)).toBe(false)
     expect(executeUnitCommand('moveForward', unitAt('b', 'tank_v1', ME, 10, 10, { gas: 0, maxGas: 100 }), {}, ctx)).toBe(false)
     expect(executeUnitCommand('moveForward', unitAt('c', 'apache', ME, 10, 10, { flightState: 'grounded' }), {}, ctx)).toBe(false)
     expect(executeUnitCommand('moveForward', unitAt('d', 'apache', ME, 10, 10, { flightState: 'flying' }), {}, ctx)).toBe(true)
   })
 
-  it('moves sideways for helicopters only, left and right of the heading', () => {
+  it('[U04650] moves sideways for helicopters only, left and right of the heading', () => {
     const heli = unitAt('h', 'apache', ME, 10, 10, { flightState: 'flying' })
     expect(executeUnitCommand('moveSidewaysLeft', heli, { tiles: 2 }, ctx)).toBe(true)
     expect(ctx.commands.handleMovementCommand).toHaveBeenLastCalledWith(
@@ -147,7 +147,7 @@ describe('movement commands', () => {
     expect(executeUnitCommand('moveSidewaysRight', jet, {}, ctx)).toBe(false)
   })
 
-  it('turns the wagon left and right in place and refuses while moving or for jets', () => {
+  it('[U04651] turns the wagon left and right in place and refuses while moving or for jets', () => {
     const tank = unitAt('t', 'tank_v1', ME, 10, 10)
     expect(executeUnitCommand('turnRight', tank, {}, ctx)).toBe(true)
     expect(tank.direction).toBeGreaterThan(0)
@@ -159,7 +159,7 @@ describe('movement commands', () => {
     expect(executeUnitCommand('turnLeft', unitAt('j', 'f22Raptor', ME, 10, 10, { flightState: 'flying' }), {}, ctx)).toBe(false)
   })
 
-  it('turns the turret for tanks with a gunner only', () => {
+  it('[U04652] turns the turret for tanks with a gunner only', () => {
     const tank = unitAt('t', 'tank-v2', ME, 10, 10)
     expect(executeUnitCommand('turretRight', tank, {}, ctx)).toBe(true)
     expect(tank.turretDirection).toBeGreaterThan(0)
@@ -173,7 +173,7 @@ describe('movement commands', () => {
 })
 
 describe('takeoff and landing', () => {
-  it('lets helicopters and the F-35 take off from the ground and land from the air', () => {
+  it('[U04653] lets helicopters and the F-35 take off from the ground and land from the air', () => {
     ;['apache', 'f35'].forEach(type => {
       const grounded = unitAt(`g-${type}`, type, ME, 10, 10, { flightState: 'grounded' })
       expect(executeUnitCommand('takeoff', grounded, {}, ctx)).toBe(true)
@@ -187,14 +187,14 @@ describe('takeoff and landing', () => {
     })
   })
 
-  it('refuses ground vehicles and the F-22', () => {
+  it('[U04654] refuses ground vehicles and the F-22', () => {
     expect(executeUnitCommand('takeoff', unitAt('t', 'tank_v1', ME, 10, 10, { flightState: 'grounded' }), {}, ctx)).toBe(false)
     expect(executeUnitCommand('land', unitAt('j', 'f22Raptor', ME, 10, 10, { flightState: 'flying' }), {}, ctx)).toBe(false)
   })
 })
 
 describe('aiming and firing', () => {
-  it('aims at and locks an enemy without firing', () => {
+  it('[U04655] aims at and locks an enemy without firing', () => {
     const tank = unitAt('t', 'tank_v1', ME, 10, 10)
     const foe = unitAt('e', 'tank_v1', FOE, 10, 15)
     expect(executeUnitCommand('aimAndLock', tank, { target: foe }, ctx)).toBe(true)
@@ -204,7 +204,7 @@ describe('aiming and firing', () => {
     expect(ctx.fire).not.toHaveBeenCalled()
   })
 
-  it('refuses to lock friends, dead targets, untargetable units and non-tank shooters', () => {
+  it('[U04656] refuses to lock friends, dead targets, untargetable units and non-tank shooters', () => {
     const tank = unitAt('t', 'tank_v1', ME, 10, 10)
     expect(executeUnitCommand('aimAndLock', tank, { target: unitAt('f', 'tank_v1', ME, 12, 10) }, ctx)).toBe(false)
     expect(executeUnitCommand('aimAndLock', tank, { target: unitAt('d', 'tank_v1', FOE, 12, 10, { health: 0 }) }, ctx)).toBe(false)
@@ -216,7 +216,7 @@ describe('aiming and firing', () => {
     expect(tank.policyLock).toBeUndefined()
   })
 
-  it('fires at the locked target only when aimed, in range, loaded and reloaded', () => {
+  it('[U04657] fires at the locked target only when aimed, in range, loaded and reloaded', () => {
     const tank = unitAt('t', 'tank_v1', ME, 10, 10, { ammunition: 5, maxAmmunition: 10 })
     const foe = unitAt('e', 'tank_v1', FOE, 15, 10)
     expect(executeUnitCommand('fireAtLocked', tank, {}, ctx)).toBe(false)
@@ -248,7 +248,7 @@ describe('aiming and firing', () => {
     expect(ctx.fire).not.toHaveBeenCalled()
   })
 
-  it('fires into the turret direction without any lock and reports a failed shot', () => {
+  it('[U04658] fires into the turret direction without any lock and reports a failed shot', () => {
     const tank = unitAt('t', 'tank-v2', ME, 10, 10, { turretDirection: Math.PI / 2, ammunition: 3, maxAmmunition: 10 })
     expect(executeUnitCommand('fireForward', tank, {}, ctx)).toBe(true)
     const aim = ctx.fire.mock.calls[0][2]
@@ -259,7 +259,7 @@ describe('aiming and firing', () => {
     expect(executeUnitCommand('fireForward', tank, {}, ctx)).toBe(false)
   })
 
-  it('refuses to fire for crews without a loader, units that may not fire and other unit types', () => {
+  it('[U04659] refuses to fire for crews without a loader, units that may not fire and other unit types', () => {
     expect(executeUnitCommand('fireForward', unitAt('a', 'tank_v1', ME, 10, 10, { crew: { driver: true, gunner: true, loader: false } }), {}, ctx)).toBe(false)
     expect(executeUnitCommand('fireForward', unitAt('b', 'tank_v1', ME, 10, 10, { canFire: false }), {}, ctx)).toBe(false)
     expect(executeUnitCommand('fireForward', unitAt('c', 'howitzer', ME, 10, 10), {}, ctx)).toBe(false)
@@ -270,7 +270,7 @@ describe('aiming and firing', () => {
 })
 
 describe('attack commands', () => {
-  it('attacks and chases a hostile target through the attack handler', () => {
+  it('[U04660] attacks and chases a hostile target through the attack handler', () => {
     const tank = unitAt('t', 'tank_v1', ME, 10, 10)
     const foe = unitAt('e', 'tank_v1', FOE, 30, 10)
     expect(executeUnitCommand('attackAndChase', tank, { target: foe }, ctx)).toBe(true)
@@ -278,7 +278,7 @@ describe('attack commands', () => {
     expect(issuedAsPolicy.at(-1)).toEqual({ name: 'attack', policy: true })
   })
 
-  it('refuses to attack friends, unarmed units and targets that cannot be hit', () => {
+  it('[U04661] refuses to attack friends, unarmed units and targets that cannot be hit', () => {
     const tank = unitAt('t', 'tank_v1', ME, 10, 10)
     expect(executeUnitCommand('attackAndChase', tank, { target: unitAt('f', 'tank_v1', ME, 12, 10) }, ctx)).toBe(false)
     expect(executeUnitCommand('attackAndChase', unitAt('h', 'harvester', ME, 10, 10), { target: unitAt('e', 'tank_v1', FOE, 12, 10) }, ctx)).toBe(false)
@@ -287,7 +287,7 @@ describe('attack commands', () => {
     expect(ctx.commands.handleAttackCommand).not.toHaveBeenCalled()
   })
 
-  it('attacks in range without chasing and lets go when the target leaves range', () => {
+  it('[U04662] attacks in range without chasing and lets go when the target leaves range', () => {
     const tank = unitAt('t', 'tank_v1', ME, 10, 10)
     const foe = unitAt('e', 'tank_v1', FOE, 15, 10)
     expect(executeUnitCommand('attackInRange', tank, { target: foe }, ctx)).toBe(true)
@@ -301,7 +301,7 @@ describe('attack commands', () => {
     expect(tank.policyNoChase).toBeNull()
   })
 
-  it('does not drop an order the player gave while releasing a no-chase target', () => {
+  it('[U04663] does not drop an order the player gave while releasing a no-chase target', () => {
     const tank = unitAt('t', 'tank_v1', ME, 10, 10)
     const foe = unitAt('e', 'tank_v1', FOE, 30, 10)
     const other = unitAt('o', 'tank_v1', FOE, 12, 10)
@@ -310,7 +310,7 @@ describe('attack commands', () => {
     expect(tank.target).toBe(other)
   })
 
-  it('attacks any enemy in range automatically and does nothing when none is near', () => {
+  it('[U04664] attacks any enemy in range automatically and does nothing when none is near', () => {
     const tank = unitAt('t', 'tank_v1', ME, 10, 10)
     const near = unitAt('n', 'tank_v1', FOE, 14, 10)
     ctx.units = [tank, near]
@@ -323,7 +323,7 @@ describe('attack commands', () => {
 })
 
 describe('service commands', () => {
-  it('lets service units service a friendly target that needs it', () => {
+  it('[U04665] lets service units service a friendly target that needs it', () => {
     const tank = unitAt('t', 'tank_v1', ME, 12, 10, { health: 30 })
     const cases = [
       ['ambulance', 'heal'], ['tankerTruck', 'refuel'], ['ammunitionTruck', 'resupply'], ['recoveryTank', 'repair']
@@ -335,7 +335,7 @@ describe('service commands', () => {
     })
   })
 
-  it('refuses service for combat units, enemies and targets that do not need it', () => {
+  it('[U04666] refuses service for combat units, enemies and targets that do not need it', () => {
     const tank = unitAt('t', 'tank_v1', ME, 12, 10)
     const foe = unitAt('e', 'tank_v1', FOE, 12, 10)
     expect(executeUnitCommand('serviceTarget', unitAt('x', 'tank_v1', ME, 10, 10), { target: tank }, ctx)).toBe(false)
@@ -347,7 +347,7 @@ describe('service commands', () => {
     expect(executeUnitCommand('serviceTarget', unitAt('a', 'ambulance', ME, 10, 10), { target: tank }, ctx)).toBe(false)
   })
 
-  it('orders a service unit to refill ammo, health or fuel only when needed and available', () => {
+  it('[U04667] orders a service unit to refill ammo, health or fuel only when needed and available', () => {
     const tank = unitAt('t', 'tank_v1', ME, 12, 10, { ammunition: 2, maxAmmunition: 10, health: 50, gas: 10, maxGas: 100 })
     const ammoTruck = unitAt('am', 'ammunitionTruck', ME, 14, 10)
     const recovery = unitAt('rec', 'recoveryTank', ME, 14, 11)
@@ -370,7 +370,7 @@ describe('service commands', () => {
     expect(executeUnitCommand('requestRefill', tank, { resource: 'beer' }, ctx)).toBe(false)
   })
 
-  it('refuses a refill when no friendly service unit exists or it cannot help', () => {
+  it('[U04668] refuses a refill when no friendly service unit exists or it cannot help', () => {
     const tank = unitAt('t', 'tank_v1', ME, 12, 10, { ammunition: 2, maxAmmunition: 10 })
     const enemyTruck = unitAt('am', 'ammunitionTruck', FOE, 14, 10)
     ctx.units = [tank, enemyTruck]
@@ -381,7 +381,7 @@ describe('service commands', () => {
     expect(executeUnitCommand('requestRefill', tank, { resource: 'ammo' }, ctx)).toBe(false)
   })
 
-  it('sends units to the nearest friendly workshop, hospital or ammo factory when it makes sense', () => {
+  it('[U04669] sends units to the nearest friendly workshop, hospital or ammo factory when it makes sense', () => {
     const workshop = { id: 'w', type: 'vehicleWorkshop', owner: ME, x: 20, y: 20, width: 3, height: 3, health: 100 }
     const hospital = { id: 'h', type: 'hospital', owner: ME, x: 25, y: 20, width: 3, height: 3, health: 100 }
     const factory = { id: 'f', type: 'ammunitionFactory', owner: ME, x: 28, y: 20, width: 3, height: 3, health: 100 }
@@ -415,7 +415,7 @@ describe('service commands', () => {
 })
 
 describe('protect and retreat', () => {
-  it('protects a friendly unit by following it', () => {
+  it('[U04670] protects a friendly unit by following it', () => {
     const tank = unitAt('t', 'tank_v1', ME, 10, 10, { target: unitAt('x', 'tank_v1', FOE, 12, 10) })
     const friend = unitAt('f', 'harvester', ME, 14, 10)
     expect(executeUnitCommand('protect', tank, { target: friend }, ctx)).toBe(true)
@@ -425,7 +425,7 @@ describe('protect and retreat', () => {
     expect(tank.target).toBeNull()
   })
 
-  it('refuses to protect itself, enemies, buildings or the dead', () => {
+  it('[U04671] refuses to protect itself, enemies, buildings or the dead', () => {
     const tank = unitAt('t', 'tank_v1', ME, 10, 10)
     expect(executeUnitCommand('protect', tank, { target: tank }, ctx)).toBe(false)
     expect(executeUnitCommand('protect', tank, { target: unitAt('e', 'tank_v1', FOE, 12, 10) }, ctx)).toBe(false)
@@ -434,7 +434,7 @@ describe('protect and retreat', () => {
     expect(tank.guardMode).toBeUndefined()
   })
 
-  it('retreats to a walkable tile and refuses blocked or off-map positions', () => {
+  it('[U04672] retreats to a walkable tile and refuses blocked or off-map positions', () => {
     const tank = unitAt('t', 'tank_v1', ME, 10, 10)
     expect(executeUnitCommand('retreatTo', tank, { tileX: 4, tileY: 5 }, ctx)).toBe(true)
     expect(ctx.commands.handleMovementCommand).toHaveBeenLastCalledWith(
@@ -445,7 +445,7 @@ describe('protect and retreat', () => {
     expect(executeUnitCommand('retreatTo', tank, { tileX: -1, tileY: 5 }, ctx)).toBe(false)
   })
 
-  it('stops a unit and clears its lock, guard and orders', () => {
+  it('[U04673] stops a unit and clears its lock, guard and orders', () => {
     const tank = unitAt('t', 'tank_v1', ME, 10, 10, {
       path: [{ x: 1, y: 1 }], moveTarget: { x: 1, y: 1 }, policyLock: {}, guardMode: true, target: {}
     })
@@ -459,7 +459,7 @@ describe('protect and retreat', () => {
 })
 
 describe('refusals leave the unit untouched', () => {
-  it('does not change a refused unit', () => {
+  it('[U04674] does not change a refused unit', () => {
     const tank = unitAt('t', 'tank_v1', ME, 10, 10, { path: [{ x: 1, y: 1 }] })
     const before = JSON.stringify(tank)
     expect(executeUnitCommand('turnLeft', tank, {}, ctx)).toBe(false)

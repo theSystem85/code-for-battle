@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import '../setup.js'
 
 describe('Destroyer image renderer', () => {
-  it('loads only the south-facing sprite and rotates it for every heading', async() => {
+  it('[U01236] loads only the south-facing sprite and rotates it for every heading', async() => {
     vi.resetModules()
     const createdImages = []
     globalThis.Image = class {

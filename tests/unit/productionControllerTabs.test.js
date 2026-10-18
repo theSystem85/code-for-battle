@@ -19,7 +19,7 @@ describe('productionControllerTabs mobile toggle selectors', () => {
     `
   })
 
-  it('toggles from buildings to units even when non-production tab buttons are active', () => {
+  it('[U03472] toggles from buildings to units even when non-production tab buttons are active', () => {
     const controller = {
       activateTab: vi.fn()
     }
@@ -29,7 +29,7 @@ describe('productionControllerTabs mobile toggle selectors', () => {
     expect(controller.activateTab).toHaveBeenCalledWith('units', { scrollIntoView: true })
   })
 
-  it('uses the production active tab for mobile toggle label state', () => {
+  it('[U03473] uses the production active tab for mobile toggle label state', () => {
     const controller = {
       mobileCategoryToggle: document.getElementById('mobileCategoryToggle'),
       ensureMobileToggle: vi.fn()

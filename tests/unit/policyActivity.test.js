@@ -98,7 +98,7 @@ describe('active control definition', () => {
   const policy = { initialStateId: 'watch' }
   const holding = { runtime: { hold: { transitionId: 't' }, finished: false, currentStateId: 'react' } }
 
-  it('is active only inside a while hold, away from the start state, not finished and unpaused', () => {
+  it('[U03316] is active only inside a while hold, away from the start state, not finished and unpaused', () => {
     expect(isBindingControlling(holding, policy, STEP_GATE.open)).toBe(true)
     expect(isBindingControlling({ runtime: { ...holding.runtime, hold: null } }, policy, STEP_GATE.open)).toBe(false)
     expect(isBindingControlling({ runtime: { ...holding.runtime, currentStateId: 'watch' } }, policy, STEP_GATE.open)).toBe(false)
@@ -109,7 +109,7 @@ describe('active control definition', () => {
 })
 
 describe('policy activity in the engine', () => {
-  it('counts enabled units and actively controlled units per policy', () => {
+  it('[U03317] counts enabled units and actively controlled units per policy', () => {
     const doc = whilePolicy('low-hp', { type: 'compare', field: 'hp', op: '<', value: 0.5 }, { type: 'hold' })
     expect(savePolicy(ME, doc).ok).toBe(true)
     const hurt = makeUnit('a', ME, 10, 10, { health: 30 })
@@ -133,7 +133,7 @@ describe('policy activity in the engine', () => {
     expect(hurt.policyActive).toBe(false)
   })
 
-  it('ignores dead units and an if-rule that already fired', () => {
+  it('[U03318] ignores dead units and an if-rule that already fired', () => {
     const ifDoc = whilePolicy('once', { type: 'compare', field: 'hp', op: '<', value: 0.5 }, { type: 'hold' })
     ifDoc.states[0].transitions[0].kind = 'if'
     expect(savePolicy(ME, ifDoc).ok).toBe(true)
@@ -146,7 +146,7 @@ describe('policy activity in the engine', () => {
     expect(countPolicyActivity([unit, dead]).get('once')).toEqual({ enabled: 1, active: 0 })
   })
 
-  it('stops counting a policy as controlling while a direct order runs or the policy is paused', () => {
+  it('[U03319] stops counting a policy as controlling while a direct order runs or the policy is paused', () => {
     const doc = whilePolicy('low-hp', { type: 'compare', field: 'hp', op: '<', value: 0.5 }, { type: 'hold' })
     savePolicy(ME, doc)
     const unit = makeUnit('a', ME, 10, 10, { health: 10 })
@@ -167,7 +167,7 @@ describe('policy activity in the engine', () => {
 })
 
 describe('new conditions and effects through the engine', () => {
-  it('turns the wagon every evaluation while a check condition holds', () => {
+  it('[U03320] turns the wagon every evaluation while a check condition holds', () => {
     const doc = whilePolicy('spin', { type: 'compare', field: 'fuel', op: '<', value: 0.5 }, { type: 'turnRight' })
     savePolicy(ME, doc)
     const tank = makeUnit('a', ME, 10, 10, { gas: 20, maxGas: 100 })
@@ -187,7 +187,7 @@ describe('new conditions and effects through the engine', () => {
     expect(tank.direction).toBe(stopped)
   })
 
-  it('gives refused commands no effect but keeps the policy running', () => {
+  it('[U03321] gives refused commands no effect but keeps the policy running', () => {
     const doc = whilePolicy('lift', { type: 'check', check: 'moving' }, { type: 'takeoff' })
     savePolicy(ME, doc)
     const tank = makeUnit('a', ME, 10, 10, { moveTarget: { x: 1, y: 1 } })
@@ -198,7 +198,7 @@ describe('new conditions and effects through the engine', () => {
     expect(tank.policyActive).toBe(true)
   })
 
-  it('runs a service-oriented effect on a helicopter through the same API', () => {
+  it('[U03322] runs a service-oriented effect on a helicopter through the same API', () => {
     const doc = whilePolicy('liftoff', { type: 'check', check: 'parkedAt', place: 'helipad' }, { type: 'takeoff' })
     savePolicy(ME, doc)
     const heli = makeUnit('h', ME, 10, 10, { type: 'apache', flightState: 'grounded' })
@@ -210,7 +210,7 @@ describe('new conditions and effects through the engine', () => {
     expect(heli.manualFlightState).toBe('takeoff')
   })
 
-  it('keeps the shipped templates working', () => {
+  it('[U03323] keeps the shipped templates working', () => {
     POLICY_TEMPLATES.forEach(template => {
       expect(savePolicy(ME, template.create(`tpl-${template.id}`)).ok).toBe(true)
     })
@@ -232,7 +232,7 @@ describe('the command API is the only way policy code moves units', () => {
     /handleMovementCommand|handleAttackCommand/
   ]
 
-  it('does not move, aim or order units anywhere outside unitCommandApi.js', () => {
+  it('[U03324] does not move, aim or order units anywhere outside unitCommandApi.js', () => {
     const offenders = []
     readdirSync(dir).filter(name => name.endsWith('.js') && name !== 'unitCommandApi.js').forEach(name => {
       const text = readFileSync(join(dir, name), 'utf8')

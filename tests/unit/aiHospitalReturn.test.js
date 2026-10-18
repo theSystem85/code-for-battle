@@ -20,7 +20,7 @@ describe('AI hospital return routing', () => {
     return { hospital, unit, state }
   }
 
-  it('uses the unit center for the path origin and tile coordinates for the move target', () => {
+  it('[U00096] uses the unit center for the path origin and tile coordinates for the move target', () => {
     const { hospital, unit, state } = scenario('ai-hospital-coordinates')
     const route = [{ x: 13, y: 15 }, { x: 6, y: 8 }]
     getCachedPath.mockReturnValue(route)
@@ -36,7 +36,7 @@ describe('AI hospital return routing', () => {
     expect(unit.hospitalTarget).toBe(hospital)
   })
 
-  it('retries a route that was initially unreachable instead of retaining a false return state', () => {
+  it('[U00097] retries a route that was initially unreachable instead of retaining a false return state', () => {
     const { unit, state } = scenario('ai-hospital-retry')
     getCachedPath.mockReturnValue([])
     manageAICrewHealing([unit], state, 6000, unit.owner)

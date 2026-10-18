@@ -6,7 +6,7 @@ import {
 } from '../../src/planning/blueprintPlanning.js'
 
 describe('blueprintPlanning', () => {
-  it('treats planned blueprints as placeable footprints for proximity checks', () => {
+  it('[U00501] treats planned blueprints as placeable footprints for proximity checks', () => {
     const blueprints = [
       { type: 'concreteWall', x: 4, y: 0 },
       { type: 'concreteWall', x: 8, y: 0 }
@@ -17,7 +17,7 @@ describe('blueprintPlanning', () => {
     expect(planningBuildings[0]).toMatchObject({ x: 4, y: 0, owner: 'player' })
   })
 
-  it('finds cascading consecutive cancellations when base connection is broken', () => {
+  it('[U00502] finds cascading consecutive cancellations when base connection is broken', () => {
     const baseBuildings = [{ x: 0, y: 0, width: 2, height: 2, owner: 'player' }]
     const blueprints = [
       { type: 'concreteWall', x: 4, y: 0 },
@@ -37,7 +37,7 @@ describe('blueprintPlanning', () => {
     expect(cancelled).toEqual([blueprints[0], blueprints[1], blueprints[2], blueprints[3]])
   })
 
-  it('keeps plans connected through remaining structures', () => {
+  it('[U00503] keeps plans connected through remaining structures', () => {
     const baseBuildings = [{ x: 0, y: 0, width: 2, height: 2, owner: 'player' }]
     const blueprints = [
       { type: 'concreteWall', x: 4, y: 0 },

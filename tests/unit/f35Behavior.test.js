@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { canF35ReleaseWeapons, canF35StartLanding, computeF35BombReleasePoint } from '../../src/game/f35Behavior.js'
 
 describe('f35Behavior helpers', () => {
-  it('blocks weapon release on non-airborne states', () => {
+  it('[U01504] blocks weapon release on non-airborne states', () => {
     const base = { type: 'f35', altitude: 20, canFire: true, manualFlightState: 'auto' }
     expect(canF35ReleaseWeapons({ ...base, flightState: 'grounded' })).toBe(false)
     expect(canF35ReleaseWeapons({ ...base, flightState: 'landing' })).toBe(false)
@@ -10,7 +10,7 @@ describe('f35Behavior helpers', () => {
     expect(canF35ReleaseWeapons({ ...base, flightState: 'airborne' })).toBe(true)
   })
 
-  it('allows landing only for explicit landing intents', () => {
+  it('[U01505] allows landing only for explicit landing intents', () => {
     const unit = { type: 'f35', commandIntent: 'move', helipadLandingRequested: true, helipadTargetId: 'h1' }
     expect(canF35StartLanding(unit)).toBe(false)
     expect(canF35StartLanding({ ...unit, commandIntent: 'landAtStructure' })).toBe(true)
@@ -29,7 +29,7 @@ describe('f35Behavior helpers', () => {
     })).toBe(true)
   })
 
-  it('computes pre-target release points', () => {
+  it('[U01506] computes pre-target release points', () => {
     const point = computeF35BombReleasePoint({
       x: 0,
       y: 0,

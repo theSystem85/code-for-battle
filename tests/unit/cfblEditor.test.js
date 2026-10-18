@@ -14,12 +14,12 @@ function setup() {
 
 describe('guided CFBL editor', () => {
   beforeEach(() => { resetPolicyStore(); localStorage.clear(); document.body.replaceChildren() })
-  it('ranks legal labels and spellings without introducing an illegal choice', () => {
+  it('[U00793] ranks legal labels and spellings without introducing an illegal choice', () => {
     const options = [{ value: 'tank-v2', label: 'Tank 2' }, { value: 'harvester', label: 'Harvester' }]
     expect(fuzzyOptions(options, 'tnk2')).toEqual([options[0]])
     expect(fuzzyOptions(options, 'unrecognized')).toEqual([])
   })
-  it('stages raw input in search and keeps accepted code parseable', () => {
+  it('[U00794] stages raw input in search and keeps accepted code parseable', () => {
     const { controller, editor } = setup()
     const before = controller.getSnapshot().source
     editor.input.focus()
@@ -31,7 +31,7 @@ describe('guided CFBL editor', () => {
     expect(parseCFBL(editor.input.value).diagnostics).toEqual([])
     editor.destroy()
   })
-  it('rejects invalid paste and accepts valid programs atomically', () => {
+  it('[U00795] rejects invalid paste and accepts valid programs atomically', () => {
     const { controller, editor } = setup()
     const before = controller.getSnapshot().source
     const paste = text => {
@@ -47,7 +47,7 @@ describe('guided CFBL editor', () => {
     expect(document.querySelector('script')).toBeNull()
     editor.destroy()
   })
-  it('keeps composition provisional until the user chooses a legal option', () => {
+  it('[U00796] keeps composition provisional until the user chooses a legal option', () => {
     const { controller, editor } = setup()
     const before = controller.getSnapshot().source
     editor.input.setSelectionRange(before.indexOf('wait'), before.indexOf('wait') + 4)
@@ -60,7 +60,7 @@ describe('guided CFBL editor', () => {
     expect(document.querySelector('[aria-label="Search legal CFBL options"]').value).toBe('retreat')
     editor.destroy()
   })
-  it('routes native accepted-history events through shared undo and redo', () => {
+  it('[U00797] routes native accepted-history events through shared undo and redo', () => {
     const { controller, editor } = setup()
     controller.setSource(controller.getSnapshot().source.replace('continuous', 'once'))
     editor.input.dispatchEvent(new window.InputEvent('beforeinput', { inputType: 'historyUndo', cancelable: true, bubbles: true }))
@@ -69,7 +69,7 @@ describe('guided CFBL editor', () => {
     expect(controller.getSnapshot().policy.execution).toBe('oneTime')
     editor.destroy()
   })
-  it('authors and removes WHILE UNTIL as complete transactions through the actual flyout', () => {
+  it('[U00798] authors and removes WHILE UNTIL as complete transactions through the actual flyout', () => {
     const { controller, editor } = setup()
     controller.transact(machine => {
       machine.states[0].transitions.push({ id: 'hold', kind: 'while', when: { type: 'always' }, to: machine.states[0].id })
@@ -90,7 +90,7 @@ describe('guided CFBL editor', () => {
     expect(parseCFBL(controller.getSnapshot().source).diagnostics).toEqual([])
     editor.destroy()
   })
-  it('groups the selected nested leaf without changing unrelated predicates', () => {
+  it('[U00799] groups the selected nested leaf without changing unrelated predicates', () => {
     const { controller, editor } = setup()
     controller.transact(machine => {
       machine.states[0].transitions.push({ id: 'nested', kind: 'if', when: { type: 'and', of: [{ type: 'compare', field: 'hp', op: '<', value: 0.25 }, { type: 'always' }] }, to: machine.states[0].id })
@@ -108,7 +108,7 @@ describe('guided CFBL editor', () => {
     expect(parseCFBL(controller.getSnapshot().source).diagnostics).toEqual([])
     editor.destroy()
   })
-  it('commits tiny legal decimals without exponent notation', () => {
+  it('[U00800] commits tiny legal decimals without exponent notation', () => {
     const { controller, editor } = setup()
     controller.transact(machine => {
       machine.states[0].transitions.push({ id: 'health', kind: 'if', when: { type: 'compare', field: 'hp', op: '<', value: 0.25 }, to: machine.states[0].id })
@@ -124,7 +124,7 @@ describe('guided CFBL editor', () => {
     expect(parseCFBL(controller.getSnapshot().source).diagnostics).toEqual([])
     editor.destroy()
   })
-  it('escapes source text in the noninteractive highlighted mirror', () => {
+  it('[U00801] escapes source text in the noninteractive highlighted mirror', () => {
     const { editor } = setup()
     expect(document.querySelector('.cfbl-editor__mirror').getAttribute('aria-hidden')).toBe('true')
     expect(document.querySelector('.cfbl-editor__input').tagName).toBe('TEXTAREA')

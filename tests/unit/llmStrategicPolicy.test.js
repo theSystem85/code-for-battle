@@ -46,7 +46,7 @@ function createCompactInput(overrides = {}) {
 }
 
 describe('llmStrategicPolicy', () => {
-  it('orders Apache, naval, and jet expansion phases sequentially', () => {
+  it('[U02371] orders Apache, naval, and jet expansion phases sequentially', () => {
     const input = createCompactInput({
       economy: { money: 50000, harvesters: { total: 4 } },
       baseStatus: {
@@ -93,7 +93,7 @@ describe('llmStrategicPolicy', () => {
 
     expect(phases.slice(0, 5)).toEqual(['helipad', 'apache', 'shipyard', 'destroyer', 'destroyer'])
   })
-  it('reverses the advanced branches for an air-first party', () => {
+  it('[U02372] reverses the advanced branches for an air-first party', () => {
     const input = createCompactInput({
       playerId: 'player3',
       economy: { money: 50000, harvesters: { total: 4 } },
@@ -115,7 +115,7 @@ describe('llmStrategicPolicy', () => {
 
     expect(phases.slice(0, 5)).toEqual(['helipad', 'apache', 'airstrip', 'f22Raptor', 'shipyard'])
   })
-  it('injects a harvester before non-economy spending when the economy is unstable', () => {
+  it('[U02373] injects a harvester before non-economy spending when the economy is unstable', () => {
     const input = createCompactInput()
     const output = {
       protocolVersion: '1.0',
@@ -138,7 +138,7 @@ describe('llmStrategicPolicy', () => {
     expect(prioritized.actions.filter(action => action.type === 'build_queue' || action.type === 'build_place').length).toBeGreaterThan(1)
   })
 
-  it('moves an existing harvester action to the front instead of duplicating it', () => {
+  it('[U02374] moves an existing harvester action to the front instead of duplicating it', () => {
     const input = createCompactInput()
     const output = {
       protocolVersion: '1.0',
@@ -159,7 +159,7 @@ describe('llmStrategicPolicy', () => {
     expect(prioritized.actions.some(action => action.actionId === 'tank-1')).toBe(true)
   })
 
-  it('prioritizes the next missing building in the economy chain before unit production', () => {
+  it('[U02375] prioritizes the next missing building in the economy chain before unit production', () => {
     const input = createCompactInput({
       baseStatus: {
         ownedBuildingCounts: {
@@ -191,7 +191,7 @@ describe('llmStrategicPolicy', () => {
     expect(prioritized.actions.length).toBeGreaterThanOrEqual(1)
   })
 
-  it('tops up the build stack when the economy is stable but queues are short', () => {
+  it('[U02376] tops up the build stack when the economy is stable but queues are short', () => {
     const input = createCompactInput({
       economy: { harvesters: { total: 2 } }
     })
@@ -213,7 +213,7 @@ describe('llmStrategicPolicy', () => {
     expect(prioritized.actions.filter(action => action.type === 'build_place' || action.type === 'build_queue').length).toBeGreaterThan(1)
   })
 
-  it('leaves actions unchanged when enough queued work already exists', () => {
+  it('[U02377] leaves actions unchanged when enough queued work already exists', () => {
     const input = createCompactInput({
       economy: { harvesters: { total: 2 } },
       queueState: {

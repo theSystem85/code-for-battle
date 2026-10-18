@@ -110,7 +110,7 @@ describe('gameStateManager', () => {
   })
 
   describe('updateMapScrolling', () => {
-    it('returns early when map grid is empty', () => {
+    it('[U01748] returns early when map grid is empty', () => {
       const gameState = {
         scrollOffset: { x: 10, y: 10 },
         dragVelocity: { x: 0, y: 0 },
@@ -124,7 +124,7 @@ describe('gameStateManager', () => {
       expect(gameState.scrollOffset).toEqual({ x: 10, y: 10 })
     })
 
-    it('starts keyboard scrolling below maximum speed', () => {
+    it('[U01749] starts keyboard scrolling below maximum speed', () => {
       const gameState = {
         scrollOffset: { x: 150, y: 150 },
         dragVelocity: { x: 0, y: 0 },
@@ -142,7 +142,7 @@ describe('gameStateManager', () => {
       expect(gameState.scrollOffset.x).toBeGreaterThan(150 - KEYBOARD_SCROLL_SPEED)
     })
 
-    it('brakes a released axis independently and retains the velocity object', () => {
+    it('[U01750] brakes a released axis independently and retains the velocity object', () => {
       const velocity = { x: 0, y: 0 }
       const state = {
         scrollOffset: { x: 500, y: 500 }, dragVelocity: velocity,
@@ -164,7 +164,7 @@ describe('gameStateManager', () => {
       expect(velocity.y).toBe(0)
     })
 
-    it('clears outward keyboard momentum at map bounds and reverses away immediately', () => {
+    it('[U01751] clears outward keyboard momentum at map bounds and reverses away immediately', () => {
       const state = {
         scrollOffset: { x: 0, y: 0 }, dragVelocity: { x: 0, y: 0 },
         keyScroll: { left: true, right: false, up: false, down: false },
@@ -180,7 +180,7 @@ describe('gameStateManager', () => {
       expect(state.scrollOffset.x).toBeGreaterThan(0)
     })
 
-    it('scrolls the map with the gamepad speed instead of the keyboard speed', () => {
+    it('[U01752] scrolls the map with the gamepad speed instead of the keyboard speed', () => {
       const gameState = {
         scrollOffset: { x: 200, y: 150 },
         dragVelocity: { x: 0, y: 0 },
@@ -200,7 +200,7 @@ describe('gameStateManager', () => {
       expect(KEYBOARD_SCROLL_SPEED).not.toBe(12)
     })
 
-    it('smoothly interpolates minimap scrolling targets', () => {
+    it('[U01753] smoothly interpolates minimap scrolling targets', () => {
       const gameState = {
         scrollOffset: { x: 0, y: 0 },
         dragVelocity: { x: 0, y: 0 },
@@ -219,7 +219,7 @@ describe('gameStateManager', () => {
   })
 
   describe('updateOreSpread', () => {
-    it('spreads ore to adjacent tiles when conditions allow', () => {
+    it('[U01754] spreads ore to adjacent tiles when conditions allow', () => {
       const mapGrid = Array.from({ length: 3 }, () =>
         Array.from({ length: 3 }, () => ({ type: 'land', ore: false, seedCrystal: false }))
       )
@@ -239,7 +239,7 @@ describe('gameStateManager', () => {
       expect(gameState.lastOreUpdate).toBe(ORE_SPREAD_INTERVAL + 10)
     })
 
-    it('avoids spreading ore onto occupied tiles', () => {
+    it('[U01755] avoids spreading ore onto occupied tiles', () => {
       const mapGrid = Array.from({ length: 3 }, () =>
         Array.from({ length: 3 }, () => ({ type: 'land', ore: false, seedCrystal: false }))
       )
@@ -259,7 +259,7 @@ describe('gameStateManager', () => {
       expect(mapGrid[1][2].ore).toBe(false)
     })
 
-    it('increases neighbor ore density on spread and respects seed density multiplier', () => {
+    it('[U01756] increases neighbor ore density on spread and respects seed density multiplier', () => {
       const mapGrid = Array.from({ length: 3 }, () =>
         Array.from({ length: 3 }, () => ({ type: 'land', ore: false, oreDensity: 0, seedCrystal: false, seedCrystalDensity: 0 }))
       )
@@ -288,7 +288,7 @@ describe('gameStateManager', () => {
   })
 
   describe('updateExplosions', () => {
-    it('removes expired explosions on the host and syncs to gameState', () => {
+    it('[U01757] removes expired explosions on the host and syncs to gameState', () => {
       const gameState = { explosions: [] }
       performanceNow.mockReturnValue(2000)
       explosions.push(
@@ -304,7 +304,7 @@ describe('gameStateManager', () => {
       expect(gameState.explosions).toBe(explosions)
     })
 
-    it('initializes explosions for non-host clients', () => {
+    it('[U01758] initializes explosions for non-host clients', () => {
       const gameState = {}
       isHost.mockReturnValue(false)
 
@@ -313,7 +313,7 @@ describe('gameStateManager', () => {
       expect(Array.isArray(gameState.explosions)).toBe(true)
     })
 
-    it('merges sprite explosions onto the host list before aliasing', () => {
+    it('[U01759] merges sprite explosions onto the host list before aliasing', () => {
       const sprite = { id: 'sheet', type: 'spriteSheet', x: 368, y: 400, startTime: 1500, duration: 1050 }
       const gameState = { explosions: [sprite], simulationTime: 1600 }
       isHost.mockReturnValue(true)
@@ -326,7 +326,7 @@ describe('gameStateManager', () => {
   })
 
   describe('updateSmokeParticles', () => {
-    it('removes invalid/expired particles and updates active ones', () => {
+    it('[U01760] removes invalid/expired particles and updates active ones', () => {
       const gameState = {
         simulationTime: 1000,
         smokeParticles: [
@@ -350,7 +350,7 @@ describe('gameStateManager', () => {
       expect(particle.size).toBeGreaterThan(4)
     })
 
-    it('uses simulation time for particle aging when available', () => {
+    it('[U01761] uses simulation time for particle aging when available', () => {
       const gameState = {
         simulationTime: 1000,
         smokeParticles: [
@@ -368,7 +368,7 @@ describe('gameStateManager', () => {
   })
 
   describe('updateDustParticles', () => {
-    it('updates dust positions and clears invalid entries', () => {
+    it('[U01762] updates dust positions and clears invalid entries', () => {
       const gameState = {
         dustParticles: [
           { startTime: 0 },
@@ -388,7 +388,7 @@ describe('gameStateManager', () => {
       expect(particle.currentSize).toBeGreaterThan(2)
     })
 
-    it('ages dust on the simulation clock so a leading start time cannot invert the radius', () => {
+    it('[U01763] ages dust on the simulation clock so a leading start time cannot invert the radius', () => {
       const gameState = {
         simulationTime: 1000,
         dustParticles: [
@@ -414,7 +414,7 @@ describe('gameStateManager', () => {
   })
 
   describe('cleanupDestroyedUnits', () => {
-    it('cleans up recovery tanks and tracks wreck assignments', () => {
+    it('[U01764] cleans up recovery tanks and tracks wreck assignments', () => {
       const unit = {
         id: 'rec-1',
         type: 'recoveryTank',
@@ -451,7 +451,7 @@ describe('gameStateManager', () => {
       expect(gameState.enemyUnitsDestroyed).toBe(1)
     })
 
-    it('registers and displays a ground-unit wreck in the initial destruction tick', () => {
+    it('[U01765] registers and displays a ground-unit wreck in the initial destruction tick', () => {
       const unit = {
         id: 'tank-1',
         type: 'tank_v1',
@@ -485,7 +485,7 @@ describe('gameStateManager', () => {
       expect(unit.turretDirection).toBe(2.2)
     })
 
-    it('starts a naval explosion and sinking together while removing turn wakes', () => {
+    it('[U01766] starts a naval explosion and sinking together while removing turn wakes', () => {
       const ship = {
         id: 'destroyer-1',
         type: 'destroyer',
@@ -521,7 +521,7 @@ describe('gameStateManager', () => {
       expect(units).toHaveLength(0)
     })
 
-    it('handles specialty unit destruction paths', () => {
+    it('[U01767] handles specialty unit destruction paths', () => {
       const ammoTruck = { id: 'ammo-1', type: 'ammunitionTruck', owner: 'enemy', health: 0, destructionQueuedAt: -2000 }
       const tankerTruck = { id: 'tank-1', type: 'tankerTruck', owner: 'player1', health: 0, destructionQueuedAt: -2000 }
       const units = [ammoTruck, tankerTruck]
@@ -544,7 +544,7 @@ describe('gameStateManager', () => {
     })
 
 
-    it('stops apache rotor audio during destroyed-unit cleanup', () => {
+    it('[U01768] stops apache rotor audio during destroyed-unit cleanup', () => {
       const stop = vi.fn()
       const apache = {
         id: 'apache-1',
@@ -586,7 +586,7 @@ describe('gameStateManager', () => {
       expect(units).toHaveLength(0)
     })
 
-    it('animates apache falling and rotating during the 2 second destruction freeze', () => {
+    it('[U01769] animates apache falling and rotating during the 2 second destruction freeze', () => {
       const apache = {
         id: 'apache-fall-1',
         type: 'apache',
@@ -635,7 +635,7 @@ describe('gameStateManager', () => {
   })
 
   describe('cleanupDestroyedFactories', () => {
-    it('removes destroyed factories and triggers explosions', () => {
+    it('[U01770] removes destroyed factories and triggers explosions', () => {
       const factory = { id: 'enemy', owner: 'enemy', x: 2, y: 3, width: 3, height: 2, health: 0 }
       const factories = [factory]
       const mapGrid = Array.from({ length: 10 }, () => Array.from({ length: 10 }, () => ({ type: 'land' })))
@@ -664,7 +664,7 @@ describe('gameStateManager', () => {
   })
 
   describe('updateUnitCollisions', () => {
-    it('delegates to resolveUnitCollisions', () => {
+    it('[U01771] delegates to resolveUnitCollisions', () => {
       const units = [{ id: 'u1' }]
       const mapGrid = []
 
@@ -675,13 +675,13 @@ describe('gameStateManager', () => {
   })
 
   describe('checkGameEndConditions', () => {
-    it('skips checks before the game starts', () => {
+    it('[U01772] skips checks before the game starts', () => {
       const gameState = { gameStarted: false, buildings: [] }
 
       expect(checkGameEndConditions([], gameState)).toBe(false)
     })
 
-    it('flags single-player defeat when no buildings remain', () => {
+    it('[U01773] flags single-player defeat when no buildings remain', () => {
       const gameState = {
         gameStarted: true,
         buildings: [],
@@ -698,7 +698,7 @@ describe('gameStateManager', () => {
       expect(playSound).toHaveBeenCalledWith('battleLost', 1.0, 0, true)
     })
 
-    it('marks multiplayer players as defeated without ending the game', () => {
+    it('[U01774] marks multiplayer players as defeated without ending the game', () => {
       const gameState = {
         gameStarted: true,
         buildings: [],
@@ -715,7 +715,7 @@ describe('gameStateManager', () => {
       expect(gameState.defeatedPlayers.has('player1')).toBe(true)
     })
 
-    it('does not mark player1 defeated when buildings use legacy player owner id', () => {
+    it('[U01775] does not mark player1 defeated when buildings use legacy player owner id', () => {
       const gameState = {
         gameStarted: true,
         buildings: [
@@ -735,7 +735,7 @@ describe('gameStateManager', () => {
       expect(gameState.defeatedPlayers.has('player1')).toBe(false)
     })
 
-    it('plays defeat sounds for newly defeated players', () => {
+    it('[U01776] plays defeat sounds for newly defeated players', () => {
       vi.useFakeTimers()
       const gameState = {
         gameStarted: true,
@@ -754,7 +754,7 @@ describe('gameStateManager', () => {
       expect(playSound).toHaveBeenCalledWith('playerRedDefeated', 1.0, 0, true)
     })
 
-    it('declares victory when all other players are eliminated', () => {
+    it('[U01777] declares victory when all other players are eliminated', () => {
       const gameState = {
         gameStarted: true,
         buildings: [{ owner: 'player1', type: 'powerPlant', health: 100 }],
@@ -773,7 +773,7 @@ describe('gameStateManager', () => {
       expect(playSound).toHaveBeenCalledWith('battleWon', 0.8, 0, true)
     })
 
-    it('ends spectator mode when a single player remains', () => {
+    it('[U01778] ends spectator mode when a single player remains', () => {
       const gameState = {
         gameStarted: true,
         buildings: [
@@ -793,7 +793,7 @@ describe('gameStateManager', () => {
   })
 
   describe('updateGameTime', () => {
-    it('scales delta by the speed multiplier', () => {
+    it('[U01779] scales delta by the speed multiplier', () => {
       const gameState = { gameTime: 0, speedMultiplier: 2 }
 
       updateGameTime(gameState, 500)
@@ -803,7 +803,7 @@ describe('gameStateManager', () => {
   })
 
   describe('handleRightClickDeselect', () => {
-    it('clears selection on right click', () => {
+    it('[U01780] clears selection on right click', () => {
       const units = [{ selected: true }, { selected: true }]
       const gameState = { rightClick: true, isRightDragging: false }
 
@@ -815,7 +815,7 @@ describe('gameStateManager', () => {
   })
 
   describe('updateCameraFollow', () => {
-    it('clears follow mode if the unit is missing or deselected', () => {
+    it('[U01781] clears follow mode if the unit is missing or deselected', () => {
       const gameState = { cameraFollowUnitId: 'unit-1' }
       const units = [{ id: 'unit-1', selected: false }]
 
@@ -824,7 +824,7 @@ describe('gameStateManager', () => {
       expect(gameState.cameraFollowUnitId).toBe(null)
     })
 
-    it('centers the camera on the followed unit', () => {
+    it('[U01782] centers the camera on the followed unit', () => {
       const gameState = {
         cameraFollowUnitId: 'unit-2',
         scrollOffset: { x: 0, y: 0 },
@@ -841,7 +841,7 @@ describe('gameStateManager', () => {
     })
   })
 
-  it('uses the host flag helper directly in updateExplosions', () => {
+  it('[U01783] uses the host flag helper directly in updateExplosions', () => {
     isHostImport.mockReturnValue(false)
     const gameState = { explosions: [] }
 
@@ -850,7 +850,7 @@ describe('gameStateManager', () => {
     expect(isHostImport).toHaveBeenCalled()
   })
 
-  it('applies inertia decay when keyboard scrolling stops', () => {
+  it('[U01784] applies inertia decay when keyboard scrolling stops', () => {
     const gameState = {
       scrollOffset: { x: 50, y: 50 },
       dragVelocity: { x: 2, y: 2 },

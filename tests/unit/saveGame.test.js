@@ -292,7 +292,7 @@ describe('saveGame.js', () => {
     localStorage.clear()
   })
 
-  it('round trips city HP, destroyed footprints and cluster settings through saveGame', async() => {
+  it('[U03842] round trips city HP, destroyed footprints and cluster settings through saveGame', async() => {
     const { gameState } = await import('../../src/gameState.js')
     const { mapGrid } = await import('../../src/main.js')
     const originalMap = mapGrid.map(row => row.map(tile => ({ ...tile })))
@@ -319,7 +319,7 @@ describe('saveGame.js', () => {
   })
 
   describe('getSaveGames', () => {
-    it('should return builtin missions', () => {
+    it('[U03843] should return builtin missions', () => {
       const saves = saveGameModule.getSaveGames()
 
       expect(saves).toBeInstanceOf(Array)
@@ -330,7 +330,7 @@ describe('saveGame.js', () => {
       expect(builtinSave.label).toBe('Test Mission 1')
     })
 
-    it('should store user saves in localStorage', async() => {
+    it('[U03844] should store user saves in localStorage', async() => {
       // Use saveGame to store a save
       const { gameState } = await import('../../src/gameState.js')
       gameState.gameStarted = true
@@ -347,7 +347,7 @@ describe('saveGame.js', () => {
       expect(parsed.builtin).toBeUndefined() // User saves don't have builtin property
     })
 
-    it('should sort builtin missions before user saves', () => {
+    it('[U03845] should sort builtin missions before user saves', () => {
       const userSave = {
         label: 'My Save',
         time: Date.now() + 100000,
@@ -366,7 +366,7 @@ describe('saveGame.js', () => {
       }
     })
 
-    it('should handle corrupted localStorage entries gracefully', () => {
+    it('[U03846] should handle corrupted localStorage entries gracefully', () => {
       localStorage.setItem('rts_save_corrupted', 'not valid json')
 
       expect(() => {
@@ -376,7 +376,7 @@ describe('saveGame.js', () => {
   })
 
   describe('saveGame', () => {
-    it('should save game to localStorage with label', async() => {
+    it('[U03847] should save game to localStorage with label', async() => {
       const { gameState } = await import('../../src/gameState.js')
       gameState.money = 15000
       gameState.gameStarted = true
@@ -393,7 +393,7 @@ describe('saveGame.js', () => {
       expect(parsed.state).toBeDefined()
     })
 
-    it('should use "Unnamed" for empty label', async() => {
+    it('[U03848] should use "Unnamed" for empty label', async() => {
       const { gameState } = await import('../../src/gameState.js')
       gameState.gameStarted = true
 
@@ -406,7 +406,7 @@ describe('saveGame.js', () => {
       expect(parsed.label).toBe('Unnamed')
     })
 
-    it('should serialize game state correctly', async() => {
+    it('[U03849] should serialize game state correctly', async() => {
       const { gameState } = await import('../../src/gameState.js')
       gameState.mapTopologyFingerprint = 'saved-topology'
       gameState.money = 25000
@@ -423,7 +423,7 @@ describe('saveGame.js', () => {
       expect(state.gameState.gameTime).toBe(120)
     })
 
-    it('should save map settings and static tile state needed for replay consistency', async() => {
+    it('[U03850] should save map settings and static tile state needed for replay consistency', async() => {
       const { gameState } = await import('../../src/gameState.js')
       const { mapGrid } = await import('../../src/main.js')
       const { getRNGState } = await import('../../src/utils/gameRandom.js')
@@ -463,7 +463,7 @@ describe('saveGame.js', () => {
       })
     })
 
-    it('should save units and their resumable factory exit state', async() => {
+    it('[U03851] should save units and their resumable factory exit state', async() => {
       const { units } = await import('../../src/main.js')
       units.push({
         factoryExit: { factoryId: 'garage', startX: 208, startY: 176, endX: 128, endY: 256, elapsed: 375, duration: 1200, phase: 'moving' },
@@ -489,7 +489,7 @@ describe('saveGame.js', () => {
       expect(state.units[0].factoryExit).toEqual(units[0].factoryExit)
     })
 
-    it('should save per-unit crew state for later load restoration', async() => {
+    it('[U03852] should save per-unit crew state for later load restoration', async() => {
       const { units } = await import('../../src/main.js')
       units.push({
         id: 'tank-crew-1',
@@ -524,7 +524,7 @@ describe('saveGame.js', () => {
       })
     })
 
-    it('should preserve Apache flight and helipad return state', async() => {
+    it('[U03853] should preserve Apache flight and helipad return state', async() => {
       const { units } = await import('../../src/main.js')
       units.push({
         id: 'apache-save-1',
@@ -565,7 +565,7 @@ describe('saveGame.js', () => {
       })
     })
 
-    it('should save independent battleship turret targets and damage order', async() => {
+    it('[U03854] should save independent battleship turret targets and damage order', async() => {
       const { units } = await import('../../src/main.js')
       units.push({
         id: 'battle-save-1',
@@ -623,7 +623,7 @@ describe('saveGame.js', () => {
       })
     })
 
-    it('should save buildings array', async() => {
+    it('[U03855] should save buildings array', async() => {
       const { gameState } = await import('../../src/gameState.js')
       gameState.buildings = [{
         id: 'cy-1',
@@ -648,7 +648,7 @@ describe('saveGame.js', () => {
       expect(state.buildings[0].type).toBe('constructionYard')
     })
 
-    it('should save ore positions from mapGrid', async() => {
+    it('[U03856] should save ore positions from mapGrid', async() => {
       const { mapGrid } = await import('../../src/main.js')
       mapGrid.forEach(row => row.forEach(tile => {
         tile.ore = false
@@ -666,7 +666,7 @@ describe('saveGame.js', () => {
       expect(state.orePositions.length).toBe(2)
     })
 
-    it('should save milestone progress', () => {
+    it('[U03857] should save milestone progress', () => {
       saveGameModule.saveGame('MilestoneTest')
 
       const saved = localStorage.getItem('rts_save_MilestoneTest')
@@ -678,7 +678,7 @@ describe('saveGame.js', () => {
   })
 
   describe('loadGame', () => {
-    it('should load builtin mission by key', async() => {
+    it('[U03858] should load builtin mission by key', async() => {
       const { showNotification } = await import('../../src/ui/notifications.js')
 
       // Load a builtin mission
@@ -687,7 +687,7 @@ describe('saveGame.js', () => {
       expect(showNotification).toHaveBeenCalled()
     })
 
-    it('should load user save from localStorage', async() => {
+    it('[U03859] should load user save from localStorage', async() => {
       const { showNotification } = await import('../../src/ui/notifications.js')
 
       // Create a user save
@@ -709,19 +709,19 @@ describe('saveGame.js', () => {
       expect(showNotification).toHaveBeenCalled()
     })
 
-    it('should handle missing save gracefully', () => {
+    it('[U03860] should handle missing save gracefully', () => {
       expect(() => {
         saveGameModule.loadGame('rts_save_NonExistent')
       }).not.toThrow()
     })
 
-    it('should handle invalid builtin mission gracefully', () => {
+    it('[U03861] should handle invalid builtin mission gracefully', () => {
       expect(() => {
         saveGameModule.loadGame('builtin:nonexistent')
       }).not.toThrow()
     })
 
-    it('should handle corrupted save data gracefully', () => {
+    it('[U03862] should handle corrupted save data gracefully', () => {
       localStorage.setItem('rts_save_Corrupted', 'not valid json')
 
       expect(() => {
@@ -729,7 +729,7 @@ describe('saveGame.js', () => {
       }).not.toThrow()
     })
 
-    it('should restore Set properties from arrays', async() => {
+    it('[U03863] should restore Set properties from arrays', async() => {
       const { gameState } = await import('../../src/gameState.js')
 
       const saveData = {
@@ -756,7 +756,7 @@ describe('saveGame.js', () => {
       expect(gameState.defeatedPlayers instanceof Set).toBe(true)
     })
 
-    it('should restore saved map settings and static ore/seed tile state when loading', async() => {
+    it('[U03864] should restore saved map settings and static ore/seed tile state when loading', async() => {
       const { gameState } = await import('../../src/gameState.js')
       const { mapGrid } = await import('../../src/main.js')
       const { setMapDimensions } = await import('../../src/config.js')
@@ -847,7 +847,7 @@ describe('saveGame.js', () => {
       playerCountInput.remove()
     })
 
-    it('should derive map dimensions from legacy saved tile grids when explicit settings are missing', async() => {
+    it('[U03865] should derive map dimensions from legacy saved tile grids when explicit settings are missing', async() => {
       const { setMapDimensions } = await import('../../src/config.js')
 
       setMapDimensions.mockReturnValueOnce({ width: 14, height: 12 })
@@ -873,7 +873,7 @@ describe('saveGame.js', () => {
       expect(setMapDimensions).toHaveBeenCalledWith(14, 12)
     })
 
-    it('should restore legacy Apaches away from helipads as airborne', async() => {
+    it('[U03866] should restore legacy Apaches away from helipads as airborne', async() => {
       const { units, factories } = await import('../../src/main.js')
       factories.push({ id: 'player2', owner: 'player2', health: 1000 })
       const saveData = {
@@ -918,7 +918,7 @@ describe('saveGame.js', () => {
   })
 
   describe('deleteGame', () => {
-    it('should delete user save from localStorage', () => {
+    it('[U03867] should delete user save from localStorage', () => {
       const userSave = {
         label: 'ToDelete',
         time: Date.now(),
@@ -933,7 +933,7 @@ describe('saveGame.js', () => {
       expect(localStorage.getItem('rts_save_ToDelete')).toBeNull()
     })
 
-    it('should not delete builtin missions', () => {
+    it('[U03868] should not delete builtin missions', () => {
       // This should not throw and should log a warning
       expect(() => {
         saveGameModule.deleteGame('builtin:mission1')
@@ -956,14 +956,14 @@ describe('saveGame.js', () => {
       }
     })
 
-    it('should update DOM list with save games', () => {
+    it('[U03869] should update DOM list with save games', () => {
       saveGameModule.updateSaveGamesList()
 
       const list = document.getElementById('saveGamesList')
       expect(list.children.length).toBeGreaterThan(0)
     })
 
-    it('should handle missing list element gracefully', () => {
+    it('[U03870] should handle missing list element gracefully', () => {
       const list = document.getElementById('saveGamesList')
       if (list) {
         list.remove()
@@ -974,7 +974,7 @@ describe('saveGame.js', () => {
       }).not.toThrow()
     })
 
-    it('should create load buttons for each save', () => {
+    it('[U03871] should create load buttons for each save', () => {
       saveGameModule.updateSaveGamesList()
 
       const list = document.getElementById('saveGamesList')
@@ -1008,21 +1008,21 @@ describe('saveGame.js', () => {
       })
     })
 
-    it('should attach click handler to save button', () => {
+    it('[U03872] should attach click handler to save button', () => {
       saveGameModule.initSaveGameSystem()
 
       const saveBtn = document.getElementById('saveGameBtn')
       expect(saveBtn).toBeDefined()
     })
 
-    it('should attach keydown handler to label input for Enter key', () => {
+    it('[U03873] should attach keydown handler to label input for Enter key', () => {
       saveGameModule.initSaveGameSystem()
 
       const labelInput = document.getElementById('saveLabelInput')
       expect(labelInput).toBeDefined()
     })
 
-    it('should not throw if DOM elements are missing', () => {
+    it('[U03874] should not throw if DOM elements are missing', () => {
       ['saveGameBtn', 'saveLabelInput'].forEach(id => {
         const el = document.getElementById(id)
         if (el) el.remove()
@@ -1035,12 +1035,12 @@ describe('saveGame.js', () => {
   })
 
   describe('maybeResumeLastPausedGame', () => {
-    it('should return false if no last game exists', () => {
+    it('[U03875] should return false if no last game exists', () => {
       const result = saveGameModule.maybeResumeLastPausedGame()
       expect(result).toBe(false)
     })
 
-    it('should return false if resume flag is not set', () => {
+    it('[U03876] should return false if resume flag is not set', () => {
       const saveData = {
         gameState: { money: 5000, gameStarted: true, gameOver: false }
       }
@@ -1055,7 +1055,7 @@ describe('saveGame.js', () => {
       expect(result).toBe(false)
     })
 
-    it('should not resume if saved game was already over', () => {
+    it('[U03877] should not resume if saved game was already over', () => {
       const saveData = {
         gameState: { money: 5000, gameStarted: true, gameOver: true }
       }
@@ -1071,7 +1071,7 @@ describe('saveGame.js', () => {
       expect(result).toBe(false)
     })
 
-    it('should resume last game when flag and save exist', async() => {
+    it('[U03878] should resume last game when flag and save exist', async() => {
       const { showNotification } = await import('../../src/ui/notifications.js')
 
       const saveData = {
@@ -1099,13 +1099,13 @@ describe('saveGame.js', () => {
   })
 
   describe('initLastGameRecovery', () => {
-    it('should start auto-save loop and pause watcher', () => {
+    it('[U03879] should start auto-save loop and pause watcher', () => {
       expect(() => {
         saveGameModule.initLastGameRecovery()
       }).not.toThrow()
     })
 
-    it('should auto-save on interval and when pausing', async() => {
+    it('[U03880] should auto-save on interval and when pausing', async() => {
       const { gameState } = await import('../../src/gameState.js')
 
       vi.useFakeTimers()
@@ -1137,7 +1137,7 @@ describe('saveGame.js', () => {
   })
 
   describe('Module exports', () => {
-    it('should export all required functions', () => {
+    it('[U03881] should export all required functions', () => {
       const expectedExports = [
         'getSaveGames',
         'saveGame',

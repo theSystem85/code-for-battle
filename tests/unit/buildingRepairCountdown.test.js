@@ -19,7 +19,7 @@ beforeEach(() => {
 })
 
 describe('building repair countdown HUD', () => {
-  it('never draws the timeout fill wider than the building', async() => {
+  it('[U00549] never draws the timeout fill wider than the building', async() => {
     globalThis.Image = class Image {}
     const { gameState } = await import('../../src/gameState.js')
     const { BuildingRenderer } = await import('../../src/rendering/buildingRenderer.js')
@@ -39,7 +39,7 @@ describe('building repair countdown HUD', () => {
     expect(fillRect).toHaveBeenNthCalledWith(2, 20, 17, 96, 3)
   })
 
-  it('uses prepared Tesla source rectangles with proportional construction cropping', async() => {
+  it('[U00550] uses prepared Tesla source rectangles with proportional construction cropping', async() => {
     globalThis.Image = class Image {}
     const { BuildingRenderer } = await import('../../src/rendering/buildingRenderer.js')
     const image = { width: 384, height: 384 }

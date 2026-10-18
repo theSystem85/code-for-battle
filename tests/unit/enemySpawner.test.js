@@ -170,7 +170,7 @@ describe('enemySpawner.js', () => {
     delete globalThis.window.cheatSystem
   })
 
-  it('passes arguments to spawnUnit and sets owner and AI properties', () => {
+  it('[U01384] passes arguments to spawnUnit and sets owner and AI properties', () => {
     const mapGrid = createMapGrid()
     const spawnBuilding = { x: 4, y: 4, width: 2, height: 2 }
     const units = []
@@ -210,7 +210,7 @@ describe('enemySpawner.js', () => {
     expect(unit.allowedToAttack).toBe(true)
   })
 
-  it('returns null when spawnUnit returns null', () => {
+  it('[U01385] returns null when spawnUnit returns null', () => {
     const mapGrid = createMapGrid(6, 6)
     const spawnBuilding = { x: 1, y: 1, width: 2, height: 2 }
 
@@ -229,7 +229,7 @@ describe('enemySpawner.js', () => {
     expect(unit).toBeNull()
   })
 
-  it('initializes gas, crew, and cost data for combat/support units', () => {
+  it('[U01386] initializes gas, crew, and cost data for combat/support units', () => {
     const mapGrid = createMapGrid()
     const spawnBuilding = { x: 2, y: 2, width: 2, height: 2 }
 
@@ -266,7 +266,7 @@ describe('enemySpawner.js', () => {
     expect(ambulance.baseCost).toBe(500)
   })
 
-  it('sets tanker supply values and skips crew for apache', () => {
+  it('[U01387] sets tanker supply values and skips crew for apache', () => {
     const mapGrid = createMapGrid()
     const spawnBuilding = { x: 3, y: 3, width: 2, height: 2 }
 
@@ -297,7 +297,7 @@ describe('enemySpawner.js', () => {
     expect(apache.crew).toBeUndefined()
   })
 
-  it('assigns harvesters to refineries and queues ore targets', () => {
+  it('[U01388] assigns harvesters to refineries and queues ore targets', () => {
     const mapGrid = createMapGrid()
     const spawnBuilding = { x: 1, y: 1, width: 2, height: 2 }
     const targetedOreTiles = {}
@@ -348,7 +348,7 @@ describe('enemySpawner.js', () => {
     expect(unit.armor).toBe(3)
   })
 
-  it('marks harvester hunter units and resets queue flags', () => {
+  it('[U01389] marks harvester hunter units and resets queue flags', () => {
     const mapGrid = createMapGrid()
     const spawnBuilding = { x: 1, y: 1, width: 2, height: 2 }
     const gameState = {
@@ -372,7 +372,7 @@ describe('enemySpawner.js', () => {
     expect(gameState.ai1HarvesterHunterQueued).toBe(false)
   })
 
-  it('adds units to god mode when cheat system is active', () => {
+  it('[U01390] adds units to god mode when cheat system is active', () => {
     const mapGrid = createMapGrid()
     const spawnBuilding = { x: 1, y: 1, width: 2, height: 2 }
 
@@ -395,7 +395,7 @@ describe('enemySpawner.js', () => {
     expect(globalThis.window.cheatSystem.addUnitToGodMode).toHaveBeenCalledWith(unit)
   })
 
-  it('preserves the unit id returned by spawnUnit', () => {
+  it('[U01391] preserves the unit id returned by spawnUnit', () => {
     const mapGrid = createMapGrid()
     const spawnBuilding = { x: 1, y: 1, width: 2, height: 2 }
 

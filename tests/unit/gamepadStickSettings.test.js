@@ -20,7 +20,7 @@ import {
 const XBOX = 'Xbox 360 Controller (XInput STANDARD GAMEPAD)'
 
 describe('stick deadzones', () => {
-  it('uses the player profile, then the controller profile, then 0.18', () => {
+  it('[U01825] uses the player profile, then the controller profile, then 0.18', () => {
     const store = createGamepadProfileStore()
     expect(resolveDeadzones(store, { slot: 0, instanceKey: 'pad#0' })).toEqual({
       left: STICK_DEADZONE,
@@ -36,7 +36,7 @@ describe('stick deadzones', () => {
 })
 
 describe('gamepad map scroll speed', () => {
-  it('stays independent of other settings and clamps to 1–24', () => {
+  it('[U01826] stays independent of other settings and clamps to 1–24', () => {
     const store = createGamepadProfileStore()
     expect(getGamepadScrollSpeed(store)).toBe(8)
     expect(setGamepadScrollSpeed(store, 12.2)).toBe(12)
@@ -49,7 +49,7 @@ describe('gamepad map scroll speed', () => {
 })
 
 describe('haptic settings', () => {
-  it('defaults to on and stores a clamped intensity', () => {
+  it('[U01827] defaults to on and stores a clamped intensity', () => {
     const store = createGamepadProfileStore()
     expect(getHapticSettings(store)).toEqual({ enabled: true, intensity: 0.65 })
     expect(setHapticSettings(store, { enabled: false, intensity: 1.4 })).toEqual({ enabled: false, intensity: 1 })
@@ -58,7 +58,7 @@ describe('haptic settings', () => {
 })
 
 describe('controller layout suggestion', () => {
-  it('suggests the detected type and leaves an explicit player profile in place', () => {
+  it('[U01828] suggests the detected type and leaves an explicit player profile in place', () => {
     const store = createGamepadProfileStore()
     const suggested = suggestControllerLayout(store, 0, XBOX)
     expect(suggested).toMatchObject({ applied: true, type: 'xbox' })
@@ -73,7 +73,7 @@ describe('controller layout suggestion', () => {
     expect(getControllerSuggestion(store, 0)).toBeNull()
   })
 
-  it('does not repeat a dismissed suggestion for the same type', () => {
+  it('[U01829] does not repeat a dismissed suggestion for the same type', () => {
     const store = createGamepadProfileStore()
     suggestControllerLayout(store, 1, 'Wireless Controller (STANDARD GAMEPAD)')
     expect(dismissControllerSuggestion(store, 1)).toBe(true)
@@ -88,7 +88,7 @@ describe('controller layout suggestion', () => {
     expect(generic.type).toBe('generic')
   })
 
-  it('marks a newly created player profile as an explicit choice', () => {
+  it('[U01830] marks a newly created player profile as an explicit choice', () => {
     const store = createGamepadProfileStore()
     const created = createPlayerProfile(store, 'Alex', 0, null)
     expect(created.id).toBe('player1')

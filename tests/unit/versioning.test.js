@@ -32,20 +32,20 @@ afterEach(() => {
 })
 
 describe('build-time versioning', () => {
-  it('parses MAJOR.MINOR.PATCH and rejects anything else', () => {
+  it('[U05197] parses MAJOR.MINOR.PATCH and rejects anything else', () => {
     expect(parseVersion('0.62.0')).toEqual([0, 62, 0])
     expect(() => parseVersion('0.62')).toThrow()
     expect(() => parseVersion('0.62.0-pr7')).toThrow()
   })
 
-  it('bumps patch for fixes and improvements, minor for features and major for breaking entries', () => {
+  it('[U05198] bumps patch for fixes and improvements, minor for features and major for breaking entries', () => {
     expect(bumpVersion('0.62.0', [])).toBe('0.62.0')
     expect(bumpVersion('0.62.0', [{ category: 'bugfixes' }, { category: 'improvements' }])).toBe('0.62.1')
     expect(bumpVersion('0.62.3', [{ category: 'bugfixes' }, { category: 'features' }])).toBe('0.63.0')
     expect(bumpVersion('0.62.3', [{ category: 'bugfixes', breaking: true }, { category: 'features' }])).toBe('1.0.0')
   })
 
-  it('validates entry files: a description string, optional boolean breaking, nothing else', () => {
+  it('[U05199] validates entry files: a description string, optional boolean breaking, nothing else', () => {
     expect(validateEntry({ description: 'Faster loading.' })).toEqual([])
     expect(validateEntry({ description: 'New maps.', breaking: true })).toEqual([])
     expect(validateEntry({ description: '' })).toHaveLength(1)
@@ -54,7 +54,7 @@ describe('build-time versioning', () => {
     expect(validateEntry(['x'])).toHaveLength(1)
   })
 
-  it('computes the version from package.json plus unreleased entries in sorted file order', () => {
+  it('[U05200] computes the version from package.json plus unreleased entries in sorted file order', () => {
     const root = scratchRepo('0.62.0', {
       improvements: { 'b-second.json': { description: 'Second' }, 'a-first.json': { description: 'First' } },
       bugfixes: { '757-fix.json': { description: 'Fix' } }
@@ -66,13 +66,13 @@ describe('build-time versioning', () => {
     expect(computeAppVersion(scratchRepo('0.62.0')).version).toBe('0.62.0')
   })
 
-  it('fails the build on an invalid entry file instead of guessing', () => {
+  it('[U05201] fails the build on an invalid entry file instead of guessing', () => {
     const root = scratchRepo('0.62.0', { features: { 'bad.json': '{ nope', 'empty.json': { description: ' ' } } })
     expect(readUnreleasedEntries(root).errors).toHaveLength(2)
     expect(() => computeAppVersion(root)).toThrow(/Invalid unreleased/)
   })
 
-  it('labels deploy previews with their PR number and leaves production and dev plain', () => {
+  it('[U05202] labels deploy previews with their PR number and leaves production and dev plain', () => {
     expect(computeVersionLabel('0.62.1', { CONTEXT: 'deploy-preview', REVIEW_ID: '757' })).toBe('0.62.1-pr757')
     expect(computeVersionLabel('0.62.1', { CONTEXT: 'production', REVIEW_ID: '757' })).toBe('0.62.1')
     expect(computeVersionLabel('0.62.1', { CONTEXT: 'branch-deploy', BRANCH: 'dev' })).toBe('0.62.1')
@@ -81,7 +81,7 @@ describe('build-time versioning', () => {
     expect(defines).toEqual({ __APP_VERSION__: '"1.3.0"', __APP_VERSION_LABEL__: '"1.3.0-pr9"' })
   })
 
-  it('injects the computed repository version into src/version.js', () => {
+  it('[U05203] injects the computed repository version into src/version.js', () => {
     expect(APP_VERSION).toBe(computeAppVersion(process.cwd()).version)
     expect(APP_VERSION_LABEL.startsWith(APP_VERSION)).toBe(true)
   })

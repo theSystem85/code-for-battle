@@ -71,7 +71,7 @@ function harness(overrides = {}) {
 }
 
 describe('presence client', () => {
-  it('stores one anonymous session id in session and local storage', () => {
+  it('[U03455] stores one anonymous session id in session and local storage', () => {
     const sessionStorage = memoryStorage()
     const localStorage = memoryStorage()
     const created = readOrCreatePresenceSessionId({ sessionStorage, localStorage }, () => 'session-created')
@@ -82,13 +82,13 @@ describe('presence client', () => {
     expect(readOrCreatePresenceSessionId({ sessionStorage, localStorage }, () => 'session-other1')).toBe('session-kept01')
   })
 
-  it('jitters the heartbeat around 45 seconds', () => {
+  it('[U03456] jitters the heartbeat around 45 seconds', () => {
     expect(nextHeartbeatDelay(() => 0)).toBe(40000)
     expect(nextHeartbeatDelay(() => 0.5)).toBe(45000)
     expect(nextHeartbeatDelay(() => 1)).toBe(50000)
   })
 
-  it('maps menu, single-player, host, client, and quick-match search', () => {
+  it('[U03457] maps menu, single-player, host, client, and quick-match search', () => {
     expect(resolvePresenceStatus({ gameStarted: false })).toBe('menu')
     expect(resolvePresenceStatus({ gameStarted: true })).toBe('single-player')
     expect(resolvePresenceStatus({ gameStarted: true, gameOver: true })).toBe('menu')
@@ -127,19 +127,19 @@ describe('presence client', () => {
     expect(live.status).toBe('mp-host')
   })
 
-  it('localizes the sidebar line', () => {
+  it('[U03458] localizes the sidebar line', () => {
     expect(formatPresenceLine({ playing: 128, onlineMultiplayer: 14 }, 'en'))
       .toBe('128 playing now · 14 in online multiplayer')
     expect(formatPresenceLine({ playing: 128, onlineMultiplayer: 14 }, 'de'))
       .toBe('128 spielen gerade · 14 im Online-Mehrspieler')
   })
 
-  it('posts presence to the signalling host when one is configured', () => {
+  it('[U03459] posts presence to the signalling host when one is configured', () => {
     expect(statsEndpoint('/presence', '')).toBe('/api/presence')
     expect(statsEndpoint('/quick-match', 'http://localhost:3333')).toBe('http://localhost:3333/quick-match')
   })
 
-  it('sends immediately, then on the timer, and again when the status changes', async() => {
+  it('[U03460] sends immediately, then on the timer, and again when the status changes', async() => {
     const { scheduler, timers, sent, counts, deps } = harness()
     scheduler.start()
     await vi.waitFor(() => expect(sent).toHaveLength(1))
@@ -153,7 +153,7 @@ describe('presence client', () => {
     expect(timers.at(-1).ms).toBe(45000)
   })
 
-  it('pauses while hidden and while offline', async() => {
+  it('[U03461] pauses while hidden and while offline', async() => {
     const hidden = harness({ hidden: true })
     hidden.scheduler.start()
     await Promise.resolve()
@@ -173,7 +173,7 @@ describe('presence client', () => {
     await vi.waitFor(() => expect(offline.sent).toHaveLength(1))
   })
 
-  it('backs off and then stops on errors, and stops immediately when the route is missing', async() => {
+  it('[U03462] backs off and then stops on errors, and stops immediately when the route is missing', async() => {
     const failing = harness({ failStatus: 503 })
     failing.scheduler.start()
     await vi.waitFor(() => expect(failing.sent).toHaveLength(1))
@@ -195,7 +195,7 @@ describe('presence client', () => {
     expect(missing.sent).toHaveLength(1)
   })
 
-  it('backs off on 429 without marking the endpoint unavailable', async() => {
+  it('[U03463] backs off on 429 without marking the endpoint unavailable', async() => {
     const limited = harness({ failStatus: 429 })
     limited.scheduler.start()
     await vi.waitFor(() => expect(limited.sent).toHaveLength(1))

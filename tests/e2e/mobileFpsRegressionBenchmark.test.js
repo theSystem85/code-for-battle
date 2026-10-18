@@ -554,7 +554,7 @@ async function collectBenchmarkStats(page, durationMs) {
 test.describe('Mobile FPS regression benchmark', () => {
   test.skip(!RUN_BENCHMARK, 'Set PERF_BENCHMARK=1 to run this opt-in performance benchmark.')
 
-  test('compares desktop throughput with throttled mobile rendering', async({ browser, baseURL }, testInfo) => {
+  test('[E00071] compares desktop throughput with throttled mobile rendering', async({ browser, baseURL }, testInfo) => {
     testInfo.setTimeout(Math.max(300000, BENCHMARK_DURATION_MS * 12))
 
     const profiles = [

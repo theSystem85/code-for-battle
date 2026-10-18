@@ -40,7 +40,7 @@ const diagnostics = {
 }
 
 describe('CpuWaterPass', () => {
-  it('retains visible runs, palette, coefficients and buffers on animation-only frames', () => {
+  it('[U01104] retains visible runs, palette, coefficients and buffers on animation-only frames', () => {
     const map = [
       [{ type: 'water' }, { type: 'land' }, { type: 'street' }],
       [{ type: 'water' }, { type: 'land' }, { type: 'water' }]
@@ -94,7 +94,7 @@ describe('CpuWaterPass', () => {
     expect(second.sotCount).toBe(1)
   })
 
-  it('rebuilds retained coverage on tile-boundary camera changes and topology revisions', () => {
+  it('[U01105] rebuilds retained coverage on tile-boundary camera changes and topology revisions', () => {
     const map = [[
       { type: 'water' },
       { type: 'land' },
@@ -151,7 +151,7 @@ describe('CpuWaterPass', () => {
     [0, { x: 0, y: 0 }],
     [777, { x: 7, y: 11 }],
     [2100, { x: 20, y: 0 }]
-  ])('preserves water phase and edge/SOT coverage at time %s', (time, scrollOffset) => {
+  ])('[U01106] preserves water phase and edge/SOT coverage at time %s', (time, scrollOffset) => {
     const map = [
       [{ type: 'water' }, { type: 'land' }],
       [{ type: 'water' }, { type: 'water' }]

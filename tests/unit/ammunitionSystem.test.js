@@ -50,7 +50,7 @@ describe('Ammunition System', () => {
   })
 
   describe('Resupply from factories', () => {
-    it('should resupply a stationary unit within range', () => {
+    it('[U00150] should resupply a stationary unit within range', () => {
       const factory = {
         id: 'factory1',
         type: 'ammunitionFactory',
@@ -86,7 +86,7 @@ describe('Ammunition System', () => {
       expect(unit.ammoRefillTimer).toBe(100)
     })
 
-    it('should NOT resupply a moving unit', () => {
+    it('[U00151] should NOT resupply a moving unit', () => {
       const factory = {
         id: 'factory1',
         type: 'ammunitionFactory',
@@ -120,7 +120,7 @@ describe('Ammunition System', () => {
       expect(unit.ammunition).toBe(50)
     })
 
-    it('should NOT resupply a unit outside range', () => {
+    it('[U00152] should NOT resupply a unit outside range', () => {
       const factory = {
         id: 'factory1',
         type: 'ammunitionFactory',
@@ -156,7 +156,7 @@ describe('Ammunition System', () => {
   })
 
   describe('Power Penalty', () => {
-    it('should resupply slower when power is negative', () => {
+    it('[U00153] should resupply slower when power is negative', () => {
       gameState.playerPowerSupply = -10
 
       const factory = {
@@ -198,7 +198,7 @@ describe('Ammunition System', () => {
       expect(unit.ammunition).toBeCloseTo(55)
     })
 
-    it('should resupply at normal rate when power is positive', () => {
+    it('[U00154] should resupply at normal rate when power is positive', () => {
       gameState.playerPowerSupply = 10
 
       const factory = {
@@ -243,7 +243,7 @@ describe('Ammunition System', () => {
 
   describe('Resupply from trucks', () => {
 
-    it('reloads an ammunition truck from the factory service radius', () => {
+    it('[U00155] reloads an ammunition truck from the factory service radius', () => {
       const factory = {
         id: 'factory1',
         type: 'ammunitionFactory',
@@ -284,7 +284,7 @@ describe('Ammunition System', () => {
       expect(truck.ammoReloadTimer).toBe(1000)
       expect(truck.ammoReloadTargetId).toBe('factory1')
     })
-    it('should resupply a unit from an ammo truck', () => {
+    it('[U00156] should resupply a unit from an ammo truck', () => {
       const truck = {
         id: 'truck1',
         type: 'ammunitionTruck',
@@ -321,7 +321,7 @@ describe('Ammunition System', () => {
     })
 
 
-    it('should not resupply enemy or airborne units from an ammo truck', () => {
+    it('[U00157] should not resupply enemy or airborne units from an ammo truck', () => {
       const truck = {
         id: 'truck1',
         type: 'ammunitionTruck',
@@ -367,7 +367,7 @@ describe('Ammunition System', () => {
       expect(truck.ammoCargo).toBe(500)
     })
 
-    it('should not resupply if truck has no cargo', () => {
+    it('[U00158] should not resupply if truck has no cargo', () => {
       const truck = {
         id: 'truck1',
         type: 'ammunitionTruck',
@@ -401,7 +401,7 @@ describe('Ammunition System', () => {
   })
 
   describe('Reloading Ammo Trucks', () => {
-    it('should reload ammo truck at factory', () => {
+    it('[U00159] should reload ammo truck at factory', () => {
       const factory = {
         id: 'factory1',
         type: 'ammunitionFactory',
@@ -444,7 +444,7 @@ describe('Ammunition System', () => {
   })
 
   describe('Helicopter Logic', () => {
-    it('should resupply rockets for apache', () => {
+    it('[U00160] should resupply rockets for apache', () => {
       const factory = {
         id: 'factory1',
         type: 'ammunitionFactory',

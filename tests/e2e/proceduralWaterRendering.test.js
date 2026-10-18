@@ -88,7 +88,7 @@ async function readWaterPixel(page) {
 }
 
 test.describe('Procedural WebGL water rendering', () => {
-  test('animates water and applies shoreline blending without tile textures', async({ page, browserName }) => {
+  test('[E00091] animates water and applies shoreline blending without tile textures', async({ page, browserName }) => {
     test.skip(browserName !== 'chromium', 'WebGL rendering checks run on Chromium only')
 
     await page.addInitScript(() => {
@@ -543,7 +543,7 @@ test.describe('Procedural WebGL water rendering', () => {
     }
   })
 
-  test('settings modal persists procedural water color sliders', async({ page, browserName }) => {
+  test('[E00092] settings modal persists procedural water color sliders', async({ page, browserName }) => {
     test.skip(browserName !== 'chromium', 'Water settings rendering checks run on Chromium only')
 
     await page.addInitScript(() => {

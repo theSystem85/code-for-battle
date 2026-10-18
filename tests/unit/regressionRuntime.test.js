@@ -20,7 +20,7 @@ function arena() {
   gameState.partyStates = []
   return gameState
 }
-it('keeps sequential Apache landings stable with two helipads in the service loop', () => {
+it('[U03636] keeps sequential Apache landings stable with two helipads in the service loop', () => {
   const gs = arena()
   const pad = createBuilding('helipad', 22, 22)
   pad.owner = 'player1'
@@ -63,7 +63,7 @@ it('keeps sequential Apache landings stable with two helipads in the service loo
   expect(pad.landedUnitId).toBe(heli.id)
   expect(alternate.landedUnitId).toBe(second.id)
 })
-it('restores enemy crew after a real hospital route', () => {
+it('[U03637] restores enemy crew after a real hospital route', () => {
   const gs = arena()
   const hospital = createBuilding('hospital', 24, 24)
   hospital.owner = 'player2'
@@ -87,7 +87,7 @@ it('restores enemy crew after a real hospital route', () => {
   expect({ crew: tank.crew, x: tank.x, y: tank.y, moveTarget: tank.moveTarget, path: tank.path, healing: hospital.healingUnits }).toMatchObject({ crew: { gunner: true } })
 })
 
-it('fires a tank and turret after removing the intervening building', async() => {
+it('[U03638] fires a tank and turret after removing the intervening building', async() => {
   const { updateUnitCombat } = await import('../../src/game/unitCombat.js')
   const { updateBuildings } = await import('../../src/game/buildingSystem.js')
   const gs = arena()
@@ -125,7 +125,7 @@ it('fires a tank and turret after removing the intervening building', async() =>
   expect(turret.ammo, JSON.stringify({ tank, turret })).toBeLessThan(100)
 })
 
-it('launches rockets and detonates against an airborne Apache using real movement and projectile updates', async() => {
+it('[U03639] launches rockets and detonates against an airborne Apache using real movement and projectile updates', async() => {
   const { updateUnitCombat } = await import('../../src/game/unitCombat.js')
   const { updateBullets } = await import('../../src/game/bulletSystem.js')
   const gs = arena()
