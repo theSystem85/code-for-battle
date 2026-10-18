@@ -80,7 +80,7 @@ Every PR that changes behaviour adds one small file per change under `features/u
 
 Name it `<pr-number>-<slug>.json` or `<YYYY-MM-DD>-<slug>.json`. Add `"breaking": true` for a breaking change. Never edit another PR's entry file and never edit released `features/<version>.json` files. Because each PR only adds its own files, parallel branches never conflict on the version.
 
-The shown version is computed with semver from `package.json` plus the unreleased entries: any breaking entry bumps the major version, any feature bumps the minor version, otherwise any improvement or bugfix bumps the patch version. Netlify deploy previews show only their PR label instead of a version (for example `PR758`); production, `dev` and local builds show the normal version (for example `v0.62.1`). Release digests and the service worker always compare the computed version. `npm run version:show` prints the current value.
+The shown version is computed with semver from `package.json` plus the unreleased entries: any breaking entry bumps the major version, any feature bumps the minor version, otherwise any improvement or bugfix bumps the patch version. Every build shows only this plain version (for example `v0.62.1`): production, `dev`, deploy previews and local builds alike, on the loading screen, the update heading and the sidebar. Never add a PR label or suffix to the in-app version; a deploy preview's PR number appears only in its Netlify URL (`deploy-preview-758--code-for-battle.netlify.app`). `npm run version:show` prints the current value.
 
 Classify entries the same way as `docs/changes/` notes: a bug is something broken or contrary to intended behaviour, an improvement is polish of something that exists, a feature is a new capability.
 
@@ -106,7 +106,7 @@ Every PR description (by any agent, into `main` or `dev`) contains a **manual te
 
 | ID | Area | Steps | Expected result | Unit tests | E2E tests |
 |---|---|---|---|---|---|
-| T01 | Loading screen | Open the deploy preview | Version shows `PR757` | 2: U05170, U05171 | 0 |
+| T01 | Loading screen | Open the deploy preview | Version shows `v0.62.1` | 2: U05170, U05171 | 0 |
 
 - IDs are `T01`, `T02`, ... per PR.
 - The last two columns give the number of unit and e2e tests that cover the row, followed by their IDs (`0` when none).

@@ -15,7 +15,7 @@ Decided by Patrick on 2026-10-18 (brainstorm item B-007). AGENTS.md ("Deployment
 
 - `package.json` = last released version. Each change adds `features/unreleased/<features|improvements|bugfixes>/<name>.json` with `{ "description": "...", "breaking"?: true }`.
 - Build-time version (`scripts/versioning.mjs`, Vite `define` `__APP_VERSION__`): breaking -> major, feature -> minor, improvement/bugfix -> patch, at most one bump per build.
-- Display label `__APP_VERSION_LABEL__`: only `PR<REVIEW_ID>` (for example `PR758`, no version number) on Netlify deploy previews; production, dev and local builds show the version (`v0.62.1`, via `formatVersionDisplay`). Release digests and the service worker compare the plain version.
+- Display: every build, deploy previews included, shows only the plain version (for example `v0.62.1`) on the loading screen, the update heading and the sidebar. The PR number of a preview appears only in its Netlify URL prefix (`deploy-preview-<n>--`). Patrick's decision, 2026-10-18.
 - `npm run release` folds entries into `features/<version>.json` (same format as earlier releases, so the loading screen and User Manual digest keep working), deletes entry files, bumps `package.json` and the lockfile, commits `chore(release): X.Y.Z`, tags `vX.Y.Z`; it never pushes.
 - The release digest treats unreleased entries as part of the current build version.
 - Replaced: `scripts/generate-version.js`, `scripts/bump-version.js` and the hand-maintained `src/version.js` constant.
@@ -29,4 +29,4 @@ Decided by Patrick on 2026-10-18 (brainstorm item B-007). AGENTS.md ("Deployment
 ## Verification
 
 - Unit tests: `tests/unit/versioning.test.js`, `releaseScript.test.js`, `netlifyIgnore.test.js`, `storageKeyPrefix.test.js`, `testIds.test.js`, new cases in `releaseDigest.test.js`, `multiplayerStats.test.js`, `signallingApi.test.js`.
-- Visual: loading screen version label on a deploy-preview style build.
+- Visual: loading screen, update heading and sidebar show the plain version on the PR deploy preview.

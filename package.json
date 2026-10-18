@@ -11,7 +11,7 @@
     "stun": "node server/stun.js",
     "prebuild": "node scripts/write-commit.js",
     "build": "vite build && node scripts/write-impressum-config.js",
-    "version:show": "node -e \"import('./scripts/versioning.mjs').then(m => console.log(m.computeVersionLabel(m.computeAppVersion(process.cwd()).version, process.env)))\"",
+    "version:show": "node -e \"import('./scripts/versioning.mjs').then(m => console.log(m.computeAppVersion(process.cwd()).version))\"",
     "release": "node scripts/release.mjs",
     "release:tag": "node scripts/release.mjs --tag",
     "preview": "vite preview",

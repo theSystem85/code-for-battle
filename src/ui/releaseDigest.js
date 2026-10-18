@@ -1,4 +1,4 @@
-import { APP_VERSION, formatVersionDisplay } from '../version.js'
+import { APP_VERSION } from '../version.js'
 
 const RELEASE_CATEGORIES = ['features', 'improvements', 'bugfixes']
 const releasedFiles = Object.values(import.meta.glob('../../features/*.json', { eager: true, import: 'default' }))
@@ -91,9 +91,7 @@ export function createReleaseDigest(digest, { compact = false } = {}) {
   const root = document.createElement('section')
   root.className = compact ? 'release-digest release-digest--compact' : 'release-digest'
   const heading = document.createElement('h3')
-  // Deploy previews label the current build PR<number> instead of a version.
-  const toLabel = digest.toVersion === APP_VERSION ? formatVersionDisplay() : `v${digest.toVersion}`
-  heading.textContent = digest.fromVersion ? `Update v${digest.fromVersion} → ${toLabel}` : `What’s new through ${toLabel}`
+  heading.textContent = digest.fromVersion ? `Update v${digest.fromVersion} → v${digest.toVersion}` : `What’s new through v${digest.toVersion}`
   root.appendChild(heading)
   const summary = document.createElement('p')
   summary.textContent = `${digest.features.length} new features · ${digest.improvements.length} improvements · ${digest.bugfixes.length} bugfixes`
