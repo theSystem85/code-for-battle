@@ -92,6 +92,14 @@
   [headers.values]
     Cache-Control = "no-cache"
 
+# This mutable manifest is the dev live-update pointer. Netlify's edge cache
+# must revalidate it; hashed CSS assets below remain immutable.
+[[headers]]
+  for = "/build-info.json"
+  [headers.values]
+    Cache-Control = "no-store, no-cache, must-revalidate, max-age=0"
+    CDN-Cache-Control = "no-store"
+
 [[headers]]
   for = "/assets/*"
   [headers.values]

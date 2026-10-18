@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import { readFileSync } from 'node:fs'
 import {
   announceAppliedUpdate,
   classifyBuildChange,
@@ -42,6 +43,13 @@ function fakeUi() {
 }
 
 describe('dev live update', () => {
+  it('[U05300] prevents browsers and Netlify edge nodes from caching the mutable build manifest', () => {
+    const netlify = readFileSync('netlify.toml', 'utf8')
+    const manifestHeaders = netlify.match(/\[\[headers\]\]\s+for = "\/build-info\.json"[\s\S]*?(?=\n\[\[|$)/)?.[0] || ''
+    expect(manifestHeaders).toContain('Cache-Control = "no-store, no-cache, must-revalidate, max-age=0"')
+    expect(manifestHeaders).toContain('CDN-Cache-Control = "no-store"')
+  })
+
   it('[U05211] classifies safe and breaking deploys, including the commit trailer and the state schema', () => {
     expect(classifyBuildChange(base, { ...base })).toBe('none')
     expect(classifyBuildChange(base, { ...base, commit: 'bbbbbbb', css: { ...base.css, 'html:1': '/assets/sidebar-CCCCCCCC.css' } })).toBe('safe')
