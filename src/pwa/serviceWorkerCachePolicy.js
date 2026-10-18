@@ -52,6 +52,16 @@ export function isAudioAssetPath(url) {
   return AUDIO_EXTENSION.test(pathnameOf(url))
 }
 
+// Sprite sheet images and metadata (and their index.json) keep their file
+// names across deploys. Serving them cache-first would keep an old index or
+// old tags forever, so the service worker fetches them network-first and only
+// falls back to a cached copy while offline.
+export const MAP_DATA_CACHE = 'cfb-map-data-v1'
+export function isNetworkFirstMapDataPath(url) {
+  const pathname = pathnameOf(url)
+  return pathname.startsWith('/images/map/sprite_sheets/') && /\.(?:json|webp|png)$/i.test(pathname)
+}
+
 export function isBulkAssetPath(url) {
   return BULK_EXTENSION.test(pathnameOf(url))
 }

@@ -68,6 +68,57 @@ const NON_SELECTABLE_SPRITE_SHEET_PATHS = new Set([
   `${SHEET_DIR}crystals_q90_1024x1024.webp`
 ])
 
+// Map settings store the sheets the user explicitly unchecked (opt-outs), so
+// newly shipped default sheets are enabled automatically for existing users.
+// The older whitelist key is only read to migrate it away.
+export const DISABLED_SHEETS_STORAGE_KEY = 'rts-integrated-spritesheet-disabled-sheets'
+export const LEGACY_SELECTED_SHEETS_STORAGE_KEY = 'rts-integrated-spritesheet-selected-sheets'
+
+/**
+ * Every sheet the pickers must offer: the bundled registry first (resolved at
+ * build time, so a stale cached index.json can never hide a shipped sheet),
+ * then any extra index.json entries and user-added sheets. Retired and
+ * non-selectable sheets are dropped silently.
+ */
+export function resolveAvailableSheetPaths(indexSheets = [], extraSheets = []) {
+  const merged = []
+  const seen = new Set()
+  for (const sheetPath of [...DEFAULT_SSE_SHEETS, ...OPTIONAL_SSE_SHEETS, ...(Array.isArray(indexSheets) ? indexSheets : []), ...(Array.isArray(extraSheets) ? extraSheets : [])]) {
+    if (typeof sheetPath !== 'string' || !sheetPath.trim()) continue
+    const normalized = sheetPath.startsWith('blob:') ? sheetPath : normalizeSheetPath(sheetPath)
+    if (seen.has(normalized) || isRetiredSpriteSheetPath(normalized) || NON_SELECTABLE_SPRITE_SHEET_PATHS.has(normalized)) continue
+    seen.add(normalized)
+    merged.push(normalized)
+  }
+  return merged
+}
+
+/** Parse the stored opt-out list; anything unusable means "no opt-outs". */
+export function parseDisabledSheetPaths(raw) {
+  let parsed = raw
+  if (typeof raw === 'string') {
+    try { parsed = JSON.parse(raw) } catch { return [] }
+  }
+  if (!Array.isArray(parsed)) return []
+  return [...new Set(parsed.filter(path => typeof path === 'string' && path.trim() && !isRetiredSpriteSheetPath(path)).map(path => path.startsWith('blob:') ? path : normalizeSheetPath(path)))]
+}
+
+/** Enabled sheets = every available sheet the user did not explicitly uncheck. */
+export function selectionFromDisabled(availableSheets = [], disabledSheets = []) {
+  const disabled = new Set(disabledSheets)
+  return availableSheets.filter(path => !disabled.has(path))
+}
+
+/** Opt-outs to store for a given available list and current selection. */
+export function disabledFromSelection(availableSheets = [], selectedSheets = [], previousDisabled = []) {
+  const selected = new Set(selectedSheets)
+  const available = new Set(availableSheets)
+  // Keep opt-outs for sheets that are temporarily not offered (e.g. an
+  // uploaded sheet from another session) so they stay unchecked later.
+  const kept = previousDisabled.filter(path => !available.has(path))
+  return [...new Set([...kept, ...availableSheets.filter(path => !selected.has(path))])]
+}
+
 export function normalizeSheetPath(sheetPath) {
   if (typeof sheetPath !== 'string') return ''
   return sheetPath.trim().replace(/^\/+/, '')

@@ -12,7 +12,7 @@ import {
 } from '../rendering/spriteSheetAnimation.js'
 import { expandCompactSpriteSheetMetadata } from '../utils/spriteSheetMetadata.js'
 import { getStoredItem, setStoredItem } from '../storage/indexedDbStorage.js'
-import { DEFAULT_SSE_SHEETS, OPTIONAL_SSE_SHEETS, filterRetiredSheetPaths, isRetiredSpriteSheetPath } from './spriteSheetRegistry.js'
+import { DEFAULT_SSE_SHEETS, OPTIONAL_SSE_SHEETS, filterRetiredSheetPaths, isRetiredSpriteSheetPath, resolveAvailableSheetPaths } from './spriteSheetRegistry.js'
 
 const DEFAULT_TILE_SIZE = 64
 const DEFAULT_BORDER_WIDTH = 1
@@ -1539,15 +1539,14 @@ async function loadSheetList() {
     const response = await fetch(SSE_SHEETS_INDEX, { cache: 'no-store' })
     if (response.ok) {
       const data = await response.json()
-      const sheets = filterRetiredSheetPaths(data?.sheets)
-      if (sheets.length) {
-        return [...new Set([...sheets, ...OPTIONAL_SSE_SHEETS])]
-      }
+      // Bundled registry first: a stale cached index.json can add sheets but
+      // never hide a shipped one.
+      return resolveAvailableSheetPaths(data?.sheets)
     }
   } catch {
     // Use fallback
   }
-  return fallbackSheets
+  return resolveAvailableSheetPaths(fallbackSheets)
 }
 
 async function loadAnimationSheetList() {
