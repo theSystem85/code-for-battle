@@ -1,0 +1,8 @@
+{
+  "version": "0.62.1",
+  "features": [],
+  "improvements": [
+    "Dev test deploys keep lobbies and player counts apart from the live game."
+  ],
+  "bugfixes": []
+}
