@@ -673,9 +673,9 @@ export async function initMapEditorControls() {
   gameState.useIntegratedSpriteSheetMode = Boolean(gameState.useIntegratedSpriteSheetMode)
   try {
     const storedMode = getStoredItem(INTEGRATED_MODE_STORAGE_KEY)
-    if (storedMode !== null) {
-      gameState.useIntegratedSpriteSheetMode = storedMode === 'true'
-    }
+    // The bundled biome sheets render by default: without a stored choice the
+    // custom sprite sheet mode starts enabled; an explicit 'false' opts out.
+    gameState.useIntegratedSpriteSheetMode = storedMode === null || storedMode === undefined ? true : storedMode === 'true'
   } catch (err) {
     window.logger.warn('Failed to load integrated sprite sheet mode:', err)
   }

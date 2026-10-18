@@ -8,7 +8,8 @@
   "tags": [
     "decorative",
     "soil",
-    "inner_cuts"
+    "inner_cuts",
+    "stones"
   ],
   "columns": 6,
   "rows": 8,
@@ -475,8 +476,7 @@
         "soil",
         "decorative",
         "impassable",
-        "ruins",
-        "farm"
+        "ruins"
       ],
       "rect": {
         "x": 192,
@@ -587,7 +587,8 @@
         "soil",
         "decorative",
         "passable",
-        "rocks"
+        "rocks",
+        "stones"
       ],
       "rect": {
         "x": 256,
@@ -769,8 +770,7 @@
         "soil",
         "decorative",
         "impassable",
-        "ruins",
-        "farm"
+        "ruins"
       ]
     },
     {
@@ -867,7 +867,8 @@
         "soil",
         "decorative",
         "passable",
-        "rocks"
+        "rocks",
+        "stones"
       ]
     }
   ]

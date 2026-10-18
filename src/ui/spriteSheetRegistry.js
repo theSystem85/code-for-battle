@@ -4,14 +4,6 @@
 
 const SHEET_DIR = 'images/map/sprite_sheets/'
 
-export const DEFAULT_SSE_SHEETS = Object.freeze([
-  `${SHEET_DIR}seasons_1024_q90_2.webp`,
-  `${SHEET_DIR}seasons_1024_q90_3.webp`,
-  `${SHEET_DIR}crystals_q90_1024x1024.webp`,
-  `${SHEET_DIR}rocks_64x64_1024x1024_q85.webp`,
-  `${SHEET_DIR}debris_craters_tracks.webp`
-])
-
 // Vite resolves availability at build time; missing future sheets never enter
 // either picker. Both image and metadata must exist before registration.
 // Besides the required dtv3 sheets, any other bundled `dtv<N>_<name>` pair
@@ -19,8 +11,7 @@ export const DEFAULT_SSE_SHEETS = Object.freeze([
 // registered automatically, so dropping its .webp + .json into the folder is
 // enough to offer it.
 const futureSheetFiles = import.meta.glob('/public/images/map/sprite_sheets/dtv*_*.{webp,json}', { eager: true, query: '?url', import: 'default' })
-const REQUIRED_FUTURE_SHEETS = Object.freeze(['dtv3_ground_detail', 'dtv3_shore', 'dtv3_city'])
-const BASE_OPTIONAL_SHEETS = Object.freeze(['dtv2_grass', 'dtv2_soil', 'dtv2_sand', 'dtv2_snow', 'dtv2_universal'])
+const REQUIRED_FUTURE_SHEETS = Object.freeze(['dtv2_grass', 'dtv2_soil', 'dtv2_sand', 'dtv2_snow', 'dtv2_universal', 'dtv3_ground_detail', 'dtv3_shore', 'dtv3_city', 'dtv3_winter'])
 export function availableFutureSheets(files = {}, warn = console.warn) {
   files = files || {}
   const prefixOf = name => `/public/${SHEET_DIR}${name}`
@@ -30,7 +21,7 @@ export function availableFutureSheets(files = {}, warn = console.warn) {
     warn(`Skipping unavailable optional sprite sheet: ${name}`)
     return []
   })
-  const known = new Set([...REQUIRED_FUTURE_SHEETS, ...BASE_OPTIONAL_SHEETS])
+  const known = new Set(REQUIRED_FUTURE_SHEETS)
   const discovered = [...new Set(Object.keys(files || {})
     .map(path => path.match(/\/(dtv\d+_[A-Za-z0-9_-]+)\.(?:webp|json)$/)?.[1])
     .filter(name => name && !known.has(name) && hasPair(name)))]
@@ -39,10 +30,14 @@ export function availableFutureSheets(files = {}, warn = console.warn) {
   return [...required, ...discovered]
 }
 
-export const OPTIONAL_SSE_SHEETS = Object.freeze([
-  ...BASE_OPTIONAL_SHEETS.map(name => `${SHEET_DIR}${name}.webp`),
+// Every bundled dtv sheet is part of the initial selection. The discovered
+// tail makes future dtv image/metadata pairs opt-out without another registry edit.
+export const DEFAULT_SSE_SHEETS = Object.freeze([
+  `${SHEET_DIR}debris_craters_tracks.webp`,
   ...availableFutureSheets(futureSheetFiles)
 ])
+
+export const OPTIONAL_SSE_SHEETS = Object.freeze([])
 
 // Sheets that used to ship and were removed. Stored settings, editor state and
 // saved games that still point at them must fall back to the defaults.
@@ -61,8 +56,17 @@ export const RETIRED_SPRITE_SHEET_PATHS = Object.freeze(new Set([
   `${SHEET_DIR}multiTerrainSpriteSheet.webp`,
   // Removed in 0.62.0: streets and rock cliffs come from the organic terrain art.
   `${SHEET_DIR}streets24_q90_1024x1024.webp`,
-  `${SHEET_DIR}rockCliffsMountains_64x64_1024x1024.webp`
+  `${SHEET_DIR}rockCliffsMountains_64x64_1024x1024.webp`,
+  `${SHEET_DIR}seasons_1024_q90_2.webp`,
+  `${SHEET_DIR}seasons_1024_q90_3.webp`,
+  `${SHEET_DIR}rocks_64x64_1024x1024_q85.webp`
 ]))
+
+// Built-in resource art is deliberately absent from both pickers, but is not
+// retired: TextureManager still preloads it for ore and seed crystals.
+const NON_SELECTABLE_SPRITE_SHEET_PATHS = new Set([
+  `${SHEET_DIR}crystals_q90_1024x1024.webp`
+])
 
 export function normalizeSheetPath(sheetPath) {
   if (typeof sheetPath !== 'string') return ''
@@ -76,7 +80,8 @@ export function isRetiredSpriteSheetPath(sheetPath) {
 
 export function filterRetiredSheetPaths(sheetPaths) {
   if (!Array.isArray(sheetPaths)) return []
-  return sheetPaths.filter(path => typeof path === 'string' && path.trim() && !isRetiredSpriteSheetPath(path))
+  return sheetPaths.filter(path => typeof path === 'string' && path.trim() &&
+    !isRetiredSpriteSheetPath(path) && !NON_SELECTABLE_SPRITE_SHEET_PATHS.has(normalizeSheetPath(path)))
 }
 
 /**
@@ -118,7 +123,7 @@ export function purgeRetiredSheetStorage(storage) {
     const applied = storage.getStoredItem('rts-sse-applied-metadata')
     if (applied && isRetiredSpriteSheetPath(parse(applied)?.sheetPath)) remove('rts-sse-applied-metadata')
     const selected = parse(storage.getStoredItem('rts-integrated-spritesheet-selected-sheets'))
-    if (Array.isArray(selected) && selected.some(isRetiredSpriteSheetPath)) {
+    if (Array.isArray(selected) && selected.some(path => isRetiredSpriteSheetPath(path) || NON_SELECTABLE_SPRITE_SHEET_PATHS.has(normalizeSheetPath(path)))) {
       storage.setStoredItem('rts-integrated-spritesheet-selected-sheets', JSON.stringify(filterRetiredSheetPaths(selected)))
     }
   } catch {

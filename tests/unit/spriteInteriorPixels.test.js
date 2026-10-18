@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { isolateComponent } from '../../src/ui/sseIsolate.js'
 import { detectSprites } from '../../src/ui/sseDetect.js'
 import { applyBlackKey, applyEdgeConnectedBlackKey, buildBlackKeySeedMask } from '../../src/rendering/blackKeyPixels.js'
@@ -141,5 +141,18 @@ describe('inner_cuts opt-in', () => {
     // Decals get no cut-outs (they will be reworked with real alpha).
     expect(Object.values(decals.tiles).some(tile => tile.tags.includes('inner_cuts'))).toBe(false)
     expect(decals.tags).not.toContain('inner_cuts')
+  })
+})
+
+describe('alpha sprite sheets', () => {
+  it('never sends an alpha-mode sheet through black keying', async() => {
+    const { getImageTextureWithBlendMode } = await import('../../src/rendering/spriteSheetAnimation.js')
+    const image = { complete: true, naturalWidth: 64, naturalHeight: 64 }
+    const originalDocument = globalThis.document
+    const createElement = vi.fn()
+    globalThis.document = { createElement }
+    expect(getImageTextureWithBlendMode(image, 'alpha', { cutoffBrightness: 255 }, { tiles: {} })).toBe(image)
+    expect(createElement).not.toHaveBeenCalled()
+    globalThis.document = originalDocument
   })
 })

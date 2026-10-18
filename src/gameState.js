@@ -33,6 +33,8 @@ export const gameState = {
   useIntegratedSpriteSheetMode: false,
   activeSpriteSheetPath: null,
   activeSpriteSheetMetadata: null,
+  // null means every bundled default sheet; [] is an explicit opt-out.
+  activeSpriteSheetSelections: null,
   activeAnimationSpriteSheetPath: null,
   activeAnimationSpriteSheetMetadata: null,
   activeSpriteSheetBiomeTag: 'grass',

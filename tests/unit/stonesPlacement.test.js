@@ -59,18 +59,17 @@ describe('stones', () => {
     expect(neighbourly / total).toBeGreaterThan(0.6)
   })
 
-  it('ships the rocks sheet tagged as stones with a mix of small and multi-tile props', () => {
-    const sheet = JSON.parse(readFileSync('public/images/map/sprite_sheets/rocks_64x64_1024x1024_q85.json', 'utf8'))
-    expect(sheet.tags).toContain('stones')
-    expect(sheet.propLayout.every(prop => prop.tags.includes('stones') && prop.tags.includes('decorative'))).toBe(true)
-    expect(sheet.propLayout.filter(prop => prop.w * prop.h === 1).length).toBeGreaterThan(40)
-    expect(sheet.propLayout.filter(prop => prop.w * prop.h > 1).length).toBeGreaterThan(20)
-    for (const prop of sheet.propLayout.filter(p => p.w * p.h > 1)) expect(prop.tags).toContain(`group_${prop.groupId}`)
-  })
-
-  it('never uses the image generator watermark (bottom-right cells) as a stone', () => {
-    const sheet = JSON.parse(readFileSync('public/images/map/sprite_sheets/rocks_64x64_1024x1024_q85.json', 'utf8'))
-    for (const key of ['14,14', '15,14', '14,15', '15,15']) expect(sheet.tiles[key]).toBeUndefined()
-    for (const prop of sheet.propLayout) expect(prop.col + prop.w <= 14 || prop.row + prop.h <= 14).toBe(true)
+  it('ships biome stone sources on the remaining dtv sheets', () => {
+    const expected = {
+      dtv2_grass: ['4,4'],
+      dtv2_soil: ['4,5'],
+      dtv2_sand: ['0,3', '1,3', '0,4', '1,4', '0,5'],
+      dtv2_snow: ['3,2', '4,3', '5,3', '5,4', '1,5'],
+      dtv3_shore: ['1,1', '2,1', '3,1']
+    }
+    for (const [name, coordinates] of Object.entries(expected)) {
+      const sheet = JSON.parse(readFileSync(`public/images/map/sprite_sheets/${name}.json`, 'utf8'))
+      for (const coordinate of coordinates) expect(sheet.tiles[coordinate].tags).toContain('stones')
+    }
   })
 })

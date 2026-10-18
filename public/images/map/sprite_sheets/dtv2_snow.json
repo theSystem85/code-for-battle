@@ -7,7 +7,8 @@
   "blendMode": "black",
   "tags": [
     "decorative",
-    "snow"
+    "snow",
+    "stones"
   ],
   "columns": 6,
   "rows": 8,
@@ -368,7 +369,8 @@
         "snow",
         "decorative",
         "impassable",
-        "rocks"
+        "rocks",
+        "stones"
       ],
       "rect": {
         "x": 192,
@@ -432,7 +434,8 @@
         "decorative",
         "impassable",
         "group_11",
-        "rocks"
+        "rocks",
+        "stones"
       ],
       "rect": {
         "x": 256,
@@ -449,7 +452,8 @@
         "decorative",
         "impassable",
         "group_11",
-        "rocks"
+        "rocks",
+        "stones"
       ],
       "rect": {
         "x": 320,
@@ -497,7 +501,8 @@
         "snow",
         "decorative",
         "passable",
-        "rocks"
+        "rocks",
+        "stones"
       ],
       "rect": {
         "x": 320,
@@ -529,7 +534,8 @@
         "snow",
         "decorative",
         "passable",
-        "rocks"
+        "rocks",
+        "stones"
       ],
       "rect": {
         "x": 64,
@@ -717,7 +723,8 @@
         "snow",
         "decorative",
         "impassable",
-        "rocks"
+        "rocks",
+        "stones"
       ]
     },
     {
@@ -773,7 +780,8 @@
         "decorative",
         "impassable",
         "group_11",
-        "rocks"
+        "rocks",
+        "stones"
       ]
     },
     {
@@ -815,7 +823,8 @@
         "snow",
         "decorative",
         "passable",
-        "rocks"
+        "rocks",
+        "stones"
       ]
     },
     {
@@ -843,7 +852,8 @@
         "snow",
         "decorative",
         "passable",
-        "rocks"
+        "rocks",
+        "stones"
       ]
     },
     {
