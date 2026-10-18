@@ -12,16 +12,24 @@ import {
   readRuntimeRedisEnv,
   statsRoute
 } from '../../src/network/multiplayerStats.js'
+import { prefixBlobStore, readStorageKeyPrefix } from '../../src/network/storageKeyPrefix.js'
 
 // Session storage using Netlify Blobs
 // Uses separate keys for offer, answer, and candidates to avoid race conditions
 const STORE_NAME = 'signalling-sessions'
 
-async function getSessionStore() {
-  return getStore({
+// The dev branch deploy sets REDIS_KEY_PREFIX=dev:, so signalling, invite
+// codes and Blobs fallback stats keys never mix with production keys.
+function readKeyPrefixEnv() {
+  return { REDIS_KEY_PREFIX: readFunctionEnv('REDIS_KEY_PREFIX') }
+}
+
+async function getSessionStore(keyPrefix = '') {
+  const store = await getStore({
     name: STORE_NAME,
     consistency: 'strong'
   })
+  return prefixBlobStore(store, keyPrefix)
 }
 
 async function getBlob(store, key) {
@@ -161,7 +169,8 @@ export default async(request, _context) => {
   }
 
   try {
-    const store = await getSessionStore()
+    const keyPrefixEnv = readKeyPrefixEnv()
+    const store = await getSessionStore(readStorageKeyPrefix(keyPrefixEnv))
 
     if (statsRoute(path)) {
       const redis = readRuntimeRedisEnv({
@@ -172,10 +181,12 @@ export default async(request, _context) => {
         env: redis
           ? {
             UPSTASH_REDIS_REST_URL: redis.url,
-            UPSTASH_REDIS_REST_TOKEN: redis.token
+            UPSTASH_REDIS_REST_TOKEN: redis.token,
+            ...keyPrefixEnv
           }
-          : {},
+          : { ...keyPrefixEnv },
         blobs: adaptNetlifyBlobStore(store),
+        blobsPrefixed: true,
         fetchImpl: fetch,
         now: () => Date.now(),
         handler: 'function'

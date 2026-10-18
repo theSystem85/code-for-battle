@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   completeBoot, createReleaseDigest, getBootReleaseDigest, getHighlightIndex,
   getLoadingHighlights, getManualReleaseDigest, getReleaseDigest,
-  LAST_DURATION_KEY, LAST_VERSION_KEY
+  LAST_DURATION_KEY, LAST_VERSION_KEY, buildUnreleasedRelease, mergeReleaseEntries
 } from '../../src/ui/releaseDigest.js'
 import { APP_VERSION } from '../../src/version.js'
 
@@ -62,5 +62,28 @@ describe('release digest', () => {
     const spy = vi.spyOn(window.Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('denied') })
     expect(() => completeBoot(2000, null)).not.toThrow()
     spy.mockRestore()
+  })
+})
+
+describe('unreleased release-note entries', () => {
+  it('collects one file per change into the build version by category', () => {
+    const release = buildUnreleasedRelease({
+      '../../features/unreleased/improvements/b.json': { description: 'Second' },
+      '../../features/unreleased/improvements/a.json': { description: 'First' },
+      '../../features/unreleased/bugfixes/c.json': { description: ' Fix ' },
+      '../../features/unreleased/other/d.json': { description: 'Ignored' }
+    }, '0.62.1')
+    expect(release).toEqual({ version: '0.62.1', features: [], improvements: ['First', 'Second'], bugfixes: ['Fix'] })
+    expect(buildUnreleasedRelease({}, '0.62.1')).toBeNull()
+  })
+
+  it('shows released plus unreleased notes in the update digest', () => {
+    const merged = mergeReleaseEntries(entries.slice(0, 3), { version: '0.11.1', features: [], improvements: ['Unreleased'], bugfixes: [] })
+    const digest = getReleaseDigest('0.10.0', '0.11.1', merged)
+    expect(digest.features).toEqual(['Third'])
+    expect(digest.improvements).toEqual(['Unreleased'])
+    const sameVersion = mergeReleaseEntries(entries, { version: '0.12.0', features: ['Extra'], improvements: [], bugfixes: [] })
+    expect(sameVersion.find(entry => entry.version === '0.12.0').features).toEqual(['Future', 'Extra'])
+    expect(mergeReleaseEntries(entries, null)).toBe(entries)
   })
 })

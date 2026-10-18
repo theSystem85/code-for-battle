@@ -480,3 +480,54 @@ describe('multiplayer stats server', () => {
     expect(await adapted.list('cl')).toEqual(['claim'])
   })
 })
+
+describe('multiplayer stats key prefix (dev branch deploy)', () => {
+  it('passes REDIS_KEY_PREFIX to both Lua scripts and never uses a bare cfb: key', () => {
+    expect(PRESENCE_LUA).not.toMatch(/(?<!p \.\. )"cfb:/)
+    expect(CLAIM_LUA).not.toMatch(/(?<!p \.\. )"cfb:/)
+    const presence = presencePipeline({ sessionId: 'session-1234', status: 'menu', now: NOW, keyPrefix: 'dev:' })[0]
+    expect(presence.at(-1)).toBe('dev:')
+    expect(presence.length).toBe(11)
+    expect(claimPipeline({ sessionId: 'session-1234', now: NOW, keyPrefix: 'dev:' })[0].at(-1)).toBe('dev:')
+    expect(presencePipeline({ sessionId: 'session-1234', status: 'menu', now: NOW })[0].at(-1)).toBe('')
+  })
+
+  it('sends the dev: prefix to Upstash when REDIS_KEY_PREFIX is set', async() => {
+    const fetchImpl = vi.fn(async() => new Response(JSON.stringify([{ result: [1, 0, 0, 0, 0, 'closed'] }]), { status: 200 }))
+    const response = await handleMultiplayerStatsRequest(request('/api/presence', { sessionId: 'session-1234', status: 'menu' }), {
+      env: { UPSTASH_REDIS_REST_URL: 'https://example.upstash.io', UPSTASH_REDIS_REST_TOKEN: 'token', REDIS_KEY_PREFIX: 'dev:' },
+      fetchImpl,
+      now: () => NOW
+    })
+    expect(response.status).toBe(200)
+    const commands = JSON.parse(fetchImpl.mock.calls[0][1].body)
+    expect(commands[0].at(-1)).toBe('dev:')
+  })
+
+  it('writes Blobs fallback keys under dev: and keeps production keys separate', async() => {
+    const store = createBlobStore()
+    await store.set('mp-stats:presence:prod-session-1', { status: 'menu', seenAt: NOW })
+    const response = await handleMultiplayerStatsRequest(request('/api/presence', { sessionId: 'session-1234', status: 'menu' }), {
+      env: { REDIS_KEY_PREFIX: 'dev:' },
+      blobs: store,
+      now: () => NOW
+    })
+    expect(response.status).toBe(200)
+    const body = await response.json()
+    expect(body.storage).toBe('blobs')
+    const keys = [...store.blobs.keys()]
+    expect(keys).toContain('dev:mp-stats:presence:session-1234')
+    expect(keys.filter(key => !key.startsWith('dev:'))).toEqual(['mp-stats:presence:prod-session-1'])
+  })
+
+  it('answers 503 instead of falling back to production keys when the prefix is malformed', async() => {
+    const store = createBlobStore()
+    const response = await handleMultiplayerStatsRequest(request('/api/presence', { sessionId: 'session-1234', status: 'menu' }), {
+      env: { REDIS_KEY_PREFIX: 'dev' },
+      blobs: store,
+      now: () => NOW
+    })
+    expect(response.status).toBe(503)
+    expect(store.blobs.size).toBe(0)
+  })
+})

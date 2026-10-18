@@ -4,6 +4,10 @@
   # (`Cannot read properties of null (reading 'edgesOut')`) and fails the deploy.
   command = "npm ci --include=dev && npm run build && npm run test:smoke"
   publish = "dist"
+  # Only main (production), the dev branch deploy and deploy previews of PRs
+  # into main are built. Other branch deploys and PRs into dev are skipped;
+  # dev itself deploys right after each merge. See AGENTS.md "Deployment".
+  ignore = "node scripts/netlify-ignore.mjs"
 
 [build.environment]
   NODE_VERSION = "22"

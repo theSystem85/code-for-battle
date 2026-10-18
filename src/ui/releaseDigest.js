@@ -1,6 +1,34 @@
 import { APP_VERSION } from '../version.js'
 
-const releases = Object.values(import.meta.glob('../../features/*.json', { eager: true, import: 'default' }))
+const RELEASE_CATEGORIES = ['features', 'improvements', 'bugfixes']
+const releasedFiles = Object.values(import.meta.glob('../../features/*.json', { eager: true, import: 'default' }))
+const unreleasedFiles = import.meta.glob('../../features/unreleased/*/*.json', { eager: true, import: 'default' })
+
+// Unreleased entries (one file per change under features/unreleased/<category>/)
+// belong to the build's computed APP_VERSION until `npm run release` folds them
+// into features/<version>.json.
+export function buildUnreleasedRelease(files, version = APP_VERSION) {
+  const release = { version, features: [], improvements: [], bugfixes: [] }
+  for (const path of Object.keys(files).sort()) {
+    const category = path.split('/').at(-2)
+    const description = files[path]?.description
+    if (RELEASE_CATEGORIES.includes(category) && typeof description === 'string' && description.trim()) {
+      release[category].push(description.trim())
+    }
+  }
+  return RELEASE_CATEGORIES.some(category => release[category].length) ? release : null
+}
+
+export function mergeReleaseEntries(released, unreleased) {
+  if (!unreleased) return released
+  const existing = released.find(entry => compareVersions(entry.version, unreleased.version) === 0)
+  if (!existing) return [...released, unreleased]
+  return released.map(entry => entry === existing
+    ? Object.fromEntries([['version', entry.version], ...RELEASE_CATEGORIES.map(category => [category, [...(entry[category] || []), ...unreleased[category]]])])
+    : entry)
+}
+
+const releases = mergeReleaseEntries(releasedFiles, buildUnreleasedRelease(unreleasedFiles))
 export const LAST_VERSION_KEY = 'cfb-last-loaded-version'
 export const LAST_DURATION_KEY = 'cfb-last-boot-duration-ms'
 const PREVIOUS_VERSION_KEY = 'cfb-release-digest-from-version'
