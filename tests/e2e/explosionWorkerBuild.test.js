@@ -4,7 +4,7 @@ test.use({ deviceScaleFactor: 2 })
 
 // Uses runtime behavior only, so the same test verifies development and the
 // actual production bundle (including Vite's emitted worker chunk).
-test('bundled explosion worker completes before combat and death animations render', async({ page }) => {
+test('[E00032] bundled explosion worker completes before combat and death animations render', async({ page }) => {
   const errors = []
   page.on('pageerror', error => errors.push(error.message))
   await page.addInitScript(() => {
@@ -39,7 +39,7 @@ test('bundled explosion worker completes before combat and death animations rend
   expect(errors).toEqual([])
 })
 
-test('a missing required explosion sheet fails loading instead of starting incomplete gameplay', async({ page }) => {
+test('[E00033] a missing required explosion sheet fails loading instead of starting incomplete gameplay', async({ page }) => {
   await page.route('**/images/map/animations/explosion.webp', route => route.abort())
   await page.goto('/?seed=11&size=100&players=4&heavyBattle=1&battleUnits=40&heavyBattleWarmupMs=0')
   await expect(page.getByText('Startup failed. Reload the page to try again.', { exact: true })).toBeVisible()

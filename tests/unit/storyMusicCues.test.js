@@ -37,7 +37,7 @@ describe('story intro and first gameplay music cues', () => {
     vi.unstubAllGlobals()
   })
 
-  it('plays First Strike for the intro, then fades it out fully before Battle Track 02', async() => {
+  it('[U04319] plays First Strike for the intro, then fades it out fully before Battle Track 02', async() => {
     expect(sound.STORY_INTRO_MUSIC_FILE).toBe('music_attack_motivational.mp3')
     expect(sound.FIRST_GAMEPLAY_MUSIC_FILE).toBe('music02.mp3')
     expect(await sound.playMusicCue(sound.STORY_INTRO_MUSIC_FILE)).toBe(true)
@@ -64,7 +64,7 @@ describe('story intro and first gameplay music cues', () => {
     expect(await sound.playFirstGameplayMusic()).toBe(false)
   })
 
-  it('respects an explicit music-off choice', async() => {
+  it('[U04320] respects an explicit music-off choice', async() => {
     await sound.toggleBackgroundMusic() // on
     await sound.toggleBackgroundMusic() // off, remembered
     expect(sound.isMusicUserDisabled()).toBe(true)
@@ -74,7 +74,7 @@ describe('story intro and first gameplay music cues', () => {
     expect(sound.hasPlayedFirstGameplayMusic()).toBe(false)
   })
 
-  it('keeps intro music playing while the intro holds the game paused', async() => {
+  it('[U04321] keeps intro music playing while the intro holds the game paused', async() => {
     await sound.playMusicCue(sound.STORY_INTRO_MUSIC_FILE)
     await flush()
     sound.setMusicPauseExempt(true)
@@ -85,7 +85,7 @@ describe('story intro and first gameplay music cues', () => {
     expect(sound.bgMusicAudio.paused).toBe(true)
   })
 
-  it('applies the narration duck on top of master volume and the default music balance', async() => {
+  it('[U04322] applies the narration duck on top of master volume and the default music balance', async() => {
     await sound.playMusicCue(sound.STORY_INTRO_MUSIC_FILE)
     await flush()
     sound.setMasterVolume(0.8)
@@ -94,7 +94,7 @@ describe('story intro and first gameplay music cues', () => {
     sound.setMusicDuck(1)
     expect(sound.bgMusicAudio.volume).toBeCloseTo(0.4, 5)
   })
-  it('scales music and effects with the persisted SFX/music balance and the master volume', async() => {
+  it('[U04323] scales music and effects with the persisted SFX/music balance and the master volume', async() => {
     const storage = await import('../../src/storage/indexedDbStorage.js')
     sound.setMasterVolume(0.5)
     // Default with no saved value: Music 50% / SFX 100%.
@@ -119,7 +119,7 @@ describe('story intro and first gameplay music cues', () => {
     sound.setMixBalance(25)
   })
 
-  it('gives intro and tutorial narration the same gain chain', () => {
+  it('[U04324] gives intro and tutorial narration the same gain chain', () => {
     sound.setMasterVolume(0.8)
     sound.setMixBalance(25)
     expect(sound.NARRATION_GAIN).toBe(1)
@@ -133,7 +133,7 @@ describe('story intro and first gameplay music cues', () => {
     sound.setMixBalance(25)
   })
 
-  it('ramps the music duck smoothly to the target', () => {
+  it('[U04325] ramps the music duck smoothly to the target', () => {
     vi.useFakeTimers()
     sound.setMusicDuck(0.1)
     let t = 0
@@ -152,14 +152,14 @@ describe('story intro and first gameplay music cues', () => {
     expect(sound.getMusicDuck()).toBe(1)
   })
 
-  it('starts a cue without first loading a random playlist track', async() => {
+  it('[U04326] starts a cue without first loading a random playlist track', async() => {
     expect(await sound.playMusicCue(sound.STORY_INTRO_MUSIC_FILE)).toBe(true)
     await flush()
     expect(sound.bgMusicAudio.src).toBe('sound/music/music_attack_motivational.mp3')
     expect(sound.getMusicDebugState().file).toBe('music_attack_motivational.mp3')
   })
 
-  it('primes the cue element muted inside a gesture and pauses it again', async() => {
+  it('[U04327] primes the cue element muted inside a gesture and pauses it again', async() => {
     expect(sound.primeMusicElementInGesture(sound.STORY_INTRO_MUSIC_FILE)).toBe(true)
     await flush()
     // A second prime is a no-op; the element is unmuted and paused again.
@@ -173,7 +173,7 @@ describe('story intro and first gameplay music cues', () => {
 })
 
 describe('first attack theme after the intro', () => {
-  it('skips the First Strike mood once when the intro already played it', async() => {
+  it('[U04328] skips the First Strike mood once when the intro already played it', async() => {
     const { createMusicDirector, suppressNextFirstAttackTheme, isFirstAttackThemeSuppressed } = await import('../../src/audio/musicDirector.js')
     suppressNextFirstAttackTheme()
     const d = createMusicDirector()

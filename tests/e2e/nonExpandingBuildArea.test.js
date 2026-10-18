@@ -12,7 +12,7 @@ test.describe('Non-expanding build area anchors', () => {
     await page.waitForFunction(() => window.gameState?.gameStarted === true, { timeout: 30000 })
   })
 
-  test('streets and walls only extend placement for their own type', async({ page }) => {
+  test('[E00078] streets and walls only extend placement for their own type', async({ page }) => {
     const result = await page.evaluate(async() => {
       const { canPlaceBuilding, createBuilding, placeBuilding } = await import('/src/buildings.js')
       const { gameState } = await import('/src/gameState.js')
@@ -50,7 +50,7 @@ test.describe('Non-expanding build area anchors', () => {
     expect(result.wallFromWall).toBe(true)
   })
 
-  test('planned street and wall chains remain eligible for production outside the base radius', async({ page }) => {
+  test('[E00079] planned street and wall chains remain eligible for production outside the base radius', async({ page }) => {
     const result = await page.evaluate(async() => {
       const { gameState } = await import('/src/gameState.js')
       const { productionQueue } = await import('/src/productionQueue.js')

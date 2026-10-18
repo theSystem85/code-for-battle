@@ -49,7 +49,7 @@ test.describe('production button desktop gesture parity', () => {
     await startGestureTestGame(page)
   })
 
-  test('native building drag reaches the map drop handler', async({ page }) => {
+  test('[E00093] native building drag reaches the map drop handler', async({ page }) => {
     const button = await exposeButton(page, '.production-button[data-building-type="powerPlant"]')
     const canvas = page.locator('#gameCanvas')
     await page.evaluate(() => {
@@ -67,7 +67,7 @@ test.describe('production button desktop gesture parity', () => {
     })
   })
 
-  test('ground, air, and water buttons decrement and retain drag rally points', async({ page }) => {
+  test('[E00094] ground, air, and water buttons decrement and retain drag rally points', async({ page }) => {
     const unitCases = [
       'tank',
       'apache',

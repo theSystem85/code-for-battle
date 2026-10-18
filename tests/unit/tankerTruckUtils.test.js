@@ -39,32 +39,32 @@ describe('tankerTruckUtils.js', () => {
   })
 
   describe('computeTankerKamikazeApproach', () => {
-    it('should return null if tanker is missing', () => {
+    it('[U04399] should return null if tanker is missing', () => {
       const result = computeTankerKamikazeApproach(null, {}, [[0]], {})
       expect(result).toBe(null)
     })
 
-    it('should return null if target is missing', () => {
+    it('[U04400] should return null if target is missing', () => {
       const tanker = { x: 0, y: 0, owner: 1 }
       const result = computeTankerKamikazeApproach(tanker, null, [[0]], {})
       expect(result).toBe(null)
     })
 
-    it('should return null if mapGrid is missing', () => {
+    it('[U04401] should return null if mapGrid is missing', () => {
       const tanker = { x: 0, y: 0, owner: 1 }
       const target = { x: 10, y: 10 }
       const result = computeTankerKamikazeApproach(tanker, target, null, {})
       expect(result).toBe(null)
     })
 
-    it('should return null if mapGrid is empty', () => {
+    it('[U04402] should return null if mapGrid is empty', () => {
       const tanker = { x: 0, y: 0, owner: 1 }
       const target = { x: 10, y: 10 }
       const result = computeTankerKamikazeApproach(tanker, target, [], {})
       expect(result).toBe(null)
     })
 
-    it('should compute path using tileX/tileY when available', () => {
+    it('[U04403] should compute path using tileX/tileY when available', () => {
       const tanker = { tileX: 5, tileY: 5, owner: 1 }
       const target = { tileX: 10, tileY: 10 }
       const mapGrid = Array(20).fill(null).map(() => Array(20).fill(0))
@@ -80,7 +80,7 @@ describe('tankerTruckUtils.js', () => {
       expect(result.moveTarget).toBeDefined()
     })
 
-    it('should compute path using pixel coordinates when tileX/tileY missing', () => {
+    it('[U04404] should compute path using pixel coordinates when tileX/tileY missing', () => {
       const tanker = { x: 160, y: 160, owner: 1 }
       const target = { x: 320, y: 320 }
       const mapGrid = Array(20).fill(null).map(() => Array(20).fill(0))
@@ -94,7 +94,7 @@ describe('tankerTruckUtils.js', () => {
       expect(findPath).toHaveBeenCalled()
     })
 
-    it('should try multiple approach offsets', () => {
+    it('[U04405] should try multiple approach offsets', () => {
       const tanker = { tileX: 5, tileY: 5, owner: 1 }
       const target = { tileX: 10, tileY: 10 }
       const mapGrid = Array(20).fill(null).map(() => Array(20).fill(0))
@@ -111,7 +111,7 @@ describe('tankerTruckUtils.js', () => {
       expect(findPath).toHaveBeenCalledTimes(3)
     })
 
-    it('should skip out-of-bounds offsets', () => {
+    it('[U04406] should skip out-of-bounds offsets', () => {
       const tanker = { tileX: 0, tileY: 0, owner: 1 }
       const target = { tileX: 0, tileY: 0 }
       const mapGrid = Array(5).fill(null).map(() => Array(5).fill(0))
@@ -128,7 +128,7 @@ describe('tankerTruckUtils.js', () => {
       })).toBe(true)
     })
 
-    it('should use fallback path if no offset path found', () => {
+    it('[U04407] should use fallback path if no offset path found', () => {
       const tanker = { tileX: 5, tileY: 5, owner: 1 }
       const target = { tileX: 10, tileY: 10 }
       const mapGrid = Array(20).fill(null).map(() => Array(20).fill(0))
@@ -149,7 +149,7 @@ describe('tankerTruckUtils.js', () => {
       expect(result.path).toBe(fallbackPath)
     })
 
-    it('should return null if no path found', () => {
+    it('[U04408] should return null if no path found', () => {
       const tanker = { tileX: 5, tileY: 5, owner: 1 }
       const target = { tileX: 10, tileY: 10 }
       const mapGrid = Array(20).fill(null).map(() => Array(20).fill(0))
@@ -161,7 +161,7 @@ describe('tankerTruckUtils.js', () => {
       expect(result).toBe(null)
     })
 
-    it('should handle target with width and height', () => {
+    it('[U04409] should handle target with width and height', () => {
       const tanker = { tileX: 5, tileY: 5, owner: 1 }
       const target = { x: 10, y: 10, width: 4, height: 4 }
       const mapGrid = Array(20).fill(null).map(() => Array(20).fill(0))
@@ -174,7 +174,7 @@ describe('tankerTruckUtils.js', () => {
       // Should target center of building (10 + 4/2 = 12)
     })
 
-    it('should return null if target has no valid coordinates', () => {
+    it('[U04410] should return null if target has no valid coordinates', () => {
       const tanker = { tileX: 5, tileY: 5, owner: 1 }
       const target = {} // No x, y, tileX, or tileY
       const mapGrid = Array(20).fill(null).map(() => Array(20).fill(0))
@@ -186,25 +186,25 @@ describe('tankerTruckUtils.js', () => {
   })
 
   describe('detonateTankerTruck', () => {
-    it('should return false if unit is null', () => {
+    it('[U04411] should return false if unit is null', () => {
       const result = detonateTankerTruck(null, [], [])
       expect(result).toBe(false)
     })
 
-    it('should return false if unit is already dead', () => {
+    it('[U04412] should return false if unit is already dead', () => {
       const unit = { health: 0, type: 'tankerTruck' }
       const result = detonateTankerTruck(unit, [], [])
       expect(result).toBe(false)
     })
 
-    it('should return false if already detonated', () => {
+    it('[U04413] should return false if already detonated', () => {
       const unit = { health: 100, _tankerDetonated: true, type: 'tankerTruck', x: 100, y: 100 }
       const result = detonateTankerTruck(unit, [], [])
       expect(result).toBe(false)
       expect(triggerExplosion).not.toHaveBeenCalled()
     })
 
-    it('should detonate tanker and trigger explosion', () => {
+    it('[U04414] should detonate tanker and trigger explosion', () => {
       const unit = {
         type: 'tankerTruck',
         health: 100,
@@ -222,7 +222,7 @@ describe('tankerTruckUtils.js', () => {
       expect(triggerExplosion).toHaveBeenCalled()
     })
 
-    it('should calculate explosion radius based on fuel', () => {
+    it('[U04415] should calculate explosion radius based on fuel', () => {
       const fullTank = {
         type: 'tankerTruck',
         health: 100,
@@ -241,7 +241,7 @@ describe('tankerTruckUtils.js', () => {
       expect(radius).toBe(160)
     })
 
-    it('should calculate smaller explosion for empty tank', () => {
+    it('[U04416] should calculate smaller explosion for empty tank', () => {
       const emptyTank = {
         type: 'tankerTruck',
         health: 100,
@@ -261,7 +261,7 @@ describe('tankerTruckUtils.js', () => {
       expect(radius).toBe(96)
     })
 
-    it('should use default capacity if maxSupplyGas not set', () => {
+    it('[U04417] should use default capacity if maxSupplyGas not set', () => {
       const unit = {
         type: 'tankerTruck',
         health: 100,
@@ -276,7 +276,7 @@ describe('tankerTruckUtils.js', () => {
       expect(triggerExplosion).toHaveBeenCalled()
     })
 
-    it('should clear all kamikaze state', () => {
+    it('[U04418] should clear all kamikaze state', () => {
       const unit = {
         type: 'tankerTruck',
         health: 100,
@@ -300,7 +300,7 @@ describe('tankerTruckUtils.js', () => {
       expect(unit.kamikazeTargetBuilding).toBe(null)
     })
 
-    it('should clear movement state', () => {
+    it('[U04419] should clear movement state', () => {
       const unit = {
         type: 'tankerTruck',
         health: 100,
@@ -320,7 +320,7 @@ describe('tankerTruckUtils.js', () => {
       expect(unit.currentCommand).toBe(null)
     })
 
-    it('should clear refuel state', () => {
+    it('[U04420] should clear refuel state', () => {
       const unit = {
         type: 'tankerTruck',
         health: 100,
@@ -341,7 +341,7 @@ describe('tankerTruckUtils.js', () => {
       expect(unit.supplyGas).toBe(0)
     })
 
-    it('should stop unit movement', () => {
+    it('[U04421] should stop unit movement', () => {
       const unit = {
         type: 'tankerTruck',
         health: 100,
@@ -365,7 +365,7 @@ describe('tankerTruckUtils.js', () => {
       expect(unit.movement.currentSpeed).toBe(0)
     })
 
-    it('should trigger distortion effect with gameState', () => {
+    it('[U04422] should trigger distortion effect with gameState', () => {
       const unit = {
         type: 'tankerTruck',
         health: 100,
@@ -386,7 +386,7 @@ describe('tankerTruckUtils.js', () => {
       )
     })
 
-    it('should not trigger distortion effect without gameState', () => {
+    it('[U04423] should not trigger distortion effect without gameState', () => {
       const unit = {
         type: 'tankerTruck',
         health: 100,
@@ -402,7 +402,7 @@ describe('tankerTruckUtils.js', () => {
   })
 
   describe('clearTankerKamikazeState', () => {
-    it('should clear all kamikaze state from tanker', () => {
+    it('[U04424] should clear all kamikaze state from tanker', () => {
       const unit = {
         type: 'tankerTruck',
         kamikazeMode: true,
@@ -427,13 +427,13 @@ describe('tankerTruckUtils.js', () => {
       expect(unit.moveTarget).toBe(null)
     })
 
-    it('should do nothing if unit is null', () => {
+    it('[U04425] should do nothing if unit is null', () => {
       expect(() => {
         clearTankerKamikazeState(null)
       }).not.toThrow()
     })
 
-    it('should do nothing if unit is not a tanker truck', () => {
+    it('[U04426] should do nothing if unit is not a tanker truck', () => {
       const unit = {
         type: 'tank',
         kamikazeMode: true
@@ -446,24 +446,24 @@ describe('tankerTruckUtils.js', () => {
   })
 
   describe('updateKamikazeTargetPoint', () => {
-    it('should return null if unit is null', () => {
+    it('[U04427] should return null if unit is null', () => {
       const result = updateKamikazeTargetPoint(null, {})
       expect(result).toBe(null)
     })
 
-    it('should return null if unit is not a tanker truck', () => {
+    it('[U04428] should return null if unit is not a tanker truck', () => {
       const unit = { type: 'tank' }
       const result = updateKamikazeTargetPoint(unit, {})
       expect(result).toBe(null)
     })
 
-    it('should return null if target is null', () => {
+    it('[U04429] should return null if target is null', () => {
       const unit = { type: 'tankerTruck' }
       const result = updateKamikazeTargetPoint(unit, null)
       expect(result).toBe(null)
     })
 
-    it('should calculate point for target with tileX/tileY', () => {
+    it('[U04430] should calculate point for target with tileX/tileY', () => {
       const unit = { type: 'tankerTruck' }
       const target = { tileX: 10, tileY: 20, x: 320, y: 640 }
 
@@ -475,7 +475,7 @@ describe('tankerTruckUtils.js', () => {
       expect(unit.kamikazeTargetPoint).toBe(result)
     })
 
-    it('should calculate point for building target', () => {
+    it('[U04431] should calculate point for building target', () => {
       const unit = { type: 'tankerTruck' }
       const target = { x: 10, y: 20, width: 4, height: 3 }
 
@@ -487,7 +487,7 @@ describe('tankerTruckUtils.js', () => {
       expect(unit.kamikazeTargetPoint).toBe(result)
     })
 
-    it('should default to width/height of 1 if not specified', () => {
+    it('[U04432] should default to width/height of 1 if not specified', () => {
       const unit = { type: 'tankerTruck' }
       const target = { x: 10, y: 20 }
 
@@ -498,7 +498,7 @@ describe('tankerTruckUtils.js', () => {
       expect(result.y).toBe((20 + 1 / 2) * 32)
     })
 
-    it('should prefer tileX/tileY over x/y', () => {
+    it('[U04433] should prefer tileX/tileY over x/y', () => {
       const unit = { type: 'tankerTruck' }
       const target = {
         tileX: 5,
@@ -514,7 +514,7 @@ describe('tankerTruckUtils.js', () => {
       expect(result.y).toBe(10 + 16)
     })
 
-    it('should return null if target has no valid coordinates', () => {
+    it('[U04434] should return null if target has no valid coordinates', () => {
       const unit = { type: 'tankerTruck' }
       const target = {} // No coordinates
 

@@ -35,7 +35,7 @@ describe('M10 map mutation notifications', () => {
     resetMapMutationRevisionStore()
   })
 
-  it('keeps the complete producer inventory and render dependency matrix explicit', () => {
+  it('[U02650] keeps the complete producer inventory and render dependency matrix explicit', () => {
     expect(M10_MUTATION_PRODUCERS).toEqual([
       'src/mapEditor.js',
       'src/buildings.js',
@@ -66,7 +66,7 @@ describe('M10 map mutation notifications', () => {
     expect(M10_RENDER_DEPENDENCIES.excluded).toEqual(['noBuild', 'decalCounter'])
   })
 
-  it('unions old and new topology and surface footprints with their specified halos', () => {
+  it('[U02651] unions old and new topology and surface footprints with their specified halos', () => {
     const dimensions = { width: 96, height: 96 }
     notifyTopologyMutation(
       dimensions,
@@ -88,7 +88,7 @@ describe('M10 map mutation notifications', () => {
     expect(store.getChunkRevision(RENDER_REVISION_DOMAINS.SURFACE, 3, 3)).toBe(1)
   })
 
-  it('coalesces resource density notifications and bulk replacement domains', () => {
+  it('[U02652] coalesces resource density notifications and bulk replacement domains', () => {
     const dimensions = { width: 64, height: 64 }
     const transaction = beginMapMutationTransaction(dimensions, { replace: true })
     notifyResourceTileMutation(dimensions, 4, 5)
@@ -108,7 +108,7 @@ describe('M10 map mutation notifications', () => {
     }
   })
 
-  it('invalidates parity fields omitted by the legacy signatures', () => {
+  it('[U02653] invalidates parity fields omitted by the legacy signatures', () => {
     const grid = createGrid(24, 24)
 
     grid[3][2].oreDensity = 4

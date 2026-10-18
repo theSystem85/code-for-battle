@@ -8,7 +8,7 @@ test.describe('F22 runway robustness and combat command reliability', () => {
     })
   })
 
-  test('stale runway operation does not permanently block landing F22', async({ page }) => {
+  test('[E00041] stale runway operation does not permanently block landing F22', async({ page }) => {
     test.setTimeout(180000)
 
     await page.goto('/?seed=23')
@@ -94,7 +94,7 @@ test.describe('F22 runway robustness and combat command reliability', () => {
     expect(result.landingQueue.includes('ghost-unit')).toBeFalsy()
   })
 
-  test('attack-assigned F22 does not reland immediately after takeoff while target is alive', async({ page }) => {
+  test('[E00042] attack-assigned F22 does not reland immediately after takeoff while target is alive', async({ page }) => {
     test.setTimeout(180000)
 
     await page.goto('/?seed=31')

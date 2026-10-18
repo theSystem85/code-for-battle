@@ -3,7 +3,7 @@ import { TextureManager } from '../../src/rendering/textureManager.js'
 import { buildOccupancyMap } from '../../src/units.js'
 
 describe('TextureManager integrated multi-sheet selection', () => {
-  it('invalidates layout and changes blocked occupancy after an optional sheet tag edit', async() => {
+  it('[U04447] invalidates layout and changes blocked occupancy after an optional sheet tag edit', async() => {
     const manager = new TextureManager()
     vi.spyOn(manager, 'loadIntegratedSpriteSheetImage').mockResolvedValue({ width: 64, height: 64 })
     const grid = Array.from({ length: 40 }, () => Array.from({ length: 40 }, () => ({ type: 'land', biome: 'grass' })))
@@ -22,7 +22,7 @@ describe('TextureManager integrated multi-sheet selection', () => {
     expect(buildOccupancyMap([], grid, manager).flat().filter(Boolean)).toHaveLength(0)
   })
 
-  it('selects land without recursion and only from enabled SSE sheets', async() => {
+  it('[U04448] selects land without recursion and only from enabled SSE sheets', async() => {
     const manager = new TextureManager()
     const enabledImage = { id: 'enabled-land-sheet' }
     const loadImage = vi.spyOn(manager, 'loadIntegratedSpriteSheetImage').mockResolvedValue(enabledImage)
@@ -50,7 +50,7 @@ describe('TextureManager integrated multi-sheet selection', () => {
     expect(loadImage).toHaveBeenCalledWith('enabled.webp')
   })
 
-  it('combines tagged tiles from multiple selected sprite sheets', async() => {
+  it('[U04449] combines tagged tiles from multiple selected sprite sheets', async() => {
     const manager = new TextureManager()
     const imageByPath = {
       'images/map/sprite_sheets/a.webp': { id: 'sheet-a' },
@@ -102,7 +102,7 @@ describe('TextureManager integrated multi-sheet selection', () => {
     ]))
   })
 
-  it('disables integrated mode when selected sheets have no tagged tiles', async() => {
+  it('[U04450] disables integrated mode when selected sheets have no tagged tiles', async() => {
     const manager = new TextureManager()
     vi.spyOn(manager, 'loadIntegratedSpriteSheetImage').mockResolvedValue({ id: 'sheet-empty' })
 
@@ -125,7 +125,7 @@ describe('TextureManager integrated multi-sheet selection', () => {
     expect(manager.integratedTagBuckets).toEqual({})
   })
 
-  it('keeps the selected biome for legacy terrain when integrated mode is disabled', async() => {
+  it('[U04451] keeps the selected biome for legacy terrain when integrated mode is disabled', async() => {
     const manager = new TextureManager()
 
     await manager.setIntegratedSpriteSheetConfig({ enabled: false, biomeTag: 'sand' })
@@ -135,7 +135,7 @@ describe('TextureManager integrated multi-sheet selection', () => {
     expect(manager.integratedRenderSignature).toBe('off|sand')
   })
 
-  it('falls back to bundled combat decal candidates when integrated sheets do not provide decal tags', () => {
+  it('[U04452] falls back to bundled combat decal candidates when integrated sheets do not provide decal tags', () => {
     const manager = new TextureManager()
     manager.defaultCombatDecalTagBuckets = {
       crater: [
@@ -155,7 +155,7 @@ describe('TextureManager integrated multi-sheet selection', () => {
     ])
   })
 
-  it('loads blob and data integrated sheets without prefixing a slash', async() => {
+  it('[U04453] loads blob and data integrated sheets without prefixing a slash', async() => {
     const manager = new TextureManager()
     const assignedSrc = []
 
@@ -191,7 +191,7 @@ describe('TextureManager integrated multi-sheet selection', () => {
     ])
   })
 
-  it('does not publish integrated images until decode completes', async() => {
+  it('[U04454] does not publish integrated images until decode completes', async() => {
     const manager = new TextureManager()
     let finishDecode
     class MockImage {
@@ -226,7 +226,7 @@ describe('TextureManager integrated multi-sheet selection', () => {
     }
   })
 
-  it('prevents a superseded sprite-sheet generation from publishing', async() => {
+  it('[U04455] prevents a superseded sprite-sheet generation from publishing', async() => {
     const manager = new TextureManager()
     let resolveFirst
     vi.spyOn(manager, 'loadIntegratedSpriteSheetImage').mockImplementation((path) => {
@@ -253,7 +253,7 @@ describe('TextureManager integrated multi-sheet selection', () => {
     expect(manager.integratedConfigVersion).toBe(1)
   })
 
-  it('builds rectangular grouped variants and returns tile slices by offset', async() => {
+  it('[U04456] builds rectangular grouped variants and returns tile slices by offset', async() => {
     const manager = new TextureManager()
     vi.spyOn(manager, 'loadIntegratedSpriteSheetImage').mockResolvedValue({ id: 'group-sheet' })
 
@@ -277,7 +277,7 @@ describe('TextureManager integrated multi-sheet selection', () => {
     expect(right?.rect?.x).toBe(64)
   })
 
-  it('does not use grouped tiles as non-group fallback candidates', async() => {
+  it('[U04457] does not use grouped tiles as non-group fallback candidates', async() => {
     const manager = new TextureManager()
     vi.spyOn(manager, 'loadIntegratedSpriteSheetImage').mockResolvedValue({ id: 'group-exclusive-sheet' })
 
@@ -305,7 +305,7 @@ describe('TextureManager integrated multi-sheet selection', () => {
     })).toBeTruthy()
   })
 
-  it('uses default crystal sheet tags when integrated custom sheets are disabled', () => {
+  it('[U04458] uses default crystal sheet tags when integrated custom sheets are disabled', () => {
     const manager = new TextureManager()
     manager.integratedSpriteSheetMode = false
     manager.defaultCrystalTagBuckets = {
@@ -333,7 +333,7 @@ describe('TextureManager integrated multi-sheet selection', () => {
     }))
   })
 
-  it('prefers integrated crystal tags over default crystal fallback when available', () => {
+  it('[U04459] prefers integrated crystal tags over default crystal fallback when available', () => {
     const manager = new TextureManager()
     manager.integratedSpriteSheetMode = true
     manager.integratedTagBuckets = {
@@ -379,7 +379,7 @@ describe('TextureManager integrated multi-sheet selection', () => {
     }))
   })
 
-  it('selects street tiles with exactly matching directional tags', () => {
+  it('[U04460] selects street tiles with exactly matching directional tags', () => {
     const manager = new TextureManager()
     manager.defaultStreetTagBuckets = {
       street: [
@@ -408,7 +408,7 @@ describe('TextureManager integrated multi-sheet selection', () => {
     expect(selected?.tags).toEqual(['street', 'top'])
   })
 
-  it('uses full street tiles for diagonal cluster corners before directional matches', () => {
+  it('[U04461] uses full street tiles for diagonal cluster corners before directional matches', () => {
     const manager = new TextureManager()
     manager.defaultStreetTagBuckets = {
       street: [
@@ -445,7 +445,7 @@ describe('TextureManager integrated multi-sheet selection', () => {
     expect(selected?.tags).toContain('full')
   })
 
-  it('keeps T-cross and 4-way street candidates separated by exact direction tags', () => {
+  it('[U04462] keeps T-cross and 4-way street candidates separated by exact direction tags', () => {
     const manager = new TextureManager()
     const grassFourWay = {
       tags: ['street', 'grass', 'top', 'bottom', 'left', 'right'],
@@ -482,7 +482,7 @@ describe('TextureManager integrated multi-sheet selection', () => {
     expect(manager.selectStreetTileByTags(['street'], 1, 1, rightTGrid)).toBe(grassRightT)
   })
 
-  it('selects only full-tagged street tiles for SOT fill art', () => {
+  it('[U04463] selects only full-tagged street tiles for SOT fill art', () => {
     const manager = new TextureManager()
     const isolatedStreet = {
       tags: ['street', 'grass'],
@@ -505,7 +505,7 @@ describe('TextureManager integrated multi-sheet selection', () => {
     expect(manager.selectFullStreetTileForSOT(5, 7)).toBe(fullGrassStreet)
   })
 
-  it('reuses cached street selection pools for repeated topology lookups', () => {
+  it('[U04464] reuses cached street selection pools for repeated topology lookups', () => {
     const manager = new TextureManager()
     manager.integratedBiomeTag = 'grass'
     manager.integratedRenderSignature = 'street-test-signature'
@@ -540,7 +540,7 @@ describe('TextureManager integrated multi-sheet selection', () => {
     expect(poolSpy).toHaveBeenCalledTimes(1)
   })
 
-  it('places multi-tile decorations from the layout, inside one biome, and frozen lakes block movement', async() => {
+  it('[U04465] places multi-tile decorations from the layout, inside one biome, and frozen lakes block movement', async() => {
     const manager = new TextureManager()
     vi.spyOn(manager, 'loadIntegratedSpriteSheetImage').mockResolvedValue({ id: 'dt-sheet' })
     const tile = (col, row, tags) => ({ col, row, tags, rect: { x: col * 64, y: row * 64, width: 64, height: 64 } })
@@ -615,7 +615,7 @@ describe('TextureManager integrated multi-sheet selection', () => {
 })
 
 
-it('explicit empty selection clears previous custom sheets and matches disabled tile choices', async() => {
+it('[U04466] explicit empty selection clears previous custom sheets and matches disabled tile choices', async() => {
   const manager = new TextureManager()
   manager.lastIntegratedSheetEntries = [{ sheetPath: 'stale.webp', metadata: { tiles: {} } }]
   const load = vi.spyOn(manager, 'loadIntegratedSpriteSheetImage')

@@ -43,7 +43,7 @@ describe('map action DOM integration', () => {
     window.dispatchEvent(new Event('blur'))
     vi.useRealTimers()
   })
-  it('consumes pointer and mouse release after a menu opens', () => {
+  it('[U02551] consumes pointer and mouse release after a menu opens', () => {
     pointer('pointerdown')
     vi.advanceTimersByTime(300)
     expect(api.isOpen()).toBe(true)
@@ -56,14 +56,14 @@ describe('map action DOM integration', () => {
     expect(normalClick).not.toHaveBeenCalled()
     expect(commands.handleMovementCommand).not.toHaveBeenCalled()
   })
-  it('leaves a short press available to normal input', () => {
+  it('[U02552] leaves a short press available to normal input', () => {
     pointer('pointerdown')
     vi.advanceTimersByTime(150)
     expect(pointer('pointerup').defaultPrevented).toBe(false)
     vi.advanceTimersByTime(500)
     expect(api.isOpen()).toBe(false)
   })
-  it.each(['pan', 'drag', 'multitouch', 'placement'])('cancels a pending hold on %s', reason => {
+  it.each(['pan', 'drag', 'multitouch', 'placement'])('[U02553] cancels a pending hold on %s', reason => {
     pointer('pointerdown', 100, 1, true)
     if (reason === 'pan') gameState.scrollOffset.x = 32
     if (reason === 'drag') handler.wasDragging = true
@@ -74,7 +74,7 @@ describe('map action DOM integration', () => {
     pointer('pointerup', 140, 2, true)
     gameState.buildingPlacementMode = false
   })
-  it('exposes agent calls through the same dispatch path and sends remote orders without mutating local units', () => {
+  it('[U02554] exposes agent calls through the same dispatch path and sends remote orders without mutating local units', () => {
     expect(window.remoteControlApi.openMapActionMenu({ x: 100, y: 100 })).toBe(true)
     gameState.multiplayerSession = { isRemote: true, localRole: 'client' }
     expect(window.remoteControlApi.forceAttackAt({ x: 100, y: 100 })).toBe(true)
@@ -82,7 +82,7 @@ describe('map action DOM integration', () => {
     expect(commands.handleAttackCommand).not.toHaveBeenCalled()
     gameState.multiplayerSession = null
   })
-  it('persists duration using the game storage and reloads it', () => {
+  it('[U02555] persists duration using the game storage and reloads it', () => {
     api.setLongPressDuration(850)
     expect(getStoredItem('rts_map_action_long_press_ms')).toBe('850')
     loadMapActionLongPressSetting()
@@ -92,7 +92,7 @@ describe('map action DOM integration', () => {
 
 // Re-evaluate the real remote-control initializer on either side of menu installation.
 describe('map action API initialization order', () => {
-  it.each(['menu-first', 'remote-first'])('preserves every action with %s', async order => {
+  it.each(['menu-first', 'remote-first'])('[U02556] preserves every action with %s', async order => {
     vi.resetModules()
     const previousApi = window.remoteControlApi
     window.remoteControlApi = undefined

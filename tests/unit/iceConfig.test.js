@@ -16,7 +16,7 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
 describe('ICE candidate summaries', () => {
-  it('classifies host, mDNS, srflx, and relay lines without returning addresses', () => {
+  it('[U02029] classifies host, mDNS, srflx, and relay lines without returning addresses', () => {
     const host = summarizeIceCandidate('candidate:1 1 udp 2122260223 192.168.1.8 54000 typ host')
     const mdns = summarizeIceCandidate('candidate:2 1 udp 2122260223 a1b2c3d4-5678-90ab.local 9 typ host')
     const srflx = summarizeIceCandidate('candidate:3 1 udp 1686052607 203.0.113.8 20000 typ srflx raddr 0.0.0.0 rport 0')
@@ -30,7 +30,7 @@ describe('ICE candidate summaries', () => {
     expect(JSON.stringify({ host, mdns, srflx, relay })).not.toContain('203.0.113.8')
   })
 
-  it('parses JSON-encoded candidate payloads from the signalling store', () => {
+  it('[U02030] parses JSON-encoded candidate payloads from the signalling store', () => {
     const summary = summarizeIceCandidate(JSON.stringify({
       candidate: 'candidate:1 1 udp 1 10.1.1.4 9 typ host',
       sdpMid: '0'
@@ -38,7 +38,7 @@ describe('ICE candidate summaries', () => {
     expect(summary).toMatchObject({ type: 'host', privateOrLoopback: true, mdns: false })
   })
 
-  it('counts candidate types for join diagnostics', () => {
+  it('[U02031] counts candidate types for join diagnostics', () => {
     const counts = countCandidateSummaries([
       { candidate: 'candidate:1 1 udp 1 example.local 9 typ host' },
       { candidate: 'candidate:2 1 udp 1 203.0.113.10 9 typ srflx' },
@@ -47,21 +47,21 @@ describe('ICE candidate summaries', () => {
     expect(counts).toMatchObject({ total: 3, host: 1, srflx: 1, relay: 1, mdns: 1 })
   })
 
-  it('redacts TURN userinfo when describing a URL', () => {
+  it('[U02032] redacts TURN userinfo when describing a URL', () => {
     expect(describeIceUrl('turns:user:pass@turn.example.com:443?transport=tcp')).toEqual({
       scheme: 'turns',
       host: 'turn.example.com:443'
     })
   })
 
-  it('explains a missing TURN relay in the player-facing hint', () => {
+  it('[U02033] explains a missing TURN relay in the player-facing hint', () => {
     expect(buildJoinFailureHint({ turnConfigured: false, stats: { relay: 0, mdns: 2 } }))
       .toContain('No TURN server is configured')
     expect(buildJoinFailureHint({ turnConfigured: true, stats: { relay: 0 } }))
       .toContain('no relay candidates')
   })
 
-  it('describes ICE progress without addresses', () => {
+  it('[U02034] describes ICE progress without addresses', () => {
     expect(formatIceProgress({
       connectionState: 'connecting',
       iceConnectionState: 'checking',
@@ -76,7 +76,7 @@ describe('ICE candidate summaries', () => {
 })
 
 describe('TURN credentials', () => {
-  it('mints coturn ephemeral credentials without embedding the shared secret', () => {
+  it('[U02035] mints coturn ephemeral credentials without embedding the shared secret', () => {
     const secret = 'coturn-shared-secret'
     const now = 1_700_000_000
     const minted = createEphemeralTurnCredential(secret, 3600, now)
@@ -95,7 +95,7 @@ describe('TURN credentials', () => {
     expect(JSON.stringify(payload.turnHosts)).not.toContain(secret)
   })
 
-  it('uses static credentials only when both username and password are set', () => {
+  it('[U02036] uses static credentials only when both username and password are set', () => {
     expect(buildIceServerPayload({ TURN_URLS: 'turn:turn.example.com:3478' }).turnConfigured).toBe(false)
     const payload = buildIceServerPayload({
       TURN_URLS: 'turn:turn.example.com:3478',
@@ -106,7 +106,7 @@ describe('TURN credentials', () => {
     expect(payload.iceServers[1]).toMatchObject({ username: 'player', credential: 'password' })
   })
 
-  it('accepts an ICE_SERVERS JSON list and still includes public STUN', () => {
+  it('[U02037] accepts an ICE_SERVERS JSON list and still includes public STUN', () => {
     const payload = buildIceServerPayload({
       ICE_SERVERS: JSON.stringify({
         iceServers: [
@@ -131,7 +131,7 @@ describe('TURN credentials', () => {
     expect(buildIceServerPayload({ ICE_SERVERS: '{not json' }).turnConfigured).toBe(false)
   })
 
-  it('builds the Vite fallback from VITE_ICE_SERVERS when the signalling request fails', () => {
+  it('[U02038] builds the Vite fallback from VITE_ICE_SERVERS when the signalling request fails', () => {
     const fallback = buildFallbackIceConfigFromEnv({
       VITE_ICE_SERVERS: JSON.stringify([{
         urls: 'turns:turn.example.com:443?transport=tcp',
@@ -146,7 +146,7 @@ describe('TURN credentials', () => {
 })
 
 describe('invite reachability', () => {
-  it('warns when a phone cannot open the host page', () => {
+  it('[U02039] warns when a phone cannot open the host page', () => {
     expect(describeInviteReachability('http://localhost:5173?invite=abc')).toContain('localhost')
     expect(describeInviteReachability('http://127.0.0.1:5173?invite=abc')).toContain('localhost')
     expect(describeInviteReachability('http://192.168.1.20:5173?invite=abc')).toContain('HTTPS')
@@ -155,11 +155,11 @@ describe('invite reachability', () => {
 })
 
 describe('ICE gathering wait', () => {
-  it('resolves immediately when the peer connection does not report gathering state', async() => {
+  it('[U02040] resolves immediately when the peer connection does not report gathering state', async() => {
     await expect(waitForIceGathering({})).resolves.toBeUndefined()
   })
 
-  it('resolves when gathering completes before the timeout', async() => {
+  it('[U02041] resolves when gathering completes before the timeout', async() => {
     const listeners = {}
     const pc = {
       iceGatheringState: 'gathering',
@@ -174,7 +174,7 @@ describe('ICE gathering wait', () => {
 })
 
 describe('service worker signalling bypass', () => {
-  it('does not cache signalling API reads', () => {
+  it('[U02042] does not cache signalling API reads', () => {
     expect(shouldBypassServiceWorkerCache('/api/signalling/pending/token?_t=1', 'GET')).toBe(true)
     expect(shouldBypassServiceWorkerCache('https://code-for-battle.netlify.app/api/signalling/ice-servers', 'GET')).toBe(true)
     expect(shouldBypassServiceWorkerCache('/images/map/buildings/yard.webp', 'GET')).toBe(false)

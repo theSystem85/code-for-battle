@@ -64,7 +64,7 @@ describe('tankerTruckLogic.js', () => {
   })
 
   describe('updateTankerTruckLogic', () => {
-    it('should do nothing if no tankers exist', () => {
+    it('[U04379] should do nothing if no tankers exist', () => {
       const units = [
         { id: 'u1', type: 'tank', health: 100 }
       ]
@@ -74,7 +74,7 @@ describe('tankerTruckLogic.js', () => {
       expect(stopUnitMovement).not.toHaveBeenCalled()
     })
 
-    it('should skip dead tankers', () => {
+    it('[U04380] should skip dead tankers', () => {
       const units = [
         { id: 't1', type: 'tankerTruck', health: 0, tileX: 10, tileY: 10 },
         { id: 't2', type: 'tankerTruck', health: 100, tileX: 10, tileY: 10 }
@@ -86,7 +86,7 @@ describe('tankerTruckLogic.js', () => {
       // Dead tanker shouldn't be processed
     })
 
-    it('should initialize tanker supply gas if undefined', () => {
+    it('[U04381] should initialize tanker supply gas if undefined', () => {
       const tanker = {
         id: 't1',
         type: 'tankerTruck',
@@ -102,7 +102,7 @@ describe('tankerTruckLogic.js', () => {
       expect(tanker.maxSupplyGas).toBe(10000)
     })
 
-    it('should clear tanker state if crew lacks loader', () => {
+    it('[U04382] should clear tanker state if crew lacks loader', () => {
       const tanker = {
         id: 't1',
         type: 'tankerTruck',
@@ -129,7 +129,7 @@ describe('tankerTruckLogic.js', () => {
       expect(mockCommands.clearUtilityQueueState).toHaveBeenCalledWith(tanker)
     })
 
-    it('should find and refuel nearby low-gas units', () => {
+    it('[U04383] should find and refuel nearby low-gas units', () => {
       const tanker = {
         id: 't1',
         type: 'tankerTruck',
@@ -157,7 +157,7 @@ describe('tankerTruckLogic.js', () => {
       expect(stopUnitMovement).toHaveBeenCalledWith(tanker)
     })
 
-    it('should refuel target unit when in range', () => {
+    it('[U04384] should refuel target unit when in range', () => {
       const target = {
         id: 'u1',
         type: 'tank',
@@ -190,7 +190,7 @@ describe('tankerTruckLogic.js', () => {
       expect(tanker.supplyGas).toBeLessThan(10000)
     })
 
-    it('should use emergency refuel rate when target is out of gas', () => {
+    it('[U04385] should use emergency refuel rate when target is out of gas', () => {
       const target = {
         id: 'u1',
         type: 'tank',
@@ -222,7 +222,7 @@ describe('tankerTruckLogic.js', () => {
     })
 
 
-    it('should not refuel enemy or airborne units', () => {
+    it('[U04386] should not refuel enemy or airborne units', () => {
       const enemyTarget = {
         id: 'u1',
         type: 'tank',
@@ -269,7 +269,7 @@ describe('tankerTruckLogic.js', () => {
       expect(tanker.supplyGas).toBe(10000)
     })
 
-    it('should stop refueling when target is full', () => {
+    it('[U04387] should stop refueling when target is full', () => {
       const target = {
         id: 'u1',
         type: 'tank',
@@ -300,7 +300,7 @@ describe('tankerTruckLogic.js', () => {
       expect(tanker.refuelTimer).toBe(0)
     })
 
-    it('should clear refuel target if target dies', () => {
+    it('[U04388] should clear refuel target if target dies', () => {
       const target = {
         id: 'u1',
         type: 'tank',
@@ -331,7 +331,7 @@ describe('tankerTruckLogic.js', () => {
       expect(tanker.refuelTimer).toBe(0)
     })
 
-    it('should clear refuel target if target moves away', () => {
+    it('[U04389] should clear refuel target if target moves away', () => {
       const target = {
         id: 'u1',
         type: 'tank',
@@ -362,7 +362,7 @@ describe('tankerTruckLogic.js', () => {
       expect(tanker.refuelTimer).toBe(0)
     })
 
-    it('should clear refuel target if target starts moving', () => {
+    it('[U04390] should clear refuel target if target starts moving', () => {
       const target = {
         id: 'u1',
         type: 'tank',
@@ -394,7 +394,7 @@ describe('tankerTruckLogic.js', () => {
       expect(tanker.refuelTimer).toBe(0)
     })
 
-    it('should not refuel units from different owner', () => {
+    it('[U04391] should not refuel units from different owner', () => {
       const tanker = {
         id: 't1',
         type: 'tankerTruck',
@@ -422,7 +422,7 @@ describe('tankerTruckLogic.js', () => {
       expect(tanker.refuelTarget).toBe(undefined)
     })
 
-    it('should not refuel units without gas property', () => {
+    it('[U04392] should not refuel units without gas property', () => {
       const tanker = {
         id: 't1',
         type: 'tankerTruck',
@@ -448,7 +448,7 @@ describe('tankerTruckLogic.js', () => {
       expect(tanker.refuelTarget).toBe(undefined)
     })
 
-    it('should prioritize units with lower fuel percentage', () => {
+    it('[U04393] should prioritize units with lower fuel percentage', () => {
       const tanker = {
         id: 't1',
         type: 'tankerTruck',
@@ -487,7 +487,7 @@ describe('tankerTruckLogic.js', () => {
       expect(tanker.refuelTarget.id).toBe('u2')
     })
 
-    it('should stop refueling when tanker runs out of supply', () => {
+    it('[U04394] should stop refueling when tanker runs out of supply', () => {
       const target = {
         id: 'u1',
         type: 'tank',
@@ -518,7 +518,7 @@ describe('tankerTruckLogic.js', () => {
       expect(tanker.refuelTimer).toBe(0)
     })
 
-    it('should clear emergency flags after successful refuel', () => {
+    it('[U04395] should clear emergency flags after successful refuel', () => {
       const target = {
         id: 'u1',
         type: 'tank',
@@ -556,7 +556,7 @@ describe('tankerTruckLogic.js', () => {
       expect(tanker.emergencyMode).toBe(false)
     })
 
-    it('should handle alert mode scanning', () => {
+    it('[U04396] should handle alert mode scanning', () => {
       const tanker = {
         id: 't1',
         type: 'tankerTruck',
@@ -605,7 +605,7 @@ describe('tankerTruckLogic.js', () => {
       expect(tanker.nextUtilityScanTime).toBeGreaterThan(0)
     })
 
-    it('should clear utility queue lock when inactive', () => {
+    it('[U04397] should clear utility queue lock when inactive', () => {
       const tanker = {
         id: 't1',
         type: 'tankerTruck',
@@ -629,7 +629,7 @@ describe('tankerTruckLogic.js', () => {
       expect(tanker.utilityQueue.source).toBe(null)
     })
 
-    it('should skip units that are currently moving', () => {
+    it('[U04398] should skip units that are currently moving', () => {
       const tanker = {
         id: 't1',
         type: 'tankerTruck',

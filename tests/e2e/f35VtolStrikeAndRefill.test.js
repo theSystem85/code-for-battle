@@ -23,7 +23,7 @@ test.describe('F35 VTOL strike and refill', () => {
     })
   })
 
-  test('cheat-spawned F35 destroys multiple queued buildings, returns to helipad, and refills', async({ page }) => {
+  test('[E00046] cheat-spawned F35 destroys multiple queued buildings, returns to helipad, and refills', async({ page }) => {
     test.setTimeout(180000)
 
     await page.goto('/?seed=13')

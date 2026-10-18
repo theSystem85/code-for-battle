@@ -48,7 +48,7 @@ describe('replaySystem.loadReplay', () => {
     localStorage.clear()
   })
 
-  it('terminates previous session sounds before loading replay baseline state', () => {
+  it('[U03755] terminates previous session sounds before loading replay baseline state', () => {
     localStorage.setItem(
       'rts_replay_test',
       JSON.stringify({

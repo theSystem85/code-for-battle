@@ -98,7 +98,7 @@ describe('policy engine: direct orders and policies', () => {
     resetPolicyStore()
   })
 
-  it('a while-condition that becomes true after an attack order overrides it, and a newer order wins again', () => {
+  it('[U03362] a while-condition that becomes true after an attack order overrides it, and a newer order wins again', () => {
     const world = createWorld()
     const events = []
     const unsubscribe = subscribePolicyEvents(event => events.push(event))
@@ -129,7 +129,7 @@ describe('policy engine: direct orders and policies', () => {
     unsubscribe()
   })
 
-  it('without a pause, a newly re-triggered while-condition overrides the newer order again', () => {
+  it('[U03363] without a pause, a newly re-triggered while-condition overrides the newer order again', () => {
     const world = createWorld()
     install('retreat-while-hurt', 'retreat-while')
     applyPolicyToUnit(ME, world.tank, 'retreat-while')
@@ -145,7 +145,7 @@ describe('policy engine: direct orders and policies', () => {
     expect(world.commands.handleMovementCommand).toHaveBeenCalledTimes(2)
   })
 
-  it('"pause until the order is fulfilled" blocks that re-trigger and lifts when the order ends', () => {
+  it('[U03364] "pause until the order is fulfilled" blocks that re-trigger and lifts when the order ends', () => {
     const world = createWorld()
     install('retreat-while-hurt', 'retreat-while')
     applyPolicyToUnit(ME, world.tank, 'retreat-while')
@@ -175,7 +175,7 @@ describe('policy engine: direct orders and policies', () => {
     expect(world.commands.handleMovementCommand).toHaveBeenCalledTimes(3)
   })
 
-  it('a held while-policy takes over again once a direct order is fulfilled', () => {
+  it('[U03365] a held while-policy takes over again once a direct order is fulfilled', () => {
     const world = createWorld()
     install('retreat-while-hurt', 'retreat-while')
     applyPolicyToUnit(ME, world.tank, 'retreat-while')
@@ -189,7 +189,7 @@ describe('policy engine: direct orders and policies', () => {
     expect(world.tank.moveTarget).toBeTruthy()
   })
 
-  it('an "if" fires once and then does not override later orders', () => {
+  it('[U03366] an "if" fires once and then does not override later orders', () => {
     const world = createWorld()
     install('retreat-if-hurt', 'retreat-if')
     applyPolicyToUnit(ME, world.tank, 'retreat-if')
@@ -205,7 +205,7 @@ describe('policy engine: direct orders and policies', () => {
     expect(world.tank.target).toBe(world.enemy)
   })
 
-  it('an "if" does not interrupt a running order and fires when the order is done', () => {
+  it('[U03367] an "if" does not interrupt a running order and fires when the order is done', () => {
     const world = createWorld()
     install('retreat-if-hurt', 'retreat-if')
     applyPolicyToUnit(ME, world.tank, 'retreat-if')
@@ -221,7 +221,7 @@ describe('policy engine: direct orders and policies', () => {
     expect(world.commands.handleMovementCommand).toHaveBeenCalledTimes(1)
   })
 
-  it('the last newly triggered condition wins among several policies', () => {
+  it('[U03368] the last newly triggered condition wins among several policies', () => {
     const world = createWorld()
     install('retreat-while-hurt', 'retreat-while')
     const attack = POLICY_TEMPLATES.find(item => item.id === 'engage-in-range').create('attack-while')
@@ -247,7 +247,7 @@ describe('policy engine: direct orders and policies', () => {
     expect(bindings.find(binding => binding.policyId === 'attack-while').runtime.hold).toBeTruthy()
   })
 
-  it('a policy-issued order is not recorded as a direct order', () => {
+  it('[U03369] a policy-issued order is not recorded as a direct order', () => {
     const world = createWorld()
     install('retreat-while-hurt', 'retreat-while')
     applyPolicyToUnit(ME, world.tank, 'retreat-while')
@@ -256,14 +256,14 @@ describe('policy engine: direct orders and policies', () => {
     expect(world.tank.policyControl.dominant.kind).toBe('policy')
   })
 
-  it('does no per-unit work for units without policies', () => {
+  it('[U03370] does no per-unit work for units without policies', () => {
     const world = createWorld()
     world.tick(5)
     expect(world.tank.policyBindings).toBeUndefined()
     expect(world.tank.policyControl).toBeUndefined()
   })
 
-  it('treats a unit with a leftover auto target as idle for order completion', () => {
+  it('[U03371] treats a unit with a leftover auto target as idle for order completion', () => {
     const unit = makeUnit('a', ME, 1, 1, { target: { health: 10 } })
     expect(isUnitIdle(unit, null, false)).toBe(true)
     expect(isUnitIdle(unit)).toBe(false)
@@ -275,7 +275,7 @@ describe('policy engine: global policies and ownership', () => {
     resetPolicyStore()
   })
 
-  it('a global policy applies to all owned programmable units while enabled', () => {
+  it('[U03372] a global policy applies to all owned programmable units while enabled', () => {
     const world = createWorld()
     install('engage-in-range', 'engage')
     world.enemy.x = 24 * TILE_SIZE
@@ -293,7 +293,7 @@ describe('policy engine: global policies and ownership', () => {
     expect(world.tank.policyBindings).toHaveLength(0)
   })
 
-  it('only the commanding owner can enable, disable or apply a policy', () => {
+  it('[U03373] only the commanding owner can enable, disable or apply a policy', () => {
     const world = createWorld()
     install('engage-in-range', 'engage')
     install('retreat-while-hurt', 'retreat-while')
@@ -305,7 +305,7 @@ describe('policy engine: global policies and ownership', () => {
     expect(setPolicyEnabled(ME, 'engage', true).ok).toBe(true)
   })
 
-  it('an AI faction commands its own units with the same rules', () => {
+  it('[U03374] an AI faction commands its own units with the same rules', () => {
     const doc = POLICY_TEMPLATES.find(item => item.id === 'engage-in-range').create('ai-engage')
     expect(savePolicy('enemy_ai', doc).ok).toBe(true)
     expect(setPolicyEnabled('enemy_ai', 'ai-engage', true).ok).toBe(true)
@@ -313,12 +313,12 @@ describe('policy engine: global policies and ownership', () => {
     expect(canCommandPolicy('player', 'player1')).toBe(true)
   })
 
-  it('does not enable a per-unit policy globally', () => {
+  it('[U03375] does not enable a per-unit policy globally', () => {
     install('retreat-while-hurt', 'retreat-while')
     expect(setPolicyEnabled(ME, 'retreat-while', true)).toMatchObject({ ok: false, reason: 'not-global' })
   })
 
-  it('one-time per-unit policies start immediately on apply and detach when finished', () => {
+  it('[U03376] one-time per-unit policies start immediately on apply and detach when finished', () => {
     const world = createWorld()
     install('retreat-if-hurt', 'retreat-if')
     world.tank.health = 10

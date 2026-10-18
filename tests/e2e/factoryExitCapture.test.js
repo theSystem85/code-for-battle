@@ -7,7 +7,7 @@ import { prepareRegressionScenario } from './helpers/regressionScenario.js'
 for (const density of [1, 3]) {
   test.describe(`factory exit at DPR ${density}`, () => {
     test.use({ deviceScaleFactor: density, viewport: { width: 1280, height: 900 } })
-    test('captures a produced tank leaving the garage', async({ page }) => {
+    test('[E00047] captures a produced tank leaving the garage', async({ page }) => {
       test.skip(process.env.FACTORY_EXIT_CAPTURE !== '1', 'Opt-in visual capture')
       await prepareRegressionScenario(page, 211)
       await page.waitForFunction(() => document.getElementById('loadingScreen')?.classList.contains('loading-screen--hidden'), null, { timeout: 30000 })

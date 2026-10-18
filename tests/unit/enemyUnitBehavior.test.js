@@ -71,7 +71,7 @@ describe('enemyUnitBehavior updateAIUnit', () => {
     vi.clearAllMocks()
   })
 
-  it('resets attack flags after cooldown and returns early for workshop repair', () => {
+  it('[U01431] resets attack flags after cooldown and returns early for workshop repair', () => {
     const unit = createBaseUnit({
       isBeingAttacked: true,
       lastDamageTime: now - 6000,
@@ -85,7 +85,7 @@ describe('enemyUnitBehavior updateAIUnit', () => {
     expect(unit.lastAttacker).toBeNull()
   })
 
-  it('clears invalid attacker references when attacker is destroyed', () => {
+  it('[U01432] clears invalid attacker references when attacker is destroyed', () => {
     const unit = createBaseUnit({
       isBeingAttacked: true,
       lastDamageTime: now - 4000,
@@ -99,7 +99,7 @@ describe('enemyUnitBehavior updateAIUnit', () => {
     expect(unit.isBeingAttacked).toBe(false)
   })
 
-  it('keeps disabled crew units in place while firing defensively', () => {
+  it('[U01433] keeps disabled crew units in place while firing defensively', () => {
     const attacker = { id: 'attacker', health: 100, x: 32, y: 32, tileX: 1, tileY: 1 }
     const unit = createBaseUnit({
       crew: { driver: false, commander: true, gunner: true },
@@ -116,7 +116,7 @@ describe('enemyUnitBehavior updateAIUnit', () => {
     expect(unit.path).toEqual([])
   })
 
-  it('clears hospital return flags when crew is restored near the hospital', () => {
+  it('[U01434] clears hospital return flags when crew is restored near the hospital', () => {
     const unit = createBaseUnit({
       crew: { driver: true, commander: true, gunner: true },
       returningToHospital: true,
@@ -134,7 +134,7 @@ describe('enemyUnitBehavior updateAIUnit', () => {
     expect(unit.path).toEqual([])
   })
 
-  it('preserves the hospital route before strategic retreat decisions', () => {
+  it('[U01435] preserves the hospital route before strategic retreat decisions', () => {
     const route = [{ x: 5, y: 8 }, { x: 5, y: 7 }]
     const destination = { x: 5, y: 7 }
     const unit = createBaseUnit({
@@ -158,7 +158,7 @@ describe('enemyUnitBehavior updateAIUnit', () => {
     expect(unit.target).toBeNull()
   })
 
-  it('releases hospital return state after arrival has cleared the move target', () => {
+  it('[U01436] releases hospital return state after arrival has cleared the move target', () => {
     const unit = createBaseUnit({
       crew: { driver: true, commander: true, loader: true, gunner: true },
       returningToHospital: true,
@@ -174,7 +174,7 @@ describe('enemyUnitBehavior updateAIUnit', () => {
     expect(unit.needsHospital).toBe(false)
   })
 
-  it('routes ambulances to hospitals when crew needs refilling', () => {
+  it('[U01437] routes ambulances to hospitals when crew needs refilling', () => {
     const hospital = { id: 'hospital-1', type: 'hospital', owner: 'ai', health: 100, x: 5, y: 5, width: 2, height: 2 }
     gameState.buildings = [hospital]
 
@@ -195,7 +195,7 @@ describe('enemyUnitBehavior updateAIUnit', () => {
     })
   })
 
-  it('assigns ambulances to heal nearby immobile units', () => {
+  it('[U01438] assigns ambulances to heal nearby immobile units', () => {
     const immobileTank = {
       id: 'ally-1',
       owner: 'ai',
@@ -220,7 +220,7 @@ describe('enemyUnitBehavior updateAIUnit', () => {
     expect(unit.moveTarget).toBeNull()
   })
 
-  it('targets nearby enemy tanks when harvester hunters are threatened', () => {
+  it('[U01439] targets nearby enemy tanks when harvester hunters are threatened', () => {
     const threatTank = {
       id: 'enemy-1',
       owner: 'player',
@@ -248,7 +248,7 @@ describe('enemyUnitBehavior updateAIUnit', () => {
     expect(unit.lastDecisionTime).toBe(now)
   })
 
-  it('defends the base by targeting nearby player units', () => {
+  it('[U01440] defends the base by targeting nearby player units', () => {
     const aiBuilding = { id: 'base', owner: 'ai', health: 100, x: 5, y: 5, width: 2, height: 2 }
     const playerUnit = {
       id: 'raider',
@@ -280,7 +280,7 @@ describe('enemyUnitBehavior updateAIUnit', () => {
     expect(unit.path.length).toBeGreaterThan(0)
   })
 
-  it('retreats apaches when air defenses are nearby', () => {
+  it('[U01441] retreats apaches when air defenses are nearby', () => {
     const rocketTank = {
       id: 'rocket-1',
       owner: 'player',
@@ -313,7 +313,7 @@ describe('enemyUnitBehavior updateAIUnit', () => {
     expect(unit.flightPlan.y).toBeDefined()
   })
 
-  it('honors decision intervals before re-evaluating apache targets', () => {
+  it('[U01442] honors decision intervals before re-evaluating apache targets', () => {
     const unit = createBaseUnit({
       type: 'apache',
       lastDecisionTime: now - AI_DECISION_INTERVAL + 100
@@ -326,7 +326,7 @@ describe('enemyUnitBehavior updateAIUnit', () => {
     expect(unit.path).toEqual([])
   })
 
-  it('clears target when target is destroyed', () => {
+  it('[U01443] clears target when target is destroyed', () => {
     const destroyedEnemy = {
       id: 'enemy-1',
       owner: 'player',
@@ -345,7 +345,7 @@ describe('enemyUnitBehavior updateAIUnit', () => {
     // Path may or may not be cleared depending on AI logic
   })
 
-  it('clears target when target is neutralized', () => {
+  it('[U01444] clears target when target is neutralized', () => {
     const neutralizedEnemy = {
       id: 'enemy-1',
       owner: 'neutral',
@@ -361,7 +361,7 @@ describe('enemyUnitBehavior updateAIUnit', () => {
     expect(unit.target).toBeNull()
   })
 
-  it('does not update AI for neutral units', () => {
+  it('[U01445] does not update AI for neutral units', () => {
     const unit = createBaseUnit({
       owner: 'neutral',
       path: [{ x: 1, y: 1 }]
@@ -375,7 +375,7 @@ describe('enemyUnitBehavior updateAIUnit', () => {
     expect(unit.path).toEqual(originalPath)
   })
 
-  it('handles units without lastDecisionTime', () => {
+  it('[U01446] handles units without lastDecisionTime', () => {
     const unit = createBaseUnit({
       lastDecisionTime: undefined
     })
@@ -385,7 +385,7 @@ describe('enemyUnitBehavior updateAIUnit', () => {
     }).not.toThrow()
   })
 
-  it('respects AI decision interval timing', () => {
+  it('[U01447] respects AI decision interval timing', () => {
     const unit = createBaseUnit({
       lastDecisionTime: now, // Just made a decision
       path: []
@@ -397,7 +397,7 @@ describe('enemyUnitBehavior updateAIUnit', () => {
     expect(unit.lastDecisionTime).toBe(now) // Unchanged
   })
 
-  it('refreshes attack permission for a current target between decision ticks', () => {
+  it('[U01448] refreshes attack permission for a current target between decision ticks', () => {
     const target = {
       id: 'enemy-1',
       owner: 'player',
@@ -427,7 +427,7 @@ describe('enemyUnitBehavior updateAIUnit', () => {
     expect(unit.allowedToAttack).toBe(true)
   })
 
-  it('falls back to a reachable in-range tile when the target tile path is blocked', () => {
+  it('[U01449] falls back to a reachable in-range tile when the target tile path is blocked', () => {
     const target = {
       id: 'enemy-1',
       owner: 'player',
@@ -465,7 +465,7 @@ describe('enemyUnitBehavior updateAIUnit', () => {
     expect(unit.lastPathCalcTime).toBe(now)
   })
 
-  it('handles harvester units without special behavior', () => {
+  it('[U01450] handles harvester units without special behavior', () => {
     const unit = createBaseUnit({
       type: 'harvester',
       path: [],
@@ -477,7 +477,7 @@ describe('enemyUnitBehavior updateAIUnit', () => {
     }).not.toThrow()
   })
 
-  it('sets target when being attacked and enemy is in range', () => {
+  it('[U01451] sets target when being attacked and enemy is in range', () => {
     const attacker = {
       id: 'attacker',
       owner: 'player',
@@ -504,7 +504,7 @@ describe('enemyUnitBehavior updateAIUnit', () => {
     expect(unit.target).toBe(attacker)
   })
 
-  it('handles ambulance with fully healed target', () => {
+  it('[U01452] handles ambulance with fully healed target', () => {
     const healedUnit = {
       id: 'ally-1',
       owner: 'ai',
@@ -529,7 +529,7 @@ describe('enemyUnitBehavior updateAIUnit', () => {
     }).not.toThrow()
   })
 
-  it('keeps apaches engaged when no air defenses nearby', () => {
+  it('[U01453] keeps apaches engaged when no air defenses nearby', () => {
     const groundUnit = {
       id: 'ground-1',
       owner: 'player',
@@ -557,7 +557,7 @@ describe('enemyUnitBehavior updateAIUnit', () => {
   })
 
 
-  it('makes enemy f35 prefer defense-less buildings outside anti-air coverage', () => {
+  it('[U01454] makes enemy f35 prefer defense-less buildings outside anti-air coverage', () => {
     mapGrid = createMapGrid(40, 40)
 
     const guardedBuilding = {
@@ -613,7 +613,7 @@ describe('enemyUnitBehavior updateAIUnit', () => {
     expect(unit.allowedToAttack).toBe(true)
   })
 
-  it('prioritizes base defense over other behaviors', () => {
+  it('[U01455] prioritizes base defense over other behaviors', () => {
     const aiBuilding = { id: 'ai-factory', owner: 'ai', health: 100, x: 5, y: 5, width: 2, height: 2 }
     const playerThreat = {
       id: 'raider',
@@ -642,7 +642,7 @@ describe('enemyUnitBehavior updateAIUnit', () => {
     expect(unit.defendingBase).toBe(true)
   })
 
-  it('handles factory holding state for spawned units', () => {
+  it('[U01456] handles factory holding state for spawned units', () => {
     const unit = createBaseUnit({
       holdInFactory: true,
       spawnedInFactory: true,
@@ -656,7 +656,7 @@ describe('enemyUnitBehavior updateAIUnit', () => {
     expect(unit.holdInFactory).toBe(true)
   })
 
-  it('clears invalid move targets', () => {
+  it('[U01457] clears invalid move targets', () => {
     const unit = createBaseUnit({
       moveTarget: { x: NaN, y: NaN },
       path: []
@@ -668,7 +668,7 @@ describe('enemyUnitBehavior updateAIUnit', () => {
     expect(unit.path).toEqual([])
   })
 
-  it('handles units at map boundaries', () => {
+  it('[U01458] handles units at map boundaries', () => {
     const unit = createBaseUnit({
       x: 0,
       y: 0,
@@ -681,7 +681,7 @@ describe('enemyUnitBehavior updateAIUnit', () => {
     }).not.toThrow()
   })
 
-  it('handles units at far map edge', () => {
+  it('[U01459] handles units at far map edge', () => {
     const unit = createBaseUnit({
       x: 19 * TILE_SIZE,
       y: 19 * TILE_SIZE,

@@ -10,14 +10,14 @@ import { validatePolicy } from '../../src/policies/policySchema.js'
 import { POLICY_TEMPLATES } from '../../src/policies/policyTemplates.js'
 
 describe('policy condition rows', () => {
-  it('round-trips a single atom', () => {
+  it('[U03340] round-trips a single atom', () => {
     const atom = makeAtom('hp')
     const parsed = conditionToRows(atom)
     expect(parsed.rows).toHaveLength(1)
     expect(rowsToCondition(parsed.mode, parsed.rows)).toEqual(atom)
   })
 
-  it('round-trips negated rows combined with or', () => {
+  it('[U03341] round-trips negated rows combined with or', () => {
     const condition = {
       type: 'or',
       of: [makeAtom('underFire'), { type: 'not', of: makeAtom('enemyInRange') }]
@@ -28,19 +28,19 @@ describe('policy condition rows', () => {
     expect(rowsToCondition(parsed.mode, parsed.rows)).toEqual(condition)
   })
 
-  it('returns null for nested conditions the builder cannot show as rows', () => {
+  it('[U03342] returns null for nested conditions the builder cannot show as rows', () => {
     const nested = { type: 'and', of: [{ type: 'or', of: [makeAtom('hp'), makeAtom('underFire')] }, makeAtom('hp')] }
     expect(conditionToRows(nested)).toBeNull()
   })
 
-  it('describes conditions in plain language', () => {
+  it('[U03343] describes conditions in plain language', () => {
     expect(describeCondition(makeAtom('hp'))).toBe('HP < 25%')
     expect(describeCondition({ type: 'and', of: [makeAtom('hp'), makeAtom('enemyInRange')] }))
       .toBe('HP < 25% and an enemy is in range')
     expect(atomKind(makeAtom('enemyDistance'))).toBe('enemyDistance')
   })
 
-  it('shipped templates are valid policies', () => {
+  it('[U03344] shipped templates are valid policies', () => {
     for (const template of POLICY_TEMPLATES) {
       const policy = template.create ? template.create('t1') : template.policy
       expect(validatePolicy(policy).valid).toBe(true)

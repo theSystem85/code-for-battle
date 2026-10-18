@@ -49,39 +49,39 @@ describe('tankConfigUtil.js', () => {
   })
 
   describe('printTankImageConfig()', () => {
-    it('should print all tank configurations when variant is "all"', () => {
+    it('[U04329] should print all tank configurations when variant is "all"', () => {
       printTankImageConfig('all')
 
       expect(window.logger).toHaveBeenCalledWith('Current Tank Image Configuration:')
       expect(window.logger).toHaveBeenCalledWith(expect.stringContaining('tankV1'))
     })
 
-    it('should print all tank configurations by default', () => {
+    it('[U04330] should print all tank configurations by default', () => {
       printTankImageConfig()
 
       expect(window.logger).toHaveBeenCalledWith('Current Tank Image Configuration:')
     })
 
-    it('should print specific tank variant configuration', () => {
+    it('[U04331] should print specific tank variant configuration', () => {
       printTankImageConfig('tankV1')
 
       expect(window.logger).toHaveBeenCalledWith('Current Tank Image Configuration for tankV1:')
       expect(window.logger).toHaveBeenCalledWith(expect.stringContaining('bodyOffset'))
     })
 
-    it('should print tankV2 configuration', () => {
+    it('[U04332] should print tankV2 configuration', () => {
       printTankImageConfig('tankV2')
 
       expect(window.logger).toHaveBeenCalledWith('Current Tank Image Configuration for tankV2:')
     })
 
-    it('should print tankV3 configuration', () => {
+    it('[U04333] should print tankV3 configuration', () => {
       printTankImageConfig('tankV3')
 
       expect(window.logger).toHaveBeenCalledWith('Current Tank Image Configuration for tankV3:')
     })
 
-    it('should log error for invalid variant', () => {
+    it('[U04334] should log error for invalid variant', () => {
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
       printTankImageConfig('invalidVariant')
@@ -93,13 +93,13 @@ describe('tankConfigUtil.js', () => {
       consoleErrorSpy.mockRestore()
     })
 
-    it('should call getTankImageConfig to retrieve configuration', () => {
+    it('[U04335] should call getTankImageConfig to retrieve configuration', () => {
       printTankImageConfig('all')
 
       expect(getTankImageConfig).toHaveBeenCalled()
     })
 
-    it('should output JSON formatted configuration', () => {
+    it('[U04336] should output JSON formatted configuration', () => {
       printTankImageConfig('tankV1')
 
       // Check that logger was called with properly formatted JSON
@@ -114,7 +114,7 @@ describe('tankConfigUtil.js', () => {
   })
 
   describe('Development mode window exposure', () => {
-    it('should expose utility to window in development mode', async() => {
+    it('[U04337] should expose utility to window in development mode', async() => {
       // Re-import module to check window exposure
       // Note: The window exposure happens at module load time
       expect(window.tankConfigUtil).toBeDefined()

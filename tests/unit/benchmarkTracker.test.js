@@ -83,17 +83,17 @@ describe('benchmarkTracker.js', () => {
   })
 
   describe('isBenchmarkRunning', () => {
-    it('should return false when no session is active', () => {
+    it('[U00463] should return false when no session is active', () => {
       expect(isBenchmarkRunning()).toBe(false)
     })
 
-    it('should return true when session is active', () => {
+    it('[U00464] should return true when session is active', () => {
       startBenchmarkSession(10000)
 
       expect(isBenchmarkRunning()).toBe(true)
     })
 
-    it('should return false after session is cancelled', () => {
+    it('[U00465] should return false after session is cancelled', () => {
       startBenchmarkSession(10000)
       cancelBenchmarkSession()
 
@@ -102,7 +102,7 @@ describe('benchmarkTracker.js', () => {
   })
 
   describe('startBenchmarkSession', () => {
-    it('should return a promise', () => {
+    it('[U00466] should return a promise', () => {
       const result = startBenchmarkSession(10000)
 
       expect(result).toBeInstanceOf(Promise)
@@ -110,7 +110,7 @@ describe('benchmarkTracker.js', () => {
       cancelBenchmarkSession()
     })
 
-    it('should return null if session is already running', () => {
+    it('[U00467] should return null if session is already running', () => {
       startBenchmarkSession(10000)
       const secondSession = startBenchmarkSession(10000)
 
@@ -120,7 +120,7 @@ describe('benchmarkTracker.js', () => {
       cancelBenchmarkSession()
     })
 
-    it('should accept duration parameter', () => {
+    it('[U00468] should accept duration parameter', () => {
       const result = startBenchmarkSession(30000)
 
       expect(result).toBeInstanceOf(Promise)
@@ -128,7 +128,7 @@ describe('benchmarkTracker.js', () => {
       cancelBenchmarkSession()
     })
 
-    it('should accept interval parameter', () => {
+    it('[U00469] should accept interval parameter', () => {
       const result = startBenchmarkSession(30000, 500)
 
       expect(result).toBeInstanceOf(Promise)
@@ -136,7 +136,7 @@ describe('benchmarkTracker.js', () => {
       cancelBenchmarkSession()
     })
 
-    it('should use default duration of 60000ms', () => {
+    it('[U00470] should use default duration of 60000ms', () => {
       const result = startBenchmarkSession()
 
       expect(result).toBeInstanceOf(Promise)
@@ -146,13 +146,13 @@ describe('benchmarkTracker.js', () => {
   })
 
   describe('notifyBenchmarkFrame', () => {
-    it('should do nothing when no session is active', () => {
+    it('[U00471] should do nothing when no session is active', () => {
       notifyBenchmarkFrame({ timestamp: 1000, frameTime: 16.67 })
 
       expect(updateBenchmarkCountdownAverage).not.toHaveBeenCalled()
     })
 
-    it('should track frame when session is active', () => {
+    it('[U00472] should track frame when session is active', () => {
       startBenchmarkSession(10000)
       gameState.benchmarkActive = true
 
@@ -161,7 +161,7 @@ describe('benchmarkTracker.js', () => {
       expect(updateBenchmarkCountdownAverage).toHaveBeenCalled()
     })
 
-    it('should normalize near-zero frameTime values instead of dropping frames', () => {
+    it('[U00473] should normalize near-zero frameTime values instead of dropping frames', () => {
       startBenchmarkSession(10000)
 
       notifyBenchmarkFrame({ timestamp: 1000, frameTime: 0.00001 })
@@ -169,7 +169,7 @@ describe('benchmarkTracker.js', () => {
       expect(updateBenchmarkCountdownAverage).toHaveBeenCalled()
     })
 
-    it('should ignore non-finite frameTime values', () => {
+    it('[U00474] should ignore non-finite frameTime values', () => {
       startBenchmarkSession(10000)
 
       notifyBenchmarkFrame({ timestamp: 1000, frameTime: NaN })
@@ -178,7 +178,7 @@ describe('benchmarkTracker.js', () => {
       expect(updateBenchmarkCountdownAverage).not.toHaveBeenCalled()
     })
 
-    it('should calculate fps from frameTime', () => {
+    it('[U00475] should calculate fps from frameTime', () => {
       startBenchmarkSession(10000, 1000)
       gameState.benchmarkActive = true
 
@@ -192,7 +192,7 @@ describe('benchmarkTracker.js', () => {
       expect(avgFps).toBeLessThan(70)
     })
 
-    it('should track multiple frames', () => {
+    it('[U00476] should track multiple frames', () => {
       startBenchmarkSession(10000, 1000)
       gameState.benchmarkActive = true
 
@@ -204,7 +204,7 @@ describe('benchmarkTracker.js', () => {
     })
 
 
-    it('should synthesize monotonic benchmark timestamps when uncapped loop provides duplicate timestamps', async() => {
+    it('[U00477] should synthesize monotonic benchmark timestamps when uncapped loop provides duplicate timestamps', async() => {
       const promise = startBenchmarkSession(16, 8)
       gameState.benchmarkActive = true
 
@@ -219,7 +219,7 @@ describe('benchmarkTracker.js', () => {
       expect(result.intervalAverages.some(point => point.fps > 0)).toBe(true)
     })
 
-    it('should track min and max fps across frames', async() => {
+    it('[U00478] should track min and max fps across frames', async() => {
       const promise = startBenchmarkSession(100, 50)
       gameState.benchmarkActive = true
 
@@ -238,13 +238,13 @@ describe('benchmarkTracker.js', () => {
   })
 
   describe('cancelBenchmarkSession', () => {
-    it('should return null when no session is running', () => {
+    it('[U00479] should return null when no session is running', () => {
       const result = cancelBenchmarkSession()
 
       expect(result).toBeNull()
     })
 
-    it('should stop tracking when cancelled', () => {
+    it('[U00480] should stop tracking when cancelled', () => {
       startBenchmarkSession(10000)
       gameState.benchmarkActive = true
 
@@ -253,7 +253,7 @@ describe('benchmarkTracker.js', () => {
       expect(isBenchmarkRunning()).toBe(false)
     })
 
-    it('should finalize and resolve the session promise', async() => {
+    it('[U00481] should finalize and resolve the session promise', async() => {
       const promise = startBenchmarkSession(60000)
       gameState.benchmarkActive = true
 
@@ -271,11 +271,11 @@ describe('benchmarkTracker.js', () => {
   })
 
   describe('resetBenchmarkCameraFocus', () => {
-    it('should be callable without error', () => {
+    it('[U00482] should be callable without error', () => {
       expect(() => resetBenchmarkCameraFocus()).not.toThrow()
     })
 
-    it('should reset camera focus state', () => {
+    it('[U00483] should reset camera focus state', () => {
       // Start a session to activate camera focus
       startBenchmarkSession(10000)
       gameState.benchmarkActive = true
@@ -290,11 +290,11 @@ describe('benchmarkTracker.js', () => {
   })
 
   describe('notifyBenchmarkManualCameraControl', () => {
-    it('should be callable without error', () => {
+    it('[U00484] should be callable without error', () => {
       expect(() => notifyBenchmarkManualCameraControl()).not.toThrow()
     })
 
-    it('should flag manual camera control', () => {
+    it('[U00485] should flag manual camera control', () => {
       startBenchmarkSession(10000)
       gameState.benchmarkActive = true
 
@@ -308,7 +308,7 @@ describe('benchmarkTracker.js', () => {
   })
 
   describe('session result structure', () => {
-    it('should return result with expected properties', async() => {
+    it('[U00486] should return result with expected properties', async() => {
       const promise = startBenchmarkSession(100, 50)
       gameState.benchmarkActive = true
 
@@ -327,7 +327,7 @@ describe('benchmarkTracker.js', () => {
       expect(result).toHaveProperty('intervalAverages')
     })
 
-    it('should have frames count matching notified frames', async() => {
+    it('[U00487] should have frames count matching notified frames', async() => {
       const promise = startBenchmarkSession(100, 50)
       gameState.benchmarkActive = true
 
@@ -344,7 +344,7 @@ describe('benchmarkTracker.js', () => {
       expect(result.frames).toBe(7)
     })
 
-    it('should calculate average fps correctly', async() => {
+    it('[U00488] should calculate average fps correctly', async() => {
       const promise = startBenchmarkSession(100, 50)
       gameState.benchmarkActive = true
 
@@ -360,7 +360,7 @@ describe('benchmarkTracker.js', () => {
       expect(result.averageFps).toBeLessThan(70)
     })
 
-    it('should record intervalAverages', async() => {
+    it('[U00489] should record intervalAverages', async() => {
       const promise = startBenchmarkSession(200, 50)
       gameState.benchmarkActive = true
 
@@ -375,7 +375,7 @@ describe('benchmarkTracker.js', () => {
       expect(result.intervalAverages.length).toBeGreaterThan(0)
     })
 
-    it('should have intervalAverages with time and fps properties', async() => {
+    it('[U00490] should have intervalAverages with time and fps properties', async() => {
       const promise = startBenchmarkSession(200, 50)
       gameState.benchmarkActive = true
 
@@ -397,7 +397,7 @@ describe('benchmarkTracker.js', () => {
   })
 
   describe('session completion', () => {
-    it('should complete when cancelled after frames', async() => {
+    it('[U00491] should complete when cancelled after frames', async() => {
       const promise = startBenchmarkSession(10000, 50)
       gameState.benchmarkActive = true
 
@@ -413,7 +413,7 @@ describe('benchmarkTracker.js', () => {
       expect(isBenchmarkRunning()).toBe(false)
     })
 
-    it('should return 0 for minFps when no frames recorded', async() => {
+    it('[U00492] should return 0 for minFps when no frames recorded', async() => {
       const promise = startBenchmarkSession(100)
 
       cancelBenchmarkSession()
@@ -423,7 +423,7 @@ describe('benchmarkTracker.js', () => {
       expect(result.minFps).toBe(0)
     })
 
-    it('should return 0 for averageFps when no frames recorded', async() => {
+    it('[U00493] should return 0 for averageFps when no frames recorded', async() => {
       const promise = startBenchmarkSession(100)
 
       cancelBenchmarkSession()
@@ -435,7 +435,7 @@ describe('benchmarkTracker.js', () => {
   })
 
   describe('camera focus behavior', () => {
-    it('should detect manual scroll activity from keyScroll', () => {
+    it('[U00494] should detect manual scroll activity from keyScroll', () => {
       startBenchmarkSession(10000)
       gameState.benchmarkActive = true
       gameState.keyScroll = { up: true }
@@ -448,7 +448,7 @@ describe('benchmarkTracker.js', () => {
       cancelBenchmarkSession()
     })
 
-    it('should detect manual scroll activity from right dragging', () => {
+    it('[U00495] should detect manual scroll activity from right dragging', () => {
       startBenchmarkSession(10000)
       gameState.benchmarkActive = true
       gameState.isRightDragging = true
@@ -460,7 +460,7 @@ describe('benchmarkTracker.js', () => {
       cancelBenchmarkSession()
     })
 
-    it('should detect manual scroll activity from drag velocity', () => {
+    it('[U00496] should detect manual scroll activity from drag velocity', () => {
       startBenchmarkSession(10000)
       gameState.benchmarkActive = true
       gameState.dragVelocity = { x: 1, y: 0 }
@@ -474,7 +474,7 @@ describe('benchmarkTracker.js', () => {
   })
 
   describe('combat focus targeting', () => {
-    it('should handle empty units array', () => {
+    it('[U00497] should handle empty units array', () => {
       startBenchmarkSession(10000)
       gameState.benchmarkActive = true
       units.length = 0
@@ -487,7 +487,7 @@ describe('benchmarkTracker.js', () => {
       cancelBenchmarkSession()
     })
 
-    it('should handle units with targets', () => {
+    it('[U00498] should handle units with targets', () => {
       startBenchmarkSession(10000)
       gameState.benchmarkActive = true
 
@@ -513,7 +513,7 @@ describe('benchmarkTracker.js', () => {
       cancelBenchmarkSession()
     })
 
-    it('should ignore destroyed units', () => {
+    it('[U00499] should ignore destroyed units', () => {
       startBenchmarkSession(10000)
       gameState.benchmarkActive = true
 
@@ -533,7 +533,7 @@ describe('benchmarkTracker.js', () => {
       cancelBenchmarkSession()
     })
 
-    it('should ignore units targeting allies', () => {
+    it('[U00500] should ignore units targeting allies', () => {
       startBenchmarkSession(10000)
       gameState.benchmarkActive = true
 

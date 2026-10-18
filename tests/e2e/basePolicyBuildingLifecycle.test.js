@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-test('policy construction pays the player price and sale removes power, occupancy and chimney emitters', async({ page }) => {
+test('[E00012] policy construction pays the player price and sale removes power, occupancy and chimney emitters', async({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem('tutorial-settings', JSON.stringify({ showTutorial: false, speechEnabled: false }))
     localStorage.setItem('tutorial-progress', JSON.stringify({ completed: true, stepIndex: 0 }))

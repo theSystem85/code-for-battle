@@ -9,7 +9,7 @@ async function startGame(page) {
   await page.waitForFunction(() => window.gameState?.gameStarted && window.gameInstance?.gameLoop)
 }
 
-test('map wheel movement consumes diagonal and boundary gestures while sidebar scrolling stays separate', async({ page }) => {
+test('[E00066] map wheel movement consumes diagonal and boundary gestures while sidebar scrolling stays separate', async({ page }) => {
   await startGame(page)
   const url = page.url()
   await page.evaluate(() => {
@@ -42,7 +42,7 @@ test('map wheel movement consumes diagonal and boundary gestures while sidebar s
   expect(outside).toBe(false)
 })
 
-test('secondary drag still pans without adding a pan action button', async({ page }) => {
+test('[E00067] secondary drag still pans without adding a pan action button', async({ page }) => {
   await startGame(page)
   await expect(page.locator('#mapPanBtn')).toHaveCount(0)
   await page.evaluate(() => {
@@ -63,7 +63,7 @@ test('secondary drag still pans without adding a pan action button', async({ pag
   expect(offset.y).toBeGreaterThan(300)
 })
 
-test('a touch tap sells a selected vehicle factory without changing its rally point or double refund', async({ browser }) => {
+test('[E00068] a touch tap sells a selected vehicle factory without changing its rally point or double refund', async({ browser }) => {
   const context = await browser.newContext({ ...devices['iPhone 13'] })
   const page = await context.newPage()
   try {
@@ -114,7 +114,7 @@ test('a touch tap sells a selected vehicle factory without changing its rally po
   } finally { await context.close() }
 })
 
-test('Controls inversion reverses two-finger touch panning', async({ browser }) => {
+test('[E00069] Controls inversion reverses two-finger touch panning', async({ browser }) => {
   const context = await browser.newContext({ ...devices['iPhone 13'] })
   const page = await context.newPage()
   try {

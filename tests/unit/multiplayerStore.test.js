@@ -104,7 +104,7 @@ afterEach(() => {
 })
 
 describe('multiplayerStore', () => {
-  it('uses crypto.randomUUID when available for generateRandomId', async() => {
+  it('[U03096] uses crypto.randomUUID when available for generateRandomId', async() => {
     const randomUUIDMock = vi.fn().mockReturnValue('uuid-123')
     const originalRandomUUID = crypto.randomUUID
     crypto.randomUUID = randomUUIDMock
@@ -117,7 +117,7 @@ describe('multiplayerStore', () => {
     crypto.randomUUID = originalRandomUUID
   })
 
-  it('falls back to deterministic random ID generation', async() => {
+  it('[U03097] falls back to deterministic random ID generation', async() => {
     const nowSpy = vi.spyOn(Date, 'now').mockReturnValue(1234567890)
     gameRandomMock.gameRandom.mockReturnValue(0.123456)
 
@@ -129,7 +129,7 @@ describe('multiplayerStore', () => {
   })
 
 
-  it('maps legacy humanPlayer "player" to player1 host party state', async() => {
+  it('[U03098] maps legacy humanPlayer "player" to player1 host party state', async() => {
     resetGameStateMock({
       playerCount: 2,
       humanPlayer: 'player',
@@ -148,7 +148,7 @@ describe('multiplayerStore', () => {
   })
 
 
-  it('reconciles preloaded AI ownership for local green party on mission load', async() => {
+  it('[U03099] reconciles preloaded AI ownership for local green party on mission load', async() => {
     resetGameStateMock({
       playerCount: 2,
       humanPlayer: 'player1',
@@ -188,7 +188,7 @@ describe('multiplayerStore', () => {
     expect(getPartyState('player2')?.aiActive).toBe(true)
   })
 
-  it('initializes party states with host ownership and colors', async() => {
+  it('[U03100] initializes party states with host ownership and colors', async() => {
     resetGameStateMock({
       playerCount: 3,
       humanPlayer: 'player2',
@@ -211,7 +211,7 @@ describe('multiplayerStore', () => {
     expect(aiParty.aiActive).toBe(true)
   })
 
-  it('generates invite tokens from the server when available', async() => {
+  it('[U03101] generates invite tokens from the server when available', async() => {
     resetGameStateMock({
       gameInstanceId: 'instance-1',
       hostId: 'host-1',
@@ -252,7 +252,7 @@ describe('multiplayerStore', () => {
     expect(record.hostId).toBeTruthy()
   })
 
-  it('does not publish a short code the signalling store cannot resolve', async() => {
+  it('[U03102] does not publish a short code the signalling store cannot resolve', async() => {
     resetGameStateMock({
       gameInstanceId: 'instance-1',
       hostId: 'host-1',
@@ -277,7 +277,7 @@ describe('multiplayerStore', () => {
     expect(result.url).toBe('http://invite.local')
   })
 
-  it('registers a short code when regenerate returns only the long token', async() => {
+  it('[U03103] registers a short code when regenerate returns only the long token', async() => {
     resetGameStateMock({
       gameInstanceId: 'instance-1',
       hostId: 'host-1',
@@ -308,7 +308,7 @@ describe('multiplayerStore', () => {
     expect(methods.some(([url, method]) => url.includes('/signalling/invite-code/ABCDEF') && method === 'GET')).toBe(true)
   })
 
-  it('falls back to local invite tokens when server requests fail', async() => {
+  it('[U03104] falls back to local invite tokens when server requests fail', async() => {
     // Initialize with 3 players so player3 exists
     resetGameStateMock({
       playerCount: 3,
@@ -334,7 +334,7 @@ describe('multiplayerStore', () => {
     expect(record.partyId).toBe('player3')
   })
 
-  it('expires and purges invite tokens after the TTL', async() => {
+  it('[U03105] expires and purges invite tokens after the TTL', async() => {
     const nowSpy = vi.spyOn(Date, 'now')
     nowSpy.mockReturnValue(1000)
 
@@ -350,7 +350,7 @@ describe('multiplayerStore', () => {
     nowSpy.mockRestore()
   })
 
-  it('invalidates invite tokens for a party', async() => {
+  it('[U03106] invalidates invite tokens for a party', async() => {
     const { generateInviteForParty, invalidateInviteToken, validateInviteToken, getPartyState } =
       await loadStore()
 
@@ -362,7 +362,7 @@ describe('multiplayerStore', () => {
     expect(getPartyState('player2').inviteToken).toBeNull()
   })
 
-  it('tracks party ownership changes and dispatches events', async() => {
+  it('[U03107] tracks party ownership changes and dispatches events', async() => {
     const handler = vi.fn()
     const { ensureMultiplayerState, observePartyOwnershipChange, markPartyControlledByHuman, markPartyControlledByAi } =
       await loadStore()
@@ -390,7 +390,7 @@ describe('multiplayerStore', () => {
     expect(handler).not.toHaveBeenCalled()
   })
 
-  it('rebuilds invite tokens and resets multiplayer session on regeneration', async() => {
+  it('[U03108] rebuilds invite tokens and resets multiplayer session on regeneration', async() => {
     globalThis.fetch = vi.fn().mockRejectedValue(new Error('offline'))
     inviteMocks.composeInviteToken.mockImplementation((instanceId, partyId) => `${instanceId}-${partyId}-token`)
 
@@ -461,7 +461,7 @@ describe('multiplayerStore', () => {
     )
   })
 
-  it('reports host status based on session role or remote flag', async() => {
+  it('[U03109] reports host status based on session role or remote flag', async() => {
     const { isHost } = await loadStore()
 
     // When isRemote is true and localRole is guest, the user is not the host
@@ -473,7 +473,7 @@ describe('multiplayerStore', () => {
     expect(isHost()).toBe(true)
   })
 
-  it('manages per-party host invite status', async() => {
+  it('[U03110] manages per-party host invite status', async() => {
     const { getHostInviteStatus, setHostInviteStatus } = await loadStore()
 
     expect(getHostInviteStatus('player2')).toBe('idle')
@@ -481,7 +481,7 @@ describe('multiplayerStore', () => {
     expect(getHostInviteStatus('player2')).toBe('loading')
   })
 
-  it('returns no-op subscription when handler is invalid or document is missing', async() => {
+  it('[U03111] returns no-op subscription when handler is invalid or document is missing', async() => {
     const { observePartyOwnershipChange } = await loadStore()
     const unsubscribe = observePartyOwnershipChange(null)
     expect(typeof unsubscribe).toBe('function')
@@ -493,7 +493,7 @@ describe('multiplayerStore', () => {
     globalThis.document = originalDocument
   })
 
-  it('exposes game instance and host identifiers', async() => {
+  it('[U03112] exposes game instance and host identifiers', async() => {
     const { getGameInstanceId, getHostId, listPartyStates } = await loadStore()
 
     const instanceId = getGameInstanceId()

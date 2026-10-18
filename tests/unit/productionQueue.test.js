@@ -165,7 +165,7 @@ describe('Production Queue System', () => {
     })
   })
 
-  it('keeps a remote completion receipt pending until the exact host acknowledgement, including duplicate acknowledgement', () => {
+  it('[U03487] keeps a remote completion receipt pending until the exact host acknowledgement, including duplicate acknowledgement', () => {
     const receiptId = createCompletionReceipt('player', 'remote-stack', 2)
     const itemId = `${receiptId}:0`
     gameState.buildings = [{ id: 'factory', type: 'vehicleFactory', owner: 'player', health: 100 }]
@@ -183,7 +183,7 @@ describe('Production Queue System', () => {
     } finally { isHost.mockReturnValue(true); gameState.multiplayerSession = null }
   })
 
-  it('does not complete a building receipt at blueprint readiness; cancellation fails the exact ready item', () => {
+  it('[U03488] does not complete a building receipt at blueprint readiness; cancellation fails the exact ready item', () => {
     const receiptId = createCompletionReceipt('player', 'ready-building')
     const blueprint = { type: 'powerPlant', x: 10, y: 10 }
     productionQueue.currentBuilding = { type: 'powerPlant', button: mockButton, blueprint, completionReceiptId: receiptId }
@@ -197,7 +197,7 @@ describe('Production Queue System', () => {
   })
 
   describe('Policy blueprint construction lifecycle', () => {
-    it('charges the full building price once and runs shared placement side effects', async() => {
+    it('[U03489] charges the full building price once and runs shared placement side effects', async() => {
       const { createBuilding, placeBuilding, updatePowerSupply } = await import('../../src/buildings.js')
       const { broadcastBuildingPlace } = await import('../../src/network/gameCommandSync.js')
       gameState.buildings = [{ type: 'constructionYard', owner: 'player', health: 100 }]
@@ -235,7 +235,7 @@ describe('Production Queue System', () => {
       ]
     })
 
-    it('preloads an unachieved milestone video when that unit or building starts production', () => {
+    it('[U03490] preloads an unachieved milestone video when that unit or building starts production', () => {
       clearMilestoneMediaPreload()
       const achieved = new Set(['firstTank'])
       setMilestoneAchievedCheck(id => achieved.has(id))
@@ -252,41 +252,41 @@ describe('Production Queue System', () => {
       setMilestoneAchievedCheck(null)
     })
 
-    it('should add unit to queue', () => {
+    it('[U03491] should add unit to queue', () => {
       productionQueue.addItem('tank_v1', mockButton, false)
 
       expect(productionQueue.unitItems.length).toBe(1)
       expect(productionQueue.unitItems[0].type).toBe('tank_v1')
     })
 
-    it('should add building to queue', () => {
+    it('[U03492] should add building to queue', () => {
       productionQueue.addItem('powerPlant', mockButton, true)
 
       expect(productionQueue.buildingItems.length).toBe(1)
       expect(productionQueue.buildingItems[0].type).toBe('powerPlant')
     })
 
-    it('should store button reference in queue item', () => {
+    it('[U03493] should store button reference in queue item', () => {
       productionQueue.addItem('tank_v1', mockButton, false)
 
       expect(productionQueue.unitItems[0].button).toBe(mockButton)
     })
 
-    it('should store rally point for units', () => {
+    it('[U03494] should store rally point for units', () => {
       const rallyPoint = { x: 100, y: 100 }
       productionQueue.addItem('tank_v1', mockButton, false, null, rallyPoint)
 
       expect(productionQueue.unitItems[0].rallyPoint).toBe(rallyPoint)
     })
 
-    it('should store blueprint for buildings', () => {
+    it('[U03495] should store blueprint for buildings', () => {
       const blueprint = { x: 10, y: 10, type: 'powerPlant' }
       productionQueue.addItem('powerPlant', mockButton, true, blueprint)
 
       expect(productionQueue.buildingItems[0].blueprint).toBe(blueprint)
     })
 
-    it('should not add items when game is paused', () => {
+    it('[U03496] should not add items when game is paused', () => {
       gameState.gamePaused = true
 
       productionQueue.addItem('tank_v1', mockButton, false)
@@ -295,7 +295,7 @@ describe('Production Queue System', () => {
       expect(mockButton.classList.add).toHaveBeenCalledWith('error')
     })
 
-    it('should remove new unit type flag when adding', () => {
+    it('[U03497] should remove new unit type flag when adding', () => {
       gameState.newUnitTypes.add('tank_v1')
 
       productionQueue.addItem('tank_v1', mockButton, false)
@@ -303,7 +303,7 @@ describe('Production Queue System', () => {
       expect(gameState.newUnitTypes.has('tank_v1')).toBe(false)
     })
 
-    it('should remove new building type flag when adding', () => {
+    it('[U03498] should remove new building type flag when adding', () => {
       gameState.newBuildingTypes.add('powerPlant')
 
       productionQueue.addItem('powerPlant', mockButton, true)
@@ -313,13 +313,13 @@ describe('Production Queue System', () => {
   })
 
   describe('Vehicle Factory Multiplier', () => {
-    it('should return 0 with no buildings', () => {
+    it('[U03499] should return 0 with no buildings', () => {
       gameState.buildings = []
       const multiplier = productionQueue.getVehicleFactoryMultiplier()
       expect(multiplier).toBe(0)
     })
 
-    it('should return number of vehicle factories', () => {
+    it('[U03500] should return number of vehicle factories', () => {
       gameState.buildings = [
         { type: 'vehicleFactory', owner: 'player' },
         { type: 'vehicleFactory', owner: 'player' }
@@ -328,7 +328,7 @@ describe('Production Queue System', () => {
       expect(multiplier).toBe(2)
     })
 
-    it('should only count player-owned factories', () => {
+    it('[U03501] should only count player-owned factories', () => {
       gameState.buildings = [
         { type: 'vehicleFactory', owner: 'player' },
         { type: 'vehicleFactory', owner: 'enemy' }
@@ -337,7 +337,7 @@ describe('Production Queue System', () => {
       expect(multiplier).toBe(1)
     })
 
-    it('should not count other building types', () => {
+    it('[U03502] should not count other building types', () => {
       gameState.buildings = [
         { type: 'vehicleFactory', owner: 'player' },
         { type: 'powerPlant', owner: 'player' }
@@ -348,13 +348,13 @@ describe('Production Queue System', () => {
   })
 
   describe('Construction Yard Multiplier', () => {
-    it('should return 0 with no buildings', () => {
+    it('[U03503] should return 0 with no buildings', () => {
       gameState.buildings = []
       const multiplier = productionQueue.getConstructionYardMultiplier()
       expect(multiplier).toBe(0)
     })
 
-    it('should return number of construction yards + 1', () => {
+    it('[U03504] should return number of construction yards + 1', () => {
       gameState.buildings = [
         { type: 'constructionYard', owner: 'player', health: 100 }
       ]
@@ -362,7 +362,7 @@ describe('Production Queue System', () => {
       expect(multiplier).toBe(2) // 1 yard + 1 base
     })
 
-    it('should only count healthy construction yards', () => {
+    it('[U03505] should only count healthy construction yards', () => {
       gameState.buildings = [
         { type: 'constructionYard', owner: 'player', health: 100 },
         { type: 'constructionYard', owner: 'player', health: 0 }
@@ -371,7 +371,7 @@ describe('Production Queue System', () => {
       expect(multiplier).toBe(2) // Only 1 healthy + 1 base
     })
 
-    it('should only count player-owned yards', () => {
+    it('[U03506] should only count player-owned yards', () => {
       gameState.buildings = [
         { type: 'constructionYard', owner: 'player', health: 100 },
         { type: 'constructionYard', owner: 'enemy', health: 100 }
@@ -382,7 +382,7 @@ describe('Production Queue System', () => {
   })
 
   describe('Pause and Resume', () => {
-    it('should toggle unit production pause', () => {
+    it('[U03507] should toggle unit production pause', () => {
       productionQueue.currentUnit = { type: 'tank_v1', button: mockButton }
       productionQueue.pausedUnit = false
 
@@ -395,7 +395,7 @@ describe('Production Queue System', () => {
       expect(mockButton.classList.remove).toHaveBeenCalledWith('paused')
     })
 
-    it('should toggle building production pause', () => {
+    it('[U03508] should toggle building production pause', () => {
       productionQueue.currentBuilding = { type: 'powerPlant', button: mockButton }
       productionQueue.pausedBuilding = false
 
@@ -406,7 +406,7 @@ describe('Production Queue System', () => {
       expect(productionQueue.pausedBuilding).toBe(false)
     })
 
-    it('should do nothing if no current unit production', () => {
+    it('[U03509] should do nothing if no current unit production', () => {
       productionQueue.currentUnit = null
 
       productionQueue.togglePauseUnit()
@@ -414,7 +414,7 @@ describe('Production Queue System', () => {
       expect(productionQueue.pausedUnit).toBe(false)
     })
 
-    it('should do nothing if no current building production', () => {
+    it('[U03510] should do nothing if no current building production', () => {
       productionQueue.currentBuilding = null
 
       productionQueue.togglePauseBuilding()
@@ -424,7 +424,7 @@ describe('Production Queue System', () => {
   })
 
   describe('Cancel Production', () => {
-    it('should cancel current unit production', () => {
+    it('[U03511] should cancel current unit production', () => {
       productionQueue.unitItems = [{ type: 'tank_v1', button: mockButton }]
       productionQueue.currentUnit = {
         type: 'tank_v1',
@@ -442,7 +442,7 @@ describe('Production Queue System', () => {
       expect(gameState.money).toBe(initialMoney + 400) // Refund
     })
 
-    it('should cancel current building production', () => {
+    it('[U03512] should cancel current building production', () => {
       productionQueue.buildingItems = [{ type: 'powerPlant', button: mockButton }]
       productionQueue.currentBuilding = {
         type: 'powerPlant',
@@ -460,13 +460,13 @@ describe('Production Queue System', () => {
       expect(gameState.money).toBe(initialMoney + 150)
     })
 
-    it('should do nothing if no current unit production', () => {
+    it('[U03513] should do nothing if no current unit production', () => {
       productionQueue.currentUnit = null
 
       expect(() => productionQueue.cancelUnitProduction()).not.toThrow()
     })
 
-    it('should clear pause state on cancellation', () => {
+    it('[U03514] should clear pause state on cancellation', () => {
       productionQueue.unitItems = [{ type: 'tank_v1', button: mockButton }]
       productionQueue.currentUnit = { type: 'tank_v1', button: mockButton }
       productionQueue.pausedUnit = true
@@ -479,7 +479,7 @@ describe('Production Queue System', () => {
   })
 
   describe('Batch Counter Updates', () => {
-    it('should update batch counter display', () => {
+    it('[U03515] should update batch counter display', () => {
       const batchCounter = { style: { display: 'none' }, textContent: '' }
       mockButton.querySelector = vi.fn(() => batchCounter)
 
@@ -489,7 +489,7 @@ describe('Production Queue System', () => {
       expect(batchCounter.style.display).toBe('flex')
     })
 
-    it('should hide batch counter when count is 0', () => {
+    it('[U03516] should hide batch counter when count is 0', () => {
       const batchCounter = { style: { display: 'flex' }, textContent: '3' }
       mockButton.querySelector = vi.fn(() => batchCounter)
 
@@ -498,7 +498,7 @@ describe('Production Queue System', () => {
       expect(batchCounter.style.display).toBe('none')
     })
 
-    it('should remove active class when count is 0', () => {
+    it('[U03517] should remove active class when count is 0', () => {
       const batchCounter = { style: { display: 'flex' }, textContent: '1' }
       mockButton.querySelector = vi.fn(() => batchCounter)
 
@@ -509,7 +509,7 @@ describe('Production Queue System', () => {
   })
 
   describe('Completed Buildings Management', () => {
-    it('should enable building placement mode', () => {
+    it('[U03518] should enable building placement mode', () => {
       productionQueue.completedBuildings = [{ type: 'powerPlant', button: mockButton }]
 
       const result = productionQueue.enableBuildingPlacementMode('powerPlant', mockButton)
@@ -519,7 +519,7 @@ describe('Production Queue System', () => {
       expect(gameState.currentBuildingType).toBe('powerPlant')
     })
 
-    it('should fail if no completed building exists', () => {
+    it('[U03519] should fail if no completed building exists', () => {
       productionQueue.completedBuildings = []
 
       const result = productionQueue.enableBuildingPlacementMode('powerPlant', mockButton)
@@ -527,7 +527,7 @@ describe('Production Queue System', () => {
       expect(result).toBe(false)
     })
 
-    it('should exit placement mode without canceling', () => {
+    it('[U03520] should exit placement mode without canceling', () => {
       gameState.buildingPlacementMode = true
       gameState.currentBuildingType = 'powerPlant'
 
@@ -537,7 +537,7 @@ describe('Production Queue System', () => {
       expect(gameState.currentBuildingType).toBeNull()
     })
 
-    it('should cancel ready building and refund money', () => {
+    it('[U03521] should cancel ready building and refund money', () => {
       productionQueue.completedBuildings = [{ type: 'powerPlant', button: mockButton }]
       const initialMoney = gameState.money
 
@@ -549,7 +549,7 @@ describe('Production Queue System', () => {
   })
 
   describe('Resume Production', () => {
-    it('should resume paused unit production when money available', () => {
+    it('[U03522] should resume paused unit production when money available', () => {
       productionQueue.unitItems = [{ type: 'tank_v1', button: mockButton }]
       productionQueue.currentUnit = {
         type: 'tank_v1',
@@ -567,7 +567,7 @@ describe('Production Queue System', () => {
       expect(productionQueue.pausedUnit).toBe(false)
     })
 
-    it('should not resume if queue is empty', () => {
+    it('[U03523] should not resume if queue is empty', () => {
       productionQueue.unitItems = []
       productionQueue.pausedUnit = true
 
@@ -578,7 +578,7 @@ describe('Production Queue System', () => {
   })
 
   describe('Serializable State', () => {
-    it('should serialize queue state', () => {
+    it('[U03524] should serialize queue state', () => {
       productionQueue.unitItems = [{ type: 'tank_v1', button: mockButton, rallyPoint: { x: 10, y: 20 } }]
       productionQueue.pausedUnit = true
       productionQueue.unitPaid = 500
@@ -591,7 +591,7 @@ describe('Production Queue System', () => {
       expect(state.unitPaid).toBe(500)
     })
 
-    it('should serialize current production', () => {
+    it('[U03525] should serialize current production', () => {
       productionQueue.currentUnit = {
         type: 'tank_v1',
         button: mockButton,
@@ -607,7 +607,7 @@ describe('Production Queue System', () => {
       expect(state.currentUnit.progress).toBeCloseTo(0.5, 1)
     })
 
-    it('should serialize completed buildings', () => {
+    it('[U03526] should serialize completed buildings', () => {
       productionQueue.completedBuildings = [
         { type: 'powerPlant', button: mockButton }
       ]
@@ -618,7 +618,7 @@ describe('Production Queue System', () => {
       expect(state.completedBuildings[0].type).toBe('powerPlant')
     })
 
-    it('should handle null values gracefully', () => {
+    it('[U03527] should handle null values gracefully', () => {
       productionQueue.currentUnit = null
       productionQueue.currentBuilding = null
 
@@ -628,7 +628,7 @@ describe('Production Queue System', () => {
       expect(state.currentBuilding).toBeNull()
     })
 
-    it('should clamp progress between 0 and 1', () => {
+    it('[U03528] should clamp progress between 0 and 1', () => {
       productionQueue.currentUnit = {
         type: 'tank_v1',
         button: mockButton,
@@ -645,7 +645,7 @@ describe('Production Queue System', () => {
   })
 
   describe('Blueprint Management', () => {
-    it('should remove blueprint when production item removed', () => {
+    it('[U03529] should remove blueprint when production item removed', () => {
       const blueprint = { x: 10, y: 10, type: 'powerPlant' }
       gameState.blueprints = [blueprint]
 
@@ -656,19 +656,19 @@ describe('Production Queue System', () => {
       expect(gameState.blueprints).not.toContain(blueprint)
     })
 
-    it('should handle item without blueprint', () => {
+    it('[U03530] should handle item without blueprint', () => {
       const item = { type: 'powerPlant', button: mockButton }
 
       expect(() => productionQueue.removeBlueprint(item)).not.toThrow()
     })
 
-    it('should handle null item', () => {
+    it('[U03531] should handle null item', () => {
       expect(() => productionQueue.removeBlueprint(null)).not.toThrow()
     })
   })
 
   describe('Vehicle Unit Types', () => {
-    it('should identify tank as vehicle type', () => {
+    it('[U03532] should identify tank as vehicle type', () => {
       // Vehicle types should spawn from vehicle factory
       // We test this by verifying the multiplier is used
       gameState.buildings = [
@@ -678,13 +678,13 @@ describe('Production Queue System', () => {
       expect(multiplier).toBe(1)
     })
 
-    it('should handle empty building list for vehicle check', () => {
+    it('[U03533] should handle empty building list for vehicle check', () => {
       gameState.buildings = []
       const multiplier = productionQueue.getVehicleFactoryMultiplier()
       expect(multiplier).toBe(0)
     })
 
-    it('should speed up F22 production when multiple vehicle factories exist', () => {
+    it('[U03534] should speed up F22 production when multiple vehicle factories exist', () => {
       gameState.buildings = [
         { type: 'airstrip', owner: 'player', health: 1000 },
         { type: 'vehicleFactory', owner: 'player', health: 100 },
@@ -699,7 +699,7 @@ describe('Production Queue System', () => {
   })
 
   describe('Update Ready Building Counter', () => {
-    it('should create ready counter if not exists', () => {
+    it('[U03535] should create ready counter if not exists', () => {
       const mockCounter = { style: { display: 'none' }, textContent: '' }
       mockButton.querySelector = vi.fn((selector) => {
         if (selector === '.ready-counter') return null
@@ -714,7 +714,7 @@ describe('Production Queue System', () => {
       expect(mockButton.appendChild).toHaveBeenCalled()
     })
 
-    it('should update existing ready counter', () => {
+    it('[U03536] should update existing ready counter', () => {
       const mockCounter = { style: { display: 'none' }, textContent: '' }
       mockButton.querySelector = vi.fn(() => mockCounter)
 
@@ -729,7 +729,7 @@ describe('Production Queue System', () => {
       expect(mockCounter.style.display).toBe('flex')
     })
 
-    it('should hide counter when no ready buildings', () => {
+    it('[U03537] should hide counter when no ready buildings', () => {
       const mockCounter = { style: { display: 'flex' }, textContent: '2' }
       mockButton.querySelector = vi.fn(() => mockCounter)
 
@@ -742,7 +742,7 @@ describe('Production Queue System', () => {
   })
 
   describe('Edge Cases', () => {
-    it('should handle production with zero duration', () => {
+    it('[U03538] should handle production with zero duration', () => {
       productionQueue.currentUnit = {
         type: 'tank_v1',
         button: mockButton,
@@ -755,7 +755,7 @@ describe('Production Queue System', () => {
       expect(state.currentUnit.duration).toBe(0)
     })
 
-    it('should handle negative money edge case', () => {
+    it('[U03539] should handle negative money edge case', () => {
       gameState.money = -100
       productionQueue.unitItems = [{ type: 'tank_v1', button: mockButton }]
       productionQueue.currentUnit = {
@@ -775,7 +775,7 @@ describe('Production Queue System', () => {
       expect(productionQueue.pausedUnit).toBe(true)
     })
 
-    it('should handle undefined speed multiplier', () => {
+    it('[U03540] should handle undefined speed multiplier', () => {
       gameState.speedMultiplier = undefined
 
       // Should not crash when serializing
@@ -791,34 +791,34 @@ describe('Production Queue System', () => {
       ]
     })
 
-    it('should not start production if queue is empty', () => {
+    it('[U03541] should not start production if queue is empty', () => {
       productionQueue.unitItems = []
       productionQueue.startNextUnitProduction()
       expect(productionQueue.currentUnit).toBeNull()
     })
 
-    it('should not start production if paused', () => {
+    it('[U03542] should not start production if paused', () => {
       productionQueue.pausedUnit = true
       productionQueue.unitItems = [{ type: 'tank_v1', button: mockButton }]
       productionQueue.startNextUnitProduction()
       expect(productionQueue.currentUnit).toBeNull()
     })
 
-    it('should not start production if game is paused', () => {
+    it('[U03543] should not start production if game is paused', () => {
       gameState.gamePaused = true
       productionQueue.unitItems = [{ type: 'tank_v1', button: mockButton }]
       productionQueue.startNextUnitProduction()
       expect(productionQueue.currentUnit).toBeNull()
     })
 
-    it('should reset unitPaid when starting new production', () => {
+    it('[U03544] should reset unitPaid when starting new production', () => {
       productionQueue.unitPaid = 500
       productionQueue.unitItems = [{ type: 'tank_v1', button: mockButton }]
       productionQueue.startNextUnitProduction()
       expect(productionQueue.unitPaid).toBe(0)
     })
 
-    it('should set current unit with production properties', () => {
+    it('[U03545] should set current unit with production properties', () => {
       productionQueue.unitItems = [{ type: 'tank_v1', button: mockButton }]
       productionQueue.startNextUnitProduction()
 
@@ -828,7 +828,7 @@ describe('Production Queue System', () => {
       expect(productionQueue.currentUnit.duration).toBeGreaterThan(0)
     })
 
-    it('should apply vehicle factory multiplier to duration', () => {
+    it('[U03546] should apply vehicle factory multiplier to duration', () => {
       gameState.buildings = [
         { type: 'vehicleFactory', owner: 'player', health: 100 },
         { type: 'vehicleFactory', owner: 'player', health: 100 }
@@ -840,7 +840,7 @@ describe('Production Queue System', () => {
       expect(productionQueue.currentUnit).toBeTruthy()
     })
 
-    it('should apply power penalty to duration', () => {
+    it('[U03547] should apply power penalty to duration', () => {
       gameState.playerPowerSupply = -100
       gameState.playerBuildSpeedModifier = 0.5
       productionQueue.unitItems = [{ type: 'tank_v1', button: mockButton }]
@@ -849,7 +849,7 @@ describe('Production Queue System', () => {
       expect(productionQueue.currentUnit).toBeTruthy()
     })
 
-    it('should preserve rally point in current unit', () => {
+    it('[U03548] should preserve rally point in current unit', () => {
       const rallyPoint = { x: 20, y: 30 }
       productionQueue.unitItems = [{ type: 'tank_v1', button: mockButton, rallyPoint }]
       productionQueue.startNextUnitProduction()
@@ -857,7 +857,7 @@ describe('Production Queue System', () => {
       expect(productionQueue.currentUnit.rallyPoint).toEqual(rallyPoint)
     })
 
-    it('skips the unit ready sting only while the first production-line narrator plays', () => {
+    it('[U03549] skips the unit ready sting only while the first production-line narrator plays', () => {
       const claim = vi.fn(type => type === 'howitzer')
       setFirstProductionNarrationClaim(claim)
       try {
@@ -911,7 +911,7 @@ describe('Production Queue System', () => {
       }
     })
 
-    it('assigns spawned harvesters an immediate ore move target when auto-harvest starts', () => {
+    it('[U03550] assigns spawned harvesters an immediate ore move target when auto-harvest starts', () => {
       gameState.buildings = [
         { id: 'vf-1', type: 'vehicleFactory', owner: 'player', health: 100, rallyPoint: null }
       ]
@@ -943,7 +943,7 @@ describe('Production Queue System', () => {
       expect(units[0].path).toEqual([{ x: 6, y: 7 }])
     })
 
-    it('passes a selected Shipyard water rally point into Destroyer spawning', () => {
+    it('[U03551] passes a selected Shipyard water rally point into Destroyer spawning', () => {
       const rallyPoint = { x: 20, y: 24 }
       const shipyard = {
         id: 'shipyard-1',
@@ -984,7 +984,7 @@ describe('Production Queue System', () => {
       )
     })
 
-    it('spawns a unit from the factory requested by the radial menu', () => {
+    it('[U03552] spawns a unit from the factory requested by the radial menu', () => {
       const first = {
         id: 'vf-1',
         type: 'vehicleFactory',
@@ -1031,7 +1031,7 @@ describe('Production Queue System', () => {
       expect(gameState.nextVehicleFactoryIndex).toBe(0)
     })
 
-    it('keeps an explicit factory id from queue through production start', () => {
+    it('[U03553] keeps an explicit factory id from queue through production start', () => {
       gameState.buildings = [
         { id: 'vf-9', type: 'vehicleFactory', owner: 'player', health: 100 }
       ]
@@ -1052,34 +1052,34 @@ describe('Production Queue System', () => {
       ]
     })
 
-    it('should not start production if queue is empty', () => {
+    it('[U03554] should not start production if queue is empty', () => {
       productionQueue.buildingItems = []
       productionQueue.startNextBuildingProduction()
       expect(productionQueue.currentBuilding).toBeNull()
     })
 
-    it('should not start production if paused', () => {
+    it('[U03555] should not start production if paused', () => {
       productionQueue.pausedBuilding = true
       productionQueue.buildingItems = [{ type: 'powerPlant', button: mockButton }]
       productionQueue.startNextBuildingProduction()
       expect(productionQueue.currentBuilding).toBeNull()
     })
 
-    it('should not start if there is already a building in production', () => {
+    it('[U03556] should not start if there is already a building in production', () => {
       productionQueue.currentBuilding = { type: 'existing', button: mockButton }
       productionQueue.buildingItems = [{ type: 'powerPlant', button: mockButton }]
       productionQueue.startNextBuildingProduction()
       expect(productionQueue.currentBuilding.type).toBe('existing')
     })
 
-    it('should reset buildingPaid when starting new production', () => {
+    it('[U03557] should reset buildingPaid when starting new production', () => {
       productionQueue.buildingPaid = 300
       productionQueue.buildingItems = [{ type: 'powerPlant', button: mockButton }]
       productionQueue.startNextBuildingProduction()
       expect(productionQueue.buildingPaid).toBe(0)
     })
 
-    it('should set current building with production properties', () => {
+    it('[U03558] should set current building with production properties', () => {
       productionQueue.buildingItems = [{ type: 'powerPlant', button: mockButton, isBuilding: true }]
       productionQueue.startNextBuildingProduction()
 
@@ -1089,7 +1089,7 @@ describe('Production Queue System', () => {
     })
 
 
-    it('should pass the blueprint building type to proximity checks for chained street plans', () => {
+    it('[U03559] should pass the blueprint building type to proximity checks for chained street plans', () => {
       const blueprint = { type: 'street', x: 27, y: 20 }
       gameState.blueprints = [
         { type: 'street', x: 23, y: 20 },
@@ -1109,7 +1109,7 @@ describe('Production Queue System', () => {
       expect(productionQueue.currentBuilding.type).toBe('street')
     })
 
-    it('should apply construction yard multiplier', () => {
+    it('[U03560] should apply construction yard multiplier', () => {
       gameState.buildings = [
         { type: 'constructionYard', owner: 'player', health: 100 },
         { type: 'constructionYard', owner: 'player', health: 100 }
@@ -1129,7 +1129,7 @@ describe('Production Queue System', () => {
       ]
     })
 
-    it('should not update if game is paused', () => {
+    it('[U03561] should not update if game is paused', () => {
       gameState.gamePaused = true
       productionQueue.unitItems = [{ type: 'tank_v1', button: mockButton }]
       productionQueue.currentUnit = {
@@ -1145,7 +1145,7 @@ describe('Production Queue System', () => {
       expect(productionQueue.currentUnit.progress).toBe(oldProgress)
     })
 
-    it('should update unit progress', () => {
+    it('[U03562] should update unit progress', () => {
       productionQueue.unitItems = [{ type: 'tank_v1', button: mockButton }]
       productionQueue.currentUnit = {
         type: 'tank_v1',
@@ -1159,7 +1159,7 @@ describe('Production Queue System', () => {
       expect(productionQueue.currentUnit.progress).toBeGreaterThan(0)
     })
 
-    it('should pause production if not enough money', () => {
+    it('[U03563] should pause production if not enough money', () => {
       gameState.money = 0
       productionQueue.unitItems = [{ type: 'tank_v1', button: mockButton }]
       productionQueue.unitPaid = 0
@@ -1175,7 +1175,7 @@ describe('Production Queue System', () => {
       expect(productionQueue.pausedUnit).toBe(true)
     })
 
-    it('should clear current building if queue is empty but currentBuilding exists', () => {
+    it('[U03564] should clear current building if queue is empty but currentBuilding exists', () => {
       productionQueue.buildingItems = []
       productionQueue.currentBuilding = {
         type: 'powerPlant',
@@ -1198,26 +1198,26 @@ describe('Production Queue System', () => {
       ]
     })
 
-    it('should start unit production if queue has items', () => {
+    it('[U03565] should start unit production if queue has items', () => {
       productionQueue.unitItems = [{ type: 'tank_v1', button: mockButton }]
       productionQueue.resumeProductionAfterUnpause()
       expect(productionQueue.currentUnit).toBeTruthy()
     })
 
-    it('should start building production if queue has items', () => {
+    it('[U03566] should start building production if queue has items', () => {
       productionQueue.buildingItems = [{ type: 'powerPlant', button: mockButton, isBuilding: true }]
       productionQueue.resumeProductionAfterUnpause()
       expect(productionQueue.currentBuilding).toBeTruthy()
     })
 
-    it('should not start if already have current production', () => {
+    it('[U03567] should not start if already have current production', () => {
       productionQueue.currentUnit = { type: 'existing', button: mockButton }
       productionQueue.unitItems = [{ type: 'tank_v1', button: mockButton }]
       productionQueue.resumeProductionAfterUnpause()
       expect(productionQueue.currentUnit.type).toBe('existing')
     })
 
-    it('should not start if production is paused', () => {
+    it('[U03568] should not start if production is paused', () => {
       productionQueue.pausedUnit = true
       productionQueue.unitItems = [{ type: 'tank_v1', button: mockButton }]
       productionQueue.resumeProductionAfterUnpause()
@@ -1226,7 +1226,7 @@ describe('Production Queue System', () => {
   })
 
   describe('Cancel Building Placement', () => {
-    it('should cancel and refund building in placement mode', () => {
+    it('[U03569] should cancel and refund building in placement mode', () => {
       gameState.buildingPlacementMode = true
       gameState.currentBuildingType = 'powerPlant'
       productionQueue.completedBuildings = [{ type: 'powerPlant', button: mockButton }]
@@ -1240,7 +1240,7 @@ describe('Production Queue System', () => {
       expect(gameState.currentBuildingType).toBeNull()
     })
 
-    it('should do nothing if no current building type', () => {
+    it('[U03570] should do nothing if no current building type', () => {
       gameState.currentBuildingType = null
       productionQueue.completedBuildings = [{ type: 'powerPlant', button: mockButton }]
       const initialCount = productionQueue.completedBuildings.length
@@ -1250,7 +1250,7 @@ describe('Production Queue System', () => {
       expect(productionQueue.completedBuildings.length).toBe(initialCount)
     })
 
-    it('should do nothing if completed building not found', () => {
+    it('[U03571] should do nothing if completed building not found', () => {
       gameState.currentBuildingType = 'oreRefinery'
       productionQueue.completedBuildings = [{ type: 'powerPlant', button: mockButton }]
 
@@ -1259,7 +1259,7 @@ describe('Production Queue System', () => {
       expect(productionQueue.completedBuildings.length).toBe(1)
     })
 
-    it('should keep ready-for-placement if more buildings of same type exist', () => {
+    it('[U03572] should keep ready-for-placement if more buildings of same type exist', () => {
       gameState.currentBuildingType = 'powerPlant'
       productionQueue.completedBuildings = [
         { type: 'powerPlant', button: mockButton },
@@ -1274,7 +1274,7 @@ describe('Production Queue System', () => {
   })
 
   describe('Restore From Serializable State', () => {
-    it('should restore empty state', () => {
+    it('[U03573] should restore empty state', () => {
       productionQueue.restoreFromSerializableState({})
 
       expect(productionQueue.unitItems).toEqual([])
@@ -1282,13 +1282,13 @@ describe('Production Queue System', () => {
       expect(productionQueue.completedBuildings).toEqual([])
     })
 
-    it('should restore null state', () => {
+    it('[U03574] should restore null state', () => {
       productionQueue.restoreFromSerializableState(null)
 
       expect(productionQueue.unitItems).toEqual([])
     })
 
-    it('should restore pause states', () => {
+    it('[U03575] should restore pause states', () => {
       productionQueue.restoreFromSerializableState({
         pausedUnit: true,
         pausedBuilding: true
@@ -1299,7 +1299,7 @@ describe('Production Queue System', () => {
       expect(productionQueue.pausedBuilding).toBe(false)
     })
 
-    it('should restore paid amounts', () => {
+    it('[U03576] should restore paid amounts', () => {
       productionQueue.restoreFromSerializableState({
         unitPaid: 500,
         buildingPaid: 300
@@ -1309,7 +1309,7 @@ describe('Production Queue System', () => {
       expect(productionQueue.buildingPaid).toBe(300)
     })
 
-    it('should clamp invalid paid amounts', () => {
+    it('[U03577] should clamp invalid paid amounts', () => {
       productionQueue.restoreFromSerializableState({
         unitPaid: NaN,
         buildingPaid: Infinity
@@ -1319,7 +1319,7 @@ describe('Production Queue System', () => {
       expect(productionQueue.buildingPaid).toBe(0)
     })
 
-    it('should handle missing completed buildings array', () => {
+    it('[U03578] should handle missing completed buildings array', () => {
       productionQueue.restoreFromSerializableState({
         completedBuildings: null
       })
@@ -1329,7 +1329,7 @@ describe('Production Queue System', () => {
   })
 
   describe('Set Production Controller', () => {
-    it('should set production controller reference', () => {
+    it('[U03579] should set production controller reference', () => {
       const mockController = { updateBuildingButtonStates: vi.fn() }
       productionQueue.setProductionController(mockController)
 
@@ -1338,7 +1338,7 @@ describe('Production Queue System', () => {
   })
 
   describe('Simulation time integration', () => {
-    it('starts ground, naval, and air production in independent concurrent lanes', () => {
+    it('[U03580] starts ground, naval, and air production in independent concurrent lanes', () => {
       gameState.money = 100000
       gameState.buildings = [
         { type: 'vehicleFactory', owner: 'player', health: 100 },
@@ -1358,7 +1358,7 @@ describe('Production Queue System', () => {
     it.each([
       ['apache', 'air'],
       ['destroyer', 'naval']
-    ])('counts and removes %s from its %s production stack', (unitType, laneName) => {
+    ])('[U03581] counts and removes %s from its %s production stack', (unitType, laneName) => {
       gameState.money = 100000
       gameState.buildings = [
         { type: 'shipyard', owner: 'player', health: 100 },
@@ -1380,7 +1380,7 @@ describe('Production Queue System', () => {
       expect(productionQueue.unitQueues[laneName].currentUnit).toBeNull()
     })
 
-    it('tracks unit production progress from simulation time instead of wall-clock speed multipliers', () => {
+    it('[U03582] tracks unit production progress from simulation time instead of wall-clock speed multipliers', () => {
       gameState.buildings = [{ type: 'vehicleFactory', owner: 'player', health: 100 }]
       productionQueue.addItem('tank_v1', mockButton, false)
 

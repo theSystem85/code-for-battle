@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-test('building completion wait holds the state until real construction and placement', async({ page }) => {
+test('[E00006] building completion wait holds the state until real construction and placement', async({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem('tutorial-settings', JSON.stringify({ showTutorial: false, speechEnabled: false }))
     localStorage.setItem('tutorial-progress', JSON.stringify({ completed: true, stepIndex: 0 }))
@@ -58,7 +58,7 @@ test('building completion wait holds the state until real construction and place
   expect(result.totalOrders).toBe(1)
 })
 
-test('unit completion wait advances only after real movement reaches its issued destination', async({ page }) => {
+test('[E00007] unit completion wait advances only after real movement reaches its issued destination', async({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem('tutorial-settings', JSON.stringify({ showTutorial: false, speechEnabled: false }))
     localStorage.setItem('tutorial-progress', JSON.stringify({ completed: true, stepIndex: 0 }))

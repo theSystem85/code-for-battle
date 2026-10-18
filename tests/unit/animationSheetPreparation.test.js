@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { AnimationSheetPreparation } from '../../src/rendering/animationSheetPreparation.js'
 
 describe('prepared animation sheet swaps', () => {
-  it('keeps the previous sheet until ready and ignores older jobs finishing last', async() => {
+  it('[U00189] keeps the previous sheet until ready and ignores older jobs finishing last', async() => {
     const previous = { sheetPath: 'previous.webp' }
     const state = { activeAnimationSpriteSheetMetadata: previous, activeAnimationSpriteSheetPath: previous.sheetPath, simulationTime: 1000, rngState: { seed: 123 } }
     const ready = new Map()
@@ -26,7 +26,7 @@ describe('prepared animation sheet swaps', () => {
     expect(state.rngState).toEqual({ seed: 123 })
   })
 
-  it('retains the current sheet on failure and allows a later successful selection', async() => {
+  it('[U00190] retains the current sheet on failure and allows a later successful selection', async() => {
     const previous = { sheetPath: 'previous.webp' }
     const state = { activeAnimationSpriteSheetMetadata: previous }
     const prepare = vi.fn().mockRejectedValueOnce(new Error('Budget exceeded')).mockResolvedValueOnce({})

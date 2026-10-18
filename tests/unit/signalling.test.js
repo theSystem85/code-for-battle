@@ -17,7 +17,7 @@ describe('signalling.js', () => {
   })
 
   describe('STUN_HOST detection', () => {
-    it('exports STUN_HOST constant', async() => {
+    it('[U04021] exports STUN_HOST constant', async() => {
       const { STUN_HOST } = await import('../../src/network/signalling.js')
       // Default should be empty string for relative URLs
       expect(typeof STUN_HOST).toBe('string')
@@ -25,7 +25,7 @@ describe('signalling.js', () => {
   })
 
   describe('postOffer', () => {
-    it('sends a POST request to the offer endpoint', async() => {
+    it('[U04022] sends a POST request to the offer endpoint', async() => {
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: () => Promise.resolve({ success: true })
@@ -46,7 +46,7 @@ describe('signalling.js', () => {
       expect(result).toEqual({ success: true })
     })
 
-    it('throws error when response is not ok', async() => {
+    it('[U04023] throws error when response is not ok', async() => {
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: false,
         status: 500
@@ -56,7 +56,7 @@ describe('signalling.js', () => {
       await expect(postOffer({})).rejects.toThrow('Signalling /signalling/offer failed: 500')
     })
 
-    it('returns empty object when JSON parsing fails', async() => {
+    it('[U04024] returns empty object when JSON parsing fails', async() => {
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: () => Promise.reject(new Error('Invalid JSON'))
@@ -69,7 +69,7 @@ describe('signalling.js', () => {
   })
 
   describe('postAnswer', () => {
-    it('sends a POST request to the answer endpoint', async() => {
+    it('[U04025] sends a POST request to the answer endpoint', async() => {
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: () => Promise.resolve({ answerId: 'a123' })
@@ -89,7 +89,7 @@ describe('signalling.js', () => {
       expect(result).toEqual({ answerId: 'a123' })
     })
 
-    it('throws error on server failure', async() => {
+    it('[U04026] throws error on server failure', async() => {
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: false,
         status: 403
@@ -101,7 +101,7 @@ describe('signalling.js', () => {
   })
 
   describe('postCandidate', () => {
-    it('sends a POST request to the candidate endpoint', async() => {
+    it('[U04027] sends a POST request to the candidate endpoint', async() => {
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: () => Promise.resolve({ received: true })
@@ -124,7 +124,7 @@ describe('signalling.js', () => {
       expect(result).toEqual({ received: true })
     })
 
-    it('throws error on network failure', async() => {
+    it('[U04028] throws error on network failure', async() => {
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: false,
         status: 502
@@ -136,14 +136,14 @@ describe('signalling.js', () => {
   })
 
   describe('fetchPendingSessions', () => {
-    it('throws error when inviteToken is missing', async() => {
+    it('[U04029] throws error when inviteToken is missing', async() => {
       const { fetchPendingSessions } = await import('../../src/network/signalling.js')
       expect(() => fetchPendingSessions()).toThrow('Invite token is required')
       expect(() => fetchPendingSessions(null)).toThrow('Invite token is required')
       expect(() => fetchPendingSessions('')).toThrow('Invite token is required')
     })
 
-    it('fetches pending sessions with cache-busting timestamp', async() => {
+    it('[U04030] fetches pending sessions with cache-busting timestamp', async() => {
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: () => Promise.resolve([{ peerId: 'peer1' }])
@@ -159,7 +159,7 @@ describe('signalling.js', () => {
       expect(result).toEqual([{ peerId: 'peer1' }])
     })
 
-    it('URL-encodes the invite token', async() => {
+    it('[U04031] URL-encodes the invite token', async() => {
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: () => Promise.resolve([])
@@ -174,7 +174,7 @@ describe('signalling.js', () => {
       )
     })
 
-    it('throws error when fetch fails', async() => {
+    it('[U04032] throws error when fetch fails', async() => {
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: false,
         status: 404
@@ -184,7 +184,7 @@ describe('signalling.js', () => {
       await expect(fetchPendingSessions('token')).rejects.toThrow('Failed to fetch pending sessions (404)')
     })
 
-    it('returns empty array when JSON parsing fails', async() => {
+    it('[U04033] returns empty array when JSON parsing fails', async() => {
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: () => Promise.reject(new Error('Invalid JSON'))
@@ -197,19 +197,19 @@ describe('signalling.js', () => {
   })
 
   describe('fetchSessionStatus', () => {
-    it('throws error when inviteToken is missing', async() => {
+    it('[U04034] throws error when inviteToken is missing', async() => {
       const { fetchSessionStatus } = await import('../../src/network/signalling.js')
       await expect(fetchSessionStatus()).rejects.toThrow('Invite token and peerId are required')
       await expect(fetchSessionStatus(null, 'peer1')).rejects.toThrow('Invite token and peerId are required')
     })
 
-    it('throws error when peerId is missing', async() => {
+    it('[U04035] throws error when peerId is missing', async() => {
       const { fetchSessionStatus } = await import('../../src/network/signalling.js')
       await expect(fetchSessionStatus('token')).rejects.toThrow('Invite token and peerId are required')
       await expect(fetchSessionStatus('token', '')).rejects.toThrow('Invite token and peerId are required')
     })
 
-    it('fetches session status with cache-busting timestamp', async() => {
+    it('[U04036] fetches session status with cache-busting timestamp', async() => {
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: () => Promise.resolve({ status: 'pending', offer: 'sdp-data' })
@@ -225,7 +225,7 @@ describe('signalling.js', () => {
       expect(result).toEqual({ status: 'pending', offer: 'sdp-data' })
     })
 
-    it('URL-encodes both inviteToken and peerId', async() => {
+    it('[U04037] URL-encodes both inviteToken and peerId', async() => {
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: () => Promise.resolve({})
@@ -244,7 +244,7 @@ describe('signalling.js', () => {
       )
     })
 
-    it('throws error when fetch fails', async() => {
+    it('[U04038] throws error when fetch fails', async() => {
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: false,
         status: 500
@@ -254,7 +254,7 @@ describe('signalling.js', () => {
       await expect(fetchSessionStatus('token', 'peer')).rejects.toThrow('Failed to retrieve signalling session (500)')
     })
 
-    it('returns empty object when JSON parsing fails', async() => {
+    it('[U04039] returns empty object when JSON parsing fails', async() => {
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: () => Promise.reject(new Error('Invalid JSON'))
@@ -267,7 +267,7 @@ describe('signalling.js', () => {
   })
 
   describe('fetchIceServers', () => {
-    it('fetches ICE server config without caching', async() => {
+    it('[U04040] fetches ICE server config without caching', async() => {
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: () => Promise.resolve({ turnConfigured: false, iceServers: [] })
@@ -283,7 +283,7 @@ describe('signalling.js', () => {
       expect(result).toEqual({ turnConfigured: false, iceServers: [] })
     })
 
-    it('throws when the ICE config request fails', async() => {
+    it('[U04041] throws when the ICE config request fails', async() => {
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: false,
         status: 503
@@ -295,33 +295,33 @@ describe('signalling.js', () => {
   })
 
   describe('generateSessionKey', () => {
-    it('combines inviteToken and peerId with a hyphen', async() => {
+    it('[U04042] combines inviteToken and peerId with a hyphen', async() => {
       const { generateSessionKey } = await import('../../src/network/signalling.js')
       expect(generateSessionKey('token123', 'peerABC')).toBe('token123-peerABC')
     })
 
-    it('handles empty strings', async() => {
+    it('[U04043] handles empty strings', async() => {
       const { generateSessionKey } = await import('../../src/network/signalling.js')
       expect(generateSessionKey('', '')).toBe('-')
       expect(generateSessionKey('token', '')).toBe('token-')
       expect(generateSessionKey('', 'peer')).toBe('-peer')
     })
 
-    it('preserves complex token and peer formats', async() => {
+    it('[U04044] preserves complex token and peer formats', async() => {
       const { generateSessionKey } = await import('../../src/network/signalling.js')
       const token = 'game-123-player1-1234567890'
       const peerId = 'uuid-peer-id-value'
       expect(generateSessionKey(token, peerId)).toBe(`${token}-${peerId}`)
     })
 
-    it('produces consistent keys for same inputs', async() => {
+    it('[U04045] produces consistent keys for same inputs', async() => {
       const { generateSessionKey } = await import('../../src/network/signalling.js')
       const key1 = generateSessionKey('token', 'peer')
       const key2 = generateSessionKey('token', 'peer')
       expect(key1).toBe(key2)
     })
 
-    it('produces unique keys for different inputs', async() => {
+    it('[U04046] produces unique keys for different inputs', async() => {
       const { generateSessionKey } = await import('../../src/network/signalling.js')
       const key1 = generateSessionKey('token1', 'peer1')
       const key2 = generateSessionKey('token2', 'peer2')
@@ -333,7 +333,7 @@ describe('signalling.js', () => {
   })
 
   describe('URL construction', () => {
-    it('builds API URLs correctly with empty STUN_HOST', async() => {
+    it('[U04047] builds API URLs correctly with empty STUN_HOST', async() => {
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: () => Promise.resolve({})
@@ -353,21 +353,21 @@ describe('signalling.js', () => {
   })
 
   describe('error handling edge cases', () => {
-    it('handles network errors in postOffer', async() => {
+    it('[U04048] handles network errors in postOffer', async() => {
       globalThis.fetch = vi.fn().mockRejectedValue(new Error('Network error'))
 
       const { postOffer } = await import('../../src/network/signalling.js')
       await expect(postOffer({})).rejects.toThrow('Network error')
     })
 
-    it('handles network errors in fetchPendingSessions', async() => {
+    it('[U04049] handles network errors in fetchPendingSessions', async() => {
       globalThis.fetch = vi.fn().mockRejectedValue(new Error('Network error'))
 
       const { fetchPendingSessions } = await import('../../src/network/signalling.js')
       await expect(fetchPendingSessions('token')).rejects.toThrow('Network error')
     })
 
-    it('handles network errors in fetchSessionStatus', async() => {
+    it('[U04050] handles network errors in fetchSessionStatus', async() => {
       globalThis.fetch = vi.fn().mockRejectedValue(new Error('Connection refused'))
 
       const { fetchSessionStatus } = await import('../../src/network/signalling.js')

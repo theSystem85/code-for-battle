@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { prepareRegressionScenario, observeSimulation, pollRegressionState } from './helpers/regressionScenario.js'
 
-test('individual Apache orders reserve separate helipads and an occupied pad shows the blocked cursor', async({ page }) => {
+test('[E00003] individual Apache orders reserve separate helipads and an occupied pad shows the blocked cursor', async({ page }) => {
   await prepareRegressionScenario(page, 213)
   await page.evaluate(() => {
     const r = window.__regression

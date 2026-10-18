@@ -45,7 +45,7 @@ function controller(sourcePixels) {
 afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); document.body.replaceChildren() })
 
 describe('SSE placement controller', () => {
-  it('allows reimporting after newSheet, createBlankSheet and target selection, and redraws source overlays', async() => {
+  it('[U04188] allows reimporting after newSheet, createBlankSheet and target selection, and redraws source overlays', async() => {
     const { api, context } = controller()
     const first = await api.newSheet({ cols: 4, rows: 2, tileSize: 16 })
     await api.loadSourceImage('data:image/png;base64,test')
@@ -62,7 +62,7 @@ describe('SSE placement controller', () => {
     expect(api.getState().sprites).toHaveLength(2)
   })
 
-  it('shares anchor and ratio controls, shrinks occupancy and merges released tile tags', async() => {
+  it('[U04189] shares anchor and ratio controls, shrinks occupancy and merges released tile tags', async() => {
     const { api, state } = controller()
     await api.newSheet({ cols: 4, rows: 2, tileSize: 16 })
     await api.loadSourceImage('data:image/png;base64,test')
@@ -103,7 +103,7 @@ function sourceFixture(rectangles) {
   return pixels
 }
 
-it('imports a direct canvas click using transformed bounds and reports the import', async() => {
+it('[U04190] imports a direct canvas click using transformed bounds and reports the import', async() => {
   const { api } = controller(sourceFixture([[3, 5, 10, 8]]))
   await api.newSheet({ cols: 1, rows: 1, tileSize: 16 })
   await api.loadSourceImage('data:image/png;base64,test')
@@ -115,7 +115,7 @@ it('imports a direct canvas click using transformed bounds and reports the impor
   expect(api.getState().sprites[0].bbox).toEqual({ x: 3, y: 5, width: 10, height: 8 })
 })
 
-it('packs default-ratio extractions in adjacent single cells', async() => {
+it('[U04191] packs default-ratio extractions in adjacent single cells', async() => {
   const { api } = controller(sourceFixture([[2, 3, 8, 8], [25, 3, 8, 8], [50, 3, 8, 8]]))
   await api.newSheet({ cols: 3, rows: 2, tileSize: 16 })
   await api.loadSourceImage('data:image/png;base64,test')
@@ -124,7 +124,7 @@ it('packs default-ratio extractions in adjacent single cells', async() => {
   expect(sprites.map(sprite => sprite.tileSpan)).toEqual(Array(3).fill({ columns: 1, rows: 1 }))
 })
 
-it('uses the configured ratio for rectangular sprite spans through UI and API', async() => {
+it('[U04192] uses the configured ratio for rectangular sprite spans through UI and API', async() => {
   const { api } = controller(sourceFixture([[2, 2, 18, 10]]))
   await api.newSheet({ cols: 4, rows: 2, tileSize: 16 })
   await api.loadSourceImage('data:image/png;base64,test')
@@ -135,7 +135,7 @@ it('uses the configured ratio for rectangular sprite spans through UI and API', 
   expect(sprite.tileSpan).toEqual({ columns: 2, rows: 1 })
 })
 
-it('keeps identical coordinates independent across sources and toggles removal with masks and tags', async() => {
+it('[U04193] keeps identical coordinates independent across sources and toggles removal with masks and tags', async() => {
   const { api, state } = controller()
   await api.newSheet({ cols: 6, tileSize: 16 })
   const first = await api.addSourceImage('data:image/png;base64,first')
@@ -154,7 +154,7 @@ it('keeps identical coordinates independent across sources and toggles removal w
   expect(api.getState().sources).toHaveLength(1)
 })
 
-it('grows downward from original pixels and rejects occupied cells and edges without changing placement', async() => {
+it('[U04194] grows downward from original pixels and rejects occupied cells and edges without changing placement', async() => {
   const { api, state } = controller()
   await api.newSheet({ cols: 3, rows: 1, tileSize: 16 })
   await api.loadSourceImage('data:image/png;base64,test')
@@ -178,7 +178,7 @@ it('grows downward from original pixels and rejects occupied cells and edges wit
   await expect(api.resizeSprite(sprite.id, { columns: 4, rows: 3 })).rejects.toThrow('edge')
 })
 
-it('maps clicks to each source independently through strip and local transforms without double toggling', async() => {
+it('[U04195] maps clicks to each source independently through strip and local transforms without double toggling', async() => {
   const { api } = controller()
   await api.newSheet({ cols: 6, rows: 4, tileSize: 16 })
   const first = await api.addSourceImage('data:image/png;base64,first')
@@ -205,7 +205,7 @@ it('maps clicks to each source independently through strip and local transforms 
   await vi.waitFor(() => expect(api.getState().sprites.map(sprite => sprite.sourceId)).toEqual([first]))
 })
 
-it('reserves ratio-sized cells with borders inset inside the span', async() => {
+it('[U04196] reserves ratio-sized cells with borders inset inside the span', async() => {
   const { api } = controller(sourceFixture([[2, 2, 16, 16], [25, 2, 16, 16]]))
   await api.createBlankSheet({ columns: 3, rows: 2, tileSize: 16, borderWidth: 1 })
   await api.loadSourceImage('data:image/png;base64,test')
@@ -215,7 +215,7 @@ it('reserves ratio-sized cells with borders inset inside the span', async() => {
   expect(sprites[0].renderRect).toEqual({ x: 1, y: 1, width: 14, height: 14 })
 })
 
-it('extracts every source in order, skips imports and supports a source filter through UI and API', async() => {
+it('[U04197] extracts every source in order, skips imports and supports a source filter through UI and API', async() => {
   const { api } = controller(sourceFixture([[2, 2, 8, 8], [25, 2, 8, 8]]))
   await api.newSheet({ cols: 4, rows: 2, tileSize: 16 })
   const first = await api.addSourceImage('data:image/png;base64,first')

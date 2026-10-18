@@ -27,7 +27,7 @@ describe('editor: marking a policy as a build policy', () => {
 
   const typeSelect = () => document.querySelector('select[aria-label="Automation type"]')
 
-  it('starts as a unit policy and offers the policy type switch for a new draft', () => {
+  it('[U00366] starts as a unit policy and offers the policy type switch for a new draft', () => {
     editor.openPolicyEditor()
     expect(document.getElementById('policyEditorTitle').textContent).toContain('Automation')
     expect([...typeSelect().options].map(item => item.value)).toEqual(expect.arrayContaining(['unit', 'build', 'unitBuild']))
@@ -35,7 +35,7 @@ describe('editor: marking a policy as a build policy', () => {
     expect(document.querySelector('select[aria-label="Scope"]')).not.toBeNull()
   })
 
-  it('switches the draft to a build policy with base-only conditions and actions', () => {
+  it('[U00367] switches the draft to a build policy with base-only conditions and actions', () => {
     const api = editor.openPolicyEditor()
     change(typeSelect(), 'build')
     expect(api.getDraft().variant).toBe('build')
@@ -53,7 +53,7 @@ describe('editor: marking a policy as a build policy', () => {
     expect(templateOptions).not.toContain('retreat-if-hurt')
   })
 
-  it('switches to unit build automation with stacking and delivery actions', () => {
+  it('[U00368] switches to unit build automation with stacking and delivery actions', () => {
     const api = editor.openPolicyEditor()
     change(typeSelect(), 'unitBuild')
     expect(api.getDraft()).toMatchObject({ variant: 'unitBuild', scope: 'global' })
@@ -66,7 +66,7 @@ describe('editor: marking a policy as a build policy', () => {
     expect(templates).toEqual(expect.arrayContaining(['replace-lost-tank', 'harvester-escort-stack', 'harvester-raiders']))
   })
 
-  it('can add a rule on available money and the draft stays valid and saveable', () => {
+  it('[U00369] can add a rule on available money and the draft stays valid and saveable', () => {
     const api = editor.openPolicyEditor()
     change(typeSelect(), 'build')
     change(document.querySelector('select[aria-label="State 1 action"]'), 'buildBuilding')
@@ -88,7 +88,7 @@ describe('editor: marking a policy as a build policy', () => {
     expect(saved[0].policy.scope).toBe('global')
   })
 
-  it('groups conditions with a visible logical bracket and an AND/OR choice', () => {
+  it('[U00370] groups conditions with a visible logical bracket and an AND/OR choice', () => {
     const api = editor.openPolicyEditor()
     const addRule = [...document.querySelectorAll('button')].find(button => button.textContent === '+ rule')
     addRule.click()
@@ -106,7 +106,7 @@ describe('editor: marking a policy as a build policy', () => {
     expect(api.getDraft().states[0].transitions[0].when.type).toBe('or')
   })
 
-  it('shows the type of an existing policy but does not let it change', () => {
+  it('[U00371] shows the type of an existing policy but does not let it change', () => {
     const build = {
       schemaVersion: 1,
       id: 'existing',
@@ -124,7 +124,7 @@ describe('editor: marking a policy as a build policy', () => {
     expect(document.body.textContent).toContain('Build → Building')
   })
 
-  it('opens straight into a build draft from the panel shortcut', () => {
+  it('[U00372] opens straight into a build draft from the panel shortcut', () => {
     const api = editor.openPolicyEditor({ variant: 'build' })
     expect(api.getDraft().variant).toBe('build')
   })
@@ -155,7 +155,7 @@ describe('policy panel: base automation section', () => {
     panelApi.openPolicyPanel()
   })
 
-  it('lists build policies in their own section with an opt-in switch that is off by default', () => {
+  it('[U00373] lists build policies in their own section with an opt-in switch that is off by default', () => {
     expect(document.getElementById('basePoliciesHeading')).not.toBeNull()
     const optIn = document.getElementById('baseAutomationSwitch')
     expect(optIn.getAttribute('aria-checked')).toBe('false')
@@ -167,7 +167,7 @@ describe('policy panel: base automation section', () => {
     expect(unitCard.querySelector('[data-role="enabled-count"]')).not.toBeNull()
   })
 
-  it('applies a build policy and opts in without pausing the game', () => {
+  it('[U00374] applies a build policy and opts in without pausing the game', () => {
     const pause = document.getElementById('pauseBtn')
     const pauseClicks = vi.fn()
     pause.addEventListener('click', pauseClicks)
@@ -184,7 +184,7 @@ describe('policy panel: base automation section', () => {
     expect(gameStateModule.gameState.gamePaused).toBe(false)
   })
 
-  it('keeps build policies out of the unit radial list', async() => {
+  it('[U00375] keeps build policies out of the unit radial list', async() => {
     store.setPolicyEnabled('player1', 'p-build', true)
     const entries = store.listPolicies('player1').filter(entry => entry.policy.scope === 'perUnit' && entry.policy.variant !== 'build')
     expect(entries.map(entry => entry.policy.id)).not.toContain('p-build')
@@ -203,7 +203,7 @@ describe('synchronized Automation editor views', () => {
     store.resetPolicyStore()
     editor = await import('../../src/ui/policies/policyEditorModal.js')
   })
-  it('uses numbered states, preserves ELSE across view switches and shares source undo', () => {
+  it('[U00376] uses numbered states, preserves ELSE across view switches and shares source undo', () => {
     const api = editor.openPolicyEditor()
     expect(document.querySelector('input[aria-label="State 1 name"]')).toBeNull()
     const click = text => [...document.querySelectorAll('button')].find(button => button.textContent === text).click()
@@ -220,7 +220,7 @@ describe('synchronized Automation editor views', () => {
     expect(document.querySelector('[aria-label="ELSE target state"]')).not.toBeNull()
     api.close(false)
   })
-  it('shows affected references and leaves the entire source unchanged when deletion is cancelled', () => {
+  it('[U00377] shows affected references and leaves the entire source unchanged when deletion is cancelled', () => {
     const api = editor.openPolicyEditor()
     const click = label => document.querySelector(`[aria-label="${label}"]`).click()
     ;[...document.querySelectorAll('button')].find(button => button.textContent === '+ Add state').click()

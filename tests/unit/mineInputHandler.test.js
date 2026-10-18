@@ -47,36 +47,36 @@ import {
 
 describe('mineInputHandler.js', () => {
   describe('hasMineLayerSelected()', () => {
-    it('should return true when a healthy mine layer is selected', () => {
+    it('[U02804] should return true when a healthy mine layer is selected', () => {
       const selectedUnits = [
         { type: 'mineLayer', health: 100 }
       ]
       expect(hasMineLayerSelected(selectedUnits)).toBe(true)
     })
 
-    it('should return false when no mine layer is selected', () => {
+    it('[U02805] should return false when no mine layer is selected', () => {
       const selectedUnits = [
         { type: 'tank', health: 100 }
       ]
       expect(hasMineLayerSelected(selectedUnits)).toBe(false)
     })
 
-    it('should return false when mine layer has no health', () => {
+    it('[U02806] should return false when mine layer has no health', () => {
       const selectedUnits = [
         { type: 'mineLayer', health: 0 }
       ]
       expect(hasMineLayerSelected(selectedUnits)).toBe(false)
     })
 
-    it('should return false for null input', () => {
+    it('[U02807] should return false for null input', () => {
       expect(hasMineLayerSelected(null)).toBeFalsy()
     })
 
-    it('should return false for empty array', () => {
+    it('[U02808] should return false for empty array', () => {
       expect(hasMineLayerSelected([])).toBe(false)
     })
 
-    it('should return true when at least one mine layer among others', () => {
+    it('[U02809] should return true when at least one mine layer among others', () => {
       const selectedUnits = [
         { type: 'tank', health: 100 },
         { type: 'mineLayer', health: 50 },
@@ -87,32 +87,32 @@ describe('mineInputHandler.js', () => {
   })
 
   describe('hasMineSweeperSelected()', () => {
-    it('should return true when a healthy mine sweeper is selected', () => {
+    it('[U02810] should return true when a healthy mine sweeper is selected', () => {
       const selectedUnits = [
         { type: 'mineSweeper', health: 100 }
       ]
       expect(hasMineSweeperSelected(selectedUnits)).toBe(true)
     })
 
-    it('should return false when no mine sweeper is selected', () => {
+    it('[U02811] should return false when no mine sweeper is selected', () => {
       const selectedUnits = [
         { type: 'tank', health: 100 }
       ]
       expect(hasMineSweeperSelected(selectedUnits)).toBe(false)
     })
 
-    it('should return false when mine sweeper has no health', () => {
+    it('[U02812] should return false when mine sweeper has no health', () => {
       const selectedUnits = [
         { type: 'mineSweeper', health: 0 }
       ]
       expect(hasMineSweeperSelected(selectedUnits)).toBe(false)
     })
 
-    it('should return false for null input', () => {
+    it('[U02813] should return false for null input', () => {
       expect(hasMineSweeperSelected(null)).toBeFalsy()
     })
 
-    it('should return false for empty array', () => {
+    it('[U02814] should return false for empty array', () => {
       expect(hasMineSweeperSelected([])).toBe(false)
     })
   })
@@ -126,18 +126,18 @@ describe('mineInputHandler.js', () => {
       ]
     })
 
-    it('should return false when no mine layers selected', () => {
+    it('[U02815] should return false when no mine layers selected', () => {
       const result = handleMineLayerClick([], 5, 5, false)
       expect(result).toBe(false)
     })
 
-    it('should return false when mine layer has no health', () => {
+    it('[U02816] should return false when mine layer has no health', () => {
       selectedUnits[0].health = 0
       const result = handleMineLayerClick(selectedUnits, 5, 5, false)
       expect(result).toBe(false)
     })
 
-    it('should add deployMine command without shift key (replace)', () => {
+    it('[U02817] should add deployMine command without shift key (replace)', () => {
       selectedUnits[0].commandQueue = [{ type: 'move', x: 0, y: 0 }]
 
       const result = handleMineLayerClick(selectedUnits, 5, 5, false)
@@ -149,7 +149,7 @@ describe('mineInputHandler.js', () => {
       expect(selectedUnits[0].currentCommand).toBeNull()
     })
 
-    it('should queue deployMine command with shift key', () => {
+    it('[U02818] should queue deployMine command with shift key', () => {
       selectedUnits[0].commandQueue = [{ type: 'move', x: 0, y: 0 }]
 
       const result = handleMineLayerClick(selectedUnits, 5, 5, true)
@@ -161,7 +161,7 @@ describe('mineInputHandler.js', () => {
       ])
     })
 
-    it('should handle multiple mine layers', () => {
+    it('[U02819] should handle multiple mine layers', () => {
       selectedUnits.push({ id: 'ml-2', type: 'mineLayer', health: 50, commandQueue: [] })
 
       const result = handleMineLayerClick(selectedUnits, 5, 5, false)
@@ -171,7 +171,7 @@ describe('mineInputHandler.js', () => {
       expect(selectedUnits[1].commandQueue.length).toBe(1)
     })
 
-    it('should initialize commandQueue if not present', () => {
+    it('[U02820] should initialize commandQueue if not present', () => {
       delete selectedUnits[0].commandQueue
 
       const result = handleMineLayerClick(selectedUnits, 5, 5, true)
@@ -192,12 +192,12 @@ describe('mineInputHandler.js', () => {
       ]
     })
 
-    it('should return empty array when no mine layers selected', () => {
+    it('[U02821] should return empty array when no mine layers selected', () => {
       const result = handleMineLayerAreaDeploy([], { startX: 0, startY: 0, endX: 2, endY: 2 }, false)
       expect(result).toEqual([])
     })
 
-    it('should deploy in checkerboard pattern', () => {
+    it('[U02822] should deploy in checkerboard pattern', () => {
       const area = { startX: 0, startY: 0, endX: 3, endY: 3 }
       const result = handleMineLayerAreaDeploy(selectedUnits, area, false)
 
@@ -205,7 +205,7 @@ describe('mineInputHandler.js', () => {
       expect(result.length).toBeGreaterThan(0)
     })
 
-    it('should assign commands to mine layer', () => {
+    it('[U02823] should assign commands to mine layer', () => {
       const area = { startX: 0, startY: 0, endX: 1, endY: 1 }
 
       handleMineLayerAreaDeploy(selectedUnits, area, false)
@@ -214,7 +214,7 @@ describe('mineInputHandler.js', () => {
       expect(selectedUnits[0].commandQueue[0].type).toBe('deployMine')
     })
 
-    it('should queue commands with shift key', () => {
+    it('[U02824] should queue commands with shift key', () => {
       selectedUnits[0].commandQueue = [{ type: 'move', x: 0, y: 0 }]
       const area = { startX: 0, startY: 0, endX: 1, endY: 1 }
 
@@ -224,7 +224,7 @@ describe('mineInputHandler.js', () => {
       expect(selectedUnits[0].commandQueue.length).toBeGreaterThan(1)
     })
 
-    it('should split path among multiple mine layers', () => {
+    it('[U02825] should split path among multiple mine layers', () => {
       selectedUnits.push({ id: 'ml-2', type: 'mineLayer', health: 100, x: 100, y: 100, commandQueue: [] })
       const area = { startX: 0, startY: 0, endX: 5, endY: 5 }
 
@@ -235,7 +235,7 @@ describe('mineInputHandler.js', () => {
       expect(selectedUnits[1].commandQueue.length).toBeGreaterThan(0)
     })
 
-    it('should include areaFieldId in commands', () => {
+    it('[U02826] should include areaFieldId in commands', () => {
       const area = { startX: 0, startY: 0, endX: 1, endY: 1 }
 
       handleMineLayerAreaDeploy(selectedUnits, area, false)
@@ -243,7 +243,7 @@ describe('mineInputHandler.js', () => {
       expect(selectedUnits[0].commandQueue[0].areaFieldId).toBeDefined()
     })
 
-    it('should register pending mine field deployment', () => {
+    it('[U02827] should register pending mine field deployment', () => {
       const area = { startX: 0, startY: 0, endX: 1, endY: 1 }
 
       handleMineLayerAreaDeploy(selectedUnits, area, false)
@@ -261,12 +261,12 @@ describe('mineInputHandler.js', () => {
       ]
     })
 
-    it('should return empty array when no mine sweepers selected', () => {
+    it('[U02828] should return empty array when no mine sweepers selected', () => {
       const result = handleMineSweeperRectangleSweep([], { startX: 0, startY: 0, endX: 2, endY: 2 }, false)
       expect(result).toEqual([])
     })
 
-    it('should generate sweep path for area', () => {
+    it('[U02829] should generate sweep path for area', () => {
       const area = { startX: 0, startY: 0, endX: 2, endY: 2 }
 
       const result = handleMineSweeperRectangleSweep(selectedUnits, area, false)
@@ -274,7 +274,7 @@ describe('mineInputHandler.js', () => {
       expect(result.length).toBeGreaterThan(0)
     })
 
-    it('should assign sweep command to sweeper', () => {
+    it('[U02830] should assign sweep command to sweeper', () => {
       const area = { startX: 0, startY: 0, endX: 2, endY: 2 }
 
       handleMineSweeperRectangleSweep(selectedUnits, area, false)
@@ -286,7 +286,7 @@ describe('mineInputHandler.js', () => {
       expect(sweepCommand.path.length).toBeGreaterThan(0)
     })
 
-    it('should queue commands with shift key', () => {
+    it('[U02831] should queue commands with shift key', () => {
       selectedUnits[0].commandQueue = [{ type: 'move', x: 0, y: 0 }]
       const area = { startX: 0, startY: 0, endX: 2, endY: 2 }
 
@@ -295,7 +295,7 @@ describe('mineInputHandler.js', () => {
       expect(selectedUnits[0].commandQueue[0].type).toBe('move')
     })
 
-    it('should split path among multiple sweepers', () => {
+    it('[U02832] should split path among multiple sweepers', () => {
       selectedUnits.push({ id: 'ms-2', type: 'mineSweeper', health: 200, x: 200, y: 200, commandQueue: [] })
       const area = { startX: 0, startY: 0, endX: 10, endY: 10 }
 
@@ -315,13 +315,13 @@ describe('mineInputHandler.js', () => {
       ]
     })
 
-    it('should return empty array when no mine sweepers selected', () => {
+    it('[U02833] should return empty array when no mine sweepers selected', () => {
       const paintedTiles = new Set(['0,0', '1,1'])
       const result = handleMineSweeperFreeformSweep([], paintedTiles, false)
       expect(result).toEqual([])
     })
 
-    it('should convert painted tiles to sweep path', () => {
+    it('[U02834] should convert painted tiles to sweep path', () => {
       const paintedTiles = new Set(['0,0', '1,1', '2,2'])
 
       const result = handleMineSweeperFreeformSweep(selectedUnits, paintedTiles, false)
@@ -329,7 +329,7 @@ describe('mineInputHandler.js', () => {
       expect(result.length).toBe(3)
     })
 
-    it('should sort tiles by Y then X', () => {
+    it('[U02835] should sort tiles by Y then X', () => {
       const paintedTiles = new Set(['2,1', '0,1', '1,0'])
 
       const result = handleMineSweeperFreeformSweep(selectedUnits, paintedTiles, false)
@@ -339,7 +339,7 @@ describe('mineInputHandler.js', () => {
       expect(result[2]).toEqual({ x: 2, y: 1 })
     })
 
-    it('should assign sweep command to sweeper', () => {
+    it('[U02836] should assign sweep command to sweeper', () => {
       const paintedTiles = new Set(['0,0', '1,1'])
 
       handleMineSweeperFreeformSweep(selectedUnits, paintedTiles, false)
@@ -348,7 +348,7 @@ describe('mineInputHandler.js', () => {
       expect(sweepCommand).toBeDefined()
     })
 
-    it('should queue commands with shift key', () => {
+    it('[U02837] should queue commands with shift key', () => {
       selectedUnits[0].commandQueue = [{ type: 'guard' }]
       const paintedTiles = new Set(['0,0'])
 
@@ -359,7 +359,7 @@ describe('mineInputHandler.js', () => {
   })
 
   describe('getMineDeploymentPreview()', () => {
-    it('should return checkerboard preview for area', () => {
+    it('[U02838] should return checkerboard preview for area', () => {
       const area = { startX: 0, startY: 0, endX: 3, endY: 3 }
 
       const preview = getMineDeploymentPreview(area)
@@ -368,7 +368,7 @@ describe('mineInputHandler.js', () => {
       expect(preview.tiles.length).toBeGreaterThan(0)
     })
 
-    it('should only include tiles where (x + y) is even', () => {
+    it('[U02839] should only include tiles where (x + y) is even', () => {
       const area = { startX: 0, startY: 0, endX: 2, endY: 2 }
 
       const preview = getMineDeploymentPreview(area)
@@ -378,7 +378,7 @@ describe('mineInputHandler.js', () => {
       })
     })
 
-    it('should handle inverted area bounds', () => {
+    it('[U02840] should handle inverted area bounds', () => {
       const area = { startX: 3, startY: 3, endX: 0, endY: 0 }
 
       const preview = getMineDeploymentPreview(area)
@@ -388,7 +388,7 @@ describe('mineInputHandler.js', () => {
   })
 
   describe('getSweepAreaPreview()', () => {
-    it('should return sweep preview for area', () => {
+    it('[U02841] should return sweep preview for area', () => {
       const area = { startX: 0, startY: 0, endX: 2, endY: 2 }
 
       const preview = getSweepAreaPreview(area)
@@ -399,7 +399,7 @@ describe('mineInputHandler.js', () => {
   })
 
   describe('getFreeformSweepPreview()', () => {
-    it('should return freeform preview from painted tiles', () => {
+    it('[U02842] should return freeform preview from painted tiles', () => {
       const paintedTiles = new Set(['0,0', '1,1', '2,2'])
 
       const preview = getFreeformSweepPreview(paintedTiles)
@@ -408,7 +408,7 @@ describe('mineInputHandler.js', () => {
       expect(preview.tiles.length).toBe(3)
     })
 
-    it('should convert tile strings to coordinates', () => {
+    it('[U02843] should convert tile strings to coordinates', () => {
       const paintedTiles = new Set(['5,10'])
 
       const preview = getFreeformSweepPreview(paintedTiles)
@@ -416,7 +416,7 @@ describe('mineInputHandler.js', () => {
       expect(preview.tiles[0]).toEqual({ x: 5, y: 10 })
     })
 
-    it('should handle empty set', () => {
+    it('[U02844] should handle empty set', () => {
       const paintedTiles = new Set()
 
       const preview = getFreeformSweepPreview(paintedTiles)

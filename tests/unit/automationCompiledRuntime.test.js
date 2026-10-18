@@ -17,7 +17,7 @@ function machine(kind = 'if') {
 }
 
 describe('IF/ELSE pairs', () => {
-  it.each([[true, 'b', 'if', 'pair'], [false, 'c', 'else', 'alternative']])('takes initial predicate %s once', (underFire, state, branch, id) => {
+  it.each([[true, 'b', 'if', 'pair'], [false, 'c', 'else', 'alternative']])('[U00265] takes initial predicate %s once', (underFire, state, branch, id) => {
     const p = machine()
     const first = stepPolicy(p, createPolicyRuntime(p), { underFire })
     expect(first.runtime.currentStateId).toBe(state)
@@ -25,7 +25,7 @@ describe('IF/ELSE pairs', () => {
     expect(first.effects[0].transitionId).toBe(id)
     expect(stepPolicy(p, first.runtime, { underFire }).effects).toEqual([])
   })
-  it('freezes both histories for direct orders and paused gates', () => {
+  it('[U00266] freezes both histories for direct orders and paused gates', () => {
     const p = machine()
     for (const gate of [STEP_GATE.orderRunning, STEP_GATE.paused]) {
       const r = createPolicyRuntime(p)
@@ -35,7 +35,7 @@ describe('IF/ELSE pairs', () => {
       expect(stepPolicy(p, blocked.runtime, { underFire: false }).runtime.currentStateId).toBe('c')
     }
   })
-  it('preserves one-time completion and self-transition entry resets', () => {
+  it('[U00267] preserves one-time completion and self-transition entry resets', () => {
     const p = machine()
     p.execution = 'oneTime'
     expect(stepPolicy(p, createPolicyRuntime(p), { underFire: false }).runtime.finished).toBe(true)
@@ -45,7 +45,7 @@ describe('IF/ELSE pairs', () => {
     const second = stepPolicy(p, first.runtime, {})
     expect(second.runtime.entered.a).toBe(3)
   })
-  it('evaluates a pair predicate once and respects ordered priority', () => {
+  it('[U00268] evaluates a pair predicate once and respects ordered priority', () => {
     const p = machine()
     p.states[0].transitions[0].when = { type: 'compare', field: 'hp', op: '<', value: 0.5 }
     p.states[0].transitions.push({ id: 'later', kind: 'if', when: { type: 'always' }, to: 'b' })
@@ -54,7 +54,7 @@ describe('IF/ELSE pairs', () => {
     expect(calls).toBe(1)
     expect(result.runtime.currentStateId).toBe('c')
   })
-  it('does not evaluate ELSE while a WHILE target is held', () => {
+  it('[U00269] does not evaluate ELSE while a WHILE target is held', () => {
     const p = machine()
     p.states[1].transitions = [{ id: 'nested', kind: 'if', when: { type: 'always' }, to: 'a', elseTo: 'c' }]
     p.states[0].transitions = [{ id: 'hold', kind: 'while', when: { type: 'underFire' }, to: 'b' }]
@@ -64,7 +64,7 @@ describe('IF/ELSE pairs', () => {
     expect(returned.runtime.currentStateId).toBe('a')
     expect(returned.effects).toEqual([])
   })
-  it('rejects ELSE on AFTER/WHILE and unresolved or duplicate branch IDs', () => {
+  it('[U00270] rejects ELSE on AFTER/WHILE and unresolved or duplicate branch IDs', () => {
     expect(validatePolicy(machine('while')).errors.some(e => e.code === 'invalid_else')).toBe(true)
     expect(validatePolicy(machine('after')).errors.some(e => e.code === 'invalid_else')).toBe(true)
     const p = machine()
@@ -78,7 +78,7 @@ describe('IF/ELSE pairs', () => {
 })
 
 describe('prepared runtime', () => {
-  it('is detached from editor drafts and rejects invalid installation', () => {
+  it('[U00271] is detached from editor drafts and rejects invalid installation', () => {
     const p = machine()
     const compiled = compilePolicyProgram(p, { behaviorRevision: 3 })
     p.states[0].transitions[0].to = 'missing'
@@ -86,7 +86,7 @@ describe('prepared runtime', () => {
     expect(compiled.policy.states[0].transitions[0].to).toBe('b')
     expect(() => compilePolicyProgram(p)).toThrow()
   })
-  it('matches reference effects, gates, runtime and traces over deterministic mixed-rule sequences', () => {
+  it('[U00272] matches reference effects, gates, runtime and traces over deterministic mixed-rule sequences', () => {
     const p = machine()
     p.states[0].transitions = [
       { id: 'timer', kind: 'after', delaySeconds: 1, when: { type: 'enemyInRange' }, to: 'b' },
@@ -109,7 +109,7 @@ describe('prepared runtime', () => {
 })
 
 describe('prepared numeric comparison defaults', () => {
-  it('keeps circular tolerance and leaf defaults equal to the reference', () => {
+  it('[U00273] keeps circular tolerance and leaf defaults equal to the reference', () => {
     const p = machine()
     p.states[0].transitions[0].when = { type: 'compare', field: 'turretRotation', mode: 'absolute', op: '==', value: 359 }
     const program = compilePolicyProgram(p)

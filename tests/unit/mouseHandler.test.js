@@ -191,7 +191,7 @@ describe('MouseHandler', () => {
     gameState.disableAGFRendering = originalState.disableAGFRendering
   })
 
-  it('detects blocked rally point tiles based on occupancy bounds', () => {
+  it('[U02989] detects blocked rally point tiles based on occupancy bounds', () => {
     const _handler = new MouseHandler()
 
     expect(isRallyPointTileBlocked(1, 1)).toBe(false)
@@ -204,7 +204,7 @@ describe('MouseHandler', () => {
     expect(isRallyPointTileBlocked(0, 0)).toBe(false)
   })
 
-  it('identifies utility units and queue eligibility', () => {
+  it('[U02990] identifies utility units and queue eligibility', () => {
     const _handler = new MouseHandler()
 
     expect(isUtilityUnit(null)).toBe(false)
@@ -216,7 +216,7 @@ describe('MouseHandler', () => {
     expect(shouldStartUtilityQueueMode([{ type: 'tankerTruck' }])).toBe(true)
   })
 
-  it('queues utility targets within a drag selection', () => {
+  it('[U02991] queues utility targets within a drag selection', () => {
     const handler = new MouseHandler()
     const mapGrid = createTestMapGrid(5, 5)
 
@@ -304,7 +304,7 @@ describe('MouseHandler', () => {
     )
   })
 
-  it('updates hover state with ranged combat info', () => {
+  it('[U02992] updates hover state with ranged combat info', () => {
     const _handler = new MouseHandler()
     const cursorManager = createCursorManager()
     const friendlyTank = {
@@ -340,7 +340,7 @@ describe('MouseHandler', () => {
     expect(cursorManager.setIsOutOfArtilleryRange).toHaveBeenCalledWith(false)
   })
 
-  it('clears hover state when no units are selected', () => {
+  it('[U02993] clears hover state when no units are selected', () => {
     const _handler = new MouseHandler()
     const cursorManager = createCursorManager()
 
@@ -353,7 +353,7 @@ describe('MouseHandler', () => {
     expect(cursorManager.setRangeCursorInfo).toHaveBeenCalledWith(null)
   })
 
-  it('issues force attack for building defenders and ground targets', () => {
+  it('[U02994] issues force attack for building defenders and ground targets', () => {
     const _handler = new MouseHandler()
     const selectionManager = {
       isCommandableUnit: () => true,
@@ -436,7 +436,7 @@ describe('MouseHandler', () => {
     )
   })
 
-  it('assigns guard mode to friendly targets', () => {
+  it('[U02995] assigns guard mode to friendly targets', () => {
     const _handler = new MouseHandler()
     const selectionManager = {
       isCommandableUnit: () => true,
@@ -476,7 +476,7 @@ describe('MouseHandler', () => {
     expect(playSound).toHaveBeenCalledWith('confirmed', 0.5)
   })
 
-  it('prioritizes direct transport and carrier interactions over stale guard state', () => {
+  it('[U02996] prioritizes direct transport and carrier interactions over stale guard state', () => {
     const mapGrid = Array.from({ length: 20 }, (_, y) =>
       Array.from({ length: 20 }, (_, x) => ({
         type: x >= 10 ? 'water' : 'land',
@@ -555,7 +555,7 @@ describe('MouseHandler', () => {
     expect(f22.guardMode).toBe(false)
   })
 
-  it('applies exactly one friendly-click action in boarding, service, guard order', () => {
+  it('[U02997] applies exactly one friendly-click action in boarding, service, guard order', () => {
     const mapGrid = Array.from({ length: 20 }, (_, y) =>
       Array.from({ length: 20 }, (_, x) => ({
         type: x >= 10 ? 'water' : 'land',
@@ -671,7 +671,7 @@ describe('MouseHandler', () => {
     )).toBe(false)
   })
 
-  it('does not launch parked carrier aircraft before requesting service from a clicked provider', () => {
+  it('[U02998] does not launch parked carrier aircraft before requesting service from a clicked provider', () => {
     const selectionManager = {
       isCommandableUnit: () => true,
       isHumanPlayerUnit: unit => unit?.owner === 'player',
@@ -714,7 +714,7 @@ describe('MouseHandler', () => {
   })
 
 
-  it('does not issue move commands when only buildings are selected', () => {
+  it('[U02999] does not issue move commands when only buildings are selected', () => {
     const _handler = new MouseHandler()
     const selectionManager = {
       isCommandableUnit: () => true
@@ -751,7 +751,7 @@ describe('MouseHandler', () => {
     expect(unitCommands.handleMovementCommand).not.toHaveBeenCalled()
     expect(unitCommands.handleAttackCommand).not.toHaveBeenCalled()
   })
-  it('prioritizes refinery unload and ore harvesting commands', () => {
+  it('[U03000] prioritizes refinery unload and ore harvesting commands', () => {
     const _handler = new MouseHandler()
     const selectionManager = {
       isCommandableUnit: () => true
@@ -812,7 +812,7 @@ describe('MouseHandler', () => {
     )
   })
 
-  it('creates synthetic mouse events from pointer data', () => {
+  it('[U03001] creates synthetic mouse events from pointer data', () => {
     const _handler = new MouseHandler()
     const target = document.createElement('div')
     const event = {
@@ -837,7 +837,7 @@ describe('MouseHandler', () => {
     expect(synthetic.target).toBe(target)
   })
 
-  it('averages touch points for two-finger pan center', () => {
+  it('[U03002] averages touch points for two-finger pan center', () => {
     const _handler = new MouseHandler()
     const activePointers = new Map()
 
@@ -850,13 +850,13 @@ describe('MouseHandler', () => {
     expect(center.y).toBe(15)
   })
 
-  it('getTouchCenter handles empty pointer array', () => {
+  it('[U03003] getTouchCenter handles empty pointer array', () => {
     const _handler = new MouseHandler()
     const center = getTouchCenter([], new Map())
     expect(center).toEqual({ x: 0, y: 0 })
   })
 
-  it('getTouchCenter handles missing pointer entry', () => {
+  it('[U03004] getTouchCenter handles missing pointer entry', () => {
     const _handler = new MouseHandler()
     const activePointers = new Map()
     activePointers.set(1, { startX: 10, startY: 20, lastEvent: null })
@@ -867,7 +867,7 @@ describe('MouseHandler', () => {
     expect(center.y).toBe(10)
   })
 
-  it('createSyntheticMouseEventFromCoords creates event without modifier keys', () => {
+  it('[U03005] createSyntheticMouseEventFromCoords creates event without modifier keys', () => {
     const _handler = new MouseHandler()
     const target = document.createElement('canvas')
 
@@ -886,7 +886,7 @@ describe('MouseHandler', () => {
     expect(typeof event.stopPropagation).toBe('function')
   })
 
-  it('createSyntheticMouseEventFromCoords handles right-click button', () => {
+  it('[U03006] createSyntheticMouseEventFromCoords handles right-click button', () => {
     const _handler = new MouseHandler()
     const target = document.createElement('canvas')
 
@@ -896,13 +896,13 @@ describe('MouseHandler', () => {
     expect(event.buttons).toBe(2)
   })
 
-  it('isOverRecoveryTankAt returns false when no game units', () => {
+  it('[U03007] isOverRecoveryTankAt returns false when no game units', () => {
     const _handler = new MouseHandler()
     _handler.gameUnits = null
     expect(isOverRecoveryTankAt(_handler, 100, 100)).toBe(false)
   })
 
-  it('isOverRecoveryTankAt detects recovery tank at tile position', () => {
+  it('[U03008] isOverRecoveryTankAt detects recovery tank at tile position', () => {
     const _handler = new MouseHandler()
     gameState.humanPlayer = 'player'
     // Unit at pixel (32, 32) has unitTileX = floor((32 + 16)/32) = 1, unitTileY = 1
@@ -915,7 +915,7 @@ describe('MouseHandler', () => {
     expect(isOverRecoveryTankAt(_handler, 0, 0)).toBe(false)
   })
 
-  it('isOverRecoveryTankAt ignores enemy recovery tanks', () => {
+  it('[U03009] isOverRecoveryTankAt ignores enemy recovery tanks', () => {
     const _handler = new MouseHandler()
     gameState.humanPlayer = 'player'
     _handler.gameUnits = [
@@ -925,13 +925,13 @@ describe('MouseHandler', () => {
     expect(isOverRecoveryTankAt(_handler, TILE_SIZE * 1.5, TILE_SIZE * 1.5)).toBe(false)
   })
 
-  it('isOverDamagedUnitAt returns false when no game units', () => {
+  it('[U03010] isOverDamagedUnitAt returns false when no game units', () => {
     const _handler = new MouseHandler()
     _handler.gameUnits = null
     expect(isOverDamagedUnitAt(_handler, 100, 100, [])).toBe(false)
   })
 
-  it('isOverDamagedUnitAt detects damaged unit at tile position', () => {
+  it('[U03011] isOverDamagedUnitAt detects damaged unit at tile position', () => {
     const _handler = new MouseHandler()
     gameState.humanPlayer = 'player'
     const damagedUnit = {
@@ -952,7 +952,7 @@ describe('MouseHandler', () => {
     expect(isOverDamagedUnitAt(_handler, TILE_SIZE * 1.5, TILE_SIZE * 1.5, [damagedUnit])).toBe(false)
   })
 
-  it('isOverDamagedUnitAt ignores healthy units and recovery tanks', () => {
+  it('[U03012] isOverDamagedUnitAt ignores healthy units and recovery tanks', () => {
     const _handler = new MouseHandler()
     gameState.humanPlayer = 'player'
     _handler.gameUnits = [
@@ -964,7 +964,7 @@ describe('MouseHandler', () => {
     expect(isOverDamagedUnitAt(_handler, TILE_SIZE * 1.5, TILE_SIZE / 2, [])).toBe(false)
   })
 
-  it('setRenderScheduler stores the callback', () => {
+  it('[U03013] setRenderScheduler stores the callback', () => {
     const _handler = new MouseHandler()
     const callback = vi.fn()
 
@@ -973,7 +973,7 @@ describe('MouseHandler', () => {
     expect(_handler.requestRenderFrame).toBe(callback)
   })
 
-  it('updateAGFCapability delegates to attackGroupHandler', () => {
+  it('[U03014] updateAGFCapability delegates to attackGroupHandler', () => {
     const _handler = new MouseHandler()
     _handler.attackGroupHandler.updateAGFCapability = vi.fn()
 
@@ -983,7 +983,7 @@ describe('MouseHandler', () => {
     expect(_handler.attackGroupHandler.updateAGFCapability).toHaveBeenCalledWith(selectedUnits)
   })
 
-  it('selectWreck clears unit selections and sets selectedWreckId', () => {
+  it('[U03015] selectWreck clears unit selections and sets selectedWreckId', () => {
     const _handler = new MouseHandler()
     const selectionManager = {
       clearAttackGroupTargets: vi.fn()
@@ -1012,14 +1012,14 @@ describe('MouseHandler', () => {
     expect(gameState.disableAGFRendering).toBe(false)
   })
 
-  it('selectWreck handles null inputs gracefully', () => {
+  it('[U03016] selectWreck handles null inputs gracefully', () => {
     const _handler = new MouseHandler()
     // Should not throw
     selectWreck(null, [], [], null)
     selectWreck({ id: 'w1' }, [], null, null)
   })
 
-  it('findEnemyTarget detects enemy buildings', () => {
+  it('[U03017] findEnemyTarget detects enemy buildings', () => {
     const _handler = new MouseHandler()
     _handler.gameFactories = []
 
@@ -1038,7 +1038,7 @@ describe('MouseHandler', () => {
     expect(target).toBe(gameState.buildings[0])
   })
 
-  it('findEnemyTarget detects enemy factories', () => {
+  it('[U03018] findEnemyTarget detects enemy factories', () => {
     const _handler = new MouseHandler()
     _handler.gameFactories = [
       {
@@ -1056,7 +1056,7 @@ describe('MouseHandler', () => {
     expect(target).toBe(_handler.gameFactories[0])
   })
 
-  it('findEnemyTarget ignores player-owned buildings and factories', () => {
+  it('[U03019] findEnemyTarget ignores player-owned buildings and factories', () => {
     const _handler = new MouseHandler()
     _handler.gameFactories = [
       {
@@ -1083,7 +1083,7 @@ describe('MouseHandler', () => {
     expect(target).toBe(null)
   })
 
-  it('findEnemyTarget returns a living neutral city building under the cursor', () => {
+  it('[U03020] findEnemyTarget returns a living neutral city building under the cursor', () => {
     const city = prepareCityFixture()
     expect(findEnemyTarget(TILE_SIZE * 3.5, TILE_SIZE * 2.5, [], [])).toBe(city)
     expect(findEnemyTarget(TILE_SIZE * 5.5, TILE_SIZE * 2.5, [], [])).toBe(null)
@@ -1091,7 +1091,7 @@ describe('MouseHandler', () => {
     expect(findEnemyTarget(TILE_SIZE * 3.5, TILE_SIZE * 2.5, [], [])).toBe(null)
   })
 
-  it('shows the attack cursor over a city building without force attack', () => {
+  it('[U03021] shows the attack cursor over a city building without force attack', () => {
     prepareCityFixture()
     const _handler = new MouseHandler()
     const cursorManager = createCursorManager()
@@ -1101,7 +1101,7 @@ describe('MouseHandler', () => {
     expect(cursorManager.setIsOverEnemyInRange).toHaveBeenCalledWith(true)
   })
 
-  it('issues a normal (not forced) attack on a city building from a standard click', () => {
+  it('[U03022] issues a normal (not forced) attack on a city building from a standard click', () => {
     const city = prepareCityFixture()
     const tank = { id: 't1', type: 'tank', owner: 'player', x: 0, y: 0, tileX: 0, tileY: 0 }
     const unitCommands = { handleAttackCommand: vi.fn(), handleMovementCommand: vi.fn() }
@@ -1111,7 +1111,7 @@ describe('MouseHandler', () => {
     expect(unitCommands.handleMovementCommand).not.toHaveBeenCalled()
   })
 
-  it('cancels repair and sell modes on context menu', () => {
+  it('[U03023] cancels repair and sell modes on context menu', () => {
     const _handler = new MouseHandler()
     const gameCanvas = document.createElement('canvas')
     gameCanvas.classList.add('repair-mode', 'sell-mode')

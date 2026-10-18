@@ -157,7 +157,7 @@ beforeEach(() => {
 })
 
 describe('enemyAIPlayer updateAIPlayer', () => {
-  it('persists one 50/50 advanced-force preference per AI party', () => {
+  it('[U01343] persists one 50/50 advanced-force preference per AI party', () => {
     const state = {}
     gameRandom.mockReturnValueOnce(0.49).mockReturnValueOnce(0.75)
 
@@ -166,7 +166,7 @@ describe('enemyAIPlayer updateAIPlayer', () => {
     expect(ensureAdvancedForcePreference(state, 'ai2')).toBe('air-first')
     expect(gameRandom).toHaveBeenCalledTimes(2)
   })
-  it('sells non-protected buildings to recover refinery funds', () => {
+  it('[U01344] sells non-protected buildings to recover refinery funds', () => {
     const aiPlayerId = 'ai1'
     const aiFactory = {
       id: aiPlayerId,
@@ -211,7 +211,7 @@ describe('enemyAIPlayer updateAIPlayer', () => {
     expect(manageAIRepairs).toHaveBeenCalled()
   })
 
-  it('places completed buildings and updates power and danger zones', () => {
+  it('[U01345] places completed buildings and updates power and danger zones', () => {
     const aiPlayerId = 'ai1'
     const aiFactory = {
       id: aiPlayerId,
@@ -253,7 +253,7 @@ describe('enemyAIPlayer updateAIPlayer', () => {
     expect(aiFactory.buildingPosition).toBe(null)
   })
 
-  it('rejects an unsafe completed gas station in final and simple fallback placement', () => {
+  it('[U01346] rejects an unsafe completed gas station in final and simple fallback placement', () => {
     const aiPlayerId = 'ai1'
     const aiFactory = {
       id: aiPlayerId,
@@ -299,7 +299,7 @@ describe('enemyAIPlayer updateAIPlayer', () => {
     expect(aiFactory.currentlyBuilding).toBe(null)
   })
 
-  it('assigns vehicle factories as spawn points for harvester production', () => {
+  it('[U01347] assigns vehicle factories as spawn points for harvester production', () => {
     const aiPlayerId = 'ai1'
     const aiFactory = {
       id: aiPlayerId,
@@ -337,7 +337,7 @@ describe('enemyAIPlayer updateAIPlayer', () => {
     expect(gameState.nextai1VehicleFactoryIndex).toBe(1)
   })
 
-  it('spawns apache production from helipads when capacity exists', () => {
+  it('[U01348] spawns apache production from helipads when capacity exists', () => {
     const aiPlayerId = 'ai1'
     const aiFactory = {
       id: aiPlayerId,
@@ -391,7 +391,7 @@ describe('enemyAIPlayer updateAIPlayer', () => {
     expect(manageAIAmmunitionMonitoring).toHaveBeenCalled()
   })
 
-  it('produces Destroyers from Shipyards after an Apache exists', () => {
+  it('[U01349] produces Destroyers from Shipyards after an Apache exists', () => {
     const aiPlayerId = 'ai1'
     const aiFactory = { id: aiPlayerId, owner: aiPlayerId, health: 100, budget: 5000 }
     const shipyard = { type: 'shipyard', owner: aiPlayerId, health: 450 }
@@ -425,7 +425,7 @@ describe('enemyAIPlayer updateAIPlayer', () => {
   })
 
 
-  it('pairs each planned F22 with an F35 on available airstrips', () => {
+  it('[U01350] pairs each planned F22 with an F35 on available airstrips', () => {
     const aiPlayerId = 'ai1'
     const aiFactory = {
       id: aiPlayerId,
@@ -477,7 +477,7 @@ describe('enemyAIPlayer updateAIPlayer', () => {
     expect(aiFactory.unitSpawnBuilding).toBe(airstrip)
   })
 
-  it('timestamps emergency AI building sales from simulation time', () => {
+  it('[U01351] timestamps emergency AI building sales from simulation time', () => {
     const aiPlayerId = 'ai1'
     const aiFactory = {
       id: aiPlayerId,
@@ -520,7 +520,7 @@ describe('enemyAIPlayer updateAIPlayer', () => {
     expect(turretGun.sellStartTime).toBe(43210)
   })
 
-  it('falls back to simple placement when advanced placement fails', () => {
+  it('[U01352] falls back to simple placement when advanced placement fails', () => {
     const aiPlayerId = 'ai1'
     const aiFactory = {
       id: aiPlayerId,
@@ -568,7 +568,7 @@ describe('enemyAIPlayer updateAIPlayer', () => {
     expect(aiFactory.buildingPosition).toBeTruthy()
   })
 
-  it('avoids selling the last vehicle factory when recovering economy', () => {
+  it('[U01353] avoids selling the last vehicle factory when recovering economy', () => {
     const aiPlayerId = 'ai1'
     const aiFactory = {
       id: aiPlayerId,
@@ -617,7 +617,7 @@ describe('enemyAIPlayer updateAIPlayer', () => {
     expect(powerPlantA.isBeingSold || powerPlantB.isBeingSold).toBe(true)
   })
 
-  it('rescans AI harvester paths every 60s and reassigns stuck ore targets', () => {
+  it('[U01354] rescans AI harvester paths every 60s and reassigns stuck ore targets', () => {
     const aiPlayerId = 'ai1'
     const aiFactory = {
       id: aiPlayerId,
@@ -695,7 +695,7 @@ describe('enemyAIPlayer updateAIPlayer', () => {
   })
 
 
-  it('does not retarget stuck harvesters when they are out of fuel or missing crew', () => {
+  it('[U01355] does not retarget stuck harvesters when they are out of fuel or missing crew', () => {
     const aiPlayerId = 'ai1'
     const aiFactory = {
       id: aiPlayerId,

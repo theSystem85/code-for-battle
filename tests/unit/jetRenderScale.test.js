@@ -6,7 +6,7 @@ import {
 } from '../../src/rendering/jetRenderScale.js'
 
 describe('jetRenderScale', () => {
-  it('renders carrier and airstrip jets at 75% while grounded', () => {
+  it('[U02216] renders carrier and airstrip jets at 75% while grounded', () => {
     expect(getJetRenderScale({
       carrierId: 'carrier',
       flightState: 'grounded',
@@ -21,7 +21,7 @@ describe('jetRenderScale', () => {
     })).toBe(LANDED_JET_SCALE)
   })
 
-  it('interpolates only during an explicitly tagged takeoff', () => {
+  it('[U02217] interpolates only during an explicitly tagged takeoff', () => {
     const jet = {
       airstripId: 'airstrip',
       flightState: 'takeoff',
@@ -35,7 +35,7 @@ describe('jetRenderScale', () => {
     expect(getJetRenderScale(jet)).toBe(1)
   })
 
-  it('keeps ordinary ground and flight states at stable prepared sizes', () => {
+  it('[U02218] keeps ordinary ground and flight states at stable prepared sizes', () => {
     expect(getJetRenderScale({
       airstripId: 'airstrip',
       flightState: 'grounded',
@@ -50,7 +50,7 @@ describe('jetRenderScale', () => {
     })).toBe(1)
   })
 
-  it('does not shrink jets unrelated to a carrier or airstrip', () => {
+  it('[U02219] does not shrink jets unrelated to a carrier or airstrip', () => {
     expect(getJetRenderScale({ altitude: 0, maxAltitude: 128 })).toBe(1)
   })
 })

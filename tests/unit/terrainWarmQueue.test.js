@@ -40,7 +40,7 @@ function makeMap(size = 64) {
 }
 
 describe('TerrainWarmQueue', () => {
-  it('keeps stable priority order and bounds backlog without sorting', () => {
+  it('[U04442] keeps stable priority order and bounds backlog without sorting', () => {
     const queue = new TerrainWarmQueue({ maxEntries: 3, maxJobAgeMs: 1000 })
     const sort = vi.spyOn(Array.prototype, 'sort')
     const initialSortCalls = sort.mock.calls.length
@@ -59,7 +59,7 @@ describe('TerrainWarmQueue', () => {
     sort.mockRestore()
   })
 
-  it('expires old work and rejects stale cancellation generations', () => {
+  it('[U04443] expires old work and rejects stale cancellation generations', () => {
     const queue = new TerrainWarmQueue({ maxEntries: 4, maxJobAgeMs: 50 })
     queue.enqueue(makeTask('expired', 3, 0, 2))
     queue.enqueue(makeTask('cancelled', 3, 100, 1))
@@ -72,7 +72,7 @@ describe('TerrainWarmQueue', () => {
 })
 
 describe('MapRenderer bounded terrain residency', () => {
-  it('refreshes neighbor discovery only for boundary, direction, or revision changes', () => {
+  it('[U04444] refreshes neighbor discovery only for boundary, direction, or revision changes', () => {
     const renderer = new MapRenderer(makeTextureManager())
     const mapGrid = makeMap()
     renderer.ensureCacheValidity(mapGrid, false)
@@ -102,7 +102,7 @@ describe('MapRenderer bounded terrain residency', () => {
     expect(queueChunk.mock.calls.length).toBeGreaterThan(initialDiscoveries)
   })
 
-  it('does not treat queued work as a resident pin during eviction', () => {
+  it('[U04445] does not treat queued work as a resident pin during eviction', () => {
     const renderer = new MapRenderer(makeTextureManager())
     renderer.maxCachedChunks = 1
     const first = renderer.getOrCreateChunk(0, 0, 0, 0, 16, 16)
@@ -118,7 +118,7 @@ describe('MapRenderer bounded terrain residency', () => {
     expect(renderer.chunkWarmQueue.get(first.key)).toBeDefined()
   })
 
-  it('enforces terrainResident and terrainStaging byte ownership', () => {
+  it('[U04446] enforces terrainResident and terrainStaging byte ownership', () => {
     const renderer = new MapRenderer(makeTextureManager())
     renderer.terrainByteBudget = createTerrainByteBudget({
       residentBytes: 100,

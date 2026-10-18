@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 
-test('optional city sheet produces whole destructible buildings and persistent debris', async({ page }) => {
+test('[E00021] optional city sheet produces whole destructible buildings and persistent debris', async({ page }) => {
   await page.goto('/')
   const result = await page.evaluate(async() => {
     const { TextureManager } = await import('/src/rendering/textureManager.js')

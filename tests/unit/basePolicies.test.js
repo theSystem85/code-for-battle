@@ -106,7 +106,7 @@ beforeEach(() => {
 })
 
 describe('build policy schema', () => {
-  it('accepts a build policy that uses money, power, inflow and counts', () => {
+  it('[U00333] accepts a build policy that uses money, power, inflow and counts', () => {
     const when = {
       type: 'and',
       of: [
@@ -124,7 +124,7 @@ describe('build policy schema', () => {
     expect(result.valid).toBe(true)
   })
 
-  it('keeps the unit-only conditions and actions out of build policies', () => {
+  it('[U00334] keeps the unit-only conditions and actions out of build policies', () => {
     expect(validatePolicy(buildPolicy('p', compare('hp', '<', 0.25), 'powerPlant')).valid).toBe(false)
     expect(validatePolicy(buildPolicy('p', { type: 'check', check: 'moving' }, 'powerPlant')).valid).toBe(false)
     expect(validatePolicy(buildPolicy('p', { type: 'enemyInRange' }, 'powerPlant')).valid).toBe(false)
@@ -133,7 +133,7 @@ describe('build policy schema', () => {
     expect(validatePolicy(unitAction).valid).toBe(false)
   })
 
-  it('keeps the base-only conditions and actions out of unit policies', () => {
+  it('[U00335] keeps the base-only conditions and actions out of unit policies', () => {
     const unit = createBlankPolicy('u')
     unit.states[0].transitions = [{ id: 'r1', kind: 'if', when: compare('moneyPerMinute', '>', 1), to: 'start' }]
     expect(validatePolicy(unit).valid).toBe(false)
@@ -142,21 +142,21 @@ describe('build policy schema', () => {
     expect(validatePolicy(build).valid).toBe(false)
   })
 
-  it('requires a build policy to be global and validates the building type', () => {
+  it('[U00336] requires a build policy to be global and validates the building type', () => {
     const perUnit = { ...buildPolicy('p', { type: 'always' }, 'powerPlant'), scope: 'perUnit' }
     expect(validatePolicy(perUnit).errors.map(e => e.code)).toContain('build_scope')
     expect(validatePolicy(buildPolicy('p', { type: 'always' }, 'banana')).valid).toBe(false)
     expect(validatePolicy(buildPolicy('p', { type: 'always' }, 'street')).valid).toBe(false)
   })
 
-  it('still holds a build policy to at most 7 states', () => {
+  it('[U00337] still holds a build policy to at most 7 states', () => {
     const policy = buildPolicy('p', { type: 'always' }, 'powerPlant')
     for (let i = 0; i < 6; i++) policy.states.push({ id: `s${i}`, name: `S${i}`, effect: null, transitions: [] })
     expect(policy.states).toHaveLength(8)
     expect(validatePolicy(policy).errors.map(e => e.code)).toContain('too_many_states')
   })
 
-  it('ships valid build templates and a blank build draft', () => {
+  it('[U00338] ships valid build templates and a blank build draft', () => {
     const templates = templatesForVariant('build')
     expect(templates.length).toBeGreaterThanOrEqual(3)
     templates.forEach(template => {
@@ -182,7 +182,7 @@ describe('build policy schema', () => {
 })
 
 describe('build policies in the store', () => {
-  it('never lets a build policy reach units or the unit radial', () => {
+  it('[U00339] never lets a build policy reach units or the unit radial', () => {
     const policy = buildPolicy('base-power', compare('power', '<', 0), 'powerPlant')
     expect(savePolicy(ME, policy).ok).toBe(true)
     expect(setPolicyEnabled(ME, 'base-power', true).ok).toBe(true)
@@ -193,7 +193,7 @@ describe('build policies in the store', () => {
     expect(tank.policyBindings).toBeUndefined()
   })
 
-  it('lists enabled build policies of one owner only', () => {
+  it('[U00340] lists enabled build policies of one owner only', () => {
     savePolicy(ME, buildPolicy('mine', { type: 'always' }, 'powerPlant'))
     savePolicy(FOE, buildPolicy('theirs', { type: 'always' }, 'powerPlant'))
     setPolicyEnabled(ME, 'mine', true)
@@ -203,7 +203,7 @@ describe('build policies in the store', () => {
     expect(setPolicyEnabled(ME, 'theirs', false)).toEqual({ ok: false, reason: 'not-owner' })
   })
 
-  it('opts in per player for their own base only, off by default', () => {
+  it('[U00341] opts in per player for their own base only, off by default', () => {
     expect(isBuildAutomationOptedIn(ME)).toBe(false)
     expect(setBuildAutomationOptIn(ME, true).ok).toBe(true)
     expect(isBuildAutomationOptedIn(ME)).toBe(true)
@@ -215,7 +215,7 @@ describe('build policies in the store', () => {
     expect(isBuildAutomationOptedIn(ME)).toBe(false)
   })
 
-  it('persists the opt-in with the policies', async() => {
+  it('[U00342] persists the opt-in with the policies', async() => {
     vi.resetModules()
     const first = await import('../../src/policies/policyStore.js')
     first.resetPolicyStore()
@@ -231,7 +231,7 @@ describe('build policies in the store', () => {
 })
 
 describe('base sensors', () => {
-  it('reads money, power and own counts by type', () => {
+  it('[U00343] reads money, power and own counts by type', () => {
     const { context } = makeContext({
       context: {
         money: 1234,
@@ -249,7 +249,7 @@ describe('base sensors', () => {
     expect(measureBaseLeaf(compare('unitCount', '>=', 0))).toBe(3)
   })
 
-  it('counts only enemies the player can see', () => {
+  it('[U00344] counts only enemies the player can see', () => {
     const hidden = unit(FOE, 'tank_v1', 30)
     const seen = unit(FOE, 'tank_v1', 8)
     const seenBuilding = building(FOE, 'teslaCoil', 9)
@@ -269,7 +269,7 @@ describe('base sensors', () => {
     expect(measureBaseLeaf(compare('enemyBuildingCount', '>=', 0, { buildingType: 'any' }))).toBe(1)
   })
 
-  it('does not count dead or embarked units', () => {
+  it('[U00345] does not count dead or embarked units', () => {
     const dead = { ...unit(FOE, 'tank_v1', 8), health: 0 }
     const embarked = { ...unit(FOE, 'tank_v1', 9), embarkedOnId: 'x' }
     const { context } = makeContext({ context: { units: [dead, embarked, unit(FOE, 'tank_v1', 10)] } })
@@ -277,7 +277,7 @@ describe('base sensors', () => {
     expect(measureBaseLeaf(compare('enemyUnitCount', '>=', 0))).toBe(1)
   })
 
-  it('measures money inflow per minute from the earnings counter, once there is history', () => {
+  it('[U00346] measures money inflow per minute from the earnings counter, once there is history', () => {
     resetBaseSensors()
     const { context } = makeContext()
     for (let t = 0; t <= 30000; t += 1000) {
@@ -287,7 +287,7 @@ describe('base sensors', () => {
     expect(measureBaseLeaf(compare('moneyPerMinute', '>=', 0))).toBeCloseTo(3000, 5)
   })
 
-  it('has no inflow reading before enough history exists', () => {
+  it('[U00347] has no inflow reading before enough history exists', () => {
     resetBaseSensors()
     const { context } = makeContext()
     beginBaseScope(context, ME, 0)
@@ -299,7 +299,7 @@ describe('base sensors', () => {
     expect(measureBaseLeaf(compare('moneyPerMinute', '>=', 0))).toBeCloseTo(1200, 5)
   })
 
-  it('only looks at the last minute of earnings', () => {
+  it('[U00348] only looks at the last minute of earnings', () => {
     resetBaseSensors()
     const { context } = makeContext()
     context.earned = 0
@@ -314,7 +314,7 @@ describe('base sensors', () => {
 })
 
 describe('build command API', () => {
-  it('queues a building through the adapter when the engine allows it', () => {
+  it('[U00349] queues a building through the adapter when the engine allows it', () => {
     const { context, fake } = makeContext()
     expect(getBuildRefusal('buildBuilding', { buildingType: 'powerPlant' }, context)).toBeNull()
     expect(executeBuildCommand('buildBuilding', { buildingType: 'powerPlant' }, context)).toEqual({ ok: true, reason: null })
@@ -328,7 +328,7 @@ describe('build command API', () => {
     ['the construction queue is busy', { busy: true }, {}],
     ['not enough money', {}, { money: 1999 }],
     ['no valid place', { place: null }, {}]
-  ])('refuses and queues nothing: %s', (text, build, context) => {
+  ])('[U00350] refuses and queues nothing: %s', (text, build, context) => {
     const { context: ctx, fake } = makeContext({ build, context })
     const result = executeBuildCommand('buildBuilding', { buildingType: 'powerPlant' }, ctx)
     expect(result.ok).toBe(false)
@@ -336,7 +336,7 @@ describe('build command API', () => {
     expect(fake.state.queued).toHaveLength(0)
   })
 
-  it('refuses unknown commands and buildings a policy may not order', () => {
+  it('[U00351] refuses unknown commands and buildings a policy may not order', () => {
     const { context } = makeContext()
     expect(executeBuildCommand('buildSpaceport', {}, context).ok).toBe(false)
     expect(executeBuildCommand('buildBuilding', { buildingType: 'street' }, context).ok).toBe(false)
@@ -350,7 +350,7 @@ describe('base policy engine', () => {
     expect(setPolicyEnabled(owner, policy.id, true).ok).toBe(true)
   }
 
-  it('does nothing until the player opts in', () => {
+  it('[U00352] does nothing until the player opts in', () => {
     enable(buildPolicy('p', { type: 'always' }, 'powerPlant'))
     const { context, fake } = makeContext()
     updateBasePolicies(context, 0)
@@ -360,7 +360,7 @@ describe('base policy engine', () => {
     expect(fake.state.queued).toHaveLength(1)
   })
 
-  it('does nothing for a policy that is saved but not enabled', () => {
+  it('[U00353] does nothing for a policy that is saved but not enabled', () => {
     savePolicy(ME, buildPolicy('p', { type: 'always' }, 'powerPlant'))
     setBuildAutomationOptIn(ME, true)
     const { context, fake } = makeContext()
@@ -368,7 +368,7 @@ describe('base policy engine', () => {
     expect(fake.state.queued).toHaveLength(0)
   })
 
-  it('never runs another player\'s build policy on this base', () => {
+  it('[U00354] never runs another player\'s build policy on this base', () => {
     enable(buildPolicy('theirs', { type: 'always' }, 'powerPlant'), FOE)
     setBuildAutomationOptIn(ME, true)
     setBuildAutomationOptIn(FOE, true)
@@ -377,7 +377,7 @@ describe('base policy engine', () => {
     expect(fake.state.queued).toHaveLength(0)
   })
 
-  it('builds while a condition holds and stops when it ends', () => {
+  it('[U00355] builds while a condition holds and stops when it ends', () => {
     enable(buildPolicy('power', compare('power', '<', 0), 'powerPlant'))
     setBuildAutomationOptIn(ME, true)
     const { context, fake } = makeContext({ context: { power: 20 } })
@@ -397,7 +397,7 @@ describe('base policy engine', () => {
     expect(fake.state.queued).toHaveLength(2)
   })
 
-  it('evaluates at most once per interval', () => {
+  it('[U00356] evaluates at most once per interval', () => {
     enable(buildPolicy('p', { type: 'always' }, 'powerPlant'))
     setBuildAutomationOptIn(ME, true)
     const { context } = makeContext()
@@ -408,7 +408,7 @@ describe('base policy engine', () => {
     expect(money.mock.calls.length).toBe(calls)
   })
 
-  it('gets refused and reports why instead of spending money it does not have', () => {
+  it('[U00357] gets refused and reports why instead of spending money it does not have', () => {
     enable(buildPolicy('p', { type: 'always' }, 'powerPlant', { kind: 'if' }))
     setBuildAutomationOptIn(ME, true)
     const { context, fake } = makeContext({ context: { money: 100 } })
@@ -420,7 +420,7 @@ describe('base policy engine', () => {
     expect(describeBasePolicyStatus(getBasePolicyStatus('p'))).toContain('not enough money')
   })
 
-  it('retries a refused one-shot order until the engine accepts it', () => {
+  it('[U00358] retries a refused one-shot order until the engine accepts it', () => {
     enable(buildPolicy('p', { type: 'always' }, 'powerPlant', { kind: 'if', execution: 'oneTime' }))
     setBuildAutomationOptIn(ME, true)
     const { context, fake } = makeContext({ context: { money: 100 } })
@@ -438,7 +438,7 @@ describe('base policy engine', () => {
     expect(fake.state.queued).toHaveLength(1)
   })
 
-  it('waits for an after delay before building', () => {
+  it('[U00359] waits for an after delay before building', () => {
     enable(buildPolicy('p', { type: 'always' }, 'radarStation', { kind: 'after', delaySeconds: 5, execution: 'oneTime' }))
     setBuildAutomationOptIn(ME, true)
     const { context, fake } = makeContext({ build: { busy: false } })
@@ -450,7 +450,7 @@ describe('base policy engine', () => {
     expect(fake.state.queued.map(q => q.type)).toEqual(['radarStation'])
   })
 
-  it('combines money, counts and visible enemies in one rule', () => {
+  it('[U00360] combines money, counts and visible enemies in one rule', () => {
     const when = {
       type: 'and',
       of: [
@@ -468,7 +468,7 @@ describe('base policy engine', () => {
     expect(fake.state.queued.map(q => q.type)).toEqual(['turretGunV1'])
   })
 
-  it('resets its state when the policy is turned off and on again', () => {
+  it('[U00361] resets its state when the policy is turned off and on again', () => {
     enable(buildPolicy('p', { type: 'always' }, 'powerPlant', { kind: 'if', execution: 'oneTime' }))
     setBuildAutomationOptIn(ME, true)
     const { context, fake } = makeContext()
@@ -483,7 +483,7 @@ describe('base policy engine', () => {
     expect(fake.state.queued).toHaveLength(2)
   })
 
-  it('starts over when simulation time goes backwards (new game)', () => {
+  it('[U00362] starts over when simulation time goes backwards (new game)', () => {
     enable(buildPolicy('p', { type: 'always' }, 'powerPlant', { kind: 'if', execution: 'oneTime' }))
     setBuildAutomationOptIn(ME, true)
     const { context, fake } = makeContext()
@@ -493,7 +493,7 @@ describe('base policy engine', () => {
     expect(fake.state.queued).toHaveLength(2)
   })
 
-  it('leaves the game running: it never touches the pause flag', async() => {
+  it('[U00363] leaves the game running: it never touches the pause flag', async() => {
     const { gameState } = await import('../../src/gameState.js')
     gameState.gamePaused = false
     enable(buildPolicy('p', { type: 'always' }, 'powerPlant'))
@@ -512,7 +512,7 @@ describe('compiled production revision and session boundaries', () => {
     setBuildAutomationOptIn(ME, true)
     return makeContext()
   }
-  it('does not reset an AFTER timer or recompile on metadata rename', () => {
+  it('[U00364] does not reset an AFTER timer or recompile on metadata rename', () => {
     const policy = buildPolicy('timer', { type: 'always' }, 'powerPlant', { kind: 'after', delaySeconds: 2 })
     const { context, fake } = setup(policy)
     const compiled = getCompiledPolicyProgram('timer')
@@ -522,7 +522,7 @@ describe('compiled production revision and session boundaries', () => {
     updateBasePolicies(context, 2000)
     expect(fake.state.queued).toHaveLength(1)
   })
-  it('restores a pending simulation-time delay and refuses stale revision/host snapshots', () => {
+  it('[U00365] restores a pending simulation-time delay and refuses stale revision/host snapshots', () => {
     const policy = buildPolicy('timer', { type: 'always' }, 'powerPlant', { kind: 'after', delaySeconds: 2 })
     const { context, fake } = setup(policy)
     updateBasePolicies(context, 0)

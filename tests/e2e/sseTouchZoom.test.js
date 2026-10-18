@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 
 test.use({ hasTouch: true })
 
-test('sheet canvases pan, pinch and synchronize sidebar zoom', async({ page }) => {
+test('[E00119] sheet canvases pan, pinch and synchronize sidebar zoom', async({ page }) => {
   await page.goto('/sse')
   await page.waitForFunction(() => Boolean(window.__SSE__))
   await page.evaluate(async() => {

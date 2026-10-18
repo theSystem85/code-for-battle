@@ -10,7 +10,7 @@ import {
 } from '../../src/rendering/renderingUtils.js'
 
 describe('rendering viewport cache', () => {
-  it('reuses published logical dimensions without frame-path layout reads or result allocations', () => {
+  it('[U03752] reuses published logical dimensions without frame-path layout reads or result allocations', () => {
     const canvas = document.createElement('canvas')
     const layoutRead = vi.spyOn(canvas, 'getBoundingClientRect')
     canvas.width = 600
@@ -38,7 +38,7 @@ describe('rendering viewport cache', () => {
     expect(layoutRead).not.toHaveBeenCalled()
   })
 
-  it('updates the reusable FrameViewport identity when world coordinates change', () => {
+  it('[U03753] updates the reusable FrameViewport identity when world coordinates change', () => {
     const canvas = document.createElement('canvas')
     const record = publishCanvasViewport(canvas, {
       logicalWidth: 200,
@@ -62,7 +62,7 @@ describe('rendering viewport cache', () => {
     expect(updateCanvasWorldViewport(canvas, 64, 96)).toBe(false)
   })
 
-  it('uses style and backing dimensions for unmanaged canvases without a DOMRect read', () => {
+  it('[U03754] uses style and backing dimensions for unmanaged canvases without a DOMRect read', () => {
     const canvas = document.createElement('canvas')
     canvas.style.width = '160px'
     canvas.style.height = '90px'

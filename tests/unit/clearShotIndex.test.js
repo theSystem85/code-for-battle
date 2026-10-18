@@ -41,7 +41,7 @@ describe('owner unit index', () => {
     resetOwnerUnitIndexForTests()
   })
 
-  it('checks live center tiles after same-pass collision movement and never self-blocks', () => {
+  it('[U00872] checks live center tiles after same-pass collision movement and never self-blocks', () => {
     const mover = { id: 'self', x: 15.9, y: 0, type: 'tank', owner: 'player1', health: 100 }
     const other = { id: 'other', x: 16, y: 0, type: 'tank', owner: 'player1', health: 100 }
     rebuildOwnerUnitIndex([mover, other])
@@ -54,7 +54,7 @@ describe('owner unit index', () => {
     expect(hasFriendlyUnitOnTile(mover, 2, 0, [])).toBe(false)
   })
 
-  it('handles missing tile metadata from live centers and rejects non-finite line endpoints', () => {
+  it('[U00873] handles missing tile metadata from live centers and rejects non-finite line endpoints', () => {
     const shooter = { x: 0, y: 0, owner: 'player1' }
     const target = { tileX: 6, x: 6 * TILE_SIZE, y: 6 * TILE_SIZE, owner: 'player2' }
     expect(hasClearShot(shooter, target, [shooter, target], openMap())).toBe(true)
@@ -62,7 +62,7 @@ describe('owner unit index', () => {
     expect(hasClearShot({ ...shooter, x: Infinity }, target, [], openMap())).toBe(false)
   })
 
-  it('excludes the actual mover when testing a hypothetical firing position', () => {
+  it('[U00874] excludes the actual mover when testing a hypothetical firing position', () => {
     const unit = { id: 'mover', x: 2 * TILE_SIZE, y: 0, owner: 'player1' }
     const proxy = { x: TILE_SIZE, y: 0, owner: unit.owner }
     const target = { tileX: 8, tileY: 0, x: 8 * TILE_SIZE, y: 0, owner: 'player2' }
@@ -73,11 +73,11 @@ describe('owner unit index', () => {
     expect(hasClearShot(proxy, target, [unit, { x: 4 * TILE_SIZE, y: 0, owner: unit.owner }], map, unit)).toBe(false)
   })
 
-  it('stays inactive until a movement or combat pass rebuilds it', () => {
+  it('[U00875] stays inactive until a movement or combat pass rebuilds it', () => {
     expect(ownerUnitList('player1')).toBeNull()
   })
 
-  it('groups live unit references by owner and reuses the lists', () => {
+  it('[U00876] groups live unit references by owner and reuses the lists', () => {
     const friendly = { id: 'a', owner: 'player1', x: 0, y: 0 }
     const enemy = { id: 'b', owner: 'player2', x: 32, y: 0 }
     rebuildOwnerUnitIndex([friendly, enemy, null, { x: 0, y: 0 }])
@@ -95,7 +95,7 @@ describe('owner unit index', () => {
     expect(ownerUnitList('player2')).toEqual([enemy])
   })
 
-  it('blocks a shot on the indexed friendlies even when the passed array omits them', () => {
+  it('[U00877] blocks a shot on the indexed friendlies even when the passed array omits them', () => {
     const shooter = { x: 0, y: 0, owner: 'player1' }
     const target = { tileX: 6, x: 6 * TILE_SIZE, y: 6 * TILE_SIZE, owner: 'player2' }
     const friendly = { x: 3 * TILE_SIZE, y: 3 * TILE_SIZE, owner: 'player1' }
@@ -111,7 +111,7 @@ describe('owner unit index', () => {
     expect(hasClearShot(shooter, target, [shooter, target], mapGrid)).toBe(true)
   })
 
-  it('treats player and player1 as the same side for tile occupancy', () => {
+  it('[U00878] treats player and player1 as the same side for tile occupancy', () => {
     const unit = { id: 'mover', owner: 'player', x: 0, y: 0, health: 100, type: 'tank' }
     const alias = {
       id: 'alias',
@@ -139,7 +139,7 @@ describe('owner unit index', () => {
     expect(hasFriendlyUnitOnTile(unit, 4, 4, [unit, alias, enemy])).toBe(false)
   })
 
-  it('searches for a sidestep a few times a second while the shot stays blocked', () => {
+  it('[U00879] searches for a sidestep a few times a second while the shot stays blocked', () => {
     const previousTime = gameState.simulationTime
     const previousOccupancy = gameState.occupancyMap
     gameState.occupancyMap = Array.from({ length: 12 }, () => Array.from({ length: 12 }, () => 0))

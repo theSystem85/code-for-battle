@@ -12,14 +12,14 @@ function readRepoFile(relativePath) {
 }
 
 describe('in-game gamepad player overlay', () => {
-  it('hides the overlay when no pad is connected', () => {
+  it('[U01811] hides the overlay when no pad is connected', () => {
     expect(gamepadIndicatorVisibility([false, false])).toEqual({
       overlay: false,
       chips: [false, false]
     })
   })
 
-  it('treats null gamepad slots and a missing list as disconnected', () => {
+  it('[U01812] treats null gamepad slots and a missing list as disconnected', () => {
     expect(gamepadIndicatorVisibility([null, null])).toEqual({
       overlay: false,
       chips: [false, false]
@@ -42,7 +42,7 @@ describe('in-game gamepad player overlay', () => {
     })
   })
 
-  it('shows only the chip for the connected player, including player 2 alone', () => {
+  it('[U01813] shows only the chip for the connected player, including player 2 alone', () => {
     expect(gamepadIndicatorVisibility([false, true])).toEqual({
       overlay: true,
       chips: [false, true]
@@ -57,7 +57,7 @@ describe('in-game gamepad player overlay', () => {
     })
   })
 
-  it('shows the remote chip only for a connected player that is in remote control', () => {
+  it('[U01814] shows the remote chip only for a connected player that is in remote control', () => {
     expect(gamepadRemoteIndicatorMode([false, false], [true, true])).toBe(0)
     expect(gamepadRemoteIndicatorMode([null, null], [true, false])).toBe(0)
     expect(gamepadRemoteIndicatorMode(null, [true, true])).toBe(0)
@@ -68,27 +68,27 @@ describe('in-game gamepad player overlay', () => {
     expect(gamepadRemoteIndicatorMode([{ connected: false }, { connected: true }], [true, true])).toBe(2)
   })
 
-  it('shows only the P1 chip for one connected pad', () => {
+  it('[U01815] shows only the P1 chip for one connected pad', () => {
     expect(gamepadIndicatorVisibility([true, false])).toEqual({
       overlay: true,
       chips: [true, false]
     })
   })
 
-  it('shows P1 and P2 when two pads are connected', () => {
+  it('[U01816] shows P1 and P2 when two pads are connected', () => {
     expect(gamepadIndicatorVisibility([true, true])).toEqual({
       overlay: true,
       chips: [true, true]
     })
   })
 
-  it('hides a chip when that player disconnects', () => {
+  it('[U01817] hides a chip when that player disconnects', () => {
     expect(gamepadIndicatorVisibility([true, true]).chips).toEqual([true, true])
     expect(gamepadIndicatorVisibility([true, false]).chips).toEqual([true, false])
     expect(gamepadIndicatorVisibility([false, false]).overlay).toBe(false)
   })
 
-  it('sets hidden on the container and on chips for players that are not connected', () => {
+  it('[U01818] sets hidden on the container and on chips for players that are not connected', () => {
     document.body.innerHTML = `
       <div id="gamepadIndicators" class="gamepad-indicators">
         <span id="gamepadIndicatorP1" class="gamepad-indicator">P1</span>
@@ -130,7 +130,7 @@ describe('in-game gamepad player overlay', () => {
 })
 
 describe('gamepad chrome stays fully hidden', () => {
-  it('forces display:none on hidden indicator, remote, and cursor nodes', () => {
+  it('[U01819] forces display:none on hidden indicator, remote, and cursor nodes', () => {
     const css = readRepoFile('styles/overlays.css')
     const hiddenRule = css.match(/\.gamepad-indicators\[hidden\][\s\S]*?\.gamepad-cursor\[hidden\]\s*\{[^}]*\}/)
     expect(hiddenRule).not.toBeNull()
@@ -140,7 +140,7 @@ describe('gamepad chrome stays fully hidden', () => {
     expect(css).not.toMatch(/\.gamepad-(?:indicators|indicator|remote|cursor)::(?:before|after)/)
   })
 
-  it('ships the in-game chrome hidden until a pad connects', () => {
+  it('[U01820] ships the in-game chrome hidden until a pad connects', () => {
     const html = readRepoFile('index.html')
     for (const id of ['gamepadIndicators', 'gamepadIndicatorP1', 'gamepadIndicatorP2', 'gamepadRemoteIndicator', 'gamepadCursor']) {
       const tag = html.match(new RegExp(`<[^>]*id="${id}"[^>]*>`))

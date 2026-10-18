@@ -115,7 +115,7 @@ describe('Building System', () => {
   })
 
   describe('Building Creation', () => {
-    it('should create a building with correct properties', () => {
+    it('[U00593] should create a building with correct properties', () => {
       const building = createBuilding('powerPlant', 10, 10)
 
       expect(building).not.toBeNull()
@@ -126,14 +126,14 @@ describe('Building System', () => {
       expect(building.height).toBe(buildingData.powerPlant.height)
     })
 
-    it('should set health to building data default', () => {
+    it('[U00594] should set health to building data default', () => {
       const building = createBuilding('powerPlant', 10, 10)
 
       expect(building.health).toBe(buildingData.powerPlant.health)
       expect(building.maxHealth).toBe(buildingData.powerPlant.health)
     })
 
-    it('should set power value from building data', () => {
+    it('[U00595] should set power value from building data', () => {
       const building = createBuilding('powerPlant', 10, 10)
       expect(building.power).toBe(buildingData.powerPlant.power)
 
@@ -141,7 +141,7 @@ describe('Building System', () => {
       expect(refinery.power).toBe(buildingData.oreRefinery.power)
     })
 
-    it('should generate unique ID for each building', () => {
+    it('[U00596] should generate unique ID for each building', () => {
       gameRandom.mockReturnValueOnce(0.1).mockReturnValueOnce(0.2)
       const building1 = createBuilding('powerPlant', 10, 10)
       const building2 = createBuilding('powerPlant', 10, 10)
@@ -151,22 +151,22 @@ describe('Building System', () => {
       expect(building1.id).not.toBe(building2.id)
     })
 
-    it('should set owner to neutral by default', () => {
+    it('[U00597] should set owner to neutral by default', () => {
       const building = createBuilding('powerPlant', 10, 10)
       expect(building.owner).toBe('neutral')
     })
 
-    it('should mark building as isBuilding', () => {
+    it('[U00598] should mark building as isBuilding', () => {
       const building = createBuilding('powerPlant', 10, 10)
       expect(building.isBuilding).toBe(true)
     })
 
-    it('should return null for unknown building type', () => {
+    it('[U00599] should return null for unknown building type', () => {
       const building = createBuilding('unknownBuildingType', 10, 10)
       expect(building).toBeNull()
     })
 
-    it('should set constructionStartTime on creation', () => {
+    it('[U00600] should set constructionStartTime on creation', () => {
       const before = performance.now()
       const building = createBuilding('powerPlant', 10, 10)
       const after = performance.now()
@@ -175,27 +175,27 @@ describe('Building System', () => {
       expect(building.constructionStartTime).toBeLessThanOrEqual(after)
     })
 
-    it('should initialize constructionFinished to false', () => {
+    it('[U00601] should initialize constructionFinished to false', () => {
       const building = createBuilding('powerPlant', 10, 10)
       expect(building.constructionFinished).toBe(false)
     })
 
-    it('should initialize helipad with landedUnitId property', () => {
+    it('[U00602] should initialize helipad with landedUnitId property', () => {
       const helipad = createBuilding('helipad', 10, 10)
       expect(helipad.landedUnitId).toBeNull()
     })
 
-    it('should initialize vehicle factory with rallyPoint', () => {
+    it('[U00603] should initialize vehicle factory with rallyPoint', () => {
       const factory = createBuilding('vehicleFactory', 10, 10)
       expect(factory.rallyPoint).toBeNull()
     })
 
-    it('should initialize vehicle workshop with rallyPoint', () => {
+    it('[U00604] should initialize vehicle workshop with rallyPoint', () => {
       const workshop = createBuilding('vehicleWorkshop', 10, 10)
       expect(workshop.rallyPoint).toBeNull()
     })
 
-    it('should initialize turret with combat properties', () => {
+    it('[U00605] should initialize turret with combat properties', () => {
       const turret = createBuilding('turretGunV1', 10, 10)
 
       expect(turret.fireRange).toBeDefined()
@@ -206,7 +206,7 @@ describe('Building System', () => {
       expect(turret.holdFire).toBe(false)
     })
 
-    it('should initialize tesla coil with special properties', () => {
+    it('[U00606] should initialize tesla coil with special properties', () => {
       const tesla = createBuilding('teslaCoil', 10, 10)
 
       expect(tesla.isTeslaCoil).toBe(true)
@@ -215,14 +215,14 @@ describe('Building System', () => {
       expect(tesla.teslaFireStartTime).toBe(0)
     })
 
-    it('should initialize helipad with fuel properties', () => {
+    it('[U00607] should initialize helipad with fuel properties', () => {
       const helipad = createBuilding('helipad', 10, 10)
 
       expect(helipad.maxFuel).toBeDefined()
       expect(helipad.fuel).toBe(helipad.maxFuel)
     })
 
-    it('should initialize helipad with ammo properties', () => {
+    it('[U00608] should initialize helipad with ammo properties', () => {
       const helipad = createBuilding('helipad', 10, 10)
 
       expect(helipad.maxAmmo).toBeDefined()
@@ -231,7 +231,7 @@ describe('Building System', () => {
   })
 
   describe('Building Placement', () => {
-    it('should mark tiles as occupied when placing building', () => {
+    it('[U00609] should mark tiles as occupied when placing building', () => {
       const building = createBuilding('powerPlant', 10, 10)
       building.owner = 'player'
 
@@ -244,7 +244,7 @@ describe('Building System', () => {
       }
     })
 
-    it('should update occupancy map when placing building', () => {
+    it('[U00610] should update occupancy map when placing building', () => {
       const building = createBuilding('powerPlant', 10, 10)
       building.owner = 'player'
 
@@ -257,7 +257,7 @@ describe('Building System', () => {
       }
     })
 
-    it('should save original tile types before placement', () => {
+    it('[U00611] should save original tile types before placement', () => {
       mapGrid[10][10].type = 'grass'
       mapGrid[10][11].type = 'sand'
 
@@ -271,7 +271,7 @@ describe('Building System', () => {
       expect(building.originalTiles[0][1]).toBe('sand')
     })
 
-    it('should remove ore from tiles when placing building', () => {
+    it('[U00612] should remove ore from tiles when placing building', () => {
       mapGrid[10][10].ore = true
       mapGrid[10][10].type = 'ore'
 
@@ -283,7 +283,7 @@ describe('Building System', () => {
       expect(mapGrid[10][10].ore).toBe(false)
     })
 
-    it('should add noBuild zones for vehicle factory', () => {
+    it('[U00613] should add noBuild zones for vehicle factory', () => {
       const factory = createBuilding('vehicleFactory', 10, 10)
       factory.owner = 'player'
 
@@ -296,7 +296,7 @@ describe('Building System', () => {
       }
     })
 
-    it('should add noBuild zones for ore refinery', () => {
+    it('[U00614] should add noBuild zones for ore refinery', () => {
       const refinery = createBuilding('oreRefinery', 10, 10)
       refinery.owner = 'player'
 
@@ -309,7 +309,7 @@ describe('Building System', () => {
       }
     })
 
-    it('should add extra noBuild zones for vehicle workshop', () => {
+    it('[U00615] should add extra noBuild zones for vehicle workshop', () => {
       const workshop = createBuilding('vehicleWorkshop', 10, 10)
       workshop.owner = 'player'
 
@@ -324,7 +324,7 @@ describe('Building System', () => {
   })
 
   describe('Building Removal', () => {
-    it('should clear building reference from tiles', () => {
+    it('[U00616] should clear building reference from tiles', () => {
       const building = createBuilding('powerPlant', 10, 10)
       building.owner = 'player'
 
@@ -338,7 +338,7 @@ describe('Building System', () => {
       }
     })
 
-    it('should restore original tile types', () => {
+    it('[U00617] should restore original tile types', () => {
       mapGrid[10][10].type = 'grass'
       mapGrid[10][11].type = 'sand'
 
@@ -352,7 +352,7 @@ describe('Building System', () => {
       expect(mapGrid[10][11].type).toBe('sand')
     })
 
-    it('should decrement occupancy map when clearing building', () => {
+    it('[U00618] should decrement occupancy map when clearing building', () => {
       const building = createBuilding('powerPlant', 10, 10)
       building.owner = 'player'
 
@@ -366,7 +366,7 @@ describe('Building System', () => {
       }
     })
 
-    it('should remove noBuild zones for vehicle factory', () => {
+    it('[U00619] should remove noBuild zones for vehicle factory', () => {
       const factory = createBuilding('vehicleFactory', 10, 10)
       factory.owner = 'player'
 
@@ -379,7 +379,7 @@ describe('Building System', () => {
       }
     })
 
-    it('should default to land type if no original tiles saved', () => {
+    it('[U00620] should default to land type if no original tiles saved', () => {
       const building = createBuilding('powerPlant', 10, 10)
       building.owner = 'player'
       building.originalTiles = null // Simulate missing original tiles
@@ -397,21 +397,21 @@ describe('Building System', () => {
   })
 
   describe('Building Damage', () => {
-    it('should track current health', () => {
+    it('[U00621] should track current health', () => {
       const building = createBuilding('powerPlant', 10, 10)
 
       building.health -= 50
       expect(building.health).toBe(buildingData.powerPlant.health - 50)
     })
 
-    it('should allow health to go negative', () => {
+    it('[U00622] should allow health to go negative', () => {
       const building = createBuilding('powerPlant', 10, 10)
 
       building.health = -10
       expect(building.health).toBe(-10)
     })
 
-    it('should health not exceed maxHealth after repair', () => {
+    it('[U00623] should health not exceed maxHealth after repair', () => {
       const building = createBuilding('powerPlant', 10, 10)
 
       building.health = building.maxHealth + 100
@@ -421,7 +421,7 @@ describe('Building System', () => {
   })
 
   describe('Repair Cost Calculation', () => {
-    it('should return 0 for undamaged building', () => {
+    it('[U00624] should return 0 for undamaged building', () => {
       const building = {
         type: 'powerPlant',
         health: buildingData.powerPlant.health,
@@ -432,7 +432,7 @@ describe('Building System', () => {
       expect(cost).toBe(0)
     })
 
-    it('should calculate cost based on damage percentage', () => {
+    it('[U00625] should calculate cost based on damage percentage', () => {
       const building = {
         type: 'powerPlant',
         health: buildingData.powerPlant.health * 0.5,
@@ -444,7 +444,7 @@ describe('Building System', () => {
       expect(cost).toBe(expected)
     })
 
-    it('should calculate max cost for completely destroyed building', () => {
+    it('[U00626] should calculate max cost for completely destroyed building', () => {
       const building = {
         type: 'powerPlant',
         health: 0,
@@ -456,7 +456,7 @@ describe('Building System', () => {
       expect(cost).toBe(expected)
     })
 
-    it('should cost more to repair expensive buildings', () => {
+    it('[U00627] should cost more to repair expensive buildings', () => {
       const cheapBuilding = {
         type: 'powerPlant',
         health: buildingData.powerPlant.health * 0.5,
@@ -474,7 +474,7 @@ describe('Building System', () => {
       expect(expensiveCost).toBeGreaterThan(cheapCost)
     })
 
-    it('should round up repair cost', () => {
+    it('[U00628] should round up repair cost', () => {
       const building = {
         type: 'powerPlant',
         health: buildingData.powerPlant.health * 0.99,
@@ -494,7 +494,7 @@ describe('Building System', () => {
       gameState.buildingsUnderRepair = []
     })
 
-    it('should fail to repair undamaged building', () => {
+    it('[U00629] should fail to repair undamaged building', () => {
       const building = createBuilding('powerPlant', 10, 10)
       building.owner = 'player'
 
@@ -504,7 +504,7 @@ describe('Building System', () => {
       expect(result.message).toContain('full health')
     })
 
-    it('should fail to repair concrete walls', () => {
+    it('[U00630] should fail to repair concrete walls', () => {
       const wall = {
         type: 'concreteWall',
         health: 50,
@@ -518,7 +518,7 @@ describe('Building System', () => {
       expect(result.message).toContain('cannot be repaired')
     })
 
-    it('should add building to repair queue on success', () => {
+    it('[U00631] should add building to repair queue on success', () => {
       const building = createBuilding('powerPlant', 10, 10)
       building.owner = 'player'
       building.health = building.maxHealth * 0.5
@@ -529,7 +529,7 @@ describe('Building System', () => {
       expect(gameState.buildingsUnderRepair[0].building).toBe(building)
     })
 
-    it('should calculate correct repair info properties', () => {
+    it('[U00632] should calculate correct repair info properties', () => {
       const building = createBuilding('powerPlant', 10, 10)
       building.owner = 'player'
       building.health = building.maxHealth * 0.5
@@ -544,7 +544,7 @@ describe('Building System', () => {
       expect(repairInfo.costPaid).toBe(0)
     })
 
-    it('should set repair duration to 2x build time', () => {
+    it('[U00633] should set repair duration to 2x build time', () => {
       const building = createBuilding('powerPlant', 10, 10)
       building.owner = 'player'
       building.health = building.maxHealth * 0.5
@@ -559,7 +559,7 @@ describe('Building System', () => {
       expect(repairInfo.duration).toBe(expectedRepairDuration)
     })
 
-    it('should return repair cost in result', () => {
+    it('[U00634] should return repair cost in result', () => {
       const building = createBuilding('powerPlant', 10, 10)
       building.owner = 'player'
       building.health = building.maxHealth * 0.5
@@ -572,7 +572,7 @@ describe('Building System', () => {
   })
 
   describe('Test Utilities Integration', () => {
-    it('should create factory with correct properties', () => {
+    it('[U00635] should create factory with correct properties', () => {
       const factory = createTestFactory(10, 10, 'player', mapGrid)
 
       expect(factory.type).toBe('constructionYard')
@@ -581,7 +581,7 @@ describe('Building System', () => {
       expect(factory.y).toBe(10)
     })
 
-    it('should mark map grid when creating factory', () => {
+    it('[U00636] should mark map grid when creating factory', () => {
       const factory = createTestFactory(10, 10, 'player', mapGrid)
 
       for (let dy = 0; dy < factory.height; dy++) {
@@ -591,7 +591,7 @@ describe('Building System', () => {
       }
     })
 
-    it('should create building with correct properties', () => {
+    it('[U00637] should create building with correct properties', () => {
       const building = createTestBuilding('powerPlant', 15, 15, 'player', mapGrid)
 
       expect(building.type).toBe('powerPlant')
@@ -600,7 +600,7 @@ describe('Building System', () => {
       expect(building.y).toBe(15)
     })
 
-    it('should throw error for unknown building type', () => {
+    it('[U00638] should throw error for unknown building type', () => {
       expect(() => {
         createTestBuilding('unknownType', 15, 15, 'player', mapGrid)
       }).toThrow('Unknown building type')
@@ -608,38 +608,38 @@ describe('Building System', () => {
   })
 
   describe('Building Data Verification', () => {
-    it('should have correct data for power plant', () => {
+    it('[U00639] should have correct data for power plant', () => {
       expect(buildingData.powerPlant).toBeDefined()
       expect(buildingData.powerPlant.width).toBeGreaterThan(0)
       expect(buildingData.powerPlant.height).toBeGreaterThan(0)
       expect(buildingData.powerPlant.power).toBeGreaterThan(0) // Produces power
     })
 
-    it('should have correct data for ore refinery', () => {
+    it('[U00640] should have correct data for ore refinery', () => {
       expect(buildingData.oreRefinery).toBeDefined()
       expect(buildingData.oreRefinery.power).toBeLessThan(0) // Consumes power
     })
 
-    it('should have correct data for construction yard', () => {
+    it('[U00641] should have correct data for construction yard', () => {
       expect(buildingData.constructionYard).toBeDefined()
       expect(buildingData.constructionYard.power).toBe(50)
     })
 
-    it('should have cost for all buildings', () => {
+    it('[U00642] should have cost for all buildings', () => {
       Object.keys(buildingData).forEach(type => {
         expect(buildingData[type].cost).toBeDefined()
         expect(buildingData[type].cost).toBeGreaterThanOrEqual(0)
       })
     })
 
-    it('should have health for all buildings', () => {
+    it('[U00643] should have health for all buildings', () => {
       Object.keys(buildingData).forEach(type => {
         expect(buildingData[type].health).toBeDefined()
         expect(buildingData[type].health).toBeGreaterThan(0)
       })
     })
 
-    it('should have dimensions for all buildings', () => {
+    it('[U00644] should have dimensions for all buildings', () => {
       Object.keys(buildingData).forEach(type => {
         expect(buildingData[type].width).toBeGreaterThan(0)
         expect(buildingData[type].height).toBeGreaterThan(0)
@@ -648,7 +648,7 @@ describe('Building System', () => {
   })
 
   describe('Edge Cases', () => {
-    it('should handle building at map edge', () => {
+    it('[U00645] should handle building at map edge', () => {
       const building = createBuilding('powerPlant', 0, 0)
       building.owner = 'player'
 
@@ -656,7 +656,7 @@ describe('Building System', () => {
       expect(() => placeBuilding(building, mapGrid)).not.toThrow()
     })
 
-    it('should handle clearing building at map edge', () => {
+    it('[U00646] should handle clearing building at map edge', () => {
       const building = createBuilding('powerPlant', 0, 0)
       building.owner = 'player'
 
@@ -666,7 +666,7 @@ describe('Building System', () => {
       expect(() => clearBuildingFromMapGrid(building, mapGrid, gameState.occupancyMap)).not.toThrow()
     })
 
-    it('should handle multiple buildings placed and cleared', () => {
+    it('[U00647] should handle multiple buildings placed and cleared', () => {
       const building1 = createBuilding('powerPlant', 5, 5)
       const building2 = createBuilding('powerPlant', 20, 20)
       building1.owner = 'player'
@@ -683,7 +683,7 @@ describe('Building System', () => {
       expect(mapGrid[5][5].building).toBeUndefined()
     })
 
-    it('should handle building with missing occupancy map', () => {
+    it('[U00648] should handle building with missing occupancy map', () => {
       const building = createBuilding('powerPlant', 10, 10)
       building.owner = 'player'
 
@@ -727,7 +727,7 @@ describe('Building System', () => {
       vi.restoreAllMocks()
     })
 
-    it('removes sold buildings and refreshes power + UI state', () => {
+    it('[U00649] removes sold buildings and refreshes power + UI state', () => {
       const now = 10000
       gameState.simulationTime = now
       const powerSpy = vi.spyOn(buildingsModule, 'updatePowerSupply')
@@ -753,7 +753,7 @@ describe('Building System', () => {
       expect(checkGameEndConditions).toHaveBeenCalledWith(factories, gameState)
     })
 
-    it('removes destroyed enemy buildings and triggers gas station explosion caps', () => {
+    it('[U00650] removes destroyed enemy buildings and triggers gas station explosion caps', () => {
       const now = 20000
       vi.spyOn(performance, 'now').mockReturnValue(now)
 
@@ -789,7 +789,7 @@ describe('Building System', () => {
       )
     })
 
-    it('spawns ammunition factory scatter particles on destruction', () => {
+    it('[U00651] spawns ammunition factory scatter particles on destruction', () => {
       const now = 30000
       vi.spyOn(performance, 'now').mockReturnValue(now)
 
@@ -811,7 +811,7 @@ describe('Building System', () => {
       )
     })
 
-    it('fires turret projectiles when aligned with a target in range', () => {
+    it('[U00652] fires turret projectiles when aligned with a target in range', () => {
       const now = 40000
       gameState.simulationTime = now
 
@@ -843,7 +843,7 @@ describe('Building System', () => {
       expect(turret.muzzleFlashStartTime).toBe(now)
     })
 
-    it('fires artillery turret projectiles using stored target positions', () => {
+    it('[U00653] fires artillery turret projectiles using stored target positions', () => {
       const now = 45000
       vi.spyOn(performance, 'now').mockReturnValue(now)
 
@@ -879,7 +879,7 @@ describe('Building System', () => {
     })
 
 
-    it('allows artillery and rocket turrets to fire without direct line of sight', () => {
+    it('[U00654] allows artillery and rocket turrets to fire without direct line of sight', () => {
       const now = 45500
       vi.spyOn(performance, 'now').mockReturnValue(now)
 
@@ -926,7 +926,7 @@ describe('Building System', () => {
       expect(bullets.some(b => b.shooter === rocket)).toBe(true)
     })
 
-    it('blocks rocket turret firing when power is negative', () => {
+    it('[U00655] blocks rocket turret firing when power is negative', () => {
       const now = 50000
       vi.spyOn(performance, 'now').mockReturnValue(now)
 
@@ -948,7 +948,7 @@ describe('Building System', () => {
       expect(bullets).toHaveLength(0)
     })
 
-    it('promotes queued forced attack targets for defense buildings in FIFO order', () => {
+    it('[U00656] promotes queued forced attack targets for defense buildings in FIFO order', () => {
       const now = 55000
       vi.spyOn(performance, 'now').mockReturnValue(now)
 
@@ -992,7 +992,7 @@ describe('Building System', () => {
       expect(bullets[0].shooter).toBe(turret)
     })
 
-    it('runs Tesla coil charge/firing sequence and applies unit effects from simulation time', () => {
+    it('[U00657] runs Tesla coil charge/firing sequence and applies unit effects from simulation time', () => {
       const now = 60000
       gameState.simulationTime = now
 
@@ -1034,7 +1034,7 @@ describe('Building System', () => {
       expect(tesla.teslaState).toBe('idle')
     })
 
-    it('toggles Tesla coil slow/disable state based on simulation-time expiry', () => {
+    it('[U00658] toggles Tesla coil slow/disable state based on simulation-time expiry', () => {
       const now = 70000
       gameState.simulationTime = now
 
@@ -1062,11 +1062,11 @@ describe('Building System', () => {
   })
 
   describe('updatePowerSupply', () => {
-    it('should be a function', () => {
+    it('[U00659] should be a function', () => {
       expect(typeof buildingsModule.updatePowerSupply).toBe('function')
     })
 
-    it('should calculate player power supply from buildings', () => {
+    it('[U00660] should calculate player power supply from buildings', () => {
       const building = createBuilding('powerPlant', 5, 5)
       building.owner = 'player1'
       building.power = 50
@@ -1080,7 +1080,7 @@ describe('Building System', () => {
       expect(gameState.playerPowerSupply).toBe(50)
     })
 
-    it('should add factory power (+50) when factory is alive', () => {
+    it('[U00661] should add factory power (+50) when factory is alive', () => {
       const factory = createTestFactory()
       factory.owner = 'player1'
       factory.health = 100
@@ -1094,7 +1094,7 @@ describe('Building System', () => {
       expect(gameState.playerPowerSupply).toBe(50)
     })
 
-    it('should not add factory power when factory is dead', () => {
+    it('[U00662] should not add factory power when factory is dead', () => {
       const factory = createTestFactory()
       factory.owner = 'player1'
       factory.health = 0
@@ -1108,7 +1108,7 @@ describe('Building System', () => {
       expect(gameState.playerPowerSupply).toBe(0)
     })
 
-    it('should track power consumption separately', () => {
+    it('[U00663] should track power consumption separately', () => {
       const powerPlant = createBuilding('powerPlant', 5, 5)
       powerPlant.owner = 'player1'
       powerPlant.power = 50
@@ -1128,7 +1128,7 @@ describe('Building System', () => {
       expect(gameState.playerPowerSupply).toBe(30)
     })
 
-    it('should enable low energy mode when power is negative', () => {
+    it('[U00664] should enable low energy mode when power is negative', () => {
       const rocketTurret = createBuilding('rocketTurret', 10, 10)
       rocketTurret.owner = 'player1'
       rocketTurret.power = -50
@@ -1143,7 +1143,7 @@ describe('Building System', () => {
       expect(gameState.playerPowerSupply).toBe(-50)
     })
 
-    it('should calculate build speed modifier when power is negative', () => {
+    it('[U00665] should calculate build speed modifier when power is negative', () => {
       const powerPlant = createBuilding('powerPlant', 5, 5)
       powerPlant.owner = 'player1'
       powerPlant.power = 50
@@ -1166,7 +1166,7 @@ describe('Building System', () => {
       expect(gameState.playerBuildSpeedModifier).toBe(0.5) // 50 / 100
     })
 
-    it('should activate radar when radar station exists and power is positive', () => {
+    it('[U00666] should activate radar when radar station exists and power is positive', () => {
       const powerPlant = createBuilding('powerPlant', 5, 5)
       powerPlant.owner = 'player1'
       powerPlant.power = 50
@@ -1185,7 +1185,7 @@ describe('Building System', () => {
       expect(gameState.radarActive).toBe(true)
     })
 
-    it('should deactivate radar when power is negative', () => {
+    it('[U00667] should deactivate radar when power is negative', () => {
       const radar = createBuilding('radarStation', 10, 10)
       radar.owner = 'player1'
       radar.power = -10
@@ -1200,7 +1200,7 @@ describe('Building System', () => {
       expect(gameState.radarActive).toBe(false)
     })
 
-    it('should calculate enemy power separately', () => {
+    it('[U00668] should calculate enemy power separately', () => {
       const enemyBuilding = createBuilding('powerPlant', 20, 20)
       enemyBuilding.owner = 'enemy'
       enemyBuilding.power = 100
@@ -1215,7 +1215,7 @@ describe('Building System', () => {
       expect(gameState.playerPowerSupply).toBe(0)
     })
 
-    it('tracks finite power by owner and refreshes the same lookup after removal', () => {
+    it('[U00669] tracks finite power by owner and refreshes the same lookup after removal', () => {
       gameState.humanPlayer = 'player1'
       gameState.factories = [
         { owner: 'player2', health: 100 },
@@ -1244,7 +1244,7 @@ describe('Building System', () => {
       expect(lookup.player3).toBe(0)
     })
 
-    it('should return player power supply', () => {
+    it('[U00670] should return player power supply', () => {
       const building = createBuilding('powerPlant', 5, 5)
       building.owner = 'player1'
       building.power = 75
@@ -1260,11 +1260,11 @@ describe('Building System', () => {
   })
 
   describe('canPlaceBuilding', () => {
-    it('should be a function', () => {
+    it('[U00671] should be a function', () => {
       expect(typeof buildingsModule.canPlaceBuilding).toBe('function')
     })
 
-    it('should return true for valid placement location', () => {
+    it('[U00672] should return true for valid placement location', () => {
       const result = buildingsModule.canPlaceBuilding(
         'powerPlant',
         10, 10,
@@ -1278,7 +1278,7 @@ describe('Building System', () => {
       expect(typeof result).toBe('boolean')
     })
 
-    it('should check placement with empty buildings array', () => {
+    it('[U00673] should check placement with empty buildings array', () => {
       const result = buildingsModule.canPlaceBuilding(
         'rocketTurret',
         5, 5,
@@ -1295,11 +1295,11 @@ describe('Building System', () => {
   })
 
   describe('cacheBuildingSmokeScales', () => {
-    it('should be a function', () => {
+    it('[U00674] should be a function', () => {
       expect(typeof buildingsModule.cacheBuildingSmokeScales).toBe('function')
     })
 
-    it('should not throw when building config has no smokeSpots', () => {
+    it('[U00675] should not throw when building config has no smokeSpots', () => {
       const building = createBuilding('powerPlant', 5, 5)
       const config = { ...buildingData.powerPlant }
       delete config.smokeSpots
@@ -1309,7 +1309,7 @@ describe('Building System', () => {
       }).not.toThrow()
     })
 
-    it('should not throw when building config is null', () => {
+    it('[U00676] should not throw when building config is null', () => {
       const building = createBuilding('powerPlant', 5, 5)
 
       expect(() => {
@@ -1317,7 +1317,7 @@ describe('Building System', () => {
       }).not.toThrow()
     })
 
-    it('should not throw when building config is undefined', () => {
+    it('[U00677] should not throw when building config is undefined', () => {
       const building = createBuilding('powerPlant', 5, 5)
 
       expect(() => {
@@ -1327,11 +1327,11 @@ describe('Building System', () => {
   })
 
   describe('markBuildingForRepairPause', () => {
-    it('should be a function', () => {
+    it('[U00678] should be a function', () => {
       expect(typeof buildingsModule.markBuildingForRepairPause).toBe('function')
     })
 
-    it('should mark building with needsRepairPause flag', () => {
+    it('[U00679] should mark building with needsRepairPause flag', () => {
       const building = createBuilding('powerPlant', 5, 5)
       building.needsRepairPause = false
 
@@ -1340,7 +1340,7 @@ describe('Building System', () => {
       expect(building.needsRepairPause).toBe(true)
     })
 
-    it('should set lastAttackedTime on building', () => {
+    it('[U00680] should set lastAttackedTime on building', () => {
       const building = createBuilding('powerPlant', 5, 5)
 
       buildingsModule.markBuildingForRepairPause(building)
@@ -1349,13 +1349,13 @@ describe('Building System', () => {
       expect(typeof building.lastAttackedTime).toBe('number')
     })
 
-    it('should not throw when building is null', () => {
+    it('[U00681] should not throw when building is null', () => {
       expect(() => {
         buildingsModule.markBuildingForRepairPause(null)
       }).not.toThrow()
     })
 
-    it('should not throw when building is undefined', () => {
+    it('[U00682] should not throw when building is undefined', () => {
       expect(() => {
         buildingsModule.markBuildingForRepairPause(undefined)
       }).not.toThrow()
@@ -1363,11 +1363,11 @@ describe('Building System', () => {
   })
 
   describe('pauseActiveRepair', () => {
-    it('should be a function', () => {
+    it('[U00683] should be a function', () => {
       expect(typeof buildingsModule.pauseActiveRepair).toBe('function')
     })
 
-    it('should return false (currently disabled)', () => {
+    it('[U00684] should return false (currently disabled)', () => {
       const building = createBuilding('powerPlant', 5, 5)
 
       const result = buildingsModule.pauseActiveRepair(building)
@@ -1377,11 +1377,11 @@ describe('Building System', () => {
   })
 
   describe('updateBuildingsUnderRepair', () => {
-    it('should be a function', () => {
+    it('[U00685] should be a function', () => {
       expect(typeof buildingsModule.updateBuildingsUnderRepair).toBe('function')
     })
 
-    it('should not throw when buildingsUnderRepair is empty', () => {
+    it('[U00686] should not throw when buildingsUnderRepair is empty', () => {
       gameState.buildingsUnderRepair = []
 
       expect(() => {
@@ -1389,7 +1389,7 @@ describe('Building System', () => {
       }).not.toThrow()
     })
 
-    it('should not throw when buildingsUnderRepair is undefined', () => {
+    it('[U00687] should not throw when buildingsUnderRepair is undefined', () => {
       gameState.buildingsUnderRepair = undefined
 
       expect(() => {
@@ -1397,7 +1397,7 @@ describe('Building System', () => {
       }).not.toThrow()
     })
 
-    it('should progress repair over time', () => {
+    it('[U00688] should progress repair over time', () => {
       const building = createBuilding('powerPlant', 5, 5)
       building.owner = 'player1'
       building.health = 50
@@ -1423,7 +1423,7 @@ describe('Building System', () => {
       expect(building.health).toBeGreaterThanOrEqual(50)
     })
 
-    it('should complete repair when duration elapsed', () => {
+    it('[U00689] should complete repair when duration elapsed', () => {
       const building = createBuilding('powerPlant', 5, 5)
       building.owner = 'player1'
       building.health = 50
@@ -1452,11 +1452,11 @@ describe('Building System', () => {
   })
 
   describe('updateBuildingsAwaitingRepair', () => {
-    it('should be a function', () => {
+    it('[U00690] should be a function', () => {
       expect(typeof buildingsModule.updateBuildingsAwaitingRepair).toBe('function')
     })
 
-    it('should not throw when buildingsAwaitingRepair is empty', () => {
+    it('[U00691] should not throw when buildingsAwaitingRepair is empty', () => {
       gameState.buildingsAwaitingRepair = []
 
       expect(() => {
@@ -1464,7 +1464,7 @@ describe('Building System', () => {
       }).not.toThrow()
     })
 
-    it('should not throw when buildingsAwaitingRepair is undefined', () => {
+    it('[U00692] should not throw when buildingsAwaitingRepair is undefined', () => {
       gameState.buildingsAwaitingRepair = undefined
 
       expect(() => {
@@ -1472,7 +1472,7 @@ describe('Building System', () => {
       }).not.toThrow()
     })
 
-    it('should skip concrete walls', () => {
+    it('[U00693] should skip concrete walls', () => {
       const wall = createBuilding('concreteWall', 5, 5)
       wall.owner = 'player1'
       wall.health = 50
@@ -1493,7 +1493,7 @@ describe('Building System', () => {
       expect(gameState.buildingsAwaitingRepair).toHaveLength(0)
     })
 
-    it('should track remaining cooldown', () => {
+    it('[U00694] should track remaining cooldown', () => {
       const building = createBuilding('powerPlant', 5, 5)
       building.owner = 'player1'
       building.health = 50
@@ -1514,7 +1514,7 @@ describe('Building System', () => {
       expect(gameState.buildingsAwaitingRepair[0].remainingCooldown).toBeCloseTo(5, 0)
     })
 
-    it('should reset countdown when building attacked again', () => {
+    it('[U00695] should reset countdown when building attacked again', () => {
       const building = createBuilding('powerPlant', 5, 5)
       building.owner = 'player1'
       building.health = 50
@@ -1561,7 +1561,7 @@ describe('Automation uses the real defence projectile path', () => {
     return building
   }
 
-  it('fires a forward gun projectile with normal ammo/cooldown then consumes the single request', () => {
+  it('[U00696] fires a forward gun projectile with normal ammo/cooldown then consumes the single request', () => {
     const building = gun()
     const bullets = []
     const initialAmmo = building.ammo
@@ -1580,7 +1580,7 @@ describe('Automation uses the real defence projectile path', () => {
     expect(executeDefenceCommand(building, { type: 'fireForward' }, { owner: 'player1', now: gameState.simulationTime }).reason).toBe('empty-ammo')
   })
 
-  it('aims without firing, then uses the gun weapon when its real lock is fired', () => {
+  it('[U00697] aims without firing, then uses the gun weapon when its real lock is fired', () => {
     const building = gun()
     const enemy = { id: 'actual-enemy', type: 'tank', owner: 'player2', x: 13 * TILE_SIZE, y: 10.5 * TILE_SIZE, health: 100, tileX: 13, tileY: 11 }
     const ctx = { owner: 'player1', now: 1000, nearestEnemy: () => enemy, canTarget: () => true, targetById: () => enemy }
@@ -1594,7 +1594,7 @@ describe('Automation uses the real defence projectile path', () => {
     expect(bullets[0].shooter).toBe(building)
   })
 
-  it('manual hold wins immediately and clearing automation suppression restores normal firing', () => {
+  it('[U00698] manual hold wins immediately and clearing automation suppression restores normal firing', () => {
     const building = gun()
     const enemy = { id: 'enemy', type: 'tank', owner: 'player2', x: 13 * TILE_SIZE, y: 10.5 * TILE_SIZE, health: 100 }
     const bullets = []

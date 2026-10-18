@@ -100,7 +100,7 @@ describe('benchmarkRunner.js', () => {
   })
 
   describe('attachBenchmarkButton', () => {
-    it('should initialize benchmark modal with callbacks', async() => {
+    it('[U00402] should initialize benchmark modal with callbacks', async() => {
       const { attachBenchmarkButton: attach } = await import('../../src/benchmark/benchmarkRunner.js')
 
       attach()
@@ -111,7 +111,7 @@ describe('benchmarkRunner.js', () => {
       })
     })
 
-    it('should attach a change listener to the benchmark dropdown', async() => {
+    it('[U00403] should attach a change listener to the benchmark dropdown', async() => {
       const { attachBenchmarkButton: attach } = await import('../../src/benchmark/benchmarkRunner.js')
 
       attach()
@@ -119,7 +119,7 @@ describe('benchmarkRunner.js', () => {
       expect(mockButton.addEventListener).toHaveBeenCalledWith('change', expect.any(Function))
     })
 
-    it('should not initialize twice when called multiple times', async() => {
+    it('[U00404] should not initialize twice when called multiple times', async() => {
       const { attachBenchmarkButton: attach } = await import('../../src/benchmark/benchmarkRunner.js')
 
       attach()
@@ -131,7 +131,7 @@ describe('benchmarkRunner.js', () => {
       expect(mockButton.addEventListener).toHaveBeenCalledTimes(1)
     })
 
-    it('should return early if button is not found', async() => {
+    it('[U00405] should return early if button is not found', async() => {
       document.getElementById = vi.fn(() => null)
 
       const { attachBenchmarkButton: attach } = await import('../../src/benchmark/benchmarkRunner.js')
@@ -141,7 +141,7 @@ describe('benchmarkRunner.js', () => {
       expect(initializeBenchmarkModal).not.toHaveBeenCalled()
     })
 
-    it('should re-enable button when onClose callback is invoked', async() => {
+    it('[U00406] should re-enable button when onClose callback is invoked', async() => {
       let closeCallback = null
       initializeBenchmarkModal.mockImplementation((config) => {
         closeCallback = config.onClose
@@ -162,7 +162,7 @@ describe('benchmarkRunner.js', () => {
   })
 
   describe('runBenchmark', () => {
-    it('should return early if benchmark is already running', async() => {
+    it('[U00407] should return early if benchmark is already running', async() => {
       isBenchmarkRunning.mockReturnValue(true)
 
       const { runBenchmark: run } = await import('../../src/benchmark/benchmarkRunner.js')
@@ -172,7 +172,7 @@ describe('benchmarkRunner.js', () => {
       expect(setupBenchmarkScenario).not.toHaveBeenCalled()
     })
 
-    it('should disable button before running benchmark', async() => {
+    it('[U00408] should disable button before running benchmark', async() => {
       const { runBenchmark: run, attachBenchmarkButton: attach } = await import('../../src/benchmark/benchmarkRunner.js')
 
       // First attach to get button reference
@@ -184,7 +184,7 @@ describe('benchmarkRunner.js', () => {
       expect(mockButton.disabled).toBe(false) // Re-enabled in finally block
     })
 
-    it('should call setBenchmarkRunningState with true at start', async() => {
+    it('[U00409] should call setBenchmarkRunningState with true at start', async() => {
       const { runBenchmark: run } = await import('../../src/benchmark/benchmarkRunner.js')
 
       await run()
@@ -192,7 +192,7 @@ describe('benchmarkRunner.js', () => {
       expect(setBenchmarkRunningState).toHaveBeenCalledWith(true)
     })
 
-    it('should show status messages during preparation', async() => {
+    it('[U00410] should show status messages during preparation', async() => {
       const { runBenchmark: run } = await import('../../src/benchmark/benchmarkRunner.js')
 
       await run()
@@ -201,7 +201,7 @@ describe('benchmarkRunner.js', () => {
       expect(showBenchmarkCountdownMessage).toHaveBeenCalledWith('Benchmark: preparing scenario…')
     })
 
-    it('handles failures when benchmark session cannot start', async() => {
+    it('[U00411] handles failures when benchmark session cannot start', async() => {
       const { runBenchmark: run, attachBenchmarkButton: attach } = await import('../../src/benchmark/benchmarkRunner.js')
       startBenchmarkSession.mockReturnValueOnce(null)
 
@@ -222,7 +222,7 @@ describe('benchmarkRunner.js', () => {
       globalThis.requestAnimationFrame = originalRaf
     })
 
-    it('should call setupBenchmarkScenario', async() => {
+    it('[U00412] should call setupBenchmarkScenario', async() => {
       const { runBenchmark: run } = await import('../../src/benchmark/benchmarkRunner.js')
 
       await run()
@@ -230,7 +230,7 @@ describe('benchmarkRunner.js', () => {
       expect(setupBenchmarkScenario).toHaveBeenCalled()
     })
 
-    it('should start benchmark countdown with 60s duration', async() => {
+    it('[U00413] should start benchmark countdown with 60s duration', async() => {
       const { runBenchmark: run } = await import('../../src/benchmark/benchmarkRunner.js')
 
       await run()
@@ -238,7 +238,7 @@ describe('benchmarkRunner.js', () => {
       expect(startBenchmarkCountdown).toHaveBeenCalledWith(60000)
     })
 
-    it('should call startBenchmarkSession with 60s duration', async() => {
+    it('[U00414] should call startBenchmarkSession with 60s duration', async() => {
       const { runBenchmark: run } = await import('../../src/benchmark/benchmarkRunner.js')
 
       await run()
@@ -246,7 +246,7 @@ describe('benchmarkRunner.js', () => {
       expect(startBenchmarkSession).toHaveBeenCalledWith(60000)
     })
 
-    it('should return benchmark results and support custom duration', async() => {
+    it('[U00415] should return benchmark results and support custom duration', async() => {
       const mockResult = {
         durationMs: 5000,
         frames: 300,
@@ -266,7 +266,7 @@ describe('benchmarkRunner.js', () => {
       expect(startBenchmarkSession).toHaveBeenCalledWith(5000)
     })
 
-    it('should show results on successful completion', async() => {
+    it('[U00416] should show results on successful completion', async() => {
       const mockResult = {
         durationMs: 60000,
         frames: 3600,
@@ -285,7 +285,7 @@ describe('benchmarkRunner.js', () => {
       expect(openBenchmarkModal).toHaveBeenCalled()
     })
 
-    it('should call teardownBenchmarkScenario in finally block', async() => {
+    it('[U00417] should call teardownBenchmarkScenario in finally block', async() => {
       const { runBenchmark: run } = await import('../../src/benchmark/benchmarkRunner.js')
 
       await run()
@@ -293,7 +293,7 @@ describe('benchmarkRunner.js', () => {
       expect(teardownBenchmarkScenario).toHaveBeenCalled()
     })
 
-    it('should reset benchmarkActive flag in finally block', async() => {
+    it('[U00418] should reset benchmarkActive flag in finally block', async() => {
       gameState.benchmarkActive = true
 
       const { runBenchmark: run } = await import('../../src/benchmark/benchmarkRunner.js')
@@ -303,7 +303,7 @@ describe('benchmarkRunner.js', () => {
       expect(gameState.benchmarkActive).toBe(false)
     })
 
-    it('should hide countdown in finally block', async() => {
+    it('[U00419] should hide countdown in finally block', async() => {
       const { runBenchmark: run } = await import('../../src/benchmark/benchmarkRunner.js')
 
       await run()
@@ -311,7 +311,7 @@ describe('benchmarkRunner.js', () => {
       expect(hideBenchmarkCountdown).toHaveBeenCalled()
     })
 
-    it('should handle errors gracefully', async() => {
+    it('[U00420] should handle errors gracefully', async() => {
       setupBenchmarkScenario.mockImplementation(() => {
         throw new Error('Setup failed')
       })
@@ -329,7 +329,7 @@ describe('benchmarkRunner.js', () => {
       consoleError.mockRestore()
     })
 
-    it('should handle startBenchmarkSession returning null', async() => {
+    it('[U00421] should handle startBenchmarkSession returning null', async() => {
       startBenchmarkSession.mockReturnValue(null)
 
       const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
@@ -344,7 +344,7 @@ describe('benchmarkRunner.js', () => {
       consoleError.mockRestore()
     })
 
-    it('should hide countdown on completion', async() => {
+    it('[U00422] should hide countdown on completion', async() => {
       const { runBenchmark: run } = await import('../../src/benchmark/benchmarkRunner.js')
 
       await run()
@@ -353,7 +353,7 @@ describe('benchmarkRunner.js', () => {
       expect(hideBenchmarkCountdown).toHaveBeenCalled()
     })
 
-    it('should call setBenchmarkRunningState false on error', async() => {
+    it('[U00423] should call setBenchmarkRunningState false on error', async() => {
       setupBenchmarkScenario.mockImplementation(() => {
         throw new Error('Test error')
       })

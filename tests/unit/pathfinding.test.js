@@ -117,7 +117,7 @@ function createMockUnit(tileX, tileY, owner = 'player') {
 
 describe('Pathfinding Core', () => {
   describe('findPath() - A* Algorithm', () => {
-    it('should find a direct path with no obstacles', () => {
+    it('[U03217] should find a direct path with no obstacles', () => {
       const mapGrid = createTestMapGrid(10, 10)
       const start = { x: 0, y: 0 }
       const end = { x: 5, y: 5 }
@@ -132,7 +132,7 @@ describe('Pathfinding Core', () => {
       expect(path[path.length - 1].y).toBe(end.y)
     })
 
-    it('should find path around water obstacle', () => {
+    it('[U03218] should find path around water obstacle', () => {
       const obstacles = [
         { x: 2, y: 0, type: 'water' },
         { x: 2, y: 1, type: 'water' },
@@ -152,7 +152,7 @@ describe('Pathfinding Core', () => {
       })
     })
 
-    it('should find path around rock obstacle', () => {
+    it('[U03219] should find path around rock obstacle', () => {
       const obstacles = [
         { x: 3, y: 2, type: 'rock' },
         { x: 3, y: 3, type: 'rock' },
@@ -171,7 +171,7 @@ describe('Pathfinding Core', () => {
       expect(path[path.length - 1].y).toBe(end.y)
     })
 
-    it('should find path around buildings', () => {
+    it('[U03220] should find path around buildings', () => {
       const building = { type: 'powerPlant', x: 3, y: 3, width: 2, height: 2 }
       const obstacles = []
       for (let dy = 0; dy < 2; dy++) {
@@ -193,7 +193,7 @@ describe('Pathfinding Core', () => {
       })
     })
 
-    it('should allow diagonal movement', () => {
+    it('[U03221] should allow diagonal movement', () => {
       const mapGrid = createTestMapGrid(10, 10)
       const start = { x: 0, y: 0 }
       const end = { x: 5, y: 5 }
@@ -205,7 +205,7 @@ describe('Pathfinding Core', () => {
       expect(path.length).toBeLessThan(12)
     })
 
-    it('should return empty array for invalid start coordinates', () => {
+    it('[U03222] should return empty array for invalid start coordinates', () => {
       const mapGrid = createTestMapGrid(10, 10)
       const start = { x: -1, y: 0 }
       const end = { x: 5, y: 5 }
@@ -215,7 +215,7 @@ describe('Pathfinding Core', () => {
       expect(path).toEqual([])
     })
 
-    it('should return empty array for invalid end coordinates', () => {
+    it('[U03223] should return empty array for invalid end coordinates', () => {
       const mapGrid = createTestMapGrid(10, 10)
       const start = { x: 0, y: 0 }
       const end = { x: 100, y: 100 }
@@ -225,7 +225,7 @@ describe('Pathfinding Core', () => {
       expect(path).toEqual([])
     })
 
-    it('should return empty array for null start', () => {
+    it('[U03224] should return empty array for null start', () => {
       const mapGrid = createTestMapGrid(10, 10)
       const end = { x: 5, y: 5 }
 
@@ -234,7 +234,7 @@ describe('Pathfinding Core', () => {
       expect(path).toEqual([])
     })
 
-    it('should return empty array for null end', () => {
+    it('[U03225] should return empty array for null end', () => {
       const mapGrid = createTestMapGrid(10, 10)
       const start = { x: 0, y: 0 }
 
@@ -243,7 +243,7 @@ describe('Pathfinding Core', () => {
       expect(path).toEqual([])
     })
 
-    it('should return empty array for null mapGrid', () => {
+    it('[U03226] should return empty array for null mapGrid', () => {
       const start = { x: 0, y: 0 }
       const end = { x: 5, y: 5 }
 
@@ -252,7 +252,7 @@ describe('Pathfinding Core', () => {
       expect(path).toEqual([])
     })
 
-    it('should return path when start equals end', () => {
+    it('[U03227] should return path when start equals end', () => {
       const mapGrid = createTestMapGrid(10, 10)
       const start = { x: 5, y: 5 }
       const end = { x: 5, y: 5 }
@@ -263,7 +263,7 @@ describe('Pathfinding Core', () => {
       expect(path.length).toBeGreaterThanOrEqual(1)
     })
 
-    it('should prefer street tiles with lower cost', () => {
+    it('[U03228] should prefer street tiles with lower cost', () => {
       const mapGrid = createTestMapGrid(10, 10)
       // Create a street path
       for (let x = 0; x < 10; x++) {
@@ -282,7 +282,7 @@ describe('Pathfinding Core', () => {
       })
     })
 
-    it('should handle pathfinding around seed crystals', () => {
+    it('[U03229] should handle pathfinding around seed crystals', () => {
       const mapGrid = createTestMapGrid(10, 10)
       mapGrid[2][3].seedCrystal = true
 
@@ -303,7 +303,7 @@ describe('Pathfinding Core', () => {
   })
 
   describe('findPath() - With Occupancy Map', () => {
-    it('should avoid occupied tiles', () => {
+    it('[U03230] should avoid occupied tiles', () => {
       const mapGrid = createTestMapGrid(10, 10)
       const occupancyMap = initializeOccupancyMap([], mapGrid)
 
@@ -322,7 +322,7 @@ describe('Pathfinding Core', () => {
       expect(pathContainsOccupied).toBe(false)
     })
 
-    it('should find alternative route when direct path is blocked', () => {
+    it('[U03231] should find alternative route when direct path is blocked', () => {
       const mapGrid = createTestMapGrid(10, 10)
       const occupancyMap = initializeOccupancyMap([], mapGrid)
 
@@ -343,7 +343,7 @@ describe('Pathfinding Core', () => {
       expect(path[path.length - 1].y).toBe(end.y)
     })
 
-    it('should allow starting from own occupied tile', () => {
+    it('[U03232] should allow starting from own occupied tile', () => {
       const mapGrid = createTestMapGrid(10, 10)
       const occupancyMap = initializeOccupancyMap([], mapGrid)
 
@@ -366,7 +366,7 @@ describe('Pathfinding Core', () => {
   })
 
   describe('findPath() - Edge Cases', () => {
-    it('should handle completely blocked destination', () => {
+    it('[U03233] should handle completely blocked destination', () => {
       const mapGrid = createTestMapGrid(10, 10)
       // Surround destination with obstacles
       const destX = 5
@@ -391,7 +391,7 @@ describe('Pathfinding Core', () => {
       expect(Array.isArray(path)).toBe(true)
     })
 
-    it('should handle large distance paths within limit', () => {
+    it('[U03234] should handle large distance paths within limit', () => {
       const mapGrid = createTestMapGrid(50, 50)
       const start = { x: 0, y: 0 }
       const end = { x: 49, y: 49 }
@@ -402,7 +402,7 @@ describe('Pathfinding Core', () => {
       expect(path.length).toBeGreaterThan(0)
     })
 
-    it('should respect pathfinding limit for complex mazes', () => {
+    it('[U03235] should respect pathfinding limit for complex mazes', () => {
       const mapGrid = createTestMapGrid(20, 20)
       // Create a maze-like structure
       for (let y = 2; y < 18; y += 4) {
@@ -428,7 +428,7 @@ describe('Pathfinding Core', () => {
       expect(duration).toBeLessThan(5000) // Should complete within 5 seconds
     })
 
-    it('should handle diagonal corner blocking', () => {
+    it('[U03236] should handle diagonal corner blocking', () => {
       const mapGrid = createTestMapGrid(10, 10)
       // Create a corner that blocks diagonal movement
       mapGrid[3][4].type = 'rock'
@@ -447,7 +447,7 @@ describe('Pathfinding Core', () => {
 
   describe('Occupancy Map', () => {
     describe('buildOccupancyMap()', () => {
-      it('should create occupancy map with correct dimensions', () => {
+      it('[U03237] should create occupancy map with correct dimensions', () => {
         const mapGrid = createTestMapGrid(20, 15)
         const units = []
 
@@ -457,7 +457,7 @@ describe('Pathfinding Core', () => {
         expect(occupancyMap[0].length).toBe(20)
       })
 
-      it('should mark water tiles as occupied', () => {
+      it('[U03238] should mark water tiles as occupied', () => {
         const mapGrid = createTestMapGrid(10, 10)
         mapGrid[5][5].type = 'water'
 
@@ -466,7 +466,7 @@ describe('Pathfinding Core', () => {
         expect(occupancyMap[5][5]).toBe(1)
       })
 
-      it('should mark rock tiles as occupied', () => {
+      it('[U03239] should mark rock tiles as occupied', () => {
         const mapGrid = createTestMapGrid(10, 10)
         mapGrid[3][3].type = 'rock'
 
@@ -475,7 +475,7 @@ describe('Pathfinding Core', () => {
         expect(occupancyMap[3][3]).toBe(1)
       })
 
-      it('should mark building tiles as occupied', () => {
+      it('[U03240] should mark building tiles as occupied', () => {
         const mapGrid = createTestMapGrid(10, 10)
         const building = { type: 'powerPlant', x: 4, y: 4 }
         mapGrid[4][4].building = building
@@ -485,7 +485,7 @@ describe('Pathfinding Core', () => {
         expect(occupancyMap[4][4]).toBe(1)
       })
 
-      it('should mark unit positions as occupied', () => {
+      it('[U03241] should mark unit positions as occupied', () => {
         const mapGrid = createTestMapGrid(10, 10)
         const unit = createMockUnit(3, 3)
 
@@ -494,7 +494,7 @@ describe('Pathfinding Core', () => {
         expect(occupancyMap[3][3]).toBe(1)
       })
 
-      it('should increment for multiple units on same tile', () => {
+      it('[U03242] should increment for multiple units on same tile', () => {
         const mapGrid = createTestMapGrid(10, 10)
         const unit1 = createMockUnit(5, 5)
         const unit2 = createMockUnit(5, 5)
@@ -504,7 +504,7 @@ describe('Pathfinding Core', () => {
         expect(occupancyMap[5][5]).toBe(2)
       })
 
-      it('should skip air units not grounded', () => {
+      it('[U03243] should skip air units not grounded', () => {
         const mapGrid = createTestMapGrid(10, 10)
         const airUnit = createMockUnit(4, 4)
         airUnit.isAirUnit = true
@@ -516,7 +516,7 @@ describe('Pathfinding Core', () => {
         expect(occupancyMap[4][4]).toBe(0)
       })
 
-      it('should include grounded air units', () => {
+      it('[U03244] should include grounded air units', () => {
         const mapGrid = createTestMapGrid(10, 10)
         const groundedAirUnit = createMockUnit(6, 6)
         groundedAirUnit.isAirUnit = true
@@ -527,7 +527,7 @@ describe('Pathfinding Core', () => {
         expect(occupancyMap[6][6]).toBe(1)
       })
 
-      it('should handle empty units array', () => {
+      it('[U03245] should handle empty units array', () => {
         const mapGrid = createTestMapGrid(10, 10)
 
         const occupancyMap = buildOccupancyMap([], mapGrid)
@@ -536,7 +536,7 @@ describe('Pathfinding Core', () => {
         expect(occupancyMap.length).toBe(10)
       })
 
-      it('should handle null units gracefully', () => {
+      it('[U03246] should handle null units gracefully', () => {
         const mapGrid = createTestMapGrid(10, 10)
 
         const occupancyMap = buildOccupancyMap(null, mapGrid)
@@ -544,7 +544,7 @@ describe('Pathfinding Core', () => {
         expect(occupancyMap).toBeDefined()
       })
 
-      it('should return null for invalid mapGrid', () => {
+      it('[U03247] should return null for invalid mapGrid', () => {
         const occupancyMap = buildOccupancyMap([], null)
 
         expect(occupancyMap).toBeNull()
@@ -552,7 +552,7 @@ describe('Pathfinding Core', () => {
     })
 
     describe('initializeOccupancyMap()', () => {
-      it('should be an alias for buildOccupancyMap', () => {
+      it('[U03248] should be an alias for buildOccupancyMap', () => {
         const mapGrid = createTestMapGrid(10, 10)
         const units = [createMockUnit(2, 2)]
 
@@ -600,7 +600,7 @@ describe('Pathfinding Core', () => {
         })
       }
 
-      it('should create offsets for array of units', () => {
+      it('[U03249] should create offsets for array of units', () => {
         const units = [
           createMockUnit(5, 5),
           createMockUnit(6, 5),
@@ -617,7 +617,7 @@ describe('Pathfinding Core', () => {
         })
       })
 
-      it('should assign different offsets to different units', () => {
+      it('[U03250] should assign different offsets to different units', () => {
         const units = [
           createMockUnit(0, 0),
           createMockUnit(1, 0),
@@ -635,7 +635,7 @@ describe('Pathfinding Core', () => {
         expect(offsets.size).toBeGreaterThan(1)
       })
 
-      it('should handle single unit', () => {
+      it('[U03251] should handle single unit', () => {
         const units = [createMockUnit(5, 5)]
 
         createFormationOffsets(units, 1)
@@ -644,14 +644,14 @@ describe('Pathfinding Core', () => {
         expect(units[0].formationActive).toBe(true)
       })
 
-      it('should handle empty array', () => {
+      it('[U03252] should handle empty array', () => {
         const units = []
 
         // Should not throw
         expect(() => createFormationOffsets(units, 1)).not.toThrow()
       })
 
-      it('should set proper group number', () => {
+      it('[U03253] should set proper group number', () => {
         const units = [createMockUnit(3, 3), createMockUnit(4, 4)]
 
         createFormationOffsets(units, 5)
@@ -661,7 +661,7 @@ describe('Pathfinding Core', () => {
         })
       })
 
-      it('should clear formation data from units', () => {
+      it('[U03254] should clear formation data from units', () => {
         const units = [
           createMockUnit(5, 5),
           createMockUnit(6, 5)
@@ -677,7 +677,7 @@ describe('Pathfinding Core', () => {
         })
       })
 
-      it('should handle already cleared units', () => {
+      it('[U03255] should handle already cleared units', () => {
         const units = [createMockUnit(5, 5)]
         units[0].formationOffset = null
         units[0].formationActive = false
@@ -687,7 +687,7 @@ describe('Pathfinding Core', () => {
         expect(() => clearFormation(units)).not.toThrow()
       })
 
-      it('should handle empty array for clearFormation', () => {
+      it('[U03256] should handle empty array for clearFormation', () => {
         const units = []
 
         expect(() => clearFormation(units)).not.toThrow()
@@ -701,7 +701,7 @@ describe('Pathfinding Core', () => {
       vi.mocked(performance.now).mockReturnValue(0)
     })
 
-    it('should return a path for valid request', () => {
+    it('[U03257] should return a path for valid request', () => {
       const mapGrid = createTestMapGrid(10, 10)
       const start = { x: 0, y: 0 }
       const end = { x: 5, y: 5 }
@@ -712,7 +712,7 @@ describe('Pathfinding Core', () => {
       expect(path.length).toBeGreaterThan(0)
     })
 
-    it('should work with occupancy avoidance', () => {
+    it('[U03258] should work with occupancy avoidance', () => {
       const mapGrid = createTestMapGrid(10, 10)
       const occupancyMap = initializeOccupancyMap([], mapGrid)
       occupancyMap[3][3] = 1
@@ -727,7 +727,7 @@ describe('Pathfinding Core', () => {
       expect(path.length).toBeGreaterThan(0)
     })
 
-    it('should handle paths with obstacles', () => {
+    it('[U03259] should handle paths with obstacles', () => {
       const mapGrid = createTestMapGrid(10, 10)
       // Block the direct path with obstacles
       for (let x = 0; x <= 8; x++) {
@@ -746,18 +746,18 @@ describe('Pathfinding Core', () => {
 })
 
 describe('Street Path Cost', () => {
-  it('should have STREET_PATH_COST less than 1', () => {
+  it('[U03260] should have STREET_PATH_COST less than 1', () => {
     // Streets should be preferred, so cost should be less than 1
     expect(STREET_PATH_COST).toBeLessThan(1)
   })
 })
 
 describe('DIRECTIONS constant', () => {
-  it('should include all 8 directions', () => {
+  it('[U03261] should include all 8 directions', () => {
     expect(DIRECTIONS.length).toBe(8)
   })
 
-  it('should include cardinal directions', () => {
+  it('[U03262] should include cardinal directions', () => {
     const hasNorth = DIRECTIONS.some(d => d.x === 0 && d.y === -1)
     const hasSouth = DIRECTIONS.some(d => d.x === 0 && d.y === 1)
     const hasEast = DIRECTIONS.some(d => d.x === 1 && d.y === 0)
@@ -769,7 +769,7 @@ describe('DIRECTIONS constant', () => {
     expect(hasWest).toBe(true)
   })
 
-  it('should include diagonal directions', () => {
+  it('[U03263] should include diagonal directions', () => {
     const hasNE = DIRECTIONS.some(d => d.x === 1 && d.y === -1)
     const hasNW = DIRECTIONS.some(d => d.x === -1 && d.y === -1)
     const hasSE = DIRECTIONS.some(d => d.x === 1 && d.y === 1)
@@ -791,7 +791,7 @@ describe('pathfinding.js - Exported Functions', () => {
   })
 
   describe('getCachedPath()', () => {
-    it('should calculate and cache a new path', () => {
+    it('[U03264] should calculate and cache a new path', () => {
       const mapGrid = createTestMapGrid(10, 10)
       const start = { x: 0, y: 0 }
       const end = { x: 5, y: 5 }
@@ -804,7 +804,7 @@ describe('pathfinding.js - Exported Functions', () => {
       expect(path[0].y).toBe(start.y)
     })
 
-    it('should return cached path when available', () => {
+    it('[U03265] should return cached path when available', () => {
       const mapGrid = createTestMapGrid(10, 10)
       const start1 = { x: 0, y: 0 }
       const start2 = { x: 1, y: 1 }
@@ -820,7 +820,7 @@ describe('pathfinding.js - Exported Functions', () => {
       expect(path2).toBeDefined()
     })
 
-    it('should handle occupancy map parameter', () => {
+    it('[U03266] should handle occupancy map parameter', () => {
       const mapGrid = createTestMapGrid(10, 10)
       const occupancyMap = initializeOccupancyMap([], mapGrid)
       occupancyMap[3][3] = 1
@@ -835,7 +835,7 @@ describe('pathfinding.js - Exported Functions', () => {
       expect(hasOccupied).toBe(false)
     })
 
-    it('should respect owner options for cache key', () => {
+    it('[U03267] should respect owner options for cache key', () => {
       const mapGrid = createTestMapGrid(10, 10)
       const start = { x: 0, y: 0, owner: 'player1' }
       const end = { x: 5, y: 5 }
@@ -847,7 +847,7 @@ describe('pathfinding.js - Exported Functions', () => {
       expect(path.length).toBeGreaterThan(0)
     })
 
-    it('should derive owner from start node properties', () => {
+    it('[U03268] should derive owner from start node properties', () => {
       const mapGrid = createTestMapGrid(10, 10)
       const start = { x: 0, y: 0, ownerId: 'player2' }
       const end = { x: 5, y: 5 }
@@ -857,7 +857,7 @@ describe('pathfinding.js - Exported Functions', () => {
       expect(path).toBeDefined()
     })
 
-    it('should handle ignoreFriendlyMines option', () => {
+    it('[U03269] should handle ignoreFriendlyMines option', () => {
       const mapGrid = createTestMapGrid(10, 10)
       const start = { x: 0, y: 0 }
       const end = { x: 5, y: 5 }
@@ -868,7 +868,7 @@ describe('pathfinding.js - Exported Functions', () => {
       expect(path).toBeDefined()
     })
 
-    it('should remove stale cache entries beyond TTL', () => {
+    it('[U03270] should remove stale cache entries beyond TTL', () => {
       const mapGrid = createTestMapGrid(10, 10)
       const start = { x: 0, y: 0 }
       const end = { x: 5, y: 5 }
@@ -887,7 +887,7 @@ describe('pathfinding.js - Exported Functions', () => {
       expect(path.length).toBeGreaterThan(0)
     })
 
-    it('should return empty array for impossible path', () => {
+    it('[U03271] should return empty array for impossible path', () => {
       const mapGrid = createTestMapGrid(10, 10)
       // Surround end with obstacles
       for (let y = 4; y <= 6; y++) {
@@ -905,7 +905,7 @@ describe('pathfinding.js - Exported Functions', () => {
   })
 
   describe('createFormationOffsets()', () => {
-    it('should assign formation offsets to units', () => {
+    it('[U03272] should assign formation offsets to units', () => {
       const units = [
         createMockUnit(5, 5),
         createMockUnit(6, 5),
@@ -924,7 +924,7 @@ describe('pathfinding.js - Exported Functions', () => {
       })
     })
 
-    it('should create unique offsets for different units', () => {
+    it('[U03273] should create unique offsets for different units', () => {
       const units = [
         createMockUnit(0, 0),
         createMockUnit(1, 0),
@@ -938,7 +938,7 @@ describe('pathfinding.js - Exported Functions', () => {
       expect(uniqueOffsets.size).toBeGreaterThan(1)
     })
 
-    it('should handle single unit formation', () => {
+    it('[U03274] should handle single unit formation', () => {
       const units = [createMockUnit(5, 5)]
 
       createFormationOffsets(units, 3)
@@ -948,7 +948,7 @@ describe('pathfinding.js - Exported Functions', () => {
       expect(units[0].groupNumber).toBe(3)
     })
 
-    it('should handle large formation', () => {
+    it('[U03275] should handle large formation', () => {
       const units = Array.from({ length: 16 }, (_, i) => createMockUnit(i % 4, Math.floor(i / 4)))
 
       createFormationOffsets(units, 4)
@@ -960,7 +960,7 @@ describe('pathfinding.js - Exported Functions', () => {
       })
     })
 
-    it('should center formation correctly', () => {
+    it('[U03276] should center formation correctly', () => {
       const units = [createMockUnit(5, 5), createMockUnit(6, 5)]
 
       createFormationOffsets(units, 1)
@@ -971,7 +971,7 @@ describe('pathfinding.js - Exported Functions', () => {
       expect(offsets.some(x => x > 0)).toBe(true)
     })
 
-    it('should handle empty units array gracefully', () => {
+    it('[U03277] should handle empty units array gracefully', () => {
       const units = []
 
       expect(() => createFormationOffsets(units, 5)).not.toThrow()
@@ -979,7 +979,7 @@ describe('pathfinding.js - Exported Functions', () => {
   })
 
   describe('clearFormation()', () => {
-    it('should clear formation data from units', () => {
+    it('[U03278] should clear formation data from units', () => {
       const units = [
         createMockUnit(5, 5),
         createMockUnit(6, 5)
@@ -995,7 +995,7 @@ describe('pathfinding.js - Exported Functions', () => {
       })
     })
 
-    it('should handle already cleared units', () => {
+    it('[U03279] should handle already cleared units', () => {
       const units = [createMockUnit(5, 5)]
       units[0].formationOffset = null
       units[0].formationActive = false
@@ -1004,13 +1004,13 @@ describe('pathfinding.js - Exported Functions', () => {
       expect(() => clearFormation(units)).not.toThrow()
     })
 
-    it('should handle empty array', () => {
+    it('[U03280] should handle empty array', () => {
       const units = []
 
       expect(() => clearFormation(units)).not.toThrow()
     })
 
-    it('should handle units without formation properties', () => {
+    it('[U03281] should handle units without formation properties', () => {
       const units = [{ id: 'test', tileX: 5, tileY: 5 }]
 
       expect(() => clearFormation(units)).not.toThrow()
@@ -1019,7 +1019,7 @@ describe('pathfinding.js - Exported Functions', () => {
   })
 
   describe('updateGlobalPathfinding()', () => {
-    it('should calculate paths for units with moveTarget but no path', () => {
+    it('[U03282] should calculate paths for units with moveTarget but no path', () => {
       const mapGrid = createTestMapGrid(20, 20)
       const occupancyMap = initializeOccupancyMap([], mapGrid)
       const gameState = { humanPlayer: 'player1', lastGlobalPathCalc: null }
@@ -1039,7 +1039,7 @@ describe('pathfinding.js - Exported Functions', () => {
       expect(units[0].lastPathCalcTime).toBeDefined()
     })
 
-    it('should calculate paths on PATH_CALC_INTERVAL', () => {
+    it('[U03283] should calculate paths on PATH_CALC_INTERVAL', () => {
       const mapGrid = createTestMapGrid(20, 20)
       const occupancyMap = initializeOccupancyMap([], mapGrid)
       mockPerformanceNow = 0
@@ -1068,7 +1068,7 @@ describe('pathfinding.js - Exported Functions', () => {
       expect(units[0].path.length).toBeGreaterThan(0)
     })
 
-    it('should skip recalculation when path already exists', () => {
+    it('[U03284] should skip recalculation when path already exists', () => {
       const mapGrid = createTestMapGrid(20, 20)
       const occupancyMap = initializeOccupancyMap([], mapGrid)
       const gameState = { humanPlayer: 'player1', lastGlobalPathCalc: 0 }
@@ -1090,7 +1090,7 @@ describe('pathfinding.js - Exported Functions', () => {
       expect(units[0].path.length).toBe(3)
     })
 
-    it('should skip units with combat targets (handled by updateUnitMovement instead)', () => {
+    it('[U03285] should skip units with combat targets (handled by updateUnitMovement instead)', () => {
       const mapGrid = createTestMapGrid(20, 20)
       const occupancyMap = initializeOccupancyMap([], mapGrid)
       const gameState = { humanPlayer: 'player1', lastGlobalPathCalc: 0 }
@@ -1113,7 +1113,7 @@ describe('pathfinding.js - Exported Functions', () => {
       expect(units[0].path.length).toBe(0)
     })
 
-    it('should handle formation groups', () => {
+    it('[U03286] should handle formation groups', () => {
       const mapGrid = createTestMapGrid(20, 20)
       const occupancyMap = initializeOccupancyMap([], mapGrid)
       const gameState = { humanPlayer: 'player1', lastGlobalPathCalc: 0 }
@@ -1146,7 +1146,7 @@ describe('pathfinding.js - Exported Functions', () => {
       expect(units[1].path.length).toBeGreaterThan(0)
     })
 
-    it('should prioritize closer units when limiting paths per cycle', () => {
+    it('[U03287] should prioritize closer units when limiting paths per cycle', () => {
       const mapGrid = createTestMapGrid(50, 50)
       const occupancyMap = initializeOccupancyMap([], mapGrid)
       mockPerformanceNow = PATH_CALC_INTERVAL + 100
@@ -1173,7 +1173,7 @@ describe('pathfinding.js - Exported Functions', () => {
       }
     })
 
-    it('should respect AI target change throttling', () => {
+    it('[U03288] should respect AI target change throttling', () => {
       const mapGrid = createTestMapGrid(20, 20)
       const occupancyMap = initializeOccupancyMap([], mapGrid)
       mockPerformanceNow = 1000
@@ -1195,7 +1195,7 @@ describe('pathfinding.js - Exported Functions', () => {
       expect(units[0].path.length).toBe(0)
     })
 
-    it('should use attack path throttling for attacking units', () => {
+    it('[U03289] should use attack path throttling for attacking units', () => {
       const mapGrid = createTestMapGrid(20, 20)
       const occupancyMap = initializeOccupancyMap([], mapGrid)
       mockPerformanceNow = PATH_CALC_INTERVAL + 100
@@ -1219,7 +1219,7 @@ describe('pathfinding.js - Exported Functions', () => {
       expect(units[0].path.length).toBe(0)
     })
 
-    it('should clear moveTarget when destination reached', () => {
+    it('[U03290] should clear moveTarget when destination reached', () => {
       const mapGrid = createTestMapGrid(20, 20)
       const occupancyMap = initializeOccupancyMap([], mapGrid)
       mockPerformanceNow = PATH_CALC_INTERVAL + 100
@@ -1241,7 +1241,7 @@ describe('pathfinding.js - Exported Functions', () => {
       expect(units[0].moveTarget).toBeNull()
     })
 
-    it('should handle empty units array', () => {
+    it('[U03291] should handle empty units array', () => {
       const mapGrid = createTestMapGrid(20, 20)
       const occupancyMap = initializeOccupancyMap([], mapGrid)
       const gameState = { humanPlayer: 'player1', lastGlobalPathCalc: null }
@@ -1250,7 +1250,7 @@ describe('pathfinding.js - Exported Functions', () => {
       expect(() => updateGlobalPathfinding(units, mapGrid, occupancyMap, gameState)).not.toThrow()
     })
 
-    it('should handle units with attackQueue', () => {
+    it('[U03292] should handle units with attackQueue', () => {
       const mapGrid = createTestMapGrid(20, 20)
       const occupancyMap = initializeOccupancyMap([], mapGrid)
       mockPerformanceNow = PATH_CALC_INTERVAL + 100

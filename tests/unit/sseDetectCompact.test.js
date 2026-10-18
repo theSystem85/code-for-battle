@@ -3,7 +3,7 @@ import { detectSprites } from '../../src/ui/sseDetect.js'
 import { compactSprites } from '../../src/ui/ssePack.js'
 
 describe('extract-all detection', () => {
-  it('finds blobs, bridges tiny gaps, preserves holes and ignores black, transparent and tiny noise', () => {
+  it('[U04171] finds blobs, bridges tiny gaps, preserves holes and ignores black, transparent and tiny noise', () => {
     const image = { width: 24, height: 16, data: new Uint8ClampedArray(24 * 16 * 4) }
     const dot = (x, y, value = 255, alpha = 255) => image.data.set([value, 0, 0, alpha], (y * 24 + x) * 4)
     for (const [x, y] of [[1, 1], [2, 1], [4, 1], [4, 2], [12, 3], [13, 3], [12, 4], [20, 12]]) dot(x, y)
@@ -21,7 +21,7 @@ describe('extract-all detection', () => {
 })
 
 describe('compaction', () => {
-  it('packs in reading order into first free whole-tile slots without overlaps or input mutation', () => {
+  it('[U04172] packs in reading order into first free whole-tile slots without overlaps or input mutation', () => {
     const sprites = [
       { id: 'last', placedAt: { column: 0, row: 5 }, tileSpan: { columns: 2, rows: 2 } },
       { id: 'second', placedAt: { column: 2, row: 2 }, tileSpan: { columns: 1, rows: 1 } },

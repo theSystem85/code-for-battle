@@ -19,7 +19,7 @@ describe('EffectsRenderer', () => {
     vi.clearAllMocks()
   })
 
-  it('renders torpedoes at half opacity to place them below the water surface', () => {
+  it('[U01289] renders torpedoes at half opacity to place them below the water surface', () => {
     const renderer = new EffectsRenderer()
     const ctx = {
       globalAlpha: 1,
@@ -38,7 +38,7 @@ describe('EffectsRenderer', () => {
   })
 
   describe('renderTeslaLightning', () => {
-    it('keeps Tesla lightning visible using simulation time', () => {
+    it('[U01290] keeps Tesla lightning visible using simulation time', () => {
       const renderer = new EffectsRenderer()
       const units = [{
         teslaCoilHit: {
@@ -65,7 +65,7 @@ describe('EffectsRenderer', () => {
   })
 
   describe('renderShipWakes', () => {
-    it('draws rotating-ship disturbances as expanding circular rings', () => {
+    it('[U01291] draws rotating-ship disturbances as expanding circular rings', () => {
       const renderer = new EffectsRenderer()
       const ctx = {
         save: vi.fn(),
@@ -95,7 +95,7 @@ describe('EffectsRenderer', () => {
       expect(ctx.quadraticCurveTo).not.toHaveBeenCalled()
     })
 
-    it('expires offscreen wakes without replacing the simulation array', () => {
+    it('[U01292] expires offscreen wakes without replacing the simulation array', () => {
       const renderer = new EffectsRenderer()
       const ctx = {
         canvas: { width: 100, height: 100 },
@@ -123,7 +123,7 @@ describe('EffectsRenderer', () => {
     })
   })
 
-  it('samples chimney smoke and renders pooled impacts without shockwave rings or runtime gradients', () => {
+  it('[U01293] samples chimney smoke and renders pooled impacts without shockwave rings or runtime gradients', () => {
     const renderer = new EffectsRenderer()
     const gradient = { addColorStop: vi.fn() }
     const ctx = {
@@ -160,7 +160,7 @@ describe('EffectsRenderer', () => {
   })
 
   describe('renderDust', () => {
-    it('does not arc a negative radius when sweep dust was stamped ahead of the simulation clock', () => {
+    it('[U01294] does not arc a negative radius when sweep dust was stamped ahead of the simulation clock', () => {
       const renderer = new EffectsRenderer()
       const ctx = {
         canvas: { width: 200, height: 200 },
@@ -191,7 +191,7 @@ describe('EffectsRenderer', () => {
       expect(radii.every(radius => radius > 0)).toBe(true)
     })
 
-    it('draws a growing positive radius for in-progress sweep dust', () => {
+    it('[U01295] draws a growing positive radius for in-progress sweep dust', () => {
       const renderer = new EffectsRenderer()
       const ctx = {
         canvas: { width: 200, height: 200 },

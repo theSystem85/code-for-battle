@@ -2,14 +2,14 @@ import { describe, expect, it } from 'vitest'
 import { createMusicDirector, selectMusicState, evaluateMusicDirector, recordMusicDamage, resetMusicDirector, NEAR_DEFEAT_MIN_GAME_TIME_MS } from '../../src/audio/musicDirector.js'
 
 describe('music director', () => {
-  it('selects states in priority order without changing inputs', () => {
+  it('[U03115] selects states in priority order without changing inputs', () => {
     const conditions = Object.freeze({ nearDefeat: true, underAttackOutnumbered: true, firstAttack: true })
     expect(selectMusicState(conditions)).toBe('nearDefeat')
     expect(selectMusicState({ ...conditions, nearDefeat: false })).toBe('underAttackOutnumbered')
     expect(selectMusicState({ firstAttack: true })).toBe('firstAttack')
     expect(selectMusicState({})).toBe('normal')
   })
-  it('plays first attack once, dwells 50s and does not retrigger', () => {
+  it('[U03116] plays first attack once, dwells 50s and does not retrigger', () => {
     const director = createMusicDirector()
     director.attack()
     expect(director.update(0, {})).toBe('firstAttack')
@@ -19,7 +19,7 @@ describe('music director', () => {
     director.attack()
     expect(director.update(100000, {})).toBe('normal')
   })
-  it('allows defeat to preempt dwell only after the 20s cooldown', () => {
+  it('[U03117] allows defeat to preempt dwell only after the 20s cooldown', () => {
     const director = createMusicDirector()
     director.attack()
     director.update(0, {})
@@ -31,7 +31,7 @@ describe('music director', () => {
     expect(director.update(89000, { underAttackOutnumbered: true })).toBe('normal')
     expect(director.update(90000, { underAttackOutnumbered: true })).toBe('underAttackOutnumbered')
   })
-  it('requires 15 continuous seconds clear after a long active situation', () => {
+  it('[U03118] requires 15 continuous seconds clear after a long active situation', () => {
     const director = createMusicDirector()
     director.update(0, { underAttackOutnumbered: true })
     director.update(60000, { underAttackOutnumbered: true })
@@ -41,7 +41,7 @@ describe('music director', () => {
     expect(director.update(85000, {})).toBe('underAttackOutnumbered')
     expect(director.update(86000, {})).toBe('normal')
   })
-  it('detects local enemy damage, excludes utilities and expires damage after 10s', () => {
+  it('[U03119] detects local enemy damage, excludes utilities and expires damage after 10s', () => {
     resetMusicDirector()
     const state = { simulationTime: 0, humanPlayer: 'p1', money: 500, availableUnitTypes: new Set(['tank']) }
     const own = { type: 'tank', owner: 'p1', health: 100, x: 0, y: 0 }
@@ -57,7 +57,7 @@ describe('music director', () => {
     resetMusicDirector()
     expect(evaluate([own, enemy, { ...enemy, type: 'harvester' }])).toBe('normal')
   })
-  it('detects economic collapse and the empty non-producing base metric once a base existed', () => {
+  it('[U03120] detects economic collapse and the empty non-producing base metric once a base existed', () => {
     resetMusicDirector()
     const state = { simulationTime: 0, humanPlayer: 'p1', money: 999, availableUnitTypes: new Set(['tank']) }
     const own = { type: 'tank', owner: 'p1', health: 100, x: 0, y: 0 }
@@ -77,7 +77,7 @@ describe('music director', () => {
     expect(evaluate([], [], [], { currentUnit: {}, pausedUnit: true })).toBe('nearDefeat')
     expect(evaluate([], [], [], {})).toBe('nearDefeat')
   })
-  it('never plays near defeat at game start, before a base or before 3 minutes', () => {
+  it('[U03121] never plays near defeat at game start, before a base or before 3 minutes', () => {
     resetMusicDirector()
     const state = { simulationTime: 0, humanPlayer: 'p1', money: 0, availableUnitTypes: new Set(['tank']) }
     // Loading/initial phase: no buildings, no units, no money.

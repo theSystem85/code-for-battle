@@ -58,7 +58,7 @@ describe('commandQueue', () => {
   })
 
   describe('processCommandQueues', () => {
-    it('does nothing for units without command queue', () => {
+    it('[U00898] does nothing for units without command queue', () => {
       const units = [
         { id: 'unit1', type: 'tank' }
       ]
@@ -69,7 +69,7 @@ describe('commandQueue', () => {
       expect(mockUnitCommands.handleAttackCommand).not.toHaveBeenCalled()
     })
 
-    it('does nothing for units with empty command queue', () => {
+    it('[U00899] does nothing for units with empty command queue', () => {
       const units = [
         { id: 'unit1', type: 'tank', commandQueue: [] }
       ]
@@ -79,7 +79,7 @@ describe('commandQueue', () => {
       expect(mockUnitCommands.handleMovementCommand).not.toHaveBeenCalled()
     })
 
-    it('dequeues and executes move command', () => {
+    it('[U00900] dequeues and executes move command', () => {
       const units = [
         {
           id: 'unit1',
@@ -97,7 +97,7 @@ describe('commandQueue', () => {
       )
     })
 
-    it('dequeues and executes attack command', () => {
+    it('[U00901] dequeues and executes attack command', () => {
       const target = { id: 'enemy', health: 100 }
       const units = [
         {
@@ -114,7 +114,7 @@ describe('commandQueue', () => {
       )
     })
 
-    it('executes agf command with multiple targets', () => {
+    it('[U00902] executes agf command with multiple targets', () => {
       const targets = [
         { id: 'enemy1', health: 100 },
         { id: 'enemy2', health: 100 }
@@ -134,7 +134,7 @@ describe('commandQueue', () => {
       expect(mockUnitCommands.handleAttackCommand).toHaveBeenCalled()
     })
 
-    it('executes workshopRepair command', () => {
+    it('[U00903] executes workshopRepair command', () => {
       const units = [
         {
           id: 'unit1',
@@ -150,7 +150,7 @@ describe('commandQueue', () => {
       )
     })
 
-    it('completes move command when path is empty', () => {
+    it('[U00904] completes move command when path is empty', () => {
       const units = [
         {
           id: 'unit1',
@@ -167,7 +167,7 @@ describe('commandQueue', () => {
       expect(units[0].currentCommand).toBe(null)
     })
 
-    it('does not complete move command while path exists', () => {
+    it('[U00905] does not complete move command while path exists', () => {
       const units = [
         {
           id: 'unit1',
@@ -184,7 +184,7 @@ describe('commandQueue', () => {
       expect(units[0].currentCommand).not.toBe(null)
     })
 
-    it('completes attack command when target is dead', () => {
+    it('[U00906] completes attack command when target is dead', () => {
       const units = [
         {
           id: 'unit1',
@@ -201,7 +201,7 @@ describe('commandQueue', () => {
       expect(units[0].currentCommand).toBe(null)
     })
 
-    it('does not complete attack command while target alive', () => {
+    it('[U00907] does not complete attack command while target alive', () => {
       const target = { id: 'enemy', health: 50 }
       const units = [
         {
@@ -219,7 +219,7 @@ describe('commandQueue', () => {
       expect(units[0].currentCommand).not.toBe(null)
     })
 
-    it('completes workshopRepair command when not at workshop', () => {
+    it('[U00908] completes workshopRepair command when not at workshop', () => {
       const units = [
         {
           id: 'unit1',
@@ -239,7 +239,7 @@ describe('commandQueue', () => {
       expect(units[0].currentCommand).toBe(null)
     })
 
-    it('handles null action gracefully', () => {
+    it('[U00909] handles null action gracefully', () => {
       const units = [
         {
           id: 'unit1',
@@ -251,7 +251,7 @@ describe('commandQueue', () => {
       expect(() => processCommandQueues(units, mapGrid, mockUnitCommands)).not.toThrow()
     })
 
-    it('processes multiple units', () => {
+    it('[U00910] processes multiple units', () => {
       const units = [
         {
           id: 'unit1',
@@ -270,7 +270,7 @@ describe('commandQueue', () => {
       expect(mockUnitCommands.handleMovementCommand).toHaveBeenCalledTimes(2)
     })
 
-    it('processes queued commands one at a time', () => {
+    it('[U00911] processes queued commands one at a time', () => {
       const units = [
         {
           id: 'unit1',
@@ -289,7 +289,7 @@ describe('commandQueue', () => {
       expect(units[0].commandQueue).toHaveLength(1)
     })
 
-    it('defaults buildings to empty array', () => {
+    it('[U00912] defaults buildings to empty array', () => {
       const units = [
         {
           id: 'unit1',
@@ -301,7 +301,7 @@ describe('commandQueue', () => {
       expect(() => processCommandQueues(units, mapGrid, mockUnitCommands)).not.toThrow()
     })
 
-    it('moves to mine deployment tile when deploying mine', () => {
+    it('[U00913] moves to mine deployment tile when deploying mine', () => {
       const units = [
         {
           id: 'unit1',
@@ -322,7 +322,7 @@ describe('commandQueue', () => {
       )
     })
 
-    it('starts mine deployment when at destination', () => {
+    it('[U00914] starts mine deployment when at destination', () => {
       vi.spyOn(performance, 'now').mockReturnValue(999999)
       gameState.simulationTime = 1234
       const units = [
@@ -344,7 +344,7 @@ describe('commandQueue', () => {
       expect(startMineDeployment).toHaveBeenCalledWith(units[0], 2, 3, 1234)
     })
 
-    it('skips an occupied plant tile and continues to the next order', () => {
+    it('[U00915] skips an occupied plant tile and continues to the next order', () => {
       const blocker = {
         id: 'tank1',
         type: 'tank',
@@ -381,7 +381,7 @@ describe('commandQueue', () => {
       expect(mockUnitCommands.handleMovementCommand).toHaveBeenCalled()
     })
 
-    it('does not treat the mine layer itself as occupying its plant tile', () => {
+    it('[U00916] does not treat the mine layer itself as occupying its plant tile', () => {
       gameState.simulationTime = 2500
       const miner = {
         id: 'unit1',
@@ -401,7 +401,7 @@ describe('commandQueue', () => {
       expect(startMineDeployment).toHaveBeenCalledWith(miner, 4, 4, 2500)
     })
 
-    it('skips a tile blocked by a building without starting deployment', () => {
+    it('[U00917] skips a tile blocked by a building without starting deployment', () => {
       const miner = {
         id: 'unit1',
         type: 'mineLayer',
@@ -421,7 +421,7 @@ describe('commandQueue', () => {
       expect(miner.currentCommand).toBeNull()
     })
 
-    it('clears minefield tracking when deployment completes', () => {
+    it('[U00918] clears minefield tracking when deployment completes', () => {
       const units = [
         {
           id: 'unit1',
@@ -446,7 +446,7 @@ describe('commandQueue', () => {
       expect(units[0].pendingMineFieldDeployments['field-1']).toBeUndefined()
     })
 
-    it('initiates sweep movement and activates sweeping mode', () => {
+    it('[U00919] initiates sweep movement and activates sweeping mode', () => {
       const units = [
         {
           id: 'unit1',
@@ -464,7 +464,7 @@ describe('commandQueue', () => {
       expect(units[0].path).toEqual([{ x: 4, y: 2 }])
     })
 
-    it('detonates mines and completes sweep action', () => {
+    it('[U00920] detonates mines and completes sweep action', () => {
       vi.mocked(getMineAtTile).mockReturnValue({ id: 'mine-1' })
       const units = [
         {

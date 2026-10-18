@@ -29,7 +29,7 @@ describe('keybindings.js', () => {
   })
 
   describe('KEYBINDING_CONTEXTS', () => {
-    it('exports the correct context constants', () => {
+    it('[U02220] exports the correct context constants', () => {
       expect(KEYBINDING_CONTEXTS.DEFAULT).toBe('gameplay')
       expect(KEYBINDING_CONTEXTS.MAP_EDIT_ON).toBe('map-edit-on')
       expect(KEYBINDING_CONTEXTS.MAP_EDIT_OFF).toBe('map-edit-off')
@@ -38,7 +38,7 @@ describe('keybindings.js', () => {
 
   describe('KeybindingManager', () => {
     describe('constructor', () => {
-      it('loads stored overrides from localStorage', () => {
+      it('[U02221] loads stored overrides from localStorage', () => {
         mockLocalStorage['rts-custom-keybindings'] = JSON.stringify({
           keyboard: { 'toggle-help': { input: 'h' } },
           mouse: {},
@@ -51,13 +51,13 @@ describe('keybindings.js', () => {
         expect(manager.overrides.keyboard['toggle-help'].input).toBe('h')
       })
 
-      it('initializes with empty overrides if no stored data', () => {
+      it('[U02222] initializes with empty overrides if no stored data', () => {
         const manager = new KeybindingManager()
 
         expect(manager.overrides).toEqual({ keyboard: {}, mouse: {}, touch: {} })
       })
 
-      it('handles corrupted localStorage data gracefully', () => {
+      it('[U02223] handles corrupted localStorage data gracefully', () => {
         mockLocalStorage['rts-custom-keybindings'] = 'invalid-json{'
 
         const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
@@ -69,7 +69,7 @@ describe('keybindings.js', () => {
         consoleWarnSpy.mockRestore()
       })
 
-      it('clones default bindings', () => {
+      it('[U02224] clones default bindings', () => {
         const manager = new KeybindingManager()
 
         expect(Array.isArray(manager.defaults.keyboard)).toBe(true)
@@ -80,7 +80,7 @@ describe('keybindings.js', () => {
     })
 
     describe('getBindingsByDevice', () => {
-      it('returns default bindings when no overrides exist', () => {
+      it('[U02225] returns default bindings when no overrides exist', () => {
         const manager = new KeybindingManager()
         const keyboardBindings = manager.getBindingsByDevice('keyboard')
 
@@ -91,7 +91,7 @@ describe('keybindings.js', () => {
         expect(keyboardBindings[0].isCustom).toBe(false)
       })
 
-      it('merges custom bindings with defaults', () => {
+      it('[U02226] merges custom bindings with defaults', () => {
         const manager = new KeybindingManager()
         manager.overrides.keyboard = { 'toggle-help': { input: 'h' } }
 
@@ -102,14 +102,14 @@ describe('keybindings.js', () => {
         expect(toggleHelpBinding.isCustom).toBe(true)
       })
 
-      it('returns empty array for unknown device', () => {
+      it('[U02227] returns empty array for unknown device', () => {
         const manager = new KeybindingManager()
         const bindings = manager.getBindingsByDevice('unknown')
 
         expect(bindings).toEqual([])
       })
 
-      it('marks unchanged overrides as not custom', () => {
+      it('[U02228] marks unchanged overrides as not custom', () => {
         const manager = new KeybindingManager()
         const originalBinding = manager.getBindingsByDevice('keyboard')[0]
         manager.overrides.keyboard = { [originalBinding.id]: { input: originalBinding.input } }
@@ -122,7 +122,7 @@ describe('keybindings.js', () => {
     })
 
     describe('updateBinding', () => {
-      it('updates a binding and persists to localStorage', () => {
+      it('[U02229] updates a binding and persists to localStorage', () => {
         const manager = new KeybindingManager()
         manager.updateBinding('keyboard', 'toggle-help', 'h')
 
@@ -133,7 +133,7 @@ describe('keybindings.js', () => {
         )
       })
 
-      it('creates overrides object for device if it does not exist', () => {
+      it('[U02230] creates overrides object for device if it does not exist', () => {
         const manager = new KeybindingManager()
         delete manager.overrides.keyboard
 
@@ -143,7 +143,7 @@ describe('keybindings.js', () => {
         expect(manager.overrides.keyboard['toggle-help']).toEqual({ input: 'h' })
       })
 
-      it('handles localStorage errors gracefully', () => {
+      it('[U02231] handles localStorage errors gracefully', () => {
         const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
         globalThis.localStorage.setItem = vi.fn(() => {
           throw new Error('Storage quota exceeded')
@@ -158,7 +158,7 @@ describe('keybindings.js', () => {
     })
 
     describe('resetBinding', () => {
-      it('removes a binding override and persists', () => {
+      it('[U02232] removes a binding override and persists', () => {
         const manager = new KeybindingManager()
         manager.overrides.keyboard = { 'toggle-help': { input: 'h' } }
 
@@ -168,7 +168,7 @@ describe('keybindings.js', () => {
         expect(globalThis.localStorage.setItem).toHaveBeenCalled()
       })
 
-      it('does nothing if no overrides exist for device', () => {
+      it('[U02233] does nothing if no overrides exist for device', () => {
         const manager = new KeybindingManager()
         delete manager.overrides.keyboard
 
@@ -179,7 +179,7 @@ describe('keybindings.js', () => {
     })
 
     describe('resetAll', () => {
-      it('clears all overrides and persists', () => {
+      it('[U02234] clears all overrides and persists', () => {
         const manager = new KeybindingManager()
         manager.overrides = {
           keyboard: { 'toggle-help': { input: 'h' } },
@@ -195,7 +195,7 @@ describe('keybindings.js', () => {
     })
 
     describe('exportBindings', () => {
-      it('exports bindings with version metadata', () => {
+      it('[U02235] exports bindings with version metadata', () => {
         const manager = new KeybindingManager()
         const exported = manager.exportBindings()
         const data = JSON.parse(exported)
@@ -209,7 +209,7 @@ describe('keybindings.js', () => {
         expect(data.bindings.touch).toBeDefined()
       })
 
-      it('includes custom bindings in export', () => {
+      it('[U02236] includes custom bindings in export', () => {
         const manager = new KeybindingManager()
         manager.updateBinding('keyboard', 'toggle-help', 'h')
 
@@ -223,7 +223,7 @@ describe('keybindings.js', () => {
     })
 
     describe('importBindings', () => {
-      it('imports bindings and persists', () => {
+      it('[U02237] imports bindings and persists', () => {
         const manager = new KeybindingManager()
         const importData = {
           bindings: {
@@ -243,7 +243,7 @@ describe('keybindings.js', () => {
         expect(globalThis.localStorage.setItem).toHaveBeenCalled()
       })
 
-      it('handles invalid import data gracefully', () => {
+      it('[U02238] handles invalid import data gracefully', () => {
         const manager = new KeybindingManager()
 
         expect(() => manager.importBindings(null)).not.toThrow()
@@ -251,7 +251,7 @@ describe('keybindings.js', () => {
         expect(() => manager.importBindings({ bindings: null })).not.toThrow()
       })
 
-      it('skips invalid entries during import', () => {
+      it('[U02239] skips invalid entries during import', () => {
         const manager = new KeybindingManager()
         const importData = {
           bindings: {
@@ -274,7 +274,7 @@ describe('keybindings.js', () => {
     })
 
     describe('normalizeKeyboardEvent', () => {
-      it('normalizes a simple key press', () => {
+      it('[U02240] normalizes a simple key press', () => {
         const manager = new KeybindingManager()
         const event = { key: 'i', ctrlKey: false, shiftKey: false, altKey: false, metaKey: false }
 
@@ -283,7 +283,7 @@ describe('keybindings.js', () => {
         expect(normalized).toBe('i')
       })
 
-      it('normalizes key with modifiers', () => {
+      it('[U02241] normalizes key with modifiers', () => {
         const manager = new KeybindingManager()
         const event = { key: 'S', ctrlKey: true, shiftKey: true, altKey: false, metaKey: false }
 
@@ -292,7 +292,7 @@ describe('keybindings.js', () => {
         expect(normalized).toBe('Ctrl+Shift+s')
       })
 
-      it('normalizes space key', () => {
+      it('[U02242] normalizes space key', () => {
         const manager = new KeybindingManager()
         const event = { key: ' ', ctrlKey: false, shiftKey: false, altKey: false, metaKey: false }
 
@@ -301,7 +301,7 @@ describe('keybindings.js', () => {
         expect(normalized).toBe('Space')
       })
 
-      it('excludes modifier keys from key part', () => {
+      it('[U02243] excludes modifier keys from key part', () => {
         const manager = new KeybindingManager()
         const event = { key: 'Control', ctrlKey: true, shiftKey: false, altKey: false, metaKey: false }
 
@@ -310,7 +310,7 @@ describe('keybindings.js', () => {
         expect(normalized).toBe('Ctrl')
       })
 
-      it('preserves special key names', () => {
+      it('[U02244] preserves special key names', () => {
         const manager = new KeybindingManager()
         const event = { key: 'ArrowUp', ctrlKey: false, shiftKey: false, altKey: false, metaKey: false }
 
@@ -319,7 +319,7 @@ describe('keybindings.js', () => {
         expect(normalized).toBe('ArrowUp')
       })
 
-      it('includes all modifiers', () => {
+      it('[U02245] includes all modifiers', () => {
         const manager = new KeybindingManager()
         const event = { key: 'a', ctrlKey: true, shiftKey: true, altKey: true, metaKey: true }
 
@@ -330,7 +330,7 @@ describe('keybindings.js', () => {
     })
 
     describe('matchesKeyboardAction', () => {
-      it('matches when normalized inputs are equal', () => {
+      it('[U02246] matches when normalized inputs are equal', () => {
         const manager = new KeybindingManager()
         const event = { key: 'i', ctrlKey: false, shiftKey: false, altKey: false, metaKey: false }
 
@@ -339,7 +339,7 @@ describe('keybindings.js', () => {
         expect(matches).toBe(true)
       })
 
-      it('does not match when inputs differ', () => {
+      it('[U02247] does not match when inputs differ', () => {
         const manager = new KeybindingManager()
         const event = { key: 'x', ctrlKey: false, shiftKey: false, altKey: false, metaKey: false }
 
@@ -348,7 +348,7 @@ describe('keybindings.js', () => {
         expect(matches).toBe(false)
       })
 
-      it('returns false for unknown action', () => {
+      it('[U02248] returns false for unknown action', () => {
         const manager = new KeybindingManager()
         const event = { key: 'z', ctrlKey: false, shiftKey: false, altKey: false, metaKey: false }
 
@@ -357,7 +357,7 @@ describe('keybindings.js', () => {
         expect(matches).toBe(false)
       })
 
-      it('matches custom binding', () => {
+      it('[U02249] matches custom binding', () => {
         const manager = new KeybindingManager()
         manager.updateBinding('keyboard', 'toggle-help', 'h')
         const event = { key: 'h', ctrlKey: false, shiftKey: false, altKey: false, metaKey: false }
@@ -367,7 +367,7 @@ describe('keybindings.js', () => {
         expect(matches).toBe(true)
       })
 
-      it('respects context when matching', () => {
+      it('[U02250] respects context when matching', () => {
         const manager = new KeybindingManager()
         const event = { key: 'M', ctrlKey: false, shiftKey: true, altKey: false, metaKey: false }
 
@@ -378,35 +378,35 @@ describe('keybindings.js', () => {
     })
 
     describe('normalizeKeyboardInput', () => {
-      it('normalizes multi-part input', () => {
+      it('[U02251] normalizes multi-part input', () => {
         const manager = new KeybindingManager()
         const normalized = manager.normalizeKeyboardInput('Ctrl+Shift+A')
 
         expect(normalized).toBe('Ctrl+Shift+a')
       })
 
-      it('handles empty input', () => {
+      it('[U02252] handles empty input', () => {
         const manager = new KeybindingManager()
         const normalized = manager.normalizeKeyboardInput('')
 
         expect(normalized).toBe('')
       })
 
-      it('handles null input', () => {
+      it('[U02253] handles null input', () => {
         const manager = new KeybindingManager()
         const normalized = manager.normalizeKeyboardInput(null)
 
         expect(normalized).toBe('')
       })
 
-      it('trims whitespace from parts', () => {
+      it('[U02254] trims whitespace from parts', () => {
         const manager = new KeybindingManager()
         const normalized = manager.normalizeKeyboardInput('Ctrl + Shift + A')
 
         expect(normalized).toBe('Ctrl+Shift+a')
       })
 
-      it('filters empty parts', () => {
+      it('[U02255] filters empty parts', () => {
         const manager = new KeybindingManager()
         const normalized = manager.normalizeKeyboardInput('Ctrl++A')
 
@@ -415,7 +415,7 @@ describe('keybindings.js', () => {
     })
 
     describe('pointerEventToString', () => {
-      it('converts a simple mouse click', () => {
+      it('[U02256] converts a simple mouse click', () => {
         const manager = new KeybindingManager()
         const event = { button: 0, detail: 1, ctrlKey: false, shiftKey: false, altKey: false, metaKey: false }
 
@@ -424,7 +424,7 @@ describe('keybindings.js', () => {
         expect(str).toBe('Mouse1')
       })
 
-      it('converts a double click', () => {
+      it('[U02257] converts a double click', () => {
         const manager = new KeybindingManager()
         const event = { button: 0, detail: 2, ctrlKey: false, shiftKey: false, altKey: false, metaKey: false }
 
@@ -433,7 +433,7 @@ describe('keybindings.js', () => {
         expect(str).toBe('Double Mouse1')
       })
 
-      it('includes modifiers for mouse events', () => {
+      it('[U02258] includes modifiers for mouse events', () => {
         const manager = new KeybindingManager()
         const event = { button: 0, detail: 1, ctrlKey: true, shiftKey: true, altKey: false, metaKey: false }
 
@@ -442,7 +442,7 @@ describe('keybindings.js', () => {
         expect(str).toBe('Ctrl+Shift+Mouse1')
       })
 
-      it('handles right click', () => {
+      it('[U02259] handles right click', () => {
         const manager = new KeybindingManager()
         const event = { button: 2, detail: 1, ctrlKey: false, shiftKey: false, altKey: false, metaKey: false }
 
@@ -451,7 +451,7 @@ describe('keybindings.js', () => {
         expect(str).toBe('Mouse3')
       })
 
-      it('converts touch tap', () => {
+      it('[U02260] converts touch tap', () => {
         const manager = new KeybindingManager()
         const event = { touches: [{}], detail: 1 }
 
@@ -460,7 +460,7 @@ describe('keybindings.js', () => {
         expect(str).toBe('Tap')
       })
 
-      it('converts double tap', () => {
+      it('[U02261] converts double tap', () => {
         const manager = new KeybindingManager()
         const event = { touches: [{}], detail: 2 }
 
@@ -469,7 +469,7 @@ describe('keybindings.js', () => {
         expect(str).toBe('Double Tap')
       })
 
-      it('converts two-finger tap', () => {
+      it('[U02262] converts two-finger tap', () => {
         const manager = new KeybindingManager()
         const event = { touches: [{}, {}], detail: 1 }
 
@@ -478,7 +478,7 @@ describe('keybindings.js', () => {
         expect(str).toBe('Double Finger Tap')
       })
 
-      it('uses changedTouches if touches is not available', () => {
+      it('[U02263] uses changedTouches if touches is not available', () => {
         const manager = new KeybindingManager()
         const event = { changedTouches: [{}, {}], detail: 1 }
 
@@ -489,7 +489,7 @@ describe('keybindings.js', () => {
     })
 
     describe('matchesPointerAction', () => {
-      it('matches mouse action', () => {
+      it('[U02264] matches mouse action', () => {
         const manager = new KeybindingManager()
         const event = { button: 0, detail: 1, ctrlKey: false, shiftKey: false, altKey: false, metaKey: false }
 
@@ -498,7 +498,7 @@ describe('keybindings.js', () => {
         expect(matches).toBe(true)
       })
 
-      it('does not match incorrect pointer action', () => {
+      it('[U02265] does not match incorrect pointer action', () => {
         const manager = new KeybindingManager()
         const event = { button: 2, detail: 1, ctrlKey: false, shiftKey: false, altKey: false, metaKey: false }
 
@@ -507,7 +507,7 @@ describe('keybindings.js', () => {
         expect(matches).toBe(false)
       })
 
-      it('returns false for unknown action', () => {
+      it('[U02266] returns false for unknown action', () => {
         const manager = new KeybindingManager()
         const event = { button: 0, detail: 1, ctrlKey: false, shiftKey: false, altKey: false, metaKey: false }
 
@@ -518,21 +518,21 @@ describe('keybindings.js', () => {
     })
 
     describe('normalizePointerInput', () => {
-      it('normalizes pointer input', () => {
+      it('[U02267] normalizes pointer input', () => {
         const manager = new KeybindingManager()
         const normalized = manager.normalizePointerInput('Ctrl + Shift + Mouse1')
 
         expect(normalized).toBe('Ctrl+Shift+Mouse1')
       })
 
-      it('handles empty input', () => {
+      it('[U02268] handles empty input', () => {
         const manager = new KeybindingManager()
         const normalized = manager.normalizePointerInput('')
 
         expect(normalized).toBe('')
       })
 
-      it('handles null input', () => {
+      it('[U02269] handles null input', () => {
         const manager = new KeybindingManager()
         const normalized = manager.normalizePointerInput(null)
 
@@ -541,7 +541,7 @@ describe('keybindings.js', () => {
     })
 
     describe('getBindingForAction', () => {
-      it('finds binding by action id and context', () => {
+      it('[U02270] finds binding by action id and context', () => {
         const manager = new KeybindingManager()
         const binding = manager.getBindingForAction('keyboard', 'toggle-help', KEYBINDING_CONTEXTS.DEFAULT)
 
@@ -549,14 +549,14 @@ describe('keybindings.js', () => {
         expect(binding.id).toBe('toggle-help')
       })
 
-      it('returns undefined for unknown action', () => {
+      it('[U02271] returns undefined for unknown action', () => {
         const manager = new KeybindingManager()
         const binding = manager.getBindingForAction('keyboard', 'unknown-action')
 
         expect(binding).toBeUndefined()
       })
 
-      it('falls back to default context', () => {
+      it('[U02272] falls back to default context', () => {
         const manager = new KeybindingManager()
         const binding = manager.getBindingForAction('keyboard', 'toggle-help', KEYBINDING_CONTEXTS.MAP_EDIT_ON)
 
@@ -567,11 +567,11 @@ describe('keybindings.js', () => {
   })
 
   describe('keybindingManager singleton', () => {
-    it('exports a singleton instance', () => {
+    it('[U02273] exports a singleton instance', () => {
       expect(keybindingManager).toBeInstanceOf(KeybindingManager)
     })
 
-    it('is the same instance across multiple imports', () => {
+    it('[U02274] is the same instance across multiple imports', () => {
       const instance1 = keybindingManager
       const instance2 = keybindingManager
 

@@ -151,7 +151,7 @@ describe('Enemy AI Strategies', () => {
   })
 
   describe('shouldRetreatLowHealth()', () => {
-    it('should return true when health is below 33%', () => {
+    it('[U01307] should return true when health is below 33%', () => {
       aiUnit.health = 30
       aiUnit.maxHealth = 100
 
@@ -160,7 +160,7 @@ describe('Enemy AI Strategies', () => {
       expect(result).toBe(true)
     })
 
-    it('should return false when health is above 33%', () => {
+    it('[U01308] should return false when health is above 33%', () => {
       aiUnit.health = 50
       aiUnit.maxHealth = 100
 
@@ -169,7 +169,7 @@ describe('Enemy AI Strategies', () => {
       expect(result).toBe(false)
     })
 
-    it('should return true when at exactly 33%', () => {
+    it('[U01309] should return true when at exactly 33%', () => {
       // 33% equals the threshold so returns true (uses <=)
       aiUnit.health = 33
       aiUnit.maxHealth = 100
@@ -179,7 +179,7 @@ describe('Enemy AI Strategies', () => {
       expect(result).toBe(true)
     })
 
-    it('should return false for unit without health', () => {
+    it('[U01310] should return false for unit without health', () => {
       delete aiUnit.health
 
       const result = shouldRetreatLowHealth(aiUnit)
@@ -187,7 +187,7 @@ describe('Enemy AI Strategies', () => {
       expect(result).toBe(false)
     })
 
-    it('should return false for unit without maxHealth', () => {
+    it('[U01311] should return false for unit without maxHealth', () => {
       delete aiUnit.maxHealth
 
       const result = shouldRetreatLowHealth(aiUnit)
@@ -221,13 +221,13 @@ describe('Enemy AI Strategies', () => {
       ]
     })
 
-    it('should return false for null target', () => {
+    it('[U01312] should return false for null target', () => {
       const result = shouldConductGroupAttack(aiUnit, mockUnits, gameState, null)
 
       expect(result).toBe(false)
     })
 
-    it('should return true when unit is being attacked', () => {
+    it('[U01313] should return true when unit is being attacked', () => {
       aiUnit.isBeingAttacked = true
       aiUnit.lastDamageTime = Date.now()
 
@@ -236,7 +236,7 @@ describe('Enemy AI Strategies', () => {
       expect(result).toBe(true)
     })
 
-    it('should return true for harvester targets', () => {
+    it('[U01314] should return true for harvester targets', () => {
       target.type = 'harvester'
 
       const result = shouldConductGroupAttack(aiUnit, mockUnits, gameState, target)
@@ -244,7 +244,7 @@ describe('Enemy AI Strategies', () => {
       expect(result).toBe(true)
     })
 
-    it('should return true for damaged targets', () => {
+    it('[U01315] should return true for damaged targets', () => {
       target.health = 30
       target.maxHealth = 100
 
@@ -253,7 +253,7 @@ describe('Enemy AI Strategies', () => {
       expect(result).toBe(true)
     })
 
-    it('should return true when unit is in player base area', () => {
+    it('[U01316] should return true when unit is in player base area', () => {
       // Place AI unit near player building
       gameState.buildings.push({
         type: 'powerPlant',
@@ -299,7 +299,7 @@ describe('Enemy AI Strategies', () => {
       aiUnit.y = 16 * TILE_SIZE
     })
 
-    it('should return false when not retreating', () => {
+    it('[U01317] should return false when not retreating', () => {
       aiUnit.isRetreating = false
 
       const result = shouldStopRetreating(aiUnit, gameState)
@@ -307,7 +307,7 @@ describe('Enemy AI Strategies', () => {
       expect(result).toBe(false)
     })
 
-    it('should return true when health recovered and near base', () => {
+    it('[U01318] should return true when health recovered and near base', () => {
       // Add enemy buildings (AI retreats to enemy buildings)
       gameState.buildings.push({
         type: 'constructionYard',
@@ -331,7 +331,7 @@ describe('Enemy AI Strategies', () => {
       expect(result).toBe(true)
     })
 
-    it('should return false when still under attack', () => {
+    it('[U01319] should return false when still under attack', () => {
       aiUnit.health = 50
       aiUnit.isBeingAttacked = true
       aiUnit.path = [{ x: 16, y: 16 }]
@@ -341,7 +341,7 @@ describe('Enemy AI Strategies', () => {
       expect(result).toBe(false)
     })
 
-    it('should return false when recently took damage', () => {
+    it('[U01320] should return false when recently took damage', () => {
       aiUnit.health = 50
       aiUnit.isBeingAttacked = false
       aiUnit.lastDamageTime = performance.now() // Very recent
@@ -378,7 +378,7 @@ describe('Enemy AI Strategies', () => {
       ]
     })
 
-    it('should return false when no friendly buildings exist', () => {
+    it('[U01321] should return false when no friendly buildings exist', () => {
       gameState.buildings = []
 
       const result = handleRetreatToBase(aiUnit, gameState, mapGrid)
@@ -386,7 +386,7 @@ describe('Enemy AI Strategies', () => {
       expect(result).toBe(false)
     })
 
-    it('should set isRetreating flag on success', () => {
+    it('[U01322] should set isRetreating flag on success', () => {
       const result = handleRetreatToBase(aiUnit, gameState, mapGrid)
 
       if (result) {
@@ -394,7 +394,7 @@ describe('Enemy AI Strategies', () => {
       }
     })
 
-    it('should set retreatTarget on success', () => {
+    it('[U01323] should set retreatTarget on success', () => {
       const result = handleRetreatToBase(aiUnit, gameState, mapGrid)
 
       if (result) {
@@ -402,7 +402,7 @@ describe('Enemy AI Strategies', () => {
       }
     })
 
-    it('should prioritize defensive buildings for retreat', () => {
+    it('[U01324] should prioritize defensive buildings for retreat', () => {
       gameState.buildings.push({
         type: 'turretGunV1',
         owner: 'player2',
@@ -440,7 +440,7 @@ describe('AI Target Selection', () => {
   })
 
   describe('Target Priority Order', () => {
-    it('should prioritize retaliation when being attacked', () => {
+    it('[U01325] should prioritize retaliation when being attacked', () => {
       const attacker = {
         id: 'attacker-1',
         type: 'tank_v1',
@@ -457,7 +457,7 @@ describe('AI Target Selection', () => {
       expect(aiUnit.lastAttacker).toBe(attacker)
     })
 
-    it('should target player harvesters as high priority', () => {
+    it('[U01326] should target player harvesters as high priority', () => {
       const harvester = {
         id: 'harvester-1',
         type: 'harvester',
@@ -471,7 +471,7 @@ describe('AI Target Selection', () => {
       expect(harvester.type).toBe('harvester')
     })
 
-    it('should prioritize constructionYard over other buildings', () => {
+    it('[U01327] should prioritize constructionYard over other buildings', () => {
       const buildings = [
         { type: 'powerPlant', owner: 'player1', health: 100 },
         { type: 'constructionYard', owner: 'player1', health: 100 },
@@ -506,7 +506,7 @@ describe('AI Resource Management', () => {
   })
 
   describe('Budget Thresholds', () => {
-    it('should identify low budget state', () => {
+    it('[U01328] should identify low budget state', () => {
       const LOW_BUDGET_THRESHOLD = 3500
 
       aiFactory.budget = 3000
@@ -515,7 +515,7 @@ describe('AI Resource Management', () => {
       expect(isLowBudget).toBe(true)
     })
 
-    it('should identify high budget state', () => {
+    it('[U01329] should identify high budget state', () => {
       const HIGH_BUDGET_THRESHOLD = 12000
 
       aiFactory.budget = 15000
@@ -524,7 +524,7 @@ describe('AI Resource Management', () => {
       expect(isHighBudget).toBe(true)
     })
 
-    it('should identify very high budget state', () => {
+    it('[U01330] should identify very high budget state', () => {
       const VERY_HIGH_BUDGET_THRESHOLD = 20000
 
       aiFactory.budget = 25000
@@ -535,7 +535,7 @@ describe('AI Resource Management', () => {
   })
 
   describe('Building Priority', () => {
-    it('should prioritize power plant when out of power', () => {
+    it('[U01331] should prioritize power plant when out of power', () => {
       const buildingOrder = ['powerPlant', 'oreRefinery', 'vehicleFactory']
       const currentPower = -50 // Negative power
 
@@ -545,7 +545,7 @@ describe('AI Resource Management', () => {
       expect(nextBuilding).toBe('powerPlant')
     })
 
-    it('should prioritize ore refinery after power', () => {
+    it('[U01332] should prioritize ore refinery after power', () => {
       const aiBuildings = [
         { type: 'powerPlant', owner: 'player2', health: 100 }
       ]
@@ -554,7 +554,7 @@ describe('AI Resource Management', () => {
       expect(hasOreRefinery).toBe(false)
     })
 
-    it('should prioritize vehicle factory for unit production', () => {
+    it('[U01333] should prioritize vehicle factory for unit production', () => {
       const aiBuildings = [
         { type: 'powerPlant', owner: 'player2', health: 100 },
         { type: 'oreRefinery', owner: 'player2', health: 100 }
@@ -566,7 +566,7 @@ describe('AI Resource Management', () => {
   })
 
   describe('Unit Production Priority', () => {
-    it('should prioritize harvesters first', () => {
+    it('[U01334] should prioritize harvesters first', () => {
       const aiHarvesters = []
       const MAX_HARVESTERS = 4
 
@@ -574,7 +574,7 @@ describe('AI Resource Management', () => {
       expect(needsHarvester).toBe(true)
     })
 
-    it('should build tanker when harvesters exist but no tanker', () => {
+    it('[U01335] should build tanker when harvesters exist but no tanker', () => {
       const aiHarvesters = [{ type: 'harvester', owner: 'player2' }]
       const aiTankers = []
       const gasStations = [{ type: 'gasStation', owner: 'player2' }]
@@ -583,7 +583,7 @@ describe('AI Resource Management', () => {
       expect(needsTanker).toBe(true)
     })
 
-    it('should build ambulance when hospital exists', () => {
+    it('[U01336] should build ambulance when hospital exists', () => {
       const hospitals = [{ type: 'hospital', owner: 'player2' }]
       const ambulances = []
 
@@ -591,7 +591,7 @@ describe('AI Resource Management', () => {
       expect(needsAmbulance).toBe(true)
     })
 
-    it('should calculate required recovery tanks from ratio', () => {
+    it('[U01337] should calculate required recovery tanks from ratio', () => {
       const RECOVERY_TANK_RATIO = 5
       const combatUnits = 15
 
@@ -644,7 +644,7 @@ describe('AI Defense Behavior', () => {
   })
 
   describe('Base Defense Detection', () => {
-    it('should detect player units near base', () => {
+    it('[U01338] should detect player units near base', () => {
       const aiBuildings = gameState.buildings.filter(b => b.owner === 'player2')
 
       const playerNearBase = aiBuildings.some(building => {
@@ -660,7 +660,7 @@ describe('AI Defense Behavior', () => {
       expect(playerNearBase).toBe(true)
     })
 
-    it('should not trigger defense for distant threats', () => {
+    it('[U01339] should not trigger defense for distant threats', () => {
       playerUnit.x = 800
       playerUnit.y = 800
 
@@ -681,21 +681,21 @@ describe('AI Defense Behavior', () => {
   })
 
   describe('Defender Assignment', () => {
-    it('should limit number of defenders', () => {
+    it('[U01340] should limit number of defenders', () => {
       const threatCount = 2
       const maxDefenders = Math.min(threatCount * 2, 6)
 
       expect(maxDefenders).toBe(4)
     })
 
-    it('should cap defenders at 6', () => {
+    it('[U01341] should cap defenders at 6', () => {
       const threatCount = 10
       const maxDefenders = Math.min(threatCount * 2, 6)
 
       expect(maxDefenders).toBe(6)
     })
 
-    it('should only assign nearby units to defend', () => {
+    it('[U01342] should only assign nearby units to defend', () => {
       const DEFENSE_RANGE = 20 * TILE_SIZE
 
       const withinRange = Math.hypot(

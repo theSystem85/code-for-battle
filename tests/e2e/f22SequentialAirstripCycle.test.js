@@ -23,7 +23,7 @@ test.describe('F22 airstrip sequential cycle', () => {
     })
   })
 
-  test('3 parked F22 launch sequentially, clear enemy groups, auto-return, park, and only refill ammo when parked', async({ page }) => {
+  test('[E00043] 3 parked F22 launch sequentially, clear enemy groups, auto-return, park, and only refill ammo when parked', async({ page }) => {
     test.setTimeout(240000)
 
     await page.goto('/?seed=11')

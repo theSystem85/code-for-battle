@@ -40,7 +40,7 @@ describe('Full Base Test locked save', () => {
   const enemyBuildings = buildings.filter(building => building.owner === ENEMY)
   const playableUnitTypes = Object.keys(UNIT_PROPERTIES).filter(type => type !== 'base')
 
-  it('is registered as a locked builtin save without replacing Mission 01', () => {
+  it('[U02957] is registered as a locked builtin save without replacing Mission 01', () => {
     expect(builtinMissions.map(mission => mission.id)).toEqual(['Mission_01', 'Full_Base_Test', 'demo'])
     expect(getBuiltinMissionById('Mission_01').label).toBe('Mission 01: Fordline')
     expect(getBuiltinMissionById('Full_Base_Test')).toBe(fullBaseTest)
@@ -49,7 +49,7 @@ describe('Full Base Test locked save', () => {
     expect(fullBaseTest.time).toBeLessThan(getBuiltinMissionById('Mission_01').time)
   })
 
-  it('gives the local player one of every building, with enough power and a finished base', () => {
+  it('[U02958] gives the local player one of every building, with enough power and a finished base', () => {
     const counts = new Map()
     playerBuildings.forEach(building => {
       counts.set(building.type, (counts.get(building.type) || 0) + 1)
@@ -73,7 +73,7 @@ describe('Full Base Test locked save', () => {
     expect(state.gameState.availableBuildingTypes).toEqual(expect.arrayContaining(Object.keys(buildingData)))
   })
 
-  it('places a coastal shipyard and an airstrip on a map that has open water', () => {
+  it('[U02959] places a coastal shipyard and an airstrip on a map that has open water', () => {
     const shipyard = playerBuildings.find(building => building.type === 'shipyard')
     const airstrip = playerBuildings.find(building => building.type === 'airstrip')
     expect(shipyard).toBeTruthy()
@@ -97,7 +97,7 @@ describe('Full Base Test locked save', () => {
     expect(waterCount).toBeGreaterThan(waterTiles.length + shipyard.width)
   })
 
-  it('gives the local player one of every unit and the enemy only a construction yard', () => {
+  it('[U02960] gives the local player one of every unit and the enemy only a construction yard', () => {
     expect(enemyBuildings).toHaveLength(1)
     expect(enemyBuildings[0]).toMatchObject({ type: 'constructionYard', owner: ENEMY, id: ENEMY })
     expect(units.filter(unit => unit.owner !== PLAYER)).toEqual([])
@@ -119,7 +119,7 @@ describe('Full Base Test locked save', () => {
     expect(state.gameState.availableUnitTypes).toEqual(expect.arrayContaining(['tank', ...playableUnitTypes]))
   })
 
-  it('keeps buildings and units from occupying the same tiles', () => {
+  it('[U02961] keeps buildings and units from occupying the same tiles', () => {
     for (let i = 0; i < buildings.length; i++) {
       for (let j = i + 1; j < buildings.length; j++) {
         expect(overlaps(buildings[i], buildings[j])).toBe(false)

@@ -5,7 +5,7 @@ const RUN_CHIMNEY_SMOKE_PERF = process.env.PERF_CHIMNEY_SMOKE === '1'
 test.describe('Building chimney smoke performance', () => {
   test.skip(!RUN_CHIMNEY_SMOKE_PERF, 'Set PERF_CHIMNEY_SMOKE=1 to run this benchmark.')
 
-  test('keeps a full smoke budget within the frame and heap budgets', async({ page, baseURL }) => {
+  test('[E00015] keeps a full smoke budget within the frame and heap budgets', async({ page, baseURL }) => {
     await page.goto(`${baseURL || 'http://localhost:5173'}?seed=41&size=64&players=2&oreFields=8`)
     await page.waitForFunction(() => Boolean(window.gameInstance?.gameLoop && window.gameState?.gameStarted), null, { timeout: 45000 })
 

@@ -23,7 +23,7 @@ test.describe('Enemy F22 anti-air aware target and approach selection', () => {
     })
   })
 
-  test('enemy F22 avoids anti-air-protected targets and chooses path points outside anti-air radius', async({ page }) => {
+  test('[E00026] enemy F22 avoids anti-air-protected targets and chooses path points outside anti-air radius', async({ page }) => {
     test.setTimeout(120000)
 
     await page.goto('/?seed=23')

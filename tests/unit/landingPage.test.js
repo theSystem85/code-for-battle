@@ -59,7 +59,7 @@ function expectGithubPlacement(html) {
 }
 
 describe('landing locales', () => {
-  it('keeps English and German message keys aligned and filled', () => {
+  it('[U02304] keeps English and German message keys aligned and filled', () => {
     const enKeys = collectMessageKeys(en).sort()
     const deKeys = collectMessageKeys(de).sort()
     expect(deKeys).toEqual(enKeys)
@@ -73,7 +73,7 @@ describe('landing locales', () => {
     expect(translate(de, 'landing.nav.githubShort')).toBe('GitHub')
   })
 
-  it('names every tech node, feature, and asset kind in both locales', () => {
+  it('[U02305] names every tech node, feature, and asset kind in both locales', () => {
     collectTechNodeIds().forEach(id => {
       expect(translate(en, `landing.tech.nodes.${id}`)).not.toBe('')
       expect(translate(de, `landing.tech.nodes.${id}`)).not.toBe('')
@@ -90,7 +90,7 @@ describe('landing locales', () => {
 })
 
 describe('landing locale selection', () => {
-  it('prefers a stored choice, then the browser list, then English', () => {
+  it('[U02306] prefers a stored choice, then the browser list, then English', () => {
     const storage = {
       value: 'de',
       getItem() { return this.value }
@@ -102,7 +102,7 @@ describe('landing locale selection', () => {
     expect(detectNavigatorLandingLocale([])).toBe('en')
   })
 
-  it('maps locales to stable paths and redirects /landing', () => {
+  it('[U02307] maps locales to stable paths and redirects /landing', () => {
     expect(landingPath('de')).toBe('/de/landing')
     expect(landingPath('en')).toBe('/en/landing')
     expect(landingRedirectTarget({
@@ -120,7 +120,7 @@ describe('landing locale selection', () => {
 })
 
 describe('landing rendering', () => {
-  it('fills visible copy from keys and renders the tech tree', () => {
+  it('[U02308] fills visible copy from keys and renders the tech tree', () => {
     document.body.innerHTML = `
       <h1 data-i18n="landing.hero.title"></h1>
       <a data-locale-link="de" href="/de/landing"></a>
@@ -145,7 +145,7 @@ describe('landing rendering', () => {
     expect(document.body.textContent).not.toContain('landing.')
   })
 
-  it('keeps the GitHub mark when filling the link label', () => {
+  it('[U02309] keeps the GitHub mark when filling the link label', () => {
     document.body.innerHTML = `
       <a class="landing-github" href="${GITHUB_REPO_URL}" target="_blank" rel="noopener noreferrer">
         <svg class="landing-github__mark" aria-hidden="true"></svg>
@@ -161,14 +161,14 @@ describe('landing rendering', () => {
     expect(link.getAttribute('rel')).toBe('noopener noreferrer')
   })
 
-  it('places the repository link on the English and German landing pages', () => {
+  it('[U02310] places the repository link on the English and German landing pages', () => {
     expectGithubPlacement(landingEn)
     expectGithubPlacement(landingDe)
   })
 })
 
 describe('landing backdrop', () => {
-  it('parallax follows scroll and stays still when motion is reduced', () => {
+  it('[U02311] parallax follows scroll and stays still when motion is reduced', () => {
     document.body.innerHTML = '<div class="landing-backdrop__shift"></div>'
     const frames = []
     const listeners = {}
@@ -203,7 +203,7 @@ describe('landing backdrop', () => {
     still()
   })
 
-  it('keeps the header outside the parallax layer and overscans the backdrop', () => {
+  it('[U02312] keeps the header outside the parallax layer and overscans the backdrop', () => {
     expect(landingCss).toMatch(/html\s*\{[^}]*scroll-behavior:\s*auto/)
     expect(landingCss).toMatch(/\.landing-backdrop__shift\s*\{[^}]*top:\s*-32%/)
     expect(landingCss).toMatch(/\.landing-bar\s*\{[^}]*position:\s*sticky[^}]*top:\s*0/)
@@ -217,7 +217,7 @@ describe('landing backdrop', () => {
 })
 
 describe('sidebar landing link', () => {
-  it('places the link after Privacy and points it at the active locale', async() => {
+  it('[U02313] places the link after Privacy and points it at the active locale', async() => {
     const privacyAt = indexHtml.indexOf('href="/privacy"')
     const landingAt = indexHtml.indexOf('id="sidebarLandingLink"')
     expect(privacyAt).toBeGreaterThan(-1)
@@ -234,7 +234,7 @@ describe('sidebar landing link', () => {
     expect(link.textContent).toBe(translate(de, 'landing.nav.sidebar'))
   })
 
-  it('places GitHub after Privacy and opens the repository in a new tab', async() => {
+  it('[U02314] places GitHub after Privacy and opens the repository in a new tab', async() => {
     const privacyAt = indexHtml.indexOf('href="/privacy"')
     const githubAt = indexHtml.indexOf('id="sidebarGithubLink"')
     const landingAt = indexHtml.indexOf('id="sidebarLandingLink"')

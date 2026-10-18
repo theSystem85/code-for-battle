@@ -54,7 +54,7 @@ describe('debugLogger', () => {
       }
     })
 
-    it('logger function does not output', async() => {
+    it('[U01177] logger function does not output', async() => {
       vi.resetModules()
       const { logger } = await import('../../src/utils/debugLogger.js')
 
@@ -63,7 +63,7 @@ describe('debugLogger', () => {
       expect(mockLog).not.toHaveBeenCalled()
     })
 
-    it('logger.warn does not output', async() => {
+    it('[U01178] logger.warn does not output', async() => {
       vi.resetModules()
       const { logger } = await import('../../src/utils/debugLogger.js')
 
@@ -72,7 +72,7 @@ describe('debugLogger', () => {
       expect(mockWarn).not.toHaveBeenCalled()
     })
 
-    it('logger.info does not output', async() => {
+    it('[U01179] logger.info does not output', async() => {
       vi.resetModules()
       const { logger } = await import('../../src/utils/debugLogger.js')
 
@@ -81,7 +81,7 @@ describe('debugLogger', () => {
       expect(mockInfo).not.toHaveBeenCalled()
     })
 
-    it('logger.debug does not output', async() => {
+    it('[U01180] logger.debug does not output', async() => {
       vi.resetModules()
       const { logger } = await import('../../src/utils/debugLogger.js')
 
@@ -90,14 +90,14 @@ describe('debugLogger', () => {
       expect(mockDebug).not.toHaveBeenCalled()
     })
 
-    it('logger.isEnabled returns false', async() => {
+    it('[U01181] logger.isEnabled returns false', async() => {
       vi.resetModules()
       const { logger } = await import('../../src/utils/debugLogger.js')
 
       expect(logger.isEnabled()).toBe(false)
     })
 
-    it('DEBUG_ENABLED is false', async() => {
+    it('[U01182] DEBUG_ENABLED is false', async() => {
       vi.resetModules()
       const { DEBUG_ENABLED } = await import('../../src/utils/debugLogger.js')
 
@@ -114,7 +114,7 @@ describe('debugLogger', () => {
       }
     })
 
-    it('logger function outputs to console.log', async() => {
+    it('[U01183] logger function outputs to console.log', async() => {
       vi.resetModules()
       const { logger } = await import('../../src/utils/debugLogger.js')
 
@@ -123,7 +123,7 @@ describe('debugLogger', () => {
       expect(mockLog).toHaveBeenCalledWith('test message', 123)
     })
 
-    it('logger.warn outputs to console.warn', async() => {
+    it('[U01184] logger.warn outputs to console.warn', async() => {
       vi.resetModules()
       const { logger } = await import('../../src/utils/debugLogger.js')
 
@@ -132,7 +132,7 @@ describe('debugLogger', () => {
       expect(mockWarn).toHaveBeenCalledWith('warning message')
     })
 
-    it('logger.info outputs to console.info', async() => {
+    it('[U01185] logger.info outputs to console.info', async() => {
       vi.resetModules()
       const { logger } = await import('../../src/utils/debugLogger.js')
 
@@ -141,7 +141,7 @@ describe('debugLogger', () => {
       expect(mockInfo).toHaveBeenCalledWith('info message', { data: true })
     })
 
-    it('logger.debug outputs to console.debug', async() => {
+    it('[U01186] logger.debug outputs to console.debug', async() => {
       vi.resetModules()
       const { logger } = await import('../../src/utils/debugLogger.js')
 
@@ -150,21 +150,21 @@ describe('debugLogger', () => {
       expect(mockDebug).toHaveBeenCalledWith('debug message')
     })
 
-    it('logger.isEnabled returns true', async() => {
+    it('[U01187] logger.isEnabled returns true', async() => {
       vi.resetModules()
       const { logger } = await import('../../src/utils/debugLogger.js')
 
       expect(logger.isEnabled()).toBe(true)
     })
 
-    it('DEBUG_ENABLED is true', async() => {
+    it('[U01188] DEBUG_ENABLED is true', async() => {
       vi.resetModules()
       const { DEBUG_ENABLED } = await import('../../src/utils/debugLogger.js')
 
       expect(DEBUG_ENABLED).toBe(true)
     })
 
-    it('handles multiple arguments', async() => {
+    it('[U01189] handles multiple arguments', async() => {
       vi.resetModules()
       const { logger } = await import('../../src/utils/debugLogger.js')
 
@@ -183,7 +183,7 @@ describe('debugLogger', () => {
       }
     })
 
-    it('debug is still enabled', async() => {
+    it('[U01190] debug is still enabled', async() => {
       vi.resetModules()
       const { DEBUG_ENABLED, logger } = await import('../../src/utils/debugLogger.js')
 
@@ -197,14 +197,14 @@ describe('debugLogger', () => {
       globalRef.window = undefined
     })
 
-    it('DEBUG_ENABLED defaults to false', async() => {
+    it('[U01191] DEBUG_ENABLED defaults to false', async() => {
       vi.resetModules()
       const { DEBUG_ENABLED } = await import('../../src/utils/debugLogger.js')
 
       expect(DEBUG_ENABLED).toBe(false)
     })
 
-    it('logger does not throw', async() => {
+    it('[U01192] logger does not throw', async() => {
       vi.resetModules()
       const { logger } = await import('../../src/utils/debugLogger.js')
 
@@ -213,7 +213,7 @@ describe('debugLogger', () => {
   })
 
   describe('exports', () => {
-    it('exports logger as named export', async() => {
+    it('[U01193] exports logger as named export', async() => {
       vi.resetModules()
       const module = await import('../../src/utils/debugLogger.js')
 
@@ -221,14 +221,14 @@ describe('debugLogger', () => {
       expect(typeof module.logger).toBe('function')
     })
 
-    it('exports DEBUG_ENABLED as named export', async() => {
+    it('[U01194] exports DEBUG_ENABLED as named export', async() => {
       vi.resetModules()
       const module = await import('../../src/utils/debugLogger.js')
 
       expect(typeof module.DEBUG_ENABLED).toBe('boolean')
     })
 
-    it('exports logger as default', async() => {
+    it('[U01195] exports logger as default', async() => {
       vi.resetModules()
       const module = await import('../../src/utils/debugLogger.js')
 

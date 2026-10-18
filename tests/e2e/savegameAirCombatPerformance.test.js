@@ -5,7 +5,7 @@ const RUN_PERF = process.env.PERF_SAVEGAME_AIR_COMBAT === '1'
 test.describe('Loaded savegame air-combat performance', () => {
   test.skip(!RUN_PERF, 'Set PERF_SAVEGAME_AIR_COMBAT=1 to run this opt-in performance benchmark.')
 
-  test('does not develop a delayed CPU regression', async({ page }, testInfo) => {
+  test('[E00103] does not develop a delayed CPU regression', async({ page }, testInfo) => {
     test.setTimeout(150_000)
     await page.goto('/?monitor')
     await page.waitForSelector('#saveLoadMenu', { state: 'visible' })

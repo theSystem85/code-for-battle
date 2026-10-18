@@ -15,7 +15,7 @@ import {
 import { allocateInstanceKey, reconcileGamepadSlots } from '../../src/input/gamepad/gamepadIdentity.js'
 
 describe('gamepad binding', () => {
-  it('ignores noise and binds a rising edge past the threshold', () => {
+  it('[U01785] ignores noise and binds a rising edge past the threshold', () => {
     const quiet = detectBindingCandidate([], [], [0.2], [0.2], 'button')
     expect(quiet).toBeNull()
 
@@ -26,7 +26,7 @@ describe('gamepad binding', () => {
     expect(held).toBeNull()
   })
 
-  it('binds a whole axis for an axis command and a signed axis for a button command', () => {
+  it('[U01786] binds a whole axis for an axis command and a signed axis for a button command', () => {
     expect(detectBindingCandidate([0], [0], [0], [0.8], 'axis')).toEqual({ type: 'axis', index: 0 })
     expect(detectBindingCandidate([0], [0], [0], [-0.8], 'button')).toEqual({
       type: 'axis',
@@ -35,7 +35,7 @@ describe('gamepad binding', () => {
     })
   })
 
-  it('treats a whole axis as overlapping either signed half', () => {
+  it('[U01787] treats a whole axis as overlapping either signed half', () => {
     const whole = { type: 'axis', index: 0 }
     const positive = { type: 'axis', index: 0, sign: 1 }
     const negative = { type: 'axis', index: 0, sign: -1 }
@@ -46,7 +46,7 @@ describe('gamepad binding', () => {
     expect(inputKey(negative)).toBe('a:0:-1')
   })
 
-  it('steals the conflicting command when a binding is assigned', () => {
+  it('[U01788] steals the conflicting command when a binding is assigned', () => {
     const bindings = emptyBindingMap(0)
     expect(findBindingConflict(bindings, 'leftClick', bindings.leftClick)).toBeNull()
     const stolen = assignBinding(bindings, 'rightClick', { type: 'button', index: 0 })
@@ -55,7 +55,7 @@ describe('gamepad binding', () => {
     expect(stolen.bindings.rightClick).toEqual({ type: 'button', index: 0 })
   })
 
-  it('reads buttons and signed axes through the play thresholds', () => {
+  it('[U01789] reads buttons and signed axes through the play thresholds', () => {
     expect(readBinding({ type: 'button', index: 0 }, [0.2], [])).toBe(0)
     expect(readBinding({ type: 'button', index: 0 }, [0.5], [])).toBe(0.5)
     expect(readBinding({ type: 'axis', index: 0, sign: 1 }, [], [0.5])).toBeGreaterThan(0)
@@ -63,7 +63,7 @@ describe('gamepad binding', () => {
     expect(readBinding({ type: 'axis', index: 0, sign: -1 }, [], [-0.5])).toBeGreaterThan(0)
   })
 
-  it('gives every command a standard binding and lets stick roles share an axis', () => {
+  it('[U01790] gives every command a standard binding and lets stick roles share an axis', () => {
     for (const slot of [0, 1]) {
       const bindings = emptyBindingMap(slot)
       GAMEPAD_COMMANDS.forEach(command => {
@@ -100,7 +100,7 @@ describe('gamepad binding', () => {
     expect(playerTwo.cursorX).toBeUndefined()
   })
 
-  it('drops illegal inputs while keeping the slot command set', () => {
+  it('[U01791] drops illegal inputs while keeping the slot command set', () => {
     const clean = sanitizeBindings({ cursorX: { type: 'axis', index: 99 }, fire: { type: 'nope', index: 1 } }, 0)
     expect(clean.cursorX).toBeNull()
     expect(clean.fire).toBeNull()
@@ -113,7 +113,7 @@ describe('gamepad identity', () => {
   const xbox = (index) => ({ id: 'Xbox', index, connected: true })
   const ps = (index) => ({ id: 'PlayStation', index, connected: true })
 
-  it('gives the first two pads separate slots and ignores a third', () => {
+  it('[U01792] gives the first two pads separate slots and ignores a third', () => {
     const first = reconcileGamepadSlots([], [xbox(0)])
     expect(first.slots[0].instanceKey).toBe('Xbox#0')
     const second = reconcileGamepadSlots(first.slots, [xbox(0), ps(1)])
@@ -125,7 +125,7 @@ describe('gamepad identity', () => {
     expect(third.slots[1].id).toBe('PlayStation')
   })
 
-  it('keeps the slot and instance key when a pad returns at a new index', () => {
+  it('[U01793] keeps the slot and instance key when a pad returns at a new index', () => {
     const paired = reconcileGamepadSlots([], [xbox(0), ps(1)])
     const psKey = paired.slots[1].instanceKey
     const returned = reconcileGamepadSlots(paired.slots, [xbox(0), ps(3)])
@@ -134,7 +134,7 @@ describe('gamepad identity', () => {
     expect(returned.slots[1].connected).toBe(true)
   })
 
-  it('distinguishes two pads that share an id', () => {
+  it('[U01794] distinguishes two pads that share an id', () => {
     const one = reconcileGamepadSlots([], [xbox(0)])
     const two = reconcileGamepadSlots(one.slots, [xbox(0), xbox(1)])
     expect(two.slots[0].instanceKey).toBe('Xbox#0')
@@ -142,7 +142,7 @@ describe('gamepad identity', () => {
     expect(allocateInstanceKey('Xbox', ['Xbox#0', 'Xbox#1'], new Set(['Xbox#0']))).toBe('Xbox#1')
   })
 
-  it('replaces a disconnected slot with a new id and leaves the old key out of that slot', () => {
+  it('[U01795] replaces a disconnected slot with a new id and leaves the old key out of that slot', () => {
     const paired = reconcileGamepadSlots([], [xbox(0), ps(1)])
     const oldKey = paired.slots[1].instanceKey
     const replaced = reconcileGamepadSlots(paired.slots, [xbox(0), { id: 'Generic', index: 2, connected: true }], [oldKey])

@@ -23,7 +23,7 @@ test.describe('Enemy air-target eligibility', () => {
     })
   })
 
-  test('enemy non-rocket ground units drop airborne Apache/F22 targets while rocket units keep valid air targets', async({ page }) => {
+  test('[E00023] enemy non-rocket ground units drop airborne Apache/F22 targets while rocket units keep valid air targets', async({ page }) => {
     test.setTimeout(120000)
 
     await page.goto('/?seed=11')
@@ -149,7 +149,7 @@ test.describe('Enemy air-target eligibility', () => {
     expect(consoleErrors, `Console errors encountered:\n${consoleErrors.join('\n')}`).toEqual([])
   })
 
-  test('enemy base-defense target selection ignores airborne-only threats for non-AA units', async({ page }) => {
+  test('[E00024] enemy base-defense target selection ignores airborne-only threats for non-AA units', async({ page }) => {
     test.setTimeout(120000)
 
     await page.goto('/?seed=11')

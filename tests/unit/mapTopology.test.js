@@ -7,7 +7,7 @@ const sheet = (sheetPath, tags = ['decorative', 'impassable', 'grass']) => ({
 const fingerprint = sheets => computeMapTopologyFingerprint({ enabled: true, sheets })
 
 describe('map topology fingerprint', () => {
-  it('ignores sheet, tile-key and tag order without mutating input', () => {
+  it('[U02716] ignores sheet, tile-key and tag order without mutating input', () => {
     const a = sheet('a.webp')
     const b = sheet('b.webp')
     const original = JSON.stringify(a)
@@ -15,7 +15,7 @@ describe('map topology fingerprint', () => {
     expect(fingerprint([a, b])).toBe(fingerprint([b, reordered]))
     expect(JSON.stringify(a)).toBe(original)
   })
-  it('changes for tags, selection and each decoration setting', () => {
+  it('[U02717] changes for tags, selection and each decoration setting', () => {
     const sheets = [sheet('a.webp')]
     const original = fingerprint(sheets)
     expect(fingerprint([sheet('a.webp', ['decorative', 'passable', 'grass'])])).not.toBe(original)
@@ -24,11 +24,11 @@ describe('map topology fingerprint', () => {
       expect(computeMapTopologyFingerprint({ enabled: true, sheets, [key]: 4 })).not.toBe(original)
     }
   })
-  it('keeps explicit empty custom selection equivalent to disabled mode', () => {
+  it('[U02718] keeps explicit empty custom selection equivalent to disabled mode', () => {
     expect(fingerprint([])).toBe('default')
     expect(computeMapTopologyFingerprint({ enabled: false, sheets: [sheet('a.webp')] })).toBe('default')
   })
-  it('blocks client edits and all mid-match multiplayer edits', () => {
+  it('[U02719] blocks client edits and all mid-match multiplayer edits', () => {
     const multiplayerSession = { isRemote: true, localRole: 'client' }
     expect(topologyChangesAllowed({ multiplayerSession })).toBe(false)
     expect(topologyChangesAllowed({ multiplayerSession }, true)).toBe(true)

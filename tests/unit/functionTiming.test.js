@@ -13,7 +13,7 @@ describe('function timing preference', () => {
     localStorage.removeItem('codeForBattle.functionTimingsEnabled')
   })
 
-  it('keeps timing disabled by default and does not allocate statistics on calls', () => {
+  it('[U01601] keeps timing disabled by default and does not allocate statistics on calls', () => {
     const wrapped = logPerformance(() => 42, false, 'disabled')
 
     expect(isFunctionTimingEnabled()).toBe(false)
@@ -21,7 +21,7 @@ describe('function timing preference', () => {
     expect(window.performanceStatistics).toEqual({})
   })
 
-  it('records only while enabled and persists the preference, without persisting traces', () => {
+  it('[U01602] records only while enabled and persists the preference, without persisting traces', () => {
     const wrapped = logPerformance(() => 7, false, 'enabled')
 
     setFunctionTimingEnabled(true)
@@ -35,7 +35,7 @@ describe('function timing preference', () => {
     expect(localStorage.getItem('codeForBattle.functionTimingsEnabled')).toBe('false')
   })
 
-  it('preserves this, return identity, and error identity', () => {
+  it('[U01603] preserves this, return identity, and error identity', () => {
     const result = { ok: true }
     const owner = {
       value: 4,
@@ -56,7 +56,7 @@ describe('function timing preference', () => {
     expect(window.performanceStatistics.failing.callCount).toBe(1)
   })
 
-  it('does not read the clock or replace the statistics object while disabled', () => {
+  it('[U01604] does not read the clock or replace the statistics object while disabled', () => {
     const statistics = window.performanceStatistics
     const nowSpy = vi.spyOn(performance, 'now')
     const wrapped = logPerformance(() => 42, false, 'disabled-clock')

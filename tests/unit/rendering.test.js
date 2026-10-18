@@ -47,11 +47,11 @@ describe('rendering.js', () => {
   })
 
   describe('renderGame', () => {
-    it('should export renderGame function', () => {
+    it('[U03719] should export renderGame function', () => {
       expect(typeof renderingModule.renderGame).toBe('function')
     })
 
-    it('should delegate to gameRenderer.renderGame', () => {
+    it('[U03720] should delegate to gameRenderer.renderGame', () => {
       const mockCtx = {}
       const mockCanvas = { width: 800, height: 600 }
       const mockMapGrid = [[]]
@@ -81,7 +81,7 @@ describe('rendering.js', () => {
       expect(true).toBe(true)
     })
 
-    it('should handle null parameters gracefully', () => {
+    it('[U03721] should handle null parameters gracefully', () => {
       expect(() => {
         renderingModule.renderGame(
           null, null, null, null, null, null, null, null, null, null, null, null
@@ -89,7 +89,7 @@ describe('rendering.js', () => {
       }).not.toThrow()
     })
 
-    it('should accept optional GPU context parameters', () => {
+    it('[U03722] should accept optional GPU context parameters', () => {
       const mockCtx = {}
       const mockCanvas = { width: 800, height: 600 }
       const mockMapGrid = [[]]
@@ -120,11 +120,11 @@ describe('rendering.js', () => {
   })
 
   describe('renderMinimap', () => {
-    it('should export renderMinimap function', () => {
+    it('[U03723] should export renderMinimap function', () => {
       expect(typeof renderingModule.renderMinimap).toBe('function')
     })
 
-    it('should delegate to gameRenderer.renderMinimap', () => {
+    it('[U03724] should delegate to gameRenderer.renderMinimap', () => {
       const mockCtx = {}
       const mockCanvas = { width: 200, height: 200 }
       const mockMapGrid = [[]]
@@ -150,11 +150,11 @@ describe('rendering.js', () => {
   })
 
   describe('preloadTileTextures', () => {
-    it('should export preloadTileTextures function', () => {
+    it('[U03725] should export preloadTileTextures function', () => {
       expect(typeof renderingModule.preloadTileTextures).toBe('function')
     })
 
-    it('should call the renderer preloadTextures method', async() => {
+    it('[U03726] should call the renderer preloadTextures method', async() => {
       const callback = vi.fn()
 
       renderingModule.preloadTileTextures(callback)
@@ -165,7 +165,7 @@ describe('rendering.js', () => {
       expect(callback).toHaveBeenCalled()
     })
 
-    it('should handle missing callback gracefully', () => {
+    it('[U03727] should handle missing callback gracefully', () => {
       expect(() => {
         renderingModule.preloadTileTextures()
       }).not.toThrow()
@@ -173,33 +173,33 @@ describe('rendering.js', () => {
   })
 
   describe('getTextureManager', () => {
-    it('should export getTextureManager function', () => {
+    it('[U03728] should export getTextureManager function', () => {
       expect(typeof renderingModule.getTextureManager).toBe('function')
     })
 
-    it('should return the texture manager from the renderer', () => {
+    it('[U03729] should return the texture manager from the renderer', () => {
       const textureManager = renderingModule.getTextureManager()
       expect(textureManager).toBeDefined()
     })
   })
 
   describe('getMapRenderer', () => {
-    it('should export getMapRenderer function', () => {
+    it('[U03730] should export getMapRenderer function', () => {
       expect(typeof renderingModule.getMapRenderer).toBe('function')
     })
 
-    it('should return the map renderer from the renderer', () => {
+    it('[U03731] should return the map renderer from the renderer', () => {
       const mapRenderer = renderingModule.getMapRenderer()
       expect(mapRenderer).toBeDefined()
     })
   })
 
   describe('notifyTileMutation', () => {
-    it('should export notifyTileMutation function', () => {
+    it('[U03732] should export notifyTileMutation function', () => {
       expect(typeof renderingModule.notifyTileMutation).toBe('function')
     })
 
-    it('should call mapRenderer.updateSOTMaskForTile when available', () => {
+    it('[U03733] should call mapRenderer.updateSOTMaskForTile when available', () => {
       const mockMapGrid = [[{ type: 'land' }]]
       const tileX = 0
       const tileY = 0
@@ -209,7 +209,7 @@ describe('rendering.js', () => {
       }).not.toThrow()
     })
 
-    it('should handle out-of-bounds coordinates gracefully', () => {
+    it('[U03734] should handle out-of-bounds coordinates gracefully', () => {
       const mockMapGrid = [[{ type: 'land' }]]
 
       expect(() => {
@@ -220,11 +220,11 @@ describe('rendering.js', () => {
   })
 
   describe('recomputeSOTMask', () => {
-    it('should export recomputeSOTMask function', () => {
+    it('[U03735] should export recomputeSOTMask function', () => {
       expect(typeof renderingModule.recomputeSOTMask).toBe('function')
     })
 
-    it('should call mapRenderer.computeSOTMask when available', () => {
+    it('[U03736] should call mapRenderer.computeSOTMask when available', () => {
       const mockMapGrid = [[{ type: 'land' }]]
 
       expect(() => {
@@ -232,13 +232,13 @@ describe('rendering.js', () => {
       }).not.toThrow()
     })
 
-    it('should handle empty map grid', () => {
+    it('[U03737] should handle empty map grid', () => {
       expect(() => {
         renderingModule.recomputeSOTMask([])
       }).not.toThrow()
     })
 
-    it('should handle null map grid', () => {
+    it('[U03738] should handle null map grid', () => {
       expect(() => {
         renderingModule.recomputeSOTMask(null)
       }).not.toThrow()
@@ -246,7 +246,7 @@ describe('rendering.js', () => {
   })
 
   describe('Module exports', () => {
-    it('should export all required functions', () => {
+    it('[U03739] should export all required functions', () => {
       const expectedExports = [
         'renderGame',
         'renderMinimap',

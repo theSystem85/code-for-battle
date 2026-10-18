@@ -105,7 +105,7 @@ describe('MapRenderer revisioned terrain cache', () => {
     vi.restoreAllMocks()
   })
 
-  it('performs no signature scan or topology reconstruction on an unchanged frame', () => {
+  it('[U02659] performs no signature scan or topology reconstruction on an unchanged frame', () => {
     const renderer = new MapRenderer(makeTextureManager())
     const mapGrid = makeMap(32, 32)
     const signature = vi.spyOn(renderer, 'computeChunkSignature')
@@ -121,7 +121,7 @@ describe('MapRenderer revisioned terrain cache', () => {
     expect(renderer.frameChunkStats.chunkHits).toBe(4)
   })
 
-  it('invalidates only the surface two-tile halo without rebuilding topology', () => {
+  it('[U02660] invalidates only the surface two-tile halo without rebuilding topology', () => {
     const renderer = new MapRenderer(makeTextureManager())
     const mapGrid = makeMap(64, 64)
     renderer.renderTiles(makeOutputContext(), mapGrid, { x: 0, y: 0 }, 0, 0, 64, 64, {}, {})
@@ -137,7 +137,7 @@ describe('MapRenderer revisioned terrain cache', () => {
     expect(renderer.frameChunkStats.topologyReconstructions).toBe(0)
   })
 
-  it('keeps local topology SOT updates equal to the full-rebuild oracle after randomized edits', () => {
+  it('[U02661] keeps local topology SOT updates equal to the full-rebuild oracle after randomized edits', () => {
     const mapGrid = makeMap(16, 16)
     for (let y = 0; y < mapGrid.length; y++) {
       for (let x = 0; x < mapGrid[y].length; x++) {
@@ -172,7 +172,7 @@ describe('MapRenderer revisioned terrain cache', () => {
     }
   })
 
-  it('matches full-rebuild raster commands and resident bytes after a topology mutation', () => {
+  it('[U02662] matches full-rebuild raster commands and resident bytes after a topology mutation', () => {
     installTraceCanvases()
     const mapGrid = makeMap(32, 32)
     const incremental = new MapRenderer(makeTextureManager())

@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { ensureAirstripOperations, reserveAirstripParkingSlot, releaseAirstripParkingSlotReservation, setAirstripSlotOccupant } from '../../src/utils/airstripUtils.js'
 
 describe('airstrip slot reservations', () => {
-  it('assigns unique reserved slots and releases correctly', () => {
+  it('[U00114] assigns unique reserved slots and releases correctly', () => {
     const airstrip = { type: 'airstrip', x: 10, y: 10, width: 24, height: 12 }
     ensureAirstripOperations(airstrip)
 

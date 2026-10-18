@@ -21,13 +21,13 @@ function paint(width, height, fill) {
 }
 
 describe('milestone video content rect', () => {
-  it('reads the clip base from the playback marker or the mp4 url', () => {
+  it('[U02793] reads the clip base from the playback marker or the mp4 url', () => {
     expect(milestoneBaseFromVideo({ dataset: { milestoneBase: 'first_tank' }, src: 'video/other.mp4' })).toBe('first_tank')
     expect(milestoneBaseFromVideo({ src: 'https://play.test/video/air_strip.mp4?cache=1' })).toBe('air_strip')
     expect(milestoneBaseFromVideo({ currentSrc: '/video/first_artillery.mp4' })).toBe('first_artillery')
   })
 
-  it('drops stable black pillarbox and letterbox bars', () => {
+  it('[U02794] drops stable black pillarbox and letterbox bars', () => {
     const data = paint(40, 20, (x, y) => {
       if (x < 8 || x >= 32 || y < 4 || y >= 16) return [0, 0, 0]
       return [180, 140, 90]
@@ -35,12 +35,12 @@ describe('milestone video content rect', () => {
     expect(contentRectFromRgba(data, 40, 20)).toEqual({ x: 8, y: 4, width: 24, height: 12 })
   })
 
-  it('keeps a full frame when the border is only a compression fringe', () => {
+  it('[U02795] keeps a full frame when the border is only a compression fringe', () => {
     const data = paint(30, 16, (x, y) => (x === 0 || y === 0 ? [2, 2, 2] : [40, 80, 120]))
     expect(contentRectFromRgba(data, 30, 16)).toBeNull()
   })
 
-  it('writes the configured first_tank crop into the caller rect', () => {
+  it('[U02796] writes the configured first_tank crop into the caller rect', () => {
     const out = { x: 1, y: 2, width: 3, height: 4 }
     const video = {
       videoWidth: 960,
@@ -53,7 +53,7 @@ describe('milestone video content rect', () => {
     expect(out).toEqual({ x: 52, y: 0, width: 854, height: 576 })
   })
 
-  it('uses the full frame for clips that were measured with no bars', () => {
+  it('[U02797] uses the full frame for clips that were measured with no bars', () => {
     const out = { x: 9, y: 9, width: 9, height: 9 }
     writeMilestoneVideoSourceRect(out, {
       videoWidth: 1280,
@@ -69,7 +69,7 @@ describe('milestone video content rect', () => {
     expect(out).toEqual({ x: 0, y: 0, width: 1280, height: 720 })
   })
 
-  it('scales a configured crop when the decoded frame size differs', () => {
+  it('[U02798] scales a configured crop when the decoded frame size differs', () => {
     const out = { x: 0, y: 0, width: 0, height: 0 }
     writeMilestoneVideoSourceRect(out, {
       videoWidth: 480,

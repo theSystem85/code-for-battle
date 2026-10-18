@@ -78,7 +78,7 @@ describe('Gas Station Logic', () => {
   })
 
   describe('Basic Refueling', () => {
-    it('should refuel stationary unit within service radius', () => {
+    it('[U04349] should refuel stationary unit within service radius', () => {
       const delta = 1000 // 1 second
 
       updateGasStationLogic([unit], [gasStation], mockGameState, delta)
@@ -89,7 +89,7 @@ describe('Gas Station Logic', () => {
       expect(unit.refueling).toBe(true)
     })
 
-    it('should not refuel unit outside service radius', () => {
+    it('[U04350] should not refuel unit outside service radius', () => {
       unit.x = 500 // Far from gas station
       unit.y = 500
 
@@ -99,7 +99,7 @@ describe('Gas Station Logic', () => {
       expect(unit.refueling).toBe(false)
     })
 
-    it('should not refuel moving unit', () => {
+    it('[U04351] should not refuel moving unit', () => {
       unit.movement = { isMoving: true }
 
       updateGasStationLogic([unit], [gasStation], mockGameState, 1000)
@@ -108,7 +108,7 @@ describe('Gas Station Logic', () => {
       expect(unit.refueling).toBe(false)
     })
 
-    it('should not refuel unit at full gas', () => {
+    it('[U04352] should not refuel unit at full gas', () => {
       unit.gas = 100
       unit.maxGas = 100
 
@@ -118,7 +118,7 @@ describe('Gas Station Logic', () => {
       expect(unit.refueling).toBe(false)
     })
 
-    it('should not exceed maxGas when refueling', () => {
+    it('[U04353] should not exceed maxGas when refueling', () => {
       unit.gas = 95
       unit.maxGas = 100
 
@@ -128,7 +128,7 @@ describe('Gas Station Logic', () => {
       expect(unit.gas).toBe(100)
     })
 
-    it('should skip units without maxGas property', () => {
+    it('[U04354] should skip units without maxGas property', () => {
       delete unit.maxGas
 
       updateGasStationLogic([unit], [gasStation], mockGameState, 1000)
@@ -136,7 +136,7 @@ describe('Gas Station Logic', () => {
       expect(unit.gas).toBe(50) // Unchanged
     })
 
-    it('should skip dead units', () => {
+    it('[U04355] should skip dead units', () => {
       unit.health = 0
 
       updateGasStationLogic([unit], [gasStation], mockGameState, 1000)
@@ -166,7 +166,7 @@ describe('Gas Station Logic', () => {
       }
     })
 
-    it('should refill tanker supply gas', () => {
+    it('[U04356] should refill tanker supply gas', () => {
       const delta = 1000
 
       updateGasStationLogic([tanker], [gasStation], mockGameState, delta)
@@ -177,7 +177,7 @@ describe('Gas Station Logic', () => {
       expect(tanker.refueling).toBe(true)
     })
 
-    it('should refill both personal gas and supply gas', () => {
+    it('[U04357] should refill both personal gas and supply gas', () => {
       tanker.gas = 50
 
       updateGasStationLogic([tanker], [gasStation], mockGameState, 1000)
@@ -186,7 +186,7 @@ describe('Gas Station Logic', () => {
       expect(tanker.supplyGas).toBeGreaterThan(20000)
     })
 
-    it('should not exceed maxSupplyGas', () => {
+    it('[U04358] should not exceed maxSupplyGas', () => {
       tanker.supplyGas = 38000
 
       updateGasStationLogic([tanker], [gasStation], mockGameState, 10000)
@@ -194,7 +194,7 @@ describe('Gas Station Logic', () => {
       expect(tanker.supplyGas).toBe(40000)
     })
 
-    it('should not refill supply when already full', () => {
+    it('[U04359] should not refill supply when already full', () => {
       tanker.gas = 100
       tanker.supplyGas = 40000
 
@@ -205,7 +205,7 @@ describe('Gas Station Logic', () => {
   })
 
   describe('Cost Calculation', () => {
-    it('should deduct money from player during refueling', () => {
+    it('[U04360] should deduct money from player during refueling', () => {
       mockGameState.money = 1000
 
       updateGasStationLogic([unit], [gasStation], mockGameState, 1000)
@@ -215,7 +215,7 @@ describe('Gas Station Logic', () => {
       expect(mockGameState.money).toBe(990)
     })
 
-    it('should not go below zero money', () => {
+    it('[U04361] should not go below zero money', () => {
       mockGameState.money = 5
 
       updateGasStationLogic([unit], [gasStation], mockGameState, 10000)
@@ -223,7 +223,7 @@ describe('Gas Station Logic', () => {
       expect(mockGameState.money).toBe(0)
     })
 
-    it('should deduct from AI factory budget for AI units', () => {
+    it('[U04362] should deduct from AI factory budget for AI units', () => {
       unit.owner = 'ai-1'
       const aiFactory = { id: 'ai-1', budget: 1000 }
       mockGameState.factories = [aiFactory]
@@ -233,7 +233,7 @@ describe('Gas Station Logic', () => {
       expect(aiFactory.budget).toBe(990)
     })
 
-    it('should not deduct when unit already full', () => {
+    it('[U04363] should not deduct when unit already full', () => {
       mockGameState.money = 1000
       unit.gas = 100
 
@@ -244,7 +244,7 @@ describe('Gas Station Logic', () => {
   })
 
   describe('Refueling State Management', () => {
-    it('should set refueling flag when starting refuel', () => {
+    it('[U04364] should set refueling flag when starting refuel', () => {
       unit.refueling = false
 
       updateGasStationLogic([unit], [gasStation], mockGameState, 1000)
@@ -252,7 +252,7 @@ describe('Gas Station Logic', () => {
       expect(unit.refueling).toBe(true)
     })
 
-    it('should clear refueling flag when leaving area', () => {
+    it('[U04365] should clear refueling flag when leaving area', () => {
       unit.refueling = true
       unit.x = 500
 
@@ -261,7 +261,7 @@ describe('Gas Station Logic', () => {
       expect(unit.refueling).toBe(false)
     })
 
-    it('should clear refueling flag when tank is full', () => {
+    it('[U04366] should clear refueling flag when tank is full', () => {
       unit.gas = 100
       unit.refueling = true
 
@@ -270,7 +270,7 @@ describe('Gas Station Logic', () => {
       expect(unit.refueling).toBe(false)
     })
 
-    it('should reset gasRefillTimer when leaving area', () => {
+    it('[U04367] should reset gasRefillTimer when leaving area', () => {
       unit.gasRefillTimer = 5000
       unit.x = 500
 
@@ -279,7 +279,7 @@ describe('Gas Station Logic', () => {
       expect(unit.gasRefillTimer).toBe(0)
     })
 
-    it('should reset outOfGasPlayed flag when tank full', () => {
+    it('[U04368] should reset outOfGasPlayed flag when tank full', () => {
       unit.gas = 100
       unit.outOfGasPlayed = true
 
@@ -288,7 +288,7 @@ describe('Gas Station Logic', () => {
       expect(unit.outOfGasPlayed).toBe(false)
     })
 
-    it('should accumulate gasRefillTimer while refueling', () => {
+    it('[U04369] should accumulate gasRefillTimer while refueling', () => {
       unit.gasRefillTimer = 0
 
       updateGasStationLogic([unit], [gasStation], mockGameState, 500)
@@ -300,7 +300,7 @@ describe('Gas Station Logic', () => {
   })
 
   describe('Multiple Units and Stations', () => {
-    it('should handle multiple units at one station', () => {
+    it('[U04370] should handle multiple units at one station', () => {
       const unit2 = {
         id: 'unit-2',
         type: 'tank',
@@ -321,7 +321,7 @@ describe('Gas Station Logic', () => {
       expect(unit2.gas).toBeGreaterThan(30)
     })
 
-    it('should skip if no gas stations', () => {
+    it('[U04371] should skip if no gas stations', () => {
       const initialGas = unit.gas
 
       updateGasStationLogic([unit], [], mockGameState, 1000)
@@ -329,7 +329,7 @@ describe('Gas Station Logic', () => {
       expect(unit.gas).toBe(initialGas)
     })
 
-    it('should skip station with zero service radius', () => {
+    it('[U04372] should skip station with zero service radius', () => {
       getServiceRadiusPixels.mockReturnValue(0)
 
       updateGasStationLogic([unit], [gasStation], mockGameState, 1000)
@@ -339,7 +339,7 @@ describe('Gas Station Logic', () => {
   })
 
   describe('Unit Position Handling', () => {
-    it('should use tileX/tileY when x/y is undefined', () => {
+    it('[U04373] should use tileX/tileY when x/y is undefined', () => {
       // Position using tileX/tileY instead of x/y
       const tileUnit = {
         id: 'tile-unit',
@@ -362,7 +362,7 @@ describe('Gas Station Logic', () => {
       expect(tileUnit.gas).toBeGreaterThan(50)
     })
 
-    it('should calculate distance from station center', () => {
+    it('[U04374] should calculate distance from station center', () => {
       // Unit just inside radius - need to account for unit center offset
       // Station center: (192, 192), Service radius: 96
       // Unit center = unit.x + 16, unit.y + 16
@@ -375,7 +375,7 @@ describe('Gas Station Logic', () => {
       expect(unit.gas).toBeGreaterThan(50)
     })
 
-    it('should not refuel unit just outside radius', () => {
+    it('[U04375] should not refuel unit just outside radius', () => {
       // Unit just outside radius
       unit.x = 192 + 100 // Center + over radius
       unit.y = 192
@@ -388,7 +388,7 @@ describe('Gas Station Logic', () => {
 })
 
 describe('Fuel Tracking', () => {
-  it('should track gas as percentage of maxGas', () => {
+  it('[U04376] should track gas as percentage of maxGas', () => {
     const unit = {
       gas: 25,
       maxGas: 100
@@ -399,7 +399,7 @@ describe('Fuel Tracking', () => {
     expect(percentage).toBe(25)
   })
 
-  it('should identify units needing fuel', () => {
+  it('[U04377] should identify units needing fuel', () => {
     const units = [
       { id: 'u1', gas: 100, maxGas: 100 },
       { id: 'u2', gas: 50, maxGas: 100 },
@@ -413,7 +413,7 @@ describe('Fuel Tracking', () => {
     expect(needFuel.map(u => u.id)).toEqual(['u3', 'u4'])
   })
 
-  it('should identify critical fuel units', () => {
+  it('[U04378] should identify critical fuel units', () => {
     const units = [
       { id: 'u1', gas: 10, maxGas: 100 },
       { id: 'u2', gas: 0, maxGas: 100 },

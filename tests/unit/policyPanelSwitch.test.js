@@ -22,14 +22,14 @@ describe('policy panel global switch', () => {
     panelApi.openPolicyPanel()
   })
 
-  it('shows the full state hint as visible text instead of a hover-only tooltip', () => {
+  it('[U03387] shows the full state hint as visible text instead of a hover-only tooltip', () => {
     const sw = document.querySelector('.policy-switch')
     expect(sw.hasAttribute('data-policy-tip')).toBe(false)
     expect(sw.querySelector('.policy-switch__track')).not.toBeNull()
     expect(sw.querySelector('.policy-switch__label').textContent).toBe('Off · click to enable')
   })
 
-  it('updates the visible label when the policy is enabled', () => {
+  it('[U03388] updates the visible label when the policy is enabled', () => {
     document.querySelector('.policy-switch').click()
     const sw = document.querySelector('.policy-switch')
     expect(sw.getAttribute('aria-checked')).toBe('true')

@@ -12,7 +12,7 @@ test.describe('Runtime config fuzzy search', () => {
     await page.waitForFunction(() => Boolean(window.gameState))
   })
 
-  test('searches runtime variables by fuzzy name and edits values from search results', async({ page }) => {
+  test('[E00101] searches runtime variables by fuzzy name and edits values from search results', async({ page }) => {
     await page.click('#helpBtn')
     await page.click('[data-config-tab="runtime"]')
     await page.click('#openRuntimeConfigDialogBtn')

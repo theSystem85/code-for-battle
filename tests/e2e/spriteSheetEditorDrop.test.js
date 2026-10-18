@@ -51,7 +51,7 @@ async function dropFiles(page, files) {
 const tagValues = (page) => page.locator('#sseTagList input[name="sse-active-tag"]').evaluateAll((els) => els.map((el) => el.value))
 
 test.describe('Sprite Sheet Editor file drop', () => {
-  test('drops an image with a proper MIME type', async({ page }) => {
+  test('[E00109] drops an image with a proper MIME type', async({ page }) => {
     await openSpriteSheetEditor(page)
     await dropFiles(page, [{ name: 'drop-mime.png', type: 'image/png' }])
     await expect(page.locator('#sseStatus')).toHaveText('Loaded dropped image: drop-mime.png')
@@ -60,7 +60,7 @@ test.describe('Sprite Sheet Editor file drop', () => {
   })
 
   for (const [name, format] of [['no-mime.png', 'image/png'], ['no-mime.webp', 'image/webp']]) {
-    test(`drops ${name} with an empty MIME type`, async({ page }) => {
+    test(`[E00110] drops ${name} with an empty MIME type`, async({ page }) => {
       await openSpriteSheetEditor(page)
       await dropFiles(page, [{ name, type: '', format }])
       await expect(page.locator('#sseStatus')).toHaveText(`Loaded dropped image: ${name}`)
@@ -68,7 +68,7 @@ test.describe('Sprite Sheet Editor file drop', () => {
     })
   }
 
-  test('drops an image together with its JSON tag file and applies the tags', async({ page }) => {
+  test('[E00111] drops an image together with its JSON tag file and applies the tags', async({ page }) => {
     await openSpriteSheetEditor(page)
     // JSON listed first on purpose: the image must still be loaded before the tags.
     await dropFiles(page, [

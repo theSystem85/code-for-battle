@@ -60,7 +60,7 @@ beforeEach(() => {
 })
 
 describe('own unit numbers', () => {
-  it('measures hp, xp and rank in relative and absolute form', () => {
+  it('[U03394] measures hp, xp and rank in relative and absolute form', () => {
     const tank = scopeFor(unitAt('a', ME, 5, 5, { health: 40, experience: 50, level: 2 }))
     expect(measureLeaf(compare('hp', '<', 0.5))).toBeCloseTo(0.4)
     expect(measureLeaf(compare('hp', '<', 50, { mode: 'absolute' }))).toBe(40)
@@ -70,7 +70,7 @@ describe('own unit numbers', () => {
     expect(tank.health).toBe(40)
   })
 
-  it('measures fuel, ammo and the air-unit rocket ammo', () => {
+  it('[U03395] measures fuel, ammo and the air-unit rocket ammo', () => {
     scopeFor(unitAt('a', ME, 5, 5, { gas: 25, maxGas: 100, ammunition: 3, maxAmmunition: 12 }))
     expect(measureLeaf(compare('fuel', '<', 0.5))).toBeCloseTo(0.25)
     expect(measureLeaf(compare('ammo', '<', 0.5))).toBeCloseTo(0.25)
@@ -79,7 +79,7 @@ describe('own unit numbers', () => {
     expect(measureLeaf(compare('ammo', '<', 0.6))).toBeCloseTo(0.5)
   })
 
-  it('returns undefined for fields the unit does not have', () => {
+  it('[U03396] returns undefined for fields the unit does not have', () => {
     scopeFor(unitAt('a', ME, 5, 5))
     expect(measureLeaf(compare('fuel', '<', 0.5))).toBeUndefined()
     expect(measureLeaf(compare('ammo', '<', 0.5))).toBeUndefined()
@@ -88,7 +88,7 @@ describe('own unit numbers', () => {
     expect(measureLeaf(compare('turretRotation', '<', 10))).toBeUndefined()
   })
 
-  it('measures reload as ready fraction or milliseconds left', () => {
+  it('[U03397] measures reload as ready fraction or milliseconds left', () => {
     scopeFor(unitAt('a', ME, 5, 5, { lastShotTime: now - 1000 }))
     expect(measureLeaf(compare('reload', '>=', 0.2))).toBeCloseTo(0.25)
     expect(measureLeaf(compare('reload', '<', 5000, { mode: 'absolute' }))).toBe(3000)
@@ -98,7 +98,7 @@ describe('own unit numbers', () => {
     expect(measureLeaf(compare('reload', '>=', 1))).toBeUndefined()
   })
 
-  it('measures crew present and cargo load', () => {
+  it('[U03398] measures crew present and cargo load', () => {
     scopeFor(unitAt('a', ME, 5, 5, { crew: { driver: true, commander: false, gunner: true, loader: true } }))
     expect(measureLeaf(compare('crew', '<', 1))).toBeCloseTo(0.75)
     expect(measureLeaf(compare('crew', '<', 4, { mode: 'absolute' }))).toBe(3)
@@ -108,7 +108,7 @@ describe('own unit numbers', () => {
     expect(measureLeaf(compare('load', '<', 3, { mode: 'absolute' }))).toBe(2)
   })
 
-  it('measures wagon and turret rotation in degrees', () => {
+  it('[U03399] measures wagon and turret rotation in degrees', () => {
     const tank = scopeFor(unitAt('a', ME, 5, 5, { direction: Math.PI / 2, turretDirection: Math.PI }))
     expect(measureLeaf(compare('rotation', '==', 90))).toBeCloseTo(90)
     expect(measureLeaf(compare('turretRotation', '==', 180))).toBeCloseTo(180)
@@ -119,7 +119,7 @@ describe('own unit numbers', () => {
 })
 
 describe('own unit state', () => {
-  it('detects airborne, moving, attacking and serving', () => {
+  it('[U03400] detects airborne, moving, attacking and serving', () => {
     scopeFor(unitAt('a', ME, 5, 5, { type: 'apache', flightState: 'flying' }))
     expect(measureLeaf(check('airborne'))).toBe(true)
     scopeFor(unitAt('b', ME, 5, 5, { type: 'apache', flightState: 'grounded' }))
@@ -144,7 +144,7 @@ describe('own unit state', () => {
 })
 
 describe('world numbers', () => {
-  it('reads base money, power and building counts for the unit owner', () => {
+  it('[U03401] reads base money, power and building counts for the unit owner', () => {
     const tank = unitAt('a', ME, 5, 5)
     scopeFor(tank, {
       buildings: [
@@ -163,7 +163,7 @@ describe('world numbers', () => {
     expect(measureLeaf(compare('money', '>=', 1))).toBeUndefined()
   })
 
-  it('measures distance only to enemies the owner can see', () => {
+  it('[U03402] measures distance only to enemies the owner can see', () => {
     const tank = unitAt('a', ME, 5, 5)
     const near = unitAt('n', FOE, 11, 5)
     const hidden = unitAt('h', FOE, 7, 5)
@@ -181,7 +181,7 @@ describe('world numbers', () => {
 })
 
 describe('service and protection checks', () => {
-  it('detects units under service by a unit or a building', () => {
+  it('[U03403] detects units under service by a unit or a building', () => {
     const tank = unitAt('t', ME, 5, 5)
     const ambulance = unitAt('amb', ME, 6, 5, { type: 'ambulance', utilityQueue: { currentTargetId: 't' } })
     scopeFor(tank, { units: [tank, ambulance] })
@@ -196,7 +196,7 @@ describe('service and protection checks', () => {
     expect(measureLeaf(check('parkedAt', { place: 'vehicleWorkshop' }))).toBe(true)
   })
 
-  it('detects service buildings in range using their service radius', () => {
+  it('[U03404] detects service buildings in range using their service radius', () => {
     const tank = unitAt('t', ME, 10, 10)
     const hospital = building('hospital', ME, 10, 11)
     scopeFor(tank, { units: [tank], buildings: [hospital] })
@@ -207,7 +207,7 @@ describe('service and protection checks', () => {
     expect(measureLeaf(check('inServiceRange', { building: 'hospital' }))).toBe(false)
   })
 
-  it('detects protection by a guarding unit', () => {
+  it('[U03405] detects protection by a guarding unit', () => {
     const tank = unitAt('t', ME, 5, 5)
     const guard = unitAt('g', ME, 6, 6, { guardMode: true, guardTarget: tank, guardTargets: [tank] })
     scopeFor(tank, { units: [tank, guard] })
@@ -217,7 +217,7 @@ describe('service and protection checks', () => {
     expect(measureLeaf(check('protectedByUnit'))).toBe(false)
   })
 
-  it('detects defense buildings and friendly units covering the unit', () => {
+  it('[U03406] detects defense buildings and friendly units covering the unit', () => {
     const tank = unitAt('t', ME, 10, 10)
     const turret = building('turretGunV1', ME, 12, 10, { fireRange: 8 })
     scopeFor(tank, { units: [tank], buildings: [turret] })
@@ -230,7 +230,7 @@ describe('service and protection checks', () => {
     expect(measureLeaf(check('inDefenseRange', { by: 'unit' }))).toBe(true)
   })
 
-  it('detects an airstrip or helipad the aircraft is parked on', () => {
+  it('[U03407] detects an airstrip or helipad the aircraft is parked on', () => {
     const heli = unitAt('h', ME, 10, 10, { type: 'apache', flightState: 'grounded' })
     const pad = building('helipad', ME, 10, 10)
     scopeFor(heli, { units: [heli], buildings: [pad] })
@@ -242,7 +242,7 @@ describe('service and protection checks', () => {
 })
 
 describe('hits and attacks', () => {
-  it('tells direct from indirect hits and unit from building attackers', () => {
+  it('[U03408] tells direct from indirect hits and unit from building attackers', () => {
     const tank = unitAt('t', ME, 5, 5)
     const foe = unitAt('f', FOE, 12, 5)
     const turret = building('turretGunV1', FOE, 14, 5)
@@ -258,7 +258,7 @@ describe('hits and attacks', () => {
     expect(measureLeaf(check('hitDirect', { by: 'building' }))).toBe(false)
   })
 
-  it('forgets hits after the hit window', () => {
+  it('[U03409] forgets hits after the hit window', () => {
     const tank = unitAt('t', ME, 5, 5)
     const foe = unitAt('f', FOE, 12, 5)
     recordUnitHit(tank, foe, true, now - 10000)
@@ -266,7 +266,7 @@ describe('hits and attacks', () => {
     expect(measureLeaf(check('hitDirect', { by: 'unit' }))).toBe(false)
   })
 
-  it('reports being under attack only when the attacker is visible', () => {
+  it('[U03410] reports being under attack only when the attacker is visible', () => {
     const tank = unitAt('t', ME, 5, 5)
     const foe = unitAt('f', FOE, 20, 5)
     recordUnitHit(tank, foe, true, now - 300)
@@ -279,7 +279,7 @@ describe('hits and attacks', () => {
     expect(measureLeaf(check('underAttackBy', { by: 'unit' }))).toBe(false)
   })
 
-  it('does not store hit records where saves or network sync would copy them', () => {
+  it('[U03411] does not store hit records where saves or network sync would copy them', () => {
     const tank = unitAt('t', ME, 5, 5)
     recordUnitHit(tank, unitAt('f', FOE, 8, 5), true, 1)
     expect(Object.keys(tank)).not.toContain('lastHit')
@@ -288,7 +288,7 @@ describe('hits and attacks', () => {
 })
 
 describe('sensing', () => {
-  it('sees enemies of a type or any type when visible', () => {
+  it('[U03412] sees enemies of a type or any type when visible', () => {
     const tank = unitAt('t', ME, 5, 5)
     const heli = unitAt('e1', FOE, 30, 30, { type: 'apache' })
     const hiddenTank = unitAt('e2', FOE, 31, 30, { type: 'tank-v3' })
@@ -298,7 +298,7 @@ describe('sensing', () => {
     expect(measureLeaf(check('enemyVisible', { targetType: 'tank-v3' }))).toBe(false)
   })
 
-  it('finds enemies of a type inside the own fire range', () => {
+  it('[U03413] finds enemies of a type inside the own fire range', () => {
     const tank = unitAt('t', ME, 5, 5)
     const near = unitAt('e1', FOE, 12, 5, { type: 'rocketTank' })
     const far = unitAt('e2', FOE, 30, 5, { type: 'howitzer' })
@@ -310,7 +310,7 @@ describe('sensing', () => {
     expect(measureLeaf(check('enemyInFireRange', { targetType: 'any' }))).toBe(false)
   })
 
-  it('detects own units standing inside an enemy fire range', () => {
+  it('[U03414] detects own units standing inside an enemy fire range', () => {
     const tank = unitAt('t', ME, 5, 5)
     const buddy = unitAt('b', ME, 6, 5, { type: 'rocketTank' })
     const gun = unitAt('e1', FOE, 12, 5, { type: 'howitzer' })
@@ -322,7 +322,7 @@ describe('sensing', () => {
     expect(measureLeaf(check('myUnitsInEnemyRange', { unitType: 'any' }))).toBe(false)
   })
 
-  it('knows when an enemy can be attacked', () => {
+  it('[U03415] knows when an enemy can be attacked', () => {
     const tank = unitAt('t', ME, 5, 5)
     const foe = unitAt('e1', FOE, 12, 5)
     scopeFor(tank, { units: [tank, foe] })
@@ -332,7 +332,7 @@ describe('sensing', () => {
     expect(measureLeaf(check('canAttack', { kind: 'unit' }))).toBe(false)
   })
 
-  it('reports being inside the visible range of an enemy unit or building', () => {
+  it('[U03416] reports being inside the visible range of an enemy unit or building', () => {
     const tank = unitAt('t', ME, 5, 5)
     const foe = unitAt('e1', FOE, 11, 5)
     scopeFor(tank, { units: [tank, foe], getVisionRange: () => 8 })

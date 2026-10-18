@@ -35,14 +35,14 @@ function makeDeps(overrides = {}) {
 }
 
 describe('tutorial narration manifest', () => {
-  it('has a normalized file on disk for every clip', () => {
+  it('[U04499] has a normalized file on disk for every clip', () => {
     for (const clip of TUTORIAL_NARRATION_CLIPS) {
       expect(fs.existsSync(path.join('public', clip.file))).toBe(true)
       expect(clip.durationMs).toBeGreaterThan(1000)
     }
   })
 
-  it('covers every step for mouse, touch and trackpad in both layouts', () => {
+  it('[U04500] covers every step for mouse, touch and trackpad in both layouts', () => {
     for (const touchLayout of [false, true]) {
       document.body.classList.toggle('is-touch', touchLayout)
       for (const method of ['mouse-keyboard', 'touch', 'trackpad']) {
@@ -58,7 +58,7 @@ describe('tutorial narration manifest', () => {
 
   // Regression: a player who skipped the input-method step has no preference.
   // Steps 7+ used the legacy copy then and fell back to browser TTS.
-  it('resolves a clip for every step when no input method was chosen', () => {
+  it('[U04501] resolves a clip for every step when no input method was chosen', () => {
     for (const touchLayout of [false, true]) {
       document.body.classList.toggle('is-touch', touchLayout)
       const method = resolveTutorialInputMethod(null)
@@ -74,13 +74,13 @@ describe('tutorial narration manifest', () => {
     expect(resolveTutorialInputMethod('bogus')).toBe('mouse-keyboard')
   })
 
-  it('ignores whitespace and typographic punctuation differences', () => {
+  it('[U04502] ignores whitespace and typographic punctuation differences', () => {
     const clip = TUTORIAL_NARRATION_CLIPS.find(c => c.step === 'welcome')
     expect(normalizeNarrationText('  a\n  b \u2019c\u2019 ')).toBe("a b 'c'")
     expect(findTutorialNarrationClip('welcome', `  ${clip.text.replace(/ /g, '  ')}\n`)).toBe(clip)
   })
 
-  it('only matches the exact text for the step and English', () => {
+  it('[U04503] only matches the exact text for the step and English', () => {
     const clip = TUTORIAL_NARRATION_CLIPS[0]
     expect(findTutorialNarrationClip(clip.step, clip.text)).toBe(clip)
     expect(findTutorialNarrationClip(clip.step, `${clip.text} extra`)).toBeNull()
@@ -94,7 +94,7 @@ describe('tutorial narrator', () => {
   const clip = TUTORIAL_NARRATION_CLIPS.find(c => c.step === 'welcome')
   const flush = () => new Promise(resolve => setTimeout(resolve, 0))
 
-  it('plays the clip, ducks music and restores it when the clip ends', () => {
+  it('[U04504] plays the clip, ducks music and restores it when the clip ends', () => {
     const deps = makeDeps()
     const narrator = createTutorialNarrator(deps)
     expect(narrator.speak('welcome', clip.text)).toBe('clip')
@@ -107,7 +107,7 @@ describe('tutorial narrator', () => {
     expect(narrator.isPlayingClip()).toBe(false)
   })
 
-  it('falls back to TTS without a matching clip or for other languages', () => {
+  it('[U04505] falls back to TTS without a matching clip or for other languages', () => {
     const deps = makeDeps()
     const narrator = createTutorialNarrator(deps)
     expect(narrator.speak('welcome', 'Some custom text')).toBe('tts')
@@ -116,7 +116,7 @@ describe('tutorial narrator', () => {
     expect(deps.clips).toHaveLength(0)
   })
 
-  it('falls back to TTS when the file fails to load', () => {
+  it('[U04506] falls back to TTS when the file fails to load', () => {
     const deps = makeDeps()
     const narrator = createTutorialNarrator(deps)
     narrator.speak('welcome', clip.text)
@@ -125,7 +125,7 @@ describe('tutorial narrator', () => {
     expect(deps.duck.at(-1)).toBe(1)
   })
 
-  it('falls back to TTS when playback is rejected', async() => {
+  it('[U04507] falls back to TTS when playback is rejected', async() => {
     const deps = makeDeps({ playResult: Promise.reject(new Error('blocked')) })
     const narrator = createTutorialNarrator(deps)
     narrator.speak('welcome', clip.text)
@@ -133,7 +133,7 @@ describe('tutorial narrator', () => {
     expect(deps.tts).toEqual([clip.text])
   })
 
-  it('stops the clip on the next step without a late fallback', () => {
+  it('[U04508] stops the clip on the next step without a late fallback', () => {
     const deps = makeDeps()
     const narrator = createTutorialNarrator(deps)
     narrator.speak('welcome', clip.text)

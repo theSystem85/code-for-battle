@@ -38,7 +38,7 @@ describe('map wheel panning', () => {
     return event
   }
 
-  it('preserves fractional diagonal deltas, cancels camera inertia and consumes the map event', () => {
+  it('[U02654] preserves fractional diagonal deltas, cancels camera inertia and consumes the map event', () => {
     const velocity = gameState.dragVelocity
     const outside = vi.fn()
     document.addEventListener('wheel', outside, { once: true })
@@ -55,7 +55,7 @@ describe('map wheel panning', () => {
     expect(outside).toHaveBeenCalledOnce()
   })
 
-  it('normalizes line/page units and supplies Shift-wheel horizontal fallback', () => {
+  it('[U02655] normalizes line/page units and supplies Shift-wheel horizontal fallback', () => {
     wheel(canvas, { deltaX: 2, deltaY: 1, deltaMode: 1 })
     expect(gameState.scrollOffset).toEqual({ x: 132, y: 216 })
     wheel(canvas, { deltaX: 0.5, deltaY: 0.5, deltaMode: 2 })
@@ -66,7 +66,7 @@ describe('map wheel panning', () => {
     expect(gameState.scrollOffset).toEqual({ x: 445, y: 463 })
   })
 
-  it('reverses both wheel axes when touch/trackpad inversion is enabled', () => {
+  it('[U02656] reverses both wheel axes when touch/trackpad inversion is enabled', () => {
     config.INVERT_TOUCH_MAP_SCROLL = true
     wheel(canvas, { deltaX: 10, deltaY: -20 })
     expect(gameState.scrollOffset).toEqual({ x: 90, y: 220 })
@@ -74,7 +74,7 @@ describe('map wheel panning', () => {
     expect(gameState.scrollOffset).toEqual({ x: 80, y: 220 })
   })
 
-  it('consumes outward gestures at all bounds, including maps smaller than the viewport', () => {
+  it('[U02657] consumes outward gestures at all bounds, including maps smaller than the viewport', () => {
     expect(wheel(canvas, { deltaX: -10000, deltaY: -10000 }).defaultPrevented).toBe(true)
     expect(gameState.scrollOffset).toEqual({ x: 0, y: 0 })
     wheel(canvas, { deltaX: 10000, deltaY: 10000 })
@@ -84,7 +84,7 @@ describe('map wheel panning', () => {
     expect(gameState.scrollOffset).toEqual({ x: 0, y: 0 })
   })
 
-  it('preserves map-editor wheel behavior and ignores pinch movement', () => {
+  it('[U02658] preserves map-editor wheel behavior and ignores pinch movement', () => {
     gameState.mapEditMode = true
     wheel(canvas, { deltaY: 9 })
     expect(notifyMapEditorWheel).toHaveBeenCalledWith(9)

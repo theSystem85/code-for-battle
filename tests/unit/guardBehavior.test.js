@@ -58,7 +58,7 @@ describe('guard behavior', () => {
   })
 
   describe('updateGuardBehavior', () => {
-    it('should not set guard mode when no guard target exists', () => {
+    it('[U01835] should not set guard mode when no guard target exists', () => {
       mockUnit.guardTarget = null
 
       updateGuardBehavior(mockUnit, mockMapGrid, mockOccupancyMap, now)
@@ -66,7 +66,7 @@ describe('guard behavior', () => {
       expect(mockUnit.guardMode).toBe(false)
     })
 
-    it('should clear guard target and mode when target has no health', () => {
+    it('[U01836] should clear guard target and mode when target has no health', () => {
       mockUnit.guardTarget = { health: 0, x: 100, y: 100, tileX: 3, tileY: 3 }
       mockUnit.guardMode = true
 
@@ -76,7 +76,7 @@ describe('guard behavior', () => {
       expect(mockUnit.guardMode).toBe(false)
     })
 
-    it('should set guard mode when target is valid and alive', () => {
+    it('[U01837] should set guard mode when target is valid and alive', () => {
       mockUnit.guardTarget = {
         health: 100,
         x: 0,
@@ -90,7 +90,7 @@ describe('guard behavior', () => {
       expect(mockUnit.guardMode).toBe(true)
     })
 
-    it('should not recalculate path within PATH_INTERVAL', () => {
+    it('[U01838] should not recalculate path within PATH_INTERVAL', () => {
       const targetX = 5 * TILE_SIZE
       const targetY = 5 * TILE_SIZE
 
@@ -109,7 +109,7 @@ describe('guard behavior', () => {
       expect(mockUnit.path).toEqual([])
     })
 
-    it('should calculate path when target is far and interval has passed', () => {
+    it('[U01839] should calculate path when target is far and interval has passed', () => {
       const targetX = 5 * TILE_SIZE
       const targetY = 5 * TILE_SIZE
 
@@ -128,7 +128,7 @@ describe('guard behavior', () => {
       expect(mockUnit.lastGuardPathCalcTime).toBe(now)
     })
 
-    it('should not calculate path when target is within follow distance', () => {
+    it('[U01840] should not calculate path when target is within follow distance', () => {
       // Place unit very close to target (within 1.5 * TILE_SIZE)
       mockUnit.x = TILE_SIZE
       mockUnit.y = TILE_SIZE
@@ -150,7 +150,7 @@ describe('guard behavior', () => {
       expect(findPath).not.toHaveBeenCalled()
     })
 
-    it('should set moveTarget when path is found', () => {
+    it('[U01841] should set moveTarget when path is found', () => {
       findPath.mockReturnValue([
         { x: 0, y: 0 },
         { x: 2, y: 2 },
@@ -174,7 +174,7 @@ describe('guard behavior', () => {
       expect(mockUnit.moveTarget).toEqual({ x: 5, y: 5 })
     })
 
-    it('should slice off first path element (current position)', () => {
+    it('[U01842] should slice off first path element (current position)', () => {
       findPath.mockReturnValue([
         { x: 0, y: 0 }, // Current position
         { x: 2, y: 2 },
@@ -199,7 +199,7 @@ describe('guard behavior', () => {
       ])
     })
 
-    it('should not set path when findPath returns null', () => {
+    it('[U01843] should not set path when findPath returns null', () => {
       findPath.mockReturnValue(null)
 
       mockUnit.guardTarget = {
@@ -217,7 +217,7 @@ describe('guard behavior', () => {
       expect(mockUnit.path).toEqual(['original'])
     })
 
-    it('should not set path when findPath returns single-element path', () => {
+    it('[U01844] should not set path when findPath returns single-element path', () => {
       findPath.mockReturnValue([{ x: 0, y: 0 }])
 
       mockUnit.guardTarget = {
@@ -235,7 +235,7 @@ describe('guard behavior', () => {
       expect(mockUnit.path).toEqual(['original'])
     })
 
-    it('should handle target with negative health', () => {
+    it('[U01845] should handle target with negative health', () => {
       mockUnit.guardTarget = {
         health: -10,
         x: 100,
@@ -251,7 +251,7 @@ describe('guard behavior', () => {
       expect(mockUnit.guardMode).toBe(false)
     })
 
-    it('should update lastGuardPathCalcTime when path is calculated', () => {
+    it('[U01846] should update lastGuardPathCalcTime when path is calculated', () => {
       findPath.mockReturnValue([
         { x: 0, y: 0 },
         { x: 5, y: 5 }
@@ -271,7 +271,7 @@ describe('guard behavior', () => {
       expect(mockUnit.lastGuardPathCalcTime).toBe(now)
     })
 
-    it('refreshes a Supply Ship water guard path before its protected ship leaves supply range', () => {
+    it('[U01847] refreshes a Supply Ship water guard path before its protected ship leaves supply range', () => {
       mockUnit.type = 'supplyShip'
       mockUnit.owner = 'player1'
       mockUnit.movementType = 'water'
@@ -297,7 +297,7 @@ describe('guard behavior', () => {
       )
     })
 
-    it('clears a stale Supply Ship guard path once it is safely inside supply range', () => {
+    it('[U01848] clears a stale Supply Ship guard path once it is safely inside supply range', () => {
       mockUnit.type = 'supplyShip'
       mockUnit.supplyRadiusTiles = 2
       mockUnit.x = TILE_SIZE

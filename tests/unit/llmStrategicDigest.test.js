@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { buildCompactStrategicInput } from '../../src/ai/llmStrategicDigest.js'
 
 describe('llmStrategicDigest', () => {
-  it('replaces raw snapshot arrays with grouped strategic sections', () => {
+  it('[U02367] replaces raw snapshot arrays with grouped strategic sections', () => {
     const rawInput = {
       protocolVersion: '1.0',
       matchId: 'local',
@@ -154,7 +154,7 @@ describe('llmStrategicDigest', () => {
     expect(digest.recentDeltas.countsByType).toEqual({ damage: 1, unit_created: 1 })
   })
 
-  it('produces a meaningfully smaller payload than the raw strategic snapshot', () => {
+  it('[U02368] produces a meaningfully smaller payload than the raw strategic snapshot', () => {
     const rawInput = {
       protocolVersion: '1.0',
       matchId: 'local',
@@ -271,7 +271,7 @@ describe('llmStrategicDigest', () => {
     expect(digestSize).toBeLessThan(rawSize)
   })
 
-  it('keeps only strategically relevant delta highlights', () => {
+  it('[U02369] keeps only strategically relevant delta highlights', () => {
     const rawInput = {
       protocolVersion: '1.0',
       matchId: 'local',
@@ -305,7 +305,7 @@ describe('llmStrategicDigest', () => {
     expect(digest.recentDeltas.highlights[2]).toMatchObject({ type: 'destroyed', victimId: 'enemy-refinery' })
   })
 
-  it('supports a smaller degraded strategic payload shape', () => {
+  it('[U02370] supports a smaller degraded strategic payload shape', () => {
     const rawInput = {
       protocolVersion: '1.0',
       matchId: 'local',

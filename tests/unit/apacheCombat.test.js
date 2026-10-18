@@ -87,7 +87,7 @@ describe('apacheCombat auto helipad return flow', () => {
     getEffectiveFireRange.mockReturnValue(5)
   })
 
-  it('stores current target when ammo empties and heads to helipad', () => {
+  it('[U00191] stores current target when ammo empties and heads to helipad', () => {
     hoisted.gameState.buildings.push({ id: 'pad-1', type: 'helipad', x: 4, y: 4, health: 100, owner: 'player1' })
     const enemy = { id: 'enemy-1', type: 'tank', x: 200, y: 200, tileX: 6, tileY: 6, health: 100 }
     const apache = createApache({ target: enemy, rocketAmmo: 0 })
@@ -100,7 +100,7 @@ describe('apacheCombat auto helipad return flow', () => {
     expect(apache.flightPlan?.mode).toBe('helipad')
   })
 
-  it('ignores stale remote-control state so ammo-empty apache still auto-returns', () => {
+  it('[U00192] ignores stale remote-control state so ammo-empty apache still auto-returns', () => {
     hoisted.gameState.buildings.push({ id: 'pad-1', type: 'helipad', x: 4, y: 4, health: 100, owner: 'player1' })
     const enemy = { id: 'enemy-1', type: 'tank', x: 200, y: 200, tileX: 6, tileY: 6, health: 100 }
     const apache = createApache({
@@ -117,7 +117,7 @@ describe('apacheCombat auto helipad return flow', () => {
     expect(apache.flightPlan?.mode).toBe('helipad')
   })
 
-  it('keeps return target state until target is gone, then clears and returns to helipad', () => {
+  it('[U00193] keeps return target state until target is gone, then clears and returns to helipad', () => {
     hoisted.gameState.buildings.push({ id: 'pad-1', type: 'helipad', x: 4, y: 4, health: 100, owner: 'player1' })
     const apache = createApache({
       target: null,
@@ -136,7 +136,7 @@ describe('apacheCombat auto helipad return flow', () => {
     expect(apache.autoReturnToHelipadOnTargetLoss).toBe(false)
   })
 
-  it('reroutes to another free helipad when assigned return pad becomes unavailable', () => {
+  it('[U00194] reroutes to another free helipad when assigned return pad becomes unavailable', () => {
     const pad1 = { id: 'pad-1', type: 'helipad', x: 4, y: 4, health: 100, owner: 'player1' }
     const pad2 = { id: 'pad-2', type: 'helipad', x: 8, y: 8, health: 100, owner: 'player1' }
     hoisted.gameState.buildings.push(pad1, pad2)
@@ -166,7 +166,7 @@ describe('apacheCombat auto helipad return flow', () => {
     expect(apache.flightPlan?.mode).toBe('helipad')
   })
 
-  it('gives player command priority over stored auto-return target recovery', () => {
+  it('[U00195] gives player command priority over stored auto-return target recovery', () => {
     const enemy = { id: 'enemy-1', type: 'tank', x: 200, y: 200, tileX: 6, tileY: 6, health: 100 }
     const apache = createApache({
       target: null,
@@ -185,7 +185,7 @@ describe('apacheCombat auto helipad return flow', () => {
     expect(apache.autoReturnToHelipadOnTargetLoss).toBe(false)
   })
 
-  it('respects the retry delay when no helipad is available', () => {
+  it('[U00196] respects the retry delay when no helipad is available', () => {
     hoisted.gameState.buildings.push({ id: 'pad-1', type: 'helipad', x: 4, y: 4, health: 100, owner: 'player1' })
     isHelipadAvailableForUnit.mockReturnValue(false)
     const enemy = { id: 'enemy-1', type: 'tank', x: 200, y: 200, tileX: 6, tileY: 6, health: 100 }
@@ -198,7 +198,7 @@ describe('apacheCombat auto helipad return flow', () => {
     expect(apache.autoHelipadRetryAt).toBe(2200)
   })
 
-  it('aims volleys at the visible airborne target position', () => {
+  it('[U00197] aims volleys at the visible airborne target position', () => {
     const airborneTarget = {
       id: 'enemy-apache',
       type: 'apache',
@@ -231,7 +231,7 @@ describe('apacheCombat auto helipad return flow', () => {
     )
   })
 
-  it('starts firing immediately after an explicit player attack command', () => {
+  it('[U00198] starts firing immediately after an explicit player attack command', () => {
     getEffectiveFireRange.mockReturnValue(100)
     const enemy = { id: 'enemy-1', type: 'tank', x: 180, y: 100, tileX: 6, tileY: 3, health: 100 }
     const apache = createApache({
@@ -265,7 +265,7 @@ describe('apacheCombat auto helipad return flow', () => {
     )
   })
 
-  it('refreshes its combat flight plan when a commanded target moves', () => {
+  it('[U00199] refreshes its combat flight plan when a commanded target moves', () => {
     getEffectiveFireRange.mockReturnValue(100)
     const mapGrid = Array.from({ length: 30 }, () => Array.from({ length: 30 }, () => ({})))
     const enemy = { id: 'enemy-1', type: 'tank', x: 400, y: 100, tileX: 12, tileY: 3, health: 100 }

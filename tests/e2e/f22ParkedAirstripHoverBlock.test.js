@@ -23,7 +23,7 @@ test.describe('F22 parked airstrip command guard', () => {
     })
   })
 
-  test('parked F22 shows blocked cursor on its own airstrip, move-into on another, and does not relaunch on right click', async({ page }) => {
+  test('[E00038] parked F22 shows blocked cursor on its own airstrip, move-into on another, and does not relaunch on right click', async({ page }) => {
     await page.goto('/?seed=11')
 
     await page.waitForSelector('#gameCanvas', { state: 'visible', timeout: 30000 })

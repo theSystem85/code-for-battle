@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 
 test.use({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 2 })
 
-test('all eight organic shoreline corners have continuous rendered alpha', async({ page }) => {
+test('[E00081] all eight organic shoreline corners have continuous rendered alpha', async({ page }) => {
   await page.goto('/?seed=4')
   const result = await page.evaluate(async() => {
     const { MapRenderer } = await import('/src/rendering/mapRenderer.js')
@@ -55,7 +55,7 @@ test('all eight organic shoreline corners have continuous rendered alpha', async
   await page.locator('#shoreline-gallery').screenshot({ path: '/tmp/shoreline-corner-gallery.png' })
 })
 
-test('land biome turns share junction coverage', async({ page }) => {
+test('[E00082] land biome turns share junction coverage', async({ page }) => {
   await page.goto('/?seed=4')
   const result = await page.evaluate(async() => {
     const { MapRenderer } = await import('/src/rendering/mapRenderer.js')
@@ -119,7 +119,7 @@ test('land biome turns share junction coverage', async({ page }) => {
   expect(result.fractionalCorners).toBeGreaterThan(result.diagonalTransitions)
 })
 
-test('organic terrain is identical across chunk seams and map edits', async({ page }) => {
+test('[E00083] organic terrain is identical across chunk seams and map edits', async({ page }) => {
   await page.goto('/?seed=4')
   const result = await page.evaluate(async() => {
     const { MapRenderer } = await import('/src/rendering/mapRenderer.js')
@@ -166,7 +166,7 @@ test('organic terrain is identical across chunk seams and map edits', async({ pa
   expect(result).toEqual({ initial: { differences: 0, bounds: null }, edited: { differences: 0, bounds: null }, unchanged: true })
 })
 
-test('shoreline water is composited before the terrain transition pass', async({ page }) => {
+test('[E00084] shoreline water is composited before the terrain transition pass', async({ page }) => {
   await page.goto('/?seed=4')
   const result = await page.evaluate(async() => {
     const { MapRenderer } = await import('/src/rendering/mapRenderer.js')
@@ -212,7 +212,7 @@ test('shoreline water is composited before the terrain transition pass', async({
   expect(result.streetSot).toEqual({ orientation: 'bottom-right', type: 'street' })
 })
 
-test('terrain combat performance at DPR 2', async({ page }, testInfo) => {
+test('[E00085] terrain combat performance at DPR 2', async({ page }, testInfo) => {
   test.skip(process.env.TERRAIN_BENCHMARK !== '1', 'Opt in with TERRAIN_BENCHMARK=1')
   if (process.env.TERRAIN_MIXED_BIOME === '1') {
     await page.goto('/?seed=4')
@@ -252,7 +252,7 @@ test('terrain combat performance at DPR 2', async({ page }, testInfo) => {
   expect(report.renderer.mapChunks.directTilePasses).toBe(0)
 })
 
-test('mixed-biome cached terrain stays within the static chunk-bake budget', async({ page }, testInfo) => {
+test('[E00086] mixed-biome cached terrain stays within the static chunk-bake budget', async({ page }, testInfo) => {
   test.skip(process.env.TERRAIN_BENCHMARK !== '1', 'Opt in with TERRAIN_BENCHMARK=1')
   await page.goto('/?seed=4')
   const report = await page.evaluate(async() => {
@@ -304,7 +304,7 @@ test('mixed-biome cached terrain stays within the static chunk-bake budget', asy
 })
 
 
-test('SOT legs stay opaque and only the diagonal fades; cliffs have no ground mat', async({ page }) => {
+test('[E00087] SOT legs stay opaque and only the diagonal fades; cliffs have no ground mat', async({ page }) => {
   await page.goto('/?seed=4')
   const report = await page.evaluate(async() => {
     const image = new Image()
@@ -331,7 +331,7 @@ test('SOT legs stay opaque and only the diagonal fades; cliffs have no ground ma
   expect(report.cliffCornerAlpha).toBe(0)
 })
 
-test('outward and inward SOT corners share stitched bounds in all four orientations', async({ page }) => {
+test('[E00088] outward and inward SOT corners share stitched bounds in all four orientations', async({ page }) => {
   await page.goto('/?seed=4')
   const report = await page.evaluate(async() => {
     const { getSotDrawBounds } = await import('/src/rendering/organicTerrain.js')
@@ -388,7 +388,7 @@ test('outward and inward SOT corners share stitched bounds in all four orientati
   ])
 })
 
-test('rock shorelines use sand transitions while every snow plateau surface tile stays snow', async({ page }) => {
+test('[E00089] rock shorelines use sand transitions while every snow plateau surface tile stays snow', async({ page }) => {
   await page.route('**/__rock-shore-plateau', route => route.fulfill({ contentType: 'text/html', body: '<html></html>' }))
   await page.goto('/__rock-shore-plateau')
   const report = await page.evaluate(async() => {
@@ -421,7 +421,7 @@ test('rock shorelines use sand transitions while every snow plateau surface tile
   expect(report.transitionBiome).toBe('sand')
 })
 
-test('CPU animated water does not erase the cached grass shore', async({ page }) => {
+test('[E00090] CPU animated water does not erase the cached grass shore', async({ page }) => {
   await page.goto('/?seed=4')
   const pixel = await page.evaluate(async() => {
     const { MapRenderer } = await import('/src/rendering/mapRenderer.js')

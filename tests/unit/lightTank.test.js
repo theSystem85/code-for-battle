@@ -13,7 +13,7 @@ const ROOT = process.cwd()
 const PART_FILES = ['wagon', 'turret', 'barrel'].map(part => path.join(ROOT, `public/images/map/units/lightTank_${part}.webp`))
 
 describe('light tank (M2 Bradley style IFV)', () => {
-  it('is cheaper, faster and lighter armored than tank V1', () => {
+  it('[U02348] is cheaper, faster and lighter armored than tank V1', () => {
     expect(UNIT_COSTS.lightTank).toBeLessThan(UNIT_COSTS.tank_v1)
     expect(UNIT_PROPERTIES.lightTank.speed).toBeGreaterThan(UNIT_PROPERTIES.tank_v1.speed)
     expect(UNIT_PROPERTIES.lightTank.maxHealth).toBeLessThan(UNIT_PROPERTIES.tank_v1.maxHealth)
@@ -23,25 +23,25 @@ describe('light tank (M2 Bradley style IFV)', () => {
     expect(isTurretTankUnitType('lightTank')).toBe(true)
   })
 
-  it('fires a rapid low-damage autocannon', () => {
+  it('[U02349] fires a rapid low-damage autocannon', () => {
     expect(getBaseFireRateForTankType('lightTank')).toBe(COMBAT_CONFIG.FIRE_RATES.LIGHT_TANK)
     expect(getBaseFireRateForTankType('tank_v1')).toBe(COMBAT_CONFIG.FIRE_RATES.STANDARD)
     expect(COMBAT_CONFIG.FIRE_RATES.LIGHT_TANK).toBeLessThan(COMBAT_CONFIG.FIRE_RATES.STANDARD / 2)
     expect(BULLET_DAMAGES.lightTank).toBeLessThan(BULLET_DAMAGES.tank_v1)
   })
 
-  it('is unlocked by a vehicle factory', () => {
+  it('[U02350] is unlocked by a vehicle factory', () => {
     const factory = { type: 'vehicleFactory', owner: 'player1', health: 100 }
     expect(computeAvailableUnitTypes([factory], [], 'player1').has('lightTank')).toBe(true)
     expect(computeAvailableUnitTypes([], [], 'player1').has('lightTank')).toBe(false)
   })
 
-  it('leaves track marks and uses the cached rotation pipeline', () => {
+  it('[U02351] leaves track marks and uses the cached rotation pipeline', () => {
     expect(TRACKED_UNIT_TYPES.has('lightTank')).toBe(true)
     expect(TANK_ROTATION_VARIANTS).toContain('lightTank')
   })
 
-  it('has mount points inside its hull and turret sources', async() => {
+  it('[U02352] has mount points inside its hull and turret sources', async() => {
     const cfg = tankImageConfigData.tankImageConfig.lightTank
     const [wagon, turret, barrel] = await Promise.all(PART_FILES.map(file => sharp(file).metadata()))
     expect(cfg.turretMountPoint.x).toBeGreaterThan(0)
@@ -55,7 +55,7 @@ describe('light tank (M2 Bradley style IFV)', () => {
     expect(cfg.muzzleFlashOffset.y).toBe(barrel.height)
   })
 
-  it('ships 1x/2x/3x prepared parts downsampled from larger sources', async() => {
+  it('[U02353] ships 1x/2x/3x prepared parts downsampled from larger sources', async() => {
     const manifest = JSON.parse(readFileSync(path.join(ROOT, 'public/images/prepared/sprite-manifest.json'), 'utf8'))
     for (const part of ['wagon', 'turret', 'barrel']) {
       const entry = manifest.entries.find(e => e.id === `unit:lightTank:${part}`)

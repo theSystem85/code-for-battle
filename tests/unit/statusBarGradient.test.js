@@ -19,7 +19,7 @@ import {
 } from '../../src/utils/statusBarGradient.js'
 
 describe('status bar gradient', () => {
-  it('reuses the energy bar linear-gradient stop structure', () => {
+  it('[U04216] reuses the energy bar linear-gradient stop structure', () => {
     expect(linearFillGradientCss('#3f8f44', '#7ce284', 90)).toBe(
       'linear-gradient(90deg, #3f8f44 0%, #7ce284 100%)'
     )
@@ -28,7 +28,7 @@ describe('status bar gradient', () => {
     )
   })
 
-  it('darkens the fill start and mixes 40% white at the growing edge', () => {
+  it('[U04217] darkens the fill start and mixes 40% white at the growing edge', () => {
     expect(STATUS_BAR_START_BLACK_MIX).toBeGreaterThanOrEqual(0.2)
     expect(STATUS_BAR_START_BLACK_MIX).toBeLessThanOrEqual(0.25)
     expect(STATUS_BAR_LEADING_WHITE_MIX).toBe(0.4)
@@ -59,13 +59,13 @@ describe('status bar gradient', () => {
     expect(gloss.g).toBeGreaterThan(tip.g)
   })
 
-  it('parses short hex and rgba colors', () => {
+  it('[U04218] parses short hex and rgba colors', () => {
     expect(parseCssColor('#abc')).toEqual({ r: 170, g: 187, b: 204, a: 1 })
     expect(parseCssColor('rgba(10, 20, 30, 0.5)')).toEqual({ r: 10, g: 20, b: 30, a: 0.5 })
     expect(colorToCss(mixTowardWhite({ r: 0, g: 0, b: 0, a: 0.5 }, 0))).toBe('rgba(0, 0, 0, 0.5)')
   })
 
-  it('draws the filled rect once and does not build a gradient on the destination context', () => {
+  it('[U04219] draws the filled rect once and does not build a gradient on the destination context', () => {
     resetStatusBarGradientCacheForTests()
     const draws = []
     const ctx = {
@@ -111,7 +111,7 @@ describe('status bar gradient', () => {
     }
   })
 
-  it('strokes a donut arc from the base color toward white without a canvas gradient', () => {
+  it('[U04220] strokes a donut arc from the base color toward white without a canvas gradient', () => {
     const styles = []
     const ctx = {
       lineWidth: 4,
@@ -147,7 +147,7 @@ describe('status bar gradient', () => {
     expect(again).toEqual(styles)
   })
 
-  it('paints the rail from a cached sprite and strokes an inset hairline', () => {
+  it('[U04221] paints the rail from a cached sprite and strokes an inset hairline', () => {
     resetStatusBarGradientCacheForTests()
     const images = []
     const strokes = []

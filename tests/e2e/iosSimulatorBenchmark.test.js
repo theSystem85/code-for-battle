@@ -252,7 +252,7 @@ test.describe('iOS Simulator benchmark', () => {
   test.skip(process.env.IOS_EMULATOR_BENCHMARK !== '1', 'Set IOS_EMULATOR_BENCHMARK=1 to run the iOS Simulator benchmark.')
   test.skip(process.platform !== 'darwin', 'The iOS Simulator benchmark requires macOS and Xcode Simulator.')
 
-  test('runs the existing game benchmark in Simulator Safari at the configured average FPS threshold', async({ browserName: _browserName }, testInfo) => {
+  test('[E00055] runs the existing game benchmark in Simulator Safari at the configured average FPS threshold', async({ browserName: _browserName }, testInfo) => {
     testInfo.setTimeout(START_TIMEOUT_MS + RESULT_TIMEOUT_MS + 30000)
 
     const simulatorDevice = await resolveSimulatorDevice()

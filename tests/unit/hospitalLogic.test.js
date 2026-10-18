@@ -77,7 +77,7 @@ describe('hospitalLogic', () => {
     getServiceRadiusPixels.mockReturnValue(96)
   })
 
-  it('leaves units untouched when no hospitals exist', () => {
+  it('[U01994] leaves units untouched when no hospitals exist', () => {
     const unit = createCrewUnit({ crew: { driver: false, commander: true, loader: true, gunner: true } })
 
     updateHospitalLogic([unit], [], gameState, 1000)
@@ -86,7 +86,7 @@ describe('hospitalLogic', () => {
     expect(gameState.money).toBe(100)
   })
 
-  it('skips healing when hospital service radius is zero', () => {
+  it('[U01995] skips healing when hospital service radius is zero', () => {
     const hospital = createHospital({ healingUnits: [{ unitId: 'unit1' }] })
     getServiceRadiusPixels.mockReturnValueOnce(0)
 
@@ -95,7 +95,7 @@ describe('hospitalLogic', () => {
     expect(hospital.healingUnits).toEqual([{ unitId: 'unit1' }])
   })
 
-  it('creates healing entries and advances crew roles with money deduction', () => {
+  it('[U01996] creates healing entries and advances crew roles with money deduction', () => {
     const hospital = createHospital()
     const unit = createCrewUnit({
       crew: { driver: false, commander: false, loader: true, gunner: true }
@@ -113,7 +113,7 @@ describe('hospitalLogic', () => {
     })
   })
 
-  it('heals crew even when funds are low without deducting money', () => {
+  it('[U01997] heals crew even when funds are low without deducting money', () => {
     gameState.money = 5
     const hospital = createHospital()
     const unit = createCrewUnit({ crew: { driver: false, commander: true, loader: true, gunner: true } })
@@ -125,7 +125,7 @@ describe('hospitalLogic', () => {
     expect(hospital.healingUnits).toHaveLength(0)
   })
 
-  it('removes healing entries when units leave the service radius', () => {
+  it('[U01998] removes healing entries when units leave the service radius', () => {
     const hospital = createHospital({
       healingUnits: [{ unitId: 'unit1', progress: 0, totalProgress: 10000, currentRole: 'driver' }]
     })
@@ -136,7 +136,7 @@ describe('hospitalLogic', () => {
     expect(hospital.healingUnits).toHaveLength(0)
   })
 
-  it('does not enroll AI ambulances in crew healing', () => {
+  it('[U01999] does not enroll AI ambulances in crew healing', () => {
     const hospital = createHospital()
     const unit = createCrewUnit({
       id: 'amb1',
@@ -150,7 +150,7 @@ describe('hospitalLogic', () => {
     expect(hospital.healingUnits).toHaveLength(0)
   })
 
-  it('refills ambulance medics over time while in range', () => {
+  it('[U02000] refills ambulance medics over time while in range', () => {
     const hospital = createHospital({ owner: 'player1' })
     const ambulance = createAmbulance({ medics: 4, maxMedics: 6, medicRefillTimer: 0 })
 
@@ -160,7 +160,7 @@ describe('hospitalLogic', () => {
     expect(ambulance.medicRefillTimer).toBe(0)
   })
 
-  it('resets ambulance refill timer when out of range', () => {
+  it('[U02001] resets ambulance refill timer when out of range', () => {
     const hospital = createHospital({ owner: 'player1' })
     const ambulance = createAmbulance({ tileY: 20, medicRefillTimer: 1000 })
 
@@ -169,7 +169,7 @@ describe('hospitalLogic', () => {
     expect(ambulance.medicRefillTimer).toBe(0)
   })
 
-  it('advances healing entries without deducting money for AI units', () => {
+  it('[U02002] advances healing entries without deducting money for AI units', () => {
     const hospital = createHospital({
       healingUnits: [{ unitId: 'unit1', progress: 9000, totalProgress: 10000, currentRole: 'driver' }]
     })

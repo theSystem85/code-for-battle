@@ -1,7 +1,7 @@
 import { expect, test, devices } from '@playwright/test'
 
 for (const phone of [false, true]) {
-  test(`input chooser shows visual mappings, persists preference and continues the tutorial on ${phone ? 'phone' : 'desktop'}`, async({ browser }) => {
+  test(`[E00126] input chooser shows visual mappings, persists preference and continues the tutorial on ${phone ? 'phone' : 'desktop'}`, async({ browser }) => {
     const context = await browser.newContext(phone ? { ...devices['iPhone 13'] } : {})
     const page = await context.newPage()
     try {

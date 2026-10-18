@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest'
 import { toggleSpriteTag } from '../../src/ui/sseTags.js'
 
-it('tags and untags every tile of an imported sprite, including partial existing tags', () => {
+it('[U04198] tags and untags every tile of an imported sprite, including partial existing tags', () => {
   const sprite = { placedAt: { column: 1, row: 2 }, tileSpan: { columns: 2, rows: 2 } }
   const data = { tiles: { '1,2': { tags: ['tree', 'forest'] } }, extension: { imports: [sprite] } }
   expect(toggleSpriteTag(data, 2, 3, 'tree')).toHaveLength(4)

@@ -25,23 +25,23 @@ describe('milestoneSystem.js', () => {
   })
 
   describe('MilestoneSystem constructor', () => {
-    it('should initialize with empty achieved milestones set', () => {
+    it('[U02741] should initialize with empty achieved milestones set', () => {
       expect(system.achievedMilestones).toBeInstanceOf(Set)
       expect(system.achievedMilestones.size).toBe(0)
     })
 
-    it('should initialize with null productionController', () => {
+    it('[U02742] should initialize with null productionController', () => {
       expect(system.productionController).toBeNull()
     })
 
-    it('should have milestone configurations defined', () => {
+    it('[U02743] should have milestone configurations defined', () => {
       expect(system.milestoneConfig).toBeDefined()
       expect(system.milestoneConfig.firstRefinery).toBeDefined()
       expect(system.milestoneConfig.firstFactory).toBeDefined()
       expect(system.milestoneConfig.tenBuildings).toBeDefined()
     })
 
-    it('should have correct milestone config properties', () => {
+    it('[U02744] should have correct milestone config properties', () => {
       const refineryConfig = system.milestoneConfig.firstRefinery
       expect(refineryConfig.id).toBe('firstRefinery')
       expect(refineryConfig.displayName).toBe('First Refinery Built')
@@ -51,7 +51,7 @@ describe('milestoneSystem.js', () => {
   })
 
   describe('setProductionController', () => {
-    it('should set the production controller reference', () => {
+    it('[U02745] should set the production controller reference', () => {
       const mockController = { unlockUnitType: vi.fn() }
       system.setProductionController(mockController)
       expect(system.productionController).toBe(mockController)
@@ -59,13 +59,13 @@ describe('milestoneSystem.js', () => {
   })
 
   describe('unlockAdvancedTechnology', () => {
-    it('should log warning if no productionController is set', () => {
+    it('[U02746] should log warning if no productionController is set', () => {
       const warnSpy = vi.spyOn(window.logger, 'warn')
       system.unlockAdvancedTechnology()
       expect(warnSpy).toHaveBeenCalledWith('ProductionController not set, cannot unlock advanced technology')
     })
 
-    it('should call unlockMultipleTypes on productionController', () => {
+    it('[U02747] should call unlockMultipleTypes on productionController', () => {
       const mockController = { unlockMultipleTypes: vi.fn() }
       system.setProductionController(mockController)
       system.unlockAdvancedTechnology()
@@ -77,13 +77,13 @@ describe('milestoneSystem.js', () => {
   })
 
   describe('unlockBasicUnits', () => {
-    it('should log warning if no productionController is set', () => {
+    it('[U02748] should log warning if no productionController is set', () => {
       const warnSpy = vi.spyOn(window.logger, 'warn')
       system.unlockBasicUnits({})
       expect(warnSpy).toHaveBeenCalledWith('ProductionController not set, cannot unlock basic units')
     })
 
-    it('should unlock tank unit type', () => {
+    it('[U02749] should unlock tank unit type', () => {
       const mockController = { unlockUnitType: vi.fn() }
       system.setProductionController(mockController)
       system.unlockBasicUnits({})
@@ -92,13 +92,13 @@ describe('milestoneSystem.js', () => {
   })
 
   describe('unlockHarvester', () => {
-    it('should log warning if no productionController is set', () => {
+    it('[U02750] should log warning if no productionController is set', () => {
       const warnSpy = vi.spyOn(window.logger, 'warn')
       system.unlockHarvester()
       expect(warnSpy).toHaveBeenCalledWith('ProductionController not set, cannot unlock harvester')
     })
 
-    it('should unlock harvester unit type', () => {
+    it('[U02751] should unlock harvester unit type', () => {
       const mockController = { unlockUnitType: vi.fn() }
       system.setProductionController(mockController)
       system.unlockHarvester()
@@ -107,7 +107,7 @@ describe('milestoneSystem.js', () => {
   })
 
   describe('unlockRocketTank', () => {
-    it('should unlock rocketTank unit type', () => {
+    it('[U02752] should unlock rocketTank unit type', () => {
       const mockController = { unlockUnitType: vi.fn() }
       system.setProductionController(mockController)
       system.unlockRocketTank()
@@ -116,7 +116,7 @@ describe('milestoneSystem.js', () => {
   })
 
   describe('unlockTankV3', () => {
-    it('should unlock tank-v3 unit type', () => {
+    it('[U02753] should unlock tank-v3 unit type', () => {
       const mockController = { unlockUnitType: vi.fn() }
       system.setProductionController(mockController)
       system.unlockTankV3()
@@ -125,7 +125,7 @@ describe('milestoneSystem.js', () => {
   })
 
   describe('unlockAmbulance', () => {
-    it('should unlock ambulance unit type', () => {
+    it('[U02754] should unlock ambulance unit type', () => {
       const mockController = { unlockUnitType: vi.fn() }
       system.setProductionController(mockController)
       system.unlockAmbulance()
@@ -134,7 +134,7 @@ describe('milestoneSystem.js', () => {
   })
 
   describe('unlockTankerTruck', () => {
-    it('should unlock tankerTruck unit type', () => {
+    it('[U02755] should unlock tankerTruck unit type', () => {
       const mockController = { unlockUnitType: vi.fn() }
       system.setProductionController(mockController)
       system.unlockTankerTruck()
@@ -143,7 +143,7 @@ describe('milestoneSystem.js', () => {
   })
 
   describe('unlockRecoveryTank', () => {
-    it('should unlock recoveryTank unit type', () => {
+    it('[U02756] should unlock recoveryTank unit type', () => {
       const mockController = { unlockUnitType: vi.fn() }
       system.setProductionController(mockController)
       system.unlockRecoveryTank()
@@ -152,7 +152,7 @@ describe('milestoneSystem.js', () => {
   })
 
   describe('checkMilestones', () => {
-    it('should detect first refinery milestone', () => {
+    it('[U02757] should detect first refinery milestone', () => {
       const gameState = {
         humanPlayer: 'player1',
         buildings: [{ type: 'oreRefinery', owner: 'player1' }]
@@ -161,7 +161,7 @@ describe('milestoneSystem.js', () => {
       expect(system.isAchieved('firstRefinery')).toBe(true)
     })
 
-    it('should not trigger milestone if already achieved', () => {
+    it('[U02758] should not trigger milestone if already achieved', () => {
       system.achievedMilestones.add('firstRefinery')
       const gameState = {
         humanPlayer: 'player1',
@@ -172,7 +172,7 @@ describe('milestoneSystem.js', () => {
       expect(system.isAchieved('firstRefinery')).toBe(true)
     })
 
-    it('should detect first factory and unlock basic units', () => {
+    it('[U02759] should detect first factory and unlock basic units', () => {
       const mockController = { unlockUnitType: vi.fn() }
       system.setProductionController(mockController)
       const gameState = {
@@ -184,7 +184,7 @@ describe('milestoneSystem.js', () => {
       expect(mockController.unlockUnitType).toHaveBeenCalledWith('tank')
     })
 
-    it('should unlock harvester when both factory and refinery exist', () => {
+    it('[U02760] should unlock harvester when both factory and refinery exist', () => {
       const mockController = { unlockUnitType: vi.fn() }
       system.setProductionController(mockController)
       const gameState = {
@@ -199,7 +199,7 @@ describe('milestoneSystem.js', () => {
       expect(mockController.unlockUnitType).toHaveBeenCalledWith('harvester')
     })
 
-    it('should unlock tanker truck when factory and gas station exist', () => {
+    it('[U02761] should unlock tanker truck when factory and gas station exist', () => {
       const mockController = { unlockUnitType: vi.fn() }
       system.setProductionController(mockController)
       const gameState = {
@@ -214,7 +214,7 @@ describe('milestoneSystem.js', () => {
       expect(mockController.unlockUnitType).toHaveBeenCalledWith('tankerTruck')
     })
 
-    it('should unlock rocket tank when rocket turret exists', () => {
+    it('[U02762] should unlock rocket tank when rocket turret exists', () => {
       const mockController = { unlockUnitType: vi.fn() }
       system.setProductionController(mockController)
       const gameState = {
@@ -226,7 +226,7 @@ describe('milestoneSystem.js', () => {
       expect(mockController.unlockUnitType).toHaveBeenCalledWith('rocketTank')
     })
 
-    it('should unlock tank-v3 when 2 vehicle factories exist', () => {
+    it('[U02763] should unlock tank-v3 when 2 vehicle factories exist', () => {
       const mockController = { unlockUnitType: vi.fn() }
       system.setProductionController(mockController)
       const gameState = {
@@ -241,7 +241,7 @@ describe('milestoneSystem.js', () => {
       expect(mockController.unlockUnitType).toHaveBeenCalledWith('tank-v3')
     })
 
-    it('should unlock recovery tank when workshop exists', () => {
+    it('[U02764] should unlock recovery tank when workshop exists', () => {
       const mockController = { unlockUnitType: vi.fn() }
       system.setProductionController(mockController)
       const gameState = {
@@ -253,7 +253,7 @@ describe('milestoneSystem.js', () => {
       expect(mockController.unlockUnitType).toHaveBeenCalledWith('recoveryTank')
     })
 
-    it('should detect ten buildings milestone', () => {
+    it('[U02765] should detect ten buildings milestone', () => {
       const buildings = Array(10).fill(null).map(() => ({
         type: 'concreteWall',
         owner: 'player1'
@@ -266,7 +266,7 @@ describe('milestoneSystem.js', () => {
       expect(system.isAchieved('tenBuildings')).toBe(true)
     })
 
-    it('should detect first unit milestone', () => {
+    it('[U02766] should detect first unit milestone', () => {
       const gameState = {
         humanPlayer: 'player1',
         buildings: [],
@@ -276,7 +276,7 @@ describe('milestoneSystem.js', () => {
       expect(system.isAchieved('firstUnit')).toBe(true)
     })
 
-    it('should not trigger first unit for harvester only', () => {
+    it('[U02767] should not trigger first unit for harvester only', () => {
       const gameState = {
         humanPlayer: 'player1',
         buildings: [],
@@ -286,7 +286,7 @@ describe('milestoneSystem.js', () => {
       expect(system.isAchieved('firstUnit')).toBe(false)
     })
 
-    it('should detect the first standard tank and play its milestone video once', () => {
+    it('[U02768] should detect the first standard tank and play its milestone video once', () => {
       const gameState = {
         humanPlayer: 'player1',
         buildings: [],
@@ -306,7 +306,7 @@ describe('milestoneSystem.js', () => {
       expect(playSyncedVideoAudio).not.toHaveBeenCalled()
     })
 
-    it('should treat the production alias tank as the standard land tank', () => {
+    it('[U02769] should treat the production alias tank as the standard land tank', () => {
       const gameState = {
         humanPlayer: 'player1',
         buildings: [],
@@ -317,7 +317,7 @@ describe('milestoneSystem.js', () => {
       expect(playSyncedVideoAudio).toHaveBeenCalledWith('first_tank', expect.any(Object))
     })
 
-    it('should not play the first tank video for other vehicles or enemy tanks', () => {
+    it('[U02770] should not play the first tank video for other vehicles or enemy tanks', () => {
       const gameState = {
         humanPlayer: 'player1',
         buildings: [],
@@ -333,7 +333,7 @@ describe('milestoneSystem.js', () => {
       expect(playSyncedVideoAudio).not.toHaveBeenCalled()
     })
 
-    it('should play a video the first time each new production unit appears', () => {
+    it('[U02771] should play a video the first time each new production unit appears', () => {
       const cases = [
         ['mineLayer', 'firstMineLayer', 'first_mine_layer', 'First Mine Layer Produced'],
         ['mineSweeper', 'firstMineSweeper', 'first_mine_sweeper', 'First Mine Sweeper Produced'],
@@ -365,7 +365,7 @@ describe('milestoneSystem.js', () => {
       })
     })
 
-    it('should not play first-build videos for enemy units or the rocket unlock milestone', () => {
+    it('[U02772] should not play first-build videos for enemy units or the rocket unlock milestone', () => {
       system.checkMilestones({
         humanPlayer: 'player1',
         buildings: [],
@@ -384,7 +384,7 @@ describe('milestoneSystem.js', () => {
       expect(playSyncedVideoAudio).not.toHaveBeenCalled()
     })
 
-    it('should keep achieved first-build milestones across save and load', () => {
+    it('[U02773] should keep achieved first-build milestones across save and load', () => {
       system.setAchievedMilestones(['firstMineLayer', 'firstHowitzer', 'firstRocketTankBuilt'])
       expect(system.getAchievedMilestones()).toEqual(expect.arrayContaining([
         'firstMineLayer',
@@ -403,7 +403,7 @@ describe('milestoneSystem.js', () => {
       expect(playSyncedVideoAudio).not.toHaveBeenCalled()
     })
 
-    it('replaces the unit-ready sting with the production-line narrator only the first time', () => {
+    it('[U02774] replaces the unit-ready sting with the production-line narrator only the first time', () => {
       expect(system.claimFirstProductionNarration('howitzer')).toBe(true)
       expect(system.isAchieved('firstHowitzer')).toBe(true)
       expect(playSyncedVideoAudio).toHaveBeenCalledWith('first_artillery', expect.any(Object))
@@ -420,7 +420,7 @@ describe('milestoneSystem.js', () => {
       expect(system.claimFirstProductionNarration('rocketTank')).toBe(true)
     })
 
-    it('should detect first tesla coil milestone', () => {
+    it('[U02775] should detect first tesla coil milestone', () => {
       const gameState = {
         humanPlayer: 'player1',
         buildings: [{ type: 'teslaCoil', owner: 'player1' }]
@@ -429,7 +429,7 @@ describe('milestoneSystem.js', () => {
       expect(system.isAchieved('firstTeslaCoil')).toBe(true)
     })
 
-    it('should detect radar built and unlock advanced tech', () => {
+    it('[U02776] should detect radar built and unlock advanced tech', () => {
       const mockController = { unlockMultipleTypes: vi.fn() }
       system.setProductionController(mockController)
       const gameState = {
@@ -441,7 +441,7 @@ describe('milestoneSystem.js', () => {
       expect(mockController.unlockMultipleTypes).toHaveBeenCalled()
     })
 
-    it('should not trigger for enemy buildings', () => {
+    it('[U02777] should not trigger for enemy buildings', () => {
       const gameState = {
         humanPlayer: 'player1',
         buildings: [{ type: 'oreRefinery', owner: 'enemy' }]
@@ -452,25 +452,25 @@ describe('milestoneSystem.js', () => {
   })
 
   describe('triggerMilestone', () => {
-    it('should add milestone to achieved set', () => {
+    it('[U02778] should add milestone to achieved set', () => {
       system.triggerMilestone('firstRefinery')
       expect(system.achievedMilestones.has('firstRefinery')).toBe(true)
     })
 
-    it('should not re-trigger already achieved milestone', () => {
+    it('[U02779] should not re-trigger already achieved milestone', () => {
       system.achievedMilestones.add('firstRefinery')
       const sizeBefore = system.achievedMilestones.size
       system.triggerMilestone('firstRefinery')
       expect(system.achievedMilestones.size).toBe(sizeBefore)
     })
 
-    it('should log warning for unknown milestone', () => {
+    it('[U02780] should log warning for unknown milestone', () => {
       const warnSpy = vi.spyOn(window.logger, 'warn')
       system.triggerMilestone('unknownMilestone')
       expect(warnSpy).toHaveBeenCalledWith('Unknown milestone: unknownMilestone')
     })
 
-    it('should dispatch milestoneAchieved event', () => {
+    it('[U02781] should dispatch milestoneAchieved event', () => {
       const eventSpy = vi.fn()
       document.addEventListener('milestoneAchieved', eventSpy)
       system.triggerMilestone('firstRefinery')
@@ -480,11 +480,11 @@ describe('milestoneSystem.js', () => {
   })
 
   describe('getAchievedMilestones', () => {
-    it('should return empty array when no milestones achieved', () => {
+    it('[U02782] should return empty array when no milestones achieved', () => {
       expect(system.getAchievedMilestones()).toEqual([])
     })
 
-    it('should return array of achieved milestone IDs', () => {
+    it('[U02783] should return array of achieved milestone IDs', () => {
       system.achievedMilestones.add('firstRefinery')
       system.achievedMilestones.add('firstFactory')
       const achieved = system.getAchievedMilestones()
@@ -495,7 +495,7 @@ describe('milestoneSystem.js', () => {
   })
 
   describe('reset', () => {
-    it('should clear all achieved milestones', () => {
+    it('[U02784] should clear all achieved milestones', () => {
       system.achievedMilestones.add('firstRefinery')
       system.achievedMilestones.add('firstFactory')
       system.reset()
@@ -504,51 +504,51 @@ describe('milestoneSystem.js', () => {
   })
 
   describe('getMilestoneConfig', () => {
-    it('should return config for valid milestone ID', () => {
+    it('[U02785] should return config for valid milestone ID', () => {
       const config = system.getMilestoneConfig('firstRefinery')
       expect(config).toBeDefined()
       expect(config.id).toBe('firstRefinery')
     })
 
-    it('should return undefined for invalid milestone ID', () => {
+    it('[U02786] should return undefined for invalid milestone ID', () => {
       const config = system.getMilestoneConfig('nonexistent')
       expect(config).toBeUndefined()
     })
   })
 
   describe('isAchieved', () => {
-    it('should return false for unachieved milestone', () => {
+    it('[U02787] should return false for unachieved milestone', () => {
       expect(system.isAchieved('firstRefinery')).toBe(false)
     })
 
-    it('should return true for achieved milestone', () => {
+    it('[U02788] should return true for achieved milestone', () => {
       system.achievedMilestones.add('firstRefinery')
       expect(system.isAchieved('firstRefinery')).toBe(true)
     })
   })
 
   describe('setAchievedMilestones', () => {
-    it('should set milestones from array', () => {
+    it('[U02789] should set milestones from array', () => {
       system.setAchievedMilestones(['firstRefinery', 'firstFactory'])
       expect(system.isAchieved('firstRefinery')).toBe(true)
       expect(system.isAchieved('firstFactory')).toBe(true)
     })
 
-    it('should clear previous milestones', () => {
+    it('[U02790] should clear previous milestones', () => {
       system.achievedMilestones.add('tenBuildings')
       system.setAchievedMilestones(['firstRefinery'])
       expect(system.isAchieved('tenBuildings')).toBe(false)
       expect(system.isAchieved('firstRefinery')).toBe(true)
     })
 
-    it('should handle non-array input gracefully', () => {
+    it('[U02791] should handle non-array input gracefully', () => {
       system.setAchievedMilestones(null)
       expect(system.achievedMilestones.size).toBe(0)
     })
   })
 
   describe('global milestoneSystem instance', () => {
-    it('should exist as a singleton', () => {
+    it('[U02792] should exist as a singleton', () => {
       expect(milestoneSystem).toBeInstanceOf(MilestoneSystem)
     })
   })

@@ -21,14 +21,14 @@ function loadProductionButtons() {
 describe('production hover card data', () => {
   beforeEach(loadProductionButtons)
 
-  it('uses the queue cost scaling, producer bonuses and low-power modifier', () => {
+  it('[U03474] uses the queue cost scaling, producer bonuses and low-power modifier', () => {
     expect(getProductionDuration(2000, false)).toBe(12000)
     expect(getProductionDuration(2000, false, 2, 0.5)).toBe(12000)
     expect(getProductionDuration(2000, true, 2)).toBe(1500)
     expect(getProductionDuration(2000, true, 3, 0.5)).toBe(2000)
   })
 
-  it('derives direct unlocks from the gameplay tree without counting dependencies twice', () => {
+  it('[U03475] derives direct unlocks from the gameplay tree without counting dependencies twice', () => {
     const index = buildProductionUnlockIndex()
     expect(index.get('radarStation')).toEqual({
       units: ['tank-v2', 'howitzer'],
@@ -50,7 +50,7 @@ describe('production hover card data', () => {
     ['vehicleFactory', 10, ['radarStation', 'gasStation', 'vehicleWorkshop', 'ammunitionFactory', 'hospital', 'turretGunV1', 'concreteWall']],
     ['radarStation', 2, ['shipyard', 'helipad', 'airstrip', 'turretGunV2', 'turretGunV3', 'rocketTurret', 'teslaCoil', 'artilleryTurret']],
     ['vehicleWorkshop', 4, ['constructionYard']]
-  ])('attributes %s unlocks to the last normal-build-order prerequisite', (type, units, buildings) => {
+  ])('[U03476] attributes %s unlocks to the last normal-build-order prerequisite', (type, units, buildings) => {
     const unlocks = buildProductionUnlockIndex().get(type)
     expect(unlocks.units).toHaveLength(units)
     expect([...unlocks.buildings].sort()).toEqual([...buildings].sort())
@@ -58,14 +58,14 @@ describe('production hover card data', () => {
     expect(new Set(unlocks.buildings).size).toBe(unlocks.buildings.length)
   })
 
-  it('counts only items that have production buttons, even when tech data contains more', () => {
+  it('[U03477] counts only items that have production buttons, even when tech data contains more', () => {
     const buttons = document.querySelectorAll('[data-building-type="vehicleFactory"], [data-building-type="ammunitionFactory"], [data-unit-type="tank"]')
     const index = buildProductionUnlockIndex(buttons)
     expect(index.get('vehicleFactory')).toEqual({ units: ['tank'], buildings: ['ammunitionFactory'] })
     expect(index.get('radarStation')).toBeUndefined()
   })
 
-  it('preserves gameplay requirements for alternatives, combined prerequisites and two factories', () => {
+  it('[U03478] preserves gameplay requirements for alternatives, combined prerequisites and two factories', () => {
     const unlocked = new Set()
     const controller = { forceUnlockUnitType: type => unlocked.add(type), forceUnlockBuildingType: vi.fn() }
     const buildings = types => types.map(type => ({ type, owner: 'player', health: 100 }))
@@ -86,13 +86,13 @@ describe('production hover card data', () => {
     expect(unlocked.size).toBe(0)
   })
 
-  it('reuses cached unlock results and handles units and empty unlocks gracefully', () => {
+  it('[U03479] reuses cached unlock results and handles units and empty unlocks gracefully', () => {
     expect(getProductionUnlocks('building', 'radarStation')).toBe(getProductionUnlocks('building', 'radarStation'))
     expect(formatProductionUnlocks(getProductionUnlocks('unit', 'tank'))).toBe('Unlocks: none')
     expect(formatProductionUnlocks({ units: ['tank'], buildings: ['shipyard'] })).toBe('Unlocks: 1 unit, 1 building')
   })
 
-  it('uses current producer counts and power, with a baseline for unavailable producers', () => {
+  it('[U03480] uses current producer counts and power, with a baseline for unavailable producers', () => {
     const queue = { getConstructionYardMultiplier: () => 2, getVehicleFactoryMultiplier: () => 3 }
     expect(getCardBuildTime('building', 'powerPlant', {}, queue)).toBe('Build time: 1.5s')
     expect(getCardBuildTime('building', 'powerPlant', { playerPowerSupply: -100, playerBuildSpeedModifier: 0.5 }, queue)).toBe('Build time: 3s')
@@ -108,7 +108,7 @@ describe('production hover card data', () => {
 describe('production hover sheet setup', () => {
   beforeEach(loadProductionButtons)
 
-  it('moves existing labels into one sheet, preserves queue indicators and refreshes on entry', () => {
+  it('[U03481] moves existing labels into one sheet, preserves queue indicators and refreshes on entry', () => {
     const button = document.querySelector('[data-building-type="powerPlant"]')
     const name = button.querySelector('.building-name')
     const state = { playerPowerSupply: 100 }
@@ -134,7 +134,7 @@ describe('production hover sheet setup', () => {
     expect(click).toHaveBeenCalledOnce()
   })
 
-  it('omits unlocks on unit cards and refreshes requirement text only on entry or focus', () => {
+  it('[U03482] omits unlocks on unit cards and refreshes requirement text only on entry or focus', () => {
     const button = document.querySelector('[data-unit-type="tank"]')
     const queue = { getVehicleFactoryMultiplier: () => 1 }
     setupProductionHoverCard(button, { kind: 'unit', type: 'tank' }, {}, queue)
@@ -157,7 +157,7 @@ describe('production hover sheet setup', () => {
     expect(button.querySelector('[title]')).toBeNull()
   })
 
-  it('retains empty unlocks only for buildings and exposes their current requirements', () => {
+  it('[U03483] retains empty unlocks only for buildings and exposes their current requirements', () => {
     const button = document.querySelector('[data-building-type="concreteWall"]')
     const queue = { getConstructionYardMultiplier: () => 2 }
     setupProductionHoverCard(button, { kind: 'building', type: 'concreteWall' }, {}, queue)

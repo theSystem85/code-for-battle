@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { pulseGamepad, pulseGamepadHaptic } from '../../src/input/gamepad/gamepadHaptics.js'
 
 describe('gamepad haptics', () => {
-  it('plays a dual-rumble pulse scaled by intensity', () => {
+  it('[U01806] plays a dual-rumble pulse scaled by intensity', () => {
     const playEffect = vi.fn(() => Promise.resolve())
     const pad = { vibrationActuator: { playEffect } }
     expect(pulseGamepadHaptic(pad, 'fire', 0.5)).toBe(true)
@@ -14,18 +14,18 @@ describe('gamepad haptics', () => {
     expect(effect[1].strongMagnitude).toBeCloseTo(0.225)
   })
 
-  it('uses the Firefox pulse actuator when dual-rumble is missing', () => {
+  it('[U01807] uses the Firefox pulse actuator when dual-rumble is missing', () => {
     const pulse = vi.fn(() => Promise.resolve())
     expect(pulseGamepadHaptic({ hapticActuators: [{ pulse }] }, 'damage', 1)).toBe(true)
     expect(pulse).toHaveBeenCalledWith(0.85, 120)
   })
 
-  it('returns false when the pad cannot vibrate', () => {
+  it('[U01808] returns false when the pad cannot vibrate', () => {
     expect(pulseGamepadHaptic({}, 'menu', 1)).toBe(false)
     expect(pulseGamepadHaptic(null, 'menu', 1)).toBe(false)
   })
 
-  it('does not touch the actuator when vibration is off or intensity is 0', () => {
+  it('[U01809] does not touch the actuator when vibration is off or intensity is 0', () => {
     const playEffect = vi.fn()
     const pad = { vibrationActuator: { playEffect } }
     expect(pulseGamepad(pad, 'fire', { enabled: false, intensity: 1 })).toBe(false)
@@ -33,7 +33,7 @@ describe('gamepad haptics', () => {
     expect(playEffect).not.toHaveBeenCalled()
   })
 
-  it('swallows a rejected vibration promise', async() => {
+  it('[U01810] swallows a rejected vibration promise', async() => {
     const playEffect = () => Promise.reject(new Error('unsupported'))
     expect(pulseGamepadHaptic({ vibrationActuator: { playEffect } }, 'menu', 0.5)).toBe(true)
     await Promise.resolve()

@@ -40,7 +40,7 @@ function fixture() {
 afterEach(() => disposePreparedSpriteRegistry())
 
 describe('deferred prepared sprite loading', () => {
-  it('boots without unit requests and deduplicates a high priority on-demand load', async() => {
+  it('[U02345] boots without unit requests and deduplicates a high priority on-demand load', async() => {
     const { options, requested } = fixture()
     const prepared = await prepareSpriteRegistry(options)
     publishPreparedSpriteRegistry(prepared)
@@ -55,7 +55,7 @@ describe('deferred prepared sprite loading', () => {
     expect(requested.every(url => url.endsWith('@2x.webp'))).toBe(true)
   })
 
-  it('includes units already present in the initial state', async() => {
+  it('[U02346] includes units already present in the initial state', async() => {
     const { options, requested } = fixture()
     const prepared = await prepareSpriteRegistry({ ...options, initialUnitTypes: ['harvester'] })
     publishPreparedSpriteRegistry(prepared)
@@ -63,7 +63,7 @@ describe('deferred prepared sprite loading', () => {
     expect(requested).toEqual(['/constructionYard@2x.webp', '/harvester@2x.webp'])
   })
 
-  it('publishes working sprites when a single image fails', async() => {
+  it('[U02347] publishes working sprites when a single image fails', async() => {
     const { options } = fixture()
     const imageFactory = options.imageFactory
     options.imageFactory = () => {

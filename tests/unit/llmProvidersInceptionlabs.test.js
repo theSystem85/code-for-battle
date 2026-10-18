@@ -25,14 +25,14 @@ describe('llmProviders inceptionlabs integration', () => {
     })
   })
 
-  it('returns static Mercury 2 model list without network discovery', async() => {
+  it('[U02360] returns static Mercury 2 model list without network discovery', async() => {
     globalThis.fetch = vi.fn()
     const models = await fetchModelList('inceptionlabs')
     expect(models).toEqual(['mercury-2'])
     expect(globalThis.fetch).not.toHaveBeenCalled()
   })
 
-  it('uses /chat/completions endpoint for completion requests', async() => {
+  it('[U02361] uses /chat/completions endpoint for completion requests', async() => {
     globalThis.fetch = vi.fn(async() => ({
       ok: true,
       json: async() => ({

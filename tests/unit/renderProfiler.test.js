@@ -15,7 +15,7 @@ function createStorage(initialValue = null) {
 }
 
 describe('RenderProfiler', () => {
-  it('does no clock work or detailed allocation while disabled', () => {
+  it('[U03681] does no clock work or detailed allocation while disabled', () => {
     const now = vi.fn(() => 1)
     const profiler = new RenderProfiler({ now, storage: createStorage('false') })
 
@@ -28,7 +28,7 @@ describe('RenderProfiler', () => {
     expect(profiler.getDebugState()).toMatchObject({ allocated: false, entryCount: 0, completedFrames: 0 })
   })
 
-  it('accounts nested spans as additive self time and inclusive parent time', () => {
+  it('[U03682] accounts nested spans as additive self time and inclusive parent time', () => {
     let now = 0
     const profiler = new RenderProfiler({ now: () => now, storage: null, frameWindow: 4 })
     profiler.setEnabled(true, { persist: false })
@@ -51,7 +51,7 @@ describe('RenderProfiler', () => {
     expect(update.slowFrameCorrelation).toMatchObject({ overlapFrames: 1, slowFrames: 1, rate: 1 })
   })
 
-  it('handles recursion without double-counting child time', () => {
+  it('[U03683] handles recursion without double-counting child time', () => {
     let now = 0
     const profiler = new RenderProfiler({ now: () => now, storage: null })
     profiler.setEnabled(true, { persist: false })
@@ -70,7 +70,7 @@ describe('RenderProfiler', () => {
     expect(update).toMatchObject({ calls: 2, selfTotalMs: 6, inclusiveTotalMs: 8 })
   })
 
-  it('bounds nesting, call samples, and frame samples', () => {
+  it('[U03684] bounds nesting, call samples, and frame samples', () => {
     let now = 0
     const profiler = new RenderProfiler({ now: () => now, storage: null, maxDepth: 2, frameWindow: 3, callWindow: 2 })
     profiler.setEnabled(true, { persist: false })
@@ -99,7 +99,7 @@ describe('RenderProfiler', () => {
     expect(snapshot.rows.some(row => row.id === PROFILER_SPAN_IDS.HUD)).toBe(false)
   })
 
-  it('sorts by aggregate self cost and exports registered definitions', () => {
+  it('[U03685] sorts by aggregate self cost and exports registered definitions', () => {
     let now = 0
     const profiler = new RenderProfiler({ now: () => now, storage: null })
     profiler.setEnabled(true, { persist: false })
@@ -117,7 +117,7 @@ describe('RenderProfiler', () => {
     expect(profiler.exportReport().definitions).toContainEqual({ id: PROFILER_SPAN_IDS.FRAME, name: 'FRAME' })
   })
 
-  it('persists only the enabled preference', () => {
+  it('[U03686] persists only the enabled preference', () => {
     const storage = createStorage('true')
     const profiler = new RenderProfiler({ storage })
     expect(profiler.isEnabled()).toBe(true)

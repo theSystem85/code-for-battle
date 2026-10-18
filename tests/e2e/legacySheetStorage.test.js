@@ -6,7 +6,7 @@ const DEFAULT_SHEETS = ['debris_craters_tracks', 'dtv2_grass', 'dtv2_soil', 'dtv
 const RETIRED = /seasons_1024|rocks_64x64|crystals_q90|streets24|rockCliffs/
 
 for (const mode of ['true', 'false']) {
-  test(`old stored sheet selection (custom sheets ${mode}) still lists and renders every sheet`, async({ page }) => {
+  test(`[E00057] old stored sheet selection (custom sheets ${mode}) still lists and renders every sheet`, async({ page }) => {
     await page.addInitScript((mode) => {
       if (sessionStorage.getItem('seeded')) return
       sessionStorage.setItem('seeded', '1')

@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-test('recorded automation command survives replay while the live engine is frozen', async({ page }) => {
+test('[E00011] recorded automation command survives replay while the live engine is frozen', async({ page }) => {
   await page.goto('/?size=60&players=2&seed=5&oreFields=1')
   const result = await page.evaluate(async() => {
     const { gameState } = await import('/src/gameState.js')

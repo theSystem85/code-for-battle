@@ -21,7 +21,7 @@ function spriteWithBlackInterior() {
 const alphaAt = (image, x, y) => image.data[(y * image.width + x) * 4 + 3]
 
 describe('sprite isolation keeps interior pixels', () => {
-  it('click isolation copies black pixels enclosed by the sprite', () => {
+  it('[U04141] click isolation copies black pixels enclosed by the sprite', () => {
     const image = spriteWithBlackInterior()
     const result = isolateComponent(image, 3, 3)
     expect(result.bbox).toEqual({ x: 2, y: 2, width: 6, height: 6 })
@@ -34,7 +34,7 @@ describe('sprite isolation keeps interior pixels', () => {
     expect(result.holes).toBe(4)
   })
 
-  it('auto detection keeps interior pixels but drops background touching the bounding box edge', () => {
+  it('[U04142] auto detection keeps interior pixels but drops background touching the bounding box edge', () => {
     const image = spriteWithBlackInterior()
     // Notch the frame so the top-left corner background reaches inside the box.
     const i = (2 * 10 + 2) * 4
@@ -47,7 +47,7 @@ describe('sprite isolation keeps interior pixels', () => {
     expect(alphaAt(local, 3, 2)).toBe(255)
   })
 
-  it('runtime black key removes only background connected to the sprite edge', () => {
+  it('[U04143] runtime black key removes only background connected to the sprite edge', () => {
     const image = spriteWithBlackInterior()
     const legacy = spriteWithBlackInterior()
     applyBlackKey(legacy.data)
@@ -62,7 +62,7 @@ describe('sprite isolation keeps interior pixels', () => {
     expect(alphaAt(image, 3, 3)).toBe(255)
   })
 
-  it('seeds tile edges but not the seams inside one multi-tile group', () => {
+  it('[U04144] seeds tile edges but not the seams inside one multi-tile group', () => {
     // Two 5x10 cells forming one 2x1 group; a black stripe crosses the seam.
     const width = 10
     const height = 10
@@ -85,7 +85,7 @@ describe('sprite isolation keeps interior pixels', () => {
     expect(split[(5 * width + 2) * 4 + 3]).toBe(0)
   })
 
-  it('decoration cutout floods ground only from the group border', () => {
+  it('[U04145] decoration cutout floods ground only from the group border', () => {
     const width = 6
     const height = 6
     const ground = new Uint8Array(width * height).fill(1)
@@ -99,7 +99,7 @@ describe('sprite isolation keeps interior pixels', () => {
 })
 
 describe('inner_cuts opt-in', () => {
-  it('click and auto isolation cut enclosed black only with innerCuts', () => {
+  it('[U04146] click and auto isolation cut enclosed black only with innerCuts', () => {
     const image = spriteWithBlackInterior()
     const kept = isolateComponent(image, 3, 3)
     const cut = isolateComponent(image, 3, 3, 16, { innerCuts: true })
@@ -114,7 +114,7 @@ describe('inner_cuts opt-in', () => {
     expect(auto.innerCuts).toBe(true)
   })
 
-  it('runtime key cuts enclosed black only in tiles tagged inner_cuts', () => {
+  it('[U04147] runtime key cuts enclosed black only in tiles tagged inner_cuts', () => {
     const tile = tags => ({ '0,0': { rect: { x: 0, y: 0, width: 10, height: 10 }, tags } })
     const plain = spriteWithBlackInterior()
     applyEdgeConnectedBlackKey(plain.data, 10, 10, 24, 48, buildBlackKeySeedMask(10, 10, { tiles: tile(['decorative']) }))
@@ -127,7 +127,7 @@ describe('inner_cuts opt-in', () => {
     expect(alphaAt(cuts, 0, 0)).toBe(0)
   })
 
-  it('tags the shipped bare trees with inner_cuts but no combat decal', async() => {
+  it('[U04148] tags the shipped bare trees with inner_cuts but no combat decal', async() => {
     const { readFileSync } = await import('node:fs')
     const winter = JSON.parse(readFileSync('public/images/map/sprite_sheets/dtv3_winter.json', 'utf8'))
     const bare = winter.propLayout.filter(prop => prop.id.startsWith('winter_bare_tree'))
@@ -145,7 +145,7 @@ describe('inner_cuts opt-in', () => {
 })
 
 describe('alpha sprite sheets', () => {
-  it('never sends an alpha-mode sheet through black keying', async() => {
+  it('[U04149] never sends an alpha-mode sheet through black keying', async() => {
     const { getImageTextureWithBlendMode } = await import('../../src/rendering/spriteSheetAnimation.js')
     const image = { complete: true, naturalWidth: 64, naturalHeight: 64 }
     const originalDocument = globalThis.document

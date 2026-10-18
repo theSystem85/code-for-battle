@@ -10,7 +10,7 @@ test.describe('Cheat console history navigation', () => {
     })
   })
 
-  test('ArrowUp/ArrowDown restore recent commands and persist capped history', async({ page }) => {
+  test('[E00019] ArrowUp/ArrowDown restore recent commands and persist capped history', async({ page }) => {
     await page.goto('/?seed=11')
 
     await page.waitForFunction(() => {

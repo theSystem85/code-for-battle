@@ -85,7 +85,7 @@ describe('enemy.js', () => {
   })
 
   describe('updateEnemyAI', () => {
-    it('does nothing when not host', () => {
+    it('[U01296] does nothing when not host', () => {
       vi.mocked(isHost).mockReturnValue(false)
 
       updateEnemyAI(units, factories, bullets, mapGrid, gameState)
@@ -93,7 +93,7 @@ describe('enemy.js', () => {
       expect(updateAIPlayer).not.toHaveBeenCalled()
     })
 
-    it('calls updateAIPlayer for AI players when host', () => {
+    it('[U01297] calls updateAIPlayer for AI players when host', () => {
       vi.mocked(isHost).mockReturnValue(true)
 
       updateEnemyAI(units, factories, bullets, mapGrid, gameState)
@@ -111,7 +111,7 @@ describe('enemy.js', () => {
       )
     })
 
-    it('updates every party when no multiplayer ownership metadata exists', () => {
+    it('[U01298] updates every party when no multiplayer ownership metadata exists', () => {
       vi.mocked(isHost).mockReturnValue(true)
       gameState.playerCount = 2
       gameState.humanPlayer = 'player1'
@@ -133,7 +133,7 @@ describe('enemy.js', () => {
       )
     })
 
-    it('updates multiple AI players in 4-player game', () => {
+    it('[U01299] updates multiple AI players in 4-player game', () => {
       vi.mocked(isHost).mockReturnValue(true)
       gameState.playerCount = 4
       gameState.humanPlayer = 'player1'
@@ -144,7 +144,7 @@ describe('enemy.js', () => {
       expect(updateAIPlayer).toHaveBeenCalledTimes(4)
     })
 
-    it('computes global attack point periodically', () => {
+    it('[U01300] computes global attack point periodically', () => {
       vi.mocked(isHost).mockReturnValue(true)
       gameState.lastGlobalAttackDecision = undefined
 
@@ -155,7 +155,7 @@ describe('enemy.js', () => {
       expect(gameState.lastGlobalAttackDecision).toBeDefined()
     })
 
-    it('skips global attack point if recently computed', () => {
+    it('[U01301] skips global attack point if recently computed', () => {
       vi.mocked(isHost).mockReturnValue(true)
       gameState.simulationTime = 10_000
       gameState.lastGlobalAttackDecision = 9_500 // 0.5 seconds ago in simulation time
@@ -166,7 +166,7 @@ describe('enemy.js', () => {
       expect(computeLeastDangerAttackPoint).not.toHaveBeenCalled()
     })
 
-    it('recomputes global attack point after 8 seconds', () => {
+    it('[U01302] recomputes global attack point after 8 seconds', () => {
       vi.mocked(isHost).mockReturnValue(true)
       gameState.simulationTime = 10_000
       gameState.lastGlobalAttackDecision = 900 // 9.1 seconds ago in simulation time
@@ -176,7 +176,7 @@ describe('enemy.js', () => {
       expect(computeLeastDangerAttackPoint).toHaveBeenCalled()
     })
 
-    it('respects aiActive flag in partyStates', () => {
+    it('[U01303] respects aiActive flag in partyStates', () => {
       vi.mocked(isHost).mockReturnValue(true)
       gameState.playerCount = 3
       gameState.humanPlayer = 'player1'
@@ -203,7 +203,7 @@ describe('enemy.js', () => {
       )
     })
 
-    it('defaults to AI control when partyStates is empty', () => {
+    it('[U01304] defaults to AI control when partyStates is empty', () => {
       vi.mocked(isHost).mockReturnValue(true)
       gameState.playerCount = 2
       gameState.partyStates = []
@@ -213,7 +213,7 @@ describe('enemy.js', () => {
       expect(updateAIPlayer).toHaveBeenCalledTimes(2)
     })
 
-    it('defaults to AI control when party not found in partyStates', () => {
+    it('[U01305] defaults to AI control when party not found in partyStates', () => {
       vi.mocked(isHost).mockReturnValue(true)
       gameState.playerCount = 3
       gameState.humanPlayer = 'player1'
@@ -228,7 +228,7 @@ describe('enemy.js', () => {
       expect(updateAIPlayer).toHaveBeenCalledTimes(2)
     })
 
-    it('uses default values when gameState fields missing', () => {
+    it('[U01306] uses default values when gameState fields missing', () => {
       vi.mocked(isHost).mockReturnValue(true)
       const minimalGameState = {
         occupancyMap: []

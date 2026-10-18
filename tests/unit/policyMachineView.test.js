@@ -8,7 +8,7 @@ vi.mock('../../src/inputHandler.js', () => ({ selectedUnits: [] }))
 vi.mock('../../src/input/selectionManager.js', () => ({ getUnitSelectionCenter: () => ({ centerX: 0, centerY: 0 }) }))
 
 describe('wrapLabel', () => {
-  it('wraps long labels onto further lines without losing text', () => {
+  it('[U03377] wraps long labels onto further lines without losing text', () => {
     const text = 'while(ammo == 100% and hp < 25% and enemy in weapon range) until(hp > 50%)'
     const lines = wrapLabel(text)
     expect(lines.length).toBeGreaterThan(1)
@@ -16,7 +16,7 @@ describe('wrapLabel', () => {
     expect(lines.join(' ')).toBe(text)
   })
 
-  it('keeps a short label on one line and hard-breaks a word without spaces', () => {
+  it('[U03378] keeps a short label on one line and hard-breaks a word without spaces', () => {
     expect(wrapLabel('if(ammo == 100%)')).toEqual(['if(ammo == 100%)'])
     expect(wrapLabel('x'.repeat(70)).length).toBe(3)
   })
@@ -31,7 +31,7 @@ describe('layoutPolicyMachine', () => {
     ]
   }
 
-  it('gives every edge a lane of its own and keeps labels left of all lanes', () => {
+  it('[U03379] gives every edge a lane of its own and keeps labels left of all lanes', () => {
     const layout = layoutPolicyMachine(policy, t => `${t.kind}(a very long condition text that has to wrap onto several lines)`, () => '')
     expect(layout.edges).toHaveLength(3)
     const lanes = new Set(layout.edges.map(edge => edge.laneX))
@@ -43,7 +43,7 @@ describe('layoutPolicyMachine', () => {
     expect(layout.nodes[1].y).toBeGreaterThan(layout.nodes[0].y + layout.nodes[0].height)
   })
 
-  it('makes room for wrapped labels so states never overlap', () => {
+  it('[U03380] makes room for wrapped labels so states never overlap', () => {
     const short = layoutPolicyMachine(policy, () => 'if(x)', () => '')
     const long = layoutPolicyMachine(policy, () => 'if(x) '.repeat(20), () => '')
     expect(long.nodes[1].y).toBeGreaterThan(short.nodes[1].y)
@@ -78,7 +78,7 @@ describe('policy state machine view', () => {
     vi.useRealTimers()
   })
 
-  it('shows every state, the full rule text and highlights the current state live', () => {
+  it('[U03381] shows every state, the full rule text and highlights the current state live', () => {
     view.openPolicyMachineView(unit)
     const nodes = document.querySelectorAll('.policy-machine__node')
     expect(nodes).toHaveLength(2)
@@ -97,14 +97,14 @@ describe('policy state machine view', () => {
     expect(document.querySelector('[data-state-id="watch"] .policy-machine__node-count').textContent).toBe('entered 1×')
   })
 
-  it('updates in place instead of rebuilding the diagram', () => {
+  it('[U03382] updates in place instead of rebuilding the diagram', () => {
     view.openPolicyMachineView(unit)
     const svgBefore = document.querySelector('.policy-machine__svg')
     vi.advanceTimersByTime(view.MACHINE_REFRESH_MS * 4)
     expect(document.querySelector('.policy-machine__svg')).toBe(svgBefore)
   })
 
-  it('shows pending and blocked completion work without rebuilding the machine', () => {
+  it('[U03383] shows pending and blocked completion work without rebuilding the machine', () => {
     view.openPolicyMachineView(unit)
     const svgBefore = document.querySelector('.policy-machine__svg')
     const status = document.querySelector('.policy-machine__completion')
@@ -119,7 +119,7 @@ describe('policy state machine view', () => {
     expect(document.querySelector('.policy-machine__svg')).toBe(svgBefore)
   })
 
-  it('toggles open and closed and never uses native titles', () => {
+  it('[U03384] toggles open and closed and never uses native titles', () => {
     expect(view.togglePolicyMachineView(unit)).toBe(true)
     expect(view.isPolicyMachineViewOpen(unit)).toBe(true)
     expect(document.querySelectorAll('.policy-machine [title]').length).toBe(0)
@@ -127,7 +127,7 @@ describe('policy state machine view', () => {
     expect(document.querySelector('.policy-machine').classList.contains('is-open')).toBe(false)
   })
 
-  it('shows the running delay of an after rule', async() => {
+  it('[U03385] shows the running delay of an after rule', async() => {
     const { POLICY_TEMPLATES } = await import('../../src/policies/policyTemplates.js')
     store.savePolicy('player1', POLICY_TEMPLATES.find(t => t.id === 'advance-after-delay').create('p-after'))
     const other = { id: 'u2', type: 'tank_v1', owner: 'player1', health: 50, maxHealth: 100, x: 0, y: 0 }
@@ -142,7 +142,7 @@ describe('policy state machine view', () => {
 })
 
 describe('automation indexes and IF/ELSE diagram', () => {
-  it('labels nodes by array index and draws both branches from one predicate', () => {
+  it('[U03386] labels nodes by array index and draws both branches from one predicate', () => {
     const policy = { initialStateId: 'stable-a', states: [
       { id: 'stable-a', name: 'Old arbitrary name', transitions: [{ id: 'pair', kind: 'if', to: 'stable-b', elseTo: 'stable-a', when: { type: 'always' } }] },
       { id: 'stable-b', name: 'Another name', transitions: [] }

@@ -127,7 +127,7 @@ describe('KeyboardHandler', () => {
     document.body.innerHTML = ''
   })
 
-  it('returns the correct keybinding context based on map edit mode', () => {
+  it('[U02280] returns the correct keybinding context based on map edit mode', () => {
     gameState.mapEditMode = false
     expect(handler.getKeybindingContext()).toBe(KEYBINDING_CONTEXTS.MAP_EDIT_OFF)
 
@@ -136,7 +136,7 @@ describe('KeyboardHandler', () => {
   })
 
 
-  it('binds sidebar performance widget button to FPS overlay toggle', () => {
+  it('[U02281] binds sidebar performance widget button to FPS overlay toggle', () => {
     document.body.innerHTML = '<button id="performanceWidgetBtn" type="button"></button>'
     handler = new KeyboardHandler()
     handler.showNotification = vi.fn()
@@ -150,7 +150,7 @@ describe('KeyboardHandler', () => {
     expect(playSound).toHaveBeenCalledWith('confirmed', 0.5)
   })
 
-  it('cancels active modes and clears selections on escape', () => {
+  it('[U02282] cancels active modes and clears selections on escape', () => {
     const sellBtn = document.createElement('button')
     sellBtn.id = 'sellBtn'
     sellBtn.classList.add('active')
@@ -210,7 +210,7 @@ describe('KeyboardHandler', () => {
     expect(handler.showNotification).toHaveBeenCalledWith('Selection cleared', 1000)
   })
 
-  it('cancels chain build mode with escape when game is paused', () => {
+  it('[U02283] cancels chain build mode with escape when game is paused', () => {
     const mapGrid = createTestMapGrid(4, 4)
     const selectedUnits = []
     const matchesKeyboardAction = vi.mocked(keybindingManager.matchesKeyboardAction)
@@ -233,7 +233,7 @@ describe('KeyboardHandler', () => {
     expect(gameState.chainBuildingButton).toBeNull()
   })
 
-  it('toggles alert mode for eligible units and plays feedback', () => {
+  it('[U02284] toggles alert mode for eligible units and plays feedback', () => {
     const unit = { type: 'tank-v2', alertMode: false }
 
     handler.handleAlertMode([unit])
@@ -243,7 +243,7 @@ describe('KeyboardHandler', () => {
     expect(handler.showNotification).toHaveBeenCalledWith('Alert mode ON for 1 unit(s)', 2000)
   })
 
-  it('warns when alert mode is used with no eligible units', () => {
+  it('[U02285] warns when alert mode is used with no eligible units', () => {
     handler.handleAlertMode([{ type: 'harvester' }])
 
     expect(handler.showNotification).toHaveBeenCalledWith(
@@ -253,7 +253,7 @@ describe('KeyboardHandler', () => {
     expect(playSound).not.toHaveBeenCalled()
   })
 
-  it('delegates sell hotkey to stop attacking when units are selected', () => {
+  it('[U02286] delegates sell hotkey to stop attacking when units are selected', () => {
     handler.selectedUnits = [{ id: 'u1' }]
     handler.handleStopAttacking = vi.fn()
 
@@ -263,7 +263,7 @@ describe('KeyboardHandler', () => {
     expect(gameState.sellMode).toBe(false)
   })
 
-  it('toggles sell mode UI state when no units are selected', () => {
+  it('[U02287] toggles sell mode UI state when no units are selected', () => {
     const sellBtn = document.createElement('button')
     sellBtn.id = 'sellBtn'
     document.body.appendChild(sellBtn)
@@ -293,7 +293,7 @@ describe('KeyboardHandler', () => {
     expect(handler.showNotification).toHaveBeenLastCalledWith('Sell mode deactivated', 2000)
   })
 
-  it('activates repair mode and disables sell mode', () => {
+  it('[U02288] activates repair mode and disables sell mode', () => {
     const sellBtn = document.createElement('button')
     sellBtn.id = 'sellBtn'
     sellBtn.classList.add('active')
@@ -323,12 +323,12 @@ describe('KeyboardHandler', () => {
     )
   })
 
-  it('returns false when Apache shift-space is used without apaches', () => {
+  it('[U02289] returns false when Apache shift-space is used without apaches', () => {
     expect(handler.handleApacheShiftSpace([])).toBe(false)
     expect(handler.handleApacheShiftSpace([{ type: 'tank' }])).toBe(false)
   })
 
-  it('toggles Apache manual flight state and plays positional sound', () => {
+  it('[U02290] toggles Apache manual flight state and plays positional sound', () => {
     const groundedApache = {
       type: 'apache',
       x: 100,
@@ -371,7 +371,7 @@ describe('KeyboardHandler', () => {
     expect(playPositionalSound).toHaveBeenCalledWith('movement', 150, 250, 0.5)
   })
 
-  it('validates dodge positions against map bounds, terrain, and occupancy', () => {
+  it('[U02291] validates dodge positions against map bounds, terrain, and occupancy', () => {
     const mapGrid = createTestMapGrid(3, 3)
     mapGrid[1][1].type = 'water'
     mapGrid[2][2].building = { id: 'building' }
@@ -390,13 +390,13 @@ describe('KeyboardHandler', () => {
     expect(handler.isValidDodgePosition(0, 0, mapGrid, [])).toBe(true)
   })
 
-  it('alerts when dodge command is issued with no selection', () => {
+  it('[U02292] alerts when dodge command is issued with no selection', () => {
     handler.handleDodgeCommand([], [], createTestMapGrid(3, 3))
 
     expect(handler.showNotification).toHaveBeenCalledWith('No units selected for dodge command', 2000)
   })
 
-  it('issues a dodge path and feedback for valid units', () => {
+  it('[U02293] issues a dodge path and feedback for valid units', () => {
     const mapGrid = createTestMapGrid(5, 5)
     const unit = {
       x: 2 * TILE_SIZE,
@@ -439,7 +439,7 @@ describe('KeyboardHandler', () => {
     expect(playPositionalSound).toHaveBeenCalled()
   })
 
-  it('assigns control groups only to player-owned units', () => {
+  it('[U02294] assigns control groups only to player-owned units', () => {
     const unit = { id: 'u1', type: 'tank', owner: gameState.humanPlayer }
     const factory = { id: 'f1', type: 'factory', owner: gameState.humanPlayer }
 
@@ -452,7 +452,7 @@ describe('KeyboardHandler', () => {
     expect(handler.showNotification).toHaveBeenCalledWith('Group 1 assigned', 2000)
   })
 
-  it('selects control group units and focuses on double press', () => {
+  it('[U02295] selects control group units and focuses on double press', () => {
     const mapGrid = createTestMapGrid(10, 10)
     const unitAlive = {
       id: 'u1',
@@ -501,7 +501,7 @@ describe('KeyboardHandler', () => {
     nowSpy.mockRestore()
   })
 
-  it('stops attacks and broadcasts stop commands for player units', () => {
+  it('[U02296] stops attacks and broadcasts stop commands for player units', () => {
     const unit = {
       owner: gameState.humanPlayer,
       target: { id: 'enemy' },
@@ -529,7 +529,7 @@ describe('KeyboardHandler', () => {
     expect(handler.showNotification).toHaveBeenCalledWith('1 unit stopped attacking', 2000)
   })
 
-  it('cancels a linked embarkation when S is pressed for either participant', () => {
+  it('[U02297] cancels a linked embarkation when S is pressed for either participant', () => {
     const ferry = {
       id: 'ferry', type: 'vehicleFerry', owner: gameState.humanPlayer,
       health: 500, x: 10 * TILE_SIZE, y: 8 * TILE_SIZE,
@@ -557,7 +557,7 @@ describe('KeyboardHandler', () => {
     expect(handler.showNotification).toHaveBeenCalledWith('1 unit stopped attacking', 2000)
   })
 
-  it('stops every selected battleship turret and cancels its queued broadside', () => {
+  it('[U02298] stops every selected battleship turret and cancels its queued broadside', () => {
     const target = { id: 'enemy', health: 100 }
     const battleship = {
       id: 'battle-1',
@@ -591,7 +591,7 @@ describe('KeyboardHandler', () => {
     expect(handler.showNotification).toHaveBeenCalledWith('1 unit stopped attacking', 2000)
   })
 
-  it('cycles occupancy map modes and updates visibility', () => {
+  it('[U02299] cycles occupancy map modes and updates visibility', () => {
     gameState.playerCount = 2
     gameState.occupancyMapViewIndex = 0
     gameState.occupancyMapViewMode = 'off'
@@ -604,14 +604,14 @@ describe('KeyboardHandler', () => {
     expect(handler.showNotification).toHaveBeenCalledWith('Occupancy map: Players', 2000)
   })
 
-  it('formats occupancy mode labels for known modes', () => {
+  it('[U02300] formats occupancy mode labels for known modes', () => {
     expect(handler.formatOccupancyModeLabel('off')).toBe('OFF')
     expect(handler.formatOccupancyModeLabel('players')).toBe('Players')
     expect(handler.formatOccupancyModeLabel('player4')).toBe('Player 4')
     expect(handler.formatOccupancyModeLabel('custom')).toBe('custom')
   })
 
-  it('rebuilds control groups from unit group numbers', () => {
+  it('[U02301] rebuilds control groups from unit group numbers', () => {
     const unitA = { id: 'a', groupNumber: '1' }
     const unitB = { id: 'b', groupNumber: '2' }
     handler.rebuildControlGroupsFromUnits([unitA, unitB])
@@ -620,7 +620,7 @@ describe('KeyboardHandler', () => {
     expect(handler.controlGroups['2']).toEqual([unitB])
   })
 
-  it('clears forced attacks for buildings when stopping', () => {
+  it('[U02302] clears forced attacks for buildings when stopping', () => {
     const unit = {
       id: 'u1',
       owner: gameState.humanPlayer,
@@ -648,7 +648,7 @@ describe('KeyboardHandler', () => {
     expect(broadcastUnitStop).toHaveBeenCalledWith([unit])
   })
 
-  it('releases any mounted unit when S is pressed on a recovery tank', () => {
+  it('[U02303] releases any mounted unit when S is pressed on a recovery tank', () => {
     const mounted = { id: 'jet-1', type: 'f22Raptor', towedBy: 'rt1' }
     const tank = {
       id: 'rt1',

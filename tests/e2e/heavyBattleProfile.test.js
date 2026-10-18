@@ -13,7 +13,7 @@ const outputPath = process.env.HEAVY_BATTLE_OUT || `artifacts/heavy-battle-${bac
 test.describe('heavy battle frame profile', () => {
   test.skip(!profileEnabled, 'Set HEAVY_BATTLE_PROFILE=1 to run the heavy-battle frame profile')
 
-  test('records phase timings for a scripted late-game battle', async({ page, baseURL }) => {
+  test('[E00050] records phase timings for a scripted late-game battle', async({ page, baseURL }) => {
     test.setTimeout(180000)
     await page.addInitScript((rendererBackend) => {
       localStorage.setItem('tutorial-settings', JSON.stringify({ showTutorial: false, speechEnabled: false }))

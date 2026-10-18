@@ -68,14 +68,14 @@ describe('heavy battle scenario', () => {
     gameState.scrollOffset = gameState.scrollOffset || { x: 0, y: 0 }
   })
 
-  it('clamps the requested army size', () => {
+  it('[U01903] clamps the requested army size', () => {
     expect(clampHeavyBattleUnitCount('nope')).toBe(320)
     expect(clampHeavyBattleUnitCount(10)).toBe(40)
     expect(clampHeavyBattleUnitCount(9000)).toBe(800)
     expect(clampHeavyBattleUnitCount(240)).toBe(240)
   })
 
-  it('sweeps the camera back and forth over a fixed span', () => {
+  it('[U01904] sweeps the camera back and forth over a fixed span', () => {
     expect(heavyBattleScrollX(0, 100, 700, 600)).toBe(100)
     expect(heavyBattleScrollX(500, 100, 700, 600)).toBe(400)
     expect(heavyBattleScrollX(1000, 100, 700, 600)).toBe(700)
@@ -83,7 +83,7 @@ describe('heavy battle scenario', () => {
     expect(heavyBattleScrollX(2000, 100, 700, 600)).toBe(100)
   })
 
-  it('spawns a deterministic multi-player battle with fog, smoke, dust, and explosions', () => {
+  it('[U01905] spawns a deterministic multi-player battle with fog, smoke, dust, and explosions', () => {
     const first = setupHeavyBattleScenario({ unitCount: 80, seed: '11' })
     const firstIds = units.map(unit => `${unit.owner}:${unit.tileX},${unit.tileY}:${unit.target?.id || ''}`)
     expect(first.unitCount).toBe(80)

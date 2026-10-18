@@ -18,7 +18,7 @@ beforeEach(() => {
 afterEach(() => { close?.(); close = null; vi.restoreAllMocks() })
 
 describe('defence authoring and migration recovery', () => {
-  it('disables unavailable selected-Tesla actions in DAV while generic global authoring preserves them', () => {
+  it('[U01233] disables unavailable selected-Tesla actions in DAV while generic global authoring preserves them', () => {
     const building = { type: 'teslaCoil', isBuilding: true, owner: 'player1', health: 100 }
     const editor = openPolicyEditor({ variant: 'defence', defenceBuilding: building })
     close = editor.close
@@ -32,7 +32,7 @@ describe('defence authoring and migration recovery', () => {
     expect(document.querySelector('[aria-label="State 1 action"] [value="fireForward"]').disabled).toBe(false)
   })
 
-  it('ATV explains unavailable selected-Tesla completions and keeps legal shared source unchanged', () => {
+  it('[U01234] ATV explains unavailable selected-Tesla completions and keeps legal shared source unchanged', () => {
     const controller = createAutomationDraft('player1', createBlankPolicy('defence-guided', 'defence'))
     const editor = createCFBLEditor(controller, { capabilityReason: (kind, name) => defenceCapabilityReason({ type: 'teslaCoil' }, kind, name) })
     document.body.append(editor.element)
@@ -47,7 +47,7 @@ describe('defence authoring and migration recovery', () => {
     expect(controller.getSnapshot().source).toBe(source)
   })
 
-  it('shows preserved recovery entries and an export-backup action as safe plain text', async() => {
+  it('[U01235] shows preserved recovery entries and an export-backup action as safe plain text', async() => {
     localStorage.setItem('cfb-unit-policies-v1', JSON.stringify({ documents: [{ ownerId: 'player1', policy: { id: '<svg onload=alert(1)>' } }] }))
     loadPolicyStore()
     document.body.innerHTML = '<button id="policiesBtn">Automation</button>'

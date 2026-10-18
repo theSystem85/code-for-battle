@@ -78,13 +78,13 @@ describe('jet fuel and recovery helpers', () => {
     ]
   })
 
-  it('identifies strike jets', () => {
+  it('[U02207] identifies strike jets', () => {
     expect(isStrikeJet({ type: 'f22Raptor' })).toBe(true)
     expect(isStrikeJet({ type: 'f35' })).toBe(true)
     expect(isStrikeJet({ type: 'apache' })).toBe(false)
   })
 
-  it('requires enough fuel for a target plus the flight home', () => {
+  it('[U02208] requires enough fuel for a target plus the flight home', () => {
     const jet = createJet({ gas: 50, flightState: 'grounded' })
     const farX = 80 * TILE_SIZE
     const farY = 80 * TILE_SIZE
@@ -93,7 +93,7 @@ describe('jet fuel and recovery helpers', () => {
     expect(canJetCompleteRoundTrip(createJet({ gas: 8000 }), farX, farY)).toBe(true)
   })
 
-  it('turns back when remaining fuel is only enough to reach home', () => {
+  it('[U02209] turns back when remaining fuel is only enough to reach home', () => {
     const jet = createJet({
       x: 40 * TILE_SIZE,
       y: 0,
@@ -109,7 +109,7 @@ describe('jet fuel and recovery helpers', () => {
     }))).toBe(false)
   })
 
-  it('blocks takeoff for grounded emergency-landed jets that are not on a street', () => {
+  it('[U02210] blocks takeoff for grounded emergency-landed jets that are not on a street', () => {
     const jet = createJet({
       landedOnGround: true,
       tileX: 0,
@@ -128,7 +128,7 @@ describe('jet fuel and recovery helpers', () => {
     expect(canJetTakeOffFromCurrentTile({ ...jet, towedBy: 'rt1' })).toBe(false)
   })
 
-  it('allows recovery tanks to mount grounded immobilized jets and crewless tanks', () => {
+  it('[U02211] allows recovery tanks to mount grounded immobilized jets and crewless tanks', () => {
     const tank = { id: 'rt1', type: 'recoveryTank', health: 100, towedUnit: null }
     const groundedJet = createJet({ landedOnGround: true, tileX: 0, tileY: 0, x: 0, y: 0 })
     const immobileTank = { id: 't1', health: 50, crew: { driver: false, commander: true } }
@@ -137,7 +137,7 @@ describe('jet fuel and recovery helpers', () => {
     expect(canRecoveryTankTowTarget(tank, createJet({ landedOnGround: false }))).toBe(false)
   })
 
-  it('releases any mounted unit or wreck from a recovery tank', () => {
+  it('[U02212] releases any mounted unit or wreck from a recovery tank', () => {
     const mounted = { id: 'jet-1', towedBy: 'rt1' }
     const wreck = { id: 'w1', towedBy: 'rt1', assignedTankId: 'rt1' }
     const tank = { id: 'rt1', towedUnit: mounted, towedWreck: wreck, recoveryTask: { wreckId: 'w1' }, recoveryProgress: 0.4 }
@@ -148,7 +148,7 @@ describe('jet fuel and recovery helpers', () => {
     expect(tank.recoveryTask).toBeNull()
   })
 
-  it('starts an emergency landing that keeps the jet alive', () => {
+  it('[U02213] starts an emergency landing that keeps the jet alive', () => {
     const jet = createJet({
       flightState: 'airborne',
       altitude: 40,
@@ -168,7 +168,7 @@ describe('jet fuel and recovery helpers', () => {
     expect(showNotification).toHaveBeenCalledWith(JET_EMERGENCY_LANDING_MESSAGE, 3000)
   })
 
-  it('refuses an impossible long-range order before takeoff', () => {
+  it('[U02214] refuses an impossible long-range order before takeoff', () => {
     const jet = createJet({ gas: 20, flightState: 'grounded', f22State: 'parked' })
     const rejected = rejectJetMissionIfImpossible(jet, {
       x: 90 * TILE_SIZE,
@@ -178,7 +178,7 @@ describe('jet fuel and recovery helpers', () => {
     expect(showNotification).toHaveBeenCalledWith(JET_INSUFFICIENT_FUEL_MESSAGE, 3000)
   })
 
-  it('completes emergency landing without inventing a new animation owner', () => {
+  it('[U02215] completes emergency landing without inventing a new animation owner', () => {
     const jet = createJet({
       type: 'f35',
       flightState: 'landing',

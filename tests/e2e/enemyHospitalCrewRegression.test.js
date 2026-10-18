@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { prepareRegressionScenario, observeSimulation, pollRegressionState } from './helpers/regressionScenario.js'
 
-test('enemy tank travels to its hospital, restores missing crew and releases medical return state', async({ page }) => {
+test('[E00030] enemy tank travels to its hospital, restores missing crew and releases medical return state', async({ page }) => {
   await prepareRegressionScenario(page, 214)
   await page.evaluate(() => {
     const r = window.__regression

@@ -99,7 +99,7 @@ import { showNotification } from '../../src/ui/notifications.js'
 import { getPlayableViewportHeight, getPlayableViewportWidth } from '../../src/utils/layoutMetrics.js'
 
 describe('selectionManager', () => {
-  it('rejects garage vehicles for click, box selection and commands', () => {
+  it('[U03936] rejects garage vehicles for click, box selection and commands', () => {
     const unit = { id: 'exiting', owner: 'player1', type: 'tank', health: 100, x: 32, y: 32, factoryExit: { phase: 'moving' } }
     const selected = []
     expect(manager.isSelectableUnit(unit)).toBe(false)
@@ -136,18 +136,18 @@ describe('selectionManager', () => {
     vi.restoreAllMocks()
   })
 
-  it('computes selection center and applies apache altitude lift', () => {
+  it('[U03937] computes selection center and applies apache altitude lift', () => {
     const center = getUnitSelectionCenter({ x: 10, y: 20, type: 'apache', altitude: 5 })
 
     expect(center).toEqual({ centerX: 26, centerY: 20 + 16 - 2 })
   })
 
-  it('clears wreck selection when requested', () => {
+  it('[U03938] clears wreck selection when requested', () => {
     manager.clearWreckSelection()
     expect(gameState.selectedWreckId).toBeNull()
   })
 
-  it('respects enemy selection config when determining selectable units', () => {
+  it('[U03939] respects enemy selection config when determining selectable units', () => {
     const humanUnit = { owner: 'player', health: 10 }
     const enemyUnit = { owner: 'enemy', health: 10 }
 
@@ -158,14 +158,14 @@ describe('selectionManager', () => {
     expect(manager.isSelectableUnit(enemyUnit)).toBe(true)
   })
 
-  it('marks enemy units commandable when enemy control is enabled', () => {
+  it('[U03940] marks enemy units commandable when enemy control is enabled', () => {
     const enemyUnit = { owner: 'enemy', health: 10 }
     configValues.ENABLE_ENEMY_CONTROL = true
 
     expect(manager.isCommandableUnit(enemyUnit)).toBe(true)
   })
 
-  it('handles normal unit clicks by clearing previous selections and attack targets', () => {
+  it('[U03941] handles normal unit clicks by clearing previous selections and attack targets', () => {
     const clickedUnit = { id: 'u1', owner: 'player', health: 10, selected: false }
     const otherUnit = { id: 'u2', owner: 'player', health: 10, selected: true }
     const units = [clickedUnit, otherUnit]
@@ -182,7 +182,7 @@ describe('selectionManager', () => {
     expect(playSound).toHaveBeenCalledWith('unitSelection')
   })
 
-  it('supports shift-click toggling without double click', () => {
+  it('[U03942] supports shift-click toggling without double click', () => {
     const clickedUnit = { id: 'u1', owner: 'player', health: 10, selected: true }
     const selectedUnits = [clickedUnit]
 
@@ -193,7 +193,7 @@ describe('selectionManager', () => {
     expect(playSound).toHaveBeenCalledWith('unitSelection')
   })
 
-  it('double-click selects all visible units of the same type and owner', () => {
+  it('[U03943] double-click selects all visible units of the same type and owner', () => {
     const clickedUnit = { id: 'u1', type: 'tank', owner: 'player', x: 10, y: 10, health: 10, selected: false }
     const visibleUnit = { id: 'u2', type: 'tank', owner: 'player', x: 40, y: 20, health: 10, selected: false }
     const offscreenUnit = { id: 'u3', type: 'tank', owner: 'player', x: 300, y: 300, health: 10, selected: true }
@@ -219,7 +219,7 @@ describe('selectionManager', () => {
     expect(getElementByIdSpy).toHaveBeenCalledWith('gameCanvas')
   })
 
-  it('shift-double-click adds visible units of the same type to selection', () => {
+  it('[U03944] shift-double-click adds visible units of the same type to selection', () => {
     const clickedUnit = { id: 'u1', type: 'tank', owner: 'player', x: 10, y: 10, health: 10, selected: true }
     const newUnit = { id: 'u2', type: 'tank', owner: 'player', x: 30, y: 20, health: 10, selected: false }
     const units = [clickedUnit, newUnit]
@@ -237,7 +237,7 @@ describe('selectionManager', () => {
     expect(playSound).toHaveBeenCalledWith('unitSelection')
   })
 
-  it('handles factory selection by clearing units and other factories', () => {
+  it('[U03945] handles factory selection by clearing units and other factories', () => {
     const selectedFactory = { id: 'f1', selected: false }
     const otherFactory = { id: 'f2', selected: true }
     gameState.factories = [selectedFactory, otherFactory]
@@ -253,7 +253,7 @@ describe('selectionManager', () => {
     expect(gameState.attackGroupTargets).toEqual([])
   })
 
-  it('supports shift-click toggling for factories', () => {
+  it('[U03946] supports shift-click toggling for factories', () => {
     const selectedFactory = { id: 'f1', selected: false }
     const selectedUnits = []
 
@@ -263,7 +263,7 @@ describe('selectionManager', () => {
     expect(selectedUnits).toEqual([selectedFactory])
   })
 
-  it('handles building selection by clearing units, factories, and other buildings', () => {
+  it('[U03947] handles building selection by clearing units, factories, and other buildings', () => {
     const selectedBuilding = { id: 'b1', selected: false }
     const otherBuilding = { id: 'b2', selected: true }
     gameState.buildings = [selectedBuilding, otherBuilding]
@@ -281,7 +281,7 @@ describe('selectionManager', () => {
     expect(gameState.attackGroupTargets).toEqual([])
   })
 
-  it('supports shift-click toggling for buildings', () => {
+  it('[U03948] supports shift-click toggling for buildings', () => {
     const selectedBuilding = { id: 'b1', selected: false }
     const selectedUnits = []
 
@@ -291,7 +291,7 @@ describe('selectionManager', () => {
     expect(selectedUnits).toEqual([selectedBuilding])
   })
 
-  it('selects units inside a drag selection box and clears buildings', () => {
+  it('[U03949] selects units inside a drag selection box and clears buildings', () => {
     const unitInBox = { id: 'u1', owner: 'player', x: 10, y: 10, health: 10, selected: false }
     const unitOutBox = { id: 'u2', owner: 'player', x: 200, y: 200, health: 10, selected: true }
     const units = [unitInBox, unitOutBox]
@@ -310,7 +310,7 @@ describe('selectionManager', () => {
     expect(playSound).toHaveBeenCalledWith('unitSelection')
   })
 
-  it('resets selection state on drag selection errors', () => {
+  it('[U03950] resets selection state on drag selection errors', () => {
     const selectedUnits = [{ id: 'u1', health: 10 }]
 
     manager.handleBoundingBoxSelection([], [], selectedUnits, null, null)
@@ -318,7 +318,7 @@ describe('selectionManager', () => {
     expect(selectedUnits).toEqual([])
   })
 
-  it('filters visible units by type, owner, and viewport bounds', () => {
+  it('[U03951] filters visible units by type, owner, and viewport bounds', () => {
     const units = [
       { id: 'u1', type: 'tank', owner: 'player', x: 10, y: 10, health: 10 },
       { id: 'u2', type: 'tank', owner: 'enemy', x: 10, y: 10, health: 10 },
@@ -332,7 +332,7 @@ describe('selectionManager', () => {
     expect(visible[0].id).toBe('u1')
   })
 
-  it('selectAllOfType updates selections and returns the count', () => {
+  it('[U03952] selectAllOfType updates selections and returns the count', () => {
     const units = [
       { id: 'u1', type: 'tank', owner: 'player', health: 10, selected: true },
       { id: 'u2', type: 'tank', owner: 'player', health: 10, selected: false },
@@ -347,7 +347,7 @@ describe('selectionManager', () => {
     expect(units[2].selected).toBe(false)
   })
 
-  it('cleanupDestroyedSelectedUnits removes invalid or destroyed units safely', () => {
+  it('[U03953] cleanupDestroyedSelectedUnits removes invalid or destroyed units safely', () => {
     const alive = { id: 'u1', health: 10 }
     const dead = { id: 'u2', health: 0 }
     const selectedUnits = [alive, dead, null]

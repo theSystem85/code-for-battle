@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { prepareRegressionScenario, pollRegressionState } from './helpers/regressionScenario.js'
 
-test('V1-V3 fire each modeled barrel and retain independent burst animation times', async({ page }) => {
+test('[E00125] V1-V3 fire each modeled barrel and retain independent burst animation times', async({ page }) => {
   await prepareRegressionScenario(page, 217)
   await page.evaluate(() => {
     const r = window.__regression

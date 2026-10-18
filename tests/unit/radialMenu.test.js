@@ -39,7 +39,7 @@ function button(kind, type, options = {}) {
 }
 
 describe('radial menu layout and long-press', () => {
-  it('fires only after the hold threshold and cancels when the pointer moves too far', () => {
+  it('[U03587] fires only after the hold threshold and cancels when the pointer moves too far', () => {
     const tracker = createLongPressTracker({ holdMs: 500, moveCancelPx: 12 })
     tracker.pointerDown({ x: 10, y: 20 }, 0)
     expect(tracker.poll(499).action).toBe('track')
@@ -56,13 +56,13 @@ describe('radial menu layout and long-press', () => {
     expect(tracker.pointerUp({ x: 2, y: 2 }, 120).action).toBe('short')
   })
 
-  it('builds every item inside one second with ease timing that stays within the budget', () => {
+  it('[U03588] builds every item inside one second with ease timing that stays within the budget', () => {
     const timing = resolveRadialTiming(18, { duration: 400, stagger: 80, budgetMs: RADIAL_BUILD_BUDGET_MS })
     expect(timing.totalMs).toBeLessThanOrEqual(RADIAL_BUILD_BUDGET_MS)
     expect(timing.flyMs + timing.staggerMs * 17).toBeCloseTo(timing.totalMs)
   })
 
-  it('hit-tests the nearest button and misses the empty center', () => {
+  it('[U03589] hit-tests the nearest button and misses the empty center', () => {
     const layout = layoutRadialItems(4, { x: 400, y: 300 }, {
       buttonSize: 48,
       radius: 120,
@@ -75,7 +75,7 @@ describe('radial menu layout and long-press', () => {
     expect(hitTestRadial(layout.points, first.x + 40, first.y, layout.buttonSize)).toBeNull()
   })
 
-  it('keeps many buttons on screen without overlapping', () => {
+  it('[U03590] keeps many buttons on screen without overlapping', () => {
     const viewport = { x: 0, y: 0, width: 390, height: 844 }
     const layout = layoutRadialItems(20, { x: 20, y: 30 }, {
       buttonSize: 48,
@@ -108,7 +108,7 @@ describe('production radial items', () => {
     document.body.innerHTML = ''
   })
 
-  it('builds sidebar-visible options per factory and keeps disabled states', () => {
+  it('[U03591] builds sidebar-visible options per factory and keeps disabled states', () => {
     button('building', 'powerPlant', { label: 'Power Plant' })
     button('building', 'turretGunV3', { hidden: true })
     button('building', 'concreteWall', { disabled: true, title: 'Requires Power Plant' })
@@ -134,7 +134,7 @@ describe('production radial items', () => {
     expect(isProductionBuildingType('hospital')).toBe(false)
   })
 
-  it('finds the player production building under the pointer and ignores enemies', () => {
+  it('[U03592] finds the player production building under the pointer and ignores enemies', () => {
     const yard = { type: 'constructionYard', owner: 'player1', health: 100, x: 4, y: 6, width: 3, height: 3 }
     const enemy = { type: 'vehicleFactory', owner: 'player2', health: 100, x: 4, y: 6, width: 3, height: 3 }
     const found = findOwnedProductionBuildingAt(4.2 * 32, 6.2 * 32, {
@@ -168,7 +168,7 @@ describe('radial production commands', () => {
     productionQueue.enableBuildingPlacementMode = originalEnablePlacement
   })
 
-  it('queues a unit on the chosen factory and places buildings through the sidebar path', () => {
+  it('[U03593] queues a unit on the chosen factory and places buildings through the sidebar path', () => {
     const unitButton = { classList: { contains: () => false } }
     const buildingButton = {
       classList: { contains: (name) => name === 'ready-for-placement' }
@@ -195,7 +195,7 @@ describe('radial production commands', () => {
     expect(productionQueue.enableBuildingPlacementMode).toHaveBeenCalledWith('powerPlant', buildingButton)
   })
 
-  it('prefers an explicit factory id and falls back when that factory is gone', () => {
+  it('[U03594] prefers an explicit factory id and falls back when that factory is gone', () => {
     const first = { id: 'vf-1' }
     const second = { id: 'vf-2' }
     expect(resolveExplicitSpawnFactory([first, second], [first, second], 'vf-2')).toEqual({
@@ -243,7 +243,7 @@ describe('radial blueprint drag', () => {
     gameState.blueprints = []
   })
 
-  it('arms a building button for 500ms and ignores unit buttons', () => {
+  it('[U03595] arms a building button for 500ms and ignores unit buttons', () => {
     const hold = createBuildingButtonHold(500)
     expect(hold.track(tank, 0)).toEqual({ phase: 'idle', progress: 0, item: null })
     expect(hold.track(powerPlant, 1000)).toMatchObject({ phase: 'arming', progress: 0 })
@@ -255,7 +255,7 @@ describe('radial blueprint drag', () => {
     expect(hold.poll(2000).phase).toBe('idle')
   })
 
-  it('resets the building hold when the pointer leaves the button', () => {
+  it('[U03596] resets the building hold when the pointer leaves the button', () => {
     const hold = createBuildingButtonHold(500)
     hold.track(powerPlant, 0)
     expect(hold.poll(400).phase).toBe('arming')
@@ -265,7 +265,7 @@ describe('radial blueprint drag', () => {
     expect(hold.poll(950).phase).toBe('fire')
   })
 
-  it('places a blueprint on a valid drag release and keeps planning when the tile is invalid', () => {
+  it('[U03597] places a blueprint on a valid drag release and keeps planning when the tile is invalid', () => {
     expect(enterRadialBuildingPlan(powerPlant)).toBe(true)
     expect(productionQueue.addItem).not.toHaveBeenCalled()
     expect(gameState.buildingPlacementMode).toBe(true)
@@ -300,7 +300,7 @@ describe('radial blueprint drag', () => {
     expect(radialPlacementGhostVisible()).toBe(false)
   })
 
-  it('clears the placement ghost after a successful place from both radial flows', () => {
+  it('[U03598] clears the placement ghost after a successful place from both radial flows', () => {
     const place = (tileX, tileY) => finishRadialBlueprintDrag(gameState.radialBuildingPlan, {
       overUi: false,
       canPlace: true,
@@ -332,7 +332,7 @@ describe('radial blueprint drag', () => {
     expect(productionQueue.addItem).toHaveBeenCalledTimes(2)
   })
 
-  it('clears the placement ghost when planning is canceled', () => {
+  it('[U03599] clears the placement ghost when planning is canceled', () => {
     enterRadialBuildingPlan(powerPlant)
     gameState.draggedBuildingType = 'powerPlant'
     expect(cancelRadialBuildingPlan()).toBe(true)
@@ -343,7 +343,7 @@ describe('radial blueprint drag', () => {
     expect(radialPlacementGhostVisible()).toBe(false)
   })
 
-  it('cancels planning when the drag ends over UI and leaves unit production on release', () => {
+  it('[U03600] cancels planning when the drag ends over UI and leaves unit production on release', () => {
     enterRadialBuildingPlan(powerPlant)
     expect(finishRadialBlueprintDrag(gameState.radialBuildingPlan, {
       overUi: true,

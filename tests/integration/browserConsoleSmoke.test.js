@@ -54,7 +54,7 @@ describe('Browser smoke test', () => {
     vi.unstubAllGlobals()
   })
 
-  it('loads the game without console errors', async() => {
+  it('[U00001] loads the game without console errors', async() => {
     const html = readFileSync(htmlPath, 'utf-8')
     document.documentElement.innerHTML = html
 

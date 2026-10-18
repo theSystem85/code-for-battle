@@ -207,7 +207,7 @@ beforeEach(() => {
 })
 
 describe('command sync helpers', () => {
-  it('creates move command payloads with normalized unitIds', () => {
+  it('[U00921] creates move command payloads with normalized unitIds', () => {
     expect(commandSync.createMoveCommand('unit-1', 10, 12)).toEqual({
       unitIds: ['unit-1'],
       targetX: 10,
@@ -221,7 +221,7 @@ describe('command sync helpers', () => {
     })
   })
 
-  it('creates attack command payloads with normalized unitIds', () => {
+  it('[U00922] creates attack command payloads with normalized unitIds', () => {
     expect(commandSync.createAttackCommand('unit-1', 'target-9', 'unit')).toEqual({
       unitIds: ['unit-1'],
       targetId: 'target-9',
@@ -235,7 +235,7 @@ describe('command sync helpers', () => {
     })
   })
 
-  it('includes per-battleship turret selections only when provided', () => {
+  it('[U00923] includes per-battleship turret selections only when provided', () => {
     expect(commandSync.createAttackCommand(
       ['battle-1'],
       'target-9',
@@ -249,7 +249,7 @@ describe('command sync helpers', () => {
     })
   })
 
-  it('creates building placement payloads', () => {
+  it('[U00924] creates building placement payloads', () => {
     expect(commandSync.createBuildingPlaceCommand('powerPlant', 8, 9)).toEqual({
       buildingType: 'powerPlant',
       x: 8,
@@ -257,7 +257,7 @@ describe('command sync helpers', () => {
     })
   })
 
-  it('creates production payloads', () => {
+  it('[U00925] creates production payloads', () => {
     expect(commandSync.createProductionCommand('unit', 'tank', 'factory-1')).toEqual({
       productionType: 'unit',
       itemType: 'tank',
@@ -267,7 +267,7 @@ describe('command sync helpers', () => {
 })
 
 describe('game command sync flow', () => {
-  it('updates network stats with rolling rates', () => {
+  it('[U00926] updates network stats with rolling rates', () => {
     const performanceSpy = vi.spyOn(performance, 'now')
 
     const baseline = commandSync.getNetworkStats()
@@ -286,7 +286,7 @@ describe('game command sync flow', () => {
     performanceSpy.mockRestore()
   })
 
-  it('tracks client party state and reset behavior', () => {
+  it('[U00927] tracks client party state and reset behavior', () => {
     commandSync.setClientPartyId('party-9')
     expect(commandSync.getClientPartyId()).toBe('party-9')
 
@@ -294,7 +294,7 @@ describe('game command sync flow', () => {
     expect(commandSync.getClientPartyId()).toBeNull()
   })
 
-  it('broadcasts commands from host to peers', () => {
+  it('[U00928] broadcasts commands from host to peers', () => {
     gameState.multiplayerSession = { localRole: 'host', isRemote: false }
     gameState.partyStates = [{ partyId: 'player1' }, { partyId: 'player2' }]
 
@@ -313,7 +313,7 @@ describe('game command sync flow', () => {
     })
   })
 
-  it('broadcasts commands from clients to the host connection', () => {
+  it('[U00929] broadcasts commands from clients to the host connection', () => {
     gameState.multiplayerSession = { localRole: 'client', isRemote: true }
     const send = vi.fn()
     vi.mocked(getActiveRemoteConnection).mockReturnValue({ send })
@@ -329,7 +329,7 @@ describe('game command sync flow', () => {
     })
   })
 
-  it('queues host commands from authorized parties and rebroadcasts', () => {
+  it('[U00930] queues host commands from authorized parties and rebroadcasts', () => {
     gameState.multiplayerSession = { localRole: 'host', isRemote: false }
     gameState.partyStates = [{ partyId: 'player1', aiActive: false }, { partyId: 'player2', aiActive: false }]
 
@@ -350,7 +350,7 @@ describe('game command sync flow', () => {
     expect(sendHostStatus).toHaveBeenCalledTimes(1)
   })
 
-  it('rejects commands from unknown or AI-controlled parties', () => {
+  it('[U00931] rejects commands from unknown or AI-controlled parties', () => {
     gameState.multiplayerSession = { localRole: 'host', isRemote: false }
     gameState.partyStates = [{ partyId: 'player1', aiActive: false }, { partyId: 'player2', aiActive: true }]
 
@@ -372,7 +372,7 @@ describe('game command sync flow', () => {
     expect(commandSync.processPendingRemoteCommands()).toHaveLength(0)
   })
 
-  it('applies authoritative host commands on clients', () => {
+  it('[U00932] applies authoritative host commands on clients', () => {
     gameState.multiplayerSession = { localRole: 'client', isRemote: true }
     gameState.buildings = [{ id: 'building-1', isBeingSold: false }]
 
@@ -398,7 +398,7 @@ describe('game command sync flow', () => {
     })
   })
 
-  it('notifies subscribers of incoming commands', () => {
+  it('[U00933] notifies subscribers of incoming commands', () => {
     const handler = vi.fn()
     const unsubscribe = commandSync.subscribeToGameCommands(handler)
 
@@ -429,7 +429,7 @@ describe('game command sync flow', () => {
     expect(handler).toHaveBeenCalledTimes(1)
   })
 
-  it('broadcasts unit commands only when sessions exist', () => {
+  it('[U00934] broadcasts unit commands only when sessions exist', () => {
     const send = vi.fn()
     gameState.multiplayerSession = { localRole: 'client', isRemote: true }
     vi.mocked(getActiveRemoteConnection).mockReturnValue({ send })
@@ -451,7 +451,7 @@ describe('game command sync flow', () => {
     expect(send).not.toHaveBeenCalled()
   })
 
-  it('routes building and production commands with ownership rules', () => {
+  it('[U00935] routes building and production commands with ownership rules', () => {
     const send = vi.fn()
     gameState.multiplayerSession = { localRole: 'client', isRemote: true }
     vi.mocked(getActiveRemoteConnection).mockReturnValue({ send })
@@ -472,7 +472,7 @@ describe('game command sync flow', () => {
     ])
   })
 
-  it('broadcasts pause/resume only from host sessions', () => {
+  it('[U00936] broadcasts pause/resume only from host sessions', () => {
     gameState.multiplayerSession = { localRole: 'host', isRemote: false }
     gameState.partyStates = [{ partyId: 'player1' }, { partyId: 'player2' }]
 
@@ -490,7 +490,7 @@ describe('game command sync flow', () => {
     ])
   })
 
-  it('initializes lockstep sessions and queues inputs', () => {
+  it('[U00937] initializes lockstep sessions and queues inputs', () => {
     gameState.multiplayerSession = { localRole: 'host', isRemote: false }
     gameState.partyStates = [{ partyId: 'player1' }, { partyId: 'player2' }]
     gameState.lockstep.enabled = false
@@ -521,7 +521,7 @@ describe('game command sync flow', () => {
     expect(inputBufferSpies.addInput).toHaveBeenCalled()
   })
 
-  it('handles lockstep inputs and acknowledgements', () => {
+  it('[U00938] handles lockstep inputs and acknowledgements', () => {
     gameState.multiplayerSession = { localRole: 'host', isRemote: false }
     gameState.lockstep.enabled = true
 
@@ -551,7 +551,7 @@ describe('game command sync flow', () => {
     expect(inputBufferSpies.confirmTick).toHaveBeenCalledWith(4)
   })
 
-  it('disables lockstep and clears buffers', () => {
+  it('[U00939] disables lockstep and clears buffers', () => {
     gameState.lockstep.enabled = true
     deterministicRNG.disable = vi.fn()
 
@@ -653,7 +653,7 @@ describe('state hash helpers', () => {
     money: 500
   }
 
-  it('computes deterministic hashes independent of array ordering', () => {
+  it('[U00940] computes deterministic hashes independent of array ordering', () => {
     const tick = 42
     const hashA = computeStateHash(baseState, tick)
     const reorderedState = {
@@ -668,7 +668,7 @@ describe('state hash helpers', () => {
     expect(hashA).toBe(hashB)
   })
 
-  it('changes hashes when important state changes occur', () => {
+  it('[U00941] changes hashes when important state changes occur', () => {
     const tick = 42
     const hashA = computeStateHash(baseState, tick)
     const changedState = {
@@ -682,14 +682,14 @@ describe('state hash helpers', () => {
     expect(hashA).not.toBe(hashB)
   })
 
-  it('changes hashes when tick changes', () => {
+  it('[U00942] changes hashes when tick changes', () => {
     const hashA = computeStateHash(baseState, 10)
     const hashB = computeStateHash(baseState, 11)
 
     expect(hashA).not.toBe(hashB)
   })
 
-  it('compares hashes for equality', () => {
+  it('[U00943] compares hashes for equality', () => {
     const hashA = computeStateHash(baseState, 8)
     const hashB = computeStateHash(baseState, 8)
     const hashC = computeStateHash(baseState, 9)
@@ -698,7 +698,7 @@ describe('state hash helpers', () => {
     expect(compareHashes(hashA, hashC)).toBe(false)
   })
 
-  it('computes quick hashes based on entity counts and totals', () => {
+  it('[U00944] computes quick hashes based on entity counts and totals', () => {
     const tick = 12
     const hashA = computeQuickHash(baseState, tick)
     const changedState = {
@@ -712,7 +712,7 @@ describe('state hash helpers', () => {
     expect(hashA).not.toBe(hashB)
   })
 
-  it('builds detailed hash reports with full hash included', () => {
+  it('[U00945] builds detailed hash reports with full hash included', () => {
     const tick = 30
     const report = createHashReport(baseState, tick)
 
@@ -727,7 +727,7 @@ describe('state hash helpers', () => {
     expect(report.fullHash).toBe(computeStateHash(baseState, tick))
   })
 
-  it('hashes ordered collections in order', () => {
+  it('[U00946] hashes ordered collections in order', () => {
     const hashA = hashArrayOrdered([1, 2, 3], value => value)
     const hashB = hashArrayOrdered([3, 2, 1], value => value)
 
@@ -736,7 +736,7 @@ describe('state hash helpers', () => {
 })
 
 describe('command type constants', () => {
-  it('exposes command type enum with unique values', () => {
+  it('[U00947] exposes command type enum with unique values', () => {
     const { COMMAND_TYPES } = commandSync
     expect(COMMAND_TYPES.UNIT_MOVE).toBeDefined()
     expect(COMMAND_TYPES.UNIT_ATTACK).toBeDefined()
@@ -757,7 +757,7 @@ describe('command type constants', () => {
 })
 
 describe('advanced command synchronization', () => {
-  it('createMoveCommand handles empty array', () => {
+  it('[U00948] createMoveCommand handles empty array', () => {
     expect(commandSync.createMoveCommand([], 10, 20)).toEqual({
       unitIds: [],
       targetX: 10,
@@ -765,12 +765,12 @@ describe('advanced command synchronization', () => {
     })
   })
 
-  it('createAttackCommand defaults to unit target type', () => {
+  it('[U00949] createAttackCommand defaults to unit target type', () => {
     const result = commandSync.createAttackCommand('u1', 'target-1', 'unit')
     expect(result.targetType).toBe('unit')
   })
 
-  it('createBuildingPlaceCommand contains correct fields', () => {
+  it('[U00950] createBuildingPlaceCommand contains correct fields', () => {
     const result = commandSync.createBuildingPlaceCommand('refinery', 10, 15)
     expect(result).toEqual({
       buildingType: 'refinery',
@@ -779,7 +779,7 @@ describe('advanced command synchronization', () => {
     })
   })
 
-  it('createProductionCommand contains correct fields', () => {
+  it('[U00951] createProductionCommand contains correct fields', () => {
     const result = commandSync.createProductionCommand('unit', 'harvester', 'factory-2')
     expect(result).toEqual({
       productionType: 'unit',
@@ -788,7 +788,7 @@ describe('advanced command synchronization', () => {
     })
   })
 
-  it('broadcastUnitMove filters out invalid units', () => {
+  it('[U00952] broadcastUnitMove filters out invalid units', () => {
     const send = vi.fn()
     gameState.multiplayerSession = { localRole: 'client', isRemote: true }
     vi.mocked(getActiveRemoteConnection).mockReturnValue({ send })
@@ -798,7 +798,7 @@ describe('advanced command synchronization', () => {
     expect(send).not.toHaveBeenCalled()
   })
 
-  it('broadcastUnitAttack handles building targets', () => {
+  it('[U00953] broadcastUnitAttack handles building targets', () => {
     const send = vi.fn()
     gameState.multiplayerSession = { localRole: 'client', isRemote: true }
     vi.mocked(getActiveRemoteConnection).mockReturnValue({ send })
@@ -812,7 +812,7 @@ describe('advanced command synchronization', () => {
     expect(payload.targetId).toBe('building-1')
   })
 
-  it('broadcastUnitAttack handles unit targets as default', () => {
+  it('[U00954] broadcastUnitAttack handles unit targets as default', () => {
     const send = vi.fn()
     gameState.multiplayerSession = { localRole: 'client', isRemote: true }
     vi.mocked(getActiveRemoteConnection).mockReturnValue({ send })
@@ -826,7 +826,7 @@ describe('advanced command synchronization', () => {
     expect(payload.targetId).toBe('unit-1')
   })
 
-  it('broadcastUnitAttack synchronizes a selected battleship turret', () => {
+  it('[U00955] broadcastUnitAttack synchronizes a selected battleship turret', () => {
     const send = vi.fn()
     gameState.multiplayerSession = { localRole: 'client', isRemote: true }
     vi.mocked(getActiveRemoteConnection).mockReturnValue({ send })
@@ -840,7 +840,7 @@ describe('advanced command synchronization', () => {
     })
   })
 
-  it('processPendingRemoteCommands returns empty when queue is empty', () => {
+  it('[U00956] processPendingRemoteCommands returns empty when queue is empty', () => {
     gameState.multiplayerSession = { localRole: 'host', isRemote: false }
     // Clear any pending commands from previous tests
     while (commandSync.processPendingRemoteCommands().length > 0) {
@@ -850,7 +850,7 @@ describe('advanced command synchronization', () => {
     expect(commands).toEqual([])
   })
 
-  it('handleReceivedCommand ignores non-game-command types', () => {
+  it('[U00957] handleReceivedCommand ignores non-game-command types', () => {
     const handler = vi.fn()
     commandSync.subscribeToGameCommands(handler)
 
@@ -863,7 +863,7 @@ describe('advanced command synchronization', () => {
     expect(handler).not.toHaveBeenCalled()
   })
 
-  it('handleReceivedCommand handles BUILDING_PLACE on client', () => {
+  it('[U00958] handleReceivedCommand handles BUILDING_PLACE on client', () => {
     gameState.multiplayerSession = { localRole: 'client', isRemote: true }
     gameState.partyStates = [{ partyId: 'host' }]
 
@@ -879,7 +879,7 @@ describe('advanced command synchronization', () => {
     // Should not throw and should handle gracefully
   })
 
-  it('handleReceivedCommand handles PRODUCTION_START on client', () => {
+  it('[U00959] handleReceivedCommand handles PRODUCTION_START on client', () => {
     gameState.multiplayerSession = { localRole: 'client', isRemote: true }
     gameState.partyStates = [{ partyId: 'host' }]
 
@@ -894,7 +894,7 @@ describe('advanced command synchronization', () => {
     // Should not throw
   })
 
-  it('lockstep queueing is skipped when lockstep is disabled', () => {
+  it('[U00960] lockstep queueing is skipped when lockstep is disabled', () => {
     gameState.lockstep.enabled = false
     createLockstepInput.mockClear()
 
@@ -903,7 +903,7 @@ describe('advanced command synchronization', () => {
     expect(createLockstepInput).not.toHaveBeenCalled()
   })
 
-  it('handleLockstepCommand handles LOCKSTEP_INIT on client', () => {
+  it('[U00961] handleLockstepCommand handles LOCKSTEP_INIT on client', () => {
     gameState.multiplayerSession = { localRole: 'client', isRemote: true }
     gameState.lockstep.enabled = false
 
@@ -916,7 +916,7 @@ describe('advanced command synchronization', () => {
     expect(lockstepManagerSpies.initialize).toHaveBeenCalled()
   })
 
-  it('network stats start at zero', () => {
+  it('[U00962] network stats start at zero', () => {
     const stats = commandSync.getNetworkStats()
     expect(stats).toHaveProperty('bytesSent')
     expect(stats).toHaveProperty('bytesReceived')
@@ -925,7 +925,7 @@ describe('advanced command synchronization', () => {
     expect(stats).toHaveProperty('lastRateUpdate')
   })
 
-  it('broadcastStateHash returns early when lockstep disabled', () => {
+  it('[U00963] broadcastStateHash returns early when lockstep disabled', () => {
     const send = vi.fn()
     gameState.multiplayerSession = { localRole: 'client', isRemote: true }
     gameState.lockstep.enabled = false
@@ -936,7 +936,7 @@ describe('advanced command synchronization', () => {
     expect(send).not.toHaveBeenCalled()
   })
 
-  it('handleStateHashCommand processes hash verification', () => {
+  it('[U00964] handleStateHashCommand processes hash verification', () => {
     gameState.multiplayerSession = { localRole: 'host', isRemote: false }
     gameState.lockstep.enabled = true
     gameState.lockstep.currentTick = 10
@@ -958,7 +958,7 @@ describe('multiplayer client snapshot sync', () => {
     gameState.multiplayerSession = { localRole: 'client', isRemote: true }
   }
 
-  it('serializes host topology and selection with cluster settings', () => {
+  it('[U00965] serializes host topology and selection with cluster settings', () => {
     gameState.mapTopologyFingerprint = '688abcde'
     gameState.activeSpriteSheetSelections = ['optional.webp']
     gameState.mapTopologySheets = [{ sheetPath: 'optional.webp', metadata: { tiles: {} } }]
@@ -968,7 +968,7 @@ describe('multiplayer client snapshot sync', () => {
     expect(snapshot.mapTopologySheets).toEqual(gameState.mapTopologySheets)
   })
 
-  it('serializes cluster settings and applies host city destruction without player buildings', () => {
+  it('[U00966] serializes cluster settings and applies host city destruction without player buildings', () => {
     Object.assign(gameState, { citySeeds: 0, cityClusterSize: 20, ruinSeeds: 10, ruinClusterSize: 3 })
     const snapshot = commandSync.createGameStateSnapshot()
     expect([snapshot.citySeeds, snapshot.cityClusterSize, snapshot.ruinSeeds, snapshot.ruinClusterSize]).toEqual([0, 20, 10, 3])
@@ -979,7 +979,7 @@ describe('multiplayer client snapshot sync', () => {
     expect(gameState.mapGrid[0][0].decal.tag).toBe('debris')
   })
 
-  it('serializes and restores selling with simulation time rather than wall time', () => {
+  it('[U00967] serializes and restores selling with simulation time rather than wall time', () => {
     gameState.simulationTime = 10000
     gameState.buildings = [{
       id: 'selling-power', type: 'powerPlant', owner: 'player1', x: 0, y: 0,
@@ -994,7 +994,7 @@ describe('multiplayer client snapshot sync', () => {
     expect(gameState.buildings[0].sellStartTime).toBe(11750)
   })
 
-  it('restores independent turret barrel times across peer clocks without replacing existing arrays', () => {
+  it('[U00968] restores independent turret barrel times across peer clocks without replacing existing arrays', () => {
     gameState.simulationTime = 300
     const times = [0, 150, null]
     gameState.buildings = [{
@@ -1014,7 +1014,7 @@ describe('multiplayer client snapshot sync', () => {
     expect(gameState.buildings[0].barrelShotTimes).toEqual([700, 850, null])
   })
 
-  it('includes sparse map decals and omits default explosion frame rects', () => {
+  it('[U00969] includes sparse map decals and omits default explosion frame rects', () => {
     gameState.mapBiomeWeights = {}
     gameState.simulationTime = 1000
     gameState.mapGrid = [
@@ -1045,7 +1045,7 @@ describe('multiplayer client snapshot sync', () => {
     expect(snapshot.explosions[0].id).toBeTruthy()
   })
 
-  it('applies decals, keeps explosion world pixels, and replays ballistic arcs', () => {
+  it('[U00970] applies decals, keeps explosion world pixels, and replays ballistic arcs', () => {
     asClient()
     gameState.simulationTime = 10000
     gameState.mapGrid = [

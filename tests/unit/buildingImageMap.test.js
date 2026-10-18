@@ -24,12 +24,12 @@ describe('buildingImageMap.js', () => {
   })
 
   describe('buildingImageMap structure', () => {
-    it('should have image map defined', () => {
+    it('[U00515] should have image map defined', () => {
       expect(buildingImageMap).toBeDefined()
       expect(typeof buildingImageMap).toBe('object')
     })
 
-    it('should have valid building types', () => {
+    it('[U00516] should have valid building types', () => {
       const expectedTypes = [
         'powerPlant',
         'oreRefinery',
@@ -47,7 +47,7 @@ describe('buildingImageMap.js', () => {
       })
     })
 
-    it('should have valid image paths', () => {
+    it('[U00517] should have valid image paths', () => {
       Object.entries(buildingImageMap).forEach(([_type, path]) => {
         expect(typeof path).toBe('string')
         expect(path.length).toBeGreaterThan(0)
@@ -56,7 +56,7 @@ describe('buildingImageMap.js', () => {
       })
     })
 
-    it('should have turret types', () => {
+    it('[U00518] should have turret types', () => {
       const turretTypes = [
         'turretGunV1',
         'turretGunV2',
@@ -71,7 +71,7 @@ describe('buildingImageMap.js', () => {
       })
     })
 
-    it('should have wall types', () => {
+    it('[U00519] should have wall types', () => {
       const wallTypes = [
         'concreteWallCross',
         'concreteWallHorizontal',
@@ -84,20 +84,20 @@ describe('buildingImageMap.js', () => {
       })
     })
 
-    it('should have ammunition factory', () => {
+    it('[U00520] should have ammunition factory', () => {
       expect(buildingImageMap).toHaveProperty('ammunitionFactory')
       expect(buildingImageMap.ammunitionFactory).toContain('ammunition_factory')
     })
   })
 
   describe('getBuildingImage', () => {
-    it('should return null for unknown building type', () => {
+    it('[U00521] should return null for unknown building type', () => {
       const result = getBuildingImage('unknownBuilding')
 
       expect(result).toBeNull()
     })
 
-    it('should call callback with null for unknown building type', () => {
+    it('[U00522] should call callback with null for unknown building type', () => {
       const callback = vi.fn()
 
       getBuildingImage('unknownBuilding', callback)
@@ -105,7 +105,7 @@ describe('buildingImageMap.js', () => {
       expect(callback).toHaveBeenCalledWith(null)
     })
 
-    it('should load image for valid building type', async() => {
+    it('[U00523] should load image for valid building type', async() => {
       const callback = vi.fn()
 
       const result = getBuildingImage('powerPlant', callback)
@@ -118,7 +118,7 @@ describe('buildingImageMap.js', () => {
       expect(callback).toHaveBeenCalled()
     })
 
-    it('should cache loaded images', async() => {
+    it('[U00524] should cache loaded images', async() => {
       const callback1 = vi.fn()
       const callback2 = vi.fn()
 
@@ -135,7 +135,7 @@ describe('buildingImageMap.js', () => {
       expect(callback2).toHaveBeenCalled()
     }, 1000)
 
-    it('should return cached image immediately on subsequent calls', async() => {
+    it('[U00525] should return cached image immediately on subsequent calls', async() => {
       const callback = vi.fn()
 
       getBuildingImage('powerPlant', callback)
@@ -147,7 +147,7 @@ describe('buildingImageMap.js', () => {
       expect(result).toBeTruthy()
     }, 1000)
 
-    it('should handle image load errors', async() => {
+    it('[U00526] should handle image load errors', async() => {
       const callback = vi.fn()
       const originalImage = globalThis.Image
 
@@ -170,7 +170,7 @@ describe('buildingImageMap.js', () => {
       globalThis.Image = originalImage
     }, 1000)
 
-    it('should set correct image src path', async() => {
+    it('[U00527] should set correct image src path', async() => {
       const callback = vi.fn()
 
       getBuildingImage('oreRefinery', callback)
@@ -183,7 +183,7 @@ describe('buildingImageMap.js', () => {
   })
 
   describe('preloadBuildingImages', () => {
-    it('should preload all building images', async() => {
+    it('[U00528] should preload all building images', async() => {
       const callback = vi.fn()
 
       preloadBuildingImages(callback)
@@ -197,7 +197,7 @@ describe('buildingImageMap.js', () => {
       expect(stats.preloaded).toBe(true)
     }, 2000)
 
-    it('should not reload if already preloaded', async() => {
+    it('[U00529] should not reload if already preloaded', async() => {
       const callback1 = vi.fn()
       const callback2 = vi.fn()
 
@@ -223,7 +223,7 @@ describe('buildingImageMap.js', () => {
       expect(cachedCountAfter).toBe(cachedCountBefore)
     }, 2000)
 
-    it('should not reload if currently loading', async() => {
+    it('[U00530] should not reload if currently loading', async() => {
       const callback1 = vi.fn()
       const callback2 = vi.fn()
 
@@ -236,7 +236,7 @@ describe('buildingImageMap.js', () => {
       expect(callback2).not.toHaveBeenCalled()
     }, 2000)
 
-    it('should call callback when already preloaded', async() => {
+    it('[U00531] should call callback when already preloaded', async() => {
       const callback1 = vi.fn()
       const callback2 = vi.fn()
 
@@ -250,7 +250,7 @@ describe('buildingImageMap.js', () => {
       expect(callback2).toHaveBeenCalled()
     }, 2000)
 
-    it('should preload correct number of images', async() => {
+    it('[U00532] should preload correct number of images', async() => {
       const callback = vi.fn()
       const expectedCount = Object.keys(buildingImageMap).length
 
@@ -264,7 +264,7 @@ describe('buildingImageMap.js', () => {
   })
 
   describe('clearBuildingImageCache', () => {
-    it('should clear all cached images', async() => {
+    it('[U00533] should clear all cached images', async() => {
       const callback = vi.fn()
 
       getBuildingImage('powerPlant', callback)
@@ -281,7 +281,7 @@ describe('buildingImageMap.js', () => {
       expect(stats.preloaded).toBe(false)
     }, 1000)
 
-    it('should reset preloaded flag', async() => {
+    it('[U00534] should reset preloaded flag', async() => {
       preloadBuildingImages()
 
       await new Promise(resolve => setTimeout(resolve, 50))
@@ -292,7 +292,7 @@ describe('buildingImageMap.js', () => {
       expect(stats.preloaded).toBe(false)
     }, 2000)
 
-    it('should allow reloading after clear', async() => {
+    it('[U00535] should allow reloading after clear', async() => {
       const callback = vi.fn()
 
       getBuildingImage('powerPlant', callback)
@@ -307,7 +307,7 @@ describe('buildingImageMap.js', () => {
   })
 
   describe('getBuildingImageCacheStats', () => {
-    it('should return stats object', () => {
+    it('[U00536] should return stats object', () => {
       const stats = getBuildingImageCacheStats()
 
       expect(stats).toHaveProperty('size')
@@ -315,7 +315,7 @@ describe('buildingImageMap.js', () => {
       expect(stats).toHaveProperty('preloaded')
     })
 
-    it('should return zero size for empty cache', () => {
+    it('[U00537] should return zero size for empty cache', () => {
       clearBuildingImageCache()
 
       const stats = getBuildingImageCacheStats()
@@ -325,7 +325,7 @@ describe('buildingImageMap.js', () => {
       expect(stats.preloaded).toBe(false)
     })
 
-    it('should return correct size after loading images', async() => {
+    it('[U00538] should return correct size after loading images', async() => {
       const callback = vi.fn()
 
       getBuildingImage('powerPlant', callback)
@@ -340,7 +340,7 @@ describe('buildingImageMap.js', () => {
       expect(stats.keys).toContain('oreRefinery')
     }, 1000)
 
-    it('should return all cached keys', async() => {
+    it('[U00539] should return all cached keys', async() => {
       const callback = vi.fn()
       const typesToLoad = ['powerPlant', 'oreRefinery', 'vehicleFactory']
 
@@ -357,7 +357,7 @@ describe('buildingImageMap.js', () => {
       })
     }, 1000)
 
-    it('should reflect preloaded status', async() => {
+    it('[U00540] should reflect preloaded status', async() => {
       preloadBuildingImages()
 
       await new Promise(resolve => setTimeout(resolve, 100))
@@ -369,7 +369,7 @@ describe('buildingImageMap.js', () => {
   })
 
   describe('image path correctness', () => {
-    it('should have webp format for most buildings', () => {
+    it('[U00541] should have webp format for most buildings', () => {
       const webpBuildings = [
         'powerPlant',
         'oreRefinery',
@@ -382,13 +382,13 @@ describe('buildingImageMap.js', () => {
       })
     })
 
-    it('should have correct subdirectory structure', () => {
+    it('[U00542] should have correct subdirectory structure', () => {
       Object.values(buildingImageMap).forEach(path => {
         expect(path).toMatch(/^images\/map\/buildings\//)
       })
     })
 
-    it('should have descriptive filenames', () => {
+    it('[U00543] should have descriptive filenames', () => {
       Object.entries(buildingImageMap).forEach(([_type, path]) => {
         const filename = path.split('/').pop()
         expect(filename.length).toBeGreaterThan(4) // More than just extension
@@ -397,7 +397,7 @@ describe('buildingImageMap.js', () => {
   })
 
   describe('concurrent loading', () => {
-    it('should handle multiple simultaneous loads', async() => {
+    it('[U00544] should handle multiple simultaneous loads', async() => {
       const callback = vi.fn()
       const types = ['powerPlant', 'oreRefinery', 'vehicleFactory', 'hospital']
 
@@ -413,7 +413,7 @@ describe('buildingImageMap.js', () => {
       expect(stats.size).toBe(types.length)
     }, 2000)
 
-    it('should handle duplicate load requests', async() => {
+    it('[U00545] should handle duplicate load requests', async() => {
       const callback = vi.fn()
 
       getBuildingImage('powerPlant', callback)
@@ -428,19 +428,19 @@ describe('buildingImageMap.js', () => {
   })
 
   describe('special building types', () => {
-    it('should handle wall variations', () => {
+    it('[U00546] should handle wall variations', () => {
       expect(buildingImageMap.concreteWall).toBe(buildingImageMap.concreteWallCross)
       expect(buildingImageMap.concreteWallHorizontal).toBeDefined()
       expect(buildingImageMap.concreteWallVertical).toBeDefined()
     })
 
-    it('should have all turret variants', () => {
+    it('[U00547] should have all turret variants', () => {
       expect(buildingImageMap.turretGunV1).toContain('turret01')
       expect(buildingImageMap.turretGunV2).toContain('turret02')
       expect(buildingImageMap.turretGunV3).toContain('turret03')
     })
 
-    it('should have special turret types', () => {
+    it('[U00548] should have special turret types', () => {
       expect(buildingImageMap.rocketTurret).toBeDefined()
       expect(buildingImageMap.teslaCoil).toBeDefined()
       expect(buildingImageMap.artilleryTurret).toBeDefined()

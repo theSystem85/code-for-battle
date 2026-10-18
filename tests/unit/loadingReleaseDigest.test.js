@@ -25,7 +25,7 @@ beforeEach(() => {
 afterEach(() => { vi.restoreAllMocks(); vi.useRealTimers() })
 
 describe('loading screen release integration', () => {
-  it('shows old and new versions and only feature descriptions, then records successful loading time', async() => {
+  it('[U02378] shows old and new versions and only feature descriptions, then records successful loading time', async() => {
     localStorage.setItem('cfb-last-loaded-version', '0.46.0')
     localStorage.setItem('cfb-last-boot-duration-ms', '4000')
     let now = 100
@@ -45,7 +45,7 @@ describe('loading screen release integration', () => {
     expect(document.querySelector('.release-digest')).toBeNull()
   })
 
-  it('does not acknowledge an update or overwrite measured loading time on failed startup', async() => {
+  it('[U02379] does not acknowledge an update or overwrite measured loading time on failed startup', async() => {
     localStorage.setItem('cfb-last-loaded-version', '0.46.0')
     localStorage.setItem('cfb-last-boot-duration-ms', '2500')
     const screen = await import('../../src/ui/loadingScreen.js')

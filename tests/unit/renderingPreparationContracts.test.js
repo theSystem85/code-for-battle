@@ -8,7 +8,7 @@ import { RenderByteBudget, RENDER_BYTE_OWNERS } from '../../src/rendering/prepar
 import { getProfilerDefinition, PROFILER_SPAN_IDS } from '../../src/performance/profilerIds.js'
 
 describe('rendering preparation contracts', () => {
-  it('invalidates the old and new chunk footprints with a halo and coalesces transactions', () => {
+  it('[U03747] invalidates the old and new chunk footprints with a halo and coalesces transactions', () => {
     const store = new RenderRevisionStore({ width: 96, height: 96, chunkSize: 16 })
     store.beginTransaction()
     store.invalidate(RENDER_REVISION_DOMAINS.TOPOLOGY,
@@ -22,7 +22,7 @@ describe('rendering preparation contracts', () => {
     expect(store.getChunkRevision(RENDER_REVISION_DOMAINS.TOPOLOGY, 3, 3)).toBe(1)
   })
 
-  it('publishes prepared maps atomically and disposes resources once', () => {
+  it('[U03748] publishes prepared maps atomically and disposes resources once', () => {
     const dispose = vi.fn()
     const prepared = new PreparedMap({ generation: 2, assetGeneration: 4, density: 2,
       byteUsage: { terrain: 100 }, resources: { pages: [] }, disposeResource: dispose })
@@ -35,7 +35,7 @@ describe('rendering preparation contracts', () => {
     expect(dispose).toHaveBeenCalledOnce()
   })
 
-  it('rejects stale preparation and enforces sprite byte ownership', () => {
+  it('[U03749] rejects stale preparation and enforces sprite byte ownership', () => {
     const generation = new PreparationGeneration(3)
     expect(() => generation.assertCurrent(4)).toThrowError(/stale/)
     const registry = new PreparedSpriteRegistry({ assetGeneration: 1, density: 2, byteBudget: 10 })
@@ -43,7 +43,7 @@ describe('rendering preparation contracts', () => {
     expect(() => registry.register('tank:move', {}, { decodedBytes: 3 })).toThrowError(/budget/)
   })
 
-  it('reuses viewport and diagnostics shapes', () => {
+  it('[U03750] reuses viewport and diagnostics shapes', () => {
     const viewport = new FrameViewport()
     const values = { logicalWidth: 100, logicalHeight: 80, backingWidth: 200, backingHeight: 160,
       density: 2, worldLeft: 10, worldTop: 20 }
@@ -54,7 +54,7 @@ describe('rendering preparation contracts', () => {
     expect(getProfilerDefinition(PROFILER_SPAN_IDS.CHUNK_SIGNATURE)?.name).toBe('CHUNK_SIGNATURE')
   })
 
-  it('accounts for byte reservations and releases them idempotently', () => {
+  it('[U03751] accounts for byte reservations and releases them idempotently', () => {
     const limits = Object.fromEntries(RENDER_BYTE_OWNERS.map(owner => [owner, 100]))
     const budget = new RenderByteBudget(limits)
     const token = budget.reserve('terrainStaging', 40)

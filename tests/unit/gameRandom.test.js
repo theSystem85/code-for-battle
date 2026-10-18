@@ -42,7 +42,7 @@ describe('gameRandom', () => {
   })
 
   describe('gameRandom()', () => {
-    it('should return a number between 0 and 1', () => {
+    it('[U01658] should return a number between 0 and 1', () => {
       for (let i = 0; i < 100; i++) {
         const result = gameRandom()
         expect(result).toBeGreaterThanOrEqual(0)
@@ -50,7 +50,7 @@ describe('gameRandom', () => {
       }
     })
 
-    it('should return different values on consecutive calls (non-deterministic)', () => {
+    it('[U01659] should return different values on consecutive calls (non-deterministic)', () => {
       deterministicRNG.disable()
       const values = new Set()
       for (let i = 0; i < 100; i++) {
@@ -60,7 +60,7 @@ describe('gameRandom', () => {
       expect(values.size).toBeGreaterThan(90)
     })
 
-    it('should return same sequence when seeded in deterministic mode', () => {
+    it('[U01660] should return same sequence when seeded in deterministic mode', () => {
       deterministicRNG.setSeed(12345)
       deterministicRNG.enable()
 
@@ -81,7 +81,7 @@ describe('gameRandom', () => {
   })
 
   describe('gameRandomInt()', () => {
-    it('should return an integer within the specified range (inclusive)', () => {
+    it('[U01661] should return an integer within the specified range (inclusive)', () => {
       for (let i = 0; i < 100; i++) {
         const result = gameRandomInt(5, 10)
         expect(result).toBeGreaterThanOrEqual(5)
@@ -90,12 +90,12 @@ describe('gameRandom', () => {
       }
     })
 
-    it('should return min when min equals max', () => {
+    it('[U01662] should return min when min equals max', () => {
       const result = gameRandomInt(7, 7)
       expect(result).toBe(7)
     })
 
-    it('should handle negative ranges', () => {
+    it('[U01663] should handle negative ranges', () => {
       for (let i = 0; i < 50; i++) {
         const result = gameRandomInt(-10, -5)
         expect(result).toBeGreaterThanOrEqual(-10)
@@ -104,7 +104,7 @@ describe('gameRandom', () => {
       }
     })
 
-    it('should handle mixed negative and positive ranges', () => {
+    it('[U01664] should handle mixed negative and positive ranges', () => {
       for (let i = 0; i < 50; i++) {
         const result = gameRandomInt(-5, 5)
         expect(result).toBeGreaterThanOrEqual(-5)
@@ -113,7 +113,7 @@ describe('gameRandom', () => {
       }
     })
 
-    it('should be deterministic with same seed', () => {
+    it('[U01665] should be deterministic with same seed', () => {
       deterministicRNG.setSeed(99999)
       deterministicRNG.enable()
 
@@ -131,7 +131,7 @@ describe('gameRandom', () => {
       expect(firstSequence).toEqual(secondSequence)
     })
 
-    it('should cover the full range over many iterations', () => {
+    it('[U01666] should cover the full range over many iterations', () => {
       const values = new Set()
       for (let i = 0; i < 1000; i++) {
         values.add(gameRandomInt(1, 10))
@@ -145,7 +145,7 @@ describe('gameRandom', () => {
   })
 
   describe('gameRandomFloat()', () => {
-    it('should return a float within the specified range', () => {
+    it('[U01667] should return a float within the specified range', () => {
       for (let i = 0; i < 100; i++) {
         const result = gameRandomFloat(2.5, 7.5)
         expect(result).toBeGreaterThanOrEqual(2.5)
@@ -153,7 +153,7 @@ describe('gameRandom', () => {
       }
     })
 
-    it('should handle negative ranges', () => {
+    it('[U01668] should handle negative ranges', () => {
       for (let i = 0; i < 50; i++) {
         const result = gameRandomFloat(-10.5, -5.5)
         expect(result).toBeGreaterThanOrEqual(-10.5)
@@ -161,7 +161,7 @@ describe('gameRandom', () => {
       }
     })
 
-    it('should return different values (not just integers)', () => {
+    it('[U01669] should return different values (not just integers)', () => {
       let hasFloat = false
       for (let i = 0; i < 100; i++) {
         const result = gameRandomFloat(0, 10)
@@ -173,7 +173,7 @@ describe('gameRandom', () => {
       expect(hasFloat).toBe(true)
     })
 
-    it('should be deterministic with same seed', () => {
+    it('[U01670] should be deterministic with same seed', () => {
       deterministicRNG.setSeed(54321)
       deterministicRNG.enable()
 
@@ -193,7 +193,7 @@ describe('gameRandom', () => {
   })
 
   describe('gameRandomElement()', () => {
-    it('should return an element from the array', () => {
+    it('[U01671] should return an element from the array', () => {
       const array = ['a', 'b', 'c', 'd', 'e']
       for (let i = 0; i < 50; i++) {
         const result = gameRandomElement(array)
@@ -201,22 +201,22 @@ describe('gameRandom', () => {
       }
     })
 
-    it('should return undefined for empty array', () => {
+    it('[U01672] should return undefined for empty array', () => {
       const result = gameRandomElement([])
       expect(result).toBeUndefined()
     })
 
-    it('should return undefined for null/undefined array', () => {
+    it('[U01673] should return undefined for null/undefined array', () => {
       expect(gameRandomElement(null)).toBeUndefined()
       expect(gameRandomElement(undefined)).toBeUndefined()
     })
 
-    it('should return the only element for single-element array', () => {
+    it('[U01674] should return the only element for single-element array', () => {
       const result = gameRandomElement(['only'])
       expect(result).toBe('only')
     })
 
-    it('should select all elements over many iterations', () => {
+    it('[U01675] should select all elements over many iterations', () => {
       const array = [1, 2, 3, 4, 5]
       const selected = new Set()
       for (let i = 0; i < 500; i++) {
@@ -225,7 +225,7 @@ describe('gameRandom', () => {
       expect(selected.size).toBe(5)
     })
 
-    it('should work with arrays of objects', () => {
+    it('[U01676] should work with arrays of objects', () => {
       const array = [{ id: 1 }, { id: 2 }, { id: 3 }]
       for (let i = 0; i < 20; i++) {
         const result = gameRandomElement(array)
@@ -234,7 +234,7 @@ describe('gameRandom', () => {
       }
     })
 
-    it('should be deterministic with same seed', () => {
+    it('[U01677] should be deterministic with same seed', () => {
       const array = ['apple', 'banana', 'cherry', 'date', 'elderberry']
 
       deterministicRNG.setSeed(11111)
@@ -255,20 +255,20 @@ describe('gameRandom', () => {
   })
 
   describe('gameShuffle()', () => {
-    it('should return the same array reference', () => {
+    it('[U01678] should return the same array reference', () => {
       const array = [1, 2, 3, 4, 5]
       const result = gameShuffle(array)
       expect(result).toBe(array)
     })
 
-    it('should contain all original elements', () => {
+    it('[U01679] should contain all original elements', () => {
       const array = [1, 2, 3, 4, 5]
       const original = [...array]
       gameShuffle(array)
       expect(array.sort()).toEqual(original.sort())
     })
 
-    it('should not always return the same order', () => {
+    it('[U01680] should not always return the same order', () => {
       const original = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
       let differentOrderCount = 0
 
@@ -283,19 +283,19 @@ describe('gameRandom', () => {
       expect(differentOrderCount).toBeGreaterThan(15)
     })
 
-    it('should handle empty array', () => {
+    it('[U01681] should handle empty array', () => {
       const array = []
       const result = gameShuffle(array)
       expect(result).toEqual([])
     })
 
-    it('should handle single-element array', () => {
+    it('[U01682] should handle single-element array', () => {
       const array = [42]
       const result = gameShuffle(array)
       expect(result).toEqual([42])
     })
 
-    it('should be deterministic with same seed', () => {
+    it('[U01683] should be deterministic with same seed', () => {
       deterministicRNG.setSeed(22222)
       deterministicRNG.enable()
       const array1 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
@@ -312,14 +312,14 @@ describe('gameRandom', () => {
   })
 
   describe('gameRandomBool()', () => {
-    it('should return a boolean', () => {
+    it('[U01684] should return a boolean', () => {
       for (let i = 0; i < 50; i++) {
         const result = gameRandomBool()
         expect(typeof result).toBe('boolean')
       }
     })
 
-    it('should return roughly 50/50 with default probability', () => {
+    it('[U01685] should return roughly 50/50 with default probability', () => {
       let trueCount = 0
       const iterations = 1000
       for (let i = 0; i < iterations; i++) {
@@ -330,7 +330,7 @@ describe('gameRandom', () => {
       expect(trueCount).toBeLessThan(iterations * 0.6)
     })
 
-    it('should return mostly true with high probability', () => {
+    it('[U01686] should return mostly true with high probability', () => {
       let trueCount = 0
       const iterations = 100
       for (let i = 0; i < iterations; i++) {
@@ -341,7 +341,7 @@ describe('gameRandom', () => {
       expect(trueCount).toBeGreaterThan(iterations * 0.75)
     })
 
-    it('should return mostly false with low probability', () => {
+    it('[U01687] should return mostly false with low probability', () => {
       let trueCount = 0
       const iterations = 100
       for (let i = 0; i < iterations; i++) {
@@ -352,13 +352,13 @@ describe('gameRandom', () => {
       expect(trueCount).toBeLessThan(iterations * 0.25)
     })
 
-    it('should always return false with probability 0', () => {
+    it('[U01688] should always return false with probability 0', () => {
       for (let i = 0; i < 50; i++) {
         expect(gameRandomBool(0)).toBe(false)
       }
     })
 
-    it('should always return true with probability 1', () => {
+    it('[U01689] should always return true with probability 1', () => {
       for (let i = 0; i < 50; i++) {
         expect(gameRandomBool(1)).toBe(true)
       }
@@ -366,32 +366,32 @@ describe('gameRandom', () => {
   })
 
   describe('isDeterministicModeEnabled()', () => {
-    it('should return false when disabled', () => {
+    it('[U01690] should return false when disabled', () => {
       deterministicRNG.disable()
       expect(isDeterministicModeEnabled()).toBe(false)
     })
 
-    it('should return true when enabled', () => {
+    it('[U01691] should return true when enabled', () => {
       deterministicRNG.enable()
       expect(isDeterministicModeEnabled()).toBe(true)
     })
   })
 
   describe('getRNGState()', () => {
-    it('should return state object with required properties', () => {
+    it('[U01692] should return state object with required properties', () => {
       const state = getRNGState()
       expect(state).toHaveProperty('seed')
       expect(state).toHaveProperty('callCount')
       expect(state).toHaveProperty('enabled')
     })
 
-    it('should reflect current seed', () => {
+    it('[U01693] should reflect current seed', () => {
       deterministicRNG.setSeed(77777)
       const state = getRNGState()
       expect(state.seed).toBe(77777)
     })
 
-    it('should track call count in deterministic mode', () => {
+    it('[U01694] should track call count in deterministic mode', () => {
       deterministicRNG.setSeed(88888)
       deterministicRNG.enable()
 
@@ -409,7 +409,7 @@ describe('gameRandom', () => {
   })
 
   describe('deterministicRNG integration', () => {
-    it('should produce identical sequences across sessions', () => {
+    it('[U01695] should produce identical sequences across sessions', () => {
       const seed = 42
 
       // Session 1
@@ -442,7 +442,7 @@ describe('gameRandom', () => {
       expect(session1).toEqual(session2)
     })
 
-    it('should handle string seeds', () => {
+    it('[U01696] should handle string seeds', () => {
       deterministicRNG.setSeed('test-seed')
       deterministicRNG.enable()
       const value1 = gameRandom()
@@ -453,7 +453,7 @@ describe('gameRandom', () => {
       expect(value1).toBe(value2)
     })
 
-    it('should produce different sequences for different seeds', () => {
+    it('[U01697] should produce different sequences for different seeds', () => {
       deterministicRNG.setSeed(111)
       deterministicRNG.enable()
       const seq1 = []

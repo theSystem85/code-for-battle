@@ -68,7 +68,7 @@ describe('airstripLogic', () => {
     vi.clearAllMocks()
   })
 
-  it('initializes airstrip fuel and ammo defaults', () => {
+  it('[U00108] initializes airstrip fuel and ammo defaults', () => {
     const airstrip = createAirstrip({ fuel: undefined, maxFuel: 0, ammo: undefined, maxAmmo: 0 })
 
     updateHelipadLogic([], [airstrip], {}, 1000)
@@ -79,7 +79,7 @@ describe('airstripLogic', () => {
     expect(airstrip.ammo).toBe(50)
   })
 
-  it('refills airstrip fuel based on reload time and updates needsFuel', () => {
+  it('[U00109] refills airstrip fuel based on reload time and updates needsFuel', () => {
     const airstrip = createAirstrip({ fuel: 10, maxFuel: 100, fuelReloadTime: 2000 })
 
     updateHelipadLogic([], [airstrip], {}, 0)
@@ -91,7 +91,7 @@ describe('airstripLogic', () => {
     expect(airstrip.needsFuel).toBe(false)
   })
 
-  it('caps airstrip ammo to the allowed reserve', () => {
+  it('[U00110] caps airstrip ammo to the allowed reserve', () => {
     const airstrip = createAirstrip({ ammo: 80, maxAmmo: 100 })
 
     updateHelipadLogic([], [airstrip], {}, 1000)
@@ -100,7 +100,7 @@ describe('airstripLogic', () => {
     expect(airstrip.ammo).toBe(50)
   })
 
-  it('refills airstrip ammo from adjacent ammo trucks', () => {
+  it('[U00111] refills airstrip ammo from adjacent ammo trucks', () => {
     const airstrip = createAirstrip({ ammo: 0, maxAmmo: 50 })
     const ammoTruck = {
       id: 'ammo-1',
@@ -119,7 +119,7 @@ describe('airstripLogic', () => {
     expect(airstrip.needsAmmo).toBe(false)
   })
 
-  it('tops up airstrip fuel from nearby tanker trucks', () => {
+  it('[U00112] tops up airstrip fuel from nearby tanker trucks', () => {
     const airstrip = createAirstrip({ fuel: 50, maxFuel: 100, fuelReloadTime: 100000 })
     const tanker = {
       id: 'tanker-1',
@@ -138,7 +138,7 @@ describe('airstripLogic', () => {
     expect(tanker.supplyGas).toBeGreaterThanOrEqual(0)
   })
 
-  it('does not allow apaches to land on the airstrip', () => {
+  it('[U00113] does not allow apaches to land on the airstrip', () => {
     const airstrip = createAirstrip({
       ammo: 10,
       maxAmmo: 50,

@@ -32,12 +32,12 @@ describe('baseUtils', () => {
   })
 
   describe('getBaseStructures', () => {
-    it('should return empty array when no structures exist', () => {
+    it('[U00378] should return empty array when no structures exist', () => {
       const structures = getBaseStructures('player')
       expect(structures).toEqual([])
     })
 
-    it('should return factory structures for the specified owner', () => {
+    it('[U00379] should return factory structures for the specified owner', () => {
       gameState.factories = [
         { id: 'player', owner: 'player', x: 10, y: 10, width: 3, height: 3 }
       ]
@@ -48,7 +48,7 @@ describe('baseUtils', () => {
       expect(structures[0]).toEqual({ x: 10, y: 10, width: 3, height: 3 })
     })
 
-    it('should return building structures for the specified owner', () => {
+    it('[U00380] should return building structures for the specified owner', () => {
       gameState.buildings = [
         { type: 'powerPlant', owner: 'player', x: 20, y: 20, width: 3, height: 3 }
       ]
@@ -59,7 +59,7 @@ describe('baseUtils', () => {
       expect(structures[0]).toEqual({ x: 20, y: 20, width: 3, height: 3 })
     })
 
-    it('should return both factories and buildings for the owner', () => {
+    it('[U00381] should return both factories and buildings for the owner', () => {
       gameState.factories = [
         { id: 'player', owner: 'player', x: 10, y: 10, width: 3, height: 3 }
       ]
@@ -73,7 +73,7 @@ describe('baseUtils', () => {
       expect(structures).toHaveLength(3)
     })
 
-    it('should filter out structures belonging to other owners', () => {
+    it('[U00382] should filter out structures belonging to other owners', () => {
       gameState.factories = [
         { id: 'player', owner: 'player', x: 10, y: 10, width: 3, height: 3 },
         { id: 'enemy', owner: 'enemy', x: 50, y: 50, width: 3, height: 3 }
@@ -90,7 +90,7 @@ describe('baseUtils', () => {
       expect(enemyStructures).toHaveLength(2)
     })
 
-    it('should use factory id as owner fallback', () => {
+    it('[U00383] should use factory id as owner fallback', () => {
       // Some factories use 'id' instead of 'owner'
       gameState.factories = [
         { id: 'player', x: 10, y: 10, width: 3, height: 3 }
@@ -101,7 +101,7 @@ describe('baseUtils', () => {
       expect(structures).toHaveLength(1)
     })
 
-    it('should default missing width/height to 1', () => {
+    it('[U00384] should default missing width/height to 1', () => {
       gameState.buildings = [
         { type: 'turret', owner: 'player', x: 15, y: 15 }
       ]
@@ -113,7 +113,7 @@ describe('baseUtils', () => {
       expect(structures[0].height).toBe(1)
     })
 
-    it('should default missing x/y to 0', () => {
+    it('[U00385] should default missing x/y to 0', () => {
       gameState.buildings = [
         { type: 'turret', owner: 'player', width: 2, height: 2 }
       ]
@@ -125,7 +125,7 @@ describe('baseUtils', () => {
       expect(structures[0].y).toBe(0)
     })
 
-    it('should accept custom buildings/factories arrays', () => {
+    it('[U00386] should accept custom buildings/factories arrays', () => {
       const customBuildings = [
         { type: 'powerPlant', owner: 'player', x: 100, y: 100, width: 3, height: 3 }
       ]
@@ -141,7 +141,7 @@ describe('baseUtils', () => {
       expect(structures).toHaveLength(2)
     })
 
-    it('should handle null/undefined entries gracefully', () => {
+    it('[U00387] should handle null/undefined entries gracefully', () => {
       gameState.buildings = [
         null,
         { type: 'powerPlant', owner: 'player', x: 20, y: 20, width: 3, height: 3 },
@@ -159,12 +159,12 @@ describe('baseUtils', () => {
   })
 
   describe('isWithinBaseRange', () => {
-    it('should return true when no structures exist (allow placement anywhere)', () => {
+    it('[U00388] should return true when no structures exist (allow placement anywhere)', () => {
       const result = isWithinBaseRange(50, 50, 'player')
       expect(result).toBe(true)
     })
 
-    it('should return true for position directly on a structure', () => {
+    it('[U00389] should return true for position directly on a structure', () => {
       gameState.factories = [
         { id: 'player', x: 10, y: 10, width: 3, height: 3 }
       ]
@@ -173,7 +173,7 @@ describe('baseUtils', () => {
       expect(result).toBe(true)
     })
 
-    it('should return true for position adjacent to structure (distance 1)', () => {
+    it('[U00390] should return true for position adjacent to structure (distance 1)', () => {
       gameState.factories = [
         { id: 'player', x: 10, y: 10, width: 3, height: 3 }
       ]
@@ -183,7 +183,7 @@ describe('baseUtils', () => {
       expect(result).toBe(true)
     })
 
-    it('should return true for position at MAX_BUILDING_GAP_TILES distance', () => {
+    it('[U00391] should return true for position at MAX_BUILDING_GAP_TILES distance', () => {
       gameState.factories = [
         { id: 'player', x: 10, y: 10, width: 3, height: 3 }
       ]
@@ -194,7 +194,7 @@ describe('baseUtils', () => {
       expect(result).toBe(true)
     })
 
-    it('should return false for position beyond MAX_BUILDING_GAP_TILES', () => {
+    it('[U00392] should return false for position beyond MAX_BUILDING_GAP_TILES', () => {
       gameState.factories = [
         { id: 'player', x: 10, y: 10, width: 3, height: 3 }
       ]
@@ -205,7 +205,7 @@ describe('baseUtils', () => {
       expect(result).toBe(false)
     })
 
-    it('should use Chebyshev distance (diagonal counts same as cardinal)', () => {
+    it('[U00393] should use Chebyshev distance (diagonal counts same as cardinal)', () => {
       gameState.factories = [
         { id: 'player', x: 10, y: 10, width: 1, height: 1 }
       ]
@@ -215,7 +215,7 @@ describe('baseUtils', () => {
       expect(result).toBe(true)
     })
 
-    it('should check distance from all tiles of a multi-tile structure', () => {
+    it('[U00394] should check distance from all tiles of a multi-tile structure', () => {
       gameState.factories = [
         { id: 'player', x: 10, y: 10, width: 3, height: 3 }
       ]
@@ -225,7 +225,7 @@ describe('baseUtils', () => {
       expect(result).toBe(true)
     })
 
-    it('should check against multiple structures', () => {
+    it('[U00395] should check against multiple structures', () => {
       gameState.buildings = [
         { type: 'powerPlant', owner: 'player', x: 10, y: 10, width: 3, height: 3 },
         { type: 'refinery', owner: 'player', x: 50, y: 50, width: 4, height: 3 }
@@ -236,7 +236,7 @@ describe('baseUtils', () => {
       expect(result).toBe(true)
     })
 
-    it('should accept custom maxDistance parameter', () => {
+    it('[U00396] should accept custom maxDistance parameter', () => {
       gameState.factories = [
         { id: 'player', x: 10, y: 10, width: 1, height: 1 }
       ]
@@ -251,7 +251,7 @@ describe('baseUtils', () => {
       expect(resultWithCustom).toBe(true)
     })
 
-    it('should only consider structures of the specified owner', () => {
+    it('[U00397] should only consider structures of the specified owner', () => {
       gameState.factories = [
         { id: 'enemy', x: 10, y: 10, width: 3, height: 3 }
       ]
@@ -264,7 +264,7 @@ describe('baseUtils', () => {
       expect(result).toBe(false)
     })
 
-    it('should accept custom buildings/factories arrays', () => {
+    it('[U00398] should accept custom buildings/factories arrays', () => {
       const customBuildings = [
         { type: 'powerPlant', owner: 'player', x: 100, y: 100, width: 3, height: 3 }
       ]
@@ -278,7 +278,7 @@ describe('baseUtils', () => {
   })
 
   describe('edge cases', () => {
-    it('should handle structures at map origin (0,0)', () => {
+    it('[U00399] should handle structures at map origin (0,0)', () => {
       gameState.factories = [
         { id: 'player', x: 0, y: 0, width: 3, height: 3 }
       ]
@@ -287,7 +287,7 @@ describe('baseUtils', () => {
       expect(result).toBe(true)
     })
 
-    it('should handle large structure dimensions', () => {
+    it('[U00400] should handle large structure dimensions', () => {
       gameState.buildings = [
         { type: 'large', owner: 'player', x: 10, y: 10, width: 10, height: 10 }
       ]
@@ -297,7 +297,7 @@ describe('baseUtils', () => {
       expect(structures[0].height).toBe(10)
     })
 
-    it('should handle negative coordinates', () => {
+    it('[U00401] should handle negative coordinates', () => {
       // While unusual, the functions should not crash
       gameState.buildings = [
         { type: 'test', owner: 'player', x: -5, y: -5, width: 3, height: 3 }

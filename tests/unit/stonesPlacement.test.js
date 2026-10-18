@@ -20,13 +20,13 @@ const stones = layout => layout.cells.filter(cell => cell && cell.offsetX === 0 
 const opts = extra => ({ salt: 11, citySeeds: 0, ruinSeeds: 0, ...extra })
 
 describe('stones', () => {
-  it('has a clamped stoneCount map setting', () => {
+  it('[U04304] has a clamped stoneCount map setting', () => {
     expect(DECORATION_SETTINGS.stoneCount.default).toBeGreaterThan(0)
     expect(normalizeDecorationSettings({ stoneCount: 9999 }).stoneCount).toBe(DECORATION_SETTINGS.stoneCount.max)
     expect(normalizeDecorationSettings({ stoneCount: -3 }).stoneCount).toBe(0)
   })
 
-  it('places about the requested number, mixing sizes, deterministically from the seed', () => {
+  it('[U04305] places about the requested number, mixing sizes, deterministically from the seed', () => {
     const map = grid()
     const layout = buildDecorationLayout(map, pools, opts({ stoneCount: 60 }))
     const placed = stones(layout)
@@ -40,7 +40,7 @@ describe('stones', () => {
     expect(stones(buildDecorationLayout(map, pools, opts({ stoneCount: 0 })))).toHaveLength(0)
   })
 
-  it('favours coasts and rock surroundings and stays loosely clustered', () => {
+  it('[U04306] favours coasts and rock surroundings and stays loosely clustered', () => {
     const map = grid()
     let near = 0
     let total = 0
@@ -59,7 +59,7 @@ describe('stones', () => {
     expect(neighbourly / total).toBeGreaterThan(0.6)
   })
 
-  it('ships biome stone sources on the remaining dtv sheets', () => {
+  it('[U04307] ships biome stone sources on the remaining dtv sheets', () => {
     const expected = {
       dtv2_grass: ['4,4'],
       dtv2_soil: ['4,5'],

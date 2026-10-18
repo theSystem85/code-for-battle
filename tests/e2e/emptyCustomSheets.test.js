@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 
-test('empty custom selection matches default tile and decoration choices', async({ page }) => {
+test('[E00022] empty custom selection matches default tile and decoration choices', async({ page }) => {
   await page.goto('/')
   const result = await page.evaluate(async() => {
     const { TextureManager } = await import('/src/rendering/textureManager.js')

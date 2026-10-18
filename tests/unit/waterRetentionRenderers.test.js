@@ -21,7 +21,7 @@ function makeMap() {
 }
 
 describe('retained GPU water topology', () => {
-  it('retains CPU topology buffers across camera/time-only frames', () => {
+  it('[U05085] retains CPU topology buffers across camera/time-only frames', () => {
     const sotMask = [
       [null, { type: 'water', orientation: 'top-left' }, null],
       [null, null, null]
@@ -42,7 +42,7 @@ describe('retained GPU water topology', () => {
     expect(renderer.getStatus().stats.topologyBuilds).toBe(builds)
   })
 
-  it('updates only changed topology chunks while preserving buffer identity', () => {
+  it('[U05086] updates only changed topology chunks while preserving buffer identity', () => {
     const mapRenderer = makeMapRenderer([
       [null, null, null],
       [null, null, null]
@@ -67,7 +67,7 @@ describe('retained GPU water topology', () => {
     expect(updated.data).not.toEqual(unchangedChunkCopy)
   })
 
-  it('keeps the WebGL topology buffer upload-free on clean scrolling frames', () => {
+  it('[U05087] keeps the WebGL topology buffer upload-free on clean scrolling frames', () => {
     const mapRenderer = makeMapRenderer([
       [null, null, null],
       [null, null, null]
@@ -107,7 +107,7 @@ describe('retained GPU water topology', () => {
     expect(gl.bufferSubData.mock.calls.length).toBeGreaterThan(initialUploads)
   })
 
-  it('retains topology independently for the WebGPU backend', () => {
+  it('[U05088] retains topology independently for the WebGPU backend', () => {
     const renderer = new GameWebGPURenderer({}, makeMapRenderer([[null]]))
     const map = [[{ type: 'water' }]]
     const first = renderer.prepareRetainedWaterTopology(map, { topologyRevision: 7, time: 0 })
@@ -120,7 +120,7 @@ describe('retained GPU water topology', () => {
     )
   })
 
-  it('invalidates only device resources across WebGL context loss and restoration', () => {
+  it('[U05089] invalidates only device resources across WebGL context loss and restoration', () => {
     const renderer = new GameWebGLRenderer(null, {}, makeMapRenderer([[null]]))
     const topology = renderer.prepareRetainedWaterTopology([[{ type: 'water' }]], { topologyRevision: 1 })
     renderer.program = {}
@@ -142,7 +142,7 @@ describe('retained GPU water topology', () => {
     expect(renderer.ensureInitialized).toHaveBeenCalledOnce()
   })
 
-  it('binds WebGL context lifecycle listeners once', () => {
+  it('[U05090] binds WebGL context lifecycle listeners once', () => {
     const renderer = new GameWebGLRenderer(null, {}, null)
     const listeners = new Map()
     const canvas = {
@@ -163,7 +163,7 @@ describe('retained GPU water topology', () => {
     })
   })
 
-  it('labels unsupported WebGPU timestamp queries as unavailable', () => {
+  it('[U05091] labels unsupported WebGPU timestamp queries as unavailable', () => {
     const renderer = new GameWebGPURenderer({}, null)
     renderer.timestampSupported = false
     renderer.createTimestampResources()
@@ -178,7 +178,7 @@ describe('retained GPU water topology', () => {
     })
   })
 
-  it('requests WebGPU reinitialization on the first frame after device loss', () => {
+  it('[U05092] requests WebGPU reinitialization on the first frame after device loss', () => {
     const renderer = new GameWebGPURenderer({}, null)
     renderer.handleDeviceLost({ message: 'device removed' })
     renderer.restore = vi.fn()

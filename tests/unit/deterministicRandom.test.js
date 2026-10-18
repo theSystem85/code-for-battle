@@ -40,17 +40,17 @@ describe('deterministicRandom', () => {
 
   describe('DeterministicRNG class', () => {
     describe('setSeed()', () => {
-      it('should accept numeric seed', () => {
+      it('[U01237] should accept numeric seed', () => {
         deterministicRNG.setSeed(12345)
         expect(deterministicRNG.getSeed()).toBe(12345)
       })
 
-      it('should accept string seed', () => {
+      it('[U01238] should accept string seed', () => {
         deterministicRNG.setSeed('test-game-session')
         expect(deterministicRNG.getSeed()).toBeGreaterThan(0)
       })
 
-      it('should hash string seed to consistent value', () => {
+      it('[U01239] should hash string seed to consistent value', () => {
         deterministicRNG.setSeed('hello')
         const seed1 = deterministicRNG.getSeed()
 
@@ -60,12 +60,12 @@ describe('deterministicRandom', () => {
         expect(seed1).toBe(seed2)
       })
 
-      it('should handle empty string seed', () => {
+      it('[U01240] should handle empty string seed', () => {
         deterministicRNG.setSeed('')
         expect(deterministicRNG.getSeed()).toBeGreaterThan(0)
       })
 
-      it('should reset call count', () => {
+      it('[U01241] should reset call count', () => {
         deterministicRNG.setSeed(111)
         deterministicRNG.enable()
         deterministicRNG.random()
@@ -76,29 +76,29 @@ describe('deterministicRandom', () => {
         expect(deterministicRNG.getCallCount()).toBe(0)
       })
 
-      it('should use absolute value for negative seeds', () => {
+      it('[U01242] should use absolute value for negative seeds', () => {
         deterministicRNG.setSeed(-12345)
         expect(deterministicRNG.getSeed()).toBe(12345)
       })
 
-      it('should default to 1 for zero or invalid seeds', () => {
+      it('[U01243] should default to 1 for zero or invalid seeds', () => {
         deterministicRNG.setSeed(0)
         expect(deterministicRNG.getSeed()).toBe(1)
       })
     })
 
     describe('enable() / disable() / isEnabled()', () => {
-      it('should start disabled', () => {
+      it('[U01244] should start disabled', () => {
         deterministicRNG.disable()
         expect(deterministicRNG.isEnabled()).toBe(false)
       })
 
-      it('should enable when enable() called', () => {
+      it('[U01245] should enable when enable() called', () => {
         deterministicRNG.enable()
         expect(deterministicRNG.isEnabled()).toBe(true)
       })
 
-      it('should disable when disable() called', () => {
+      it('[U01246] should disable when disable() called', () => {
         deterministicRNG.enable()
         deterministicRNG.disable()
         expect(deterministicRNG.isEnabled()).toBe(false)
@@ -106,7 +106,7 @@ describe('deterministicRandom', () => {
     })
 
     describe('random()', () => {
-      it('should return value between 0 and 1', () => {
+      it('[U01247] should return value between 0 and 1', () => {
         deterministicRNG.enable()
         for (let i = 0; i < 100; i++) {
           const val = deterministicRNG.random()
@@ -115,7 +115,7 @@ describe('deterministicRandom', () => {
         }
       })
 
-      it('should be deterministic with same seed', () => {
+      it('[U01248] should be deterministic with same seed', () => {
         deterministicRNG.setSeed(42)
         deterministicRNG.enable()
 
@@ -133,7 +133,7 @@ describe('deterministicRandom', () => {
         expect(seq1).toEqual(seq2)
       })
 
-      it('should produce different sequences for different seeds', () => {
+      it('[U01249] should produce different sequences for different seeds', () => {
         deterministicRNG.enable()
 
         deterministicRNG.setSeed(111)
@@ -151,7 +151,7 @@ describe('deterministicRandom', () => {
         expect(seq1).not.toEqual(seq2)
       })
 
-      it('should increment call count when enabled', () => {
+      it('[U01250] should increment call count when enabled', () => {
         deterministicRNG.setSeed(100)
         deterministicRNG.enable()
 
@@ -163,7 +163,7 @@ describe('deterministicRandom', () => {
         expect(deterministicRNG.getCallCount()).toBe(initial + 3)
       })
 
-      it('should use Math.random when disabled', () => {
+      it('[U01251] should use Math.random when disabled', () => {
         deterministicRNG.disable()
 
         // Can't really test Math.random behavior, just ensure no crash
@@ -177,7 +177,7 @@ describe('deterministicRandom', () => {
     })
 
     describe('randomInt()', () => {
-      it('should return integers in range', () => {
+      it('[U01252] should return integers in range', () => {
         deterministicRNG.enable()
         for (let i = 0; i < 100; i++) {
           const val = deterministicRNG.randomInt(5, 10)
@@ -187,7 +187,7 @@ describe('deterministicRandom', () => {
         }
       })
 
-      it('should be deterministic', () => {
+      it('[U01253] should be deterministic', () => {
         deterministicRNG.setSeed(777)
         deterministicRNG.enable()
 
@@ -207,7 +207,7 @@ describe('deterministicRandom', () => {
     })
 
     describe('randomFloat()', () => {
-      it('should return floats in range', () => {
+      it('[U01254] should return floats in range', () => {
         deterministicRNG.enable()
         for (let i = 0; i < 100; i++) {
           const val = deterministicRNG.randomFloat(2.5, 7.5)
@@ -218,7 +218,7 @@ describe('deterministicRandom', () => {
     })
 
     describe('randomElement()', () => {
-      it('should return element from array', () => {
+      it('[U01255] should return element from array', () => {
         deterministicRNG.enable()
         const arr = [1, 2, 3, 4, 5]
         for (let i = 0; i < 50; i++) {
@@ -226,30 +226,30 @@ describe('deterministicRandom', () => {
         }
       })
 
-      it('should return undefined for empty array', () => {
+      it('[U01256] should return undefined for empty array', () => {
         expect(deterministicRNG.randomElement([])).toBeUndefined()
       })
 
-      it('should return undefined for null/undefined', () => {
+      it('[U01257] should return undefined for null/undefined', () => {
         expect(deterministicRNG.randomElement(null)).toBeUndefined()
         expect(deterministicRNG.randomElement(undefined)).toBeUndefined()
       })
     })
 
     describe('shuffle()', () => {
-      it('should return same array reference', () => {
+      it('[U01258] should return same array reference', () => {
         const arr = [1, 2, 3, 4, 5]
         expect(deterministicRNG.shuffle(arr)).toBe(arr)
       })
 
-      it('should contain all original elements', () => {
+      it('[U01259] should contain all original elements', () => {
         const arr = [1, 2, 3, 4, 5]
         const original = [...arr]
         deterministicRNG.shuffle(arr)
         expect(arr.sort()).toEqual(original.sort())
       })
 
-      it('should be deterministic', () => {
+      it('[U01260] should be deterministic', () => {
         deterministicRNG.setSeed(888)
         deterministicRNG.enable()
 
@@ -265,14 +265,14 @@ describe('deterministicRandom', () => {
     })
 
     describe('randomBool()', () => {
-      it('should return boolean', () => {
+      it('[U01261] should return boolean', () => {
         deterministicRNG.enable()
         for (let i = 0; i < 50; i++) {
           expect(typeof deterministicRNG.randomBool()).toBe('boolean')
         }
       })
 
-      it('should respect probability', () => {
+      it('[U01262] should respect probability', () => {
         deterministicRNG.enable()
 
         let trueCount = 0
@@ -287,7 +287,7 @@ describe('deterministicRandom', () => {
     })
 
     describe('reset()', () => {
-      it('should reset to initial seed state', () => {
+      it('[U01263] should reset to initial seed state', () => {
         deterministicRNG.setSeed(999)
         deterministicRNG.enable()
 
@@ -306,7 +306,7 @@ describe('deterministicRandom', () => {
         expect(initial).toEqual(afterReset)
       })
 
-      it('should reset call count to 0', () => {
+      it('[U01264] should reset call count to 0', () => {
         deterministicRNG.setSeed(100)
         deterministicRNG.enable()
         deterministicRNG.random()
@@ -319,14 +319,14 @@ describe('deterministicRandom', () => {
     })
 
     describe('getState() / setState()', () => {
-      it('should return state object with required properties', () => {
+      it('[U01265] should return state object with required properties', () => {
         const state = deterministicRNG.getState()
         expect(state).toHaveProperty('seed')
         expect(state).toHaveProperty('callCount')
         expect(state).toHaveProperty('enabled')
       })
 
-      it('should restore state correctly', () => {
+      it('[U01266] should restore state correctly', () => {
         deterministicRNG.setSeed(12345)
         deterministicRNG.enable()
 
@@ -348,7 +348,7 @@ describe('deterministicRandom', () => {
         expect(deterministicRNG.random()).toBe(val2)
       })
 
-      it('should handle partial state restoration', () => {
+      it('[U01267] should handle partial state restoration', () => {
         deterministicRNG.setState({ seed: 55555 })
         expect(deterministicRNG.getSeed()).toBe(55555)
       })
@@ -357,7 +357,7 @@ describe('deterministicRandom', () => {
 
   describe('exported utility functions', () => {
     describe('random()', () => {
-      it('should use global deterministicRNG instance', () => {
+      it('[U01268] should use global deterministicRNG instance', () => {
         deterministicRNG.setSeed(111)
         deterministicRNG.enable()
 
@@ -371,7 +371,7 @@ describe('deterministicRandom', () => {
     })
 
     describe('randomInt()', () => {
-      it('should use global deterministicRNG instance', () => {
+      it('[U01269] should use global deterministicRNG instance', () => {
         deterministicRNG.setSeed(222)
         deterministicRNG.enable()
 
@@ -385,7 +385,7 @@ describe('deterministicRandom', () => {
     })
 
     describe('randomFloat()', () => {
-      it('should use global deterministicRNG instance', () => {
+      it('[U01270] should use global deterministicRNG instance', () => {
         deterministicRNG.setSeed(333)
         deterministicRNG.enable()
 
@@ -399,7 +399,7 @@ describe('deterministicRandom', () => {
     })
 
     describe('randomElement()', () => {
-      it('should use global deterministicRNG instance', () => {
+      it('[U01271] should use global deterministicRNG instance', () => {
         const arr = [1, 2, 3, 4, 5]
 
         deterministicRNG.setSeed(444)
@@ -414,7 +414,7 @@ describe('deterministicRandom', () => {
     })
 
     describe('shuffle()', () => {
-      it('should use global deterministicRNG instance', () => {
+      it('[U01272] should use global deterministicRNG instance', () => {
         deterministicRNG.setSeed(555)
         deterministicRNG.enable()
 
@@ -430,7 +430,7 @@ describe('deterministicRandom', () => {
     })
 
     describe('randomBool()', () => {
-      it('should use global deterministicRNG instance', () => {
+      it('[U01273] should use global deterministicRNG instance', () => {
         deterministicRNG.setSeed(666)
         deterministicRNG.enable()
         const val1 = randomBool()
@@ -444,36 +444,36 @@ describe('deterministicRandom', () => {
   })
 
   describe('initializeSessionRNG()', () => {
-    it('should set seed', () => {
+    it('[U01274] should set seed', () => {
       initializeSessionRNG(99999)
       expect(deterministicRNG.getSeed()).toBe(99999)
     })
 
-    it('should enable deterministic mode by default', () => {
+    it('[U01275] should enable deterministic mode by default', () => {
       deterministicRNG.disable()
       initializeSessionRNG(99999)
       expect(deterministicRNG.isEnabled()).toBe(true)
     })
 
-    it('should not enable if explicitly disabled', () => {
+    it('[U01276] should not enable if explicitly disabled', () => {
       deterministicRNG.disable()
       initializeSessionRNG(99999, false)
       expect(deterministicRNG.isEnabled()).toBe(false)
     })
 
-    it('should return the RNG instance', () => {
+    it('[U01277] should return the RNG instance', () => {
       const result = initializeSessionRNG(12345)
       expect(result).toBe(deterministicRNG)
     })
 
-    it('should handle string session seed', () => {
+    it('[U01278] should handle string session seed', () => {
       initializeSessionRNG('game-session-abc')
       expect(deterministicRNG.getSeed()).toBeGreaterThan(0)
     })
   })
 
   describe('syncRNGForTick()', () => {
-    it('should reset call count', () => {
+    it('[U01279] should reset call count', () => {
       deterministicRNG.setSeed(100)
       deterministicRNG.enable()
       deterministicRNG.random()
@@ -484,7 +484,7 @@ describe('deterministicRandom', () => {
       expect(deterministicRNG.getCallCount()).toBe(0)
     })
 
-    it('should produce different values for different ticks', () => {
+    it('[U01280] should produce different values for different ticks', () => {
       deterministicRNG.setSeed(100)
       deterministicRNG.enable()
 
@@ -497,7 +497,7 @@ describe('deterministicRandom', () => {
       expect(tick1Val).not.toBe(tick2Val)
     })
 
-    it('should produce same values for same tick', () => {
+    it('[U01281] should produce same values for same tick', () => {
       deterministicRNG.setSeed(100)
       deterministicRNG.enable()
 
@@ -512,7 +512,7 @@ describe('deterministicRandom', () => {
   })
 
   describe('cross-client determinism simulation', () => {
-    it('should produce identical sequences for simulated clients', () => {
+    it('[U01282] should produce identical sequences for simulated clients', () => {
       const sessionSeed = 'multiplayer-game-123'
       const numTicks = 10
       const callsPerTick = 5
@@ -555,7 +555,7 @@ describe('deterministicRandom', () => {
       expect(clientAResults).toEqual(clientBResults)
     })
 
-    it('should detect desync if call counts differ', () => {
+    it('[U01283] should detect desync if call counts differ', () => {
       const sessionSeed = 12345
 
       // Client A makes 3 calls
@@ -577,7 +577,7 @@ describe('deterministicRandom', () => {
   })
 
   describe('Mulberry32 quality', () => {
-    it('should have good distribution', () => {
+    it('[U01284] should have good distribution', () => {
       deterministicRNG.setSeed(42)
       deterministicRNG.enable()
 
@@ -597,7 +597,7 @@ describe('deterministicRandom', () => {
       }
     })
 
-    it('should not have obvious patterns', () => {
+    it('[U01285] should not have obvious patterns', () => {
       deterministicRNG.setSeed(1)
       deterministicRNG.enable()
 

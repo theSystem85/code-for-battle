@@ -23,7 +23,7 @@ const point = (g, x, y) => ({ group: g, anchorX: x, anchorY: y })
 const anchors = layout => layout.cells.filter(cell => cell && cell.offsetX === 0 && cell.offsetY === 0)
 
 describe('natural decoration preparation', () => {
-  it('keeps shore classification and biome tags synchronized on every sprite', () => {
+  it('[U01202] keeps shore classification and biome tags synchronized on every sprite', () => {
     const sheet = JSON.parse(readFileSync('public/images/map/sprite_sheets/dtv3_shore.json', 'utf8'))
     expect(tagShoreSheet(JSON.parse(JSON.stringify(sheet)))).toEqual(sheet)
     for (const tile of [...Object.values(sheet.tiles), ...sheet.propLayout]) {
@@ -37,7 +37,7 @@ describe('natural decoration preparation', () => {
     }
   })
 
-  it.each(['onshore', 'offshore', 'shore_trans'])('places sparse deterministic %s props on a 60-tile coast', kind => {
+  it.each(['onshore', 'offshore', 'shore_trans'])('[U01203] places sparse deterministic %s props on a 60-tile coast', kind => {
     for (const vertical of [false, true]) for (const reverse of [false, true]) {
       const map = Array.from({ length: 60 }, (_, y) => Array.from({ length: 60 }, (_, x) => ({
         type: ((vertical ? x : y) < 20) !== reverse ? 'water' : 'land', biome: 'grass'
@@ -72,7 +72,7 @@ describe('natural decoration preparation', () => {
     }
   })
 
-  it('renders rotated crossings and keeps the water half passable', () => {
+  it('[U01204] renders rotated crossings and keeps the water half passable', () => {
     const map = Array.from({ length: 60 }, (_, y) => Array.from({ length: 60 }, () => ({ type: y < 20 ? 'water' : 'land', biome: 'grass' })))
     const prop = group('pier', ['shore', 'shore_trans', 'impassable'], 2, 1)
     const pools = buildDecorationPools([prop])
@@ -101,13 +101,13 @@ describe('natural decoration preparation', () => {
     expect(getValidDecorationCell(layout, map, cell.landX, cell.landY - 1)).toBeNull()
   })
 
-  it('uses normal spacing between shore props', () => {
+  it('[U01205] uses normal spacing between shore props', () => {
     const shore = group('hut', ['shore'], 2, 1)
     expect(decorationSpacingAllows(point(shore, 2, 0), [point(shore, 0, 0)])).toBe(false)
     expect(decorationSpacingAllows(point(shore, 7, 0), [point(shore, 0, 0)])).toBe(true)
   })
 
-  it('requires explicit biome tags for details and leaves all rocky terrain empty', () => {
+  it('[U01206] requires explicit biome tags for details and leaves all rocky terrain empty', () => {
     const map = grid(96)
     const biomes = ['grass', 'soil', 'sand', 'snow']
     for (let y = 0; y < 96; y++) for (let x = 0; x < 96; x++) {
@@ -129,7 +129,7 @@ describe('natural decoration preparation', () => {
     }
   })
 
-  it('prepares ungrouped shore art without replacing terrain rock buckets', async() => {
+  it('[U01207] prepares ungrouped shore art without replacing terrain rock buckets', async() => {
     const manager = new TextureManager()
     vi.spyOn(manager, 'loadIntegratedSpriteSheetImage').mockResolvedValue({ width: 64, height: 64 })
     const metadata = { blendMode: 'alpha', tiles: { '0,0': {
@@ -141,7 +141,7 @@ describe('natural decoration preparation', () => {
     expect(manager.getIntegratedTileForMapTile('rock', 0, 0)).toBeNull()
   })
 
-  it('samples smooth seeded noise with both dense patches and clearings', () => {
+  it('[U01208] samples smooth seeded noise with both dense patches and clearings', () => {
     expect(decorationSeed('map-688')).toBe(decorationSeed('map-688'))
     expect(decorationSeed('map-689')).not.toBe(decorationSeed('map-688'))
     const values = []
@@ -156,7 +156,7 @@ describe('natural decoration preparation', () => {
     expect(decorationDensity(12, 25, 688)).not.toBe(decorationDensity(12, 25, 689))
   })
 
-  it('grows separate seeded forest, rock and farm patches on matching biomes', () => {
+  it('[U01209] grows separate seeded forest, rock and farm patches on matching biomes', () => {
     const map = grid()
     const clusters = buildCategoryClusters(map, { salt: 688 })
     expect(buildCategoryClusters(map, { salt: 688 })).toEqual(clusters)
@@ -175,7 +175,7 @@ describe('natural decoration preparation', () => {
     expect(categoryClusterAllows(group('other'), 0, 0, 'grass', clusters)).toBe(true)
   })
 
-  it('reserves road buffers and confines roadside and shore sprites to their environments', () => {
+  it('[U01210] reserves road buffers and confines roadside and shore sprites to their environments', () => {
     const map = grid(40)
     for (let y = 0; y < 40; y++) { map[y][10].type = 'street'; map[y][30].type = 'water' }
     const constraints = buildDecorationConstraints(map)
@@ -196,7 +196,7 @@ describe('natural decoration preparation', () => {
     }
   })
 
-  it('keeps starts, bases, ore and narrow passages clear over entire footprints', () => {
+  it('[U01211] keeps starts, bases, ore and narrow passages clear over entire footprints', () => {
     const map = grid(64)
     map[30][30].ore = true
     map[48][48].basePosition = true
@@ -211,7 +211,7 @@ describe('natural decoration preparation', () => {
     layout.cells.forEach((cell, index) => { if (cell) expect(constraints.keepClear[index]).toBe(0) })
   })
 
-  it('uses footprint spans for small/medium/large spacing and six-tile variety', () => {
+  it('[U01212] uses footprint spans for small/medium/large spacing and six-tile variety', () => {
     const large = group('large', [], 3)
     const medium = group('medium', [], 2)
     const small = group('small')
@@ -228,7 +228,7 @@ describe('natural decoration preparation', () => {
     placed.forEach((cell, i) => expect(decorationSpacingAllows(cell, placed.slice(i + 1))).toBe(true))
   })
 
-  it('caps landmarks per 64x64 region and at three per map', () => {
+  it('[U01213] caps landmarks per 64x64 region and at three per map', () => {
     expect(landmarkAllows(63, 63, [{ anchorX: 0, anchorY: 0 }])).toBe(false)
     expect(landmarkAllows(64, 63, [{ anchorX: 0, anchorY: 0 }])).toBe(true)
     expect(landmarkAllows(200, 200, [{ anchorX: 0, anchorY: 0 }, { anchorX: 64, anchorY: 0 }, { anchorX: 0, anchorY: 64 }])).toBe(false)
@@ -238,7 +238,7 @@ describe('natural decoration preparation', () => {
     expect(new Set(placed.map(p => `${Math.floor(p.anchorX / 64)},${Math.floor(p.anchorY / 64)}`)).size).toBe(3)
   })
 
-  it('offers candidates evenly in reproducible shuffled bags', () => {
+  it('[U01214] offers candidates evenly in reproducible shuffled bags', () => {
     const candidates = [group('a'), group('b'), group('c')]
     const bag = createDecorationBag(candidates, 688)
     const again = createDecorationBag(candidates, 688)
@@ -249,7 +249,7 @@ describe('natural decoration preparation', () => {
     expect(createDecorationBag([]).next()).toBeNull()
   })
 
-  it('places passable detail independently, without altering decoration spacing or occupancy', () => {
+  it('[U01215] places passable detail independently, without altering decoration spacing or occupancy', () => {
     const map = grid()
     const prop = group('prop')
     const detail = group('detail', ['ground_detail', 'passable'])
@@ -266,7 +266,7 @@ describe('natural decoration preparation', () => {
     expect(again).toEqual(layout)
   })
 
-  it('renders detail at 0.55 opacity below decorations, restoring canvas state', () => {
+  it('[U01216] renders detail at 0.55 opacity below decorations, restoring canvas state', () => {
     const events = []
     const renderer = Object.create(MapRenderer.prototype)
     const ctx = { globalAlpha: 0.8 }
@@ -287,7 +287,7 @@ describe('natural decoration preparation', () => {
     expect(renderer.textureManager.getGroundDetailForMapTile).not.toHaveBeenCalled()
   })
 
-  it('loads ungrouped ground detail separately from terrain and blocking tags', async() => {
+  it('[U01217] loads ungrouped ground detail separately from terrain and blocking tags', async() => {
     const manager = new TextureManager()
     vi.spyOn(manager, 'loadIntegratedSpriteSheetImage').mockResolvedValue({ width: 64, height: 64 })
     await manager.setIntegratedSpriteSheetConfig({ enabled: true, sheets: [{ sheetPath: 'images/map/sprite_sheets/dtv3_ground_detail.webp', metadata: {
@@ -304,7 +304,7 @@ describe('natural decoration preparation', () => {
     expect(manager.getIntegratedTileForMapTile('land', index % 96, Math.floor(index / 96), { mapGrid: map })).toBeNull()
   })
 
-  it('registers future sheets only when both files exist and warns for missing pairs', () => {
+  it('[U01218] registers future sheets only when both files exist and warns for missing pairs', () => {
     const warn = vi.fn()
     expect(availableFutureSheets({}, warn)).toEqual([])
     expect(warn).toHaveBeenCalledTimes(9)
@@ -313,7 +313,7 @@ describe('natural decoration preparation', () => {
     expect(availableFutureSheets({ [`${prefix}.webp`]: 'image', [`${prefix}.json`]: 'metadata' }, warn)).toEqual(['images/map/sprite_sheets/dtv3_ground_detail.webp'])
   })
 
-  it('preserves source impassability and synchronizes categories on every prop cell', () => {
+  it('[U01219] preserves source impassability and synchronizes categories on every prop cell', () => {
     for (const biome of ['grass', 'soil', 'sand', 'snow', 'universal']) {
       const sheet = JSON.parse(readFileSync(`public/images/map/sprite_sheets/dtv2_${biome}.json`, 'utf8'))
       for (const prop of sheet.propLayout) {

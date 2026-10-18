@@ -74,7 +74,7 @@ afterEach(() => {
 })
 
 describe('prepared sprite generation and registry', () => {
-  it('commits bounded WebP-85 variants with complete inventory metadata', async() => {
+  it('[U03449] commits bounded WebP-85 variants with complete inventory metadata', async() => {
     const root = path.resolve(import.meta.dirname, '../..')
     const manifest = JSON.parse(await readFile(
       path.join(root, 'public/images/prepared/sprite-manifest.json'),
@@ -112,7 +112,7 @@ describe('prepared sprite generation and registry', () => {
     ))
   })
 
-  it('materializes a nonstandard density before publication and accounts disposal bytes', async() => {
+  it('[U03450] materializes a nonstandard density before publication and accounts disposal bytes', async() => {
     const closed = vi.fn()
     const manifest = {
       schemaVersion: 1,
@@ -171,7 +171,7 @@ describe('prepared sprite generation and registry', () => {
     expect(closed).toHaveBeenCalledOnce()
   })
 
-  it('exposes allocation-free sprite and building-layer lookups after publication', () => {
+  it('[U03451] exposes allocation-free sprite and building-layer lookups after publication', () => {
     publishPreparedSpriteRegistry(createPreparedSet([{
       id: 'building:powerPlant:base',
       logicalWidth: 96,
@@ -184,7 +184,7 @@ describe('prepared sprite generation and registry', () => {
     expect(getPreparedSprite('building:powerPlant:base')).toBe(first)
   })
 
-  it('uses native three-argument draws under the complete backing transform', () => {
+  it('[U03452] uses native three-argument draws under the complete backing transform', () => {
     const sprite = {
       id: 'unit:test:base',
       image: {},
@@ -205,7 +205,7 @@ describe('prepared sprite generation and registry', () => {
 })
 
 describe('prepared aircraft rendering states', () => {
-  it('keeps ground and flight sizes stable and tags only real transitions', () => {
+  it('[U03453] keeps ground and flight sizes stable and tags only real transitions', () => {
     const grounded = { airstripId: 'a', flightState: 'grounded', altitude: 0, maxAltitude: 128, f22State: 'parked' }
     const flight = { airstripId: 'a', flightState: 'airborne', altitude: 64, maxAltitude: 128, f22State: 'airborne' }
     const takeoff = { airstripId: 'a', flightState: 'takeoff', altitude: 64, maxAltitude: 128, f22State: 'liftoff' }
@@ -228,7 +228,7 @@ describe('prepared aircraft rendering states', () => {
     expect(getJetRenderScale(takeoff)).toBe((LANDED_JET_SCALE + 1) / 2)
   })
 
-  it('renders stable F35 art natively and reports an authorized takeoff resize', async() => {
+  it('[U03454] renders stable F35 art natively and reports an authorized takeoff resize', async() => {
     publishPreparedSpriteRegistry(createPreparedSet([
       {
         id: 'aircraft:f35:ground',

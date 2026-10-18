@@ -27,7 +27,7 @@ describe('Mission 01 Fordline', () => {
     localStorage.removeItem(LANDING_LOCALE_STORAGE_KEY)
   })
 
-  it('keeps the first-mission id and replaces the old siege content', () => {
+  it('[U02978] keeps the first-mission id and replaces the old siege content', () => {
     expect(mission01.id).toBe('Mission_01')
     expect(mission01.label).toBe('Mission 01: Fordline')
     expect(mission01.description).toContain('Ashford ford')
@@ -39,7 +39,7 @@ describe('Mission 01 Fordline', () => {
     expect(fullBaseTest.introVideo).toBeUndefined()
   })
 
-  it('localizes the briefing in English and German', () => {
+  it('[U02979] localizes the briefing in English and German', () => {
     localStorage.setItem(LANDING_LOCALE_STORAGE_KEY, 'en')
     const english = localizeMission(mission01, 'en')
     expect(english.label).toBe(mission01.label)
@@ -57,7 +57,7 @@ describe('Mission 01 Fordline', () => {
     expect(missionText('missions.intro.skip', 'de')).toBe('Überspringen')
   })
 
-  it('starts the player with a yard, one tank, and credits for the opening chain', () => {
+  it('[U02980] starts the player with a yard, one tank, and credits for the opening chain', () => {
     const playerBuildings = buildings.filter(building => building.owner === PLAYER)
     const playerUnits = units.filter(unit => unit.owner === PLAYER)
 
@@ -76,7 +76,7 @@ describe('Mission 01 Fordline', () => {
     ]))
   })
 
-  it('fields a walled camp instead of a fortress', () => {
+  it('[U02981] fields a walled camp instead of a fortress', () => {
     const enemyBuildings = buildings.filter(building => building.owner === ENEMY)
     const enemyTypes = [...new Set(enemyBuildings.map(building => building.type))].sort()
     expect(enemyTypes).toEqual(['concreteWall', 'constructionYard', 'oreRefinery', 'powerPlant', 'turretGunV1'].sort())
@@ -102,7 +102,7 @@ describe('Mission 01 Fordline', () => {
     })
   })
 
-  it('keeps visible land under the player yard', () => {
+  it('[U02982] keeps visible land under the player yard', () => {
     for (let y = 78; y <= 80; y++) {
       for (let x = 14; x <= 16; x++) {
         expect(state.mapGridTypes[y][x]).toBe('land')
@@ -117,7 +117,7 @@ describe('Mission 01 Fordline', () => {
     expect(nearbyStreets).toBeLessThanOrEqual(24)
   })
 
-  it('keeps a southern ore seam, a river ford, and a clear approach', () => {
+  it('[U02983] keeps a southern ore seam, a river ford, and a clear approach', () => {
     const playerOre = state.orePositions.filter(pos => pos.y > 60)
     const enemyOre = state.orePositions.filter(pos => pos.y < 40 && pos.x > 60)
     expect(playerOre.length).toBeGreaterThanOrEqual(12)

@@ -58,7 +58,7 @@ describe('multiplayer stats server', () => {
     vi.restoreAllMocks()
   })
 
-  it('rejects invalid presence input and ignores personal fields', () => {
+  it('[U03083] rejects invalid presence input and ignores personal fields', () => {
     expect(parsePresenceBody(null).error).toBe('invalid_request')
     expect(parsePresenceBody({ sessionId: 'short', status: 'menu' }).error).toBe('invalid_request')
     expect(parsePresenceBody({ sessionId: 'session-1234', status: 'asleep' }).error).toBe('invalid_request')
@@ -74,7 +74,7 @@ describe('multiplayer stats server', () => {
     })
   })
 
-  it('counts fresh sessions, moves status, and drops entries older than 90s', () => {
+  it('[U03084] counts fresh sessions, moves status, and drops entries older than 90s', () => {
     const db = createMemoryStatsDb()
     const first = applyPresence(db, { sessionId: 'session-aaaa', status: 'menu', openInviteToken: null, now: NOW })
     expect(first.playing).toBe(1)
@@ -113,7 +113,7 @@ describe('multiplayer stats server', () => {
     expect(JSON.stringify(db)).not.toContain('Ada')
   })
 
-  it('rate-limits a session and expires idle keys', () => {
+  it('[U03085] rate-limits a session and expires idle keys', () => {
     const db = createMemoryStatsDb()
     for (let i = 0; i < RATE_LIMIT_MAX; i += 1) {
       const outcome = applyPresence(db, {
@@ -155,7 +155,7 @@ describe('multiplayer stats server', () => {
     expect(afterExpiry.singlePlayer).toBe(0)
   })
 
-  it('claims the oldest other host, skips self and stale hosts, and refuses a second claim', () => {
+  it('[U03086] claims the oldest other host, skips self and stale hosts, and refuses a second claim', () => {
     const db = createMemoryStatsDb()
     applyPresence(db, {
       sessionId: 'host-self00',
@@ -197,7 +197,7 @@ describe('multiplayer stats server', () => {
     expect(db.sets.get('cfb:open-hosts').has('host-other1')).toBe(false)
   })
 
-  it('uses one pipeline EVAL that updates sets and pops an open host', () => {
+  it('[U03087] uses one pipeline EVAL that updates sets and pops an open host', () => {
     expect(PRESENCE_LUA).toContain('ZADD')
     expect(PRESENCE_LUA).toContain('ZREM')
     expect(PRESENCE_LUA).toContain('ZREMRANGEBYSCORE')
@@ -246,13 +246,13 @@ describe('multiplayer stats server', () => {
     })
   })
 
-  it('interprets a rate-limited eval result', () => {
+  it('[U03088] interprets a rate-limited eval result', () => {
     expect(interpretPresenceEval(['rate']).rateLimited).toBe(true)
     expect(interpretClaimEval(['rate']).rateLimited).toBe(true)
     expect(summarizePresenceCounts({ menu: 2, 'mp-host': 1, 'mp-client': 1 }).onlineMultiplayer).toBe(2)
   })
 
-  it('falls back to blobs with approximate counts and onlyIfNew claims', async() => {
+  it('[U03089] falls back to blobs with approximate counts and onlyIfNew claims', async() => {
     const store = createBlobStore()
     const host = await blobsPresence(store, {
       sessionId: 'host-session',
@@ -320,7 +320,7 @@ describe('multiplayer stats server', () => {
     expect(filled.openSlot).toBe('filled')
   })
 
-  it('serves presence from blobs through the request handler when redis is unset', async() => {
+  it('[U03090] serves presence from blobs through the request handler when redis is unset', async() => {
     const store = createBlobStore()
     const response = await handleMultiplayerStatsRequest(request('/api/presence', {
       sessionId: 'session-1234',
@@ -347,7 +347,7 @@ describe('multiplayer stats server', () => {
     expect(missing.status).toBe(400)
   })
 
-  it('reports backend redis when Upstash answers the pipeline', async() => {
+  it('[U03091] reports backend redis when Upstash answers the pipeline', async() => {
     const fetchImpl = vi.fn(async() => new Response(JSON.stringify([
       { result: [1, 0, 0, 0, 0, 'closed'] }
     ]), { status: 200 }))
@@ -374,7 +374,7 @@ describe('multiplayer stats server', () => {
     expect(blobs.blobs.size).toBe(0)
   })
 
-  it('omits store debug fields when the deploy context is production', async() => {
+  it('[U03092] omits store debug fields when the deploy context is production', async() => {
     const fetchImpl = vi.fn(async() => new Response(JSON.stringify([
       { result: [1, 0, 0, 0, 0, 'closed'] }
     ]), { status: 200 }))
@@ -400,7 +400,7 @@ describe('multiplayer stats server', () => {
     expect(fetchImpl).toHaveBeenCalledTimes(1)
   })
 
-  it('keeps store debug fields on deploy previews', async() => {
+  it('[U03093] keeps store debug fields on deploy previews', async() => {
     const response = await handleMultiplayerStatsRequest(request('/api/presence', {
       sessionId: 'session-1234',
       status: 'menu'
@@ -416,7 +416,7 @@ describe('multiplayer stats server', () => {
     expect(body.handler).toBe('function')
   })
 
-  it('reads a secret Upstash token from Netlify.env when process.env is empty', async() => {
+  it('[U03094] reads a secret Upstash token from Netlify.env when process.env is empty', async() => {
     const previous = globalThis.Netlify
     globalThis.Netlify = {
       env: {
@@ -457,7 +457,7 @@ describe('multiplayer stats server', () => {
     }
   })
 
-  it('adapts Netlify blob conditional writes', async() => {
+  it('[U03095] adapts Netlify blob conditional writes', async() => {
     const saved = new Map()
     const adapted = adaptNetlifyBlobStore({
       async get(key) {
@@ -482,7 +482,7 @@ describe('multiplayer stats server', () => {
 })
 
 describe('multiplayer stats key prefix (dev branch deploy)', () => {
-  it('passes REDIS_KEY_PREFIX to both Lua scripts and never uses a bare cfb: key', () => {
+  it('[U05177] passes REDIS_KEY_PREFIX to both Lua scripts and never uses a bare cfb: key', () => {
     expect(PRESENCE_LUA).not.toMatch(/(?<!p \.\. )"cfb:/)
     expect(CLAIM_LUA).not.toMatch(/(?<!p \.\. )"cfb:/)
     const presence = presencePipeline({ sessionId: 'session-1234', status: 'menu', now: NOW, keyPrefix: 'dev:' })[0]
@@ -492,7 +492,7 @@ describe('multiplayer stats key prefix (dev branch deploy)', () => {
     expect(presencePipeline({ sessionId: 'session-1234', status: 'menu', now: NOW })[0].at(-1)).toBe('')
   })
 
-  it('sends the dev: prefix to Upstash when REDIS_KEY_PREFIX is set', async() => {
+  it('[U05178] sends the dev: prefix to Upstash when REDIS_KEY_PREFIX is set', async() => {
     const fetchImpl = vi.fn(async() => new Response(JSON.stringify([{ result: [1, 0, 0, 0, 0, 'closed'] }]), { status: 200 }))
     const response = await handleMultiplayerStatsRequest(request('/api/presence', { sessionId: 'session-1234', status: 'menu' }), {
       env: { UPSTASH_REDIS_REST_URL: 'https://example.upstash.io', UPSTASH_REDIS_REST_TOKEN: 'token', REDIS_KEY_PREFIX: 'dev:' },
@@ -504,7 +504,7 @@ describe('multiplayer stats key prefix (dev branch deploy)', () => {
     expect(commands[0].at(-1)).toBe('dev:')
   })
 
-  it('writes Blobs fallback keys under dev: and keeps production keys separate', async() => {
+  it('[U05179] writes Blobs fallback keys under dev: and keeps production keys separate', async() => {
     const store = createBlobStore()
     await store.set('mp-stats:presence:prod-session-1', { status: 'menu', seenAt: NOW })
     const response = await handleMultiplayerStatsRequest(request('/api/presence', { sessionId: 'session-1234', status: 'menu' }), {
@@ -520,7 +520,7 @@ describe('multiplayer stats key prefix (dev branch deploy)', () => {
     expect(keys.filter(key => !key.startsWith('dev:'))).toEqual(['mp-stats:presence:prod-session-1'])
   })
 
-  it('answers 503 instead of falling back to production keys when the prefix is malformed', async() => {
+  it('[U05180] answers 503 instead of falling back to production keys when the prefix is malformed', async() => {
     const store = createBlobStore()
     const response = await handleMultiplayerStatsRequest(request('/api/presence', { sessionId: 'session-1234', status: 'menu' }), {
       env: { REDIS_KEY_PREFIX: 'dev' },

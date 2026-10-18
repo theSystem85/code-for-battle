@@ -23,7 +23,7 @@ test.describe('Enemy harvester stuck rescan', () => {
     })
   })
 
-  test('enemy AI rescans every 60s and reassigns stuck harvester ore tile', async({ page }) => {
+  test('[E00029] enemy AI rescans every 60s and reassigns stuck harvester ore tile', async({ page }) => {
     test.setTimeout(120000)
 
     await page.goto('/?seed=17')

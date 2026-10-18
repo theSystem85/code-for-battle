@@ -94,14 +94,14 @@ function cacheStorageFrom(cachesByName) {
 }
 
 describe('offline mode state', () => {
-  it('treats forced offline, a dropped line, or a failed probe as offline', () => {
+  it('[U03171] treats forced offline, a dropped line, or a failed probe as offline', () => {
     expect(computeEffectiveOffline({ navigatorOnLine: true, forced: false, probeFailed: false })).toBe(false)
     expect(computeEffectiveOffline({ navigatorOnLine: false, forced: false, probeFailed: false })).toBe(true)
     expect(computeEffectiveOffline({ navigatorOnLine: true, forced: true, probeFailed: false })).toBe(true)
     expect(computeEffectiveOffline({ navigatorOnLine: true, forced: false, probeFailed: true })).toBe(true)
   })
 
-  it('persists the forced-offline toggle in storage', () => {
+  it('[U03172] persists the forced-offline toggle in storage', () => {
     const storage = memoryStorage()
     expect(readForcedOffline(storage)).toBe(false)
     writeForcedOffline(storage, true)
@@ -112,7 +112,7 @@ describe('offline mode state', () => {
     expect(readForcedOffline(null)).toBe(false)
   })
 
-  it('publishes one effective snapshot and skips milestone video while offline', () => {
+  it('[U03173] publishes one effective snapshot and skips milestone video while offline', () => {
     const snapshot = setOfflineSnapshot({ navigatorOnLine: true, forced: true, probeFailed: false })
     expect(snapshot).toEqual(createOfflineSnapshot({ navigatorOnLine: true, forced: true, probeFailed: false }))
     expect(shouldSkipMilestoneVideo()).toBe(true)
@@ -121,7 +121,7 @@ describe('offline mode state', () => {
     expect(shouldSkipMilestoneVideo(true)).toBe(true)
   })
 
-  it('counts a failed connectivity probe and a successful one', async() => {
+  it('[U03174] counts a failed connectivity probe and a successful one', async() => {
     await expect(probeConnectivity(async() => {
       throw new Error('offline')
     })).resolves.toBe(false)
@@ -131,7 +131,7 @@ describe('offline mode state', () => {
 })
 
 describe('offline cache size', () => {
-  it('formats megabytes and the ready and preparing tooltips', () => {
+  it('[U03175] formats megabytes and the ready and preparing tooltips', () => {
     expect(formatCachedByteSize(42.3 * 1024 * 1024)).toBe('42.3 MB')
     expect(formatOfflineCacheTooltip({
       ready: true,
@@ -140,7 +140,7 @@ describe('offline cache size', () => {
     expect(formatOfflineCacheTooltip({ ready: false, percent: 40.2 })).toBe('Preparing offline cache… 40%')
   })
 
-  it('sums Content-Length and falls back to the blob size', async() => {
+  it('[U03176] sums Content-Length and falls back to the blob size', async() => {
     const headerResponse = responseWith({ contentLength: 1000, body: 'short' })
     const blobResponse = responseWith({ body: 'abcdef' })
     expect(await cachedResponseSize(headerResponse)).toBe(1000)
@@ -155,7 +155,7 @@ describe('offline cache size', () => {
     expect(summed).toEqual({ bytes: 1006, entries: 2 })
   })
 
-  it('reports an empty cache as zero and uses the storage estimate only when Cache Storage cannot be read', async() => {
+  it('[U03177] reports an empty cache as zero and uses the storage estimate only when Cache Storage cannot be read', async() => {
     const empty = await resolveOfflineCacheBytes({
       cacheStorage: cacheStorageFrom({}),
       estimate: async() => ({ usage: 4096 })
@@ -183,7 +183,7 @@ describe('offline cache size', () => {
 })
 
 describe('offline mode UI', () => {
-  it('uses the exact English multiplayer hint and German copy', () => {
+  it('[U03178] uses the exact English multiplayer hint and German copy', () => {
     const english = offlineStringsForTest('en')
     const german = offlineStringsForTest('de')
     expect(english.multiplayerHint).toBe('Multiplayer is not available in offline mode!')
@@ -195,7 +195,7 @@ describe('offline mode UI', () => {
     expect(german.updateLabel).toBe('Update verfügbar – neu laden')
   })
 
-  it('reflects effective offline on the button and locks multiplayer with the hint', () => {
+  it('[U03179] reflects effective offline on the button and locks multiplayer with the hint', () => {
     document.body.innerHTML = `
       <div id="sidebar">
         <button id="offlineModeButton" type="button" aria-pressed="false" title="native" aria-describedby="offlineModeTip">
@@ -282,7 +282,7 @@ describe('offline mode UI', () => {
 })
 
 describe('offline cache clear', () => {
-  it('deletes only this app caches and unregisters the service worker', async() => {
+  it('[U03180] deletes only this app caches and unregisters the service worker', async() => {
     const deleted = []
     const storage = {
       removed: [],
@@ -325,7 +325,7 @@ describe('offline cache clear', () => {
     expect(source).not.toMatch(/localStorage|indexedDB|deleteDatabase|window\.confirm/)
   })
 
-  it('confirms before clearing, warns while offline, then shows an empty cache and a reload', () => {
+  it('[U03181] confirms before clearing, warns while offline, then shows an empty cache and a reload', () => {
     const english = offlineClearCopy('en')
     const german = offlineClearCopy('de')
     expect(english.action).toBe('Clear offline cache')
@@ -409,7 +409,7 @@ describe('offline cache clear', () => {
     expect(dialog.warning.textContent).toBe(english.clearedOfflineWarning)
   })
 
-  it('opens the confirm dialog on a long press and leaves a short press as a click', () => {
+  it('[U03182] opens the confirm dialog on a long press and leaves a short press as a click', () => {
     vi.useFakeTimers()
     try {
       let opened = 0
@@ -430,14 +430,14 @@ describe('offline cache clear', () => {
     }
   })
 
-  it('places portrait toasts below the offline pill', () => {
+  it('[U03183] places portrait toasts below the offline pill', () => {
     const css = readFileSync(path.join(process.cwd(), 'styles/notificationHistory.css'), 'utf8')
     expect(css).toMatch(/body\.mobile-portrait \.notification\s*\{[^}]*top:\s*calc\(var\(--safe-area-top\)\s*\*\s*2\s*\+\s*72px\)/)
   })
 })
 
 describe('offline sidebar toggle', () => {
-  it('keeps a single sidebar toggle and floats its tooltip outside the sidebar', () => {
+  it('[U03184] keeps a single sidebar toggle and floats its tooltip outside the sidebar', () => {
     const html = readFileSync(path.join(process.cwd(), 'index.html'), 'utf8')
     const sidebarStart = html.indexOf('id="sidebar"')
     const scrollStart = html.indexOf('id="sidebarScroll"')
@@ -491,7 +491,7 @@ describe('offline sidebar toggle', () => {
 })
 
 describe('offline precache policy', () => {
-  it('keeps videos and the connectivity probe out of the precache and off the cache', () => {
+  it('[U03185] keeps videos and the connectivity probe out of the precache and off the cache', () => {
     expect(PRECACHE_MAX_FILE_BYTES).toBeGreaterThanOrEqual(4 * 1024 * 1024)
     expect(PRECACHE_GLOB_PATTERNS.join(' ')).not.toContain('mp3')
     expect(PRECACHE_GLOB_PATTERNS.join(' ')).toContain('offline-assets-manifest.json')
@@ -555,7 +555,7 @@ function asset(url, revision = 'rev-1', size = 4) {
 }
 
 describe('offline asset split', () => {
-  it('keeps the boot shell small and moves audio, atlases, and json out of the precache', () => {
+  it('[U03186] keeps the boot shell small and moves audio, atlases, and json out of the precache', () => {
     expect(classifyOfflinePath('index.html')).toBe('boot')
     expect(classifyOfflinePath('assets/main-abc.js')).toBe('boot')
     expect(classifyOfflinePath('assets/main-abc.css')).toBe('boot')
@@ -581,7 +581,7 @@ describe('offline asset split', () => {
       .toBe('/images/prepared/aircraft/apache/body-atlas@2x.webp')
   })
 
-  it('writes a revisioned manifest that separates boot files from bulk assets', () => {
+  it('[U03187] writes a revisioned manifest that separates boot files from bulk assets', () => {
     const root = mkdtempSync(path.join(tmpdir(), 'cfb-offline-'))
     try {
       mkdirSync(path.join(root, 'images/sidebar'), { recursive: true })
@@ -607,7 +607,7 @@ describe('offline asset split', () => {
 })
 
 describe('resumable offline asset download', () => {
-  it('skips cached revisions, retries with backoff, and cleans stale entries', async() => {
+  it('[U03188] skips cached revisions, retries with backoff, and cleans stale entries', async() => {
     const cache = memoryAssetCache()
     await cache.put('/old.webp', new Response('old', {
       status: 200,
@@ -649,7 +649,7 @@ describe('resumable offline asset download', () => {
     expect(again.done).toBe(2)
   })
 
-  it('pauses when offline and resumes the files that were not stored', async() => {
+  it('[U03189] pauses when offline and resumes the files that were not stored', async() => {
     const cache = memoryAssetCache()
     let allow = true
     let fetches = 0
@@ -681,7 +681,7 @@ describe('resumable offline asset download', () => {
     expect(fetches).toBe(1)
   })
 
-  it('limits concurrency and does not retry a missing file forever', async() => {
+  it('[U03190] limits concurrency and does not retry a missing file forever', async() => {
     let active = 0
     let maxActive = 0
     const calls = []
@@ -710,7 +710,7 @@ describe('resumable offline asset download', () => {
     expect(summary.done).toBe(7)
   })
 
-  it('counts cached bytes against the expected list and ignores a storage estimate', async() => {
+  it('[U03191] counts cached bytes against the expected list and ignores a storage estimate', async() => {
     const bulk = memoryAssetCache()
     await downloadOfflineAssets({
       assets: [asset('/sound/a.mp3', 'hash', 8)],
@@ -745,7 +745,7 @@ describe('resumable offline asset download', () => {
 })
 
 describe('offline navigation and storage', () => {
-  it('serves the network document and falls back to the shell after the timeout', async() => {
+  it('[U03192] serves the network document and falls back to the shell after the timeout', async() => {
     expect(isNavigationDenylisted('/api/signalling')).toBe(true)
     expect(isNavigationDenylisted('/.netlify/functions/api')).toBe(true)
     expect(isNavigationDenylisted('/')).toBe(false)
@@ -781,7 +781,7 @@ describe('offline navigation and storage', () => {
     expect(await denied.text()).toBe('api')
   })
 
-  it('requests persistent storage for an installed app and formats the result', async() => {
+  it('[U03193] requests persistent storage for an installed app and formats the result', async() => {
     expect(isStandaloneDisplayMode({
       matchMedia: () => ({ matches: true }),
       navigator: {}
@@ -837,7 +837,7 @@ describe('offline navigation and storage', () => {
     expect(hung.error).toMatch(/timed out/)
   })
 
-  it('keeps Retry download visible and disables it until a download fails', () => {
+  it('[U03194] keeps Retry download visible and disables it until a download fails', () => {
     const retry = {
       hidden: true,
       disabled: false,
@@ -855,7 +855,7 @@ describe('offline navigation and storage', () => {
     expect(retry['aria-disabled']).toBe('false')
   })
 
-  it('leaves same-origin audio non-CORS so Safari can play a cached 200', () => {
+  it('[U03195] leaves same-origin audio non-CORS so Safari can play a cached 200', () => {
     expect(audioCrossOriginForUrl('/sound/music/music01.mp3', 'https://game.example')).toBeNull()
     expect(audioCrossOriginForUrl('https://cdn.example/music.mp3', 'https://game.example')).toBe('anonymous')
     const audio = document.createElement('audio')

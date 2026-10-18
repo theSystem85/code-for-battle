@@ -7,7 +7,7 @@ import {
 } from '../../src/ai/llmRequestBudget.js'
 
 describe('llmRequestBudget helpers', () => {
-  it('estimates prompt tokens across messages and instructions', () => {
+  it('[U02363] estimates prompt tokens across messages and instructions', () => {
     const estimate = estimateRequestPromptTokens({
       messages: [{ role: 'user', content: 'hello world' }],
       instructions: 'follow this',
@@ -17,7 +17,7 @@ describe('llmRequestBudget helpers', () => {
     expect(estimate).toBeGreaterThan(0)
   })
 
-  it('requests a context reset when chain length exceeds budget', () => {
+  it('[U02364] requests a context reset when chain length exceeds budget', () => {
     const decision = shouldResetResponseChain(
       { requestCount: 8, estimatedPromptTokens: 3000, responseId: 'resp_1' },
       400,
@@ -27,7 +27,7 @@ describe('llmRequestBudget helpers', () => {
     expect(decision).toEqual({ reset: true, reason: 'request-count-budget' })
   })
 
-  it('builds compact carry-forward memory for reset requests', () => {
+  it('[U02365] builds compact carry-forward memory for reset requests', () => {
     const memory = buildCarryForwardMemory({
       plan: {
         intent: 'expand-and-defend',
@@ -47,7 +47,7 @@ describe('llmRequestBudget helpers', () => {
     })
   })
 
-  it('trims rolling summaries to the requested number of lines', () => {
+  it('[U02366] trims rolling summaries to the requested number of lines', () => {
     expect(trimRollingSummary('a\nb\nc', 2)).toBe('b\nc')
   })
 })

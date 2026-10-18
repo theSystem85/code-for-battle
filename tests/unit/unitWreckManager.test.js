@@ -65,12 +65,12 @@ describe('unitWreckManager.js', () => {
   })
 
   describe('registerUnitWreck', () => {
-    it('should return null if unit is null', () => {
+    it('[U04808] should return null if unit is null', () => {
       const result = registerUnitWreck(null, gameState)
       expect(result).toBe(null)
     })
 
-    it('should initialize unitWrecks array if not present', () => {
+    it('[U04809] should initialize unitWrecks array if not present', () => {
       delete gameState.unitWrecks
       const unit = { id: 'unit-1', type: 'tank', x: 100, y: 100, health: 100, maxHealth: 100, owner: 1 }
 
@@ -79,7 +79,7 @@ describe('unitWreckManager.js', () => {
       expect(Array.isArray(gameState.unitWrecks)).toBe(true)
     })
 
-    it('should create a wreck from a unit', () => {
+    it('[U04810] should create a wreck from a unit', () => {
       const unit = {
         id: 'unit-1',
         type: 'tank',
@@ -109,7 +109,7 @@ describe('unitWreckManager.js', () => {
       expect(wreck.maxHealth).toBe(100)
     })
 
-    it('should not create duplicate wreck for same unit', () => {
+    it('[U04811] should not create duplicate wreck for same unit', () => {
       const unit = { id: 'unit-1', type: 'tank', x: 100, y: 100, health: 100, maxHealth: 100, owner: 1 }
 
       const wreck1 = registerUnitWreck(unit, gameState)
@@ -119,7 +119,7 @@ describe('unitWreckManager.js', () => {
       expect(gameState.unitWrecks.length).toBe(1)
     })
 
-    it('should add wreck to gameState.unitWrecks', () => {
+    it('[U04812] should add wreck to gameState.unitWrecks', () => {
       const unit = { id: 'unit-1', type: 'tank', x: 100, y: 100, health: 100, owner: 1 }
 
       registerUnitWreck(unit, gameState)
@@ -127,7 +127,7 @@ describe('unitWreckManager.js', () => {
       expect(gameState.unitWrecks.length).toBe(1)
     })
 
-    it('should update occupancy map when registering wreck', () => {
+    it('[U04813] should update occupancy map when registering wreck', () => {
       const unit = { id: 'unit-1', type: 'tank', x: 100, y: 100, health: 100, owner: 1 }
 
       registerUnitWreck(unit, gameState)
@@ -138,7 +138,7 @@ describe('unitWreckManager.js', () => {
       expect(gameState.occupancyMap[tileY][tileX]).toBe(1)
     })
 
-    it('should use default direction of 0 if not provided', () => {
+    it('[U04814] should use default direction of 0 if not provided', () => {
       const unit = { id: 'unit-1', type: 'tank', x: 100, y: 100, health: 100, owner: 1 }
 
       const wreck = registerUnitWreck(unit, gameState)
@@ -147,7 +147,7 @@ describe('unitWreckManager.js', () => {
       expect(wreck.turretDirection).toBe(0)
     })
 
-    it('should estimate build duration based on unit cost', () => {
+    it('[U04815] should estimate build duration based on unit cost', () => {
       const unit = { id: 'unit-1', type: 'apache', x: 100, y: 100, health: 100, owner: 1 }
 
       const wreck = registerUnitWreck(unit, gameState)
@@ -156,7 +156,7 @@ describe('unitWreckManager.js', () => {
       expect(getUnitCost).toHaveBeenCalledWith('apache')
     })
 
-    it('should initialize velocity to zero', () => {
+    it('[U04816] should initialize velocity to zero', () => {
       const unit = { id: 'unit-1', type: 'tank', x: 100, y: 100, health: 100, owner: 1 }
 
       const wreck = registerUnitWreck(unit, gameState)
@@ -165,7 +165,7 @@ describe('unitWreckManager.js', () => {
       expect(wreck.velocityY).toBe(0)
     })
 
-    it('selects each directional naval sinking mode from an equal quarter of deterministic rolls', () => {
+    it('[U04817] selects each directional naval sinking mode from an equal quarter of deterministic rolls', () => {
       const cases = [
         [0, 'front-down'],
         [0.25, 'back-down'],
@@ -185,22 +185,22 @@ describe('unitWreckManager.js', () => {
   })
 
   describe('getWreckById', () => {
-    it('should return null if gameState is null', () => {
+    it('[U04818] should return null if gameState is null', () => {
       const result = getWreckById(null, 'wreck-1')
       expect(result).toBe(null)
     })
 
-    it('should return null if unitWrecks is not present', () => {
+    it('[U04819] should return null if unitWrecks is not present', () => {
       const result = getWreckById({}, 'wreck-1')
       expect(result).toBe(null)
     })
 
-    it('should return undefined if wreck not found', () => {
+    it('[U04820] should return undefined if wreck not found', () => {
       const result = getWreckById(gameState, 'nonexistent-wreck')
       expect(result).toBeUndefined()
     })
 
-    it('should find wreck by id', () => {
+    it('[U04821] should find wreck by id', () => {
       const unit = { id: 'unit-1', type: 'tank', x: 100, y: 100, health: 100, owner: 1 }
       registerUnitWreck(unit, gameState)
 
@@ -212,22 +212,22 @@ describe('unitWreckManager.js', () => {
   })
 
   describe('removeWreckById', () => {
-    it('should return null if gameState is null', () => {
+    it('[U04822] should return null if gameState is null', () => {
       const result = removeWreckById(null, 'wreck-1')
       expect(result).toBe(null)
     })
 
-    it('should return null if unitWrecks is not present', () => {
+    it('[U04823] should return null if unitWrecks is not present', () => {
       const result = removeWreckById({}, 'wreck-1')
       expect(result).toBe(null)
     })
 
-    it('should return null if wreck not found', () => {
+    it('[U04824] should return null if wreck not found', () => {
       const result = removeWreckById(gameState, 'nonexistent-wreck')
       expect(result).toBe(null)
     })
 
-    it('should remove wreck and return it', () => {
+    it('[U04825] should remove wreck and return it', () => {
       const unit = { id: 'unit-1', type: 'tank', x: 100, y: 100, health: 100, owner: 1 }
       registerUnitWreck(unit, gameState)
 
@@ -238,7 +238,7 @@ describe('unitWreckManager.js', () => {
       expect(gameState.unitWrecks.length).toBe(0)
     })
 
-    it('should clear selectedWreckId if removed wreck was selected', () => {
+    it('[U04826] should clear selectedWreckId if removed wreck was selected', () => {
       const unit = { id: 'unit-1', type: 'tank', x: 100, y: 100, health: 100, owner: 1 }
       registerUnitWreck(unit, gameState)
       gameState.selectedWreckId = 'unit-1-wreck'
@@ -248,7 +248,7 @@ describe('unitWreckManager.js', () => {
       expect(gameState.selectedWreckId).toBe(null)
     })
 
-    it('should update occupancy map when removing wreck', () => {
+    it('[U04827] should update occupancy map when removing wreck', () => {
       const unit = { id: 'unit-1', type: 'tank', x: 100, y: 100, health: 100, owner: 1 }
       registerUnitWreck(unit, gameState)
 
@@ -263,17 +263,17 @@ describe('unitWreckManager.js', () => {
   })
 
   describe('findWreckAtTile', () => {
-    it('should return null if gameState is null', () => {
+    it('[U04828] should return null if gameState is null', () => {
       const result = findWreckAtTile(null, 3, 3)
       expect(result).toBe(null)
     })
 
-    it('should return null if unitWrecks is not present', () => {
+    it('[U04829] should return null if unitWrecks is not present', () => {
       const result = findWreckAtTile({}, 3, 3)
       expect(result).toBe(null)
     })
 
-    it('should return undefined if no wreck at tile', () => {
+    it('[U04830] should return undefined if no wreck at tile', () => {
       const unit = { id: 'unit-1', type: 'tank', x: 100, y: 100, health: 100, owner: 1 }
       registerUnitWreck(unit, gameState)
 
@@ -282,7 +282,7 @@ describe('unitWreckManager.js', () => {
       expect(result).toBeUndefined()
     })
 
-    it('should find wreck at specific tile', () => {
+    it('[U04831] should find wreck at specific tile', () => {
       const unit = { id: 'unit-1', type: 'tank', x: 80, y: 80, health: 100, owner: 1 }
       registerUnitWreck(unit, gameState)
 
@@ -295,11 +295,11 @@ describe('unitWreckManager.js', () => {
   })
 
   describe('releaseWreckAssignment', () => {
-    it('should do nothing if wreck is null', () => {
+    it('[U04832] should do nothing if wreck is null', () => {
       expect(() => releaseWreckAssignment(null)).not.toThrow()
     })
 
-    it('should clear all assignment-related properties', () => {
+    it('[U04833] should clear all assignment-related properties', () => {
       const wreck = {
         id: 'wreck-1',
         assignedTankId: 'tank-1',
@@ -320,17 +320,17 @@ describe('unitWreckManager.js', () => {
   })
 
   describe('updateWreckPositionFromTank', () => {
-    it('should do nothing if wreck is null', () => {
+    it('[U04834] should do nothing if wreck is null', () => {
       const tank = { x: 100, y: 100, direction: 0 }
       expect(() => updateWreckPositionFromTank(null, tank, null)).not.toThrow()
     })
 
-    it('should do nothing if tank is null', () => {
+    it('[U04835] should do nothing if tank is null', () => {
       const wreck = { x: 0, y: 0 }
       expect(() => updateWreckPositionFromTank(wreck, null, null)).not.toThrow()
     })
 
-    it('should update wreck position behind tank', () => {
+    it('[U04836] should update wreck position behind tank', () => {
       const wreck = { x: 0, y: 0, tileX: 0, tileY: 0 }
       const tank = { x: 100, y: 100, direction: 0 }
 
@@ -341,7 +341,7 @@ describe('unitWreckManager.js', () => {
       expect(wreck.y).toBeCloseTo(100, 1)
     })
 
-    it('should update wreck tile positions', () => {
+    it('[U04837] should update wreck tile positions', () => {
       const wreck = { x: 0, y: 0, tileX: 0, tileY: 0 }
       const tank = { x: 100, y: 100, direction: 0 }
 
@@ -351,7 +351,7 @@ describe('unitWreckManager.js', () => {
       expect(typeof wreck.tileY).toBe('number')
     })
 
-    it('should update occupancy map when position changes', () => {
+    it('[U04838] should update occupancy map when position changes', () => {
       const wreck = { x: 0, y: 0, tileX: 0, tileY: 0, occupancyTileX: null, occupancyTileY: null }
       const tank = { x: 100, y: 100, direction: 0 }
       const occupancyMap = Array(100).fill(null).map(() => Array(100).fill(0))
@@ -364,18 +364,18 @@ describe('unitWreckManager.js', () => {
   })
 
   describe('findNearestWorkshop', () => {
-    it('should return null if gameState is null', () => {
+    it('[U04839] should return null if gameState is null', () => {
       const result = findNearestWorkshop(null, 1, { x: 5, y: 5 })
       expect(result).toBe(null)
     })
 
-    it('should return null if no buildings exist', () => {
+    it('[U04840] should return null if no buildings exist', () => {
       gameState.buildings = null
       const result = findNearestWorkshop(gameState, 1, { x: 5, y: 5 })
       expect(result).toBe(null)
     })
 
-    it('should return null if no workshops for owner', () => {
+    it('[U04841] should return null if no workshops for owner', () => {
       gameState.buildings = [
         { type: 'vehicleWorkshop', owner: 2, health: 100, x: 10, y: 10, width: 3, height: 3 }
       ]
@@ -385,7 +385,7 @@ describe('unitWreckManager.js', () => {
       expect(result).toBe(null)
     })
 
-    it('should return null if all workshops are destroyed', () => {
+    it('[U04842] should return null if all workshops are destroyed', () => {
       gameState.buildings = [
         { type: 'vehicleWorkshop', owner: 1, health: 0, x: 10, y: 10, width: 3, height: 3 }
       ]
@@ -395,7 +395,7 @@ describe('unitWreckManager.js', () => {
       expect(result).toBe(null)
     })
 
-    it('should find nearest workshop for owner', () => {
+    it('[U04843] should find nearest workshop for owner', () => {
       gameState.buildings = [
         { type: 'vehicleWorkshop', owner: 1, health: 100, x: 10, y: 10, width: 3, height: 3 },
         { type: 'vehicleWorkshop', owner: 1, health: 100, x: 50, y: 50, width: 3, height: 3 }
@@ -408,7 +408,7 @@ describe('unitWreckManager.js', () => {
       expect(result.entryTile).toBeDefined()
     })
 
-    it('should include entry tile in result', () => {
+    it('[U04844] should include entry tile in result', () => {
       gameState.buildings = [
         { type: 'vehicleWorkshop', owner: 1, health: 100, x: 10, y: 10, width: 3, height: 3 }
       ]
@@ -422,12 +422,12 @@ describe('unitWreckManager.js', () => {
   })
 
   describe('getRecycleDurationForWreck', () => {
-    it('should return minimum duration for null wreck', () => {
+    it('[U04845] should return minimum duration for null wreck', () => {
       const result = getRecycleDurationForWreck(null)
       expect(result).toBe(1000) // MIN_BUILD_DURATION
     })
 
-    it('should calculate duration based on unit type', () => {
+    it('[U04846] should calculate duration based on unit type', () => {
       const wreck = { unitType: 'tank' }
 
       const result = getRecycleDurationForWreck(wreck)
@@ -435,7 +435,7 @@ describe('unitWreckManager.js', () => {
       expect(result).toBeGreaterThan(0)
     })
 
-    it('should use existing buildDuration if provided', () => {
+    it('[U04847] should use existing buildDuration if provided', () => {
       const wreck = { unitType: 'tank', buildDuration: 5000 }
 
       const result = getRecycleDurationForWreck(wreck)
@@ -443,7 +443,7 @@ describe('unitWreckManager.js', () => {
       expect(result).toBe(5000)
     })
 
-    it('should clamp duration to max value', () => {
+    it('[U04848] should clamp duration to max value', () => {
       const wreck = { unitType: 'tank', buildDuration: 1000000 }
 
       const result = getRecycleDurationForWreck(wreck)
@@ -453,30 +453,30 @@ describe('unitWreckManager.js', () => {
   })
 
   describe('applyDamageToWreck', () => {
-    it('should return false if wreck is null', () => {
+    it('[U04849] should return false if wreck is null', () => {
       const result = applyDamageToWreck(null, 50, gameState)
       expect(result).toBe(false)
     })
 
-    it('should return false if gameState is null', () => {
+    it('[U04850] should return false if gameState is null', () => {
       const wreck = { health: 100 }
       const result = applyDamageToWreck(wreck, 50, null)
       expect(result).toBe(false)
     })
 
-    it('should return false for zero damage', () => {
+    it('[U04851] should return false for zero damage', () => {
       const wreck = { health: 100 }
       const result = applyDamageToWreck(wreck, 0, gameState)
       expect(result).toBe(false)
     })
 
-    it('should return false if wreck already dead', () => {
+    it('[U04852] should return false if wreck already dead', () => {
       const wreck = { health: 0 }
       const result = applyDamageToWreck(wreck, 50, gameState)
       expect(result).toBe(false)
     })
 
-    it('should reduce wreck health', () => {
+    it('[U04853] should reduce wreck health', () => {
       const unit = { id: 'unit-1', type: 'tank', x: 100, y: 100, health: 100, maxHealth: 100, owner: 1 }
       const wreck = registerUnitWreck(unit, gameState)
 
@@ -485,7 +485,7 @@ describe('unitWreckManager.js', () => {
       expect(wreck.health).toBe(70)
     })
 
-    it('should return true and remove wreck when health reaches zero', () => {
+    it('[U04854] should return true and remove wreck when health reaches zero', () => {
       const unit = { id: 'unit-1', type: 'tank', x: 100, y: 100, health: 50, maxHealth: 100, owner: 1 }
       const wreck = registerUnitWreck(unit, gameState)
 
@@ -495,7 +495,7 @@ describe('unitWreckManager.js', () => {
       expect(gameState.unitWrecks.length).toBe(0)
     })
 
-    it('should apply velocity from impact position', () => {
+    it('[U04855] should apply velocity from impact position', () => {
       const unit = { id: 'unit-1', type: 'tank', x: 100, y: 100, health: 100, maxHealth: 100, owner: 1 }
       const wreck = registerUnitWreck(unit, gameState)
       const impactPosition = { x: 90, y: 100 }
@@ -505,7 +505,7 @@ describe('unitWreckManager.js', () => {
       expect(wreck.velocityX).not.toBe(0)
     })
 
-    it('should use random angle when impact at center', () => {
+    it('[U04856] should use random angle when impact at center', () => {
       const unit = { id: 'unit-1', type: 'tank', x: 100, y: 100, health: 100, maxHealth: 100, owner: 1 }
       const wreck = registerUnitWreck(unit, gameState)
       const impactPosition = { x: 116, y: 116 } // Center of wreck
@@ -517,7 +517,7 @@ describe('unitWreckManager.js', () => {
       expect(typeof wreck.velocityY).toBe('number')
     })
 
-    it('should not apply velocity without impact position', () => {
+    it('[U04857] should not apply velocity without impact position', () => {
       const unit = { id: 'unit-1', type: 'tank', x: 100, y: 100, health: 100, maxHealth: 100, owner: 1 }
       const wreck = registerUnitWreck(unit, gameState)
 
@@ -529,20 +529,20 @@ describe('unitWreckManager.js', () => {
   })
 
   describe('updateWreckPhysics', () => {
-    it('should do nothing if gameState is null', () => {
+    it('[U04858] should do nothing if gameState is null', () => {
       expect(() => updateWreckPhysics(null, [], 16)).not.toThrow()
     })
 
-    it('should do nothing if unitWrecks is empty', () => {
+    it('[U04859] should do nothing if unitWrecks is empty', () => {
       expect(() => updateWreckPhysics(gameState, [], 16)).not.toThrow()
     })
 
-    it('should do nothing if unitWrecks is not an array', () => {
+    it('[U04860] should do nothing if unitWrecks is not an array', () => {
       gameState.unitWrecks = null
       expect(() => updateWreckPhysics(gameState, [], 16)).not.toThrow()
     })
 
-    it('should skip wrecks with no velocity', () => {
+    it('[U04861] should skip wrecks with no velocity', () => {
       const unit = { id: 'unit-1', type: 'tank', x: 100, y: 100, health: 100, owner: 1 }
       const wreck = registerUnitWreck(unit, gameState)
       wreck.velocityX = 0
@@ -557,7 +557,7 @@ describe('unitWreckManager.js', () => {
       expect(wreck.y).toBe(initialY)
     })
 
-    it('should move wrecks with velocity', () => {
+    it('[U04862] should move wrecks with velocity', () => {
       const unit = { id: 'unit-1', type: 'tank', x: 100, y: 100, health: 100, owner: 1 }
       const wreck = registerUnitWreck(unit, gameState)
       wreck.velocityX = 10
@@ -570,7 +570,7 @@ describe('unitWreckManager.js', () => {
       expect(wreck.x).toBeGreaterThan(initialX)
     })
 
-    it('should apply inertia decay to velocity', () => {
+    it('[U04863] should apply inertia decay to velocity', () => {
       const unit = { id: 'unit-1', type: 'tank', x: 100, y: 100, health: 100, owner: 1 }
       const wreck = registerUnitWreck(unit, gameState)
       wreck.velocityX = 10
@@ -581,7 +581,7 @@ describe('unitWreckManager.js', () => {
       expect(wreck.velocityX).toBeLessThan(10)
     })
 
-    it('should skip towed wrecks', () => {
+    it('[U04864] should skip towed wrecks', () => {
       const unit = { id: 'unit-1', type: 'tank', x: 100, y: 100, health: 100, owner: 1 }
       const wreck = registerUnitWreck(unit, gameState)
       wreck.velocityX = 10
@@ -596,7 +596,7 @@ describe('unitWreckManager.js', () => {
       expect(wreck.velocityY).toBe(0)
     })
 
-    it('should clamp position to map boundaries', () => {
+    it('[U04865] should clamp position to map boundaries', () => {
       const unit = { id: 'unit-1', type: 'tank', x: 10, y: 10, health: 100, owner: 1 }
       const wreck = registerUnitWreck(unit, gameState)
       wreck.velocityX = -100
@@ -608,7 +608,7 @@ describe('unitWreckManager.js', () => {
       expect(wreck.y).toBeGreaterThanOrEqual(0)
     })
 
-    it('should detect collision with blocked tiles', () => {
+    it('[U04866] should detect collision with blocked tiles', () => {
       const unit = { id: 'unit-1', type: 'tank', x: 64, y: 64, health: 100, owner: 1 }
       const wreck = registerUnitWreck(unit, gameState)
       wreck.velocityX = 32
@@ -622,7 +622,7 @@ describe('unitWreckManager.js', () => {
       expect(wreck.x).toBe(initialX)
     })
 
-    it('should update tile position after movement', () => {
+    it('[U04867] should update tile position after movement', () => {
       const unit = { id: 'unit-1', type: 'tank', x: 50, y: 50, tileX: 2, tileY: 2, health: 100, owner: 1 }
       const wreck = registerUnitWreck(unit, gameState)
       wreck.velocityX = 50
@@ -636,7 +636,7 @@ describe('unitWreckManager.js', () => {
       expect(wreck.x).toBeGreaterThan(initialX)
     })
 
-    it('should detect collision with units', () => {
+    it('[U04868] should detect collision with units', () => {
       const unit = { id: 'unit-1', type: 'tank', x: 100, y: 100, health: 100, owner: 1 }
       const wreck = registerUnitWreck(unit, gameState)
       wreck.velocityX = 10
@@ -654,7 +654,7 @@ describe('unitWreckManager.js', () => {
       expect(typeof wreck.velocityX).toBe('number')
     })
 
-    it('should detect collision with other wrecks', () => {
+    it('[U04869] should detect collision with other wrecks', () => {
       const unit1 = { id: 'unit-1', type: 'tank', x: 100, y: 100, health: 100, owner: 1 }
       const unit2 = { id: 'unit-2', type: 'tank', x: 130, y: 100, health: 100, owner: 1 }
       const wreck1 = registerUnitWreck(unit1, gameState)
@@ -669,7 +669,7 @@ describe('unitWreckManager.js', () => {
       expect(typeof wreck2.velocityX).toBe('number')
     })
 
-    it('should accept delta as second argument for backwards compatibility', () => {
+    it('[U04870] should accept delta as second argument for backwards compatibility', () => {
       const unit = { id: 'unit-1', type: 'tank', x: 100, y: 100, health: 100, owner: 1 }
       const wreck = registerUnitWreck(unit, gameState)
       wreck.velocityX = 10
@@ -681,7 +681,7 @@ describe('unitWreckManager.js', () => {
       expect(wreck.x).toBeGreaterThan(initialX)
     })
 
-    it('should handle wreck with zero health', () => {
+    it('[U04871] should handle wreck with zero health', () => {
       const unit = { id: 'unit-1', type: 'tank', x: 100, y: 100, health: 0, owner: 1 }
       const wreck = registerUnitWreck(unit, gameState)
       wreck.health = 0
@@ -695,7 +695,7 @@ describe('unitWreckManager.js', () => {
       expect(wreck.x).toBe(initialX)
     })
 
-    it('removes a naval wreck after its sinking animation completes', () => {
+    it('[U04872] removes a naval wreck after its sinking animation completes', () => {
       gameState.simulationTime = 7000
       gameState.unitWrecks = [{
         id: 'destroyer-wreck',
@@ -712,7 +712,7 @@ describe('unitWreckManager.js', () => {
       expect(gameState.unitWrecks).toEqual([])
     })
 
-    it('should zero out very small velocities', () => {
+    it('[U04873] should zero out very small velocities', () => {
       const unit = { id: 'unit-1', type: 'tank', x: 100, y: 100, health: 100, owner: 1 }
       const wreck = registerUnitWreck(unit, gameState)
       wreck.velocityX = 0.00005
@@ -724,7 +724,7 @@ describe('unitWreckManager.js', () => {
       expect(wreck.velocityY).toBe(0)
     })
 
-    it('should update occupancy map when wreck tile changes', () => {
+    it('[U04874] should update occupancy map when wreck tile changes', () => {
       const unit = { id: 'unit-1', type: 'tank', x: 50, y: 50, health: 100, owner: 1 }
       const wreck = registerUnitWreck(unit, gameState)
       wreck.velocityX = 100

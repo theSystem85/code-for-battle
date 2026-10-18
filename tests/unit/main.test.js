@@ -298,23 +298,23 @@ describe('main.js', () => {
   })
 
   describe('Exported arrays', () => {
-    it('should export mapGrid array', () => {
+    it('[U02509] should export mapGrid array', () => {
       expect(mainModule.mapGrid).toBeInstanceOf(Array)
     })
 
-    it('should export factories array', () => {
+    it('[U02510] should export factories array', () => {
       expect(mainModule.factories).toBeInstanceOf(Array)
     })
 
-    it('should export units array', () => {
+    it('[U02511] should export units array', () => {
       expect(mainModule.units).toBeInstanceOf(Array)
     })
 
-    it('should export bullets array', () => {
+    it('[U02512] should export bullets array', () => {
       expect(mainModule.bullets).toBeInstanceOf(Array)
     })
 
-    it('should have mutable arrays', () => {
+    it('[U02513] should have mutable arrays', () => {
       const originalLength = mainModule.units.length
       mainModule.units.push({ id: 'test', type: 'tank' })
       expect(mainModule.units.length).toBe(originalLength + 1)
@@ -323,11 +323,11 @@ describe('main.js', () => {
   })
 
   describe('getCurrentGame', () => {
-    it('should export getCurrentGame function', () => {
+    it('[U02514] should export getCurrentGame function', () => {
       expect(typeof mainModule.getCurrentGame).toBe('function')
     })
 
-    it('should return game instance if initialized', () => {
+    it('[U02515] should return game instance if initialized', () => {
       // Note: in test environment this might return null or mock
       const _result = mainModule.getCurrentGame()
       // Just check it doesn't throw
@@ -336,11 +336,11 @@ describe('main.js', () => {
   })
 
   describe('regenerateMapForClient', () => {
-    it('should export regenerateMapForClient function', () => {
+    it('[U02516] should export regenerateMapForClient function', () => {
       expect(typeof mainModule.regenerateMapForClient).toBe('function')
     })
 
-    it('should regenerate map with given parameters', async() => {
+    it('[U02517] should regenerate map with given parameters', async() => {
       const { setMapDimensions } = await import('../../src/config.js')
       const { generateMap } = await import('../../src/gameSetup.js')
       const { gameState } = await import('../../src/gameState.js')
@@ -355,7 +355,7 @@ describe('main.js', () => {
       expect(gameState.playerCount).toBe(3)
     })
 
-    it('should clear unit wrecks when regenerating', async() => {
+    it('[U02518] should clear unit wrecks when regenerating', async() => {
       const { gameState } = await import('../../src/gameState.js')
       gameState.unitWrecks = [{ id: 'wreck1' }]
 
@@ -364,7 +364,7 @@ describe('main.js', () => {
       expect(gameState.unitWrecks).toEqual([])
     })
 
-    it('should initialize shadow of war for new map', async() => {
+    it('[U02519] should initialize shadow of war for new map', async() => {
       const { initializeShadowOfWar } = await import('../../src/game/shadowOfWar.js')
 
       mainModule.regenerateMapForClient('seed', 100, 100, 2)
@@ -372,7 +372,7 @@ describe('main.js', () => {
       expect(initializeShadowOfWar).toHaveBeenCalled()
     })
 
-    it('should invalidate map renderer chunks', async() => {
+    it('[U02520] should invalidate map renderer chunks', async() => {
       const { getMapRenderer } = await import('../../src/rendering.js')
       const mockInvalidate = vi.fn()
       getMapRenderer.mockReturnValue({ invalidateAllChunks: mockInvalidate })
@@ -384,25 +384,25 @@ describe('main.js', () => {
   })
 
   describe('buildingCosts', () => {
-    it('should export buildingCosts object', () => {
+    it('[U02521] should export buildingCosts object', () => {
       expect(mainModule.buildingCosts).toBeDefined()
       expect(typeof mainModule.buildingCosts).toBe('object')
     })
 
-    it('should contain costs from buildingData', () => {
+    it('[U02522] should contain costs from buildingData', () => {
       // The costs should be populated from buildingData
       expect(mainModule.buildingCosts['constructionYard']).toBe(5000)
       expect(mainModule.buildingCosts['vehicleFactory']).toBe(2000)
       expect(mainModule.buildingCosts['powerPlant']).toBe(500)
     })
 
-    it('should have factory repair cost', () => {
+    it('[U02523] should have factory repair cost', () => {
       expect(mainModule.buildingCosts['factory']).toBe(5000)
     })
   })
 
   describe('unitCosts', () => {
-    it('should re-export unitCosts', () => {
+    it('[U02524] should re-export unitCosts', () => {
       expect(mainModule.unitCosts).toBeDefined()
       expect(mainModule.unitCosts.tank).toBe(1000)
       expect(mainModule.unitCosts.harvester).toBe(1500)
@@ -410,23 +410,23 @@ describe('main.js', () => {
   })
 
   describe('showNotification', () => {
-    it('should re-export showNotification', () => {
+    it('[U02525] should re-export showNotification', () => {
       expect(typeof mainModule.showNotification).toBe('function')
     })
   })
 
   describe('updateVehicleButtonStates', () => {
-    it('should export updateVehicleButtonStates for backward compatibility', () => {
+    it('[U02526] should export updateVehicleButtonStates for backward compatibility', () => {
       expect(typeof mainModule.updateVehicleButtonStates).toBe('function')
     })
 
-    it('should not throw when called', () => {
+    it('[U02527] should not throw when called', () => {
       expect(() => {
         mainModule.updateVehicleButtonStates()
       }).not.toThrow()
     })
 
-    it('should warn when called', () => {
+    it('[U02528] should warn when called', () => {
       const warnSpy = vi.spyOn(window.logger, 'warn')
 
       mainModule.updateVehicleButtonStates()
@@ -438,17 +438,17 @@ describe('main.js', () => {
   })
 
   describe('updateBuildingButtonStates', () => {
-    it('should export updateBuildingButtonStates for backward compatibility', () => {
+    it('[U02529] should export updateBuildingButtonStates for backward compatibility', () => {
       expect(typeof mainModule.updateBuildingButtonStates).toBe('function')
     })
 
-    it('should not throw when called', () => {
+    it('[U02530] should not throw when called', () => {
       expect(() => {
         mainModule.updateBuildingButtonStates()
       }).not.toThrow()
     })
 
-    it('should warn when called', () => {
+    it('[U02531] should warn when called', () => {
       const warnSpy = vi.spyOn(window.logger, 'warn')
 
       mainModule.updateBuildingButtonStates()
@@ -460,33 +460,33 @@ describe('main.js', () => {
   })
 
   describe('Storage keys', () => {
-    it('should export MAP_SEED_STORAGE_KEY', () => {
+    it('[U02532] should export MAP_SEED_STORAGE_KEY', () => {
       expect(mainModule.MAP_SEED_STORAGE_KEY).toBe('rts-map-seed')
     })
 
-    it('should export MAP_WIDTH_TILES_STORAGE_KEY', () => {
+    it('[U02533] should export MAP_WIDTH_TILES_STORAGE_KEY', () => {
       expect(mainModule.MAP_WIDTH_TILES_STORAGE_KEY).toBe('rts-map-width-tiles')
     })
 
-    it('should export MAP_HEIGHT_TILES_STORAGE_KEY', () => {
+    it('[U02534] should export MAP_HEIGHT_TILES_STORAGE_KEY', () => {
       expect(mainModule.MAP_HEIGHT_TILES_STORAGE_KEY).toBe('rts-map-height-tiles')
     })
   })
 
   describe('Module initialization', () => {
-    it('should register map editor rendering', async() => {
+    it('[U02535] should register map editor rendering', async() => {
       const { registerMapEditorRendering } = await import('../../src/mapEditor.js')
       expect(registerMapEditorRendering).toHaveBeenCalled()
     })
 
-    it('should initialize mobile viewport lock', async() => {
+    it('[U02536] should initialize mobile viewport lock', async() => {
       const { initializeMobileViewportLock } = await import('../../src/ui/mobileViewportLock.js')
       expect(initializeMobileViewportLock).toHaveBeenCalled()
     })
   })
 
   describe('updateTouchClass', () => {
-    it('should not throw when called', () => {
+    it('[U02537] should not throw when called', () => {
       expect(() => {
         mainModule.updateTouchClass()
       }).not.toThrow()
@@ -494,7 +494,7 @@ describe('main.js', () => {
   })
 
   describe('updateStandaloneClass', () => {
-    it('should not throw when called', () => {
+    it('[U02538] should not throw when called', () => {
       expect(() => {
         mainModule.updateStandaloneClass()
       }).not.toThrow()
@@ -502,31 +502,31 @@ describe('main.js', () => {
   })
 
   describe('sanitizeMapDimension', () => {
-    it('should return parsed integer when valid', () => {
+    it('[U02539] should return parsed integer when valid', () => {
       expect(mainModule.sanitizeMapDimension('100', 50)).toBe(100)
     })
 
-    it('should return minimum value when below minimum', () => {
+    it('[U02540] should return minimum value when below minimum', () => {
       expect(mainModule.sanitizeMapDimension('10', 50)).toBe(50) // MIN_MAP_TILES
     })
 
-    it('should return fallback when value is invalid', () => {
+    it('[U02541] should return fallback when value is invalid', () => {
       expect(mainModule.sanitizeMapDimension('invalid', 75)).toBe(75)
     })
 
-    it('should handle float values by flooring', () => {
+    it('[U02542] should handle float values by flooring', () => {
       expect(mainModule.sanitizeMapDimension('100.7', 50)).toBe(100)
     })
   })
 
   describe('resolveMapSeed', () => {
-    it('should return sanitized seed as string', () => {
+    it('[U02543] should return sanitized seed as string', () => {
       const result = mainModule.resolveMapSeed('test-seed')
       expect(typeof result).toBe('string')
       expect(result).toBe('test-seed') // Mocked sanitizeSeed returns the input
     })
 
-    it('should handle random keyword', () => {
+    it('[U02544] should handle random keyword', () => {
       const result = mainModule.resolveMapSeed('random')
       expect(typeof result).toBe('string')
     })
@@ -539,7 +539,7 @@ describe('main.js', () => {
       document.body.innerHTML = ''
     })
 
-    it('should load map seed from localStorage', () => {
+    it('[U02545] should load map seed from localStorage', () => {
       localStorage.setItem('rts-map-seed', 'test-seed')
 
       mainModule.loadPersistedSettings()
@@ -548,7 +548,7 @@ describe('main.js', () => {
       expect(seedInput.value).toBe('test-seed')
     })
 
-    it('should load and validate map dimensions', () => {
+    it('[U02546] should load and validate map dimensions', () => {
       mainModule.loadPersistedSettings()
 
       const widthInput = document.getElementById('mapWidthTiles')
@@ -557,7 +557,7 @@ describe('main.js', () => {
       expect(heightInput.value).toBe('100') // default value
     })
 
-    it('should load player count and validate range', async() => {
+    it('[U02547] should load player count and validate range', async() => {
       localStorage.setItem('rts-player-count', '3')
 
       const { gameState } = await import('../../src/gameState.js')
@@ -569,7 +569,7 @@ describe('main.js', () => {
       expect(gameState.playerCount).toBe(3)
     })
 
-    it('should handle invalid player count', () => {
+    it('[U02548] should handle invalid player count', () => {
       localStorage.setItem('rts-player-count', '10')
 
       mainModule.loadPersistedSettings()
@@ -578,7 +578,7 @@ describe('main.js', () => {
       expect(playerInput.value).toBe('2') // should remain default
     })
 
-    it('should load shadow of war setting', async() => {
+    it('[U02549] should load shadow of war setting', async() => {
       localStorage.setItem('rts-shadow-of-war-enabled', 'true')
 
       const { gameState } = await import('../../src/gameState.js')
@@ -588,7 +588,7 @@ describe('main.js', () => {
       expect(gameState.shadowOfWarEnabled).toBe(true)
     })
 
-    it('should restore game speed from localStorage', async() => {
+    it('[U02550] should restore game speed from localStorage', async() => {
       localStorage.setItem('rts-game-speed-multiplier', '2.5')
 
       const { gameState } = await import('../../src/gameState.js')

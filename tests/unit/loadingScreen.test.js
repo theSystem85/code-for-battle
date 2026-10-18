@@ -14,7 +14,7 @@ describe('loadingScreen', () => {
     hideLoadingScreen()
   })
 
-  it('shows a determinate loading state the UI can bind to', () => {
+  it('[U02380] shows a determinate loading state the UI can bind to', () => {
     const session = showLoadingScreen({
       phase: 'assets',
       kicker: 'Patrick Beyer Software',
@@ -37,7 +37,7 @@ describe('loadingScreen', () => {
     expect(getLoadingScreenState().visible).toBe(true)
   })
 
-  it('uses an indeterminate standby state when progress is unknown', () => {
+  it('[U02381] uses an indeterminate standby state when progress is unknown', () => {
     showLoadingScreen({
       phase: 'map',
       kicker: 'MAP CONTROL',
@@ -53,7 +53,7 @@ describe('loadingScreen', () => {
     expect(document.getElementById('loadingScreenTrack').getAttribute('aria-valuetext')).toBe('Loading')
   })
 
-  it('hides cleanly and ignores a stale session', () => {
+  it('[U02382] hides cleanly and ignores a stale session', () => {
     const first = showLoadingScreen({ detail: 'First', progress: 0.2 })
     const second = showLoadingScreen({ detail: 'Second', progress: 0.5 })
 
@@ -73,7 +73,7 @@ describe('loadingScreen', () => {
     expect(getLoadingScreenState().visible).toBe(false)
   })
 
-  it('ignores progress updates from an older session', () => {
+  it('[U02383] ignores progress updates from an older session', () => {
     const first = showLoadingScreen({ detail: 'Boot', progress: 0.1 })
     showLoadingScreen({ detail: 'Map', progress: null })
 
@@ -83,7 +83,7 @@ describe('loadingScreen', () => {
     expect(document.getElementById('loadingScreenBar').classList.contains('is-indeterminate')).toBe(true)
   })
 
-  it('runs a reload task after the overlay can paint, then tears it down', async() => {
+  it('[U02384] runs a reload task after the overlay can paint, then tears it down', async() => {
     let sawOverlay = false
 
     const result = await runWithLoadingScreen(() => {
@@ -103,7 +103,7 @@ describe('loadingScreen', () => {
     expect(document.getElementById('loadingScreen').classList.contains('loading-screen--hidden')).toBe(true)
   })
 
-  it('removes the overlay when a reload task fails', async() => {
+  it('[U02385] removes the overlay when a reload task fails', async() => {
     await expect(runWithLoadingScreen(() => {
       throw new Error('regen failed')
     }, {

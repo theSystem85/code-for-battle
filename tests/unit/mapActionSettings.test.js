@@ -9,7 +9,7 @@ afterEach(() => {
   setMapActionLongPressMs(DEFAULT_MAP_ACTION_LONG_PRESS_MS)
 })
 
-it('binds hold duration before opening and tolerates deferred initialization afterward', () => {
+it('[U02560] binds hold duration before opening and tolerates deferred initialization afterward', () => {
   document.body.innerHTML = `<div id="configSettingsModal">
     <input id="settingsMapActionLongPressMs" type="number">
     <button id="configModalCloseBtn">Close</button>

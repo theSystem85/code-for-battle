@@ -12,7 +12,7 @@ function context() {
 }
 
 describe('prepared factory garage rendering', () => {
-  it.each([1, 3])('prepares bounded alpha masks once at DPR %s and reuses them for draws', density => {
+  it.each([1, 3])('[U01553] prepares bounded alpha masks once at DPR %s and reuses them for draws', density => {
     const registry = new PreparedSpriteRegistry({ assetGeneration: 1, density, byteBudget: 1024 * 1024 })
     const source = { width: 96 * density, height: 96 * density }
     registry.register(`test@${density}:building:vehicleFactory:base`, { image: source }, { decodedBytes: 0 })
@@ -46,7 +46,7 @@ describe('prepared factory garage rendering', () => {
 })
 
 describe('clipOutsideFactoryBody', () => {
-  it('clips exiting units with an even-odd mask around the factory body and ignores others', async() => {
+  it('[U01554] clips exiting units with an even-odd mask around the factory body and ignores others', async() => {
     const { clipOutsideFactoryBody } = await import('../../src/rendering/factoryExitRenderer.js')
     const calls = []
     const ctx = new Proxy({}, { get: (_t, key) => (...args) => calls.push([key, ...args]) })

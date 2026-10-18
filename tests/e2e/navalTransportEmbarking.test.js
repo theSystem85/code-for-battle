@@ -193,7 +193,7 @@ test.describe('Naval transport embarking prepared scenarios', () => {
     await page.waitForFunction(() => Boolean(window.gameInstance?.gameLoop && window.gameState?.gameStarted), null, { timeout: 30000 })
   })
 
-  test('boards every prepared ferry and hovercraft scenario without guard fallback or dangling cancellation state', async({ page }) => {
+  test('[E00077] boards every prepared ferry and hovercraft scenario without guard fallback or dangling cancellation state', async({ page }) => {
     test.setTimeout(120000)
 
     await setupScenario(page, {

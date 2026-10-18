@@ -3,7 +3,7 @@ import { shorelineCornerMask, shorelineCoverage } from '../../src/rendering/orga
 
 describe('organic shoreline junctions', () => {
   for (const beachPattern of [false, 0, 1, 2, 3, 4, 5]) for (const inward of [false, true]) for (let rotation = 0; rotation < 4; rotation++) {
-    it(`${beachPattern === false ? 'smooth' : `beach variant ${beachPattern}`} ${inward ? 'inward' : 'outward'} corner ${rotation} connects across every edge`, () => {
+    it(`[U04014] ${beachPattern === false ? 'smooth' : `beach variant ${beachPattern}`} ${inward ? 'inward' : 'outward'} corner ${rotation} connects across every edge`, () => {
       let grid = Array.from({ length: 7 }, (_, y) => Array.from({ length: 7 }, (_, x) => ({
         type: ((x < 3 && y < 3) !== inward) ? 'land' : 'water'
       })))
@@ -24,7 +24,7 @@ describe('organic shoreline junctions', () => {
     })
   }
 
-  it('moves the visibly irregular contour to straight sand/water edges', () => {
+  it('[U04015] moves the visibly irregular contour to straight sand/water edges', () => {
     const straightTopLandMask = 3
     const smoothSamples = [0.125, 0.375, 0.625, 0.875].map(u => shorelineCoverage(straightTopLandMask, u, 0.5))
     const beachSamples = [0.125, 0.375, 0.625, 0.875].map(u => shorelineCoverage(straightTopLandMask, u, 0.5, 0.2, 0))
@@ -33,7 +33,7 @@ describe('organic shoreline junctions', () => {
     expect(new Set(beachSamples.map(value => value.toFixed(8))).size).toBeGreaterThan(1)
   })
 
-  it('keeps independently selected beach variants aligned at shared edges', () => {
+  it('[U04016] keeps independently selected beach variants aligned at shared edges', () => {
     for (let firstVariant = 0; firstVariant < 6; firstVariant++) for (let secondVariant = 0; secondVariant < 6; secondVariant++) {
       for (let i = 0; i <= 32; i++) {
         const t = i / 32

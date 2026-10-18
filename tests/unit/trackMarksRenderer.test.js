@@ -17,7 +17,7 @@ function fakeCtx() {
 }
 
 describe('TrackMarksRenderer memory', () => {
-  it('bakes visible chunks and frees canvases of emptied chunks', () => {
+  it('[U04485] bakes visible chunks and frees canvases of emptied chunks', () => {
     globalThis.HTMLCanvasElement.prototype.getContext = vi.fn(() => fakeCtx())
     trackMarkSettings.enabled = true
     trackMarkSettings.fade = true

@@ -32,7 +32,7 @@ function makeGrid(width, height, cellAt) {
 }
 
 describe('decoration layout', () => {
-  it('splits groups into per-biome multi-tile and 1x1 pools, respecting seasons', () => {
+  it('[U01196] splits groups into per-biome multi-tile and 1x1 pools, respecting seasons', () => {
     const pools = buildDecorationPools(GROUPS)
     expect(pools.grass.multi.map(g => g.groupLabel)).toEqual(expect.arrayContaining(['forest', 'lake', 'logs']))
     expect(pools.grass.multi.map(g => g.groupLabel)).not.toContain('springForest')
@@ -43,14 +43,14 @@ describe('decoration layout', () => {
     expect(pools.grass.multi[0].width * pools.grass.multi[0].height).toBe(9)
   })
 
-  it('drops universal sprites that are mostly painted ground', () => {
+  it('[U01197] drops universal sprites that are mostly painted ground', () => {
     const clearing = { ...group('clearing', 3, 3, ['universal', 'decorative']), coverage: 0.9 }
     const logs = { ...group('logs2', 2, 1, ['universal', 'decorative']), coverage: 0.2 }
     const pools = buildDecorationPools([clearing, logs])
     expect(pools.snow.multi.map(g => g.groupLabel)).toEqual(['logs2'])
   })
 
-  it('places multi-tile sprites first without overlaps, inside one biome, deterministically', () => {
+  it('[U01198] places multi-tile sprites first without overlaps, inside one biome, deterministically', () => {
     const pools = buildDecorationPools(GROUPS)
     const grid = makeGrid(80, 80, (x, y) => ({
       type: (x === 40 || y === 40) ? 'street' : 'land',
@@ -86,7 +86,7 @@ describe('decoration layout', () => {
     expect(cell.offsetX).toBe(first.group.width - 1)
   })
 
-  it('skips ore, buildings and airstrip cells and leaves undecorated cells empty', () => {
+  it('[U01199] skips ore, buildings and airstrip cells and leaves undecorated cells empty', () => {
     const pools = buildDecorationPools(GROUPS)
     const grid = makeGrid(50, 50, (x) => ({ type: 'land', biome: 'grass', ore: x % 2 === 0 }))
     const layout = buildDecorationLayout(grid, pools)
@@ -98,7 +98,7 @@ describe('decoration layout', () => {
     expect(layout.cells.some(cell => cell === null)).toBe(true)
   })
 
-  it('stays fast on a large map', () => {
+  it('[U01200] stays fast on a large map', () => {
     const pools = buildDecorationPools(GROUPS)
     const grid = makeGrid(300, 300, (x, y) => ({ type: (x * y) % 17 === 0 ? 'water' : 'land', biome: x < 150 ? 'grass' : 'snow' }))
     const start = performance.now()
@@ -108,7 +108,7 @@ describe('decoration layout', () => {
 })
 
 
-it('clusters ruins deterministically on matching land with minimum spacing', () => {
+it('[U01201] clusters ruins deterministically on matching land with minimum spacing', () => {
   const grid = makeGrid(80, 80, x => ({ type: 'land', biome: x < 40 ? 'grass' : 'soil' }))
   const clusters = buildRuinClusters(grid, { salt: 42, biomes: ['grass'], count: 3, radius: 7 })
   expect(buildRuinClusters(grid, { salt: 42, biomes: ['grass'], count: 3, radius: 7 })).toEqual(clusters)

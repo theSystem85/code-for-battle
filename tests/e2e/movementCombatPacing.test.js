@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 
 test.use({ deviceScaleFactor: 2 })
 
-test('combat keeps moving and firing, and fractional scrolling aligns terrain with sprites', async({ page }) => {
+test('[E00073] combat keeps moving and firing, and fractional scrolling aligns terrain with sprites', async({ page }) => {
   const errors = []
   page.on('pageerror', error => {
     errors.push(error.message)

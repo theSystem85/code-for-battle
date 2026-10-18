@@ -6,7 +6,7 @@ afterEach(() => {
   delete window.__SSE__
 })
 
-it('selects and removes full sprite spans, compacts tags and retains stable imported IDs', async() => {
+it('[U04170] selects and removes full sprite spans, compacts tags and retains stable imported IDs', async() => {
   document.body.innerHTML = '<main><aside></aside><div class="sprite-sheet-editor__workspace"><div id="wrap"><div id="viewport"><canvas></canvas></div></div></div></main>'
   const root = document.querySelector('main')
   const image = document.querySelector('canvas')

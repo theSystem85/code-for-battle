@@ -27,13 +27,13 @@ function button(widthAt) {
   return text
 }
 
-it('keeps the 7 px label when it already fits inside the circle', () => {
+it('[U02557] keeps the 7 px label when it already fits inside the circle', () => {
   const text = button(size => size * 5)
   fitMapActionLabels(document.body)
   expect(text.style.fontSize).toBe('7px')
 })
 
-it('shrinks long labels until every line box is inside the circle', () => {
+it('[U02558] shrinks long labels until every line box is inside the circle', () => {
   const text = button(size => size * 6.5)
   fitMapActionLabels(document.body)
   expect(parseFloat(text.style.fontSize)).toBeLessThan(7)
@@ -41,7 +41,7 @@ it('shrinks long labels until every line box is inside the circle', () => {
   expect(Math.hypot(half, 4)).toBeLessThanOrEqual(22 - 1.5)
 })
 
-it('allows a mid-word break only when the minimum size still overflows', () => {
+it('[U02559] allows a mid-word break only when the minimum size still overflows', () => {
   const text = button(() => 60)
   fitMapActionLabels(document.body)
   expect(text.style.fontSize).toBe('5px')

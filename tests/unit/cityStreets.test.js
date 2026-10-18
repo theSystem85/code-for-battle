@@ -25,7 +25,7 @@ function cityTiles(layout) {
 }
 
 describe('city streets', () => {
-  it('lays streets between city buildings without covering any building', () => {
+  it('[U00866] lays streets between city buildings without covering any building', () => {
     const { map, pools } = fixture()
     const layout = buildDecorationLayout(map, pools, options)
     const houses = cityTiles(layout)
@@ -45,7 +45,7 @@ describe('city streets', () => {
     }
   })
 
-  it('connects every city street to the generated road network', () => {
+  it('[U00867] connects every city street to the generated road network', () => {
     const { map, pools } = fixture()
     const layout = buildDecorationLayout(map, pools, options)
     prepareCityBuildings(map, layout)
@@ -69,7 +69,7 @@ describe('city streets', () => {
     for (const offset of layout.cityStreets) expect(seen.has(offset)).toBe(true)
   })
 
-  it('is idempotent once streets are stamped and reverts them when cities are disabled', () => {
+  it('[U00868] is idempotent once streets are stamped and reverts them when cities are disabled', () => {
     const { map, pools } = fixture()
     const layout = buildDecorationLayout(map, pools, options)
     expect(applyCityStreets(map, layout)).toBe(layout.cityStreets.length)
@@ -86,7 +86,7 @@ describe('city streets', () => {
     expect(map.flat().filter(tile => tile.type === 'street')).toHaveLength(64)
   })
 
-  it('lines every house up with one full side facing a street (no interior blocks)', () => {
+  it('[U00869] lines every house up with one full side facing a street (no interior blocks)', () => {
     const { map, pools } = fixture()
     const layout = buildDecorationLayout(map, pools, options)
     const streets = new Set(layout.cityStreets)
@@ -99,7 +99,7 @@ describe('city streets', () => {
     }
   })
 
-  it('plans one curved main street per city with 1-4 side streets, deterministically', () => {
+  it('[U00870] plans one curved main street per city with 1-4 side streets, deterministically', () => {
     const { map } = fixture()
     const cities = buildRuinClusters(map, { salt: 7919, count: 2, radius: 8, minDistance: 1 })
     const plan = planOrganicCityStreets(map, cities, { salt: 5 })
@@ -129,7 +129,7 @@ describe('city streets', () => {
     expect(planOrganicCityStreets(map, cities, { salt: 5 }).cities).toEqual(plan.cities)
   })
 
-  it('bends a street around water instead of crossing it', () => {
+  it('[U00871] bends a street around water instead of crossing it', () => {
     const { map } = fixture()
     const cities = { radius: 8, centers: [{ x: 30, y: 30, biome: 'grass' }] }
     const straight = planOrganicCityStreets(map, cities, { salt: 1 })

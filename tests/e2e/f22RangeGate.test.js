@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 
 test.describe('F22 firing range gate', () => {
-  test('F22 only fires when target is inside range and never exceeds 20-tile range cap', async({ page }) => {
+  test('[E00039] F22 only fires when target is inside range and never exceeds 20-tile range cap', async({ page }) => {
     test.setTimeout(90000)
 
     await page.addInitScript(() => {

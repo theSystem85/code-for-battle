@@ -104,13 +104,13 @@ describe('unitMovement.js', () => {
   })
 
   describe('updateUnitMovement', () => {
-    it('should clean up destroyed units', () => {
+    it('[U04755] should clean up destroyed units', () => {
       const units = [{ health: 100, x: 32, y: 32, tileX: 1, tileY: 1 }]
       updateUnitMovement(units, mockMapGrid, mockOccupancyMap, mockGameState, performance.now())
       expect(cleanupDestroyedSelectedUnits).toHaveBeenCalled()
     })
 
-    it('should skip units with health <= 0 and leave cleanup to cleanupDestroyedUnits', () => {
+    it('[U04756] should skip units with health <= 0 and leave cleanup to cleanupDestroyedUnits', () => {
       const units = [
         { id: 1, health: 0, x: 32, y: 32, tileX: 1, tileY: 1, occupancyRemoved: false },
         { id: 2, health: 50, x: 64, y: 64, tileX: 2, tileY: 2 }
@@ -121,13 +121,13 @@ describe('unitMovement.js', () => {
       expect(units[1].id).toBe(2)
     })
 
-    it('should initialize movement system for all units', () => {
+    it('[U04757] should initialize movement system for all units', () => {
       const units = [{ health: 100, x: 32, y: 32, tileX: 1, tileY: 1 }]
       updateUnitMovement(units, mockMapGrid, mockOccupancyMap, mockGameState, performance.now())
       expect(initializeUnitMovement).toHaveBeenCalledWith(units[0])
     })
 
-    it('should clear destroyed targets from units', () => {
+    it('[U04758] should clear destroyed targets from units', () => {
       const unit = {
         health: 100,
         x: 32,
@@ -141,13 +141,13 @@ describe('unitMovement.js', () => {
       expect(unit.target).toBeNull()
     })
 
-    it('should update unit position through unified movement system', () => {
+    it('[U04759] should update unit position through unified movement system', () => {
       const units = [{ health: 100, x: 32, y: 32, tileX: 1, tileY: 1 }]
       updateUnitMovement(units, mockMapGrid, mockOccupancyMap, mockGameState, performance.now())
       expect(updateUnitPosition).toHaveBeenCalled()
     })
 
-    it('should clear local avoidance state after dodge completion', () => {
+    it('[U04760] should clear local avoidance state after dodge completion', () => {
       const unit = {
         health: 100,
         x: 32,
@@ -164,7 +164,7 @@ describe('unitMovement.js', () => {
       expect(unit.localAvoidanceRemainingSteps).toBe(0)
     })
 
-    it('should clamp tile indices to map bounds', () => {
+    it('[U04761] should clamp tile indices to map bounds', () => {
       const unit = {
         health: 100,
         x: -100,
@@ -178,7 +178,7 @@ describe('unitMovement.js', () => {
     })
 
 
-    it('suppresses attack auto-chase for 5s while recently remote-controlled unit remains selected', () => {
+    it('[U04762] suppresses attack auto-chase for 5s while recently remote-controlled unit remains selected', () => {
       const now = 10_000
       const target = { id: 'enemy-1', x: 400, y: 400, tileX: 12, tileY: 12, health: 100 }
       const unit = {
@@ -202,7 +202,7 @@ describe('unitMovement.js', () => {
       expect(unit.moveTarget).toBeNull()
     })
 
-    it('allows attack auto-chase after deselection even within the 5s suppression window', () => {
+    it('[U04763] allows attack auto-chase after deselection even within the 5s suppression window', () => {
       const now = 10_000
       const target = { id: 'enemy-1', x: 400, y: 400, tileX: 12, tileY: 12, health: 100 }
       const unit = {
@@ -226,7 +226,7 @@ describe('unitMovement.js', () => {
       expect(unit.moveTarget).toEqual({ x: 12, y: 12 })
     })
 
-    it('keeps the empty path stable while holding a target in firing range', () => {
+    it('[U04764] keeps the empty path stable while holding a target in firing range', () => {
       const unit = {
         id: 'stationary-shooter', owner: 'player1', health: 100, type: 'tank_v1',
         x: 32, y: 32, tileX: 1, tileY: 1, path: [{ x: 2, y: 1 }],
@@ -243,7 +243,7 @@ describe('unitMovement.js', () => {
       }
     })
 
-    it('sets an attack move path when target is out of range', () => {
+    it('[U04765] sets an attack move path when target is out of range', () => {
       const target = { id: 'enemy-1', x: 400, y: 400, tileX: 12, tileY: 12, health: 100 }
       const unit = {
         health: 100,
@@ -263,7 +263,7 @@ describe('unitMovement.js', () => {
       expect(unit.moveTarget).toBeTruthy()
     })
 
-    it('recovers a missing attack path for AI-controlled units with a live target', () => {
+    it('[U04766] recovers a missing attack path for AI-controlled units with a live target', () => {
       const target = { id: 'enemy-1', x: 400, y: 400, tileX: 12, tileY: 12, health: 100 }
       const unit = {
         health: 100,
@@ -286,7 +286,7 @@ describe('unitMovement.js', () => {
       expect(unit.moveTarget).toEqual({ x: 12, y: 12 })
     })
 
-    it('clears moveTarget when close enough and no path remains', () => {
+    it('[U04767] clears moveTarget when close enough and no path remains', () => {
       const unit = {
         health: 100,
         x: 64,
@@ -302,7 +302,7 @@ describe('unitMovement.js', () => {
       expect(unit.moveTarget).toBeNull()
     })
 
-    it('should apply speed modifiers', () => {
+    it('[U04768] should apply speed modifiers', () => {
       const unit = {
         health: 100,
         x: 32,
@@ -315,7 +315,7 @@ describe('unitMovement.js', () => {
       expect(unit.speedModifier).toBe(1.5)
     })
 
-    it('should set default speedModifier if not defined', () => {
+    it('[U04769] should set default speedModifier if not defined', () => {
       const unit = {
         health: 100,
         x: 32,
@@ -327,7 +327,7 @@ describe('unitMovement.js', () => {
       expect(unit.speedModifier).toBe(1)
     })
 
-    it('should handle retreat behavior', () => {
+    it('[U04770] should handle retreat behavior', () => {
       vi.mocked(shouldExitRetreat).mockReturnValueOnce(true)
       const unit = {
         health: 100,
@@ -342,7 +342,7 @@ describe('unitMovement.js', () => {
       expect(updateRetreatBehavior).toHaveBeenCalled()
     })
 
-    it('should defer cheatSystem destroyed-unit tracking cleanup to cleanupDestroyedUnits', () => {
+    it('[U04771] should defer cheatSystem destroyed-unit tracking cleanup to cleanupDestroyedUnits', () => {
       const mockRemoveUnit = vi.fn()
       window.cheatSystem = { removeUnitFromTracking: mockRemoveUnit }
       const unit = { id: 'test-id', health: 0, x: 32, y: 32, tileX: 1, tileY: 1, occupancyRemoved: false }
@@ -357,7 +357,7 @@ describe('unitMovement.js', () => {
       vi.mocked(findPath).mockReturnValue([{ x: 1, y: 1 }, { x: 2, y: 2 }])
     })
 
-    it('should calculate paths for units with moveTarget', () => {
+    it('[U04772] should calculate paths for units with moveTarget', () => {
       const unit = {
         tileX: 1,
         tileY: 1,
@@ -370,7 +370,7 @@ describe('unitMovement.js', () => {
       expect(findPath).toHaveBeenCalled()
     })
 
-    it('should not recalculate path if cooldown not passed', () => {
+    it('[U04773] should not recalculate path if cooldown not passed', () => {
       const unit = {
         tileX: 1,
         tileY: 1,
@@ -383,7 +383,7 @@ describe('unitMovement.js', () => {
       expect(findPath).not.toHaveBeenCalled()
     })
 
-    it('should skip units without moveTarget', () => {
+    it('[U04774] should skip units without moveTarget', () => {
       const unit = {
         tileX: 1,
         tileY: 1,
@@ -395,7 +395,7 @@ describe('unitMovement.js', () => {
       expect(findPath).not.toHaveBeenCalled()
     })
 
-    it('should handle formation offsets', () => {
+    it('[U04775] should handle formation offsets', () => {
       const unit = {
         tileX: 1,
         tileY: 1,
@@ -409,7 +409,7 @@ describe('unitMovement.js', () => {
       expect(findPath).toHaveBeenCalled()
     })
 
-    it('should skip sweepingOverrideMovement units', () => {
+    it('[U04776] should skip sweepingOverrideMovement units', () => {
       const unit = {
         tileX: 1,
         tileY: 1,
@@ -423,7 +423,7 @@ describe('unitMovement.js', () => {
       expect(findPath).not.toHaveBeenCalled()
     })
 
-    it('should set path excluding start position', () => {
+    it('[U04777] should set path excluding start position', () => {
       vi.mocked(findPath).mockReturnValue([{ x: 1, y: 1 }, { x: 2, y: 2 }, { x: 3, y: 3 }])
       const unit = {
         tileX: 1,
@@ -437,7 +437,7 @@ describe('unitMovement.js', () => {
       expect(unit.path).toEqual([{ x: 2, y: 2 }, { x: 3, y: 3 }])
     })
 
-    it('clears moveTarget when already at destination', () => {
+    it('[U04778] clears moveTarget when already at destination', () => {
       vi.mocked(findPath).mockReturnValue([{ x: 1, y: 1 }])
       const unit = {
         tileX: 1,
@@ -451,7 +451,7 @@ describe('unitMovement.js', () => {
       expect(unit.moveTarget).toBeNull()
     })
 
-    it('skips attack mode units (handled by updateUnitMovement main loop instead)', () => {
+    it('[U04779] skips attack mode units (handled by updateUnitMovement main loop instead)', () => {
       const unit = {
         tileX: 1,
         tileY: 1,
@@ -468,7 +468,7 @@ describe('unitMovement.js', () => {
   })
 
   describe('updateSpawnExit', () => {
-    it('should find exit path for units spawned in factory', () => {
+    it('[U04780] should find exit path for units spawned in factory', () => {
       vi.mocked(logic.findAdjacentTile).mockReturnValue({ x: 3, y: 3 })
       vi.mocked(findPath).mockReturnValue([{ x: 2, y: 2 }, { x: 3, y: 3 }])
 
@@ -494,7 +494,7 @@ describe('unitMovement.js', () => {
       expect(findPath).toHaveBeenCalled()
     })
 
-    it('should clear spawnedInFactory flag when unit leaves factory', () => {
+    it('[U04781] should clear spawnedInFactory flag when unit leaves factory', () => {
       const factory = {
         id: 'player1',
         owner: 'player1',
@@ -517,7 +517,7 @@ describe('unitMovement.js', () => {
       expect(unit.spawnedInFactory).toBe(false)
     })
 
-    it('should respect holdInFactory for AI units', () => {
+    it('[U04782] should respect holdInFactory for AI units', () => {
       vi.mocked(findPath).mockReturnValue([{ x: 2, y: 2 }, { x: 3, y: 3 }])
 
       const factory = {
@@ -546,7 +546,7 @@ describe('unitMovement.js', () => {
   })
 
   describe('rotation behavior', () => {
-    it('should initialize rotation properties if missing', () => {
+    it('[U04783] should initialize rotation properties if missing', () => {
       const unit = {
         health: 100,
         x: 32,
@@ -560,7 +560,7 @@ describe('unitMovement.js', () => {
       expect(unit.rotationSpeed).toBeDefined()
     })
 
-    it('should update unit rotation when path exists', () => {
+    it('[U04784] should update unit rotation when path exists', () => {
       const unit = {
         health: 100,
         x: 32,
@@ -576,7 +576,7 @@ describe('unitMovement.js', () => {
       expect(unit.direction).toBeDefined()
     })
 
-    it('settles naval rotation at a negative target heading and clears angular velocity after movement', () => {
+    it('[U04785] settles naval rotation at a negative target heading and clears angular velocity after movement', () => {
       const unit = {
         id: 'destroyer-rotation',
         type: 'destroyer',
@@ -610,7 +610,7 @@ describe('unitMovement.js', () => {
       expect(unit.isRotating).toBe(false)
     })
 
-    it('aims a Destroyer gun at its assigned combat target', () => {
+    it('[U04786] aims a Destroyer gun at its assigned combat target', () => {
       const target = {
         id: 'destroyer-target',
         health: 100,
@@ -644,7 +644,7 @@ describe('unitMovement.js', () => {
       expect(destroyer.turretDirection).toBeCloseTo(Math.PI / 2, 5)
     })
 
-    it('should handle howitzer rotation locked to body', () => {
+    it('[U04787] should handle howitzer rotation locked to body', () => {
       const unit = {
         health: 100,
         x: 32,

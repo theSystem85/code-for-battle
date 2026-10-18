@@ -144,7 +144,7 @@ describe('Renderer airborne layering', () => {
     ;({ Renderer } = await import('../../src/rendering/renderer.js'))
   })
 
-  it('partitions airborne and carrier-deck units into the top render layer', () => {
+  it('[U03713] partitions airborne and carrier-deck units into the top render layer', () => {
     const renderer = new Renderer()
     const exitingTank = { id: 'exiting', type: 'tank_v1', x: 0, y: 0, factoryExit: { elapsed: 800, duration: 1200, phase: 'waiting' } }
     const groundedTank = { id: 'ground-1', type: 'tank_v1', x: 0, y: 0, flightState: 'grounded' }
@@ -168,7 +168,7 @@ describe('Renderer airborne layering', () => {
     expect(result.airborneUnits.map(unit => unit.id)).toEqual(['air-1', 'deck-1'])
   })
 
-  it('reuses frame lists and only builds the shared ID index when a target needs it', () => {
+  it('[U03714] reuses frame lists and only builds the shared ID index when a target needs it', () => {
     const renderer = new Renderer()
     const first = renderer.partitionUnitsByRenderLayer([{ id: 'one', type: 'tank_v1' }])
     const groundedIdentity = first.groundedUnits
@@ -186,7 +186,7 @@ describe('Renderer airborne layering', () => {
     expect(index.get('unit:target')).toBe(target)
   })
 
-  it('renders airborne units after grounded units and building overlays', () => {
+  it('[U03715] renders airborne units after grounded units and building overlays', () => {
     const renderer = new Renderer()
     const callOrder = []
     const exitingTank = { id: 'exiting', type: 'tank_v1', x: 0, y: 0, factoryExit: { elapsed: 800, duration: 1200, phase: 'waiting' } }
@@ -272,7 +272,7 @@ describe('Renderer airborne layering', () => {
     expect(callOrder.indexOf('unit-bases:air-1,deck-1')).toBeLessThan(callOrder.indexOf('unit-overlays:air-1,deck-1'))
   })
 
-  it('keeps GPU procedural water active in water-only mode when custom sheets have no water tags', () => {
+  it('[U03716] keeps GPU procedural water active in water-only mode when custom sheets have no water tags', () => {
     const renderer = new Renderer()
     const gameCtx = {
       clearRect: vi.fn(),
@@ -336,7 +336,7 @@ describe('Renderer airborne layering', () => {
     )
   })
 
-  it.each([false, true])('isolates default ground and procedural water with custom checkbox %s and no selected sheets', (customCheckbox) => {
+  it.each([false, true])('[U03717] isolates default ground and procedural water with custom checkbox %s and no selected sheets', (customCheckbox) => {
     const renderer = new Renderer()
     renderer.textureManager.integratedSpriteSheetMode = false
     const gameCtx = {
@@ -407,7 +407,7 @@ describe('Renderer airborne layering', () => {
     }))
   })
 
-  it('does not use legacy GPU terrain when integrated custom water tiles are available', () => {
+  it('[U03718] does not use legacy GPU terrain when integrated custom water tiles are available', () => {
     const renderer = new Renderer()
     const gameCtx = {
       clearRect: vi.fn(),

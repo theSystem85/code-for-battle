@@ -23,7 +23,7 @@ test.describe('Enemy F22 airstrike behavior', () => {
     })
   })
 
-  test('enemy F22 acquires a human target and starts takeoff to attack', async({ page }) => {
+  test('[E00025] enemy F22 acquires a human target and starts takeoff to attack', async({ page }) => {
     test.setTimeout(120000)
 
     await page.goto('/?seed=13')

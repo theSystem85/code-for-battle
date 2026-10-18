@@ -13,7 +13,7 @@ async function applyMapSettings(page) {
 }
 
 test.describe('Map generation ore field count rules', () => {
-  test('supports OFC=0 and applies center/near/spread placement rules with immediate map updates', async({ page }) => {
+  test('[E00065] supports OFC=0 and applies center/near/spread placement rules with immediate map updates', async({ page }) => {
     await page.goto('/?seed=11&players=4&oreFieldCount=0')
     await page.waitForSelector('#gameCanvas', { state: 'visible', timeout: 30000 })
     await page.locator('#mapSettingsToggle').click()

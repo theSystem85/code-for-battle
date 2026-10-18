@@ -11,7 +11,7 @@ import {
 
 describe('spatialQuadtree.js', () => {
   describe('AABB', () => {
-    it('should create AABB with correct properties', () => {
+    it('[U04109] should create AABB with correct properties', () => {
       const aabb = new AABB(10, 20, 100, 200)
 
       expect(aabb.x).toBe(10)
@@ -26,7 +26,7 @@ describe('spatialQuadtree.js', () => {
       expect(aabb.bottom).toBe(220)
     })
 
-    it('should check if point is inside AABB', () => {
+    it('[U04110] should check if point is inside AABB', () => {
       const aabb = new AABB(0, 0, 100, 100)
 
       expect(aabb.containsPoint(50, 50)).toBe(true)
@@ -39,7 +39,7 @@ describe('spatialQuadtree.js', () => {
       expect(aabb.containsPoint(50, 101)).toBe(false)
     })
 
-    it('should check circle intersection with AABB', () => {
+    it('[U04111] should check circle intersection with AABB', () => {
       const aabb = new AABB(0, 0, 100, 100)
 
       // Circle inside AABB
@@ -56,7 +56,7 @@ describe('spatialQuadtree.js', () => {
       expect(aabb.intersectsCircle(0, 0, cornerDist * cornerDist + 1)).toBe(true)
     })
 
-    it('should handle edge cases for circle intersection', () => {
+    it('[U04112] should handle edge cases for circle intersection', () => {
       const aabb = new AABB(100, 100, 50, 50)
 
       // Circle at exact edge
@@ -74,7 +74,7 @@ describe('spatialQuadtree.js', () => {
       boundary = new AABB(0, 0, 1000, 1000)
     })
 
-    it('should create node with correct initial state', () => {
+    it('[U04113] should create node with correct initial state', () => {
       const node = new QuadtreeNode(boundary, 16, 0)
 
       expect(node.boundary).toBe(boundary)
@@ -89,7 +89,7 @@ describe('spatialQuadtree.js', () => {
       expect(node.southwest).toBe(null)
     })
 
-    it('should insert units within boundary', () => {
+    it('[U04114] should insert units within boundary', () => {
       const node = new QuadtreeNode(boundary, 16, 0)
       const unit = { id: 'u1', x: 100, y: 100, _cx: 116, _cy: 116 }
 
@@ -100,7 +100,7 @@ describe('spatialQuadtree.js', () => {
       expect(node.units[0]).toBe(unit)
     })
 
-    it('should reject units outside boundary', () => {
+    it('[U04115] should reject units outside boundary', () => {
       const node = new QuadtreeNode(boundary, 16, 0)
       const unit = { id: 'u1', x: 1100, y: 1100, _cx: 1116, _cy: 1116 }
 
@@ -110,7 +110,7 @@ describe('spatialQuadtree.js', () => {
       expect(node.unitCount).toBe(0)
     })
 
-    it('should subdivide when capacity exceeded', () => {
+    it('[U04116] should subdivide when capacity exceeded', () => {
       const node = new QuadtreeNode(boundary, 4, 0)
 
       // Insert 4 units (at capacity)
@@ -128,7 +128,7 @@ describe('spatialQuadtree.js', () => {
       expect(node.southwest).not.toBe(null)
     })
 
-    it('should not subdivide beyond max depth', () => {
+    it('[U04117] should not subdivide beyond max depth', () => {
       const node = new QuadtreeNode(boundary, 2, 6) // depth = 6 (MAX_DEPTH)
 
       // Insert 3 units (exceeds capacity)
@@ -140,7 +140,7 @@ describe('spatialQuadtree.js', () => {
       expect(node.unitCount).toBe(3)
     })
 
-    it('should distribute units to correct quadrants', () => {
+    it('[U04118] should distribute units to correct quadrants', () => {
       const node = new QuadtreeNode(boundary, 2, 0)
 
       // Create units in each quadrant
@@ -161,7 +161,7 @@ describe('spatialQuadtree.js', () => {
       expect(node.southeast.unitCount > 0).toBe(true)
     })
 
-    it('reuses split nodes while preserving fresh-tree query order as units move', () => {
+    it('[U04119] reuses split nodes while preserving fresh-tree query order as units move', () => {
       const retained = new QuadtreeNode(boundary, 2, 0)
       const units = Array.from({ length: 20 }, (_, index) => ({
         id: `retained-${index}`, _cx: 10 + index * 35, _cy: 10 + index * 35
@@ -193,7 +193,7 @@ describe('spatialQuadtree.js', () => {
       expect(retained.northwest).toBeNull()
     })
 
-    it('should query units within circular range', () => {
+    it('[U04120] should query units within circular range', () => {
       const node = new QuadtreeNode(boundary, 16, 0)
 
       // Insert units at various positions
@@ -214,7 +214,7 @@ describe('spatialQuadtree.js', () => {
       expect(results).not.toContain(units[2])
     })
 
-    it('should exclude specified unit from query', () => {
+    it('[U04121] should exclude specified unit from query', () => {
       const node = new QuadtreeNode(boundary, 16, 0)
 
       const units = [
@@ -231,7 +231,7 @@ describe('spatialQuadtree.js', () => {
       expect(results[0].id).toBe('u2')
     })
 
-    it('should query subdivided nodes', () => {
+    it('[U04122] should query subdivided nodes', () => {
       const node = new QuadtreeNode(boundary, 2, 0)
 
       // Insert enough units to trigger subdivision
@@ -251,7 +251,7 @@ describe('spatialQuadtree.js', () => {
       expect(results.length).toBe(2)
     })
 
-    it('should clear all units and children', () => {
+    it('[U04123] should clear all units and children', () => {
       const node = new QuadtreeNode(boundary, 2, 0)
 
       // Insert units to trigger subdivision
@@ -280,7 +280,7 @@ describe('spatialQuadtree.js', () => {
       quadtree = new SpatialQuadtree(3200, 3200, 16)
     })
 
-    it('should create quadtree with correct properties', () => {
+    it('[U04124] should create quadtree with correct properties', () => {
       expect(quadtree.mapWidth).toBe(3200)
       expect(quadtree.mapHeight).toBe(3200)
       expect(quadtree.capacity).toBe(16)
@@ -290,7 +290,7 @@ describe('spatialQuadtree.js', () => {
       expect(quadtree._airResults).toEqual([])
     })
 
-    it('should rebuild quadtree with ground units', () => {
+    it('[U04125] should rebuild quadtree with ground units', () => {
       const units = [
         { id: 'u1', type: 'tank', x: 100, y: 100, health: 100, isAirUnit: false },
         { id: 'u2', type: 'truck', x: 200, y: 200, health: 100, isAirUnit: false }
@@ -303,7 +303,7 @@ describe('spatialQuadtree.js', () => {
       expect(quadtree.groundTree.unitCount > 0 || quadtree.groundTree.divided).toBe(true)
     })
 
-    it('should rebuild quadtree with air units', () => {
+    it('[U04126] should rebuild quadtree with air units', () => {
       const units = [
         { id: 'u1', type: 'apache', x: 100, y: 100, health: 100, isAirUnit: true, flightState: 'airborne' },
         { id: 'u2', type: 'apache', x: 200, y: 200, health: 100, isAirUnit: true, flightState: 'airborne' }
@@ -314,7 +314,7 @@ describe('spatialQuadtree.js', () => {
       expect(quadtree.airTree.unitCount > 0 || quadtree.airTree.divided).toBe(true)
     })
 
-    it('should place grounded air units in ground tree', () => {
+    it('[U04127] should place grounded air units in ground tree', () => {
       const units = [
         { id: 'u1', type: 'apache', x: 100, y: 100, health: 100, isAirUnit: true, flightState: 'grounded' }
       ]
@@ -328,7 +328,7 @@ describe('spatialQuadtree.js', () => {
       expect(airResults.length).toBe(0)
     })
 
-    it('should skip dead units during rebuild', () => {
+    it('[U04128] should skip dead units during rebuild', () => {
       const units = [
         { id: 'u1', type: 'tank', x: 100, y: 100, health: 0, isAirUnit: false },
         { id: 'u2', type: 'tank', x: 200, y: 200, health: 100, isAirUnit: false }
@@ -341,7 +341,7 @@ describe('spatialQuadtree.js', () => {
       expect(results[0].id).toBe('u2')
     })
 
-    it('should query nearby ground units', () => {
+    it('[U04129] should query nearby ground units', () => {
       const units = [
         { id: 'u1', type: 'tank', x: 100, y: 100, health: 100, isAirUnit: false },
         { id: 'u2', type: 'tank', x: 110, y: 110, health: 100, isAirUnit: false },
@@ -358,7 +358,7 @@ describe('spatialQuadtree.js', () => {
       expect(results.some(u => u.id === 'u3')).toBe(false)
     })
 
-    it('should query nearby air units', () => {
+    it('[U04130] should query nearby air units', () => {
       const units = [
         { id: 'u1', type: 'apache', x: 100, y: 100, health: 100, isAirUnit: true, flightState: 'airborne' },
         { id: 'u2', type: 'apache', x: 110, y: 110, health: 100, isAirUnit: true, flightState: 'airborne' },
@@ -372,7 +372,7 @@ describe('spatialQuadtree.js', () => {
       expect(results.length).toBe(2)
     })
 
-    it('should exclude specified unit from query', () => {
+    it('[U04131] should exclude specified unit from query', () => {
       const units = [
         { id: 'u1', type: 'tank', x: 100, y: 100, health: 100, isAirUnit: false },
         { id: 'u2', type: 'tank', x: 110, y: 110, health: 100, isAirUnit: false }
@@ -386,7 +386,7 @@ describe('spatialQuadtree.js', () => {
       expect(results[0].id).toBe('u2')
     })
 
-    it('should reuse result arrays for performance', () => {
+    it('[U04132] should reuse result arrays for performance', () => {
       const units = [
         { id: 'u1', type: 'tank', x: 100, y: 100, health: 100, isAirUnit: false }
       ]
@@ -399,7 +399,7 @@ describe('spatialQuadtree.js', () => {
       expect(results1).toBe(results2) // Same array reference
     })
 
-    it('should query for unit based on airborne state', () => {
+    it('[U04133] should query for unit based on airborne state', () => {
       const groundUnits = [
         { id: 'g1', type: 'tank', x: 100, y: 100, health: 100, isAirUnit: false }
       ]
@@ -418,7 +418,7 @@ describe('spatialQuadtree.js', () => {
       expect(airResults[0].id).toBe('a1')
     })
 
-    it('should handle empty units array', () => {
+    it('[U04134] should handle empty units array', () => {
       quadtree.rebuild([])
 
       const results = quadtree.queryNearbyGround(100, 100, 100)
@@ -426,7 +426,7 @@ describe('spatialQuadtree.js', () => {
       expect(results.length).toBe(0)
     })
 
-    it('should handle null units', () => {
+    it('[U04135] should handle null units', () => {
       const units = [
         null,
         { id: 'u1', type: 'tank', x: 100, y: 100, health: 100, isAirUnit: false },
@@ -448,7 +448,7 @@ describe('spatialQuadtree.js', () => {
       initSpatialQuadtree(3200, 3200)
     })
 
-    it('should initialize singleton quadtree', () => {
+    it('[U04136] should initialize singleton quadtree', () => {
       const instance = initSpatialQuadtree(3200, 3200)
 
       expect(instance).toBeInstanceOf(SpatialQuadtree)
@@ -456,14 +456,14 @@ describe('spatialQuadtree.js', () => {
       expect(instance.mapHeight).toBe(3200)
     })
 
-    it('should get initialized quadtree instance', () => {
+    it('[U04137] should get initialized quadtree instance', () => {
       const instance1 = initSpatialQuadtree(3200, 3200)
       const instance2 = getSpatialQuadtree()
 
       expect(instance1).toBe(instance2)
     })
 
-    it('should return null if not initialized', () => {
+    it('[U04138] should return null if not initialized', () => {
       // Create a fresh test by re-importing (not possible in this context)
       // So we'll just verify getSpatialQuadtree returns something after init
       initSpatialQuadtree(3200, 3200)
@@ -472,7 +472,7 @@ describe('spatialQuadtree.js', () => {
       expect(instance).not.toBe(null)
     })
 
-    it('should rebuild singleton quadtree', () => {
+    it('[U04139] should rebuild singleton quadtree', () => {
       initSpatialQuadtree(3200, 3200)
 
       const units = [
@@ -487,7 +487,7 @@ describe('spatialQuadtree.js', () => {
       expect(results.length).toBe(1)
     })
 
-    it('should handle rebuild without initialized quadtree', () => {
+    it('[U04140] should handle rebuild without initialized quadtree', () => {
       const units = [
         { id: 'u1', type: 'tank', x: 100, y: 100, health: 100, isAirUnit: false }
       ]

@@ -113,7 +113,7 @@ describe('buildingSellHandler.js', () => {
   })
 
   describe('Sell Mode Activation', () => {
-    it('should do nothing when sell mode is not active', () => {
+    it('[U00571] should do nothing when sell mode is not active', () => {
       gameState.sellMode = false
       const building = createTestBuilding('powerPlant', 10, 10, 'player1', mapGrid)
       gameState.buildings.push(building)
@@ -125,7 +125,7 @@ describe('buildingSellHandler.js', () => {
       expect(showNotification).not.toHaveBeenCalled()
     })
 
-    it('should return undefined when sell mode is not active', () => {
+    it('[U00572] should return undefined when sell mode is not active', () => {
       gameState.sellMode = false
       const event = createClickEvent(10, 10)
 
@@ -136,7 +136,7 @@ describe('buildingSellHandler.js', () => {
   })
 
   describe('Factory Protection', () => {
-    it('should prevent selling the main factory', () => {
+    it('[U00573] should prevent selling the main factory', () => {
       gameState.sellMode = true
       const factory = createTestFactory(10, 10, 'player1', mapGrid)
       factories.push(factory)
@@ -149,7 +149,7 @@ describe('buildingSellHandler.js', () => {
       expect(gameState.money).toBe(10000) // No change
     })
 
-    it('should not prevent selling if factory belongs to different player', () => {
+    it('[U00574] should not prevent selling if factory belongs to different player', () => {
       gameState.sellMode = true
       const enemyFactory = createTestFactory(10, 10, 'enemy', mapGrid)
       factories.push(enemyFactory)
@@ -167,7 +167,7 @@ describe('buildingSellHandler.js', () => {
   })
 
   describe('Building Detection', () => {
-    it('should show notification when no building found at click location', () => {
+    it('[U00575] should show notification when no building found at click location', () => {
       gameState.sellMode = true
 
       const event = createClickEvent(25, 25) // Empty location
@@ -177,7 +177,7 @@ describe('buildingSellHandler.js', () => {
       expect(result).toBe(false)
     })
 
-    it('should not sell enemy buildings', () => {
+    it('[U00576] should not sell enemy buildings', () => {
       gameState.sellMode = true
       const enemyBuilding = createTestBuilding('powerPlant', 10, 10, 'enemy', mapGrid)
       enemyBuilding.type = 'powerPlant'
@@ -190,7 +190,7 @@ describe('buildingSellHandler.js', () => {
       expect(result).toBe(false)
     })
 
-    it('should detect building within its multi-tile bounds', () => {
+    it('[U00577] should detect building within its multi-tile bounds', () => {
       gameState.sellMode = true
       const building = createTestBuilding('oreRefinery', 10, 10, 'player1', mapGrid)
       building.type = 'oreRefinery'
@@ -207,7 +207,7 @@ describe('buildingSellHandler.js', () => {
   })
 
   describe('Sell Value Calculation', () => {
-    it('should refund 70% of building cost for power plant', () => {
+    it('[U00578] should refund 70% of building cost for power plant', () => {
       gameState.sellMode = true
       const building = createTestBuilding('powerPlant', 10, 10, 'player1', mapGrid)
       building.type = 'powerPlant'
@@ -220,7 +220,7 @@ describe('buildingSellHandler.js', () => {
       expect(gameState.money).toBe(11400)
     })
 
-    it('should refund 70% of building cost for ore refinery', () => {
+    it('[U00579] should refund 70% of building cost for ore refinery', () => {
       gameState.sellMode = true
       const building = createTestBuilding('oreRefinery', 10, 10, 'player1', mapGrid)
       building.type = 'oreRefinery'
@@ -233,7 +233,7 @@ describe('buildingSellHandler.js', () => {
       expect(gameState.money).toBe(11750)
     })
 
-    it('should floor the sell value to whole number', () => {
+    it('[U00580] should floor the sell value to whole number', () => {
       gameState.sellMode = true
       const building = createTestBuilding('vehicleFactory', 10, 10, 'player1', mapGrid)
       building.type = 'vehicleFactory'
@@ -246,7 +246,7 @@ describe('buildingSellHandler.js', () => {
       expect(gameState.money).toBe(12100)
     })
 
-    it('should handle unknown building type with 0 cost', () => {
+    it('[U00581] should handle unknown building type with 0 cost', () => {
       gameState.sellMode = true
       const building = createTestBuilding('powerPlant', 10, 10, 'player1', mapGrid)
       building.type = 'unknownBuilding'
@@ -261,7 +261,7 @@ describe('buildingSellHandler.js', () => {
   })
 
   describe('Sell Animation State', () => {
-    it('should mark building as being sold', () => {
+    it('[U00582] should mark building as being sold', () => {
       gameState.sellMode = true
       const building = createTestBuilding('powerPlant', 10, 10, 'player1', mapGrid)
       building.type = 'powerPlant'
@@ -275,7 +275,7 @@ describe('buildingSellHandler.js', () => {
       expect(building.sellStartTime).toBe(gameState.simulationTime)
     })
 
-    it('should prevent double-selling a building', () => {
+    it('[U00583] should prevent double-selling a building', () => {
       gameState.sellMode = true
       const building = createTestBuilding('powerPlant', 10, 10, 'player1', mapGrid)
       building.type = 'powerPlant'
@@ -295,7 +295,7 @@ describe('buildingSellHandler.js', () => {
   })
 
   describe('Notifications and Sounds', () => {
-    it('should play deposit sound on successful sell', () => {
+    it('[U00584] should play deposit sound on successful sell', () => {
       gameState.sellMode = true
       const building = createTestBuilding('powerPlant', 10, 10, 'player1', mapGrid)
       building.type = 'powerPlant'
@@ -307,7 +307,7 @@ describe('buildingSellHandler.js', () => {
       expect(playSound).toHaveBeenCalledWith('deposit')
     })
 
-    it('should show notification with sell value', () => {
+    it('[U00585] should show notification with sell value', () => {
       gameState.sellMode = true
       const building = createTestBuilding('rocketTurret', 10, 10, 'player1', mapGrid)
       building.type = 'rocketTurret'
@@ -322,7 +322,7 @@ describe('buildingSellHandler.js', () => {
   })
 
   describe('Money Bar Update', () => {
-    it('should call updateMoneyBar after successful sell', () => {
+    it('[U00586] should call updateMoneyBar after successful sell', () => {
       gameState.sellMode = true
       const building = createTestBuilding('powerPlant', 10, 10, 'player1', mapGrid)
       building.type = 'powerPlant'
@@ -336,7 +336,7 @@ describe('buildingSellHandler.js', () => {
   })
 
   describe('Production Queue Integration', () => {
-    it('should try to resume production after selling', () => {
+    it('[U00587] should try to resume production after selling', () => {
       gameState.sellMode = true
       const building = createTestBuilding('powerPlant', 10, 10, 'player1', mapGrid)
       building.type = 'powerPlant'
@@ -350,7 +350,7 @@ describe('buildingSellHandler.js', () => {
   })
 
   describe('Multiplayer Broadcasting', () => {
-    it('should broadcast sell action to other players', () => {
+    it('[U00588] should broadcast sell action to other players', () => {
       gameState.sellMode = true
       const building = createTestBuilding('powerPlant', 10, 10, 'player1', mapGrid)
       building.type = 'powerPlant'
@@ -369,7 +369,7 @@ describe('buildingSellHandler.js', () => {
   })
 
   describe('Scroll Offset Handling', () => {
-    it('should correctly account for scroll offset when detecting buildings', () => {
+    it('[U00589] should correctly account for scroll offset when detecting buildings', () => {
       gameState.sellMode = true
       // Test with no scroll offset first (simpler case)
       gameState.scrollOffset = { x: 0, y: 0 }
@@ -387,7 +387,7 @@ describe('buildingSellHandler.js', () => {
   })
 
   describe('Return Values', () => {
-    it('should return true on successful sell', () => {
+    it('[U00590] should return true on successful sell', () => {
       gameState.sellMode = true
       const building = createTestBuilding('powerPlant', 10, 10, 'player1', mapGrid)
       building.type = 'powerPlant'
@@ -399,7 +399,7 @@ describe('buildingSellHandler.js', () => {
       expect(result).toBe(true)
     })
 
-    it('should return false when no building found', () => {
+    it('[U00591] should return false when no building found', () => {
       gameState.sellMode = true
 
       const event = createClickEvent(25, 25)
@@ -408,7 +408,7 @@ describe('buildingSellHandler.js', () => {
       expect(result).toBe(false)
     })
 
-    it('should return undefined when sell mode is inactive', () => {
+    it('[U00592] should return undefined when sell mode is inactive', () => {
       gameState.sellMode = false
 
       const event = createClickEvent(10, 10)

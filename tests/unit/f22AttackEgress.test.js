@@ -36,7 +36,7 @@ function makeJet(x, y, direction) {
 }
 
 describe('F22 re-attack egress distance', () => {
-  it('uses the same weapon range as combat, including the level cap', () => {
+  it('[U01498] uses the same weapon range as combat, including the level cap', () => {
     const base = { type: 'f22Raptor' }
     const leveled = { type: 'f22Raptor', level: 3, rangeMultiplier: 2 }
     expect(getF22WeaponRange(base)).toBe(getEffectiveFireRange(base))
@@ -44,7 +44,7 @@ describe('F22 re-attack egress distance', () => {
     expect(getF22WeaponRange(leveled)).toBe(20 * TILE_SIZE)
   })
 
-  it('requires a departure beyond weapon range by at least two turn radii', () => {
+  it('[U01499] requires a departure beyond weapon range by at least two turn radii', () => {
     const jet = makeJet(0, 0, 0)
     const turnRadius = getF22TurnRadius(jet)
     const egressDistance = getF22ReattackEgressDistance(F22_DEFAULT_WEAPON_RANGE, turnRadius)
@@ -56,7 +56,7 @@ describe('F22 re-attack egress distance', () => {
     expect(egressDistance).toBeGreaterThan(14 * TILE_SIZE)
   })
 
-  it('aims the outbound waypoint past weapon range when the jet is still inside the engagement circle', () => {
+  it('[U01500] aims the outbound waypoint past weapon range when the jet is still inside the engagement circle', () => {
     const target = { x: 4000, y: 4000 }
     const jet = makeJet(target.x, target.y - 10 * TILE_SIZE, 0)
     const plan = planF22CombatAttack(jet, target, null, F22_DEFAULT_WEAPON_RANGE)
@@ -67,7 +67,7 @@ describe('F22 re-attack egress distance', () => {
     expect(waypointDistance).toBeGreaterThan(F22_DEFAULT_WEAPON_RANGE)
   })
 
-  it('keeps a border egress on the map and outside weapon range', () => {
+  it('[U01501] keeps a border egress on the map and outside weapon range', () => {
     const bounds = { minX: 80, minY: 80, maxX: 3200, maxY: 3200 }
     const target = { x: 200, y: 1600 }
     const jet = makeJet(120, target.y - TILE_SIZE / 2, Math.PI)
@@ -80,7 +80,7 @@ describe('F22 re-attack egress distance', () => {
     expect(Math.hypot(plan.x - target.x, plan.y - target.y)).toBeGreaterThan(F22_DEFAULT_WEAPON_RANGE)
   })
 
-  it('leaves the firing window after a pass and re-enters it on the next run', () => {
+  it('[U01502] leaves the firing window after a pass and re-enters it on the next run', () => {
     const target = { x: 5000, y: 5000 }
     const weaponRange = F22_DEFAULT_WEAPON_RANGE
     const jet = makeJet(target.x - 40 * TILE_SIZE, target.y - TILE_SIZE / 2, 0)
@@ -140,7 +140,7 @@ describe('F22 re-attack egress distance', () => {
     expect(longestEgressRun).toBeGreaterThan(20)
   })
 
-  it('keeps the combat assignment while the attack run is active', () => {
+  it('[U01503] keeps the combat assignment while the attack run is active', () => {
     const previous = {
       mapGrid: gameState.mapGrid,
       units: gameState.units,

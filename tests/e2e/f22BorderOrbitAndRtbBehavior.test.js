@@ -23,7 +23,7 @@ test.describe('F22 border avoidance, orbit speed, and repeated attack passes', (
     })
   })
 
-  test('F22 keeps wide passes near border, slows down while orbiting, and returns when ammo is empty', async({ page }) => {
+  test('[E00034] F22 keeps wide passes near border, slows down while orbiting, and returns when ammo is empty', async({ page }) => {
     test.setTimeout(120000)
 
     await page.goto('/?seed=29')

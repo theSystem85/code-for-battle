@@ -7,7 +7,7 @@ import {
 
 describe('multiUnitInputHandler', () => {
   describe('filterEligibleUnits', () => {
-    it('filters out dead units and buildings by default', () => {
+    it('[U03040] filters out dead units and buildings by default', () => {
       const aliveUnit = { id: 'u1', health: 100 }
       const deadUnit = { id: 'u2', health: 0 }
       const building = { id: 'b1', health: 100, isBuilding: true }
@@ -17,20 +17,20 @@ describe('multiUnitInputHandler', () => {
       expect(result).toEqual([aliveUnit])
     })
 
-    it('allows buildings when configured', () => {
+    it('[U03041] allows buildings when configured', () => {
       const building = { id: 'b1', health: 100, isBuilding: true }
       const result = filterEligibleUnits([building], { allowBuildings: true })
 
       expect(result).toEqual([building])
     })
 
-    it('returns an empty array for non-arrays', () => {
+    it('[U03042] returns an empty array for non-arrays', () => {
       expect(filterEligibleUnits(null)).toEqual([])
     })
   })
 
   describe('applyCommandsToUnit', () => {
-    it('replaces the command queue and clears current command when not queueing', () => {
+    it('[U03043] replaces the command queue and clears current command when not queueing', () => {
       const unit = {
         id: 'u1',
         commandQueue: [{ type: 'move', x: 1, y: 1 }],
@@ -44,7 +44,7 @@ describe('multiUnitInputHandler', () => {
       expect(unit.currentCommand).toBeNull()
     })
 
-    it('appends commands when queueing and preserves current command', () => {
+    it('[U03044] appends commands when queueing and preserves current command', () => {
       const unit = {
         id: 'u1',
         commandQueue: [{ type: 'move', x: 2, y: 2 }],
@@ -63,7 +63,7 @@ describe('multiUnitInputHandler', () => {
   })
 
   describe('distributeCommandsToUnits', () => {
-    it('distributes commands in round-robin order and resets queues when not queueing', () => {
+    it('[U03045] distributes commands in round-robin order and resets queues when not queueing', () => {
       const units = [
         { id: 'u1', health: 100, commandQueue: [{ type: 'move', x: 0, y: 0 }], currentCommand: { type: 'move', x: 0, y: 0 } },
         { id: 'u2', health: 100, commandQueue: [], currentCommand: { type: 'move', x: 1, y: 1 } }
@@ -87,7 +87,7 @@ describe('multiUnitInputHandler', () => {
       ])
     })
 
-    it('skips null commands and ignores ineligible units', () => {
+    it('[U03046] skips null commands and ignores ineligible units', () => {
       const aliveUnit = { id: 'u1', health: 100, commandQueue: [] }
       const deadUnit = { id: 'u2', health: 0, commandQueue: [{ type: 'move', x: 9 }] }
       const building = { id: 'b1', health: 100, isBuilding: true, commandQueue: [{ type: 'move', x: 8 }] }
@@ -111,7 +111,7 @@ describe('multiUnitInputHandler', () => {
       ])
     })
 
-    it('appends commands when queueing', () => {
+    it('[U03047] appends commands when queueing', () => {
       const units = [
         { id: 'u1', health: 100, commandQueue: [{ type: 'move', x: 1 }] },
         { id: 'u2', health: 100, commandQueue: [{ type: 'move', x: 2 }] }
@@ -124,7 +124,7 @@ describe('multiUnitInputHandler', () => {
       expect(units[1].commandQueue).toEqual([{ type: 'move', x: 2 }, { type: 'move', x: 4 }])
     })
 
-    it('returns empty array when targets is empty', () => {
+    it('[U03048] returns empty array when targets is empty', () => {
       const units = [{ id: 'u1', health: 100, commandQueue: [] }]
       const result = distributeCommandsToUnits(units, [], () => ({ type: 'move' }))
 
@@ -132,7 +132,7 @@ describe('multiUnitInputHandler', () => {
       expect(units[0].commandQueue).toEqual([])
     })
 
-    it('returns empty array when createCommand is not a function', () => {
+    it('[U03049] returns empty array when createCommand is not a function', () => {
       const units = [{ id: 'u1', health: 100, commandQueue: [] }]
       const targets = [{ x: 1 }]
       const result = distributeCommandsToUnits(units, targets, null)
@@ -140,7 +140,7 @@ describe('multiUnitInputHandler', () => {
       expect(result).toEqual([])
     })
 
-    it('handles single unit with multiple targets', () => {
+    it('[U03050] handles single unit with multiple targets', () => {
       const unit = { id: 'u1', health: 100, commandQueue: [] }
       const targets = [{ x: 1 }, { x: 2 }, { x: 3 }]
 
@@ -153,7 +153,7 @@ describe('multiUnitInputHandler', () => {
       ])
     })
 
-    it('does not modify unit when queueing with no commands assigned', () => {
+    it('[U03051] does not modify unit when queueing with no commands assigned', () => {
       const unit = { id: 'u1', health: 100, commandQueue: [{ type: 'move', x: 0 }] }
       const secondUnit = { id: 'u2', health: 100, commandQueue: [] }
       const targets = [{ x: 1 }]
@@ -164,7 +164,7 @@ describe('multiUnitInputHandler', () => {
       expect(secondUnit.commandQueue).toEqual([])
     })
 
-    it('creates commandQueue if it does not exist when queueing', () => {
+    it('[U03052] creates commandQueue if it does not exist when queueing', () => {
       const unit = { id: 'u1', health: 100 }
       const commands = [{ type: 'move', x: 1 }]
 
@@ -173,7 +173,7 @@ describe('multiUnitInputHandler', () => {
       expect(unit.commandQueue).toEqual(commands)
     })
 
-    it('handles undefined commands parameter', () => {
+    it('[U03053] handles undefined commands parameter', () => {
       const unit = { id: 'u1', health: 100, commandQueue: [] }
 
       applyCommandsToUnit(unit, undefined)
@@ -181,11 +181,11 @@ describe('multiUnitInputHandler', () => {
       expect(unit.commandQueue).toEqual([])
     })
 
-    it('does nothing when unit is null', () => {
+    it('[U03054] does nothing when unit is null', () => {
       expect(() => applyCommandsToUnit(null, [{ type: 'move' }])).not.toThrow()
     })
 
-    it('filters out units with undefined health', () => {
+    it('[U03055] filters out units with undefined health', () => {
       const validUnit = { id: 'u1', health: 100 }
       const invalidUnit = { id: 'u2' }
 
@@ -194,7 +194,7 @@ describe('multiUnitInputHandler', () => {
       expect(result).toEqual([validUnit])
     })
 
-    it('filters out units with negative health', () => {
+    it('[U03056] filters out units with negative health', () => {
       const validUnit = { id: 'u1', health: 50 }
       const deadUnit = { id: 'u2', health: -10 }
 
@@ -203,7 +203,7 @@ describe('multiUnitInputHandler', () => {
       expect(result).toEqual([validUnit])
     })
 
-    it('allows buildings when allowBuildings is true', () => {
+    it('[U03057] allows buildings when allowBuildings is true', () => {
       const unit = { id: 'u1', health: 100 }
       const building = { id: 'b1', health: 200, isBuilding: true }
 
@@ -212,7 +212,7 @@ describe('multiUnitInputHandler', () => {
       expect(result).toEqual([unit, building])
     })
 
-    it('handles multiple targets per unit in round-robin distribution', () => {
+    it('[U03058] handles multiple targets per unit in round-robin distribution', () => {
       const unit1 = { id: 'u1', health: 100, commandQueue: [] }
       const unit2 = { id: 'u2', health: 100, commandQueue: [] }
       const targets = [{ x: 1 }, { x: 2 }, { x: 3 }, { x: 4 }, { x: 5 }]
@@ -225,7 +225,7 @@ describe('multiUnitInputHandler', () => {
       expect(unit2.commandQueue.map(c => c.x)).toEqual([2, 4])
     })
 
-    it('returns assignment information for each unit', () => {
+    it('[U03059] returns assignment information for each unit', () => {
       const unit1 = { id: 'u1', health: 100, commandQueue: [] }
       const unit2 = { id: 'u2', health: 100, commandQueue: [] }
       const targets = [{ x: 1 }, { x: 2 }]
@@ -239,7 +239,7 @@ describe('multiUnitInputHandler', () => {
       expect(assignments[1].commands).toEqual([{ type: 'move', x: 2 }])
     })
 
-    it('passes target index to createCommand function', () => {
+    it('[U03060] passes target index to createCommand function', () => {
       const units = [{ id: 'u1', health: 100, commandQueue: [] }]
       const targets = [{ x: 1 }, { x: 2 }]
       const createCommand = vi.fn((target, index) => ({ type: 'move', x: target.x, index }))
@@ -250,14 +250,14 @@ describe('multiUnitInputHandler', () => {
       expect(createCommand).toHaveBeenCalledWith({ x: 2 }, 1)
     })
 
-    it('handles empty selectedUnits array', () => {
+    it('[U03061] handles empty selectedUnits array', () => {
       const targets = [{ x: 1 }]
       const result = distributeCommandsToUnits([], targets, (t) => ({ type: 'move', x: t.x }))
 
       expect(result).toEqual([])
     })
 
-    it('handles null selectedUnits', () => {
+    it('[U03062] handles null selectedUnits', () => {
       const targets = [{ x: 1 }]
       const result = distributeCommandsToUnits(null, targets, (t) => ({ type: 'move', x: t.x }))
 

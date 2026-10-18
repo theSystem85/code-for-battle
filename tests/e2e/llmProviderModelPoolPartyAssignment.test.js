@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 
-test('allows mixed-provider LLM model pool and per-party Local/LLM assignment', async({ page }) => {
+test('[E00058] allows mixed-provider LLM model pool and per-party Local/LLM assignment', async({ page }) => {
   await page.route('**/models', async route => {
     const url = route.request().url()
     if (url.includes('inceptionlabs')) {

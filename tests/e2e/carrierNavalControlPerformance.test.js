@@ -6,7 +6,7 @@ const SAMPLE_DURATION_MS = Number.parseInt(process.env.PERF_CARRIER_NAVAL_DURATI
 test.describe('Carrier air operations and naval direct-control performance', () => {
   test.skip(!RUN_PERF, 'Set PERF_CARRIER_NAVAL=1 to run this opt-in performance benchmark.')
 
-  test('keeps tick cost, frame rate, and heap stable under concurrent carrier approaches', async({ page, baseURL }, testInfo) => {
+  test('[E00018] keeps tick cost, frame rate, and heap stable under concurrent carrier approaches', async({ page, baseURL }, testInfo) => {
     testInfo.setTimeout(120000)
     await page.goto(`${baseURL || 'http://localhost:5173'}?seed=27&size=64&players=2&oreFields=8&monitor=1`)
     await page.waitForFunction(() => Boolean(window.gameInstance?.gameLoop && window.gameState?.gameStarted), null, { timeout: 45000 })

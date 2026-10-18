@@ -42,7 +42,7 @@ describe('MinimapRenderer prepared caches', () => {
     vi.restoreAllMocks()
   })
 
-  it('keeps destination-size terrain, resource, and unchanged fog layers reusable', () => {
+  it('[U02945] keeps destination-size terrain, resource, and unchanged fog layers reusable', () => {
     const renderer = new MinimapRenderer()
     const minimapCanvas = createCanvas(160, 96, 2)
     const gameCanvas = createCanvas(400, 240, 2, 360, 220)
@@ -110,7 +110,7 @@ describe('MinimapRenderer prepared caches', () => {
     expect(fogClear).toHaveBeenCalledTimes(fogAfterFirstRender + 1)
   })
 
-  it('attributes video rendering only to the minimap video span', () => {
+  it('[U02946] attributes video rendering only to the minimap video span', () => {
     const renderer = new MinimapRenderer()
     const minimapCanvas = createCanvas(160, 96, 2)
     const gameCanvas = createCanvas(400, 240, 2)
@@ -134,7 +134,7 @@ describe('MinimapRenderer prepared caches', () => {
     expect(startSpan).not.toHaveBeenCalledWith(PROFILER_SPAN_IDS.MINIMAP_BASE)
   })
 
-  it('fades a milestone video over the radar while opacity is below 1', () => {
+  it('[U02947] fades a milestone video over the radar while opacity is below 1', () => {
     const renderer = new MinimapRenderer()
     const minimapCanvas = createCanvas(160, 96, 2)
     const gameCanvas = createCanvas(400, 240, 2)
@@ -169,7 +169,7 @@ describe('MinimapRenderer prepared caches', () => {
     expect(minimapCtx.globalAlpha).toBe(1)
   })
 
-  it('stretches milestone video to the full radar when the clip or the radar aspect changes', () => {
+  it('[U02948] stretches milestone video to the full radar when the clip or the radar aspect changes', () => {
     const renderer = new MinimapRenderer()
     const gameCanvas = createCanvas(400, 240, 2)
     const draws = []
@@ -208,7 +208,7 @@ describe('MinimapRenderer prepared caches', () => {
     ])
   })
 
-  it('crops baked pillarbox bars and still fills the radar destination', () => {
+  it('[U02949] crops baked pillarbox bars and still fills the radar destination', () => {
     const renderer = new MinimapRenderer()
     const gameCanvas = createCanvas(400, 240, 2)
     const draws = []

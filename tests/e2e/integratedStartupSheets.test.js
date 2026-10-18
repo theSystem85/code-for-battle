@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 
-test('persisted optional sheets apply before the startup map is generated', async({ page }) => {
+test('[E00053] persisted optional sheets apply before the startup map is generated', async({ page }) => {
   const missingSheets = []
   page.on('response', response => {
     if (response.status() === 404 && response.url().includes('/sprite_sheets/')) {

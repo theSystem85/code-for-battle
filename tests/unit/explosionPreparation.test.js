@@ -5,7 +5,7 @@ import { prepareExplosionInWorker } from '../../src/rendering/explosionPreparati
 afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals() })
 
 describe('explosion preparation', () => {
-  it('preserves the original alpha curve for every brightness/alpha combination', () => {
+  it('[U01493] preserves the original alpha curve for every brightness/alpha combination', () => {
     for (let brightness = 0; brightness < 256; brightness++) {
       for (let alpha = 0; alpha < 256; alpha++) {
         const pixels = new Uint8ClampedArray([brightness, 0, 0, alpha])
@@ -17,12 +17,12 @@ describe('explosion preparation', () => {
     }
   })
 
-  it('returns a startup fallback when worker canvas support is missing', async() => {
+  it('[U01494] returns a startup fallback when worker canvas support is missing', async() => {
     vi.stubGlobal('OffscreenCanvas', undefined)
     expect(await prepareExplosionInWorker({})).toBeNull()
   })
 
-  it('transfers each bitmap, serializes jobs and terminates finished workers', async() => {
+  it('[U01495] transfers each bitmap, serializes jobs and terminates finished workers', async() => {
     const workers = []
     const inputs = []
     vi.stubGlobal('OffscreenCanvas', class {})
@@ -49,7 +49,7 @@ describe('explosion preparation', () => {
     expect(workers[1].terminate).toHaveBeenCalledOnce()
   })
 
-  it('releases untransferred inputs on startup failure and permits the next job', async() => {
+  it('[U01496] releases untransferred inputs on startup failure and permits the next job', async() => {
     const close = vi.fn()
     vi.stubGlobal('OffscreenCanvas', class {})
     vi.stubGlobal('createImageBitmap', vi.fn(async() => ({ close })))
@@ -60,7 +60,7 @@ describe('explosion preparation', () => {
     expect(await prepareExplosionInWorker({})).toBeNull()
   })
 
-  it('terminates a hung worker and unblocks the preparation queue', async() => {
+  it('[U01497] terminates a hung worker and unblocks the preparation queue', async() => {
     vi.useFakeTimers()
     const terminate = vi.fn()
     vi.stubGlobal('OffscreenCanvas', class {})

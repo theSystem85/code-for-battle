@@ -41,7 +41,7 @@ describe('direct orders reach the policy engine through the real command handler
     enemy = { id: 'e1', owner: 'player2', x: 160, y: 160, tileX: 5, tileY: 5, health: 100 }
   })
 
-  it('records a move order and the attack target', () => {
+  it('[U03360] records a move order and the attack target', () => {
     handler.handleMovementCommand([unit], 96, 96, grid())
     expect(unit.policyControl.order).toMatchObject({ active: true })
 
@@ -50,7 +50,7 @@ describe('direct orders reach the policy engine through the real command handler
     expect(unit.policyControl.dominant.kind).toBe('order')
   })
 
-  it('does not record orders issued by a policy', () => {
+  it('[U03361] does not record orders issued by a policy', () => {
     runAsPolicy(() => handler.handleMovementCommand([unit], 96, 96, grid()))
     expect(unit.policyControl).toBeUndefined()
   })

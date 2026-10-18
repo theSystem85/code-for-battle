@@ -76,7 +76,7 @@ describe('helipadLogic', () => {
     vi.clearAllMocks()
   })
 
-  it('initializes helipad fuel and ammo defaults', () => {
+  it('[U01906] initializes helipad fuel and ammo defaults', () => {
     const helipad = createHelipad({ fuel: undefined, maxFuel: 0, ammo: undefined, maxAmmo: 0 })
 
     updateHelipadLogic([], [helipad], {}, 1000)
@@ -87,7 +87,7 @@ describe('helipadLogic', () => {
     expect(helipad.ammo).toBe(50)
   })
 
-  it('refills helipad fuel based on reload time and updates needsFuel', () => {
+  it('[U01907] refills helipad fuel based on reload time and updates needsFuel', () => {
     const helipad = createHelipad({ fuel: 10, maxFuel: 100, fuelReloadTime: 2000 })
 
     updateHelipadLogic([], [helipad], {}, 0)
@@ -99,7 +99,7 @@ describe('helipadLogic', () => {
     expect(helipad.needsFuel).toBe(false)
   })
 
-  it('caps helipad ammo to the allowed reserve', () => {
+  it('[U01908] caps helipad ammo to the allowed reserve', () => {
     const helipad = createHelipad({ ammo: 80, maxAmmo: 100 })
 
     updateHelipadLogic([], [helipad], {}, 1000)
@@ -108,7 +108,7 @@ describe('helipadLogic', () => {
     expect(helipad.ammo).toBe(50)
   })
 
-  it('refills ammo from adjacent ammo trucks', () => {
+  it('[U01909] refills ammo from adjacent ammo trucks', () => {
     const helipad = createHelipad({ ammo: 0, maxAmmo: 50 })
     const ammoTruck = {
       id: 'ammo-1',
@@ -127,7 +127,7 @@ describe('helipadLogic', () => {
     expect(helipad.needsAmmo).toBe(false)
   })
 
-  it('lands and refuels apache helicopters at the helipad', () => {
+  it('[U01910] lands and refuels apache helicopters at the helipad', () => {
     const helipad = createHelipad({
       ammo: 10,
       maxAmmo: 50,
@@ -160,7 +160,7 @@ describe('helipadLogic', () => {
   })
 
 
-  it('keeps Apache pinned to helipad center while landing even before touchdown', () => {
+  it('[U01911] keeps Apache pinned to helipad center while landing even before touchdown', () => {
     const helipad = createHelipad({ ammo: 50, fuel: 100 })
     const landingCenter = getHelipadLandingCenter(helipad)
     const apache = createApache({
@@ -183,7 +183,7 @@ describe('helipadLogic', () => {
     expect(helipad.landedUnitId ?? null).toBeNull()
   })
 
-  it('waits until an apache is fully settled on the helipad before refilling ammo or fuel', () => {
+  it('[U01912] waits until an apache is fully settled on the helipad before refilling ammo or fuel', () => {
     const helipad = createHelipad({ ammo: 50, fuel: 100, landedUnitId: null })
     const landingCenter = getHelipadLandingCenter(helipad)
     const apache = createApache({
@@ -210,7 +210,7 @@ describe('helipadLogic', () => {
     expect(apache.gas).toBeGreaterThan(0)
   })
 
-  it('auto relaunches to continue attack after full ammo reload on auto-return', () => {
+  it('[U01913] auto relaunches to continue attack after full ammo reload on auto-return', () => {
     const helipad = createHelipad({
       ammo: 50,
       maxAmmo: 50,
@@ -241,7 +241,7 @@ describe('helipadLogic', () => {
     expect(apache.landedHelipadId).toBeNull()
     expect(helipad.landedUnitId).toBeNull()
   })
-  it('clears stale landed unit references when helicopters depart', () => {
+  it('[U01914] clears stale landed unit references when helicopters depart', () => {
     const helipad = createHelipad({ landedUnitId: 'a1' })
     const landingCenter = getHelipadLandingCenter(helipad)
     const apache = createApache({
@@ -258,7 +258,7 @@ describe('helipadLogic', () => {
     expect(apache.landedHelipadId).toBeNull()
   })
 
-  it('tops up helipad fuel from nearby tanker trucks', () => {
+  it('[U01915] tops up helipad fuel from nearby tanker trucks', () => {
     const helipad = createHelipad({ fuel: 50, maxFuel: 100, fuelReloadTime: 100000 })
     const landingCenter = getHelipadLandingCenter(helipad)
     const tanker = {

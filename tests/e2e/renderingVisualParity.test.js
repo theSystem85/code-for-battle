@@ -6,7 +6,7 @@ const RUN_VISUAL_CAPTURE = process.env.PERF_RENDERING_VISUAL === '1'
 test.describe('Rendering visual golden capture', () => {
   test.skip(!RUN_VISUAL_CAPTURE, 'Set PERF_RENDERING_VISUAL=1 to capture rendering golden sequences.')
 
-  test('captures shoreline, terrain, dynamic-water and entity states with fixed metadata', async({ page }, testInfo) => {
+  test('[E00096] captures shoreline, terrain, dynamic-water and entity states with fixed metadata', async({ page }, testInfo) => {
     await page.setViewportSize({ width: 1440, height: 1000 })
     await page.goto('/?seed=4&size=100&monitor=1', { waitUntil: 'domcontentloaded', timeout: 60000 })
     await page.waitForSelector('#gameCanvas', { state: 'visible', timeout: 45000 })

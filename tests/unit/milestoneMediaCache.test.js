@@ -21,7 +21,7 @@ describe('milestone media preload and fade', () => {
     setMilestoneAchievedCheck(null)
   })
 
-  it('preloads a milestone clip when production starts and the milestone is still open', () => {
+  it('[U02737] preloads a milestone clip when production starts and the milestone is still open', () => {
     const achieved = new Set()
     setMilestoneAchievedCheck(id => achieved.has(id))
 
@@ -39,7 +39,7 @@ describe('milestone media preload and fade', () => {
     expect(videoOverlay.getCurrentVideo()).toBeFalsy()
   })
 
-  it('does not preload once the milestone is achieved and ignores unrelated production', () => {
+  it('[U02738] does not preload once the milestone is achieved and ignores unrelated production', () => {
     setMilestoneAchievedCheck(id => id === 'firstHowitzer' || id === 'firstTank')
     expect(preloadMilestoneForProduction('howitzer', false)).toBeNull()
     expect(preloadMilestoneForProduction('tank_v1', false)).toBeNull()
@@ -49,14 +49,14 @@ describe('milestone media preload and fade', () => {
     expect(isMilestoneMediaPreloaded('first_tank')).toBe(false)
   })
 
-  it('records a preload without starting playback', () => {
+  it('[U02739] records a preload without starting playback', () => {
     preloadMilestoneMedia('first_rocket_tank')
     expect(isMilestoneMediaPreloaded('first_rocket_tank')).toBe(true)
     preloadMilestoneMedia('first_rocket_tank')
     expect(videoOverlay.isVideoPlaying()).toBe(false)
   })
 
-  it('fades milestone video opacity in and out over 220ms', () => {
+  it('[U02740] fades milestone video opacity in and out over 220ms', () => {
     const start = 1000
     expect(computeMilestoneVideoOpacity(false, start, start, 6, 0)).toBe(0)
     expect(computeMilestoneVideoOpacity(true, 0, start, 6, 0)).toBe(1)

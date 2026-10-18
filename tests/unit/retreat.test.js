@@ -36,29 +36,29 @@ const TILE_SIZE = 32
 
 describe('retreat behavior', () => {
   describe('isRetreating', () => {
-    it('returns true when unit isRetreating is true', () => {
+    it('[U03800] returns true when unit isRetreating is true', () => {
       const unit = { isRetreating: true }
       expect(isRetreating(unit)).toBe(true)
     })
 
-    it('returns false when unit isRetreating is false', () => {
+    it('[U03801] returns false when unit isRetreating is false', () => {
       const unit = { isRetreating: false }
       expect(isRetreating(unit)).toBe(false)
     })
 
-    it('returns false when unit isRetreating is undefined', () => {
+    it('[U03802] returns false when unit isRetreating is undefined', () => {
       const unit = {}
       expect(isRetreating(unit)).toBe(false)
     })
 
-    it('returns false when unit isRetreating is null', () => {
+    it('[U03803] returns false when unit isRetreating is null', () => {
       const unit = { isRetreating: null }
       expect(isRetreating(unit)).toBe(false)
     })
   })
 
   describe('cancelRetreat', () => {
-    it('clears retreat state from unit', () => {
+    it('[U03804] clears retreat state from unit', () => {
       const unit = {
         isRetreating: true,
         retreatTarget: { x: 5, y: 5 },
@@ -92,7 +92,7 @@ describe('retreat behavior', () => {
       expect(unit.movement.targetVelocity).toEqual({ x: 0, y: 0 })
     })
 
-    it('does nothing if unit is not retreating', () => {
+    it('[U03805] does nothing if unit is not retreating', () => {
       const unit = {
         isRetreating: false,
         canFire: false
@@ -104,7 +104,7 @@ describe('retreat behavior', () => {
       expect(unit.canFire).toBe(false)
     })
 
-    it('handles unit without movement property', () => {
+    it('[U03806] handles unit without movement property', () => {
       const unit = {
         isRetreating: true,
         retreatTarget: { x: 5, y: 5 }
@@ -116,7 +116,7 @@ describe('retreat behavior', () => {
   })
 
   describe('cancelRetreatForUnits', () => {
-    it('cancels retreat for all retreating units', () => {
+    it('[U03807] cancels retreat for all retreating units', () => {
       const units = [
         { isRetreating: true, retreatTarget: { x: 1, y: 1 }, path: [] },
         { isRetreating: true, retreatTarget: { x: 2, y: 2 }, path: [] },
@@ -130,23 +130,23 @@ describe('retreat behavior', () => {
       expect(units[2].isRetreating).toBe(false)
     })
 
-    it('handles empty array', () => {
+    it('[U03808] handles empty array', () => {
       expect(() => cancelRetreatForUnits([])).not.toThrow()
     })
 
-    it('handles units without retreat state', () => {
+    it('[U03809] handles units without retreat state', () => {
       const units = [{ type: 'tank' }]
       expect(() => cancelRetreatForUnits(units)).not.toThrow()
     })
   })
 
   describe('shouldExitRetreat', () => {
-    it('returns false if unit is not retreating', () => {
+    it('[U03810] returns false if unit is not retreating', () => {
       const unit = { isRetreating: false }
       expect(shouldExitRetreat(unit, performance.now())).toBe(false)
     })
 
-    it('returns true if retreat original target is destroyed', () => {
+    it('[U03811] returns true if retreat original target is destroyed', () => {
       const unit = {
         isRetreating: true,
         retreatOriginalTarget: { health: 0 },
@@ -155,7 +155,7 @@ describe('retreat behavior', () => {
       expect(shouldExitRetreat(unit, performance.now())).toBe(true)
     })
 
-    it('returns true if retreat original target has negative health', () => {
+    it('[U03812] returns true if retreat original target has negative health', () => {
       const unit = {
         isRetreating: true,
         retreatOriginalTarget: { health: -10 },
@@ -164,7 +164,7 @@ describe('retreat behavior', () => {
       expect(shouldExitRetreat(unit, performance.now())).toBe(true)
     })
 
-    it('returns false if retreat original target is alive', () => {
+    it('[U03813] returns false if retreat original target is alive', () => {
       const unit = {
         isRetreating: true,
         retreatOriginalTarget: { health: 100 },
@@ -173,7 +173,7 @@ describe('retreat behavior', () => {
       expect(shouldExitRetreat(unit, performance.now())).toBe(false)
     })
 
-    it('returns true if retreat duration exceeds 30 seconds', () => {
+    it('[U03814] returns true if retreat duration exceeds 30 seconds', () => {
       const now = performance.now()
       const unit = {
         isRetreating: true,
@@ -183,7 +183,7 @@ describe('retreat behavior', () => {
       expect(shouldExitRetreat(unit, now)).toBe(true)
     })
 
-    it('returns false if retreat duration is under 30 seconds', () => {
+    it('[U03815] returns false if retreat duration is under 30 seconds', () => {
       const now = performance.now()
       const unit = {
         isRetreating: true,
@@ -193,7 +193,7 @@ describe('retreat behavior', () => {
       expect(shouldExitRetreat(unit, now)).toBe(false)
     })
 
-    it('handles missing retreatOriginalTarget', () => {
+    it('[U03816] handles missing retreatOriginalTarget', () => {
       const now = performance.now()
       const unit = {
         isRetreating: true,
@@ -202,7 +202,7 @@ describe('retreat behavior', () => {
       expect(shouldExitRetreat(unit, now)).toBe(false)
     })
 
-    it('handles missing retreatStartTime by using current time', () => {
+    it('[U03817] handles missing retreatStartTime by using current time', () => {
       const now = performance.now()
       const unit = {
         isRetreating: true,
@@ -227,7 +227,7 @@ describe('retreat behavior', () => {
       )
     })
 
-    it('sets retreat state on valid tank units', () => {
+    it('[U03818] sets retreat state on valid tank units', () => {
       const units = [
         { id: 1, type: 'tank', owner: 'player1', target: null, attackQueue: [] }
       ]
@@ -238,7 +238,7 @@ describe('retreat behavior', () => {
       expect(units[0].retreatTarget).toBeDefined()
     })
 
-    it('ignores non-tank units', () => {
+    it('[U03819] ignores non-tank units', () => {
       const units = [
         { id: 1, type: 'harvester', owner: 'player1' }
       ]
@@ -248,7 +248,7 @@ describe('retreat behavior', () => {
       expect(units[0].isRetreating).toBeUndefined()
     })
 
-    it('ignores enemy units', () => {
+    it('[U03820] ignores enemy units', () => {
       const units = [
         { id: 1, type: 'tank', owner: 'enemy' }
       ]
@@ -258,7 +258,7 @@ describe('retreat behavior', () => {
       expect(units[0].isRetreating).toBeUndefined()
     })
 
-    it('rejects water terrain as retreat position', () => {
+    it('[U03821] rejects water terrain as retreat position', () => {
       mapGrid[5][5].type = 'water'
 
       const units = [
@@ -271,7 +271,7 @@ describe('retreat behavior', () => {
       expect(units[0].isRetreating).toBeUndefined()
     })
 
-    it('rejects building tiles as retreat position', () => {
+    it('[U03822] rejects building tiles as retreat position', () => {
       mapGrid[5][5].building = true
 
       const units = [
@@ -283,7 +283,7 @@ describe('retreat behavior', () => {
       expect(units[0].isRetreating).toBeUndefined()
     })
 
-    it('supports tank variants', () => {
+    it('[U03823] supports tank variants', () => {
       const units = [
         { id: 1, type: 'tank_v1', owner: 'player1', attackQueue: [] },
         { id: 2, type: 'tank-v2', owner: 'player1', attackQueue: [] },
@@ -299,7 +299,7 @@ describe('retreat behavior', () => {
       })
     })
 
-    it('clears attack state when retreating', () => {
+    it('[U03824] clears attack state when retreating', () => {
       const units = [
         {
           id: 1,
@@ -318,7 +318,7 @@ describe('retreat behavior', () => {
       expect(units[0].alertMode).toBe(false)
     })
 
-    it('preserves current target for continued firing', () => {
+    it('[U03825] preserves current target for continued firing', () => {
       const target = { id: 'enemy1', health: 100 }
       const units = [
         {
@@ -336,7 +336,7 @@ describe('retreat behavior', () => {
       expect(units[0].retreatOriginalTarget).toBe(target)
     })
 
-    it('does not preserve dead target', () => {
+    it('[U03826] does not preserve dead target', () => {
       const target = { id: 'enemy1', health: 0 }
       const units = [
         {
@@ -353,7 +353,7 @@ describe('retreat behavior', () => {
       expect(units[0].retreatOriginalTarget).toBeUndefined()
     })
 
-    it('rejects out-of-bounds retreat position', () => {
+    it('[U03827] rejects out-of-bounds retreat position', () => {
       const units = [
         { id: 1, type: 'tank', owner: 'player1' }
       ]
@@ -377,12 +377,12 @@ describe('retreat behavior', () => {
       )
     })
 
-    it('returns false if unit is not retreating', () => {
+    it('[U03828] returns false if unit is not retreating', () => {
       const unit = { isRetreating: false }
       expect(updateRetreatBehavior(unit, performance.now(), mapGrid, [])).toBe(false)
     })
 
-    it('returns false for non-player-issued retreats (AI retreats)', () => {
+    it('[U03829] returns false for non-player-issued retreats (AI retreats)', () => {
       const unit = {
         isRetreating: true,
         retreatIssuedByPlayer: false,
@@ -394,7 +394,7 @@ describe('retreat behavior', () => {
       expect(updateRetreatBehavior(unit, performance.now(), mapGrid, [])).toBe(false)
     })
 
-    it('returns true if unit is retreating (player-issued)', () => {
+    it('[U03830] returns true if unit is retreating (player-issued)', () => {
       const unit = {
         isRetreating: true,
         retreatIssuedByPlayer: true,
@@ -406,7 +406,7 @@ describe('retreat behavior', () => {
       expect(updateRetreatBehavior(unit, performance.now(), mapGrid, [])).toBe(true)
     })
 
-    it('clears retreat state when reaching destination', () => {
+    it('[U03831] clears retreat state when reaching destination', () => {
       const unit = {
         isRetreating: true,
         retreatIssuedByPlayer: true,
@@ -428,7 +428,7 @@ describe('retreat behavior', () => {
       expect(unit.path).toEqual([])
     })
 
-    it('stops retreat when path is blocked by building', () => {
+    it('[U03832] stops retreat when path is blocked by building', () => {
       // Place building in path
       mapGrid[3][3].building = true
 
@@ -448,7 +448,7 @@ describe('retreat behavior', () => {
       expect(unit.isRetreating).toBe(false)
     })
 
-    it('stops retreat when path is blocked by water', () => {
+    it('[U03833] stops retreat when path is blocked by water', () => {
       mapGrid[2][2].type = 'water'
 
       const unit = {
@@ -467,7 +467,7 @@ describe('retreat behavior', () => {
       expect(unit.isRetreating).toBe(false)
     })
 
-    it('disables firing when retreat target is out of range', () => {
+    it('[U03834] disables firing when retreat target is out of range', () => {
       const unit = {
         isRetreating: true,
         retreatIssuedByPlayer: true,
@@ -484,7 +484,7 @@ describe('retreat behavior', () => {
       expect(unit.canFire).toBe(false)
     })
 
-    it('clears retreat state when stuck for too long', () => {
+    it('[U03835] clears retreat state when stuck for too long', () => {
       const now = 5000
       const unit = {
         id: 'tank-1',

@@ -41,20 +41,20 @@ afterEach(() => {
 })
 
 describe('npm run release', () => {
-  it('formats the changelog and release file per category', () => {
+  it('[U05187] formats the changelog and release file per category', () => {
     const entries = [{ category: 'features', description: 'A', breaking: true }, { category: 'bugfixes', description: 'B' }]
     expect(buildReleaseFile('1.0.0', entries)).toEqual({ version: '1.0.0', features: ['A'], improvements: [], bugfixes: ['B'] })
     expect(formatChangelog('1.0.0', '0.62.0', entries)).toContain('[BREAKING] A')
   })
 
-  it('prints the next version on --dry-run without touching files', () => {
+  it('[U05188] prints the next version on --dry-run without touching files', () => {
     const root = scratchRepo()
     expect(release(root, '--dry-run')).toContain('v0.62.0 -> v0.63.0')
     expect(existsSync(join(root, 'features', '0.63.0.json'))).toBe(false)
     expect(git(root, 'status', '--porcelain')).toBe('')
   })
 
-  it('folds entries into features/<version>.json, bumps package.json and the lockfile, commits and tags', () => {
+  it('[U05189] folds entries into features/<version>.json, bumps package.json and the lockfile, commits and tags', () => {
     const root = scratchRepo()
     release(root)
     expect(JSON.parse(readFileSync(join(root, 'features', '0.63.0.json'), 'utf8'))).toEqual({
@@ -70,7 +70,7 @@ describe('npm run release', () => {
     expect(git(root, 'status', '--porcelain')).toBe('')
   })
 
-  it('refuses to release without entries or with a dirty tree', () => {
+  it('[U05190] refuses to release without entries or with a dirty tree', () => {
     const root = scratchRepo()
     writeFileSync(join(root, 'stray.txt'), 'x')
     expect(() => release(root)).toThrow()
@@ -79,7 +79,7 @@ describe('npm run release', () => {
     expect(() => release(root)).toThrow()
   })
 
-  it('re-points the tag at the rewritten release commit after a rebase-merge', () => {
+  it('[U05191] re-points the tag at the rewritten release commit after a rebase-merge', () => {
     const root = scratchRepo()
     release(root)
     const original = git(root, 'rev-parse', 'HEAD')

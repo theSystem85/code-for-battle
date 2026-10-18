@@ -119,7 +119,7 @@ describe('Mine Layer Behavior', () => {
   })
 
   describe('startMineDeployment()', () => {
-    it('should start deployment for mine layer with remaining mines', () => {
+    it('[U02845] should start deployment for mine layer with remaining mines', () => {
       const result = startMineDeployment(mineLayer, 5, 5, 1000)
 
       expect(result).toBe(true)
@@ -129,7 +129,7 @@ describe('Mine Layer Behavior', () => {
       expect(mineLayer.deployTargetY).toBe(5)
     })
 
-    it('should clear path and moveTarget when starting deployment', () => {
+    it('[U02846] should clear path and moveTarget when starting deployment', () => {
       mineLayer.path = [{ x: 10, y: 10 }]
       mineLayer.moveTarget = { x: 10, y: 10 }
 
@@ -139,7 +139,7 @@ describe('Mine Layer Behavior', () => {
       expect(mineLayer.moveTarget).toBeNull()
     })
 
-    it('should reset deploymentCompleted flag', () => {
+    it('[U02847] should reset deploymentCompleted flag', () => {
       mineLayer.deploymentCompleted = true
 
       startMineDeployment(mineLayer, 5, 5, 1000)
@@ -147,7 +147,7 @@ describe('Mine Layer Behavior', () => {
       expect(mineLayer.deploymentCompleted).toBe(false)
     })
 
-    it('should return false for non-mineLayer unit', () => {
+    it('[U02848] should return false for non-mineLayer unit', () => {
       const tank = { type: 'tank', remainingMines: 10 }
 
       const result = startMineDeployment(tank, 5, 5, 1000)
@@ -155,7 +155,7 @@ describe('Mine Layer Behavior', () => {
       expect(result).toBe(false)
     })
 
-    it('should return false when no mines remaining', () => {
+    it('[U02849] should return false when no mines remaining', () => {
       mineLayer.remainingMines = 0
 
       const result = startMineDeployment(mineLayer, 5, 5, 1000)
@@ -166,7 +166,7 @@ describe('Mine Layer Behavior', () => {
   })
 
   describe('updateMineLayerBehavior()', () => {
-    it('should skip non-mineLayer units', () => {
+    it('[U02850] should skip non-mineLayer units', () => {
       const tank = { type: 'tank', speed: 1 }
 
       updateMineLayerBehavior([tank], 1000)
@@ -174,7 +174,7 @@ describe('Mine Layer Behavior', () => {
       expect(tank.speed).toBe(1)
     })
 
-    it('should set deploy speed when deploying', () => {
+    it('[U02851] should set deploy speed when deploying', () => {
       mineLayer.deployingMine = true
       mineLayer.speed = UNIT_PROPERTIES.mineLayer.speed
 
@@ -183,7 +183,7 @@ describe('Mine Layer Behavior', () => {
       expect(mineLayer.speed).toBe(UNIT_PROPERTIES.mineLayer.deploySpeed)
     })
 
-    it('should set deploy speed when deploy commands queued', () => {
+    it('[U02852] should set deploy speed when deploy commands queued', () => {
       mineLayer.commandQueue = [{ type: 'deployMine', x: 5, y: 5 }]
       mineLayer.speed = UNIT_PROPERTIES.mineLayer.speed
 
@@ -192,7 +192,7 @@ describe('Mine Layer Behavior', () => {
       expect(mineLayer.speed).toBe(UNIT_PROPERTIES.mineLayer.deploySpeed)
     })
 
-    it('should restore normal speed when not deploying', () => {
+    it('[U02853] should restore normal speed when not deploying', () => {
       mineLayer.speed = UNIT_PROPERTIES.mineLayer.deploySpeed
       mineLayer.deployingMine = false
       mineLayer.commandQueue = []
@@ -202,7 +202,7 @@ describe('Mine Layer Behavior', () => {
       expect(mineLayer.speed).toBe(UNIT_PROPERTIES.mineLayer.speed)
     })
 
-    it('should deploy mine after deploy stop time elapsed', () => {
+    it('[U02854] should deploy mine after deploy stop time elapsed', () => {
       mineLayer.deployingMine = true
       mineLayer.deployStartTime = 1000
       mineLayer.remainingMines = 5
@@ -215,7 +215,7 @@ describe('Mine Layer Behavior', () => {
       expect(mineLayer.deploymentCompleted).toBe(true)
     })
 
-    it('should not deploy mine before time elapsed', () => {
+    it('[U02855] should not deploy mine before time elapsed', () => {
       mineLayer.deployingMine = true
       mineLayer.deployStartTime = 1000
       mineLayer.remainingMines = 5
@@ -227,7 +227,7 @@ describe('Mine Layer Behavior', () => {
       expect(mineLayer.deployingMine).toBe(true)
     })
 
-    it('should mark deployment completed when no mines remaining', () => {
+    it('[U02856] should mark deployment completed when no mines remaining', () => {
       mineLayer.deployingMine = true
       mineLayer.deployStartTime = 1000
       mineLayer.remainingMines = 0
@@ -239,7 +239,7 @@ describe('Mine Layer Behavior', () => {
       expect(mineLayer.deploymentCompleted).toBe(true)
     })
 
-    it('should handle multiple mine layers', () => {
+    it('[U02857] should handle multiple mine layers', () => {
       const mineLayer2 = {
         ...mineLayer,
         id: 'ml-2',
@@ -260,7 +260,7 @@ describe('Mine Layer Behavior', () => {
   })
 
   describe('Capacity Tracking', () => {
-    it('should decrement remaining mines on successful deployment', () => {
+    it('[U02858] should decrement remaining mines on successful deployment', () => {
       mineLayer.deployingMine = true
       mineLayer.deployStartTime = 0
       mineLayer.remainingMines = 5
@@ -270,7 +270,7 @@ describe('Mine Layer Behavior', () => {
       expect(mineLayer.remainingMines).toBe(4)
     })
 
-    it('should not go below zero mines', () => {
+    it('[U02859] should not go below zero mines', () => {
       mineLayer.deployingMine = true
       mineLayer.deployStartTime = 0
       mineLayer.remainingMines = 0
@@ -280,7 +280,7 @@ describe('Mine Layer Behavior', () => {
       expect(mineLayer.remainingMines).toBe(0)
     })
 
-    it('should check remaining mines before deployment', () => {
+    it('[U02860] should check remaining mines before deployment', () => {
       mineLayer.remainingMines = 0
 
       const result = startMineDeployment(mineLayer, 5, 5, 1000)
@@ -288,7 +288,7 @@ describe('Mine Layer Behavior', () => {
       expect(result).toBe(false)
     })
 
-    it('restarts a deploy timer that was stamped ahead of the simulation clock', () => {
+    it('[U02861] restarts a deploy timer that was stamped ahead of the simulation clock', () => {
       mineLayer.deployingMine = true
       mineLayer.deployStartTime = 50000
       mineLayer.remainingMines = 5
@@ -308,7 +308,7 @@ describe('Mine Layer Behavior', () => {
   })
 
   describe('isMinePlantTileBlocked()', () => {
-    it('ignores the mine layer standing on its own plant tile', () => {
+    it('[U02862] ignores the mine layer standing on its own plant tile', () => {
       expect(isMinePlantTileBlocked(5, 5, mineLayer, {
         units: [mineLayer],
         mapGrid: gameState.mapGrid,
@@ -317,7 +317,7 @@ describe('Mine Layer Behavior', () => {
       })).toBe(false)
     })
 
-    it('blocks a tile occupied by another unit center', () => {
+    it('[U02863] blocks a tile occupied by another unit center', () => {
       const tank = { id: 'tank-1', type: 'tank', health: 80, x: 5 * 32, y: 5 * 32 }
 
       expect(isMinePlantTileBlocked(5, 5, mineLayer, {
@@ -328,7 +328,7 @@ describe('Mine Layer Behavior', () => {
       })).toBe(true)
     })
 
-    it('does not block a neighboring tile', () => {
+    it('[U02864] does not block a neighboring tile', () => {
       const tank = { id: 'tank-1', type: 'tank', health: 80, x: 6 * 32, y: 5 * 32 }
 
       expect(isMinePlantTileBlocked(5, 5, mineLayer, {
@@ -369,14 +369,14 @@ describe('Mine Sweeper Behavior', () => {
   })
 
   describe('activateSweepingMode()', () => {
-    it('should activate sweeping mode for mine sweeper', () => {
+    it('[U02865] should activate sweeping mode for mine sweeper', () => {
       activateSweepingMode(mineSweeper)
 
       expect(mineSweeper.sweeping).toBe(true)
       expect(mineSweeper.speed).toBe(UNIT_PROPERTIES.mineSweeper.sweepingSpeed)
     })
 
-    it('should initialize normalSpeed if not set', () => {
+    it('[U02866] should initialize normalSpeed if not set', () => {
       delete mineSweeper.normalSpeed
 
       activateSweepingMode(mineSweeper)
@@ -384,7 +384,7 @@ describe('Mine Sweeper Behavior', () => {
       expect(mineSweeper.normalSpeed).toBe(UNIT_PROPERTIES.mineSweeper.speed)
     })
 
-    it('should initialize sweepingSpeed if not set', () => {
+    it('[U02867] should initialize sweepingSpeed if not set', () => {
       delete mineSweeper.sweepingSpeed
 
       activateSweepingMode(mineSweeper)
@@ -392,7 +392,7 @@ describe('Mine Sweeper Behavior', () => {
       expect(mineSweeper.sweepingSpeed).toBe(UNIT_PROPERTIES.mineSweeper.sweepingSpeed)
     })
 
-    it('should not activate for non-mineSweeper', () => {
+    it('[U02868] should not activate for non-mineSweeper', () => {
       const tank = { type: 'tank', sweeping: false, speed: 1 }
 
       activateSweepingMode(tank)
@@ -403,7 +403,7 @@ describe('Mine Sweeper Behavior', () => {
   })
 
   describe('deactivateSweepingMode()', () => {
-    it('should deactivate sweeping mode', () => {
+    it('[U02869] should deactivate sweeping mode', () => {
       mineSweeper.sweeping = true
       mineSweeper.speed = UNIT_PROPERTIES.mineSweeper.sweepingSpeed
 
@@ -413,7 +413,7 @@ describe('Mine Sweeper Behavior', () => {
       expect(mineSweeper.speed).toBe(UNIT_PROPERTIES.mineSweeper.speed)
     })
 
-    it('should initialize normalSpeed if not set', () => {
+    it('[U02870] should initialize normalSpeed if not set', () => {
       delete mineSweeper.normalSpeed
       mineSweeper.sweeping = true
 
@@ -422,7 +422,7 @@ describe('Mine Sweeper Behavior', () => {
       expect(mineSweeper.normalSpeed).toBe(UNIT_PROPERTIES.mineSweeper.speed)
     })
 
-    it('should not affect non-mineSweeper', () => {
+    it('[U02871] should not affect non-mineSweeper', () => {
       const tank = { type: 'tank', sweeping: true, speed: 0.5 }
 
       deactivateSweepingMode(tank)
@@ -433,7 +433,7 @@ describe('Mine Sweeper Behavior', () => {
   })
 
   describe('updateMineSweeperBehavior()', () => {
-    it('should skip non-mineSweeper units', () => {
+    it('[U02872] should skip non-mineSweeper units', () => {
       const tank = { type: 'tank', speed: 1 }
 
       updateMineSweeperBehavior([tank], mockGameState, 1000)
@@ -441,7 +441,7 @@ describe('Mine Sweeper Behavior', () => {
       expect(tank.speed).toBe(1)
     })
 
-    it('should activate sweeping when sweep command is active', () => {
+    it('[U02873] should activate sweeping when sweep command is active', () => {
       mineSweeper.currentCommand = { type: 'sweepArea', path: [{ x: 5, y: 5 }] }
       mineSweeper.sweeping = false
 
@@ -451,7 +451,7 @@ describe('Mine Sweeper Behavior', () => {
       expect(mineSweeper.speed).toBe(mineSweeper.sweepingSpeed)
     })
 
-    it('should deactivate sweeping when no sweep command', () => {
+    it('[U02874] should deactivate sweeping when no sweep command', () => {
       mineSweeper.sweeping = true
       mineSweeper.currentCommand = null
 
@@ -461,7 +461,7 @@ describe('Mine Sweeper Behavior', () => {
       expect(mineSweeper.speed).toBe(mineSweeper.normalSpeed)
     })
 
-    it('should reset lastDustTime when deactivating', () => {
+    it('[U02875] should reset lastDustTime when deactivating', () => {
       mineSweeper.sweeping = true
       mineSweeper.lastDustTime = 500
       mineSweeper.currentCommand = null
@@ -471,7 +471,7 @@ describe('Mine Sweeper Behavior', () => {
       expect(mineSweeper.lastDustTime).toBe(0)
     })
 
-    it('should generate dust when sweeping and moving', () => {
+    it('[U02876] should generate dust when sweeping and moving', () => {
       mineSweeper.sweeping = true
       mineSweeper.currentCommand = { type: 'sweepArea', path: [] }
       mineSweeper.velocityX = 1
@@ -482,7 +482,7 @@ describe('Mine Sweeper Behavior', () => {
       expect(mockGameState.dustParticles.length).toBeGreaterThan(0)
     })
 
-    it('should not generate dust when not moving', () => {
+    it('[U02877] should not generate dust when not moving', () => {
       mineSweeper.sweeping = true
       mineSweeper.currentCommand = { type: 'sweepArea', path: [] }
       mineSweeper.velocityX = 0
@@ -493,7 +493,7 @@ describe('Mine Sweeper Behavior', () => {
       expect(mockGameState.dustParticles.length).toBe(0)
     })
 
-    it('should respect dust emission rate limit', () => {
+    it('[U02878] should respect dust emission rate limit', () => {
       mineSweeper.sweeping = true
       mineSweeper.currentCommand = { type: 'sweepArea', path: [] }
       mineSweeper.velocityX = 1
@@ -505,7 +505,7 @@ describe('Mine Sweeper Behavior', () => {
       expect(mockGameState.dustParticles.length).toBe(0)
     })
 
-    it('should handle multiple sweepers', () => {
+    it('[U02879] should handle multiple sweepers', () => {
       const sweeper2 = {
         ...mineSweeper,
         id: 'ms-2',
@@ -520,7 +520,7 @@ describe('Mine Sweeper Behavior', () => {
   })
 
   describe('calculateZigZagSweepPath()', () => {
-    it('should generate zig-zag path for rectangular area', () => {
+    it('[U02880] should generate zig-zag path for rectangular area', () => {
       const area = { startX: 0, startY: 0, endX: 2, endY: 1 }
 
       const path = calculateZigZagSweepPath(area)
@@ -528,13 +528,13 @@ describe('Mine Sweeper Behavior', () => {
       expect(path.length).toBe(6) // 3 x 2 tiles
     })
 
-    it('should return empty array for null area', () => {
+    it('[U02881] should return empty array for null area', () => {
       const path = calculateZigZagSweepPath(null)
 
       expect(path).toEqual([])
     })
 
-    it('should handle inverted area bounds', () => {
+    it('[U02882] should handle inverted area bounds', () => {
       const area = { startX: 2, startY: 2, endX: 0, endY: 0 }
 
       const path = calculateZigZagSweepPath(area)
@@ -542,7 +542,7 @@ describe('Mine Sweeper Behavior', () => {
       expect(path.length).toBe(9) // 3 x 3 tiles
     })
 
-    it('should create serpentine pattern (alternating row direction)', () => {
+    it('[U02883] should create serpentine pattern (alternating row direction)', () => {
       const area = { startX: 0, startY: 0, endX: 2, endY: 1 }
 
       const path = calculateZigZagSweepPath(area)
@@ -558,7 +558,7 @@ describe('Mine Sweeper Behavior', () => {
       expect(path[5]).toEqual({ x: 0, y: 1 })
     })
 
-    it('should handle single tile area', () => {
+    it('[U02884] should handle single tile area', () => {
       const area = { startX: 5, startY: 5, endX: 5, endY: 5 }
 
       const path = calculateZigZagSweepPath(area)
@@ -567,7 +567,7 @@ describe('Mine Sweeper Behavior', () => {
       expect(path[0]).toEqual({ x: 5, y: 5 })
     })
 
-    it('should respect horizontal orientation (right)', () => {
+    it('[U02885] should respect horizontal orientation (right)', () => {
       const area = { startX: 0, startY: 0, endX: 2, endY: 0 }
       const orientation = { horizontal: 'right', vertical: 'top' }
 
@@ -578,7 +578,7 @@ describe('Mine Sweeper Behavior', () => {
       expect(path[2]).toEqual({ x: 0, y: 0 })
     })
 
-    it('should respect vertical orientation (bottom)', () => {
+    it('[U02886] should respect vertical orientation (bottom)', () => {
       const area = { startX: 0, startY: 0, endX: 0, endY: 2 }
       const orientation = { horizontal: 'left', vertical: 'bottom' }
 
@@ -591,7 +591,7 @@ describe('Mine Sweeper Behavior', () => {
   })
 
   describe('calculateFreeformSweepPath()', () => {
-    it('should convert Set to sorted array', () => {
+    it('[U02887] should convert Set to sorted array', () => {
       const tiles = new Set(['1,2', '0,0', '1,0'])
 
       const path = calculateFreeformSweepPath(tiles)
@@ -599,19 +599,19 @@ describe('Mine Sweeper Behavior', () => {
       expect(path.length).toBe(3)
     })
 
-    it('should return empty array for null input', () => {
+    it('[U02888] should return empty array for null input', () => {
       const path = calculateFreeformSweepPath(null)
 
       expect(path).toEqual([])
     })
 
-    it('should return empty array for empty Set', () => {
+    it('[U02889] should return empty array for empty Set', () => {
       const path = calculateFreeformSweepPath(new Set())
 
       expect(path).toEqual([])
     })
 
-    it('should sort by Y then X', () => {
+    it('[U02890] should sort by Y then X', () => {
       const tiles = new Set(['2,1', '0,1', '1,0'])
 
       const path = calculateFreeformSweepPath(tiles)
@@ -624,7 +624,7 @@ describe('Mine Sweeper Behavior', () => {
   })
 
   describe('generateSweepDust()', () => {
-    it('should return null when not sweeping', () => {
+    it('[U02891] should return null when not sweeping', () => {
       mineSweeper.sweeping = false
 
       const dust = generateSweepDust(mineSweeper, 1000)
@@ -632,7 +632,7 @@ describe('Mine Sweeper Behavior', () => {
       expect(dust).toBeNull()
     })
 
-    it('should create dust particle when sweeping', () => {
+    it('[U02892] should create dust particle when sweeping', () => {
       mineSweeper.sweeping = true
       mineSweeper.direction = 0
       mineSweeper.x = 100
@@ -646,7 +646,7 @@ describe('Mine Sweeper Behavior', () => {
       expect(dust.color).toBe('#D2B48C')
     })
 
-    it('should position dust in front of unit based on direction', () => {
+    it('[U02893] should position dust in front of unit based on direction', () => {
       mineSweeper.sweeping = true
       mineSweeper.direction = 0 // Facing right
       mineSweeper.x = 100
@@ -658,7 +658,7 @@ describe('Mine Sweeper Behavior', () => {
       expect(dust.x).toBeGreaterThan(mineSweeper.x + 16) // Center + offset
     })
 
-    it('should have velocity in direction of movement', () => {
+    it('[U02894] should have velocity in direction of movement', () => {
       mineSweeper.sweeping = true
       mineSweeper.direction = Math.PI / 2 // Facing down
       mineSweeper.x = 100
@@ -671,7 +671,7 @@ describe('Mine Sweeper Behavior', () => {
   })
 
   describe('computeSweepDustRadius()', () => {
-    it('keeps a positive radius when the dust timestamp is ahead of the render clock', () => {
+    it('[U02895] keeps a positive radius when the dust timestamp is ahead of the render clock', () => {
       // size * (1 + ((now - startTime) / lifetime) * 0.5) with this skew is about -85.29
       const dust = {
         startTime: 11661.2375,
@@ -686,7 +686,7 @@ describe('Mine Sweeper Behavior', () => {
       expect(radius).toBeGreaterThan(0)
     })
 
-    it('grows dust over its lifetime and drops expired particles', () => {
+    it('[U02896] grows dust over its lifetime and drops expired particles', () => {
       const dust = { startTime: 1000, lifetime: 500, size: 8 }
 
       expect(computeSweepDustRadius(dust, 1250)).toBeCloseTo(8 * 1.25)

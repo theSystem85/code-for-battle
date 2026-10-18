@@ -53,7 +53,7 @@ describe('map traces on restart', () => {
     resetTrackMarksForTests()
   })
 
-  it('clears track marks when the same mapGrid array is refilled for a new match', () => {
+  it('[U02720] clears track marks when the same mapGrid array is refilled for a new match', () => {
     const mapGrid = makeGrassGrid(16, 16)
     driveTank(mapGrid)
     expect(trackMarkStore.count).toBeGreaterThan(0)
@@ -71,7 +71,7 @@ describe('map traces on restart', () => {
     }
   })
 
-  it('does not clear track marks for ordinary non-replacing map mutations', () => {
+  it('[U02721] does not clear track marks for ordinary non-replacing map mutations', () => {
     const mapGrid = makeGrassGrid(16, 16)
     driveTank(mapGrid)
     const before = trackMarkStore.count
@@ -79,7 +79,7 @@ describe('map traces on restart', () => {
     expect(trackMarkStore.count).toBe(before)
   })
 
-  it('empties transient effect and mine lists, including the host explosion alias', () => {
+  it('[U02722] empties transient effect and mine lists, including the host explosion alias', () => {
     const hostExplosions = [{ x: 1, y: 1, startTime: 0, duration: 500 }]
     const state = {
       explosions: [{ x: 2, y: 2 }],

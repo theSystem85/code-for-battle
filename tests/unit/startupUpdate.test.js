@@ -27,7 +27,7 @@ function setup({ waiting = true, installing = false, activate = true } = {}) {
 afterEach(() => vi.useRealTimers())
 
 describe('startup update preflight', () => {
-  it('checks explicitly, activates a waiting update, and reloads before game startup', async() => {
+  it('[U04205] checks explicitly, activates a waiting update, and reloads before game startup', async() => {
     const { win, worker, registration, store } = setup()
     const status = vi.fn()
     expect(await checkStartupUpdate({ win, enabled: true, onStatus: status })).toBe(true)
@@ -38,7 +38,7 @@ describe('startup update preflight', () => {
     expect(status).toHaveBeenLastCalledWith('Installing update')
   })
 
-  it('waits for an update found during the check to finish installing', async() => {
+  it('[U04206] waits for an update found during the check to finish installing', async() => {
     const { win, worker, registration } = setup({ waiting: false })
     registration.update.mockImplementation(async() => {
       registration.installing = worker
@@ -52,7 +52,7 @@ describe('startup update preflight', () => {
     expect(win.location.reload).toHaveBeenCalledOnce()
   })
 
-  it('allows game startup when offline, unchanged, or registration fails', async() => {
+  it('[U04207] allows game startup when offline, unchanged, or registration fails', async() => {
     const { win } = setup({ waiting: false })
     expect(await checkStartupUpdate({ win, enabled: true })).toBe(false)
     win.navigator.onLine = false
@@ -64,7 +64,7 @@ describe('startup update preflight', () => {
     expect(await checkStartupUpdate({ win, enabled: true })).toBe(false)
   })
 
-  it('does not reload repeatedly after activation or in forced offline mode', async() => {
+  it('[U04208] does not reload repeatedly after activation or in forced offline mode', async() => {
     const { win, store } = setup()
     store.set(UPDATE_RELOAD_GUARD, '1')
     expect(await checkStartupUpdate({ win, enabled: true })).toBe(false)
@@ -75,7 +75,7 @@ describe('startup update preflight', () => {
     expect(win.navigator.serviceWorker.register).not.toHaveBeenCalled()
   })
 
-  it('bounds a stalled installation and activation without leaving listeners behind', async() => {
+  it('[U04209] bounds a stalled installation and activation without leaving listeners behind', async() => {
     const { win } = setup({ activate: false })
     expect(await checkStartupUpdate({ win, enabled: true, timeoutMs: 10 })).toBe(false)
     win.navigator.serviceWorker.dispatchEvent(new Event('controllerchange'))
@@ -84,7 +84,7 @@ describe('startup update preflight', () => {
     expect(await checkStartupUpdate({ win: pending.win, enabled: true, timeoutMs: 10 })).toBe(false)
   })
 
-  it('does not treat a first installation as an update requiring reload', async() => {
+  it('[U04210] does not treat a first installation as an update requiring reload', async() => {
     const { win } = setup()
     win.navigator.serviceWorker.controller = null
     expect(await checkStartupUpdate({ win, enabled: true })).toBe(false)

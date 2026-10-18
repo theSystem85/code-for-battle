@@ -4,7 +4,7 @@ const iphoneLandscape = { ...devices['iPhone 13 Pro Max landscape'] }
 delete iphoneLandscape.defaultBrowserType
 test.use({ ...iphoneLandscape, storageState: undefined })
 
-test('scrolling from every production category never builds on release', async({ page, context }) => {
+test('[E00072] scrolling from every production category never builds on release', async({ page, context }) => {
   await page.addInitScript(() => {
     localStorage.setItem('tutorial-settings', JSON.stringify({ showTutorial: false, speechEnabled: false }))
     localStorage.setItem('tutorial-progress', JSON.stringify({ completed: true, stepIndex: 0 }))

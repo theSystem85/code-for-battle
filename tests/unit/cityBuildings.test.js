@@ -25,13 +25,13 @@ function prepared() {
 }
 
 describe('city clusters and settings', () => {
-  it('normalizes defaults and clamps integer settings, preserving zero centers', () => {
+  it('[U00857] normalizes defaults and clamps integer settings, preserving zero centers', () => {
     expect(normalizeDecorationSettings()).toEqual({ citySeeds: 2, cityClusterSize: 8, ruinSeeds: 3, ruinClusterSize: 7, stoneCount: 40 })
     expect(normalizeDecorationSettings({ citySeeds: 0, cityClusterSize: 900, ruinSeeds: -5, ruinClusterSize: 1 })).toEqual({ citySeeds: 0, cityClusterSize: 20, ruinSeeds: 0, ruinClusterSize: 3, stoneCount: 40 })
     expect(normalizeDecorationSettings({ citySeeds: '7.9', ruinSeeds: NaN }).citySeeds).toBe(7)
   })
 
-  it('places dense deterministic city grids only in seeded clusters, without overlap or water', () => {
+  it('[U00858] places dense deterministic city grids only in seeded clusters, without overlap or water', () => {
     const { map, pools } = fixture()
     map[12][12].type = 'water'
     map[40][40].ore = true
@@ -59,7 +59,7 @@ describe('city clusters and settings', () => {
 describe('city structure lifecycle', () => {
   it.each([
     ['house', 1, 1], ['shop', 2, 1], ['shop block', 2, 2], ['petrol station', 2, 2]
-  ])('derives %s HP from its actual %ix%i footprint', (label, width, height) => {
+  ])('[U00859] derives %s HP from its actual %ix%i footprint', (label, width, height) => {
     const { map, pools } = fixture()
     const group = { ...pools.grass.multi[0], groupLabel: label, width, height }
     const cells = new Array(64 * 64).fill(null)
@@ -73,7 +73,7 @@ describe('city structure lifecycle', () => {
     expect(cells.filter(Boolean).every(cell => cell.cityBuilding === buildings[0])).toBe(true)
   })
 
-  it('shares group HP, stamps existing debris, removes intact imagery, frees only static occupancy and clears cached paths', () => {
+  it('[U00860] shares group HP, stamps existing debris, removes intact imagery, frees only static occupancy and clears cached paths', () => {
     const { map, layout, buildings } = prepared()
     const building = buildings[0]
     expect(building.maxHealth).toBe(400)
@@ -96,7 +96,7 @@ describe('city structure lifecycle', () => {
     expect(map[building.y][building.x].decalCounter).toBe(counter)
   })
 
-  it('preserves tombstones and HP after serialization and layout preparation', () => {
+  it('[U00861] preserves tombstones and HP after serialization and layout preparation', () => {
     const { map, layout, buildings } = prepared()
     applyCityDamage(buildings[0], 9999, map, {})
     applyCityDamage(buildings[1], 100, map, {})
@@ -108,7 +108,7 @@ describe('city structure lifecycle', () => {
     expect(getValidDecorationCell(layout, restored, buildings[0].x, buildings[0].y)).toBeNull()
   })
 
-  it('accepts host snapshots in place and rejects local client damage', () => {
+  it('[U00862] accepts host snapshots in place and rejects local client damage', () => {
     const { map, buildings } = prepared()
     const building = buildings[0]
     const state = { multiplayerSession: { isRemote: true, localRole: 'client' } }
@@ -121,7 +121,7 @@ describe('city structure lifecycle', () => {
     expect(map[building.y][building.x].decalCounter).toBe(counter)
   })
 
-  it('draws health bars only for damaged living cities', () => {
+  it('[U00863] draws health bars only for damaged living cities', () => {
     const { map, buildings } = prepared()
     const ctx = { canvas: { width: 4096, height: 4096 }, fillRect: vi.fn() }
     renderCityHealthBars(ctx, map, { x: 0, y: 0 })
@@ -131,7 +131,7 @@ describe('city structure lifecycle', () => {
     expect(ctx.fillRect).toHaveBeenCalledTimes(2)
   })
 
-  it('resolves city targets by id and reference for commands, replays and saves', () => {
+  it('[U00864] resolves city targets by id and reference for commands, replays and saves', () => {
     const { map, buildings } = prepared()
     const building = buildings[0]
     expect(isCityBuildingTarget(building)).toBe(true)
@@ -147,7 +147,7 @@ describe('city structure lifecycle', () => {
     expect(getAttackableCityAtWorld(map, worldX, worldY)).toBeNull()
   })
 
-  it('leaves no impact decal on a living city building, but allows it once destroyed', () => {
+  it('[U00865] leaves no impact decal on a living city building, but allows it once destroyed', () => {
     const { map, buildings } = prepared()
     const building = buildings[0]
     expect(setTileDecal(map, {}, building.x + 1, building.y + 1, 'impact')).toBeNull()

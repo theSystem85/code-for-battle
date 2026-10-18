@@ -25,7 +25,7 @@ describe('waypointSounds.js', () => {
   })
 
   describe('markWaypointsAdded', () => {
-    it('should mark that waypoints were added', () => {
+    it('[U05093] should mark that waypoints were added', () => {
       markWaypointsAdded()
 
       // Verify by checking that handleAltKeyRelease plays sound
@@ -33,7 +33,7 @@ describe('waypointSounds.js', () => {
       expect(playSound).toHaveBeenCalled()
     })
 
-    it('should not throw when called multiple times', () => {
+    it('[U05094] should not throw when called multiple times', () => {
       expect(() => {
         markWaypointsAdded()
         markWaypointsAdded()
@@ -41,7 +41,7 @@ describe('waypointSounds.js', () => {
       }).not.toThrow()
     })
 
-    it('should set state that persists until Alt key is released', () => {
+    it('[U05095] should set state that persists until Alt key is released', () => {
       markWaypointsAdded()
 
       // State should persist
@@ -51,13 +51,13 @@ describe('waypointSounds.js', () => {
   })
 
   describe('handleAltKeyRelease', () => {
-    it('should not play sound if no waypoints were added', () => {
+    it('[U05096] should not play sound if no waypoints were added', () => {
       handleAltKeyRelease()
 
       expect(playSound).not.toHaveBeenCalled()
     })
 
-    it('should play sound when waypoints were added', () => {
+    it('[U05097] should play sound when waypoints were added', () => {
       markWaypointsAdded()
 
       handleAltKeyRelease()
@@ -70,7 +70,7 @@ describe('waypointSounds.js', () => {
       )
     })
 
-    it('should reset state after playing sound', () => {
+    it('[U05098] should reset state after playing sound', () => {
       markWaypointsAdded()
       handleAltKeyRelease()
 
@@ -80,7 +80,7 @@ describe('waypointSounds.js', () => {
       expect(playSound).toHaveBeenCalledTimes(1)
     })
 
-    it('should use stackable sound queue (true parameter)', () => {
+    it('[U05099] should use stackable sound queue (true parameter)', () => {
       markWaypointsAdded()
       handleAltKeyRelease()
 
@@ -92,7 +92,7 @@ describe('waypointSounds.js', () => {
       )
     })
 
-    it('should use correct volume (1.0)', () => {
+    it('[U05100] should use correct volume (1.0)', () => {
       markWaypointsAdded()
       handleAltKeyRelease()
 
@@ -104,7 +104,7 @@ describe('waypointSounds.js', () => {
       )
     })
 
-    it('should use correct pan value (0)', () => {
+    it('[U05101] should use correct pan value (0)', () => {
       markWaypointsAdded()
       handleAltKeyRelease()
 
@@ -116,7 +116,7 @@ describe('waypointSounds.js', () => {
       )
     })
 
-    it('should play the chainOfCommandsReceived sound', () => {
+    it('[U05102] should play the chainOfCommandsReceived sound', () => {
       markWaypointsAdded()
       handleAltKeyRelease()
 
@@ -130,7 +130,7 @@ describe('waypointSounds.js', () => {
   })
 
   describe('resetWaypointTracking', () => {
-    it('should clear waypoint added state', () => {
+    it('[U05103] should clear waypoint added state', () => {
       markWaypointsAdded()
       resetWaypointTracking()
 
@@ -139,11 +139,11 @@ describe('waypointSounds.js', () => {
       expect(playSound).not.toHaveBeenCalled()
     })
 
-    it('should not throw when called with no state', () => {
+    it('[U05104] should not throw when called with no state', () => {
       expect(() => resetWaypointTracking()).not.toThrow()
     })
 
-    it('should not throw when called multiple times', () => {
+    it('[U05105] should not throw when called multiple times', () => {
       expect(() => {
         resetWaypointTracking()
         resetWaypointTracking()
@@ -151,7 +151,7 @@ describe('waypointSounds.js', () => {
       }).not.toThrow()
     })
 
-    it('should allow new waypoints to be tracked after reset', () => {
+    it('[U05106] should allow new waypoints to be tracked after reset', () => {
       markWaypointsAdded()
       resetWaypointTracking()
       markWaypointsAdded()
@@ -163,7 +163,7 @@ describe('waypointSounds.js', () => {
   })
 
   describe('integration scenarios', () => {
-    it('should handle typical Alt+click waypoint workflow', () => {
+    it('[U05107] should handle typical Alt+click waypoint workflow', () => {
       // User presses Alt and clicks to add waypoints
       markWaypointsAdded()
       markWaypointsAdded()
@@ -177,7 +177,7 @@ describe('waypointSounds.js', () => {
       expect(playSound).toHaveBeenCalledWith('chainOfCommandsReceived', 1.0, 0, true)
     })
 
-    it('should handle Alt press without adding waypoints', () => {
+    it('[U05108] should handle Alt press without adding waypoints', () => {
       // User presses Alt but doesn't add any waypoints
       resetWaypointTracking() // Alt key pressed
 
@@ -188,7 +188,7 @@ describe('waypointSounds.js', () => {
       expect(playSound).not.toHaveBeenCalled()
     })
 
-    it('should handle multiple Alt key press/release cycles', () => {
+    it('[U05109] should handle multiple Alt key press/release cycles', () => {
       // First cycle - add waypoints
       markWaypointsAdded()
       handleAltKeyRelease()
@@ -205,7 +205,7 @@ describe('waypointSounds.js', () => {
       expect(playSound).toHaveBeenCalledTimes(2)
     })
 
-    it('should properly reset between Alt key sessions', () => {
+    it('[U05110] should properly reset between Alt key sessions', () => {
       // First session
       markWaypointsAdded()
       handleAltKeyRelease()

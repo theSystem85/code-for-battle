@@ -45,17 +45,17 @@ describe('cursorStyles.js', () => {
   })
 
   describe('GAME_DEFAULT_CURSOR constant', () => {
-    it('exports the default cursor URL', () => {
+    it('[U01134] exports the default cursor URL', () => {
       expect(GAME_DEFAULT_CURSOR_URL).toBe('/cursors/default.svg')
     })
 
-    it('exports the default cursor CSS string', () => {
+    it('[U01135] exports the default cursor CSS string', () => {
       expect(GAME_DEFAULT_CURSOR).toBe('url("/cursors/default.svg") 6 4, auto')
     })
   })
 
   describe('preloadCursorAssets', () => {
-    it('preloads all cursor assets as link tags', () => {
+    it('[U01136] preloads all cursor assets as link tags', () => {
       preloadCursorAssets()
 
       expect(globalThis.document.createElement).toHaveBeenCalledWith('link')
@@ -65,7 +65,7 @@ describe('cursorStyles.js', () => {
       expect(createElementCalls.length).toBeGreaterThan(0)
     })
 
-    it('creates Image objects for each cursor URL', () => {
+    it('[U01137] creates Image objects for each cursor URL', () => {
       preloadCursorAssets()
 
       expect(globalThis.Image).toHaveBeenCalled()
@@ -75,7 +75,7 @@ describe('cursorStyles.js', () => {
       expect(imageInstances[0].src).toBeDefined()
     })
 
-    it('sets correct attributes on link elements', () => {
+    it('[U01138] sets correct attributes on link elements', () => {
       const linkElements = []
       globalThis.document.createElement = vi.fn((tag) => {
         if (tag === 'link') {
@@ -100,7 +100,7 @@ describe('cursorStyles.js', () => {
       expect(validLinks.every(link => link.type === 'image/svg+xml')).toBe(true)
     })
 
-    it('does not preload twice when called multiple times', () => {
+    it('[U01139] does not preload twice when called multiple times', () => {
       preloadCursorAssets()
       const _firstCallCount = globalThis.document.createElement.mock.calls.length
 
@@ -112,7 +112,7 @@ describe('cursorStyles.js', () => {
       expect(globalThis.document.head.appendChild).not.toHaveBeenCalled()
     })
 
-    it('does nothing if document is undefined', () => {
+    it('[U01140] does nothing if document is undefined', () => {
       globalThis.document = undefined
 
       preloadCursorAssets()
@@ -120,7 +120,7 @@ describe('cursorStyles.js', () => {
       expect(globalThis.Image).not.toHaveBeenCalled()
     })
 
-    it('falls back to getElementsByTagName if document.head is undefined', () => {
+    it('[U01141] falls back to getElementsByTagName if document.head is undefined', () => {
       const mockHead = { appendChild: vi.fn() }
       globalThis.document.head = undefined
       globalThis.document.getElementsByTagName = vi.fn(() => [mockHead])
@@ -131,7 +131,7 @@ describe('cursorStyles.js', () => {
       expect(mockHead.appendChild).toHaveBeenCalled()
     })
 
-    it('skips empty href values', () => {
+    it('[U01142] skips empty href values', () => {
       const linkElements = []
       globalThis.document.createElement = vi.fn((tag) => {
         if (tag === 'link') {
@@ -153,14 +153,14 @@ describe('cursorStyles.js', () => {
       expect(emptyLinks.length).toBe(0)
     })
 
-    it('handles environment without Image constructor', () => {
+    it('[U01143] handles environment without Image constructor', () => {
       globalThis.Image = undefined
 
       expect(() => preloadCursorAssets()).not.toThrow()
       expect(globalThis.document.head.appendChild).toHaveBeenCalled()
     })
 
-    it('preloads all expected cursor types', () => {
+    it('[U01144] preloads all expected cursor types', () => {
       const linkElements = []
       globalThis.document.createElement = vi.fn((tag) => {
         if (tag === 'link') {

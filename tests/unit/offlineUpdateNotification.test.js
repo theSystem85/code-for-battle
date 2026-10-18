@@ -11,7 +11,7 @@ afterEach(() => {
 
 describe('available update notification', () => {
   for (const target of ['sidebar', 'notification', 'history']) {
-    it(`applies the waiting worker and reloads once from the ${target} action`, async() => {
+    it(`[U03196] applies the waiting worker and reloads once from the ${target} action`, async() => {
       vi.resetModules()
       vi.stubEnv('PROD', true)
       vi.useFakeTimers()

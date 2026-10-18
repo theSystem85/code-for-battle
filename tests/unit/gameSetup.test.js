@@ -65,7 +65,7 @@ describe('gameSetup.js', () => {
   })
 
   describe('initializeGameAssets', () => {
-    it('should call all preload functions', () => {
+    it('[U01698] should call all preload functions', () => {
       const callback = vi.fn()
 
       initializeGameAssets(callback)
@@ -75,7 +75,7 @@ describe('gameSetup.js', () => {
       expect(preloadTurretImages).toHaveBeenCalled()
     })
 
-    it('should invoke callback when all assets are loaded', () => {
+    it('[U01699] should invoke callback when all assets are loaded', () => {
       const callback = vi.fn()
 
       initializeGameAssets(callback)
@@ -84,7 +84,7 @@ describe('gameSetup.js', () => {
       expect(callback).toHaveBeenCalled()
     })
 
-    it('propagates required texture preparation failure without later publishing readiness', () => {
+    it('[U01700] propagates required texture preparation failure without later publishing readiness', () => {
       const error = new Error('Explosion sheet exceeds byte budget')
       preloadTileTextures.mockImplementationOnce(callback => callback(error))
       const callback = vi.fn()
@@ -92,7 +92,7 @@ describe('gameSetup.js', () => {
       expect(callback).toHaveBeenCalledExactlyOnceWith(error)
     })
 
-    it('should report asset progress while preload groups finish', () => {
+    it('[U01701] should report asset progress while preload groups finish', () => {
       const onProgress = vi.fn()
 
       initializeGameAssets(() => {}, onProgress)
@@ -106,7 +106,7 @@ describe('gameSetup.js', () => {
       expect(values[values.length - 1]).toBe(1)
     })
 
-    it('should wait to invoke callback until all assets are reported loaded', async() => {
+    it('[U01702] should wait to invoke callback until all assets are reported loaded', async() => {
       // Reset module state to get fresh state variables
       vi.resetModules()
 
@@ -149,14 +149,14 @@ describe('gameSetup.js', () => {
     })
 
     describe('Grid Initialization', () => {
-      it('should create map grid with correct dimensions', () => {
+      it('[U01703] should create map grid with correct dimensions', () => {
         generateMap(12345, mapGrid, 50, 50)
 
         expect(mapGrid.length).toBe(50)
         expect(mapGrid[0].length).toBe(50)
       })
 
-      it('should clear existing map content before generating', () => {
+      it('[U01704] should clear existing map content before generating', () => {
         // Pre-populate map
         mapGrid.push([{ type: 'oldTile' }])
 
@@ -166,7 +166,7 @@ describe('gameSetup.js', () => {
         expect(mapGrid[0][0].type).not.toBe('oldTile')
       })
 
-      it('should initialize all tiles with land type by default', () => {
+      it('[U01705] should initialize all tiles with land type by default', () => {
         generateMap(12345, mapGrid, 20, 20)
 
         let hasLand = false
@@ -181,7 +181,7 @@ describe('gameSetup.js', () => {
         expect(hasLand).toBe(true)
       })
 
-      it('should initialize tiles with ore: false', () => {
+      it('[U01706] should initialize tiles with ore: false', () => {
         generateMap(12345, mapGrid, 20, 20)
 
         // At least some tiles should have ore: false initially (before ore generation)
@@ -197,7 +197,7 @@ describe('gameSetup.js', () => {
         expect(hasOreFalse).toBe(true)
       })
 
-      it('should initialize tiles with noBuild: 0', () => {
+      it('[U01707] should initialize tiles with noBuild: 0', () => {
         generateMap(12345, mapGrid, 20, 20)
 
         for (let y = 0; y < 20; y++) {
@@ -209,7 +209,7 @@ describe('gameSetup.js', () => {
     })
 
     describe('Deterministic Generation', () => {
-      it('should generate identical maps with the same seed', () => {
+      it('[U01708] should generate identical maps with the same seed', () => {
         const mapGrid1 = []
         const mapGrid2 = []
 
@@ -224,7 +224,7 @@ describe('gameSetup.js', () => {
         }
       })
 
-      it('should generate different maps with different seeds', () => {
+      it('[U01709] should generate different maps with different seeds', () => {
         const mapGrid1 = []
         const mapGrid2 = []
 
@@ -248,7 +248,7 @@ describe('gameSetup.js', () => {
     })
 
     describe('Terrain Features - Rock Clusters', () => {
-      it('should generate rock clusters', () => {
+      it('[U01710] should generate rock clusters', () => {
         generateMap(12345, mapGrid, 100, 100)
 
         let rockCount = 0
@@ -263,7 +263,7 @@ describe('gameSetup.js', () => {
         expect(rockCount).toBeGreaterThan(0)
       })
 
-      it('should connect rock clusters into chains', () => {
+      it('[U01711] should connect rock clusters into chains', () => {
         generateMap(12345, mapGrid, 100, 100)
 
         // Rock tiles should form connected regions
@@ -280,7 +280,7 @@ describe('gameSetup.js', () => {
         expect(rockCount).toBeGreaterThan(50)
       })
 
-      it('generates solid three-tile-wide rock areas for plateaus', () => {
+      it('[U01712] generates solid three-tile-wide rock areas for plateaus', () => {
         generateMap(12345, mapGrid, 100, 100)
 
         let hasPlateauFootprint = false
@@ -305,7 +305,7 @@ describe('gameSetup.js', () => {
         expect(hasPlateauFootprint).toBe(true)
       })
 
-      it('prefers rock footprints compatible with two-tile-deep macro cliffs', () => {
+      it('[U01713] prefers rock footprints compatible with two-tile-deep macro cliffs', () => {
         generateMap(12345, mapGrid, 100, 100)
 
         let compatibleBlocks = 0
@@ -329,7 +329,7 @@ describe('gameSetup.js', () => {
     })
 
     describe('Terrain Features - Water', () => {
-      it('should generate lakes', () => {
+      it('[U01714] should generate lakes', () => {
         generateMap(12345, mapGrid, 100, 100)
 
         let waterCount = 0
@@ -344,7 +344,7 @@ describe('gameSetup.js', () => {
         expect(waterCount).toBeGreaterThan(0)
       })
 
-      it('should connect lakes with rivers', () => {
+      it('[U01715] should connect lakes with rivers', () => {
         generateMap(12345, mapGrid, 100, 100)
 
         // With 2 lakes, we should have a good amount of water tiles
@@ -361,7 +361,7 @@ describe('gameSetup.js', () => {
         expect(waterCount).toBeGreaterThan(30)
       })
 
-      it('should honor configured water percentage', () => {
+      it('[U01716] should honor configured water percentage', () => {
         gameState.mapWaterPercent = 25
         gameState.mapRockPercent = 0
         gameState.mapCenterLake = false
@@ -384,7 +384,7 @@ describe('gameSetup.js', () => {
         expect(waterPercent).toBeGreaterThan(15)
       })
 
-      it('should enforce max combined terrain budget (water + rocks <= 50%)', () => {
+      it('[U01717] should enforce max combined terrain budget (water + rocks <= 50%)', () => {
         gameState.mapWaterPercent = 40
         gameState.mapRockPercent = 30
 
@@ -393,7 +393,7 @@ describe('gameSetup.js', () => {
         expect(gameState.mapWaterPercent + gameState.mapRockPercent).toBeLessThanOrEqual(50)
       })
 
-      it('should create shoreline on checked map edges', () => {
+      it('[U01718] should create shoreline on checked map edges', () => {
         gameState.mapWaterPercent = 0
         gameState.mapRockPercent = 0
         gameState.mapShoreNorth = true
@@ -418,7 +418,7 @@ describe('gameSetup.js', () => {
         expect(westWaterCount).toBeGreaterThan(40)
       })
 
-      it('should form water in long connected lines rather than isolated single tiles', () => {
+      it('[U01719] should form water in long connected lines rather than isolated single tiles', () => {
         gameState.mapWaterPercent = 20
         gameState.mapRockPercent = 0
         gameState.mapShoreNorth = false
@@ -451,7 +451,7 @@ describe('gameSetup.js', () => {
     })
 
     describe('Terrain Features - Streets', () => {
-      it('should generate street network', () => {
+      it('[U01720] should generate street network', () => {
         generateMap(12345, mapGrid, 100, 100)
 
         let streetCount = 0
@@ -466,7 +466,7 @@ describe('gameSetup.js', () => {
         expect(streetCount).toBeGreaterThan(0)
       })
 
-      it('should not throw when creating street network for any player count', () => {
+      it('[U01721] should not throw when creating street network for any player count', () => {
         gameState.playerCount = 4
 
         // Should not throw
@@ -475,7 +475,7 @@ describe('gameSetup.js', () => {
     })
 
     describe('Ore Generation', () => {
-      it('should scale ore density down as tiles get farther from the seed crystal', () => {
+      it('[U01722] should scale ore density down as tiles get farther from the seed crystal', () => {
         expect(getOreDensityForDistance(0, 5, 5)).toBe(5)
         expect(getOreDensityForDistance(1, 5, 5)).toBe(4)
         expect(getOreDensityForDistance(2, 5, 5)).toBe(3)
@@ -484,7 +484,7 @@ describe('gameSetup.js', () => {
         expect(getOreDensityForDistance(12, 5, 5)).toBe(1)
       })
 
-      it('spreads initial ore density across reachable tiles before enriching the inner field', () => {
+      it('[U01723] spreads initial ore density across reachable tiles before enriching the inner field', () => {
         const assigned = allocateOreFieldCandidateDensities([
           { maxDensity: 4 },
           { maxDensity: 3 },
@@ -495,7 +495,7 @@ describe('gameSetup.js', () => {
         expect(assigned).toEqual([2, 2, 2, 1])
       })
 
-      it('should generate ore fields', () => {
+      it('[U01724] should generate ore fields', () => {
         generateMap(12345, mapGrid, 100, 100)
 
         let oreCount = 0
@@ -510,7 +510,7 @@ describe('gameSetup.js', () => {
         expect(oreCount).toBeGreaterThan(0)
       })
 
-      it('should only place ore on passable terrain', () => {
+      it('[U01725] should only place ore on passable terrain', () => {
         generateMap(12345, mapGrid, 100, 100)
 
         for (let y = 0; y < 100; y++) {
@@ -522,7 +522,7 @@ describe('gameSetup.js', () => {
         }
       })
 
-      it('should generate seed crystals', () => {
+      it('[U01726] should generate seed crystals', () => {
         generateMap(12345, mapGrid, 100, 100)
 
         let seedCount = 0
@@ -537,7 +537,7 @@ describe('gameSetup.js', () => {
         expect(seedCount).toBeGreaterThan(0)
       })
 
-      it('should place seed crystals in ore fields', () => {
+      it('[U01727] should place seed crystals in ore fields', () => {
         generateMap(12345, mapGrid, 100, 100)
 
         for (let y = 0; y < 100; y++) {
@@ -549,7 +549,7 @@ describe('gameSetup.js', () => {
         }
       })
 
-      it('should only generate seed crystals when total ore value is zero', () => {
+      it('[U01728] should only generate seed crystals when total ore value is zero', () => {
         gameState.mapOreFieldCount = 6
         gameState.mapOreTotalValue = 0
 
@@ -572,7 +572,7 @@ describe('gameSetup.js', () => {
         expect(nonSeedOreCount).toBe(0)
       })
 
-      it('should distribute total ore value in 1000-value steps across non-seed crystals', () => {
+      it('[U01729] should distribute total ore value in 1000-value steps across non-seed crystals', () => {
         gameState.mapOreFieldCount = 4
         gameState.mapOreTotalValue = 12000
 
@@ -591,7 +591,7 @@ describe('gameSetup.js', () => {
         expect(nonSeedOreValue).toBe(12000)
       })
 
-      it('should keep outer candidate tiles at or below inner candidate density during enrichment', () => {
+      it('[U01730] should keep outer candidate tiles at or below inner candidate density during enrichment', () => {
         const assigned = allocateOreFieldCandidateDensities([
           { maxDensity: 4 },
           { maxDensity: 3 },
@@ -602,7 +602,7 @@ describe('gameSetup.js', () => {
         expect(assigned).toEqual([4, 3, 2, 1])
       })
 
-      it('keeps low starting ore budgets harvestable instead of collapsing into one dense inner tile', () => {
+      it('[U01731] keeps low starting ore budgets harvestable instead of collapsing into one dense inner tile', () => {
         const assigned = allocateOreFieldCandidateDensities([
           { maxDensity: 4 },
           { maxDensity: 3 },
@@ -615,7 +615,7 @@ describe('gameSetup.js', () => {
     })
 
     describe('Factory Area Protection', () => {
-      it('should keep all base spawn anchors on land-reachable terrain', () => {
+      it('[U01732] should keep all base spawn anchors on land-reachable terrain', () => {
         gameState.playerCount = 4
         gameState.mapWaterPercent = 40
         gameState.mapRockPercent = 25
@@ -666,7 +666,7 @@ describe('gameSetup.js', () => {
         })
       })
 
-      it('should not place ore in factory areas', () => {
+      it('[U01733] should not place ore in factory areas', () => {
         gameState.playerCount = 2
 
         generateMap(12345, mapGrid, 100, 100)
@@ -787,7 +787,7 @@ describe('gameSetup.js', () => {
         restoreMapDefaults()
       })
 
-      it('curves enabled shorelines instead of stamping a constant-depth band', () => {
+      it('[U01734] curves enabled shorelines instead of stamping a constant-depth band', () => {
         configureQuietTerrain({
           mapWaterPercent: 16,
           mapShoreNorth: true,
@@ -814,7 +814,7 @@ describe('gameSetup.js', () => {
         expect(stats.longest).toBeLessThan(18)
       })
 
-      it('rounds the corner where two shores meet', () => {
+      it('[U01735] rounds the corner where two shores meet', () => {
         configureQuietTerrain({
           mapWaterPercent: 18,
           mapShoreNorth: true,
@@ -840,7 +840,7 @@ describe('gameSetup.js', () => {
         expect(stats.maxStep).toBeLessThan(mapGrid.length * 0.35)
       })
 
-      it('keeps a disabled shore dry when no other water source reaches it', () => {
+      it('[U01736] keeps a disabled shore dry when no other water source reaches it', () => {
         configureQuietTerrain({ mapShoreNorth: true })
 
         generateMap(12345, mapGrid, 80, 80)
@@ -853,7 +853,7 @@ describe('gameSetup.js', () => {
         expect(mapGrid[0][40].type).toBe('water')
       })
 
-      it('shapes the center lake as one irregular blob around the map center', () => {
+      it('[U01737] shapes the center lake as one irregular blob around the map center', () => {
         ;[4, 42, 99, 12345].forEach(seed => {
           configureQuietTerrain({ mapCenterLake: true })
           const lakeGrid = []
@@ -895,7 +895,7 @@ describe('gameSetup.js', () => {
         })
       })
 
-      it('reproduces organic water from the same seed and changes it for another seed', () => {
+      it('[U01738] reproduces organic water from the same seed and changes it for another seed', () => {
         configureQuietTerrain({
           mapWaterPercent: 12,
           mapShoreNorth: true,
@@ -937,7 +937,7 @@ describe('gameSetup.js', () => {
       }
     })
 
-    it('should remove ore from factory tiles', () => {
+    it('[U01739] should remove ore from factory tiles', () => {
       const factories = [
         { x: 10, y: 10, width: 3, height: 3 }
       ]
@@ -951,7 +951,7 @@ describe('gameSetup.js', () => {
       }
     })
 
-    it('should remove ore from building tiles', () => {
+    it('[U01740] should remove ore from building tiles', () => {
       const buildings = [
         { x: 20, y: 20, width: 2, height: 2 }
       ]
@@ -965,7 +965,7 @@ describe('gameSetup.js', () => {
       }
     })
 
-    it('should clear texture variation cache for affected tiles', () => {
+    it('[U01741] should clear texture variation cache for affected tiles', () => {
       const buildings = [
         { x: 15, y: 15, width: 2, height: 2 }
       ]
@@ -979,7 +979,7 @@ describe('gameSetup.js', () => {
       }
     })
 
-    it('should handle multiple factories', () => {
+    it('[U01742] should handle multiple factories', () => {
       const factories = [
         { x: 5, y: 5, width: 3, height: 3 },
         { x: 40, y: 40, width: 3, height: 3 }
@@ -1002,7 +1002,7 @@ describe('gameSetup.js', () => {
       }
     })
 
-    it('should handle multiple buildings', () => {
+    it('[U01743] should handle multiple buildings', () => {
       const buildings = [
         { x: 10, y: 10, width: 2, height: 2 },
         { x: 30, y: 30, width: 3, height: 2 }
@@ -1025,12 +1025,12 @@ describe('gameSetup.js', () => {
       }
     })
 
-    it('should handle empty factory array', () => {
+    it('[U01744] should handle empty factory array', () => {
       // Should not throw
       expect(() => cleanupOreFromBuildings(mapGrid, [], [])).not.toThrow()
     })
 
-    it('should handle tiles without ore property', () => {
+    it('[U01745] should handle tiles without ore property', () => {
       // Some tiles without ore
       mapGrid[25][25] = { type: 'rock' }
 
@@ -1042,7 +1042,7 @@ describe('gameSetup.js', () => {
       expect(() => cleanupOreFromBuildings(mapGrid, buildings, [])).not.toThrow()
     })
 
-    it('should skip tiles where ore is already false', () => {
+    it('[U01746] should skip tiles where ore is already false', () => {
       mapGrid[10][10].ore = false
       mapGrid[10][10].textureVariation = 'preserved'
 
@@ -1056,7 +1056,7 @@ describe('gameSetup.js', () => {
       expect(mapGrid[10][10].textureVariation).toBe('preserved')
     })
 
-    it('should handle missing map grid rows', () => {
+    it('[U01747] should handle missing map grid rows', () => {
       const sparseMapGrid = []
       sparseMapGrid[10] = []
       sparseMapGrid[10][10] = { type: 'land', ore: true }

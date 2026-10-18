@@ -30,7 +30,7 @@ function unitContext(actor) {
 }
 beforeEach(() => { localStorage.clear(); resetPolicyStore(); resetBasePolicyEngine(); gameState.replayMode = false; gameState.replay = null; gameState.humanPlayer = OWNER })
 
-it('pure step freezes rules and one-time completion until the accepted objective completes', () => {
+it('[U00278] pure step freezes rules and one-time completion until the accepted objective completes', () => {
   const p = machine('pure', { type: 'moveForward', tiles: 2 }, 'unit', true)
   const entered = stepPolicy(p, createPolicyRuntime(p), {})
   expect(entered.runtime.finished).toBe(false)
@@ -40,7 +40,7 @@ it('pure step freezes rules and one-time completion until the accepted objective
   expect(stepPolicy(p, entered.runtime, {}).runtime.finished).toBe(true)
 })
 
-it('an exact movement waits for stopped arrival, never unrelated idle, and is not reissued', () => {
+it('[U00279] an exact movement waits for stopped arrival, never unrelated idle, and is not reissued', () => {
   const p = machine('move', { type: 'moveForward', tiles: 2 })
   expect(savePolicy(OWNER, p).ok).toBe(true)
   const actor = unit()
@@ -60,7 +60,7 @@ it('an exact movement waits for stopped arrival, never unrelated idle, and is no
   expect(ctx.movement).toHaveBeenCalledTimes(1)
 })
 
-it('manual replacement fails a receipt instead of completing another objective', () => {
+it('[U00280] manual replacement fails a receipt instead of completing another objective', () => {
   const p = machine('manual', { type: 'moveForward', tiles: 2 }, 'unit', true)
   savePolicy(OWNER, p)
   const actor = unit(); applyPolicyToUnit(OWNER, actor, p.id)
@@ -73,7 +73,7 @@ it('manual replacement fails a receipt instead of completing another objective',
   expect(actor.policyBindings[0].runtime.finished).toBe(false)
 })
 
-it('tracks exact attack destruction after target cleanup, without accepting a missing/sold target', () => {
+it('[U00281] tracks exact attack destruction after target cleanup, without accepting a missing/sold target', () => {
   const actor = unit()
   const enemy = { ...unit('enemy'), owner: 'player2' }
   const objective = { kind: 'attack', ownerId: OWNER, target: { entityKind: 'unit', id: enemy.id, ownerId: enemy.owner } }
@@ -93,7 +93,7 @@ function baseContext() {
     receipt: () => receiptId }
 }
 
-it('production waits for its exact receipt, survives save/restore and retries only refusals', () => {
+it('[U00282] production waits for its exact receipt, survives save/restore and retries only refusals', () => {
   const p = machine('building', { type: 'buildBuilding', buildingType: 'powerPlant' }, 'build', true)
   expect(savePolicy(OWNER, p).ok).toBe(true)
   setPolicyEnabled(OWNER, p.id, true); setBuildAutomationOptIn(OWNER, true)
@@ -111,7 +111,7 @@ it('production waits for its exact receipt, survives save/restore and retries on
   expect(ctx.queue).toHaveBeenCalledTimes(1)
 })
 
-it('unit stack completion is exact, owner isolated and duplicate acknowledgement safe', () => {
+it('[U00283] unit stack completion is exact, owner isolated and duplicate acknowledgement safe', () => {
   const p = machine('stack', { type: 'buildUnits', unitType: 'tank', quantity: 2, delivery: 'factoryRally' }, 'unitBuild', true)
   savePolicy(OWNER, p); setPolicyEnabled(OWNER, p.id, true); setUnitBuildAutomationOptIn(OWNER, true)
   let receiptId
@@ -132,7 +132,7 @@ it('unit stack completion is exact, owner isolated and duplicate acknowledgement
   expect(queue).toHaveBeenCalledTimes(1)
 })
 
-it('cancellation and revision/reset cleanup do not falsely finish or leak production receipts', () => {
+it('[U00284] cancellation and revision/reset cleanup do not falsely finish or leak production receipts', () => {
   const p = machine('cancel', { type: 'buildBuilding', buildingType: 'powerPlant' }, 'build', true)
   savePolicy(OWNER, p); setPolicyEnabled(OWNER, p.id, true); setBuildAutomationOptIn(OWNER, true)
   const ctx = baseContext(); updateBasePolicies(ctx, 0)
@@ -145,7 +145,7 @@ it('cancellation and revision/reset cleanup do not falsely finish or leak produc
   expect(exportBaseAutomationRuntime()).toEqual([])
 })
 
-it('waits survive unit runtime round-trip and compile without hidden source changes', () => {
+it('[U00285] waits survive unit runtime round-trip and compile without hidden source changes', () => {
   const p = machine('persist', { type: 'moveForward', tiles: 2 })
   savePolicy(OWNER, p)
   const actor = unit(); applyPolicyToUnit(OWNER, actor, p.id)
@@ -157,7 +157,7 @@ it('waits survive unit runtime round-trip and compile without hidden source chan
 })
 
 
-it('a competing automation fails the unissued wait and cannot fulfil the previous issuer objective', () => {
+it('[U00286] a competing automation fails the unissued wait and cannot fulfil the previous issuer objective', () => {
   const actor = unit()
   const first = machine('first', { type: 'moveForward', tiles: 2 })
   const second = machine('second', { type: 'moveForward', tiles: 3 })
@@ -174,7 +174,7 @@ it('a competing automation fails the unissued wait and cannot fulfil the previou
   expect(b.runtime.wait.status).toBe('failed')
 })
 
-it('WHILE cannot return or reissue its finite effect until completion, and THEN returns without reissuing', () => {
+it('[U00287] WHILE cannot return or reissue its finite effect until completion, and THEN returns without reissuing', () => {
   const p = machine('while', { type: 'moveForward', tiles: 2 })
   p.states[0].transitions[0] = { id: 'start', kind: 'while', when: { type: 'underFire' }, to: 'act' }
   let r = createPolicyRuntime(p)
@@ -189,7 +189,7 @@ it('WHILE cannot return or reissue its finite effect until completion, and THEN 
   expect(outcome.effects).toEqual([])
 })
 
-it('unit refusals and unrelated idleness remain blocked rather than treating failure as completion', () => {
+it('[U00288] unit refusals and unrelated idleness remain blocked rather than treating failure as completion', () => {
   const p = machine('refused', { type: 'moveForward', tiles: 2 }, 'unit', true)
   savePolicy(OWNER, p)
   const actor = unit(); applyPolicyToUnit(OWNER, actor, p.id)
@@ -201,7 +201,7 @@ it('unit refusals and unrelated idleness remain blocked rather than treating fai
   expect(ctx.movement).not.toHaveBeenCalled()
 })
 
-it('service completion requires full resource at the exact still-owned provider, while flight waits for its actual state', () => {
+it('[U00289] service completion requires full resource at the exact still-owned provider, while flight waits for its actual state', () => {
   const actor = { ...unit(), type: 'ambulance', medics: 0, maxMedics: 4, refillingTarget: null }
   const hospital = { id: 'hospital', isBuilding: true, owner: OWNER, x: 5, y: 5, width: 2, height: 2, health: 100 }
   actor.refillingTarget = hospital
@@ -221,7 +221,7 @@ it('service completion requires full resource at the exact still-owned provider,
   expect(unitCompletionStatus(actor, flight, ctx, 750).status).toBe('completed')
 })
 
-it('behaviour revision releases old exact-target watchers and starts a fresh objective', () => {
+it('[U00290] behaviour revision releases old exact-target watchers and starts a fresh objective', () => {
   const p = machine('revision', { type: 'attackNearestEnemy' })
   savePolicy(OWNER, p)
   const actor = unit(); const enemy = { ...unit('enemy'), owner: 'player2', x: 64 }
@@ -237,7 +237,7 @@ it('behaviour revision releases old exact-target watchers and starts a fresh obj
 })
 
 
-it('host source resync does not erase the owning client completion receipt or its production run', () => {
+it('[U00291] host source resync does not erase the owning client completion receipt or its production run', () => {
   const p = machine('resync', { type: 'buildBuilding', buildingType: 'powerPlant' }, 'build', true)
   savePolicy(OWNER, p); setPolicyEnabled(OWNER, p.id, true); setBuildAutomationOptIn(OWNER, true)
   const ctx = baseContext(); updateBasePolicies(ctx, 0)
@@ -249,7 +249,7 @@ it('host source resync does not erase the owning client completion receipt or it
   expect(getBasePolicyStatus(p.id).waiting).toBe(true)
 })
 
-it('build refusal retries at the existing cadence and issues only one receipt after acceptance', () => {
+it('[U00292] build refusal retries at the existing cadence and issues only one receipt after acceptance', () => {
   const p = machine('retry', { type: 'buildBuilding', buildingType: 'powerPlant' }, 'build', true)
   savePolicy(OWNER, p); setPolicyEnabled(OWNER, p.id, true); setBuildAutomationOptIn(OWNER, true)
   const ctx = baseContext()

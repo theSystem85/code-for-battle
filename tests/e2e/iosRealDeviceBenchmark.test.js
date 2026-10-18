@@ -199,7 +199,7 @@ function buildTimeoutError(events, benchmarkUrl) {
 test.describe('iOS real-device benchmark', () => {
   test.skip(!RUN_REAL_DEVICE_BENCHMARK, 'Set IOS_REAL_DEVICE_BENCHMARK=1 to run the manual real-iPhone benchmark.')
 
-  test('runs the benchmark on a manually connected real iPhone and fails on crash/reload/visual corruption', async({ browserName }, testInfo) => {
+  test('[E00054] runs the benchmark on a manually connected real iPhone and fails on crash/reload/visual corruption', async({ browserName }, testInfo) => {
     void browserName
     testInfo.setTimeout(PHONE_OPEN_TIMEOUT_MS + RESULT_TIMEOUT_MS + 30000)
 

@@ -120,7 +120,7 @@ function createTestMapGrid(width = 20, height = 20) {
 
 describe('Unit Combat System', () => {
   describe('Target Acquisition', () => {
-    it('should track assigned unit target', () => {
+    it('[U04591] should track assigned unit target', () => {
       const attacker = createCombatUnit({ tileX: 5, tileY: 5, owner: 'player' })
       const target = createCombatUnit({ tileX: 10, tileY: 5, owner: 'enemy' })
 
@@ -130,7 +130,7 @@ describe('Unit Combat System', () => {
       expect(attacker.target.owner).toBe('enemy')
     })
 
-    it('should clear target when target is destroyed', () => {
+    it('[U04592] should clear target when target is destroyed', () => {
       const attacker = createCombatUnit({ tileX: 5, tileY: 5 })
       const target = createCombatUnit({ tileX: 10, tileY: 5, owner: 'enemy', health: 0 })
 
@@ -140,7 +140,7 @@ describe('Unit Combat System', () => {
       expect(target.health).toBe(0)
     })
 
-    it('should target buildings', () => {
+    it('[U04593] should target buildings', () => {
       const attacker = createCombatUnit({ tileX: 5, tileY: 5 })
       const building = createMockBuilding({ x: 10, y: 10, owner: 'enemy' })
 
@@ -150,14 +150,14 @@ describe('Unit Combat System', () => {
       expect(attacker.target.type).toBe('powerPlant')
     })
 
-    it('should handle null target gracefully', () => {
+    it('[U04594] should handle null target gracefully', () => {
       const attacker = createCombatUnit({ tileX: 5, tileY: 5 })
       attacker.target = null
 
       expect(attacker.target).toBeNull()
     })
 
-    it('should maintain attack queue', () => {
+    it('[U04595] should maintain attack queue', () => {
       const attacker = createCombatUnit({ tileX: 5, tileY: 5 })
       const target1 = createCombatUnit({ tileX: 10, tileY: 5, owner: 'enemy' })
       const target2 = createCombatUnit({ tileX: 15, tileY: 5, owner: 'enemy' })
@@ -169,7 +169,7 @@ describe('Unit Combat System', () => {
       expect(attacker.attackQueue[1]).toBe(target2)
     })
 
-    it('should distinguish between own units and enemy units', () => {
+    it('[U04596] should distinguish between own units and enemy units', () => {
       const playerUnit = createCombatUnit({ owner: 'player' })
       const allyUnit = createCombatUnit({ owner: 'player' })
       const enemyUnit = createCombatUnit({ owner: 'enemy' })
@@ -180,14 +180,14 @@ describe('Unit Combat System', () => {
   })
 
   describe('Range Checking', () => {
-    it('should calculate correct fire range in pixels', () => {
+    it('[U04597] should calculate correct fire range in pixels', () => {
       const expectedRangePixels = TANK_FIRE_RANGE * TILE_SIZE
 
       expect(expectedRangePixels).toBeGreaterThan(0)
       expect(expectedRangePixels).toBe(TANK_FIRE_RANGE * TILE_SIZE)
     })
 
-    it('should detect target within range', () => {
+    it('[U04598] should detect target within range', () => {
       const attacker = createCombatUnit({ tileX: 5, tileY: 5 })
       const target = createCombatUnit({ tileX: 7, tileY: 5, owner: 'enemy' })
 
@@ -202,7 +202,7 @@ describe('Unit Combat System', () => {
       expect(distance).toBeLessThan(fireRange)
     })
 
-    it('should detect target out of range', () => {
+    it('[U04599] should detect target out of range', () => {
       const attacker = createCombatUnit({ tileX: 0, tileY: 0 })
       const target = createCombatUnit({ tileX: 50, tileY: 50, owner: 'enemy' })
 
@@ -217,7 +217,7 @@ describe('Unit Combat System', () => {
       expect(distance).toBeGreaterThan(fireRange)
     })
 
-    it('should handle building target positions correctly', () => {
+    it('[U04600] should handle building target positions correctly', () => {
       const attacker = createCombatUnit({ tileX: 5, tileY: 5 })
       const building = createMockBuilding({ x: 10, y: 10, width: 3, height: 3 })
 
@@ -234,13 +234,13 @@ describe('Unit Combat System', () => {
   })
 
   describe('Turret Rotation', () => {
-    it('should have initial turret direction of 0', () => {
+    it('[U04601] should have initial turret direction of 0', () => {
       const tank = createCombatUnit({ type: 'tank_v1' })
 
       expect(tank.turretDirection).toBe(0)
     })
 
-    it('should rotate turret towards target', () => {
+    it('[U04602] should rotate turret towards target', () => {
       const tank = createCombatUnit({ tileX: 5, tileY: 5, turretDirection: 0 })
       const target = createCombatUnit({ tileX: 5, tileY: 10, owner: 'enemy' }) // Target is south
 
@@ -255,18 +255,18 @@ describe('Unit Combat System', () => {
       expect(Math.abs(angleToTarget - Math.PI / 2)).toBeLessThan(0.1)
     })
 
-    it('should have turret rotation speed', () => {
+    it('[U04603] should have turret rotation speed', () => {
       const tank = createCombatUnit({ turretRotationSpeed: 0.15 })
 
       expect(tank.turretRotationSpeed).toBe(0.15)
     })
 
-    it('should respect aiming threshold', () => {
+    it('[U04604] should respect aiming threshold', () => {
       expect(TURRET_AIMING_THRESHOLD).toBeGreaterThan(0)
       expect(TURRET_AIMING_THRESHOLD).toBeLessThan(Math.PI)
     })
 
-    it('should detect when turret is aimed at target', () => {
+    it('[U04605] should detect when turret is aimed at target', () => {
       const tank = createCombatUnit({ tileX: 5, tileY: 5, turretDirection: 0 })
       const target = createCombatUnit({ tileX: 10, tileY: 5, owner: 'enemy' }) // Target is east
 
@@ -282,7 +282,7 @@ describe('Unit Combat System', () => {
       expect(angleDiff).toBeLessThan(TURRET_AIMING_THRESHOLD)
     })
 
-    it('should detect when turret is not aimed at target', () => {
+    it('[U04606] should detect when turret is not aimed at target', () => {
       const tank = createCombatUnit({ tileX: 5, tileY: 5, turretDirection: 0 }) // Facing east
       const target = createCombatUnit({ tileX: 5, tileY: 10, owner: 'enemy' }) // Target is south
 
@@ -300,7 +300,7 @@ describe('Unit Combat System', () => {
   })
 
   describe('Damage Calculation', () => {
-    it('should apply base damage', () => {
+    it('[U04607] should apply base damage', () => {
       const target = createCombatUnit({ health: 100, owner: 'enemy' })
       const baseDamage = 25
 
@@ -309,7 +309,7 @@ describe('Unit Combat System', () => {
       expect(target.health).toBe(75)
     })
 
-    it('should not reduce health below zero', () => {
+    it('[U04608] should not reduce health below zero', () => {
       const target = createCombatUnit({ health: 10, owner: 'enemy' })
       const baseDamage = 25
 
@@ -318,7 +318,7 @@ describe('Unit Combat System', () => {
       expect(target.health).toBe(0)
     })
 
-    it('should apply armor reduction', () => {
+    it('[U04609] should apply armor reduction', () => {
       const target = createCombatUnit({ health: 100, owner: 'enemy' })
       target.armor = 2 // 50% damage reduction
       const baseDamage = 20
@@ -328,7 +328,7 @@ describe('Unit Combat System', () => {
       expect(reducedDamage).toBe(10)
     })
 
-    it('should handle units without armor', () => {
+    it('[U04610] should handle units without armor', () => {
       const target = createCombatUnit({ health: 100, owner: 'enemy' })
       // No armor property
       const baseDamage = 20
@@ -339,7 +339,7 @@ describe('Unit Combat System', () => {
       expect(reducedDamage).toBe(20)
     })
 
-    it('should track different damage values for unit types', () => {
+    it('[U04611] should track different damage values for unit types', () => {
       // Different unit types have different base damages
       const standardDamage = 25
       const tankV3Damage = 30
@@ -353,7 +353,7 @@ describe('Unit Combat System', () => {
   })
 
   describe('Crew System', () => {
-    it('should have full crew by default', () => {
+    it('[U04612] should have full crew by default', () => {
       const tank = createCombatUnit({ type: 'tank_v1' })
 
       expect(tank.crew.driver).toBe(true)
@@ -362,7 +362,7 @@ describe('Unit Combat System', () => {
       expect(tank.crew.loader).toBe(true)
     })
 
-    it('should prevent firing without loader', () => {
+    it('[U04613] should prevent firing without loader', () => {
       const tank = createCombatUnit({ type: 'tank_v1' })
       tank.crew.loader = false
 
@@ -372,7 +372,7 @@ describe('Unit Combat System', () => {
       expect(canFire).toBe(false)
     })
 
-    it('should allow firing with loader', () => {
+    it('[U04614] should allow firing with loader', () => {
       const tank = createCombatUnit({ type: 'tank_v1' })
       tank.crew.loader = true
 
@@ -383,14 +383,14 @@ describe('Unit Combat System', () => {
   })
 
   describe('Ammunition System', () => {
-    it('should track ammunition', () => {
+    it('[U04615] should track ammunition', () => {
       const tank = createCombatUnit({ ammunition: 50, maxAmmunition: 100 })
 
       expect(tank.ammunition).toBe(50)
       expect(tank.maxAmmunition).toBe(100)
     })
 
-    it('should deplete ammunition on fire', () => {
+    it('[U04616] should deplete ammunition on fire', () => {
       const tank = createCombatUnit({ ammunition: 10 })
       const ammoPerShot = 1
 
@@ -399,7 +399,7 @@ describe('Unit Combat System', () => {
       expect(tank.ammunition).toBe(9)
     })
 
-    it('should prevent firing when out of ammo', () => {
+    it('[U04617] should prevent firing when out of ammo', () => {
       const tank = createCombatUnit({ ammunition: 0 })
 
       const canFire = tank.ammunition > 0
@@ -407,14 +407,14 @@ describe('Unit Combat System', () => {
       expect(canFire).toBe(false)
     })
 
-    it('should track rocket ammo for apache', () => {
+    it('[U04618] should track rocket ammo for apache', () => {
       const apache = createCombatUnit({ type: 'apache', rocketAmmo: 30 })
 
       expect(apache.rocketAmmo).toBe(30)
       expect(apache.maxRocketAmmo).toBe(38)
     })
 
-    it('should mark apache as empty when out of rockets', () => {
+    it('[U04619] should mark apache as empty when out of rockets', () => {
       const apache = createCombatUnit({ type: 'apache', rocketAmmo: 0 })
       apache.apacheAmmoEmpty = true
 
@@ -423,7 +423,7 @@ describe('Unit Combat System', () => {
   })
 
   describe('Combat States', () => {
-    it('should track canFire state', () => {
+    it('[U04620] should track canFire state', () => {
       const tank = createCombatUnit({ canFire: true })
 
       expect(tank.canFire).toBe(true)
@@ -432,7 +432,7 @@ describe('Unit Combat System', () => {
       expect(tank.canFire).toBe(false)
     })
 
-    it('should track last shot time', () => {
+    it('[U04621] should track last shot time', () => {
       const tank = createCombatUnit()
       const now = 5000
 
@@ -441,7 +441,7 @@ describe('Unit Combat System', () => {
       expect(tank.lastShotTime).toBe(5000)
     })
 
-    it('should track retreat state', () => {
+    it('[U04622] should track retreat state', () => {
       const tank = createCombatUnit({ isRetreating: false })
 
       expect(tank.isRetreating).toBe(false)
@@ -450,7 +450,7 @@ describe('Unit Combat System', () => {
       expect(tank.isRetreating).toBe(true)
     })
 
-    it('should track guard mode', () => {
+    it('[U04623] should track guard mode', () => {
       const tank = createCombatUnit({ guardMode: false })
 
       tank.guardMode = true
@@ -462,20 +462,20 @@ describe('Unit Combat System', () => {
   })
 
   describe('Alert Mode (Tank V2/V3)', () => {
-    it('should initialize with alert mode off', () => {
+    it('[U04624] should initialize with alert mode off', () => {
       const tank = createCombatUnit({ type: 'tank-v2', alertMode: false })
 
       expect(tank.alertMode).toBe(false)
     })
 
-    it('should enable alert mode', () => {
+    it('[U04625] should enable alert mode', () => {
       const tank = createCombatUnit({ type: 'tank-v2' })
       tank.alertMode = true
 
       expect(tank.alertMode).toBe(true)
     })
 
-    it('should auto-scan for enemies in alert mode', () => {
+    it('[U04626] should auto-scan for enemies in alert mode', () => {
       const tank = createCombatUnit({ type: 'tank-v2', alertMode: true })
 
       // Alert mode enables auto-targeting within fire range
@@ -485,7 +485,7 @@ describe('Unit Combat System', () => {
   })
 
   describe('Burst Fire (Tank V3 and Rocket Tank)', () => {
-    it('should initialize without burst state', () => {
+    it('[U04627] should initialize without burst state', () => {
       const tankV3 = createCombatUnit({ type: 'tank-v3' })
       const rocketTank = createCombatUnit({ type: 'rocketTank' })
 
@@ -493,7 +493,7 @@ describe('Unit Combat System', () => {
       expect(rocketTank.burstState).toBeNull()
     })
 
-    it('should support burst state for rocket tank', () => {
+    it('[U04628] should support burst state for rocket tank', () => {
       const rocketTank = createCombatUnit({ type: 'rocketTank' })
 
       rocketTank.burstState = {
@@ -506,26 +506,26 @@ describe('Unit Combat System', () => {
   })
 
   describe('Apache Combat', () => {
-    it('should be an air unit', () => {
+    it('[U04629] should be an air unit', () => {
       const apache = createCombatUnit({ type: 'apache' })
 
       expect(apache.isAirUnit).toBe(true)
     })
 
-    it('should track flight state', () => {
+    it('[U04630] should track flight state', () => {
       const apache = createCombatUnit({ type: 'apache', flightState: 'flying' })
 
       expect(apache.flightState).toBe('flying')
     })
 
-    it('should have rocket ammo', () => {
+    it('[U04631] should have rocket ammo', () => {
       const apache = createCombatUnit({ type: 'apache' })
 
       expect(apache.rocketAmmo).toBe(38)
       expect(apache.maxRocketAmmo).toBe(38)
     })
 
-    it('should track volley state', () => {
+    it('[U04632] should track volley state', () => {
       const apache = createCombatUnit({ type: 'apache' })
 
       expect(apache.volleyState).toBeNull()
@@ -543,7 +543,7 @@ describe('Unit Combat System', () => {
       expect(apache.volleyState.rightRemaining).toBe(4)
     })
 
-    it('should track altitude', () => {
+    it('[U04633] should track altitude', () => {
       const apache = createCombatUnit({ type: 'apache', altitude: TILE_SIZE * 3 })
 
       expect(apache.altitude).toBe(TILE_SIZE * 3)
@@ -551,13 +551,13 @@ describe('Unit Combat System', () => {
   })
 
   describe('Howitzer Combat', () => {
-    it('should be a howitzer', () => {
+    it('[U04634] should be a howitzer', () => {
       const howitzer = createCombatUnit({ type: 'howitzer' })
 
       expect(howitzer.isHowitzer).toBe(true)
     })
 
-    it('should have howitzer-specific targeting', () => {
+    it('[U04635] should have howitzer-specific targeting', () => {
       const howitzer = createCombatUnit({ type: 'howitzer' })
 
       // Howitzers require visibility check but body rotation for aiming
@@ -566,7 +566,7 @@ describe('Unit Combat System', () => {
   })
 
   describe('Line of Sight', () => {
-    it('should check clear shot between units', () => {
+    it('[U04636] should check clear shot between units', () => {
       const attacker = createCombatUnit({ tileX: 5, tileY: 5 })
       const target = createCombatUnit({ tileX: 10, tileY: 5, owner: 'enemy' })
       const mapGrid = createTestMapGrid()
@@ -587,7 +587,7 @@ describe('Unit Combat System', () => {
       expect(hasObstacle).toBe(false)
     })
 
-    it('should detect obstacle blocking shot', () => {
+    it('[U04637] should detect obstacle blocking shot', () => {
       const mapGrid = createTestMapGrid()
       // Place obstacle between attacker and target
       mapGrid[5][7].type = 'rock'
@@ -607,7 +607,7 @@ describe('Unit Combat System', () => {
       expect(hasObstacle).toBe(true)
     })
 
-    it('should detect building blocking shot', () => {
+    it('[U04638] should detect building blocking shot', () => {
       const mapGrid = createTestMapGrid()
       // Place building between attacker and target
       const building = { type: 'powerPlant', x: 7, y: 5 }
@@ -630,7 +630,7 @@ describe('Unit Combat System', () => {
   })
 
   describe('Target Center Calculation', () => {
-    it('should calculate unit center correctly', () => {
+    it('[U04639] should calculate unit center correctly', () => {
       const unit = createCombatUnit({ tileX: 5, tileY: 5 })
 
       const centerX = unit.x + TILE_SIZE / 2
@@ -640,7 +640,7 @@ describe('Unit Combat System', () => {
       expect(centerY).toBe(5 * TILE_SIZE + TILE_SIZE / 2)
     })
 
-    it('should calculate building center correctly', () => {
+    it('[U04640] should calculate building center correctly', () => {
       const building = createMockBuilding({ x: 10, y: 10, width: 3, height: 2 })
 
       const centerX = building.x * TILE_SIZE + (building.width * TILE_SIZE) / 2
@@ -650,7 +650,7 @@ describe('Unit Combat System', () => {
       expect(centerY).toBe(10 * TILE_SIZE + (2 * TILE_SIZE) / 2)
     })
 
-    it('should adjust for apache altitude visual offset', () => {
+    it('[U04641] should adjust for apache altitude visual offset', () => {
       const apache = createCombatUnit({ type: 'apache', tileX: 5, tileY: 5, altitude: TILE_SIZE * 2 })
 
       const baseY = apache.y + TILE_SIZE / 2
@@ -661,21 +661,21 @@ describe('Unit Combat System', () => {
   })
 
   describe('Owner-Based Combat', () => {
-    it('should identify human player units', () => {
+    it('[U04642] should identify human player units', () => {
       const playerUnit = createCombatUnit({ owner: 'player' })
       gameState.humanPlayer = 'player'
 
       expect(playerUnit.owner).toBe(gameState.humanPlayer)
     })
 
-    it('should identify AI units', () => {
+    it('[U04643] should identify AI units', () => {
       const aiUnit = createCombatUnit({ owner: 'ai-red' })
       gameState.humanPlayer = 'player'
 
       expect(aiUnit.owner).not.toBe(gameState.humanPlayer)
     })
 
-    it('should check multiplayer party states', () => {
+    it('[U04644] should check multiplayer party states', () => {
       gameState.partyStates = [
         { partyId: 'player1', aiActive: false },
         { partyId: 'player2', aiActive: false },

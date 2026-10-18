@@ -15,21 +15,21 @@ import { TILE_SIZE } from '../../src/config.js'
 
 describe('helipadUtils', () => {
   describe('HELIPAD_LANDING_CENTER_OFFSET', () => {
-    it('should be a frozen object', () => {
+    it('[U01916] should be a frozen object', () => {
       expect(Object.isFrozen(HELIPAD_LANDING_CENTER_OFFSET)).toBe(true)
     })
 
-    it('should have x and y properties', () => {
+    it('[U01917] should have x and y properties', () => {
       expect(HELIPAD_LANDING_CENTER_OFFSET).toHaveProperty('x')
       expect(HELIPAD_LANDING_CENTER_OFFSET).toHaveProperty('y')
     })
 
-    it('should have expected offset values', () => {
+    it('[U01918] should have expected offset values', () => {
       expect(HELIPAD_LANDING_CENTER_OFFSET.x).toBe(25)
       expect(HELIPAD_LANDING_CENTER_OFFSET.y).toBe(44)
     })
 
-    it('should not be modifiable', () => {
+    it('[U01919] should not be modifiable', () => {
       expect(() => {
         HELIPAD_LANDING_CENTER_OFFSET.x = 100
       }).toThrow()
@@ -37,31 +37,31 @@ describe('helipadUtils', () => {
   })
 
   describe('getHelipadLandingCenter', () => {
-    it('should return null for null helipad', () => {
+    it('[U01920] should return null for null helipad', () => {
       expect(getHelipadLandingCenter(null)).toBeNull()
     })
 
-    it('should return null for undefined helipad', () => {
+    it('[U01921] should return null for undefined helipad', () => {
       expect(getHelipadLandingCenter(undefined)).toBeNull()
     })
 
-    it('should return null for helipad without x coordinate', () => {
+    it('[U01922] should return null for helipad without x coordinate', () => {
       expect(getHelipadLandingCenter({ y: 5 })).toBeNull()
     })
 
-    it('should return null for helipad without y coordinate', () => {
+    it('[U01923] should return null for helipad without y coordinate', () => {
       expect(getHelipadLandingCenter({ x: 5 })).toBeNull()
     })
 
-    it('should return null for helipad with non-numeric x', () => {
+    it('[U01924] should return null for helipad with non-numeric x', () => {
       expect(getHelipadLandingCenter({ x: 'five', y: 5 })).toBeNull()
     })
 
-    it('should return null for helipad with non-numeric y', () => {
+    it('[U01925] should return null for helipad with non-numeric y', () => {
       expect(getHelipadLandingCenter({ x: 5, y: 'five' })).toBeNull()
     })
 
-    it('should calculate center position at origin', () => {
+    it('[U01926] should calculate center position at origin', () => {
       const helipad = { x: 0, y: 0 }
       const center = getHelipadLandingCenter(helipad)
 
@@ -71,7 +71,7 @@ describe('helipadUtils', () => {
       })
     })
 
-    it('should calculate center position at non-origin', () => {
+    it('[U01927] should calculate center position at non-origin', () => {
       const helipad = { x: 5, y: 10 }
       const center = getHelipadLandingCenter(helipad)
 
@@ -81,7 +81,7 @@ describe('helipadUtils', () => {
       })
     })
 
-    it('should handle zero coordinates', () => {
+    it('[U01928] should handle zero coordinates', () => {
       const helipad = { x: 0, y: 0 }
       const center = getHelipadLandingCenter(helipad)
 
@@ -90,7 +90,7 @@ describe('helipadUtils', () => {
       expect(center.y).toBe(44)
     })
 
-    it('should ignore extra properties on helipad', () => {
+    it('[U01929] should ignore extra properties on helipad', () => {
       const helipad = { x: 1, y: 1, type: 'helipad', health: 100 }
       const center = getHelipadLandingCenter(helipad)
 
@@ -102,13 +102,13 @@ describe('helipadUtils', () => {
   })
 
   describe('getHelipadLandingTile', () => {
-    it('should return null for invalid helipad', () => {
+    it('[U01930] should return null for invalid helipad', () => {
       expect(getHelipadLandingTile(null)).toBeNull()
       expect(getHelipadLandingTile(undefined)).toBeNull()
       expect(getHelipadLandingTile({})).toBeNull()
     })
 
-    it('should return tile coordinates at origin', () => {
+    it('[U01931] should return tile coordinates at origin', () => {
       const helipad = { x: 0, y: 0 }
       const tile = getHelipadLandingTile(helipad)
 
@@ -119,7 +119,7 @@ describe('helipadUtils', () => {
       expect(tile.y).toBe(Math.floor(HELIPAD_LANDING_CENTER_OFFSET.y / TILE_SIZE))
     })
 
-    it('should return correct tile for offset helipad', () => {
+    it('[U01932] should return correct tile for offset helipad', () => {
       const helipad = { x: 5, y: 5 }
       const tile = getHelipadLandingTile(helipad)
 
@@ -129,7 +129,7 @@ describe('helipadUtils', () => {
       expect(tile).toEqual({ x: expectedX, y: expectedY })
     })
 
-    it('should return integer tile coordinates', () => {
+    it('[U01933] should return integer tile coordinates', () => {
       const helipad = { x: 3, y: 7 }
       const tile = getHelipadLandingTile(helipad)
 
@@ -139,13 +139,13 @@ describe('helipadUtils', () => {
   })
 
   describe('getHelipadLandingTopLeft', () => {
-    it('should return null for invalid helipad', () => {
+    it('[U01934] should return null for invalid helipad', () => {
       expect(getHelipadLandingTopLeft(null)).toBeNull()
       expect(getHelipadLandingTopLeft(undefined)).toBeNull()
       expect(getHelipadLandingTopLeft({})).toBeNull()
     })
 
-    it('should calculate top-left from center at origin', () => {
+    it('[U01935] should calculate top-left from center at origin', () => {
       const helipad = { x: 0, y: 0 }
       const topLeft = getHelipadLandingTopLeft(helipad)
 
@@ -156,7 +156,7 @@ describe('helipadUtils', () => {
       })
     })
 
-    it('should calculate top-left for offset helipad', () => {
+    it('[U01936] should calculate top-left for offset helipad', () => {
       const helipad = { x: 10, y: 10 }
       const topLeft = getHelipadLandingTopLeft(helipad)
 
@@ -169,7 +169,7 @@ describe('helipadUtils', () => {
       })
     })
 
-    it('should be exactly TILE_SIZE/2 to the left and up from center', () => {
+    it('[U01937] should be exactly TILE_SIZE/2 to the left and up from center', () => {
       const helipad = { x: 5, y: 5 }
       const center = getHelipadLandingCenter(helipad)
       const topLeft = getHelipadLandingTopLeft(helipad)
@@ -180,7 +180,7 @@ describe('helipadUtils', () => {
   })
 
   describe('integration', () => {
-    it('should provide consistent coordinates across all functions', () => {
+    it('[U01938] should provide consistent coordinates across all functions', () => {
       const helipad = { x: 7, y: 3 }
 
       const center = getHelipadLandingCenter(helipad)

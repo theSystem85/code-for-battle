@@ -45,7 +45,7 @@ describe('mission intro', () => {
     resetIntro()
   })
 
-  it('points at the public video path and does not open without a clip name', async() => {
+  it('[U02950] points at the public video path and does not open without a clip name', async() => {
     expect(missionIntroAssetPath('mission_01_intro.mp4')).toBe('/video/mission_01_intro.mp4')
     gameState.gamePaused = false
     queueMissionIntro({ id: 'Full_Base_Test', label: 'Full Base Test' })
@@ -54,7 +54,7 @@ describe('mission intro', () => {
     expect(gameState.gamePaused).toBe(false)
   })
 
-  it('shows the localized briefing when the video file is missing', async() => {
+  it('[U02951] shows the localized briefing when the video file is missing', async() => {
     localStorage.setItem(LANDING_LOCALE_STORAGE_KEY, 'de')
     const played = await playMissionIntro(mission, { loadTimeoutMs: 20 })
     const root = document.getElementById('mission-intro')
@@ -70,7 +70,7 @@ describe('mission intro', () => {
     expect(gameState.gamePaused).toBe(false)
   })
 
-  it('plays a loaded clip once and closes on Escape', async() => {
+  it('[U02952] plays a loaded clip once and closes on Escape', async() => {
     const played = await playMissionIntro(mission, {
       loadVideo: async(video) => {
         video.play = () => Promise.resolve()
@@ -89,7 +89,7 @@ describe('mission intro', () => {
     expect(gameState.gamePaused).toBe(false)
   })
 
-  it('waits for the loading screen to finish before opening a queued intro', async() => {
+  it('[U02953] waits for the loading screen to finish before opening a queued intro', async() => {
     queueMissionIntro(mission)
     expect(isMissionIntroOpen()).toBe(false)
     expect(gameState.gamePaused).toBe(true)

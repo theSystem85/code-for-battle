@@ -97,28 +97,28 @@ describe('Steering Behaviors', () => {
   })
 
   describe('STEERING_CONFIG', () => {
-    it('should have separation radius defined', () => {
+    it('[U04222] should have separation radius defined', () => {
       expect(STEERING_CONFIG.SEPARATION_RADIUS).toBeDefined()
       expect(STEERING_CONFIG.SEPARATION_RADIUS).toBeGreaterThan(0)
     })
 
-    it('should have alignment radius defined', () => {
+    it('[U04223] should have alignment radius defined', () => {
       expect(STEERING_CONFIG.ALIGNMENT_RADIUS).toBeDefined()
       expect(STEERING_CONFIG.ALIGNMENT_RADIUS).toBeGreaterThan(0)
     })
 
-    it('should have cohesion radius defined', () => {
+    it('[U04224] should have cohesion radius defined', () => {
       expect(STEERING_CONFIG.COHESION_RADIUS).toBeDefined()
       expect(STEERING_CONFIG.COHESION_RADIUS).toBeGreaterThan(0)
     })
 
-    it('should have weight values defined', () => {
+    it('[U04225] should have weight values defined', () => {
       expect(STEERING_CONFIG.SEPARATION_WEIGHT).toBeDefined()
       expect(STEERING_CONFIG.ALIGNMENT_WEIGHT).toBeDefined()
       expect(STEERING_CONFIG.COHESION_WEIGHT).toBeDefined()
     })
 
-    it('should have separation weight >= alignment weight', () => {
+    it('[U04226] should have separation weight >= alignment weight', () => {
       // Separation is typically most important to avoid collisions
       expect(STEERING_CONFIG.SEPARATION_WEIGHT).toBeGreaterThanOrEqual(
         STEERING_CONFIG.ALIGNMENT_WEIGHT
@@ -127,14 +127,14 @@ describe('Steering Behaviors', () => {
   })
 
   describe('calculateSeparation()', () => {
-    it('should return zero vector when no neighbors', () => {
+    it('[U04227] should return zero vector when no neighbors', () => {
       const result = calculateSeparation(unit, [])
 
       expect(result.x).toBe(0)
       expect(result.y).toBe(0)
     })
 
-    it('should push away from nearby units', () => {
+    it('[U04228] should push away from nearby units', () => {
       const nearbyUnit = {
         id: 'unit-2',
         x: 510,
@@ -149,7 +149,7 @@ describe('Steering Behaviors', () => {
       expect(result.x).toBeLessThan(0)
     })
 
-    it('should not affect units outside separation radius', () => {
+    it('[U04229] should not affect units outside separation radius', () => {
       const farUnit = {
         id: 'unit-far',
         x: unit.x + STEERING_CONFIG.SEPARATION_RADIUS + 100,
@@ -165,7 +165,7 @@ describe('Steering Behaviors', () => {
       expect(result.y).toBe(0)
     })
 
-    it('should increase force with closer proximity', () => {
+    it('[U04230] should increase force with closer proximity', () => {
       const closeUnit = {
         id: 'unit-close',
         x: 505,
@@ -186,7 +186,7 @@ describe('Steering Behaviors', () => {
       expect(Math.abs(closeResult.x)).toBeGreaterThan(Math.abs(furtherResult.x))
     })
 
-    it('should handle multiple neighbors', () => {
+    it('[U04231] should handle multiple neighbors', () => {
       neighbors = [
         { id: 'unit-2', x: 510, y: 500, size: 28 },
         { id: 'unit-3', x: 500, y: 510, size: 28 }
@@ -199,7 +199,7 @@ describe('Steering Behaviors', () => {
       expect(result.y).toBeLessThanOrEqual(0)
     })
 
-    it('should skip self when calculating', () => {
+    it('[U04232] should skip self when calculating', () => {
       neighbors = [unit] // Include self in neighbors
 
       const result = calculateSeparation(unit, neighbors)
@@ -210,14 +210,14 @@ describe('Steering Behaviors', () => {
   })
 
   describe('calculateAlignment()', () => {
-    it('should return zero vector when no neighbors', () => {
+    it('[U04233] should return zero vector when no neighbors', () => {
       const result = calculateAlignment(unit, [])
 
       expect(result.x).toBe(0)
       expect(result.y).toBe(0)
     })
 
-    it('should align with neighbor heading', () => {
+    it('[U04234] should align with neighbor heading', () => {
       // Alignment requires same owner and movement.velocity object
       const movingNeighbor = {
         id: 'unit-2',
@@ -236,7 +236,7 @@ describe('Steering Behaviors', () => {
       expect(result.y).toBeGreaterThan(0)
     })
 
-    it('should average multiple neighbor headings', () => {
+    it('[U04235] should average multiple neighbor headings', () => {
       neighbors = [
         { id: 'unit-2', x: 510, y: 500, owner: 'player1', movement: { velocity: { x: 2, y: 0 } }, size: 28, health: 100 },
         { id: 'unit-3', x: 490, y: 500, owner: 'player1', movement: { velocity: { x: -2, y: 0 } }, size: 28, health: 100 }
@@ -248,7 +248,7 @@ describe('Steering Behaviors', () => {
       expect(Math.abs(result.x)).toBeLessThan(0.5)
     })
 
-    it('should ignore stationary neighbors', () => {
+    it('[U04236] should ignore stationary neighbors', () => {
       const stationaryNeighbor = {
         id: 'unit-2',
         x: 510,
@@ -267,7 +267,7 @@ describe('Steering Behaviors', () => {
       expect(result.y).toBe(0)
     })
 
-    it('should skip neighbors outside alignment radius', () => {
+    it('[U04237] should skip neighbors outside alignment radius', () => {
       const farNeighbor = {
         id: 'unit-far',
         x: unit.x + STEERING_CONFIG.ALIGNMENT_RADIUS + 100,
@@ -287,14 +287,14 @@ describe('Steering Behaviors', () => {
   })
 
   describe('calculateCohesion()', () => {
-    it('should return zero vector when no neighbors', () => {
+    it('[U04238] should return zero vector when no neighbors', () => {
       const result = calculateCohesion(unit, [])
 
       expect(result.x).toBe(0)
       expect(result.y).toBe(0)
     })
 
-    it('should steer toward center of mass', () => {
+    it('[U04239] should steer toward center of mass', () => {
       // Cohesion requires same owner and moving units
       const rightNeighbor = {
         id: 'unit-2',
@@ -313,7 +313,7 @@ describe('Steering Behaviors', () => {
       expect(result.x).toBeGreaterThan(0)
     })
 
-    it('should find center of multiple neighbors', () => {
+    it('[U04240] should find center of multiple neighbors', () => {
       neighbors = [
         { id: 'unit-2', x: 600, y: 500, owner: 'player1', movement: { velocity: { x: 1, y: 0 } }, size: 28, health: 100 },
         { id: 'unit-3', x: 400, y: 500, owner: 'player1', movement: { velocity: { x: 1, y: 0 } }, size: 28, health: 100 }
@@ -325,7 +325,7 @@ describe('Steering Behaviors', () => {
       expect(Math.abs(result.x)).toBeLessThan(0.5)
     })
 
-    it('should ignore neighbors outside cohesion radius', () => {
+    it('[U04241] should ignore neighbors outside cohesion radius', () => {
       const farNeighbor = {
         id: 'unit-far',
         x: unit.x + STEERING_CONFIG.COHESION_RADIUS + 200,
@@ -341,7 +341,7 @@ describe('Steering Behaviors', () => {
       expect(result.y).toBe(0)
     })
 
-    it('should produce consistent normalized force regardless of distance', () => {
+    it('[U04242] should produce consistent normalized force regardless of distance', () => {
       // Both neighbors need owner and movement to be considered
       // Cohesion normalizes the force and applies weight, so force magnitude is constant
       const closeNeighbor = {
@@ -372,14 +372,14 @@ describe('Steering Behaviors', () => {
   })
 
   describe('calculateObstacleAvoidance()', () => {
-    it('should return zero vector when no mapGrid', () => {
+    it('[U04243] should return zero vector when no mapGrid', () => {
       const result = calculateObstacleAvoidance(unit, null, null)
 
       expect(result.x).toBe(0)
       expect(result.y).toBe(0)
     })
 
-    it('should return zero when unit not moving', () => {
+    it('[U04244] should return zero when unit not moving', () => {
       const mapGrid = [[{ type: 'grass' }]]
       unit.movement = { velocity: { x: 0, y: 0 } }
 
@@ -389,7 +389,7 @@ describe('Steering Behaviors', () => {
       expect(result.y).toBe(0)
     })
 
-    it('should avoid blocking tiles ahead', () => {
+    it('[U04245] should avoid blocking tiles ahead', () => {
       // Create a simple map with a blocked tile ahead
       const mapGrid = []
       for (let y = 0; y < 20; y++) {
@@ -415,7 +415,7 @@ describe('Steering Behaviors', () => {
       expect(typeof result.y).toBe('number')
     })
 
-    it('should not avoid distant obstacles', () => {
+    it('[U04246] should not avoid distant obstacles', () => {
       const mapGrid = []
       for (let y = 0; y < 50; y++) {
         mapGrid[y] = []
@@ -431,7 +431,7 @@ describe('Steering Behaviors', () => {
       expect(result.y).toBe(0)
     })
 
-    it('should handle multiple blocked tiles', () => {
+    it('[U04247] should handle multiple blocked tiles', () => {
       const mapGrid = []
       for (let y = 0; y < 20; y++) {
         mapGrid[y] = []
@@ -449,7 +449,7 @@ describe('Steering Behaviors', () => {
   })
 
   describe('calculateFormationCohesion()', () => {
-    it('should return zero when no formation target', () => {
+    it('[U04248] should return zero when no formation target', () => {
       unit.formationOffset = null
       unit.formationCenter = null
 
@@ -459,7 +459,7 @@ describe('Steering Behaviors', () => {
       expect(result.y).toBe(0)
     })
 
-    it('should steer toward formation position', () => {
+    it('[U04249] should steer toward formation position', () => {
       // Need both formationOffset and formationCenter
       unit.formationCenter = { x: 600, y: 500 }
       unit.formationOffset = { x: 50, y: 0 }
@@ -472,7 +472,7 @@ describe('Steering Behaviors', () => {
       expect(result.x).toBeGreaterThan(0)
     })
 
-    it('should have zero force when at formation position', () => {
+    it('[U04250] should have zero force when at formation position', () => {
       unit.formationCenter = { x: 500, y: 500 }
       unit.formationOffset = { x: TILE_SIZE / 2, y: TILE_SIZE / 2 }
 
@@ -485,7 +485,7 @@ describe('Steering Behaviors', () => {
   })
 
   describe('calculateSteeringForces()', () => {
-    it('should combine all steering behaviors', () => {
+    it('[U04251] should combine all steering behaviors', () => {
       neighbors = [
         { id: 'unit-2', x: 510, y: 500, velocityX: 1, velocityY: 0, size: 28 }
       ]
@@ -497,7 +497,7 @@ describe('Steering Behaviors', () => {
       expect(result).toHaveProperty('y')
     })
 
-    it('should apply weights to different behaviors', () => {
+    it('[U04252] should apply weights to different behaviors', () => {
       neighbors = [
         { id: 'unit-2', x: 505, y: 500, velocityX: 2, velocityY: 0, size: 28 }
       ]
@@ -509,14 +509,14 @@ describe('Steering Behaviors', () => {
       expect(typeof result.y).toBe('number')
     })
 
-    it('should handle empty neighbors and obstacles', () => {
+    it('[U04253] should handle empty neighbors and obstacles', () => {
       const result = calculateSteeringForces(unit, [], [])
 
       expect(result.x).toBe(0)
       expect(result.y).toBe(0)
     })
 
-    it('should clamp maximum steering force', () => {
+    it('[U04254] should clamp maximum steering force', () => {
       // Create situation with strong steering
       neighbors = [
         { id: 'unit-2', x: 501, y: 500, velocityX: 5, velocityY: 0, size: 28, health: 100 },
@@ -552,7 +552,7 @@ describe('Smooth Rotation', () => {
   })
 
   describe('Rotation Calculations', () => {
-    it('should calculate target rotation from velocity', () => {
+    it('[U04255] should calculate target rotation from velocity', () => {
       unit.velocityX = 0
       unit.velocityY = 1
 
@@ -562,7 +562,7 @@ describe('Smooth Rotation', () => {
       expect(targetRotation).toBeCloseTo(Math.PI / 2)
     })
 
-    it('should calculate rotation for diagonal movement', () => {
+    it('[U04256] should calculate rotation for diagonal movement', () => {
       unit.velocityX = 1
       unit.velocityY = 1
 
@@ -572,7 +572,7 @@ describe('Smooth Rotation', () => {
       expect(targetRotation).toBeCloseTo(Math.PI / 4)
     })
 
-    it('should handle negative velocities', () => {
+    it('[U04257] should handle negative velocities', () => {
       unit.velocityX = -1
       unit.velocityY = 0
 
@@ -584,7 +584,7 @@ describe('Smooth Rotation', () => {
   })
 
   describe('Rotation Interpolation', () => {
-    it('should lerp rotation smoothly', () => {
+    it('[U04258] should lerp rotation smoothly', () => {
       const currentRotation = 0
       const targetRotation = Math.PI
       const lerpFactor = 0.1
@@ -594,7 +594,7 @@ describe('Smooth Rotation', () => {
       expect(newRotation).toBeCloseTo(Math.PI * 0.1)
     })
 
-    it('should handle wrap-around from positive to negative', () => {
+    it('[U04259] should handle wrap-around from positive to negative', () => {
       // When rotating from just below PI to just above -PI
       const currentRotation = Math.PI - 0.1
       const targetRotation = -Math.PI + 0.1
@@ -607,7 +607,7 @@ describe('Smooth Rotation', () => {
       expect(Math.abs(diff)).toBeLessThan(0.5)
     })
 
-    it('should not overshoot target rotation', () => {
+    it('[U04260] should not overshoot target rotation', () => {
       const targetRotation = Math.PI / 4
       let currentRotation = 0
       const lerpFactor = 0.5
@@ -652,7 +652,7 @@ describe('Collision Avoidance', () => {
   })
 
   describe('Collision Detection', () => {
-    it('should detect overlapping units', () => {
+    it('[U04261] should detect overlapping units', () => {
       // Position units close enough to overlap
       // Combined radius = (28 + 28) / 2 = 28
       unit.x = 500
@@ -668,7 +668,7 @@ describe('Collision Avoidance', () => {
       expect(isColliding).toBe(true)
     })
 
-    it('should not detect collision for distant units', () => {
+    it('[U04262] should not detect collision for distant units', () => {
       otherUnit.x = 600
 
       const distance = Math.hypot(unit.x - otherUnit.x, unit.y - otherUnit.y)
@@ -679,7 +679,7 @@ describe('Collision Avoidance', () => {
       expect(isColliding).toBe(false)
     })
 
-    it('should handle units at same position', () => {
+    it('[U04263] should handle units at same position', () => {
       otherUnit.x = unit.x
       otherUnit.y = unit.y
 
@@ -690,7 +690,7 @@ describe('Collision Avoidance', () => {
   })
 
   describe('Collision Response', () => {
-    it('should calculate separation vector', () => {
+    it('[U04264] should calculate separation vector', () => {
       const dx = unit.x - otherUnit.x
       const dy = unit.y - otherUnit.y
       const distance = Math.hypot(dx, dy) || 0.001
@@ -702,7 +702,7 @@ describe('Collision Avoidance', () => {
       expect(Math.abs(separationY)).toBeLessThan(0.1) // Same y level
     })
 
-    it('should calculate push force based on overlap', () => {
+    it('[U04265] should calculate push force based on overlap', () => {
       // Position units with overlap
       unit.x = 500
       unit.y = 500
@@ -716,7 +716,7 @@ describe('Collision Avoidance', () => {
       expect(overlap).toBeGreaterThan(0)
     })
 
-    it('should give priority to moving units', () => {
+    it('[U04266] should give priority to moving units', () => {
       const unitSpeed = Math.hypot(unit.velocityX, unit.velocityY)
       const otherSpeed = Math.hypot(otherUnit.velocityX, otherUnit.velocityY)
 
@@ -724,7 +724,7 @@ describe('Collision Avoidance', () => {
       expect(unitSpeed).toBeCloseTo(otherSpeed)
     })
 
-    it('should give priority to units with targets', () => {
+    it('[U04267] should give priority to units with targets', () => {
       unit.target = { x: 600, y: 500 }
       otherUnit.target = null
 
@@ -737,14 +737,14 @@ describe('Collision Avoidance', () => {
   })
 
   describe('Unit Size Handling', () => {
-    it('should use correct collision radius', () => {
+    it('[U04268] should use correct collision radius', () => {
       const UNIT_SIZE = 28
       const collisionRadius = UNIT_SIZE / 2
 
       expect(collisionRadius).toBe(14)
     })
 
-    it('should handle different sized units', () => {
+    it('[U04269] should handle different sized units', () => {
       unit.size = 32
       otherUnit.size = 24
 
@@ -753,7 +753,7 @@ describe('Collision Avoidance', () => {
       expect(combinedRadius).toBe(28)
     })
 
-    it('should handle units without size property', () => {
+    it('[U04270] should handle units without size property', () => {
       delete unit.size
       const defaultSize = 28
 
@@ -780,7 +780,7 @@ describe('Velocity Calculations', () => {
   })
 
   describe('Speed Limiting', () => {
-    it('should clamp velocity to max speed', () => {
+    it('[U04271] should clamp velocity to max speed', () => {
       const targetVelocityX = 5
       const targetVelocityY = 5
       const maxSpeed = unit.speed
@@ -798,7 +798,7 @@ describe('Velocity Calculations', () => {
       expect(clampedMagnitude).toBeCloseTo(maxSpeed)
     })
 
-    it('should not modify velocity under max speed', () => {
+    it('[U04272] should not modify velocity under max speed', () => {
       const targetVelocityX = 1
       const targetVelocityY = 0
       const maxSpeed = unit.speed
@@ -810,7 +810,7 @@ describe('Velocity Calculations', () => {
   })
 
   describe('Velocity Smoothing', () => {
-    it('should apply acceleration limits', () => {
+    it('[U04273] should apply acceleration limits', () => {
       const maxAcceleration = 0.5
       const currentVelocityX = 0
       const targetVelocityX = 2
@@ -821,7 +821,7 @@ describe('Velocity Calculations', () => {
       expect(clampedAccelerationX).toBe(maxAcceleration)
     })
 
-    it('should apply deceleration limits', () => {
+    it('[U04274] should apply deceleration limits', () => {
       const maxDeceleration = 0.8
       const currentVelocityX = 2
       const targetVelocityX = 0
@@ -834,7 +834,7 @@ describe('Velocity Calculations', () => {
   })
 
   describe('Direction Calculation', () => {
-    it('should calculate heading from velocity', () => {
+    it('[U04275] should calculate heading from velocity', () => {
       unit.velocityX = 1
       unit.velocityY = 0
 
@@ -843,7 +843,7 @@ describe('Velocity Calculations', () => {
       expect(heading).toBe(0) // East
     })
 
-    it('should handle cardinal directions', () => {
+    it('[U04276] should handle cardinal directions', () => {
       const directions = [
         { vx: 1, vy: 0, expected: 0 },       // East
         { vx: 0, vy: 1, expected: Math.PI / 2 },  // South
@@ -857,7 +857,7 @@ describe('Velocity Calculations', () => {
       })
     })
 
-    it('should normalize velocity for direction', () => {
+    it('[U04277] should normalize velocity for direction', () => {
       unit.velocityX = 3
       unit.velocityY = 4
       const magnitude = Math.hypot(unit.velocityX, unit.velocityY)
@@ -888,20 +888,20 @@ describe('applySteeringForces()', () => {
     }
   })
 
-  it('should not modify unit if unit is null', () => {
+  it('[U04278] should not modify unit if unit is null', () => {
     expect(() => applySteeringForces(null, { x: 1, y: 1 }, 1)).not.toThrow()
   })
 
-  it('should not modify unit if steeringForce is null', () => {
+  it('[U04279] should not modify unit if steeringForce is null', () => {
     expect(() => applySteeringForces(unit, null, 1)).not.toThrow()
   })
 
-  it('should not modify unit if movement is missing', () => {
+  it('[U04280] should not modify unit if movement is missing', () => {
     delete unit.movement
     expect(() => applySteeringForces(unit, { x: 1, y: 1 }, 1)).not.toThrow()
   })
 
-  it('should add steering force to target velocity with default deltaTime', () => {
+  it('[U04281] should add steering force to target velocity with default deltaTime', () => {
     const steeringForce = { x: 0.5, y: 0.3 }
     const originalTargetX = unit.movement.targetVelocity.x
     const originalTargetY = unit.movement.targetVelocity.y
@@ -912,7 +912,7 @@ describe('applySteeringForces()', () => {
     expect(unit.movement.targetVelocity.y).toBe(originalTargetY + steeringForce.y)
   })
 
-  it('should scale steering force by deltaTime', () => {
+  it('[U04282] should scale steering force by deltaTime', () => {
     const steeringForce = { x: 1, y: 1 }
     const deltaTime = 0.5
     const originalTargetX = unit.movement.targetVelocity.x
@@ -924,7 +924,7 @@ describe('applySteeringForces()', () => {
     expect(unit.movement.targetVelocity.y).toBe(originalTargetY + steeringForce.y * deltaTime)
   })
 
-  it('should handle negative steering forces', () => {
+  it('[U04283] should handle negative steering forces', () => {
     const steeringForce = { x: -1.5, y: -0.5 }
     const deltaTime = 1
     const originalTargetX = unit.movement.targetVelocity.x
@@ -936,7 +936,7 @@ describe('applySteeringForces()', () => {
     expect(unit.movement.targetVelocity.y).toBe(originalTargetY - 0.5)
   })
 
-  it('should handle zero deltaTime', () => {
+  it('[U04284] should handle zero deltaTime', () => {
     const steeringForce = { x: 100, y: 100 }
     const deltaTime = 0
     const originalTargetX = unit.movement.targetVelocity.x
@@ -949,7 +949,7 @@ describe('applySteeringForces()', () => {
     expect(unit.movement.targetVelocity.y).toBe(originalTargetY)
   })
 
-  it('should not crash if targetVelocity is missing', () => {
+  it('[U04285] should not crash if targetVelocity is missing', () => {
     unit.movement.targetVelocity = undefined
     expect(() => applySteeringForces(unit, { x: 1, y: 1 }, 1)).not.toThrow()
   })
@@ -967,15 +967,15 @@ describe('updateFormationCenter()', () => {
     ]
   })
 
-  it('should return early if units array is empty', () => {
+  it('[U04286] should return early if units array is empty', () => {
     expect(() => updateFormationCenter([], 10, 10)).not.toThrow()
   })
 
-  it('should return early if units is null', () => {
+  it('[U04287] should return early if units is null', () => {
     expect(() => updateFormationCenter(null, 10, 10)).not.toThrow()
   })
 
-  it('should set formationCenter for all units', () => {
+  it('[U04288] should set formationCenter for all units', () => {
     const targetX = 15
     const targetY = 20
 
@@ -988,7 +988,7 @@ describe('updateFormationCenter()', () => {
     })
   })
 
-  it('should set formationOffset for all units', () => {
+  it('[U04289] should set formationOffset for all units', () => {
     updateFormationCenter(units, 10, 10)
 
     units.forEach(unit => {
@@ -998,7 +998,7 @@ describe('updateFormationCenter()', () => {
     })
   })
 
-  it('should calculate square formation based on unit count', () => {
+  it('[U04290] should calculate square formation based on unit count', () => {
     // With 4 units, should form a 2x2 square
     updateFormationCenter(units, 10, 10)
 
@@ -1010,7 +1010,7 @@ describe('updateFormationCenter()', () => {
     expect(uniqueOffsets.size).toBe(4)
   })
 
-  it('should create larger formation for more units', () => {
+  it('[U04291] should create larger formation for more units', () => {
     // Create 9 units for a 3x3 formation
     const nineUnits = Array.from({ length: 9 }, (_, i) => ({
       id: `unit-${i}`,
@@ -1033,7 +1033,7 @@ describe('updateFormationCenter()', () => {
     expect(nineUnits[0].formationOffset.y).not.toBe(nineUnits[8].formationOffset.y)
   })
 
-  it('should skip null units in array', () => {
+  it('[U04292] should skip null units in array', () => {
     const unitsWithNull = [
       { id: 'unit-1', formationCenter: null, formationOffset: null },
       null,
@@ -1047,7 +1047,7 @@ describe('updateFormationCenter()', () => {
     expect(unitsWithNull[2].formationCenter).toBeDefined()
   })
 
-  it('should handle single unit formation', () => {
+  it('[U04293] should handle single unit formation', () => {
     const singleUnit = [{ id: 'unit-1', formationCenter: null, formationOffset: null }]
 
     updateFormationCenter(singleUnit, 10, 10)
@@ -1070,15 +1070,15 @@ describe('clearFormation()', () => {
     ]
   })
 
-  it('should return early if units is null', () => {
+  it('[U04294] should return early if units is null', () => {
     expect(() => clearFormation(null)).not.toThrow()
   })
 
-  it('should return early if units is undefined', () => {
+  it('[U04295] should return early if units is undefined', () => {
     expect(() => clearFormation(undefined)).not.toThrow()
   })
 
-  it('should clear formationCenter for all units', () => {
+  it('[U04296] should clear formationCenter for all units', () => {
     clearFormation(units)
 
     units.forEach(unit => {
@@ -1086,7 +1086,7 @@ describe('clearFormation()', () => {
     })
   })
 
-  it('should clear formationOffset for all units', () => {
+  it('[U04297] should clear formationOffset for all units', () => {
     clearFormation(units)
 
     units.forEach(unit => {
@@ -1094,7 +1094,7 @@ describe('clearFormation()', () => {
     })
   })
 
-  it('should handle units that already have null formation data', () => {
+  it('[U04298] should handle units that already have null formation data', () => {
     const unitsNoFormation = [
       { id: 'unit-1', formationCenter: null, formationOffset: null },
       { id: 'unit-2', formationCenter: null, formationOffset: null }
@@ -1108,7 +1108,7 @@ describe('clearFormation()', () => {
     })
   })
 
-  it('should skip null entries in units array', () => {
+  it('[U04299] should skip null entries in units array', () => {
     const unitsWithNull = [
       { id: 'unit-1', formationCenter: { x: 100, y: 100 }, formationOffset: { x: 10, y: 0 } },
       null,
@@ -1121,20 +1121,20 @@ describe('clearFormation()', () => {
     expect(unitsWithNull[2].formationCenter).toBeNull()
   })
 
-  it('should work with empty array', () => {
+  it('[U04300] should work with empty array', () => {
     expect(() => clearFormation([])).not.toThrow()
   })
 })
 
 describe('calculateFlowFieldSteering()', () => {
-  it('should return zero vector when unit is null', () => {
+  it('[U04301] should return zero vector when unit is null', () => {
     const result = calculateFlowFieldSteering(null, [], null)
 
     expect(result.x).toBe(0)
     expect(result.y).toBe(0)
   })
 
-  it('should return zero vector when unit has no moveTarget', () => {
+  it('[U04302] should return zero vector when unit has no moveTarget', () => {
     const unit = { id: 'unit-1', moveTarget: null }
 
     const result = calculateFlowFieldSteering(unit, [], null)
@@ -1143,7 +1143,7 @@ describe('calculateFlowFieldSteering()', () => {
     expect(result.y).toBe(0)
   })
 
-  it('should return a vector when unit has moveTarget', () => {
+  it('[U04303] should return a vector when unit has moveTarget', () => {
     const unit = {
       id: 'unit-1',
       x: 100,

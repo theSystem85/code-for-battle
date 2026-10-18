@@ -5,7 +5,7 @@ import { RENDER_COUNTER_IDS, renderDiagnostics } from '../../src/performance/ren
 describe('PerformanceMonitor', () => {
   beforeEach(() => renderDiagnostics.resetForTests())
 
-  it('keeps a fixed-size aggregate report while recording arbitrary frame counts', () => {
+  it('[U03308] keeps a fixed-size aggregate report while recording arbitrary frame counts', () => {
     const monitor = new PerformanceMonitor()
     monitor.start()
 
@@ -43,7 +43,7 @@ describe('PerformanceMonitor', () => {
     expect(JSON.stringify(report).length).toBeLessThan(20000)
   })
 
-  it('retains cumulative diagnostic counters across a recording', () => {
+  it('[U03309] retains cumulative diagnostic counters across a recording', () => {
     const monitor = new PerformanceMonitor()
     monitor.start()
     monitor.recordDiagnosticCounter(RENDER_COUNTER_IDS.DRAW_CALLS, 4)
@@ -61,7 +61,7 @@ describe('PerformanceMonitor', () => {
     expect(report.diagnostics.lifetimeCounterTotals.DRAW_CALLS).toBe(11)
   })
 
-  it('samples bounded low-rate heap trends and labels suspected drops', () => {
+  it('[U03310] samples bounded low-rate heap trends and labels suspected drops', () => {
     let now = 0
     let heapBytes = 100
     const monitor = new PerformanceMonitor({ now: () => now, heapBytes: () => heapBytes })

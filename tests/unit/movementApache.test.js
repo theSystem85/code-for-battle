@@ -83,7 +83,7 @@ describe('updateApacheFlightState rotor loop lifecycle', () => {
     vi.clearAllMocks()
   })
 
-  it('stops a pending rotor loop if the apache lands before audio resolves', async() => {
+  it('[U03024] stops a pending rotor loop if the apache lands before audio resolves', async() => {
     let resolveSound
     soundMock.playPositionalSound.mockReturnValue(new Promise(resolve => {
       resolveSound = resolve
@@ -113,7 +113,7 @@ describe('updateApacheFlightState rotor loop lifecycle', () => {
     expect(apache.rotorSoundLoading).toBe(false)
   })
 
-  it('fades and stops an active rotor loop when the apache is destroyed', () => {
+  it('[U03025] fades and stops an active rotor loop when the apache is destroyed', () => {
     const stop = vi.fn()
     const apache = createApache({
       rotorSound: {
@@ -136,7 +136,7 @@ describe('updateApacheFlightState rotor loop lifecycle', () => {
     expect(apache.rotorSoundLoading).toBe(false)
   })
 
-  it('keeps apache in landing descent when helipad landing is requested and no flight plan remains', () => {
+  it('[U03026] keeps apache in landing descent when helipad landing is requested and no flight plan remains', () => {
     const apache = createApache({
       altitude: 0,
       flightState: 'grounded',

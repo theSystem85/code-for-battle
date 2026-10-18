@@ -58,7 +58,7 @@ describe('deviceLifecycle mobile layout detection', () => {
     })
   })
 
-  it('keeps phone landscape touch devices in mobile landscape mode', () => {
+  it('[U01286] keeps phone landscape touch devices in mobile landscape mode', () => {
     isPortrait = false
     updateMobileLayoutClasses()
 
@@ -67,7 +67,7 @@ describe('deviceLifecycle mobile layout detection', () => {
     expect(applyMobileSidebarLayoutMock).toHaveBeenCalledWith('landscape')
   })
 
-  it('switches touch tablets in landscape to desktop sidebar behavior', () => {
+  it('[U01287] switches touch tablets in landscape to desktop sidebar behavior', () => {
     Object.defineProperty(window, 'innerWidth', {
       configurable: true,
       writable: true,
@@ -86,7 +86,7 @@ describe('deviceLifecycle mobile layout detection', () => {
     expect(applyMobileSidebarLayoutMock).toHaveBeenCalledWith(null)
   })
 
-  it('still applies mobile portrait mode on touch portrait devices', () => {
+  it('[U01288] still applies mobile portrait mode on touch portrait devices', () => {
     isPortrait = true
     Object.defineProperty(window, 'innerWidth', {
       configurable: true,

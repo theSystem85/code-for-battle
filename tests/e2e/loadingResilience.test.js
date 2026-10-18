@@ -12,7 +12,7 @@ async function expectPlayable(page) {
 }
 
 for (const failure of ['normal', 'aborted image', 'missing metadata', 'hanging image', 'stale settings']) {
-  test(`loading reaches playable with ${failure}`, async({ page }) => {
+  test(`[E00059] loading reaches playable with ${failure}`, async({ page }) => {
     await page.addInitScript(() => localStorage.setItem('cfb-story-intro-v1', 'seen'))
     if (failure === 'aborted image') {
       await page.route('**/images/map/water_spritesheet.webp', route => route.abort())

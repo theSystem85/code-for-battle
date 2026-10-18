@@ -23,7 +23,7 @@ function memoryStorage(entries) {
 }
 
 describe('sprite sheet registry', () => {
-  it('matches index.json and every listed sheet exists', () => {
+  it('[U04162] matches index.json and every listed sheet exists', () => {
     const index = JSON.parse(readFileSync('public/images/map/sprite_sheets/index.json', 'utf8'))
     expect(index.sheets).toEqual([...DEFAULT_SSE_SHEETS])
     DEFAULT_SSE_SHEETS.forEach((path) => {
@@ -32,7 +32,7 @@ describe('sprite sheet registry', () => {
     })
   })
 
-  it('enables every dtv sheet by default and retires removed sheets', () => {
+  it('[U04163] enables every dtv sheet by default and retires removed sheets', () => {
     expect(OPTIONAL_SSE_SHEETS).toHaveLength(0)
     expect(DEFAULT_SSE_SHEETS).toContain('images/map/sprite_sheets/dtv3_winter.webp')
     expect(DEFAULT_SSE_SHEETS.filter(path => /\/dtv[23]_/.test(path))).toHaveLength(9)
@@ -41,7 +41,7 @@ describe('sprite sheet registry', () => {
     expect(isRetiredSpriteSheetPath('images/map/sprite_sheets/rockCliffsMountains_64x64_1024x1024.webp')).toBe(true)
   })
 
-  it('purges stored state that references retired sheets', () => {
+  it('[U04164] purges stored state that references retired sheets', () => {
     const storage = memoryStorage({
       [`rts-sse-metadata:${SEASONS}`]: '{}',
       [`rts-sse-metadata:${RETIRED_SEASONS}`]: '{}',
@@ -57,7 +57,7 @@ describe('sprite sheet registry', () => {
     expect(JSON.parse(storage.map.get('rts-integrated-spritesheet-selected-sheets'))).toEqual([])
   })
 
-  it('clears retired sheets from loaded saved games', () => {
+  it('[U04165] clears retired sheets from loaded saved games', () => {
     const saved = migrateSavedSpriteSheetState({
       useIntegratedSpriteSheetMode: true,
       activeSpriteSheetPath: 'images/map/sprite_sheets/dt_soil_1024_q85.webp',
@@ -69,7 +69,7 @@ describe('sprite sheet registry', () => {
   })
 })
 
-it('preserves restored sheets in stored settings and saved games', () => {
+it('[U04166] preserves restored sheets in stored settings and saved games', () => {
   const restored = DEFAULT_SSE_SHEETS.find(path => path.includes('dtv2_grass'))
   const storage = memoryStorage({
     'rts-sse-last-sheet': restored,
@@ -80,7 +80,7 @@ it('preserves restored sheets in stored settings and saved games', () => {
   expect(migrateSavedSpriteSheetState({ activeSpriteSheetPath: restored }).activeSpriteSheetPath).toBe(restored)
 })
 
-it('tags complete ruin footprints while preserving impassability and excluding huts', () => {
+it('[U04167] tags complete ruin footprints while preserving impassability and excluding huts', () => {
   DEFAULT_SSE_SHEETS.filter(path => /\/dtv[23]_/.test(path)).forEach(path => {
     const metadata = JSON.parse(readFileSync(`public/${path.replace('.webp', '.json')}`, 'utf8'))
     metadata.propLayout.forEach(prop => {
@@ -103,14 +103,14 @@ it('tags complete ruin footprints while preserving impassability and excluding h
 
 describe('opt-out sheet selection', () => {
   const dir = 'images/map/sprite_sheets/'
-  it('always offers every bundled sheet even with a stale index.json', async() => {
+  it('[U04168] always offers every bundled sheet even with a stale index.json', async() => {
     const { resolveAvailableSheetPaths } = await import('../../src/ui/spriteSheetRegistry.js')
     const stale = ['seasons_1024_q90_2', 'seasons_1024_q90_3', 'crystals_q90_1024x1024', 'rocks_64x64_1024x1024_q85', 'debris_craters_tracks'].map(n => `${dir}${n}.webp`)
     const available = resolveAvailableSheetPaths(stale, ['blob:uploaded', `/${dir}dtv3_city.webp`])
     expect(available).toEqual([...DEFAULT_SSE_SHEETS, 'blob:uploaded'])
   })
 
-  it('derives the selection from opt-outs and ignores retired entries', async() => {
+  it('[U04169] derives the selection from opt-outs and ignores retired entries', async() => {
     const { parseDisabledSheetPaths, selectionFromDisabled, disabledFromSelection } = await import('../../src/ui/spriteSheetRegistry.js')
     const city = `${dir}dtv3_city.webp`
     const disabled = parseDisabledSheetPaths(JSON.stringify([city, `${dir}seasons_1024_q90_2.webp`, 7]))

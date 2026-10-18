@@ -152,7 +152,7 @@ afterEach(() => {
 })
 
 describe('GameLoop', () => {
-  it('registers production controller and money displays', () => {
+  it('[U01637] registers production controller and money displays', () => {
     document.body.innerHTML = '<div id="mobileMoneyValue"></div>'
     const moneyEl = document.createElement('span')
     const productionController = {
@@ -173,7 +173,7 @@ describe('GameLoop', () => {
     expect(loop.moneyDisplays.has(document.getElementById('mobileMoneyValue'))).toBe(true)
   })
 
-  it('starts and stops the animation loop', () => {
+  it('[U01638] starts and stops the animation loop', () => {
     const loop = createLoop()
 
     loop.start()
@@ -190,7 +190,7 @@ describe('GameLoop', () => {
     expect(loop.animationId).toBe(null)
   })
 
-  it('requests render updates only when running', () => {
+  it('[U01639] requests render updates only when running', () => {
     const loop = createLoop()
 
     loop.requestRender()
@@ -203,7 +203,7 @@ describe('GameLoop', () => {
     expect(requestAnimationFrame).toHaveBeenCalled()
   })
 
-  it('does not reschedule when an animation frame is already queued', () => {
+  it('[U01640] does not reschedule when an animation frame is already queued', () => {
     const loop = createLoop()
     loop.running = true
     loop.animationId = 123
@@ -214,7 +214,7 @@ describe('GameLoop', () => {
   })
 
 
-  it('uses requestAnimationFrame when frame limiter is enabled', () => {
+  it('[U01641] uses requestAnimationFrame when frame limiter is enabled', () => {
     const loop = createLoop()
     loop.running = true
     gameState.frameLimiterEnabled = true
@@ -225,7 +225,7 @@ describe('GameLoop', () => {
     expect(setTimeout).not.toHaveBeenCalled()
   })
 
-  it('races RAF with a mobile watchdog and cancels the delayed RAF when the watchdog wins', () => {
+  it('[U01642] races RAF with a mobile watchdog and cancels the delayed RAF when the watchdog wins', () => {
     document.body.classList.add('is-touch')
     const loop = createLoop()
     loop.running = true
@@ -242,7 +242,7 @@ describe('GameLoop', () => {
     expect(loop.lastSchedulerSource).toBe('watchdog')
   })
 
-  it('cancels the mobile watchdog when RAF arrives on time', () => {
+  it('[U01643] cancels the mobile watchdog when RAF arrives on time', () => {
     document.body.classList.add('is-touch')
     const loop = createLoop()
     loop.running = true
@@ -256,7 +256,7 @@ describe('GameLoop', () => {
     expect(loop.lastSchedulerSource).toBe('raf')
   })
 
-  it('records paused scrolling frames for physical-device terrain diagnosis', () => {
+  it('[U01644] records paused scrolling frames for physical-device terrain diagnosis', () => {
     const loop = createLoop()
     loop.running = true
     gameState.gameStarted = true
@@ -273,7 +273,7 @@ describe('GameLoop', () => {
     }))
   })
 
-  it('uses setTimeout scheduling when frame limiter is disabled', () => {
+  it('[U01645] uses setTimeout scheduling when frame limiter is disabled', () => {
     const loop = createLoop()
     loop.running = true
     gameState.frameLimiterEnabled = false
@@ -285,7 +285,7 @@ describe('GameLoop', () => {
     expect(loop.frameTimeoutId).toBe(202)
   })
 
-  it('runs standard mode with a fixed simulation step scaled by game speed instead of render FPS', () => {
+  it('[U01646] runs standard mode with a fixed simulation step scaled by game speed instead of render FPS', () => {
     const productionQueue = {
       updateProgress: vi.fn(),
       setProductionController: vi.fn()
@@ -307,7 +307,7 @@ describe('GameLoop', () => {
     expect(productionQueue.updateProgress).toHaveBeenCalledWith(0)
   })
 
-  it('updates map scrolling once per rendered frame regardless of game speed', () => {
+  it('[U01647] updates map scrolling once per rendered frame regardless of game speed', () => {
     const loop = createLoop()
     loop.running = true
     gameState.gameStarted = true
@@ -323,7 +323,7 @@ describe('GameLoop', () => {
     expect(updateMapScrollingMock).toHaveBeenCalledWith(gameState, [], 33)
   })
 
-  it('clears timeout-based scheduling on stop', () => {
+  it('[U01648] clears timeout-based scheduling on stop', () => {
     const loop = createLoop()
     loop.running = true
     loop.frameTimeoutId = 303
@@ -334,7 +334,7 @@ describe('GameLoop', () => {
     expect(loop.frameTimeoutId).toBe(null)
   })
 
-  it('resumes from pause only when running', () => {
+  it('[U01649] resumes from pause only when running', () => {
     const loop = createLoop()
     loop.running = false
 
@@ -349,7 +349,7 @@ describe('GameLoop', () => {
     expect(requestAnimationFrame).toHaveBeenCalled()
   })
 
-  it('detects active scroll activity', () => {
+  it('[U01650] detects active scroll activity', () => {
     const loop = createLoop()
 
     gameState.isRightDragging = true
@@ -372,7 +372,7 @@ describe('GameLoop', () => {
     gameState.dragVelocity.x = 0
   })
 
-  it('renders paused frames and snaps drag velocity', () => {
+  it('[U01651] renders paused frames and snaps drag velocity', () => {
     const loop = createLoop()
     loop.running = true // Loop must be running for requestRender to work
     loop.forceRender = true
@@ -396,7 +396,7 @@ describe('GameLoop', () => {
     expect(requestAnimationFrame).toHaveBeenCalled()
   })
 
-  it('renders a loading frame before the game starts', () => {
+  it('[U01652] renders a loading frame before the game starts', () => {
     const loop = createLoop()
     loop.running = true
     gameState.gameStarted = false
@@ -409,7 +409,7 @@ describe('GameLoop', () => {
     expect(updateGameMock).not.toHaveBeenCalled()
   })
 
-  it('pauses and resumes audio when pause state changes', () => {
+  it('[U01653] pauses and resumes audio when pause state changes', () => {
     const loop = createLoop()
     loop.running = true
     gameState.gameStarted = true
@@ -429,7 +429,7 @@ describe('GameLoop', () => {
     expect(loop.lastFrameTime).toBe(1100)
   })
 
-  it('updates game state, UI, and milestones during active frames', () => {
+  it('[U01654] updates game state, UI, and milestones during active frames', () => {
     const moneyEl = document.createElement('span')
     const gameTimeEl = document.createElement('span')
     const productionController = {
@@ -472,7 +472,7 @@ describe('GameLoop', () => {
     expect(renderMinimapMock).toHaveBeenCalled()
   })
 
-  it('throttles minimap rendering on mobile layouts', () => {
+  it('[U01655] throttles minimap rendering on mobile layouts', () => {
     const loop = createLoop()
     loop.running = true
     document.body.classList.add('is-touch')
@@ -493,7 +493,7 @@ describe('GameLoop', () => {
     expect(renderMinimapMock).toHaveBeenCalledTimes(1)
   })
 
-  it('caps lockstep tick accumulator after catching up', () => {
+  it('[U01656] caps lockstep tick accumulator after catching up', () => {
     const loop = createLoop()
     loop.running = true
 
@@ -508,7 +508,7 @@ describe('GameLoop', () => {
     expect(gameState.lockstep.tickAccumulator).toBe(32)
   })
 
-  it('processes lockstep ticks and schedules delayed frames for large armies', () => {
+  it('[U01657] processes lockstep ticks and schedules delayed frames for large armies', () => {
     vi.useFakeTimers()
     const rafSpy = vi.fn(() => 101)
     vi.stubGlobal('requestAnimationFrame', rafSpy)

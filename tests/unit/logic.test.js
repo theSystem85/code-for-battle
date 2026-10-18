@@ -78,40 +78,40 @@ const TILE_SIZE = 32
 
 describe('logic.js', () => {
   describe('normalizeAngle', () => {
-    it('returns 0 for 0', () => {
+    it('[U02427] returns 0 for 0', () => {
       expect(normalizeAngle(0)).toBe(0)
     })
 
-    it('returns same angle for angles within -PI to PI', () => {
+    it('[U02428] returns same angle for angles within -PI to PI', () => {
       expect(normalizeAngle(1)).toBeCloseTo(1)
       expect(normalizeAngle(-1)).toBeCloseTo(-1)
       expect(normalizeAngle(Math.PI / 2)).toBeCloseTo(Math.PI / 2)
     })
 
-    it('normalizes angles > PI', () => {
+    it('[U02429] normalizes angles > PI', () => {
       expect(normalizeAngle(Math.PI + 0.5)).toBeCloseTo(-Math.PI + 0.5)
       expect(normalizeAngle(2 * Math.PI)).toBeCloseTo(0)
     })
 
-    it('normalizes angles < -PI', () => {
+    it('[U02430] normalizes angles < -PI', () => {
       expect(normalizeAngle(-Math.PI - 0.5)).toBeCloseTo(Math.PI - 0.5)
     })
 
-    it('handles very large positive angles', () => {
+    it('[U02431] handles very large positive angles', () => {
       const angle = 10 * Math.PI
       const result = normalizeAngle(angle)
       expect(result).toBeGreaterThanOrEqual(-Math.PI)
       expect(result).toBeLessThanOrEqual(Math.PI)
     })
 
-    it('handles very large negative angles', () => {
+    it('[U02432] handles very large negative angles', () => {
       const angle = -10 * Math.PI
       const result = normalizeAngle(angle)
       expect(result).toBeGreaterThanOrEqual(-Math.PI)
       expect(result).toBeLessThanOrEqual(Math.PI)
     })
 
-    it('handles PI exactly', () => {
+    it('[U02433] handles PI exactly', () => {
       // PI is on the boundary and should stay as PI or -PI
       const result = normalizeAngle(Math.PI)
       expect(Math.abs(result)).toBeCloseTo(Math.PI)
@@ -119,23 +119,23 @@ describe('logic.js', () => {
   })
 
   describe('angleDiff', () => {
-    it('returns 0 for same angles', () => {
+    it('[U02434] returns 0 for same angles', () => {
       expect(angleDiff(0, 0)).toBeCloseTo(0)
       expect(angleDiff(Math.PI / 2, Math.PI / 2)).toBeCloseTo(0)
     })
 
-    it('returns correct difference for different angles', () => {
+    it('[U02435] returns correct difference for different angles', () => {
       expect(angleDiff(0, Math.PI / 2)).toBeCloseTo(Math.PI / 2)
       expect(angleDiff(Math.PI / 2, 0)).toBeCloseTo(Math.PI / 2)
     })
 
-    it('returns absolute difference for angles near PI', () => {
+    it('[U02436] returns absolute difference for angles near PI', () => {
       // The actual function returns absolute value after modulo
       const result = angleDiff(0, Math.PI / 2)
       expect(result).toBeCloseTo(Math.PI / 2)
     })
 
-    it('handles opposite directions', () => {
+    it('[U02437] handles opposite directions', () => {
       // 0 and PI are opposite, difference is PI
       expect(angleDiff(0, Math.PI)).toBeCloseTo(Math.PI)
     })
@@ -144,28 +144,28 @@ describe('logic.js', () => {
   describe('smoothRotateTowardsAngle', () => {
     const rotationSpeed = 0.1
 
-    it('snaps to target when very close', () => {
+    it('[U02438] snaps to target when very close', () => {
       const current = 0
       const target = 0.05
       const result = smoothRotateTowardsAngle(current, target, rotationSpeed)
       expect(result).toBeCloseTo(target)
     })
 
-    it('rotates clockwise when target is ahead', () => {
+    it('[U02439] rotates clockwise when target is ahead', () => {
       const current = 0
       const target = 1
       const result = smoothRotateTowardsAngle(current, target, rotationSpeed)
       expect(result).toBeCloseTo(rotationSpeed)
     })
 
-    it('rotates counter-clockwise when target is behind', () => {
+    it('[U02440] rotates counter-clockwise when target is behind', () => {
       const current = 0
       const target = -1
       const result = smoothRotateTowardsAngle(current, target, rotationSpeed)
       expect(result).toBeCloseTo(-rotationSpeed)
     })
 
-    it('takes shortest path across PI boundary', () => {
+    it('[U02441] takes shortest path across PI boundary', () => {
       // At current = 0.9*PI, target = -0.9*PI, should rotate clockwise (positive direction)
       const current = 0.9 * Math.PI
       const target = -0.9 * Math.PI
@@ -174,7 +174,7 @@ describe('logic.js', () => {
       expect(result).toBeGreaterThan(current)
     })
 
-    it('returns normalized angle', () => {
+    it('[U02442] returns normalized angle', () => {
       const result = smoothRotateTowardsAngle(Math.PI, 0, rotationSpeed)
       expect(result).toBeGreaterThanOrEqual(-Math.PI)
       expect(result).toBeLessThanOrEqual(Math.PI)
@@ -184,37 +184,37 @@ describe('logic.js', () => {
   describe('isAdjacentToFactory', () => {
     const factory = { x: 5, y: 5, width: 2, height: 2 }
 
-    it('returns true for unit directly adjacent (left)', () => {
+    it('[U02443] returns true for unit directly adjacent (left)', () => {
       const unit = { x: 4 * TILE_SIZE, y: 5 * TILE_SIZE }
       expect(isAdjacentToFactory(unit, factory)).toBe(true)
     })
 
-    it('returns true for unit directly adjacent (right)', () => {
+    it('[U02444] returns true for unit directly adjacent (right)', () => {
       const unit = { x: 7 * TILE_SIZE, y: 5 * TILE_SIZE }
       expect(isAdjacentToFactory(unit, factory)).toBe(true)
     })
 
-    it('returns true for unit directly adjacent (top)', () => {
+    it('[U02445] returns true for unit directly adjacent (top)', () => {
       const unit = { x: 5 * TILE_SIZE, y: 4 * TILE_SIZE }
       expect(isAdjacentToFactory(unit, factory)).toBe(true)
     })
 
-    it('returns true for unit directly adjacent (bottom)', () => {
+    it('[U02446] returns true for unit directly adjacent (bottom)', () => {
       const unit = { x: 5 * TILE_SIZE, y: 7 * TILE_SIZE }
       expect(isAdjacentToFactory(unit, factory)).toBe(true)
     })
 
-    it('returns true for unit diagonally adjacent', () => {
+    it('[U02447] returns true for unit diagonally adjacent', () => {
       const unit = { x: 4 * TILE_SIZE, y: 4 * TILE_SIZE }
       expect(isAdjacentToFactory(unit, factory)).toBe(true)
     })
 
-    it('returns false for unit far away', () => {
+    it('[U02448] returns false for unit far away', () => {
       const unit = { x: 10 * TILE_SIZE, y: 10 * TILE_SIZE }
       expect(isAdjacentToFactory(unit, factory)).toBe(false)
     })
 
-    it('returns true for unit inside factory bounds', () => {
+    it('[U02449] returns true for unit inside factory bounds', () => {
       // isAdjacentToFactory includes tiles inside factory bounds
       const unit = { x: 5 * TILE_SIZE, y: 5 * TILE_SIZE }
       expect(isAdjacentToFactory(unit, factory)).toBe(true)
@@ -224,28 +224,28 @@ describe('logic.js', () => {
   describe('isAdjacentToBuilding', () => {
     const building = { x: 5, y: 5, width: 2, height: 2 }
 
-    it('returns true for unit directly adjacent (left)', () => {
+    it('[U02450] returns true for unit directly adjacent (left)', () => {
       const unit = { x: 4 * TILE_SIZE, y: 5 * TILE_SIZE }
       expect(isAdjacentToBuilding(unit, building)).toBe(true)
     })
 
-    it('returns true for unit directly adjacent (right)', () => {
+    it('[U02451] returns true for unit directly adjacent (right)', () => {
       const unit = { x: 7 * TILE_SIZE, y: 5 * TILE_SIZE }
       expect(isAdjacentToBuilding(unit, building)).toBe(true)
     })
 
-    it('returns false for unit inside building bounds', () => {
+    it('[U02452] returns false for unit inside building bounds', () => {
       // isAdjacentToBuilding explicitly skips tiles inside the building
       const unit = { x: 5 * TILE_SIZE, y: 5 * TILE_SIZE }
       expect(isAdjacentToBuilding(unit, building)).toBe(false)
     })
 
-    it('returns true for unit diagonally adjacent', () => {
+    it('[U02453] returns true for unit diagonally adjacent', () => {
       const unit = { x: 4 * TILE_SIZE, y: 4 * TILE_SIZE }
       expect(isAdjacentToBuilding(unit, building)).toBe(true)
     })
 
-    it('returns false for unit far away', () => {
+    it('[U02454] returns false for unit far away', () => {
       const unit = { x: 10 * TILE_SIZE, y: 10 * TILE_SIZE }
       expect(isAdjacentToBuilding(unit, building)).toBe(false)
     })
@@ -264,7 +264,7 @@ describe('logic.js', () => {
       globalThis.window.cheatSystem = undefined
     })
 
-    it('visualOnly impacts (M2 autocannon, no splash) show a small flash but damage nothing nearby', () => {
+    it('[U02455] visualOnly impacts (M2 autocannon, no splash) show a small flash but damage nothing nearby', () => {
       const shooter = { id: 'm2', owner: 'player1', type: 'lightTank' }
       const neighbour = { id: 'n1', type: 'tank_v1', owner: 'enemy', x: 160, y: 160, health: 100, maxHealth: 100 }
       const factory = { id: 'f1', type: 'constructionYard', x: 5, y: 5, width: 3, height: 3, health: 500 }
@@ -276,7 +276,7 @@ describe('logic.js', () => {
       expect(explosions[0].maxRadius).toBeCloseTo(TILE_SIZE * 0.35)
     })
 
-    it('applies the same direct-hit damage to grounded and airborne apaches', () => {
+    it('[U02456] applies the same direct-hit damage to grounded and airborne apaches', () => {
       const shooter = { id: 'rocket-turret-1', owner: 'player1', type: 'rocketTurret' }
       const groundedApache = {
         id: 'apache-grounded',
@@ -333,7 +333,7 @@ describe('logic.js', () => {
       expect(airborneApache.health).toBe(26)
     })
 
-    it('applies discrete 100%, 75%, 50%, and 25% damage through four tile rings', () => {
+    it('[U02457] applies discrete 100%, 75%, 50%, and 25% damage through four tile rings', () => {
       const distancesInTiles = [1, 2, 3, 4, 4.01]
       const units = distancesInTiles.map((distance, index) => ({
         id: `ring-target-${index}`,
@@ -362,7 +362,7 @@ describe('logic.js', () => {
       expect(units.map(unit => 1000 - unit.health)).toEqual([400, 300, 200, 100, 0])
     })
 
-    it('caps explosion damage to construction yards stored as factories', () => {
+    it('[U02458] caps explosion damage to construction yards stored as factories', () => {
       const constructionYard = {
         id: 'enemy',
         type: 'constructionYard',
@@ -408,12 +408,12 @@ describe('logic.js', () => {
       )
     })
 
-    it('returns null when no ore exists', () => {
+    it('[U02459] returns null when no ore exists', () => {
       const unit = { id: 1, x: 5 * TILE_SIZE, y: 5 * TILE_SIZE }
       expect(findClosestOre(unit, mapGrid)).toBe(null)
     })
 
-    it('finds closest ore tile', () => {
+    it('[U02460] finds closest ore tile', () => {
       mapGrid[3][4].ore = true
       mapGrid[8][8].ore = true
 
@@ -424,7 +424,7 @@ describe('logic.js', () => {
       expect(result).toBeTruthy()
     })
 
-    it('skips seed crystals', () => {
+    it('[U02461] skips seed crystals', () => {
       mapGrid[4][4].ore = true
       mapGrid[4][4].seedCrystal = true
       mapGrid[8][8].ore = true
@@ -436,7 +436,7 @@ describe('logic.js', () => {
       expect(result).toEqual({ x: 8, y: 8 })
     })
 
-    it('skips ore tiles above the harvester XP density limit', () => {
+    it('[U02462] skips ore tiles above the harvester XP density limit', () => {
       mapGrid[4][4].ore = true
       mapGrid[4][4].oreDensity = 4
       mapGrid[8][8].ore = true
@@ -448,7 +448,7 @@ describe('logic.js', () => {
       expect(result).toEqual({ x: 8, y: 8 })
     })
 
-    it('skips tiles targeted by other units', () => {
+    it('[U02463] skips tiles targeted by other units', () => {
       mapGrid[4][4].ore = true
       mapGrid[8][8].ore = true
 
@@ -460,7 +460,7 @@ describe('logic.js', () => {
       expect(result).toEqual({ x: 8, y: 8 })
     })
 
-    it('allows tiles targeted by same unit', () => {
+    it('[U02464] allows tiles targeted by same unit', () => {
       mapGrid[4][4].ore = true
       mapGrid[8][8].ore = true
 
@@ -473,16 +473,16 @@ describe('logic.js', () => {
       expect(result).toBeTruthy()
     })
 
-    it('returns null for undefined unit', () => {
+    it('[U02465] returns null for undefined unit', () => {
       expect(findClosestOre(undefined, mapGrid)).toBe(null)
     })
 
-    it('returns null for unit missing x property', () => {
+    it('[U02466] returns null for unit missing x property', () => {
       const unit = { id: 1, y: 5 * TILE_SIZE }
       expect(findClosestOre(unit, mapGrid)).toBe(null)
     })
 
-    it('returns null for unit missing y property', () => {
+    it('[U02467] returns null for unit missing y property', () => {
       const unit = { id: 1, x: 5 * TILE_SIZE }
       expect(findClosestOre(unit, mapGrid)).toBe(null)
     })
@@ -499,7 +499,7 @@ describe('logic.js', () => {
       )
     })
 
-    it('finds first adjacent non-building tile', () => {
+    it('[U02468] finds first adjacent non-building tile', () => {
       const factory = { x: 5, y: 5, width: 2, height: 2 }
 
       // Mark factory tiles as buildings
@@ -516,7 +516,7 @@ describe('logic.js', () => {
       expect(result.y).toBeDefined()
     })
 
-    it('returns null when all adjacent tiles are buildings', () => {
+    it('[U02469] returns null when all adjacent tiles are buildings', () => {
       const factory = { x: 5, y: 5, width: 2, height: 2 }
 
       // Mark all tiles as buildings
@@ -531,16 +531,16 @@ describe('logic.js', () => {
       expect(result).toBe(null)
     })
 
-    it('returns null for invalid factory', () => {
+    it('[U02470] returns null for invalid factory', () => {
       expect(findAdjacentTile(null, mapGrid)).toBe(null)
     })
 
-    it('returns null for invalid mapGrid', () => {
+    it('[U02471] returns null for invalid mapGrid', () => {
       const factory = { x: 5, y: 5, width: 2, height: 2 }
       expect(findAdjacentTile(factory, null)).toBe(null)
     })
 
-    it('handles factories at edge of map', () => {
+    it('[U02472] handles factories at edge of map', () => {
       const factory = { x: 0, y: 0, width: 2, height: 2 }
 
       const result = findAdjacentTile(factory, mapGrid)
@@ -565,14 +565,14 @@ describe('logic.js', () => {
       )
     })
 
-    it('returns true when no obstructions', () => {
+    it('[U02473] returns true when no obstructions', () => {
       const shooter = { x: 0, y: 0, owner: 'player1' }
       const target = { tileX: 5, x: 5 * TILE_SIZE, y: 5 * TILE_SIZE, owner: 'player2' }
 
       expect(hasClearShot(shooter, target, units, mapGrid)).toBe(true)
     })
 
-    it('returns false when friendly unit is in the way', () => {
+    it('[U02474] returns false when friendly unit is in the way', () => {
       const shooter = { x: 0, y: 0, owner: 'player1' }
       const target = { tileX: 6, x: 6 * TILE_SIZE, y: 6 * TILE_SIZE, owner: 'player2' }
       const friendly = { x: 3 * TILE_SIZE, y: 3 * TILE_SIZE, owner: 'player1' }
@@ -582,7 +582,7 @@ describe('logic.js', () => {
       expect(hasClearShot(shooter, target, units, mapGrid)).toBe(false)
     })
 
-    it('ignores enemy units in the way', () => {
+    it('[U02475] ignores enemy units in the way', () => {
       const shooter = { x: 0, y: 0, owner: 'player1' }
       const target = { tileX: 6, x: 6 * TILE_SIZE, y: 6 * TILE_SIZE, owner: 'player2' }
       const enemy = { x: 3 * TILE_SIZE, y: 3 * TILE_SIZE, owner: 'player2' }
@@ -592,7 +592,7 @@ describe('logic.js', () => {
       expect(hasClearShot(shooter, target, units, mapGrid)).toBe(true)
     })
 
-    it('returns true for clear horizontal shot', () => {
+    it('[U02476] returns true for clear horizontal shot', () => {
       const shooter = { x: 0, y: 0, owner: 'player1' }
       const target = { tileX: 4, x: 4 * TILE_SIZE, y: 0, owner: 'player2' }
 
@@ -600,7 +600,7 @@ describe('logic.js', () => {
       expect(hasClearShot(shooter, target, units, mapGrid)).toBe(true)
     })
 
-    it('ignores the shooter itself', () => {
+    it('[U02477] ignores the shooter itself', () => {
       const shooter = { x: 0, y: 0, owner: 'player1' }
       const target = { tileX: 5, x: 5 * TILE_SIZE, y: 5 * TILE_SIZE, owner: 'player2' }
 
@@ -609,7 +609,7 @@ describe('logic.js', () => {
       expect(hasClearShot(shooter, target, units, mapGrid)).toBe(true)
     })
 
-    it('ignores the target itself', () => {
+    it('[U02478] ignores the target itself', () => {
       const shooter = { x: 0, y: 0, owner: 'player1' }
       const target = { tileX: 5, x: 5 * TILE_SIZE, y: 5 * TILE_SIZE, owner: 'player1' }
 
@@ -618,7 +618,7 @@ describe('logic.js', () => {
       expect(hasClearShot(shooter, target, units, mapGrid)).toBe(true)
     })
 
-    it('handles building targets (no tileX)', () => {
+    it('[U02479] handles building targets (no tileX)', () => {
       const shooter = { x: 0, y: 0, owner: 'player1' }
       const building = { x: 5, y: 5, width: 2, height: 2, owner: 'player2' }
 
@@ -642,7 +642,7 @@ describe('logic.js', () => {
       explosions.length = 0
     })
 
-    it('applies the same footprint splash damage to neutral cities and ordinary buildings', () => {
+    it('[U02480] applies the same footprint splash damage to neutral cities and ordinary buildings', () => {
       const map = Array.from({ length: 8 }, () => Array.from({ length: 8 }, () => ({ type: 'land' })))
       const group = { width: 2, height: 1, tagSet: new Set(['city']) }
       const layout = { cells: [{ group, anchorX: 2, anchorY: 2 }] }
@@ -659,7 +659,7 @@ describe('logic.js', () => {
       gameState.buildings = []
     })
 
-    it('adds explosion to explosions array', () => {
+    it('[U02481] adds explosion to explosions array', () => {
       triggerExplosion(100, 200, 50, mockUnits, mockFactories, mockShooter, mockNow, mockMapGrid)
 
       expect(explosions.length).toBe(1)
@@ -667,14 +667,14 @@ describe('logic.js', () => {
       expect(explosions[0].y).toBe(200)
     })
 
-    it('stores startTime in explosion', () => {
+    it('[U02482] stores startTime in explosion', () => {
       const now = Date.now()
       triggerExplosion(50, 75, 50, mockUnits, mockFactories, mockShooter, now, mockMapGrid)
 
       expect(explosions[0].startTime).toBe(now)
     })
 
-    it('handles multiple explosions', () => {
+    it('[U02483] handles multiple explosions', () => {
       triggerExplosion(10, 20, 50, mockUnits, mockFactories, mockShooter, mockNow, mockMapGrid)
       triggerExplosion(30, 40, 50, mockUnits, mockFactories, mockShooter, mockNow, mockMapGrid)
       triggerExplosion(50, 60, 50, mockUnits, mockFactories, mockShooter, mockNow, mockMapGrid)
@@ -685,14 +685,14 @@ describe('logic.js', () => {
       expect(explosions[2].x).toBe(50)
     })
 
-    it('handles negative coordinates', () => {
+    it('[U02484] handles negative coordinates', () => {
       triggerExplosion(-100, -200, 50, mockUnits, mockFactories, mockShooter, mockNow, mockMapGrid)
 
       expect(explosions[0].x).toBe(-100)
       expect(explosions[0].y).toBe(-200)
     })
 
-    it('handles zero coordinates', () => {
+    it('[U02485] handles zero coordinates', () => {
       triggerExplosion(0, 0, 50, mockUnits, mockFactories, mockShooter, mockNow, mockMapGrid)
 
       expect(explosions[0].x).toBe(0)
@@ -701,7 +701,7 @@ describe('logic.js', () => {
   })
 
   describe('showUnloadingFeedback', () => {
-    it('is a placeholder function that can be called without error', () => {
+    it('[U02486] is a placeholder function that can be called without error', () => {
       const unit = { x: 150, y: 250 }
       const refinery = { x: 5, y: 5 }
 
@@ -709,7 +709,7 @@ describe('logic.js', () => {
       expect(() => showUnloadingFeedback(unit, refinery)).not.toThrow()
     })
 
-    it('accepts unit and refinery parameters', () => {
+    it('[U02487] accepts unit and refinery parameters', () => {
       const unit = { x: 100, y: 200 }
       const refinery = { x: 10, y: 10 }
 
@@ -742,7 +742,7 @@ describe('logic.js', () => {
       gameState.occupancyMap = savedOccupancyMap
     })
 
-    it('returns true or false based on finding clear shot position', () => {
+    it('[U02488] returns true or false based on finding clear shot position', () => {
       const shooter = { x: 0, y: 0, owner: 'player1', path: [] }
       const target = { tileX: 5, x: 5 * TILE_SIZE, y: 0, owner: 'player2' }
 
@@ -751,7 +751,7 @@ describe('logic.js', () => {
       expect(typeof result).toBe('boolean')
     })
 
-    it('modifies unit path when position is found', () => {
+    it('[U02489] modifies unit path when position is found', () => {
       const shooter = { x: 32, y: 32, owner: 'player1', path: [] }
       const target = { tileX: 5, x: 5 * TILE_SIZE, y: 32, owner: 'player2' }
 
@@ -764,7 +764,7 @@ describe('logic.js', () => {
       expect(typeof shooter.path).toBe('object')
     })
 
-    it('handles crowded areas without crashing', () => {
+    it('[U02490] handles crowded areas without crashing', () => {
       const shooter = { x: 0, y: 0, owner: 'player1', path: [] }
       const target = { tileX: 10, x: 10 * TILE_SIZE, y: 10 * TILE_SIZE, owner: 'player2' }
 
@@ -781,7 +781,7 @@ describe('logic.js', () => {
       expect(() => findPositionWithClearShot(shooter, target, units, mapGrid)).not.toThrow()
     })
 
-    it('handles target with no tileX (building)', () => {
+    it('[U02491] handles target with no tileX (building)', () => {
       const shooter = { x: 0, y: 0, owner: 'player1', path: [] }
       const building = { x: 5, y: 5, width: 2, height: 2, owner: 'player2' }
 
@@ -789,7 +789,7 @@ describe('logic.js', () => {
       expect(() => findPositionWithClearShot(shooter, building, units, mapGrid)).not.toThrow()
     })
 
-    it('operates on direct path situations', () => {
+    it('[U02492] operates on direct path situations', () => {
       const shooter = { x: 0, y: 0, owner: 'player1', path: [] }
       const target = { tileX: 8, x: 8 * TILE_SIZE, y: 0, owner: 'player2' }
 
@@ -802,7 +802,7 @@ describe('logic.js', () => {
       expect(() => findPositionWithClearShot(shooter, target, units, mapGrid)).not.toThrow()
     })
 
-    it('handles diagonal situations', () => {
+    it('[U02493] handles diagonal situations', () => {
       const shooter = { x: 0, y: 0, owner: 'player1', path: [] }
       const target = { tileX: 6, x: 6 * TILE_SIZE, y: 6 * TILE_SIZE, owner: 'player2' }
 

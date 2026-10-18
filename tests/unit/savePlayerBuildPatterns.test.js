@@ -65,14 +65,14 @@ describe('savePlayerBuildPatterns.js', () => {
   })
 
   describe('ensurePlayerBuildHistoryLoaded()', () => {
-    it('should initialize empty history when none exists', () => {
+    it('[U03882] should initialize empty history when none exists', () => {
       const history = ensurePlayerBuildHistoryLoaded()
 
       expect(history).toBeInstanceOf(Array)
       expect(history.length).toBe(0)
     })
 
-    it('should load history from localStorage when available', () => {
+    it('[U03883] should load history from localStorage when available', () => {
       const savedHistory = [
         { id: 'session-1', buildings: ['powerPlant', 'barracks'] }
       ]
@@ -83,7 +83,7 @@ describe('savePlayerBuildPatterns.js', () => {
       expect(history).toEqual(savedHistory)
     })
 
-    it('should return existing history if already loaded', () => {
+    it('[U03884] should return existing history if already loaded', () => {
       gameState.playerBuildHistory = [
         { id: 'existing-session', buildings: ['turretGunV1'] }
       ]
@@ -94,7 +94,7 @@ describe('savePlayerBuildPatterns.js', () => {
       expect(mockLocalStorage.getItem).not.toHaveBeenCalled()
     })
 
-    it('should handle corrupted localStorage data', () => {
+    it('[U03885] should handle corrupted localStorage data', () => {
       mockLocalStorage.data.playerBuildHistory = 'invalid json{'
 
       const history = ensurePlayerBuildHistoryLoaded()
@@ -103,7 +103,7 @@ describe('savePlayerBuildPatterns.js', () => {
       expect(window.logger.warn).toHaveBeenCalled()
     })
 
-    it('should return empty array when localStorage returns non-array', () => {
+    it('[U03886] should return empty array when localStorage returns non-array', () => {
       mockLocalStorage.data.playerBuildHistory = JSON.stringify('not an array')
 
       const history = ensurePlayerBuildHistoryLoaded()
@@ -122,21 +122,21 @@ describe('savePlayerBuildPatterns.js', () => {
       vi.spyOn(Date, 'now').mockReturnValue(1234567890)
     })
 
-    it('should save building type to current session', () => {
+    it('[U03887] should save building type to current session', () => {
       savePlayerBuildPatterns('powerPlant')
 
       expect(gameState.playerBuildHistory.length).toBe(1)
       expect(gameState.playerBuildHistory[0].buildings).toContain('powerPlant')
     })
 
-    it('should create new session if none exists', () => {
+    it('[U03888] should create new session if none exists', () => {
       savePlayerBuildPatterns('barracks')
 
       expect(gameState.currentSessionId).toBe('1234567890')
       expect(gameState.playerBuildHistory[0].id).toBe('1234567890')
     })
 
-    it('should add multiple buildings to same session', () => {
+    it('[U03889] should add multiple buildings to same session', () => {
       savePlayerBuildPatterns('powerPlant')
       savePlayerBuildPatterns('barracks')
       savePlayerBuildPatterns('vehicleFactory')
@@ -148,7 +148,7 @@ describe('savePlayerBuildPatterns.js', () => {
       ])
     })
 
-    it('should persist to localStorage', () => {
+    it('[U03890] should persist to localStorage', () => {
       savePlayerBuildPatterns('turretGunV1')
 
       expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
@@ -160,7 +160,7 @@ describe('savePlayerBuildPatterns.js', () => {
       expect(savedData[0].buildings).toContain('turretGunV1')
     })
 
-    it('should limit history to 20 sessions', () => {
+    it('[U03891] should limit history to 20 sessions', () => {
       // Create 25 sessions
       for (let i = 0; i < 25; i++) {
         gameState.currentSessionId = `session-${i}`
@@ -177,7 +177,7 @@ describe('savePlayerBuildPatterns.js', () => {
       expect(gameState.playerBuildHistory.length).toBeLessThanOrEqual(20)
     })
 
-    it('should handle localStorage errors gracefully', () => {
+    it('[U03892] should handle localStorage errors gracefully', () => {
       mockLocalStorage.setItem.mockImplementation(() => {
         throw new Error('Storage quota exceeded')
       })
@@ -193,7 +193,7 @@ describe('savePlayerBuildPatterns.js', () => {
       consoleErrorSpy.mockRestore()
     })
 
-    it('should reuse existing session when currentSessionId is set', () => {
+    it('[U03893] should reuse existing session when currentSessionId is set', () => {
       gameState.currentSessionId = 'existing-session-id'
       gameState.playerBuildHistory = [
         { id: 'existing-session-id', buildings: [] }
@@ -208,7 +208,7 @@ describe('savePlayerBuildPatterns.js', () => {
   })
 
   describe('Edge cases', () => {
-    it('should handle undefined localStorage gracefully', () => {
+    it('[U03894] should handle undefined localStorage gracefully', () => {
       // Remove localStorage
       delete globalThis.localStorage
 
@@ -220,7 +220,7 @@ describe('savePlayerBuildPatterns.js', () => {
       expect(result).toEqual([])
     })
 
-    it('should handle null returned from localStorage.getItem', () => {
+    it('[U03895] should handle null returned from localStorage.getItem', () => {
       mockLocalStorage.getItem.mockReturnValue(null)
 
       const history = ensurePlayerBuildHistoryLoaded()
@@ -228,7 +228,7 @@ describe('savePlayerBuildPatterns.js', () => {
       expect(history).toEqual([])
     })
 
-    it('should handle empty string from localStorage', () => {
+    it('[U03896] should handle empty string from localStorage', () => {
       mockLocalStorage.data.playerBuildHistory = ''
 
       const history = ensurePlayerBuildHistoryLoaded()

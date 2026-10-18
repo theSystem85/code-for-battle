@@ -26,7 +26,7 @@ function mountAccordion(idPrefix) {
 }
 
 describe('sidebar accordion', () => {
-  it('toggles open and closed like Map Settings', () => {
+  it('[U04017] toggles open and closed like Map Settings', () => {
     const { toggle, content, icon } = mountAccordion('saveLoad')
     bindSidebarAccordions()
 
@@ -44,7 +44,7 @@ describe('sidebar accordion', () => {
     expect(icon.textContent).toBe('▼')
   })
 
-  it('does not bind the same toggle twice', () => {
+  it('[U04018] does not bind the same toggle twice', () => {
     const { toggle, content } = mountAccordion('multiplayer')
     bindSidebarAccordions()
     bindSidebarAccordions()
@@ -52,7 +52,7 @@ describe('sidebar accordion', () => {
     expect(isSidebarAccordionOpen(content)).toBe(true)
   })
 
-  it('scrolls the opened section to the top of the sidebar when it is outside the viewport', () => {
+  it('[U04019] scrolls the opened section to the top of the sidebar when it is outside the viewport', () => {
     vi.useFakeTimers()
     const { toggle, content } = mountAccordion('mapSettings')
     const sidebarScroll = document.getElementById('sidebarScroll')
@@ -72,7 +72,7 @@ describe('sidebar accordion', () => {
     vi.useRealTimers()
   })
 
-  it('sets the closed chevron without scrolling', () => {
+  it('[U04020] sets the closed chevron without scrolling', () => {
     const { toggle, content, icon } = mountAccordion('statsSection')
     const sidebarScroll = document.getElementById('sidebarScroll')
     sidebarScroll.scrollTo = vi.fn()

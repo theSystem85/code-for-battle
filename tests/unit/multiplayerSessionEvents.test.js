@@ -37,17 +37,17 @@ describe('multiplayerSessionEvents.js', () => {
   })
 
   describe('MULTIPLAYER_SESSION_EVENT constant', () => {
-    it('exports the correct event name', () => {
+    it('[U03063] exports the correct event name', () => {
       expect(MULTIPLAYER_SESSION_EVENT).toBe('multiplayerSessionChanged')
     })
 
-    it('is a string type', () => {
+    it('[U03064] is a string type', () => {
       expect(typeof MULTIPLAYER_SESSION_EVENT).toBe('string')
     })
   })
 
   describe('emitMultiplayerSessionChange', () => {
-    it('dispatches a CustomEvent with the event name', () => {
+    it('[U03065] dispatches a CustomEvent with the event name', () => {
       emitMultiplayerSessionChange()
 
       expect(dispatchEventSpy).toHaveBeenCalledTimes(1)
@@ -56,7 +56,7 @@ describe('multiplayerSessionEvents.js', () => {
       expect(event.type).toBe(MULTIPLAYER_SESSION_EVENT)
     })
 
-    it('includes multiplayerSession data in event detail', () => {
+    it('[U03066] includes multiplayerSession data in event detail', () => {
       gameState.multiplayerSession = {
         isActive: true,
         isHost: true,
@@ -75,7 +75,7 @@ describe('multiplayerSessionEvents.js', () => {
       })
     })
 
-    it('creates a copy of the session data (spread operator)', () => {
+    it('[U03067] creates a copy of the session data (spread operator)', () => {
       gameState.multiplayerSession = {
         isActive: false,
         customProp: 'test'
@@ -88,7 +88,7 @@ describe('multiplayerSessionEvents.js', () => {
       expect(event.detail).toEqual(gameState.multiplayerSession)
     })
 
-    it('handles empty multiplayerSession', () => {
+    it('[U03068] handles empty multiplayerSession', () => {
       gameState.multiplayerSession = {}
 
       emitMultiplayerSessionChange()
@@ -97,7 +97,7 @@ describe('multiplayerSessionEvents.js', () => {
       expect(event.detail).toEqual({})
     })
 
-    it('handles multiplayerSession with nested objects', () => {
+    it('[U03069] handles multiplayerSession with nested objects', () => {
       gameState.multiplayerSession = {
         isActive: true,
         config: {
@@ -117,7 +117,7 @@ describe('multiplayerSessionEvents.js', () => {
   })
 
   describe('observeMultiplayerSession', () => {
-    it('adds an event listener for the session event', () => {
+    it('[U03070] adds an event listener for the session event', () => {
       const handler = vi.fn()
       observeMultiplayerSession(handler)
 
@@ -127,14 +127,14 @@ describe('multiplayerSessionEvents.js', () => {
       )
     })
 
-    it('returns an unsubscribe function', () => {
+    it('[U03071] returns an unsubscribe function', () => {
       const handler = vi.fn()
       const unsubscribe = observeMultiplayerSession(handler)
 
       expect(typeof unsubscribe).toBe('function')
     })
 
-    it('unsubscribe function removes the event listener', () => {
+    it('[U03072] unsubscribe function removes the event listener', () => {
       const handler = vi.fn()
       const unsubscribe = observeMultiplayerSession(handler)
 
@@ -146,7 +146,7 @@ describe('multiplayerSessionEvents.js', () => {
       )
     })
 
-    it('returns no-op function when handler is not a function', () => {
+    it('[U03073] returns no-op function when handler is not a function', () => {
       const unsubscribe1 = observeMultiplayerSession(null)
       const unsubscribe2 = observeMultiplayerSession('not a function')
       const unsubscribe3 = observeMultiplayerSession(123)
@@ -163,7 +163,7 @@ describe('multiplayerSessionEvents.js', () => {
       unsubscribe4()
     })
 
-    it('handler receives events when session changes', () => {
+    it('[U03074] handler receives events when session changes', () => {
       const handler = vi.fn()
 
       // Use real event listeners for this test
@@ -179,7 +179,7 @@ describe('multiplayerSessionEvents.js', () => {
       expect(handler.mock.calls[0][0].detail).toEqual({ isActive: true })
     })
 
-    it('handler stops receiving events after unsubscribe', () => {
+    it('[U03075] handler stops receiving events after unsubscribe', () => {
       const handler = vi.fn()
 
       // Use real event listeners
@@ -199,7 +199,7 @@ describe('multiplayerSessionEvents.js', () => {
       expect(handler).toHaveBeenCalledTimes(1) // Still just 1
     })
 
-    it('multiple handlers can observe session changes', () => {
+    it('[U03076] multiple handlers can observe session changes', () => {
       const handler1 = vi.fn()
       const handler2 = vi.fn()
 
@@ -217,7 +217,7 @@ describe('multiplayerSessionEvents.js', () => {
       expect(handler2).toHaveBeenCalledTimes(1)
     })
 
-    it('handlers can unsubscribe independently', () => {
+    it('[U03077] handlers can unsubscribe independently', () => {
       const handler1 = vi.fn()
       const handler2 = vi.fn()
 
@@ -247,7 +247,7 @@ describe('multiplayerSessionEvents.js', () => {
       removeEventListenerSpy.mockRestore()
     })
 
-    it('tracks multiplayer session state changes over time', () => {
+    it('[U03078] tracks multiplayer session state changes over time', () => {
       const sessionHistory = []
       const handler = (event) => {
         sessionHistory.push({ ...event.detail })
@@ -285,7 +285,7 @@ describe('multiplayerSessionEvents.js', () => {
       expect(sessionHistory[2].connectedPeers).toHaveLength(2)
     })
 
-    it('emits change events for host/client role switches', () => {
+    it('[U03079] emits change events for host/client role switches', () => {
       const events = []
       observeMultiplayerSession((e) => events.push(e.detail))
 
@@ -299,7 +299,7 @@ describe('multiplayerSessionEvents.js', () => {
       expect(events[1].isHost).toBe(false)
     })
 
-    it('supports reactive UI updates pattern', () => {
+    it('[U03080] supports reactive UI updates pattern', () => {
       let uiState = { connected: false, peerCount: 0 }
 
       observeMultiplayerSession((event) => {
@@ -321,7 +321,7 @@ describe('multiplayerSessionEvents.js', () => {
       expect(uiState.peerCount).toBe(3)
     })
 
-    it('handles rapid session changes', () => {
+    it('[U03081] handles rapid session changes', () => {
       const events = []
       observeMultiplayerSession((e) => events.push(e.detail.isActive))
 
@@ -334,7 +334,7 @@ describe('multiplayerSessionEvents.js', () => {
       expect(events).toEqual([true, false, true, false, true, false, true, false, true, false])
     })
 
-    it('gracefully handles observers that throw errors', () => {
+    it('[U03082] gracefully handles observers that throw errors', () => {
       // Error handlers in DOM event listeners are swallowed by the browser,
       // but in jsdom test environment they propagate - we just verify the pattern works
       const normalHandler = vi.fn()

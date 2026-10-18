@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { decodeSaveObject, encodeCompactSave } from '../../src/saveFormat.js'
 
 describe('compact save format', () => {
-  it('round trips map tiles and reconstructs redundant legacy indexes', () => {
+  it('[U03839] round trips map tiles and reconstructs redundant legacy indexes', () => {
     const mapTileState = [
       [{ type: 'land', ore: false }, { type: 'water', ore: true, oreDensity: 2 }],
       [{ type: 'land', ore: false }, { type: 'land', ore: false }]
@@ -24,7 +24,7 @@ describe('compact save format', () => {
     expect(decoded.gameState.money).toBe(42)
   })
 
-  it('groups entity rows by type and keeps paths and queued targets losslessly', () => {
+  it('[U03840] groups entity rows by type and keeps paths and queued targets losslessly', () => {
     const units = [
       { type: 'tank', id: 'a', path: [{ x: 2, y: 3 }], commandQueue: [{ type: 'attack', targetId: 'b' }] },
       { type: 'tank', id: 'b', path: [] },
@@ -37,7 +37,7 @@ describe('compact save format', () => {
     expect(decoded.units).toEqual(units)
   })
 
-  it('reduces a uniform 200 by 200 map to less than one tenth of legacy JSON', () => {
+  it('[U03841] reduces a uniform 200 by 200 map to less than one tenth of legacy JSON', () => {
     const tile = { type: 'land', ore: false, oreDensity: 0, seedCrystal: false, seedCrystalDensity: 0 }
     const mapTileState = Array.from({ length: 200 }, () => Array.from({ length: 200 }, () => ({ ...tile })))
     const state = { mapTileState, mapGridTypes: mapTileState.map(row => row.map(entry => entry.type)), orePositions: [] }

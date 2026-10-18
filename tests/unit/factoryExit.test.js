@@ -15,7 +15,7 @@ function fixture() {
 }
 
 describe('vehicle factory exit', () => {
-  it('starts covered, facing southwest with center-based tile coordinates', () => {
+  it('[U01539] starts covered, facing southwest with center-based tile coordinates', () => {
     const { unit, factory } = fixture()
     expect(unit.x).toBe((factory.x + 1.3) * TILE_SIZE)
     expect(unit.direction).toBe(Math.PI * 3 / 4)
@@ -24,7 +24,7 @@ describe('vehicle factory exit', () => {
     expect(canInteractWithUnit(unit)).toBe(false)
   })
 
-  it('eases through the midpoint, completes after the slow crawl duration, then issues rally movement', () => {
+  it('[U01540] eases through the midpoint, completes after the slow crawl duration, then issues rally movement', () => {
     const f = fixture()
     const state = { ...f.unit.factoryExit }
     expect(factoryExitEase(0)).toBe(0)
@@ -45,7 +45,7 @@ describe('vehicle factory exit', () => {
     expect(canInteractWithUnit(f.unit)).toBe(true)
   })
 
-  it('is deterministic and never advances while paused', () => {
+  it('[U01541] is deterministic and never advances while paused', () => {
     const a = fixture()
     const b = fixture()
     for (let i = 0; i < 60; i++) {
@@ -58,7 +58,7 @@ describe('vehicle factory exit', () => {
     expect(JSON.stringify(a.unit)).toBe(before)
   })
 
-  it('holds inside until both terrain and unit occupancy allow departure', () => {
+  it('[U01542] holds inside until both terrain and unit occupancy allow departure', () => {
     const f = fixture()
     f.map[8][4].type = 'water'
     f.tick(200)
@@ -76,7 +76,7 @@ describe('vehicle factory exit', () => {
     expect(f.unit.factoryExit.elapsed).toBe(100)
   })
 
-  it('staggers units until the previous vehicle has cleared the gate', () => {
+  it('[U01543] staggers units until the previous vehicle has cleared the gate', () => {
     const f = fixture()
     const second = { id: 'second', health: 100 }
     beginFactoryExit(second, f.factory)
@@ -93,7 +93,7 @@ describe('vehicle factory exit', () => {
     expect(second.x).not.toBe(f.unit.x)
   })
 
-  it.each(['destroyed', 'sold', 'removed'])('finishes immediately when the factory is %s', reason => {
+  it.each(['destroyed', 'sold', 'removed'])('[U01544] finishes immediately when the factory is %s', reason => {
     const f = fixture()
     const endX = f.unit.factoryExit.endX
     if (reason === 'destroyed') f.factory.health = 0
@@ -104,7 +104,7 @@ describe('vehicle factory exit', () => {
     expect(canInteractWithUnit(f.unit)).toBe(true)
   })
 
-  it('uses a valid outside tile for a factory at the southwest map corner', () => {
+  it('[U01545] uses a valid outside tile for a factory at the southwest map corner', () => {
     const f = fixture()
     f.factory.x = 0
     f.factory.y = 17
@@ -115,7 +115,7 @@ describe('vehicle factory exit', () => {
     expect(f.unit.tileY).toBe(19)
   })
 
-  it('resumes identical positions and completion after a JSON save/load round trip', () => {
+  it('[U01546] resumes identical positions and completion after a JSON save/load round trip', () => {
     const a = fixture()
     a.tick(375)
     const b = fixture()
@@ -126,7 +126,7 @@ describe('vehicle factory exit', () => {
       expect(b.unit).toEqual(a.unit)
     }
   })
-  it('hides the unit inside the dark gate and fades it in while rolling out', () => {
+  it('[U01547] hides the unit inside the dark gate and fades it in while rolling out', () => {
     const f = fixture()
     expect(factoryExitVisibility(f.unit)).toBe(0)
     f.tick(FACTORY_EXIT_DURATION * 0.075)
@@ -135,7 +135,7 @@ describe('vehicle factory exit', () => {
     expect(factoryExitVisibility(f.unit)).toBe(1)
   })
 
-  it('pushes an idle friendly unit off the exit tile instead of waiting forever', () => {
+  it('[U01548] pushes an idle friendly unit off the exit tile instead of waiting forever', () => {
     const f = fixture()
     f.unit.owner = 'p1'
     const idle = { id: 'idle', owner: 'p1', health: 100, x: 4 * TILE_SIZE, y: 8 * TILE_SIZE, path: [] }
@@ -152,7 +152,7 @@ describe('vehicle factory exit', () => {
     expect(f.unit.factoryExit.phase).toBe('moving')
   })
 
-  it('uses the next free spot when the exit is blocked by a non-movable unit (no deadlock)', () => {
+  it('[U01549] uses the next free spot when the exit is blocked by a non-movable unit (no deadlock)', () => {
     const f = fixture()
     f.unit.owner = 'p1'
     f.units.push({ id: 'enemy', owner: 'p2', health: 100, x: 4 * TILE_SIZE, y: 8 * TILE_SIZE })
@@ -167,7 +167,7 @@ describe('vehicle factory exit', () => {
     expect(f.unit.tileX < f.factory.x || f.unit.tileY >= f.factory.y + 3).toBe(true)
   })
 
-  it('sends the unit to the nearest free tile when the rally point is occupied', () => {
+  it('[U01550] sends the unit to the nearest free tile when the rally point is occupied', () => {
     const f = fixture()
     f.path.mockImplementation((from, to) => [from, to])
     f.units.push({ id: 'parked', health: 100, x: 12 * TILE_SIZE, y: 12 * TILE_SIZE })
@@ -176,7 +176,7 @@ describe('vehicle factory exit', () => {
     expect(Math.max(Math.abs(f.unit.moveTarget.x - 12), Math.abs(f.unit.moveTarget.y - 12))).toBe(1)
   })
 
-  it('gives queued units distinct rally tiles when they share one rally point', () => {
+  it('[U01551] gives queued units distinct rally tiles when they share one rally point', () => {
     const f = fixture()
     f.path.mockImplementation((from, to) => [from, to])
     const second = { id: 'second', health: 100 }
@@ -187,7 +187,7 @@ describe('vehicle factory exit', () => {
     expect(second.moveTarget).not.toEqual({ x: 12, y: 12 })
   })
 
-  it('resolves blocked exits and rally points identically on every peer', () => {
+  it('[U01552] resolves blocked exits and rally points identically on every peer', () => {
     const build = () => {
       const f = fixture()
       f.path.mockImplementation((from, to) => [from, to])
