@@ -25,3 +25,11 @@ Processed by: Grok Bot (executor subagent). The exact underlying model name, ver
 3. Main branch protection does not include admins; Patrick sets it up himself. The Netlify dev branch deploy is already configured by Patrick.
 
 Result: `computeVersionLabel` returns `PR<REVIEW_ID>` on deploy previews, `formatVersionDisplay` adds the `v` only to real versions, tests, AGENTS.md, spec and change note updated.
+
+## Follow-up 2026-10-18T13:47:00Z (correction)
+
+Processed by: Grok Bot (executor subagent). The exact underlying model name, version and token counts are not exposed to the agent, so they are left out rather than guessed.
+
+Patrick: "No the user should only see version numbers but PR and url prefix should be PR number". Users only ever see the plain version (for example `v0.62.1`) in the app, on every build including deploy previews: loading screen, update heading and sidebar. The PR number shows up only in the Netlify preview URL prefix (`deploy-preview-758--...`). The Redis-prefix and branch-protection answers stay as they were.
+
+Result: removed the display label (`__APP_VERSION_LABEL__`, `computeVersionLabel`, `formatVersionDisplay`) and the preview-label release-note entry; tests, AGENTS.md, spec and change note updated. This supersedes item 1 of the previous follow-up.
