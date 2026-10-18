@@ -35,8 +35,8 @@ test.describe('Sprite Sheet Editor integration', () => {
     await expect(page.locator('#spriteSheetEditorModal')).toHaveClass(/config-modal--open/)
 
     await expect(page.locator('#sseTileSizeInput')).toHaveValue('64')
-    // The first default sheet has no border.
-    await expect(page.locator('#sseBorderWidthInput')).toHaveValue('0')
+    // The first default sheet (debris_craters_tracks) has a 1 px border.
+    await expect(page.locator('#sseBorderWidthInput')).toHaveValue('1')
     await expect(page.locator('#spriteSheetEditorMaxBtn')).toHaveCount(0)
 
     const fitScaleCheck = await page.evaluate(() => {
@@ -220,7 +220,8 @@ test.describe('Sprite Sheet Editor integration', () => {
     await page.click('#spriteSheetEditorCloseBtn')
     await expect(page.locator('#spriteSheetEditorModal')).not.toHaveClass(/config-modal--open/)
 
-    await page.check('#integratedSpriteSheetModeCheckbox')
+    // Custom sprite sheets start enabled by default (no stored choice needed).
+    await expect(page.locator('#integratedSpriteSheetModeCheckbox')).toBeChecked()
 
     await page.selectOption('#integratedSpriteSheetBiomeSelect', 'snow')
 
@@ -235,7 +236,8 @@ test.describe('Sprite Sheet Editor integration', () => {
     })
 
     expect(runtimeModeEnabled.stateFlag).toBe(true)
-    expect(runtimeModeEnabled.persistedFlag).toBe('true')
+    // null = no stored choice, which means enabled by default.
+    expect(runtimeModeEnabled.persistedFlag).not.toBe('false')
     expect(runtimeModeEnabled.biomeTag).toBe('snow')
     expect(runtimeModeEnabled.persistedBiome).toBe('snow')
 
@@ -290,6 +292,15 @@ test.describe('Sprite Sheet Editor integration', () => {
         }
         return { x: 1, y: 1 }
       }
+
+      // Re-apply the seeded sheet in the same step as the lookup, like the checks
+      // below: a still-running runtime apply of the default sheets can replace it.
+      await textureManager.setIntegratedSpriteSheetConfig({
+        enabled: true,
+        sheetPath: window.gameState.activeSpriteSheetPath,
+        metadata: window.gameState.activeSpriteSheetMetadata,
+        biomeTag: 'snow'
+      })
 
       const landPos = findTileType('land')
       const landSnow = textureManager.getIntegratedTileForMapTile('land', landPos.x, landPos.y)
