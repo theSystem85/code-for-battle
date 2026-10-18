@@ -206,6 +206,10 @@ export function startOfflineMode(options = {}) {
   const fetchImpl = options.fetchImpl || fetch
   const win = options.window || (typeof window !== 'undefined' ? window : null)
   if (!win) return { stop() {} }
+  // The live-update coordinator owns deploy notices on the dev branch. A new
+  // service worker accompanies every deploy, including CSS-only updates, so the
+  // generic offline-cache reload prompt would otherwise contradict a safe update.
+  const liveUpdateEnabled = options.liveUpdateEnabled ?? __LIVE_UPDATE__
 
   let forced = readForcedOffline(storage)
   let navigatorOnLine = win.navigator ? win.navigator.onLine !== false : true
@@ -350,7 +354,7 @@ export function startOfflineMode(options = {}) {
       tooltipWarning,
       fileCount: formatOfflineFileCount(assetDone, assetTotal, clearCopy.filesWord),
       tooltip: cacheTooltip(copy, clearCopy),
-      updateAvailable: Boolean(updateRegistration?.waiting) && Boolean(win.navigator.serviceWorker?.controller) && !applyingUpdate
+      updateAvailable: !liveUpdateEnabled && Boolean(updateRegistration?.waiting) && Boolean(win.navigator.serviceWorker?.controller) && !applyingUpdate
     }
     applyOfflineModeDom(elements(), view)
     if (view.updateAvailable && announcedWorker !== updateRegistration.waiting) {
