@@ -1,0 +1,65 @@
+/* Update notices of the dev live update (src/pwa/liveUpdate.js). */
+.live-update-bubble {
+  position: fixed;
+  top: calc(var(--safe-area-top, 0px) + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: var(--z-hud-popover);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: min(92vw, 520px);
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(12, 16, 20, 0.92);
+  border: 1px solid rgba(124, 226, 132, 0.6);
+  color: #f2f2f2;
+  font-family: var(--game-font-family, inherit);
+  font-size: 13px;
+  line-height: 1.3;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  pointer-events: auto;
+}
+
+.live-update-bubble[hidden] {
+  display: none;
+}
+
+.live-update-bubble[data-kind="breaking"] {
+  border-color: rgba(255, 183, 77, 0.8);
+}
+
+.live-update-bubble__text {
+  flex: 1;
+}
+
+.live-update-bubble__button,
+.live-update-status__button {
+  flex: none;
+  padding: 4px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.live-update-bubble__button--primary {
+  background: #d18100;
+  border-color: #ffb74d;
+  color: #111;
+  font-weight: 600;
+}
+
+.live-update-status {
+  margin-top: 2px;
+  font-size: 11px;
+  color: #ffd489;
+}
+
+.live-update-status__button {
+  margin-left: 6px;
+  padding: 1px 6px;
+  font-size: 11px;
+}

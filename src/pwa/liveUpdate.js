@@ -10,6 +10,7 @@
 // CFB_LIVE_UPDATE=1); production builds never start it. See AGENTS.md, Deployment.
 import { APP_VERSION } from '../version.js'
 import versionInfo from '../version.json' with { type: 'json' }
+import { GAME_STATE_SCHEMA_VERSION } from '../gameStateSchema.js'
 import { UPDATE_RELOAD_GUARD } from './startupUpdate.js'
 
 export const BUILD_INFO_URL = '/build-info.json'
@@ -38,11 +39,18 @@ export function planStylesheetSwaps(previous, next) {
   return swaps
 }
 
-export function classifyBuildChange(previous, next) {
+// 'safe': only stylesheets or release-note data changed, applied live.
+// 'breaking': JS changed, the state schema changed or the deploy's commit
+// trailer says "Live-Update: breaking". Needs the player's consent and a reload
+// (module hot-swap and live state migration are not built yet).
+export function classifyBuildChange(previous, next, runningSchema = GAME_STATE_SCHEMA_VERSION) {
   if (!next || !previous) return 'none'
   if (next.commit === previous.commit && next.jsSignature === previous.jsSignature
     && JSON.stringify(next.css) === JSON.stringify(previous.css)) return 'none'
-  return next.jsSignature === previous.jsSignature ? 'css' : 'js'
+  if (next.update?.kind === 'breaking') return 'breaking'
+  if (next.jsSignature !== previous.jsSignature) return 'breaking'
+  if (Number.isFinite(next.stateSchemaVersion) && next.stateSchemaVersion !== runningSchema) return 'breaking'
+  return 'safe'
 }
 
 // Replace each changed <link rel="stylesheet">: the new link is inserted next to
@@ -78,13 +86,15 @@ export function swapStylesheets(doc, swaps, { timeoutMs = 10000 } = {}) {
   return Promise.all(jobs).then(results => results.filter(Boolean).length)
 }
 
-// A reload would drop a running multiplayer match: the joined client
-// (isRemote), a pending/connected WebRTC session, or a host with a remote human
-// in another party.
+// Live updates are single-player only, where single-player means "no other
+// human connected over the network". A local game against any number of AI
+// enemies (the HUD shows "You (Host)") is in scope. Skipped only while this
+// browser joined someone else's game (isRemote), a WebRTC peer is connected,
+// or a remote human controls another party.
 export function isMultiplayerActive(state) {
   const session = state?.multiplayerSession
   if (session?.isRemote) return true
-  if (session?.status === 'connected' || session?.status === 'pending') return true
+  if (session?.status === 'connected') return true
   const parties = Array.isArray(state?.partyStates) ? state.partyStates : []
   return parties.some(party => party && party.partyId !== state.humanPlayer
     && party.aiActive === false && Boolean(party.lastConnectedAt))
@@ -133,20 +143,108 @@ async function activateWaitingServiceWorker(win, timeoutMs = 8000) {
   })
 }
 
+function makeButton(doc, label, onClick, className) {
+  const button = doc.createElement('button')
+  button.type = 'button'
+  button.className = className
+  button.textContent = label
+  button.addEventListener('click', onClick)
+  return button
+}
+
+// Default notice UI: a small bubble at the top of the screen plus a status
+// line under the version in the left sidebar. Every update is announced.
+export function createUpdateNoticeUi(doc = document) {
+  let bubble = null
+  let hideTimer = null
+
+  function ensureBubble() {
+    if (bubble?.isConnected) return bubble
+    bubble = doc.createElement('div')
+    bubble.id = 'liveUpdateBubble'
+    bubble.className = 'live-update-bubble'
+    bubble.setAttribute('role', 'status')
+    doc.body.appendChild(bubble)
+    return bubble
+  }
+
+  function sidebarStatus(text, action) {
+    const anchor = doc.getElementById('sidebarFooterVersion')
+    if (!anchor) return
+    let line = doc.getElementById('liveUpdateStatus')
+    if (!line) {
+      line = doc.createElement('div')
+      line.id = 'liveUpdateStatus'
+      line.className = 'live-update-status'
+      const row = anchor.querySelector('.sidebar-version__row')
+      if (row) row.after(line)
+      else anchor.prepend(line)
+    }
+    line.textContent = text
+    if (action) line.appendChild(action)
+  }
+
+  function render(text, buttons, { kind, autoHideMs = 0 }) {
+    const el = ensureBubble()
+    clearTimeout(hideTimer)
+    el.dataset.kind = kind
+    el.textContent = ''
+    const label = doc.createElement('span')
+    label.className = 'live-update-bubble__text'
+    label.textContent = text
+    el.appendChild(label)
+    buttons.forEach(button => el.appendChild(button))
+    el.hidden = false
+    if (autoHideMs) hideTimer = setTimeout(() => { el.hidden = true }, autoHideMs)
+  }
+
+  return {
+    showSafe(info, swapped) {
+      const what = swapped ? 'styles refreshed' : 'no visible changes'
+      render(`Update v${info.version} (${info.commit}) loaded live: ${what}. No reload needed.`, [], { kind: 'safe', autoHideMs: 6000 })
+      sidebarStatus(`Live update ${info.commit} applied, no reload needed`)
+    },
+    showDeferred(info, change) {
+      const reload = change === 'breaking' ? 'It needs a reload.' : 'It loads live, no reload needed.'
+      render(`Update v${info.version} (${info.commit}) is available. ${reload} Other players are connected, so it waits until the network match is over.`, [
+        makeButton(doc, 'OK', () => { ensureBubble().hidden = true }, 'live-update-bubble__button')
+      ], { kind: change })
+      sidebarStatus(`Update ${info.commit} waits for the network match to end (${change === 'breaking' ? 'needs a reload' : 'no reload'})`)
+    },
+    showBreaking(info, { multiplayer, onReload }) {
+      if (multiplayer) {
+        this.showDeferred(info, 'breaking')
+        return
+      }
+      render(`Update v${info.version} (${info.commit}) is ready. It needs a reload: your game is saved and comes right back.`, [
+        makeButton(doc, 'Reload now', onReload, 'live-update-bubble__button live-update-bubble__button--primary'),
+        makeButton(doc, 'Later', () => { ensureBubble().hidden = true }, 'live-update-bubble__button')
+      ], { kind: 'breaking' })
+      sidebarStatus(`Update ${info.commit} ready, needs a reload `, makeButton(doc, 'Load', onReload, 'live-update-status__button'))
+    },
+    showApplied(applied) {
+      render(`Updated to v${applied.version} (${applied.commit}). Your game was restored.`, [], { kind: 'safe', autoHideMs: 6000 })
+    }
+  }
+}
+
 export function createLiveUpdater({
   win = window,
   doc = document,
   fetchImpl = (...args) => win.fetch(...args),
   getGameState = () => null,
-  notify = () => {},
+  ui = createUpdateNoticeUi(doc),
   prepareReload = async() => {},
   reload = () => win.location.reload(),
   activateServiceWorker = () => activateWaitingServiceWorker(win),
-  running = { version: APP_VERSION, commit: versionInfo?.commit || 'unknown' }
+  running = { version: APP_VERSION, commit: versionInfo?.commit || 'unknown' },
+  runningSchema = GAME_STATE_SCHEMA_VERSION
 } = {}) {
   let baseline = null
   let busy = false
-  let deferredNotified = false
+  let announcedBreaking = null
+  let pendingBreaking = null
+  let deferredNotice = null
 
   async function fetchInfo() {
     const response = await fetchImpl(`${BUILD_INFO_URL}?t=${Date.now()}`, { cache: 'no-store' })
@@ -154,17 +252,14 @@ export function createLiveUpdater({
     return response.json()
   }
 
-  async function applyJsUpdate(info) {
-    if (isMultiplayerActive(getGameState())) {
-      if (!deferredNotified) notify(`Update v${info.version} (${info.commit}) is ready. It loads after this match, on your next reload.`)
-      deferredNotified = true
-      return 'deferred'
-    }
+  // Runs only after the player chose "Reload now" / "Load".
+  async function applyBreakingUpdate(info = pendingBreaking) {
+    if (!info) return 'none'
+    if (isMultiplayerActive(getGameState())) return 'deferred'
     let attempt = null
     try { attempt = win.sessionStorage?.getItem(LIVE_UPDATE_ATTEMPT_KEY) } catch { /* optional */ }
     // A reload for this commit already happened and the old code came back: stop.
     if (attempt === info.commit) return 'stuck'
-    notify(`Updating to v${info.version} (${info.commit}). Your game is saved and comes right back.`)
     await prepareReload()
     await activateServiceWorker()
     try {
@@ -175,6 +270,17 @@ export function createLiveUpdater({
     } catch { /* optional */ }
     reload()
     return 'reload'
+  }
+
+  function announceBreaking(info) {
+    pendingBreaking = info
+    if (announcedBreaking === info.commit) return 'breaking'
+    announcedBreaking = info.commit
+    ui.showBreaking(info, {
+      multiplayer: isMultiplayerActive(getGameState()),
+      onReload: () => { void applyBreakingUpdate(info) }
+    })
+    return 'breaking'
   }
 
   async function check() {
@@ -189,28 +295,39 @@ export function createLiveUpdater({
           return 'baseline'
         }
         // A deploy landed before the first poll, so the running build's
-        // stylesheet map is unknown. Reload to be safe.
-        return applyJsUpdate(info)
+        // stylesheet map is unknown: offer it as a reload update.
+        return announceBreaking(info)
       }
-      const change = classifyBuildChange(baseline, info)
+      const change = classifyBuildChange(baseline, info, runningSchema)
       if (change === 'none') return 'none'
-      if (change === 'css') {
+      if (isMultiplayerActive(getGameState())) {
+        // Network match: tell the player once per commit, apply nothing.
+        // The baseline stays, so the next poll after the match applies it.
+        if (deferredNotice !== info.commit) {
+          deferredNotice = info.commit
+          ui.showDeferred(info, change)
+        }
+        return 'deferred'
+      }
+      if (change === 'safe' && !pendingBreaking) {
         const swapped = await swapStylesheets(doc, planStylesheetSwaps(baseline, info))
         updateVersionLabels(doc, info)
         baseline = info
-        notify(`Live update ${info.commit}: ${swapped ? 'styles refreshed' : 'no visible changes'}, no reload.`)
-        return 'css'
+        ui.showSafe(info, swapped)
+        return 'safe'
       }
-      return applyJsUpdate(info)
+      // Breaking, or a safe deploy on top of a pending breaking one (the
+      // running page is already behind, so the reload covers both).
+      return announceBreaking(info)
     } finally {
       busy = false
     }
   }
 
-  return { check, getBaseline: () => baseline }
+  return { check, applyBreakingUpdate, getBaseline: () => baseline, getPending: () => pendingBreaking }
 }
 
-export function announceAppliedUpdate({ win = window, notify = () => {}, running = { commit: versionInfo?.commit } } = {}) {
+export function announceAppliedUpdate({ win = window, ui = null, running = { commit: versionInfo?.commit } } = {}) {
   let applied = null
   try {
     applied = JSON.parse(win.sessionStorage?.getItem(LIVE_UPDATE_APPLIED_KEY) || 'null')
@@ -218,19 +335,18 @@ export function announceAppliedUpdate({ win = window, notify = () => {}, running
     if (applied?.commit === running.commit) win.sessionStorage?.removeItem(LIVE_UPDATE_ATTEMPT_KEY)
   } catch { /* optional */ }
   if (applied?.commit && applied.commit === running.commit) {
-    notify(`Updated to v${applied.version} (${applied.commit}). Your game was restored.`)
+    ui?.showApplied(applied)
     return true
   }
   return false
 }
 
 export async function startLiveUpdate({ intervalMs = LIVE_UPDATE_INTERVAL_MS } = {}) {
-  const [{ showNotification }, { gameState }, { prepareForLiveUpdateReload }] = await Promise.all([
-    import('../ui/notifications.js'),
+  const [{ gameState }, { prepareForLiveUpdateReload }] = await Promise.all([
     import('../gameState.js'),
-    import('../saveGame.js')
+    import('../saveGame.js'),
+    import('./liveUpdate.css')
   ])
-  const notify = message => showNotification(message, 4000)
 
   if (import.meta.hot) {
     // `npm run dev`: Vite swaps CSS itself; before a full reload for a JS
@@ -239,10 +355,11 @@ export async function startLiveUpdate({ intervalMs = LIVE_UPDATE_INTERVAL_MS } =
     return null
   }
 
-  setTimeout(() => announceAppliedUpdate({ notify }), 1500)
+  const ui = createUpdateNoticeUi(document)
+  setTimeout(() => announceAppliedUpdate({ ui }), 1500)
   const updater = createLiveUpdater({
     getGameState: () => gameState,
-    notify,
+    ui,
     prepareReload: () => prepareForLiveUpdateReload()
   })
   void updater.check()

@@ -3,6 +3,7 @@ import {
   announceAppliedUpdate,
   classifyBuildChange,
   createLiveUpdater,
+  createUpdateNoticeUi,
   isMultiplayerActive,
   LIVE_UPDATE_APPLIED_KEY,
   planStylesheetSwaps,
@@ -36,12 +37,20 @@ function fakeFetch(sequence) {
   })
 }
 
+function fakeUi() {
+  return { showSafe: vi.fn(), showBreaking: vi.fn(), showApplied: vi.fn(), showDeferred: vi.fn() }
+}
+
 describe('dev live update', () => {
-  it('[U05211] classifies CSS-only and JS deploys', () => {
+  it('[U05211] classifies safe and breaking deploys, including the commit trailer and the state schema', () => {
     expect(classifyBuildChange(base, { ...base })).toBe('none')
-    expect(classifyBuildChange(base, { ...base, commit: 'bbbbbbb', css: { ...base.css, 'html:1': '/assets/sidebar-CCCCCCCC.css' } })).toBe('css')
-    expect(classifyBuildChange(base, { ...base, commit: 'bbbbbbb' })).toBe('css')
-    expect(classifyBuildChange(base, { ...base, commit: 'bbbbbbb', jsSignature: 'js-2' })).toBe('js')
+    expect(classifyBuildChange(base, { ...base, commit: 'bbbbbbb', css: { ...base.css, 'html:1': '/assets/sidebar-CCCCCCCC.css' } })).toBe('safe')
+    expect(classifyBuildChange(base, { ...base, commit: 'bbbbbbb' })).toBe('safe')
+    expect(classifyBuildChange(base, { ...base, commit: 'bbbbbbb', jsSignature: 'js-2' })).toBe('breaking')
+    expect(classifyBuildChange(base, { ...base, commit: 'bbbbbbb', update: { kind: 'breaking', reason: 'x' } })).toBe('breaking')
+    expect(classifyBuildChange(base, { ...base, commit: 'bbbbbbb', update: { kind: 'safe' }, jsSignature: 'js-2' })).toBe('breaking')
+    expect(classifyBuildChange(base, { ...base, commit: 'bbbbbbb', stateSchemaVersion: 2 }, 1)).toBe('breaking')
+    expect(classifyBuildChange(base, { ...base, commit: 'bbbbbbb', stateSchemaVersion: 1 }, 1)).toBe('safe')
     expect(planStylesheetSwaps(base, { ...base, css: { ...base.css, 'html:1': '/assets/sidebar-CCCCCCCC.css' } }))
       .toEqual(new Map([['/assets/sidebar-BBBBBBBB.css', '/assets/sidebar-CCCCCCCC.css']]))
   })
@@ -58,79 +67,115 @@ describe('dev live update', () => {
       .toEqual(['/assets/main-AAAAAAAA.css', '/assets/sidebar-CCCCCCCC.css'])
   })
 
-  it('[U05213] hot-swaps CSS without reloading and updates the version label', async() => {
+  it('[U05213] applies a safe update live, without a reload, and tells the player', async() => {
     document.head.innerHTML = '<link rel="stylesheet" href="/assets/sidebar-BBBBBBBB.css">'
     document.body.innerHTML = '<span id="appVersion">0.62.2 (aaaaaaa)</span>'
     const next = { ...base, version: '0.62.3', commit: 'bbbbbbb', css: { ...base.css, 'html:1': '/assets/sidebar-CCCCCCCC.css' } }
     const reload = vi.fn()
     const prepareReload = vi.fn()
-    const notify = vi.fn()
-    const updater = createLiveUpdater({ win: { sessionStorage: memoryStorage() }, doc: document, fetchImpl: fakeFetch([base, next]), reload, prepareReload, notify, running: { version: '0.62.2', commit: 'aaaaaaa' } })
+    const ui = fakeUi()
+    const updater = createLiveUpdater({ win: { sessionStorage: memoryStorage() }, doc: document, fetchImpl: fakeFetch([base, next]), reload, prepareReload, ui, running: { version: '0.62.2', commit: 'aaaaaaa' } })
     expect(await updater.check()).toBe('baseline')
     const result = updater.check()
     await vi.waitFor(() => expect(document.head.querySelector('link[data-live-update]')).toBeTruthy())
     document.head.querySelector('link[data-live-update]').dispatchEvent(new Event('load'))
-    expect(await result).toBe('css')
+    expect(await result).toBe('safe')
     expect(reload).not.toHaveBeenCalled()
     expect(prepareReload).not.toHaveBeenCalled()
+    expect(ui.showSafe).toHaveBeenCalledWith(next, 1)
     expect(document.getElementById('appVersion').textContent).toBe('0.62.3 (bbbbbbb)')
     expect(updater.getBaseline().commit).toBe('bbbbbbb')
   })
 
-  it('[U05214] saves the game, activates the new worker and reloads once on a JS deploy', async() => {
+  it('[U05214] never reloads a breaking update on its own: it asks, then saves, activates the worker and reloads once', async() => {
     const storage = memoryStorage()
     const order = []
+    const ui = fakeUi()
+    const next = { ...base, commit: 'bbbbbbb', jsSignature: 'js-2' }
     const updater = createLiveUpdater({
       win: { sessionStorage: storage },
       doc: document,
-      fetchImpl: fakeFetch([base, { ...base, commit: 'bbbbbbb', jsSignature: 'js-2' }]),
+      fetchImpl: fakeFetch([base, next]),
       getGameState: () => ({ multiplayerSession: { isRemote: false, status: 'idle' }, partyStates: [] }),
+      ui,
       prepareReload: async() => { order.push('save') },
       activateServiceWorker: async() => { order.push('sw') },
       reload: () => order.push('reload'),
       running: { version: '0.62.2', commit: 'aaaaaaa' }
     })
     await updater.check()
-    expect(await updater.check()).toBe('reload')
-    expect(order).toEqual(['save', 'sw', 'reload'])
+    expect(await updater.check()).toBe('breaking')
+    expect(await updater.check()).toBe('breaking')
+    expect(order).toEqual([])
+    expect(ui.showBreaking).toHaveBeenCalledTimes(1)
+    const [, options] = ui.showBreaking.mock.calls[0]
+    expect(options.multiplayer).toBe(false)
+    options.onReload()
+    await vi.waitFor(() => expect(order).toEqual(['save', 'sw', 'reload']))
     expect(storage.getItem(UPDATE_RELOAD_GUARD)).toBe('1')
     expect(JSON.parse(storage.getItem(LIVE_UPDATE_APPLIED_KEY)).commit).toBe('bbbbbbb')
     // The same commit never triggers a second reload.
-    expect(await updater.check()).toBe('stuck')
+    expect(await updater.applyBreakingUpdate(next)).toBe('stuck')
   })
 
-  it('[U05215] defers a JS reload during a multiplayer match and reloads when the first poll already sees a new deploy', async() => {
+  it('[U05215] holds every update while other humans are connected over the network and offers one when the first poll already sees a new deploy', async() => {
     const reload = vi.fn()
+    const ui = fakeUi()
     const mp = createLiveUpdater({
       win: { sessionStorage: memoryStorage() },
       fetchImpl: fakeFetch([base, { ...base, commit: 'bbbbbbb', jsSignature: 'js-2' }]),
       getGameState: () => ({ multiplayerSession: { isRemote: true } }),
+      ui,
       reload,
       activateServiceWorker: async() => {},
       running: { commit: 'aaaaaaa' }
     })
     await mp.check()
     expect(await mp.check()).toBe('deferred')
+    expect(await mp.check()).toBe('deferred')
+    expect(ui.showDeferred).toHaveBeenCalledTimes(1)
+    expect(ui.showDeferred.mock.calls[0][1]).toBe('breaking')
+    expect(ui.showBreaking).not.toHaveBeenCalled()
+    expect(await mp.applyBreakingUpdate({ ...base, commit: 'bbbbbbb' })).toBe('deferred')
     expect(reload).not.toHaveBeenCalled()
 
-    const early = createLiveUpdater({ win: { sessionStorage: memoryStorage() }, fetchImpl: fakeFetch([{ ...base, commit: 'ccccccc' }]), reload, activateServiceWorker: async() => {}, running: { commit: 'aaaaaaa' } })
-    expect(await early.check()).toBe('reload')
-    expect(reload).toHaveBeenCalledTimes(1)
+    const earlyUi = fakeUi()
+    const early = createLiveUpdater({ win: { sessionStorage: memoryStorage() }, fetchImpl: fakeFetch([{ ...base, commit: 'ccccccc' }]), ui: earlyUi, reload, activateServiceWorker: async() => {}, running: { commit: 'aaaaaaa' } })
+    expect(await early.check()).toBe('breaking')
+    expect(reload).not.toHaveBeenCalled()
+    expect(earlyUi.showBreaking).toHaveBeenCalledTimes(1)
   })
 
-  it('[U05216] detects multiplayer sessions without flagging a plain single-player game', () => {
+  it('[U05216] only treats network matches with other humans as multiplayer, never a local game against AI', () => {
     expect(isMultiplayerActive({ multiplayerSession: { isRemote: false, status: 'idle' }, humanPlayer: 'player1', partyStates: [{ partyId: 'player1', aiActive: false, lastConnectedAt: null }] })).toBe(false)
     expect(isMultiplayerActive({ multiplayerSession: { isRemote: false, status: 'disconnected' }, partyStates: [] })).toBe(false)
+    // A local game against AI with an open invite (nobody joined yet) stays in scope.
+    expect(isMultiplayerActive({ multiplayerSession: { isRemote: false, status: 'pending', localRole: 'host' }, humanPlayer: 'player1', partyStates: [{ partyId: 'player2', aiActive: true, lastConnectedAt: null }] })).toBe(false)
     expect(isMultiplayerActive({ multiplayerSession: { status: 'connected' } })).toBe(true)
+    expect(isMultiplayerActive({ multiplayerSession: { isRemote: true } })).toBe(true)
     expect(isMultiplayerActive({ multiplayerSession: {}, humanPlayer: 'player1', partyStates: [{ partyId: 'player2', aiActive: false, lastConnectedAt: 1 }] })).toBe(true)
   })
 
-  it('[U05217] announces the applied update after the reload and keeps build-info out of every cache', () => {
+  it('[U05217] renders the notice bubble and sidebar line, announces the restore and keeps build-info out of every cache', () => {
+    document.body.innerHTML = '<div id="sidebarFooterVersion"><div class="sidebar-version__row"><span id="appVersion">x</span></div></div>'
+    const noticeUi = createUpdateNoticeUi(document)
+    const onReload = vi.fn()
+    noticeUi.showBreaking({ version: '0.63.0', commit: 'bbbbbbb' }, { multiplayer: false, onReload })
+    const bubble = document.getElementById('liveUpdateBubble')
+    expect(bubble.dataset.kind).toBe('breaking')
+    expect(bubble.textContent).toContain('needs a reload')
+    expect(document.getElementById('liveUpdateStatus').textContent).toContain('needs a reload')
+    bubble.querySelector('.live-update-bubble__button--primary').click()
+    expect(onReload).toHaveBeenCalledTimes(1)
+    noticeUi.showSafe({ version: '0.63.0', commit: 'ccccccc' }, 1)
+    expect(bubble.dataset.kind).toBe('safe')
+    expect(bubble.textContent).toContain('No reload needed')
+
     const storage = memoryStorage()
     storage.setItem(LIVE_UPDATE_APPLIED_KEY, JSON.stringify({ version: '0.62.3', commit: 'bbbbbbb' }))
-    const notify = vi.fn()
-    expect(announceAppliedUpdate({ win: { sessionStorage: storage }, notify, running: { commit: 'bbbbbbb' } })).toBe(true)
-    expect(notify.mock.calls[0][0]).toContain('restored')
+    const ui = fakeUi()
+    expect(announceAppliedUpdate({ win: { sessionStorage: storage }, ui, running: { commit: 'bbbbbbb' } })).toBe(true)
+    expect(ui.showApplied).toHaveBeenCalledWith({ version: '0.62.3', commit: 'bbbbbbb' })
     expect(storage.getItem(LIVE_UPDATE_APPLIED_KEY)).toBe(null)
     expect(BUILD_INFO_PATH).toBe('/build-info.json')
     expect(shouldBypassServiceWorkerCache('https://x.test/build-info.json?t=1')).toBe(true)
