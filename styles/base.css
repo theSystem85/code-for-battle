@@ -2127,8 +2127,8 @@ body.mobile-portrait.sidebar-condensed.pwa-standalone #mobileEnergyValue {
   align-items: center;
   justify-content: center;
   font-family: var(--game-font-family);
-  font-size: 10px;
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 600;
   letter-spacing: 0.02em;
   color: #f2f2f2;
   text-shadow: 0 0 3px #000;
@@ -2144,8 +2144,8 @@ body.mobile-portrait.sidebar-condensed.pwa-standalone #mobileMoneyValue {
   align-items: center;
   justify-content: center;
   font-family: var(--game-font-family);
-  font-size: 10px;
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 600;
   letter-spacing: 0.02em;
   color: #f2f2f2;
   text-shadow: 0 0 3px #000;
