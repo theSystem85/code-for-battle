@@ -10,6 +10,44 @@ afterEach(() => {
 })
 
 describe('available update notification', () => {
+  it('[U05400] leaves a waiting worker silent when live updates own deploy notices', async() => {
+    vi.resetModules()
+    vi.stubEnv('PROD', true)
+    document.body.innerHTML = `<div id="sidebar"><div class="sidebar-status-row">
+      <div id="offlineUpdatePrompt" hidden><button id="offlineUpdateReload" data-offline-update-label></button></div>
+      <button id="offlineModeButton"><span data-offline-label></span></button>
+    </div></div>`
+    window.gameState = { gameStarted: true, gameOver: false }
+    const worker = new window.EventTarget()
+    worker.postMessage = vi.fn()
+    const registration = new window.EventTarget()
+    registration.waiting = worker
+    const serviceWorker = new window.EventTarget()
+    serviceWorker.controller = {}
+    serviceWorker.register = vi.fn(async() => registration)
+    serviceWorker.ready = new Promise(() => {})
+    const events = new window.EventTarget()
+    const win = {
+      document, navigator: { onLine: true, serviceWorker }, sessionStorage,
+      location: { href: 'http://localhost/', reload: vi.fn() },
+      addEventListener: events.addEventListener.bind(events),
+      removeEventListener: events.removeEventListener.bind(events)
+    }
+    const { startOfflineMode } = await import('../../src/pwa/offlineController.js')
+    controller = startOfflineMode({
+      window: win,
+      fetchImpl: async() => ({ ok: false }),
+      liveUpdateEnabled: true
+    })
+
+    await controller.refreshProbe()
+
+    expect(document.getElementById('offlineUpdatePrompt').hidden).toBe(true)
+    expect(document.querySelector('.notification__inline-link')).toBeNull()
+    expect(worker.postMessage).not.toHaveBeenCalled()
+    expect(win.location.reload).not.toHaveBeenCalled()
+  })
+
   for (const target of ['sidebar', 'notification', 'history']) {
     it(`[U03196] applies the waiting worker and reloads once from the ${target} action`, async() => {
       vi.resetModules()

@@ -2311,7 +2311,8 @@ body.mobile-portrait.sidebar-condensed #mobileBuildMenuContainer #productionArea
   flex-direction: row;
   align-items: stretch;
   gap: 0;
-  flex: 1;
+  flex: 1 1 auto;
+  min-width: 0;
   width: 100%;
   height: 100%;
 }
@@ -2401,8 +2402,8 @@ body.mobile-portrait.sidebar-condensed #mobileBuildMenuContainer #productionTabC
 
 body.mobile-portrait.sidebar-condensed #mobileBuildMenuContainer #production {
   display: flex !important;
-  flex: 1;
-  min-width: calc(100% - 20px);
+  flex: 1 1 auto;
+  min-width: 0;
   height: 100%;
   order: 1;
   align-items: stretch;

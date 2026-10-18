@@ -40,4 +40,14 @@ describe('mobile money and power bars fill their status bar', () => {
     expect(rule('body.mobile-landscape #mobileMoneyTrack')).toMatch(/height:\s*100%/)
     expect(rule('body.mobile-landscape #mobileEnergyTrack')).toMatch(/height:\s*100%/)
   })
+
+  it('[U05401] lets the portrait build scroller shrink beside the category tab in browser and standalone layouts', () => {
+    const area = rule('body.mobile-portrait.sidebar-condensed #mobileBuildMenuContainer #productionArea')
+    expect(area).toMatch(/flex:\s*1 1 auto/)
+    expect(area).toMatch(/min-width:\s*0/)
+    const production = rule('body.mobile-portrait.sidebar-condensed #mobileBuildMenuContainer #production')
+    expect(production).toMatch(/flex:\s*1 1 auto/)
+    expect(production).toMatch(/min-width:\s*0/)
+    expect(production).not.toMatch(/min-width:\s*calc/)
+  })
 })
