@@ -25,6 +25,11 @@ describe('mobile money and power bars fill their status bar', () => {
       expect(track).not.toMatch(/height:\s*\d+px/)
     }
     expect(rule(`${portrait} #mobileMoneyValue`)).toMatch(/align-items:\s*center/)
+    // Larger, bolder labels for the taller bars.
+    for (const id of ['mobileMoneyValue', 'mobileEnergyValue']) {
+      expect(rule(`${portrait} #${id}`)).toMatch(/font-size:\s*12px/)
+      expect(rule(`${portrait} #${id}`)).toMatch(/font-weight:\s*600/)
+    }
     expect(rule(`${portrait} #mobileEnergyValue`)).toMatch(/align-items:\s*center/)
     expect(rule('body.is-touch')).toMatch(/--portrait-status-bar-bottom-reserve:\s*max\(3px, calc\(var\(--safe-area-bottom\) - 21px\)\)/)
   })
