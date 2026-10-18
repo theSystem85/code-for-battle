@@ -12,6 +12,8 @@ import { APP_VERSION } from '../version.js'
 import versionInfo from '../version.json' with { type: 'json' }
 import { GAME_STATE_SCHEMA_VERSION } from '../gameStateSchema.js'
 import { UPDATE_RELOAD_GUARD } from './startupUpdate.js'
+import { createLiveSwapScheduler, setActiveLiveSwapScheduler } from './liveSwapScheduler.js'
+import { getLiveModule } from './liveModuleRegistry.js'
 
 export const BUILD_INFO_URL = '/build-info.json'
 export const LIVE_UPDATE_INTERVAL_MS = 20000
@@ -48,7 +50,11 @@ export function classifyBuildChange(previous, next, runningSchema = GAME_STATE_S
   if (next.commit === previous.commit && next.jsSignature === previous.jsSignature
     && JSON.stringify(next.css) === JSON.stringify(previous.css)) return 'none'
   if (next.update?.kind === 'breaking') return 'breaking'
-  if (next.jsSignature !== previous.jsSignature) return 'breaking'
+  if (next.jsSignature !== previous.jsSignature) {
+    const hasModuleManifest = next.modules && previous.modules
+    if (next.update?.kind === 'safe' && hasModuleManifest && next.coreJsSignature === previous.coreJsSignature) return 'hot'
+    return 'breaking'
+  }
   if (Number.isFinite(next.stateSchemaVersion) && next.stateSchemaVersion !== runningSchema) return 'breaking'
   return 'safe'
 }
@@ -199,9 +205,8 @@ export function createUpdateNoticeUi(doc = document) {
   }
 
   return {
-    showSafe(info, swapped) {
-      const what = swapped ? 'styles refreshed' : 'no visible changes'
-      render(`Update v${info.version} (${info.commit}) loaded live: ${what}. No reload needed.`, [], { kind: 'safe', autoHideMs: 6000 })
+    showSafe(info, swapped, modules = 0) {
+      render(getLiveModule('update-notice').safeUpdateText(info, swapped, modules), [], { kind: 'safe', autoHideMs: 6000 })
       sidebarStatus(`Live update ${info.commit} applied, no reload needed`)
     },
     showDeferred(info, change) {
@@ -238,7 +243,8 @@ export function createLiveUpdater({
   reload = () => win.location.reload(),
   activateServiceWorker = () => activateWaitingServiceWorker(win),
   running = { version: APP_VERSION, commit: versionInfo?.commit || 'unknown' },
-  runningSchema = GAME_STATE_SCHEMA_VERSION
+  runningSchema = GAME_STATE_SCHEMA_VERSION,
+  swapScheduler = createLiveSwapScheduler()
 } = {}) {
   let baseline = null
   let busy = false
@@ -283,6 +289,8 @@ export function createLiveUpdater({
     return 'breaking'
   }
 
+  swapScheduler.setFallback?.(info => announceBreaking(info))
+
   async function check() {
     if (busy) return 'busy'
     busy = true
@@ -309,12 +317,20 @@ export function createLiveUpdater({
         }
         return 'deferred'
       }
-      if (change === 'safe' && !pendingBreaking) {
+      if ((change === 'safe' || change === 'hot') && !pendingBreaking) {
+        let changedModules = []
+        if (change === 'hot') {
+          try {
+            changedModules = await swapScheduler.stage(baseline, info)
+          } catch {
+            return announceBreaking(info)
+          }
+        }
         const swapped = await swapStylesheets(doc, planStylesheetSwaps(baseline, info))
         updateVersionLabels(doc, info)
         baseline = info
-        ui.showSafe(info, swapped)
-        return 'safe'
+        ui.showSafe(info, swapped, changedModules.length)
+        return change
       }
       // Breaking, or a safe deploy on top of a pending breaking one (the
       // running page is already behind, so the reload covers both).
@@ -324,7 +340,7 @@ export function createLiveUpdater({
     }
   }
 
-  return { check, applyBreakingUpdate, getBaseline: () => baseline, getPending: () => pendingBreaking }
+  return { check, applyBreakingUpdate, swapScheduler, getBaseline: () => baseline, getPending: () => pendingBreaking }
 }
 
 export function announceAppliedUpdate({ win = window, ui = null, running = { commit: versionInfo?.commit } } = {}) {
@@ -362,6 +378,7 @@ export async function startLiveUpdate({ intervalMs = LIVE_UPDATE_INTERVAL_MS } =
     ui,
     prepareReload: () => prepareForLiveUpdateReload()
   })
+  setActiveLiveSwapScheduler(updater.swapScheduler)
   void updater.check()
   setInterval(() => { void updater.check() }, intervalMs)
   document.addEventListener('visibilitychange', () => {

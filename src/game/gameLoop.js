@@ -25,6 +25,7 @@ import { getCanvasLogicalSize } from '../rendering/renderingUtils.js'
 import { initGamepadSupport, pollGamepads } from '../input/gamepad/gamepadRuntime.js'
 import { bootMark } from '../ui/bootTiming.js'
 import { finishBootFrame } from '../ui/bootProgress.js'
+import { applyLiveSwapAtSafePoint } from '../pwa/liveSwapScheduler.js'
 
 const MOBILE_FRAME_WATCHDOG_MS = 250
 const MAX_FOREGROUND_SIMULATION_DELTA_MS = 100
@@ -331,6 +332,10 @@ export class GameLoop {
 
     this.animationId = null
     this.frameTimeoutId = null
+
+    // B-008 safe point: downloaded modules and live-state migrations take
+    // effect between frames, before this frame can advance simulation state.
+    applyLiveSwapAtSafePoint(gameState)
 
     // Get current time and canvas contexts (used throughout the function)
     const now = timestamp || performance.now()
