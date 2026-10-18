@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { collectStylesheets, computeJsSignature, isLiveUpdateBuild, normalizeModuleCode } from '../../scripts/liveUpdateBuildInfo.mjs'
+import { collectStylesheets, computeJsSignature, isLiveUpdateBuild, normalizeModuleCode, readUpdateDecision } from '../../scripts/liveUpdateBuildInfo.mjs'
 
 function bundleWith({ code, digest = '', version = '0.62.2', cssName = 'sidebar-BBBBBBBB.css' }) {
   return {
@@ -40,5 +40,11 @@ describe('live update build info', () => {
     expect(isLiveUpdateBuild({ CONTEXT: 'deploy-preview', BRANCH: 'dev' })).toBe(false)
     expect(isLiveUpdateBuild({ CFB_LIVE_UPDATE: '1' })).toBe(true)
     expect(isLiveUpdateBuild({ CFB_LIVE_UPDATE: '0', CONTEXT: 'branch-deploy', BRANCH: 'dev' })).toBe(false)
+  })
+
+  it('[U05220] reads the safe-or-breaking decision from the commit trailer', () => {
+    expect(readUpdateDecision('fix(ui): x\n\nLive-Update: breaking (changes unit AI)\n')).toEqual({ kind: 'breaking', reason: 'changes unit AI' })
+    expect(readUpdateDecision('style: y\n\nLive-Update: safe\n')).toEqual({ kind: 'safe', reason: '' })
+    expect(readUpdateDecision('feat: z')).toEqual({ kind: 'auto', reason: '' })
   })
 })
