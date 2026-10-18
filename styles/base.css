@@ -74,6 +74,9 @@ body {
 }
 
 body.is-touch {
+  /* Space kept free under the portrait PWA money/power bars for the iOS home
+     indicator: everything of the bottom safe area beyond 21px, at least 3px. */
+  --portrait-status-bar-bottom-reserve: max(3px, calc(var(--safe-area-bottom) - 21px));
   --safe-area-top: env(safe-area-inset-top, 0px);
   --safe-area-right: env(safe-area-inset-right, 0px);
   --safe-area-bottom: env(safe-area-inset-bottom, 0px);
@@ -1380,11 +1383,21 @@ body.mobile-landscape #mobileBuildMenuContainer #mobileStatusBar {
 
 body.mobile-landscape #mobileBuildMenuContainer #mobileStatusBar .mobile-resource-row {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   justify-content: center;
+  flex: 1 1 0;
+  min-height: 18px;
   margin: 0;
   padding: 0;
   width: 100%;
+}
+
+body.mobile-landscape #mobileMoneyTrack {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 100%;
 }
 
 body.mobile-landscape #mobileBuildMenuContainer #mobileStatusBar .mobile-resource-value {
@@ -1409,7 +1422,7 @@ body.mobile-landscape #moneyLabel {
 body.mobile-landscape #mobileEnergyBarContainer {
   position: relative;
   width: 100%;
-  height: 18px;
+  height: auto;
   display: flex;
   align-items: stretch;
   justify-content: flex-start;
@@ -2016,11 +2029,13 @@ body.mobile-portrait.sidebar-condensed.pwa-standalone #mobileBuildMenuContainer 
   right: 0;
   bottom: 0;
   display: flex;
-  align-items: center;
+  /* The money and power bars fill the whole bar height (minus the iOS home
+     indicator zone), see docs/changes/2026-10-18-mobile-status-bar-full-height.md. */
+  align-items: stretch;
   justify-content: space-between;
   gap: 8px;
   height: var(--safe-area-bottom);
-  padding: 4px 12px;
+  padding: 3px 12px var(--portrait-status-bar-bottom-reserve, 3px);
   background-color: var(--sidebar-shared-bg-color);
   background-image: var(--sidebar-shared-bg-image);
   box-sizing: border-box;
@@ -2030,13 +2045,14 @@ body.mobile-portrait.sidebar-condensed.pwa-standalone #mobileBuildMenuContainer 
 body.mobile-portrait.sidebar-condensed.pwa-standalone #mobileMoneyDisplay {
   position: relative;
   flex: 1;
-  height: 100%;
+  height: auto;
+  align-self: stretch;
 }
 
 body.mobile-portrait.sidebar-condensed.pwa-standalone #mobileMoneyTrack {
   position: relative;
   width: 100%;
-  height: 12px;
+  height: 100%;
   background: rgba(8, 8, 8, 0.8);
   border-radius: 0;
   overflow: hidden;
@@ -2056,7 +2072,7 @@ body.mobile-portrait.sidebar-condensed.pwa-standalone #mobileMoneyBar {
 
 body.mobile-portrait.sidebar-condensed.pwa-standalone #mobileBuildMenuContainer #mobileStatusBar .mobile-resource-row {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   justify-content: center;
   flex: 1;
   margin: 0;
@@ -2077,13 +2093,14 @@ body.mobile-portrait.sidebar-condensed.pwa-standalone #mobileBuildMenuContainer 
 body.mobile-portrait.sidebar-condensed.pwa-standalone #mobileEnergyBarContainer {
   position: relative;
   flex: 1;
-  height: 100%;
+  height: auto;
+  align-self: stretch;
 }
 
 body.mobile-portrait.sidebar-condensed.pwa-standalone #mobileEnergyTrack {
   position: relative;
   width: 100%;
-  height: 12px;
+  height: 100%;
   background: rgba(8, 8, 8, 0.8);
   border-radius: 0;
   overflow: hidden;
