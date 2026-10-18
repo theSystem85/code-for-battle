@@ -2,7 +2,7 @@
 import { APP_VERSION } from '../version.js'
 import { cleanupOutdatedCaches, createHandlerBoundToURL, precacheAndRoute } from 'workbox-precaching'
 import { registerRoute } from 'workbox-routing'
-import { CacheFirst, NetworkOnly, StaleWhileRevalidate } from 'workbox-strategies'
+import { CacheFirst, NetworkFirst, NetworkOnly, StaleWhileRevalidate } from 'workbox-strategies'
 import { CacheableResponsePlugin } from 'workbox-cacheable-response'
 import { ExpirationPlugin } from 'workbox-expiration'
 import { RangeRequestsPlugin } from 'workbox-range-requests'
@@ -13,7 +13,9 @@ import {
   isBulkAssetPath,
   isNavigationDenylisted,
   isNetlifyDrawerRequest,
+  isNetworkFirstMapDataPath,
   isOfflineAssetFillRequest,
+  MAP_DATA_CACHE,
   isRuntimeFontRequest,
   shouldBypassServiceWorkerCache
 } from './serviceWorkerCachePolicy.js'
@@ -118,6 +120,25 @@ registerRoute(
     timeoutMs: NAVIGATION_NETWORK_TIMEOUT_MS,
     fetchImpl: (request) => fetch(request),
     shell: () => getNavigationShellPath(context.request.url) === '/sse.html' ? sseShell(context) : appShell(context)
+  })
+)
+
+// Sprite sheets keep their names across deploys: network first, so a new
+// deploy's index.json, tags and images are used immediately. Offline, fall
+// back to this cache or to the downloaded offline-assets copy.
+registerRoute(
+  ({ url, request }) => request.method === 'GET'
+    && url.origin === self.location.origin
+    && request.mode !== 'navigate'
+    && !isOfflineAssetFillRequest(request)
+    && isNetworkFirstMapDataPath(url),
+  new NetworkFirst({
+    cacheName: MAP_DATA_CACHE,
+    networkTimeoutSeconds: 4,
+    plugins: [
+      new CacheableResponsePlugin({ statuses: [200] }),
+      { handlerDidError: async({ request }) => (await caches.match(request, { ignoreSearch: true })) || undefined }
+    ]
   })
 )
 

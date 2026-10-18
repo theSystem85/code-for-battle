@@ -131,13 +131,15 @@ describe('mapEditorControls integrated sheet selection list', () => {
     const regenerate = vi.fn()
     setTopologyRegenerator(regenerate)
     gameState.mapTopologyFingerprint = null
+    const { DEFAULT_SSE_SHEETS } = await import('../../src/ui/spriteSheetRegistry.js')
+    const city = 'images/map/sprite_sheets/dtv3_city.webp'
     localStorage.setItem('rts-integrated-spritesheet-mode', 'true')
-    localStorage.setItem('rts-integrated-spritesheet-selected-sheets', JSON.stringify([
-      'images/map/sprite_sheets/dtv3_city.webp', 'images/map/sprite_sheets/missing.webp'
+    localStorage.setItem('rts-integrated-spritesheet-disabled-sheets', JSON.stringify([
+      ...DEFAULT_SSE_SHEETS.filter(path => path !== city), 'images/map/sprite_sheets/default.webp', 'images/map/sprite_sheets/missing.webp'
     ]))
     await initMapEditorControls()
     expect(mockSetIntegratedSpriteSheetConfig).toHaveBeenCalledTimes(1)
-    expect(gameState.activeSpriteSheetSelections).toEqual(['images/map/sprite_sheets/dtv3_city.webp'])
+    expect(gameState.activeSpriteSheetSelections).toEqual([city])
     expect(fetch).not.toHaveBeenCalledWith(expect.stringContaining('missing'), expect.anything())
     expect(gameState.mapTopologyFingerprint).toBe('default')
     expect(regenerate).not.toHaveBeenCalled()
@@ -154,6 +156,50 @@ describe('mapEditorControls integrated sheet selection list', () => {
     await initMapEditorControls()
     expect(gameState.useIntegratedSpriteSheetMode).toBe(false)
     gameState.useIntegratedSpriteSheetMode = true
+  })
+
+  it('migrates an old whitelist with retired sheets to every default sheet enabled', async() => {
+    const { gameState } = await import('../../src/gameState.js')
+    const { initMapEditorControls } = await import('../../src/ui/mapEditorControls.js')
+    const { DEFAULT_SSE_SHEETS } = await import('../../src/ui/spriteSheetRegistry.js')
+    const dir = 'images/map/sprite_sheets/'
+    localStorage.setItem('rts-integrated-spritesheet-mode', 'true')
+    localStorage.setItem('rts-integrated-spritesheet-selected-sheets', JSON.stringify(
+      ['streets24_q90_1024x1024', 'seasons_1024_q90_2', 'seasons_1024_q90_3', 'crystals_q90_1024x1024',
+        'rockCliffsMountains_64x64_1024x1024', 'rocks_64x64_1024x1024_q85', 'debris_craters_tracks'].map(name => `${dir}${name}.webp`)))
+    // A stale (service-worker cached) index.json from an older deploy.
+    fetch.mockImplementation(async(url) => url === 'images/map/sprite_sheets/index.json'
+      ? { ok: true, json: async() => ({ sheets: ['seasons_1024_q90_2', 'seasons_1024_q90_3', 'crystals_q90_1024x1024', 'rocks_64x64_1024x1024_q85', 'debris_craters_tracks'].map(name => `${dir}${name}.webp`) }) }
+      : { ok: false, json: async() => ({}) })
+    await initMapEditorControls()
+    expect(gameState.availableStaticSpriteSheets).toEqual(expect.arrayContaining([...DEFAULT_SSE_SHEETS]))
+    expect(gameState.activeSpriteSheetSelections).toEqual(expect.arrayContaining([...DEFAULT_SSE_SHEETS]))
+    for (const path of [...gameState.availableStaticSpriteSheets, ...gameState.activeSpriteSheetSelections]) {
+      expect(path).not.toMatch(/seasons_|rocks_64|crystals_|streets24|rockCliffs/)
+    }
+    const listed = [...document.querySelectorAll('#integratedSpriteSheetSelectionList input')]
+    expect(listed.map(input => input.dataset.sheetPath)).toEqual(expect.arrayContaining([...DEFAULT_SSE_SHEETS]))
+    expect(listed.every(input => input.checked)).toBe(true)
+    expect(localStorage.getItem('rts-integrated-spritesheet-selected-sheets')).toBeNull()
+    expect(JSON.parse(localStorage.getItem('rts-integrated-spritesheet-disabled-sheets'))).toEqual([])
+  })
+
+  it('stores unchecked sheets as opt-outs and keeps new defaults enabled', async() => {
+    const { gameState } = await import('../../src/gameState.js')
+    const { initMapEditorControls } = await import('../../src/ui/mapEditorControls.js')
+    const { DEFAULT_SSE_SHEETS } = await import('../../src/ui/spriteSheetRegistry.js')
+    const city = 'images/map/sprite_sheets/dtv3_city.webp'
+    localStorage.setItem('rts-integrated-spritesheet-mode', 'true')
+    await initMapEditorControls()
+    const checkbox = document.querySelector(`input[data-sheet-path="${city}"]`)
+    checkbox.checked = false
+    checkbox.dispatchEvent(new Event('change'))
+    await Promise.resolve()
+    expect(JSON.parse(localStorage.getItem('rts-integrated-spritesheet-disabled-sheets'))).toEqual([city])
+    await initMapEditorControls()
+    expect(gameState.activeSpriteSheetSelections).not.toContain(city)
+    expect(gameState.activeSpriteSheetSelections).toEqual(expect.arrayContaining(DEFAULT_SSE_SHEETS.filter(path => path !== city)))
+    expect(document.querySelector(`input[data-sheet-path="${city}"]`).checked).toBe(false)
   })
 
   it('filters unknown runtime selections before fetching sheet metadata', async() => {

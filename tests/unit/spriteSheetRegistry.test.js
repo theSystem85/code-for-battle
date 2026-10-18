@@ -100,3 +100,24 @@ it('tags complete ruin footprints while preserving impassability and excluding h
     })
   })
 })
+
+describe('opt-out sheet selection', () => {
+  const dir = 'images/map/sprite_sheets/'
+  it('always offers every bundled sheet even with a stale index.json', async() => {
+    const { resolveAvailableSheetPaths } = await import('../../src/ui/spriteSheetRegistry.js')
+    const stale = ['seasons_1024_q90_2', 'seasons_1024_q90_3', 'crystals_q90_1024x1024', 'rocks_64x64_1024x1024_q85', 'debris_craters_tracks'].map(n => `${dir}${n}.webp`)
+    const available = resolveAvailableSheetPaths(stale, ['blob:uploaded', `/${dir}dtv3_city.webp`])
+    expect(available).toEqual([...DEFAULT_SSE_SHEETS, 'blob:uploaded'])
+  })
+
+  it('derives the selection from opt-outs and ignores retired entries', async() => {
+    const { parseDisabledSheetPaths, selectionFromDisabled, disabledFromSelection } = await import('../../src/ui/spriteSheetRegistry.js')
+    const city = `${dir}dtv3_city.webp`
+    const disabled = parseDisabledSheetPaths(JSON.stringify([city, `${dir}seasons_1024_q90_2.webp`, 7]))
+    expect(disabled).toEqual([city])
+    expect(parseDisabledSheetPaths('not json')).toEqual([])
+    const selection = selectionFromDisabled([...DEFAULT_SSE_SHEETS], disabled)
+    expect(selection).toEqual(DEFAULT_SSE_SHEETS.filter(path => path !== city))
+    expect(disabledFromSelection([...DEFAULT_SSE_SHEETS], selection, ['blob:gone'])).toEqual(['blob:gone', city])
+  })
+})

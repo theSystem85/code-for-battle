@@ -36,6 +36,7 @@
     "Craters and impact marks no longer appear on buildings, city houses or other impassable tiles.",
     "Sprite isolation never strips interior pixels: SSE click/auto isolation and the runtime black key on the final sheet only remove background connected to the sprite edge.",
     "Snow tiles no longer show green shrubs or trees: only snow-tagged vegetation is placed on snow, and the fallback summer ground details skip snow.",
-    "Map settings edited while an Apply regeneration is still running stay pending instead of being silently dropped."
+    "Map settings edited while an Apply regeneration is still running stay pending instead of being silently dropped.",
+    "Players with older saved sprite sheet settings now see every default biome sheet in Map Settings, in the sprite sheet editor and on the map. New default sheets are enabled automatically and only sheets you uncheck stay off."
   ]
 }

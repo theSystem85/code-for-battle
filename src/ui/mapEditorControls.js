@@ -26,11 +26,15 @@ import { expandCompactSpriteSheetMetadata, hasTaggedSpriteSheetTiles } from '../
 import { getStoredItem, setStoredItem, removeStoredItem, getStoredKeys } from '../storage/indexedDbStorage.js'
 import {
   DEFAULT_SSE_SHEETS,
-  OPTIONAL_SSE_SHEETS,
-  filterRetiredSheetPaths,
+  DISABLED_SHEETS_STORAGE_KEY,
+  LEGACY_SELECTED_SHEETS_STORAGE_KEY,
+  disabledFromSelection,
   isRetiredSpriteSheetPath,
+  parseDisabledSheetPaths,
   purgeRetiredSheetStorage,
-  sanitizeAppliedSheetMetadata
+  resolveAvailableSheetPaths,
+  sanitizeAppliedSheetMetadata,
+  selectionFromDisabled
 } from './spriteSheetRegistry.js'
 
 let editButton = null
@@ -56,7 +60,6 @@ const runtimeSheetDisplayLabelByPath = new Map()
 
 const INTEGRATED_MODE_STORAGE_KEY = 'rts-integrated-spritesheet-mode'
 const INTEGRATED_BIOME_STORAGE_KEY = 'rts-integrated-spritesheet-biome'
-const INTEGRATED_SELECTED_SHEETS_STORAGE_KEY = 'rts-integrated-spritesheet-selected-sheets'
 const SSE_APPLIED_METADATA_STORAGE_KEY = 'rts-sse-applied-metadata'
 const SSE_APPLIED_ANIMATION_METADATA_STORAGE_KEY = 'rts-sse-applied-animation-metadata'
 const SSE_SHEETS_INDEX = 'images/map/sprite_sheets/index.json'
@@ -181,6 +184,27 @@ function mergeSheetPaths(baseSheetPaths = [], additionalSheetPaths = []) {
   return merged
 }
 
+function readDisabledSheetPaths() {
+  try {
+    return parseDisabledSheetPaths(getStoredItem(DISABLED_SHEETS_STORAGE_KEY))
+  } catch {
+    return []
+  }
+}
+
+// Store explicit opt-outs instead of a whitelist, so new default sheets are
+// enabled automatically. The legacy whitelist key is dropped once replaced.
+function persistIntegratedSheetSelection() {
+  try {
+    const available = Array.isArray(gameState.availableStaticSpriteSheets) ? gameState.availableStaticSpriteSheets : []
+    const selected = Array.isArray(gameState.activeSpriteSheetSelections) ? gameState.activeSpriteSheetSelections : available
+    setStoredItem(DISABLED_SHEETS_STORAGE_KEY, JSON.stringify(disabledFromSelection(available, selected, readDisabledSheetPaths())))
+    removeStoredItem(LEGACY_SELECTED_SHEETS_STORAGE_KEY)
+  } catch (err) {
+    window.logger.warn('Failed to persist integrated sprite sheet opt-outs:', err)
+  }
+}
+
 function ensureIntegratedSheetVisible(sheetPath, { autoSelect = true } = {}) {
   if (typeof sheetPath !== 'string' || !sheetPath.trim()) return
   const available = Array.isArray(gameState.availableStaticSpriteSheets)
@@ -197,11 +221,7 @@ function ensureIntegratedSheetVisible(sheetPath, { autoSelect = true } = {}) {
     selectedSet.add(sheetPath)
   }
   gameState.activeSpriteSheetSelections = nextAvailable.filter(path => selectedSet.has(path))
-  try {
-    setStoredItem(INTEGRATED_SELECTED_SHEETS_STORAGE_KEY, JSON.stringify(gameState.activeSpriteSheetSelections))
-  } catch (err) {
-    window.logger.warn('Failed to persist selected integrated sprite sheets:', err)
-  }
+  persistIntegratedSheetSelection()
 
   renderIntegratedSheetSelectionList(nextAvailable)
 }
@@ -424,13 +444,13 @@ function initSseImageConverterControls() {
 async function loadStaticSheetPaths() {
   try {
     const parsed = await fetchAssetJson(SSE_SHEETS_INDEX)
-    if (Array.isArray(parsed?.sheets) && parsed.sheets.length) {
-      return [...new Set([...filterRetiredSheetPaths(parsed.sheets), ...OPTIONAL_SSE_SHEETS])]
-    }
+    // The bundled registry always wins: a stale (service-worker cached)
+    // index.json may only add sheets, never hide shipped ones.
+    return resolveAvailableSheetPaths(parsed?.sheets)
   } catch (err) {
     window.logger.warn('Failed to load sprite sheet index:', err)
   }
-  return [...DEFAULT_SSE_SHEETS, ...OPTIONAL_SSE_SHEETS]
+  return resolveAvailableSheetPaths()
 }
 
 async function loadMetadataForSheet(sheetPath, { allowLocalOverride = true } = {}) {
@@ -473,11 +493,7 @@ function renderIntegratedSheetSelectionList(sheetPaths = []) {
       if (checkbox.checked) currentSelected.add(sheetPath)
       else currentSelected.delete(sheetPath)
       gameState.activeSpriteSheetSelections = sheetPaths.filter(path => currentSelected.has(path))
-      try {
-        setStoredItem(INTEGRATED_SELECTED_SHEETS_STORAGE_KEY, JSON.stringify(gameState.activeSpriteSheetSelections))
-      } catch (err) {
-        window.logger.warn('Failed to persist selected integrated sprite sheets:', err)
-      }
+      persistIntegratedSheetSelection()
       await applyIntegratedSpriteSheetRuntime()
     })
     const name = document.createElement('span')
@@ -707,34 +723,29 @@ export async function initMapEditorControls() {
     window.logger.warn('Failed to load applied SSE metadata from IndexedDB:', err)
   }
 
-  gameState.availableStaticSpriteSheets = mergeSheetPaths(
-    [...DEFAULT_SSE_SHEETS, ...OPTIONAL_SSE_SHEETS],
-    [gameState.activeSpriteSheetMetadata?.sheetPath, gameState.activeSpriteSheetPath]
-  )
+  gameState.availableStaticSpriteSheets = resolveAvailableSheetPaths([],
+    [gameState.activeSpriteSheetMetadata?.sheetPath, gameState.activeSpriteSheetPath])
 
+  // Enabled sheets = everything offered minus explicit opt-outs. A legacy
+  // whitelist from older builds is migrated: retired sheets are dropped and
+  // every default sheet is enabled (nothing was explicitly unchecked yet).
+  let disabledSheets = readDisabledSheetPaths()
   try {
-    const storedSelected = safeParseJson(getStoredItem(INTEGRATED_SELECTED_SHEETS_STORAGE_KEY), null)
-    if (Array.isArray(storedSelected)) {
-      gameState.activeSpriteSheetSelections = gameState.availableStaticSpriteSheets.filter(path => storedSelected.includes(path))
+    if (getStoredItem(DISABLED_SHEETS_STORAGE_KEY) === null && getStoredItem(LEGACY_SELECTED_SHEETS_STORAGE_KEY) !== null) {
+      disabledSheets = []
+      setStoredItem(DISABLED_SHEETS_STORAGE_KEY, '[]')
+      removeStoredItem(LEGACY_SELECTED_SHEETS_STORAGE_KEY)
     }
   } catch (err) {
-    window.logger.warn('Failed to load selected integrated sprite sheets:', err)
+    window.logger.warn('Failed to migrate selected integrated sprite sheets:', err)
   }
-  if (!Array.isArray(gameState.activeSpriteSheetSelections)) {
-    gameState.activeSpriteSheetSelections = [...DEFAULT_SSE_SHEETS]
-  }
+  gameState.activeSpriteSheetSelections = selectionFromDisabled(gameState.availableStaticSpriteSheets, disabledSheets)
   renderIntegratedSheetSelectionList(gameState.availableStaticSpriteSheets)
   const runtimeReady = loadStaticSheetPaths().then(async(sheetPaths) => {
-    gameState.availableStaticSpriteSheets = mergeSheetPaths(
-      sheetPaths,
-      [gameState.activeSpriteSheetMetadata?.sheetPath, gameState.activeSpriteSheetPath]
-    )
+    gameState.availableStaticSpriteSheets = resolveAvailableSheetPaths(sheetPaths,
+      [...gameState.availableStaticSpriteSheets, gameState.activeSpriteSheetMetadata?.sheetPath, gameState.activeSpriteSheetPath])
     const availablePaths = gameState.availableStaticSpriteSheets
-    if (!Array.isArray(gameState.activeSpriteSheetSelections)) {
-      gameState.activeSpriteSheetSelections = [...DEFAULT_SSE_SHEETS]
-    } else {
-      gameState.activeSpriteSheetSelections = availablePaths.filter(path => gameState.activeSpriteSheetSelections.includes(path))
-    }
+    gameState.activeSpriteSheetSelections = selectionFromDisabled(availablePaths, readDisabledSheetPaths())
     renderIntegratedSheetSelectionList(availablePaths)
     if (gameState.useIntegratedSpriteSheetMode) {
       await applyIntegratedSpriteSheetRuntime()
