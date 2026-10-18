@@ -10,9 +10,13 @@ import {
   PRECACHE_GLOB_PATTERNS,
   PRECACHE_MAX_FILE_BYTES
 } from './src/pwa/precachePolicy.js'
-import { versionDefines } from './scripts/versioning.mjs'
+import { computeAppVersion, versionDefines } from './scripts/versioning.mjs'
+import { isLiveUpdateBuild, liveUpdateBuildInfoPlugin } from './scripts/liveUpdateBuildInfo.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
+// Live updates (src/pwa/liveUpdate.js) run only on the dev branch deploy or
+// with CFB_LIVE_UPDATE=1. Production and deploy previews never enable them.
+const LIVE_UPDATE = isLiveUpdateBuild()
 const LEGAL_ENTRY_DIR = resolve(__dirname, 'src/legal')
 const LEGAL_OUTPUT_FILES = [
   'impressum.html',
@@ -102,9 +106,10 @@ export default defineConfig({
   // APP_VERSION is computed here from package.json plus the unreleased
   // release-note entries (see scripts/versioning.mjs). Nothing in src/ holds a
   // hand-edited version number.
-  define: versionDefines(__dirname),
+  define: { ...versionDefines(__dirname), __LIVE_UPDATE__: JSON.stringify(LIVE_UPDATE) },
   plugins: [
     legalRoutePlugin,
+    liveUpdateBuildInfoPlugin({ root: __dirname, version: computeAppVersion(__dirname).version, enabled: LIVE_UPDATE }),
     offlineAssetManifestPlugin(),
     VitePWA({
       strategies: 'injectManifest',
