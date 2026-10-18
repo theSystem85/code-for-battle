@@ -307,7 +307,7 @@ describe('natural decoration preparation', () => {
   it('registers future sheets only when both files exist and warns for missing pairs', () => {
     const warn = vi.fn()
     expect(availableFutureSheets({}, warn)).toEqual([])
-    expect(warn).toHaveBeenCalledTimes(3)
+    expect(warn).toHaveBeenCalledTimes(9)
     const prefix = '/public/images/map/sprite_sheets/dtv3_ground_detail'
     expect(availableFutureSheets({ [`${prefix}.webp`]: 'image' }, warn)).toEqual([])
     expect(availableFutureSheets({ [`${prefix}.webp`]: 'image', [`${prefix}.json`]: 'metadata' }, warn)).toEqual(['images/map/sprite_sheets/dtv3_ground_detail.webp'])

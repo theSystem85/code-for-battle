@@ -21,7 +21,9 @@
     "New inner_cuts sprite tag: interior black is only cut for tagged sprites (bare winter trees, decals, arches, fences, tyres, reeds and more); everything else keeps its dark interior.",
     "dtv2_universal props are now mostly ruins (clustered in ruin regions) and roadside decoration placed sparsely right next to roads; the fuel depot and water tower are rare (once per map).",
     "Cities now have an organic layout: one gently curved main street joined to the big roads, 1-4 side streets with occasional branches, and houses only along streets facing them (no grid).",
-    "Combat decals no longer carry inner_cuts (no cut-outs; to be reworked with real alpha)."
+    "Combat decals no longer carry inner_cuts (no cut-outs; to be reworked with real alpha).",
+    "All biome decoration sheets are now enabled by default, with native-alpha ground detail and remembered opt-outs.",
+    "Retired season and rocks sheets were removed; biome rocks now supply stone scatter while crystal art remains resource-only."
   ],
   "bugfixes": [
     "Empty custom sheet selections now render exactly like default mode.",

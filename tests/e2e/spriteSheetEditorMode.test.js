@@ -35,7 +35,7 @@ test.describe('Sprite Sheet Editor integration', () => {
     await expect(page.locator('#spriteSheetEditorModal')).toHaveClass(/config-modal--open/)
 
     await expect(page.locator('#sseTileSizeInput')).toHaveValue('64')
-    // The first default sheet (seasons_1024_q90_2 since streets24 was removed) has no border.
+    // The first default sheet has no border.
     await expect(page.locator('#sseBorderWidthInput')).toHaveValue('0')
     await expect(page.locator('#spriteSheetEditorMaxBtn')).toHaveCount(0)
 

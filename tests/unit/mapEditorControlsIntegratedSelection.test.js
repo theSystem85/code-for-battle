@@ -92,7 +92,7 @@ describe('mapEditorControls integrated sheet selection list', () => {
         return {
           ok: true,
           json: async() => ({
-            sheets: ['images/map/sprite_sheets/default.webp']
+            sheets: ['images/map/sprite_sheets/default.webp', 'images/map/sprite_sheets/dtv3_city.webp']
           })
         }
       }
@@ -142,6 +142,18 @@ describe('mapEditorControls integrated sheet selection list', () => {
     expect(gameState.mapTopologyFingerprint).toBe('default')
     expect(regenerate).not.toHaveBeenCalled()
     setTopologyRegenerator(null)
+  })
+
+  it('enables custom sprite sheets by default and respects a stored opt-out', async() => {
+    const { gameState } = await import('../../src/gameState.js')
+    const { initMapEditorControls } = await import('../../src/ui/mapEditorControls.js')
+    gameState.useIntegratedSpriteSheetMode = false
+    await initMapEditorControls()
+    expect(gameState.useIntegratedSpriteSheetMode).toBe(true)
+    localStorage.setItem('rts-integrated-spritesheet-mode', 'false')
+    await initMapEditorControls()
+    expect(gameState.useIntegratedSpriteSheetMode).toBe(false)
+    gameState.useIntegratedSpriteSheetMode = true
   })
 
   it('filters unknown runtime selections before fetching sheet metadata', async() => {

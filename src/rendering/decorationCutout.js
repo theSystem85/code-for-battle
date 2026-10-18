@@ -64,6 +64,8 @@ export function floodBorderBackground(data, width, height, isBackground) {
 
 export function cutoutDecorationGroup(group, cellSize = 64) {
   if (!group?.tilesByOffset || !group.width || !group.height) return group
+  // Native-alpha art is already compositing-ready; never derive another mask.
+  if (Object.values(group.tilesByOffset).some(tile => tile?.blendMode === 'alpha')) return group
   const width = group.width * cellSize
   const height = group.height * cellSize
   const target = createCanvas(width, height)

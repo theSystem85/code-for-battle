@@ -9,7 +9,7 @@ import {
 } from '../../src/ui/spriteSheetRegistry.js'
 
 const SEASONS = 'images/map/sprite_sheets/dt_grass_1024_q85.webp'
-const STREETS = 'images/map/sprite_sheets/seasons_1024_q90_2.webp'
+const RETIRED_SEASONS = 'images/map/sprite_sheets/seasons_1024_q90_2.webp'
 
 function memoryStorage(entries) {
   const map = new Map(Object.entries(entries))
@@ -32,11 +32,11 @@ describe('sprite sheet registry', () => {
     })
   })
 
-  it('keeps optional sheets out of defaults and restores seasons', () => {
-    expect(OPTIONAL_SSE_SHEETS).toHaveLength(9)
-    expect(OPTIONAL_SSE_SHEETS).toContain('images/map/sprite_sheets/dtv3_winter.webp')
-    OPTIONAL_SSE_SHEETS.forEach(path => expect(DEFAULT_SSE_SHEETS).not.toContain(path))
-    expect(isRetiredSpriteSheetPath('images/map/sprite_sheets/seasons_1024_q90_2.webp')).toBe(false)
+  it('enables every dtv sheet by default and retires removed sheets', () => {
+    expect(OPTIONAL_SSE_SHEETS).toHaveLength(0)
+    expect(DEFAULT_SSE_SHEETS).toContain('images/map/sprite_sheets/dtv3_winter.webp')
+    expect(DEFAULT_SSE_SHEETS.filter(path => /\/dtv[23]_/.test(path))).toHaveLength(9)
+    expect(isRetiredSpriteSheetPath('images/map/sprite_sheets/seasons_1024_q90_2.webp')).toBe(true)
     expect(isRetiredSpriteSheetPath('images/map/sprite_sheets/streets24_q90_1024x1024.webp')).toBe(true)
     expect(isRetiredSpriteSheetPath('images/map/sprite_sheets/rockCliffsMountains_64x64_1024x1024.webp')).toBe(true)
   })
@@ -44,17 +44,17 @@ describe('sprite sheet registry', () => {
   it('purges stored state that references retired sheets', () => {
     const storage = memoryStorage({
       [`rts-sse-metadata:${SEASONS}`]: '{}',
-      [`rts-sse-metadata:${STREETS}`]: '{}',
+      [`rts-sse-metadata:${RETIRED_SEASONS}`]: '{}',
       'rts-sse-last-sheet': `/${SEASONS}`,
       'rts-sse-applied-metadata': JSON.stringify({ sheetPath: SEASONS }),
-      'rts-integrated-spritesheet-selected-sheets': JSON.stringify([SEASONS, STREETS])
+      'rts-integrated-spritesheet-selected-sheets': JSON.stringify([SEASONS, RETIRED_SEASONS, 'images/map/sprite_sheets/crystals_q90_1024x1024.webp'])
     })
     purgeRetiredSheetStorage(storage)
     expect(storage.map.has(`rts-sse-metadata:${SEASONS}`)).toBe(false)
-    expect(storage.map.has(`rts-sse-metadata:${STREETS}`)).toBe(true)
+    expect(storage.map.has(`rts-sse-metadata:${RETIRED_SEASONS}`)).toBe(false)
     expect(storage.map.has('rts-sse-last-sheet')).toBe(false)
     expect(storage.map.has('rts-sse-applied-metadata')).toBe(false)
-    expect(JSON.parse(storage.map.get('rts-integrated-spritesheet-selected-sheets'))).toEqual([STREETS])
+    expect(JSON.parse(storage.map.get('rts-integrated-spritesheet-selected-sheets'))).toEqual([])
   })
 
   it('clears retired sheets from loaded saved games', () => {
@@ -70,7 +70,7 @@ describe('sprite sheet registry', () => {
 })
 
 it('preserves restored sheets in stored settings and saved games', () => {
-  const restored = DEFAULT_SSE_SHEETS[1]
+  const restored = DEFAULT_SSE_SHEETS.find(path => path.includes('dtv2_grass'))
   const storage = memoryStorage({
     'rts-sse-last-sheet': restored,
     'rts-integrated-spritesheet-selected-sheets': JSON.stringify([restored])
@@ -81,7 +81,7 @@ it('preserves restored sheets in stored settings and saved games', () => {
 })
 
 it('tags complete ruin footprints while preserving impassability and excluding huts', () => {
-  OPTIONAL_SSE_SHEETS.forEach(path => {
+  DEFAULT_SSE_SHEETS.filter(path => /\/dtv[23]_/.test(path)).forEach(path => {
     const metadata = JSON.parse(readFileSync(`public/${path.replace('.webp', '.json')}`, 'utf8'))
     metadata.propLayout.forEach(prop => {
       const isRuin = prop.id.includes('ruin') || ['soil_collapsed_shed', 'universal_rubble_pile'].includes(prop.id)

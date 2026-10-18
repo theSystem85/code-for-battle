@@ -53,12 +53,13 @@ describe('strict snow decoration placement', () => {
     }
     files[`${dir}dtv4_halfdone.webp`] = 'image'
     expect(availableFutureSheets(files, warn)).toEqual([
+      'images/map/sprite_sheets/dtv2_snow.webp',
       'images/map/sprite_sheets/dtv3_ground_detail.webp',
       'images/map/sprite_sheets/dtv3_shore.webp',
       'images/map/sprite_sheets/dtv3_city.webp',
       'images/map/sprite_sheets/dtv3_winter.webp'
     ])
-    expect(warn).not.toHaveBeenCalled()
+    expect(warn).toHaveBeenCalledTimes(4)
   })
 
   it('never draws the green fallback ground details on snow tiles', () => {

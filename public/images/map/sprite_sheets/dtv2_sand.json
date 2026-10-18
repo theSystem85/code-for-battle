@@ -8,7 +8,8 @@
   "tags": [
     "decorative",
     "sand",
-    "inner_cuts"
+    "inner_cuts",
+    "stones"
   ],
   "columns": 6,
   "rows": 8,
@@ -353,7 +354,8 @@
         "decorative",
         "impassable",
         "group_9",
-        "rocks"
+        "rocks",
+        "stones"
       ],
       "rect": {
         "x": 0,
@@ -370,7 +372,8 @@
         "decorative",
         "impassable",
         "group_9",
-        "rocks"
+        "rocks",
+        "stones"
       ],
       "rect": {
         "x": 64,
@@ -387,7 +390,8 @@
         "decorative",
         "impassable",
         "group_9",
-        "rocks"
+        "rocks",
+        "stones"
       ],
       "rect": {
         "x": 0,
@@ -404,7 +408,8 @@
         "decorative",
         "impassable",
         "group_9",
-        "rocks"
+        "rocks",
+        "stones"
       ],
       "rect": {
         "x": 64,
@@ -516,7 +521,8 @@
         "sand",
         "decorative",
         "passable",
-        "rocks"
+        "rocks",
+        "stones"
       ],
       "rect": {
         "x": 0,
@@ -734,7 +740,8 @@
         "decorative",
         "impassable",
         "group_9",
-        "rocks"
+        "rocks",
+        "stones"
       ]
     },
     {
@@ -818,7 +825,8 @@
         "sand",
         "decorative",
         "passable",
-        "rocks"
+        "rocks",
+        "stones"
       ]
     },
     {
