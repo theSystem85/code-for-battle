@@ -65,6 +65,7 @@ import { gameRandom } from './utils/gameRandom.js'
 import { getRNGState } from './utils/gameRandom.js'
 import { deterministicRNG, initializeSessionRNG } from './network/deterministicRandom.js'
 import {
+  flushGameStorageWrites,
   getStoredEntries,
   getStoredItem,
   hasStoredItem,
@@ -162,6 +163,19 @@ function saveLastGameCheckpoint(reason = '') {
 
 export function persistLastGameCheckpoint(reason = '') {
   saveLastGameCheckpoint(reason)
+}
+
+// Live update (src/pwa/liveUpdate.js): keep the running game in the lastGame
+// checkpoint, mark it for auto-resume and wait until IndexedDB has it, so the
+// reload restores it through maybeResumeLastPausedGame.
+export async function prepareForLiveUpdateReload() {
+  const saved = canPersistLastGame()
+  if (saved) {
+    saveLastGameCheckpoint('live update')
+    markLastGameResumePending()
+  }
+  await flushGameStorageWrites()
+  return saved
 }
 
 function startLastGameAutoSaveLoop() {

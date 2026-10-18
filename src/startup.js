@@ -34,6 +34,13 @@ async function start() {
   if (reloading) return
   const game = await import('./main.js')
   await game.initializeApp()
+  // Dev branch deploy and `npm run dev` only (see src/pwa/liveUpdate.js);
+  // production builds drop this branch at build time.
+  if (__LIVE_UPDATE__ || import.meta.env.DEV) {
+    import('./pwa/liveUpdate.js')
+      .then(({ startLiveUpdate }) => startLiveUpdate())
+      .catch(error => console.warn('Live update unavailable', error))
+  }
 }
 
 start().catch(error => {

@@ -69,6 +69,7 @@ export function classifyOfflinePath(relativePath) {
 
   if (!relative || relative.endsWith('/')) return 'exclude'
   if (relative === 'offline-probe.txt') return 'exclude'
+  if (relative === 'build-info.json') return 'exclude'
   if (name === 'sw.js' || name === 'registerSW.js' || /^workbox-.*\.js$/i.test(name)) return 'exclude'
   if (name === OFFLINE_ASSETS_MANIFEST_FILE) return 'exclude'
   if (EXCLUDED_EXTENSIONS.has(extension)) return 'exclude'
