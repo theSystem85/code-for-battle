@@ -1,6 +1,7 @@
 import { OFFLINE_ASSET_FILL_HEADER } from './offlineAssetPlan.js'
 import { OFFLINE_PROBE_PATH } from './precachePolicy.js'
 
+export const BUILD_INFO_PATH = '/build-info.json'
 const VIDEO_EXTENSION = /\.(?:mp4|webm|mov|m4v)$/i
 const AUDIO_EXTENSION = /\.(?:mp3|ogg|wav)$/i
 const BULK_EXTENSION = /\.(?:png|webp|gif|json|mp3|ogg|wav)$/i
@@ -23,6 +24,8 @@ export function shouldBypassServiceWorkerCache(url, method = 'GET') {
   const pathname = pathnameOf(url)
   if (pathname.startsWith('/api/') || pathname.startsWith('/.netlify/')) return true
   if (pathname === OFFLINE_PROBE_PATH) return true
+  // Polled by the dev live update (src/pwa/liveUpdate.js); must never be cached.
+  if (pathname === BUILD_INFO_PATH) return true
   if (VIDEO_EXTENSION.test(pathname)) return true
   return false
 }
