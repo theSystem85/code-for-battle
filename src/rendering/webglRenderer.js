@@ -4,18 +4,29 @@ import {
   USE_TEXTURES,
   USE_OCEAN_WATER_RENDERING,
   WATER_EFFECT_TONE,
-  WATER_EFFECT_SATURATION,
-  WATER_EFFECT_ZOOM,
+  COASTAL_SHALLOWS_ENABLED,
+  WATER_WAVE_DIRECTION,
+  WATER_EFFECT_SPEED,
   WATER_EFFECT_STRENGTH,
-  WATER_EFFECT_SPEED
+  WATER_EFFECT_SATURATION,
+  WATER_EFFECT_ZOOM
 } from '../config.js'
-import { PROFILER_SPAN_IDS } from '../performance/profilerIds.js'
-import { renderProfiler } from '../performance/renderProfiler.js'
-import { RENDER_COUNTER_IDS, renderDiagnostics } from '../performance/renderDiagnostics.js'
-import { getCanvasPixelRatio } from './renderingUtils.js'
-import { bootMark } from '../ui/bootTiming.js'
-import { OCEAN_WATER_GLSL } from './oceanWaterShader.js'
-import { hasWebGlHardwareGpu, LEGACY_WATER_GLSL } from './waterRenderingMode.js'
+import { PROFILER_SPAN_IDS
+} from '../performance/profilerIds.js'
+import { renderProfiler
+} from '../performance/renderProfiler.js'
+import { RENDER_COUNTER_IDS, renderDiagnostics
+} from '../performance/renderDiagnostics.js'
+import { getCanvasPixelRatio
+} from './renderingUtils.js'
+import { bootMark
+} from '../ui/bootTiming.js'
+import { ShoreDepthField
+} from './prepared/shoreDepthField.js'
+import { OCEAN_WATER_GLSL
+} from './oceanWaterShader.js'
+import { hasWebGlHardwareGpu, LEGACY_WATER_GLSL
+} from './waterRenderingMode.js'
 
 export const WATER_INSTANCE_FLOATS = 17
 export const WATER_INSTANCE_STRIDE = WATER_INSTANCE_FLOATS * 4
@@ -109,6 +120,7 @@ uniform float uWaterTone;
 uniform float uWaterSaturation;
 uniform float uOceanWaterEnabled;
 uniform float uWaterStrength;
+uniform vec4 uWaterControls;
 
 in vec2 vUV;
 in vec4 vColor;
@@ -150,11 +162,13 @@ void main() {
   }
 
   if (vTextureType > 1.5) {
+    float c = cos(uWaterControls.x), s = sin(uWaterControls.x);
+    vec2 wavePos = vec2(c * vWorldPos.x + s * vWorldPos.y, -s * vWorldPos.x + c * vWorldPos.y);
     vec3 waterColor;
     if (uOceanWaterEnabled > 0.5) {
-      waterColor = oceanWater(vWorldPos, uTime, uWaterZoom, uWaterTone, waterFootprint, uWaterStrength);
+      waterColor = oceanWater(wavePos, uTime, uWaterZoom, uWaterTone, waterFootprint, uWaterStrength);
     } else {
-      waterColor = legacyWater(vWorldPos, uTime, uWaterZoom, uWaterTone, uWaterStrength);
+      waterColor = legacyWater(wavePos, uTime, uWaterZoom, uWaterTone, uWaterStrength);
     }
 
     float edgeDistance = 1.0;
@@ -166,7 +180,12 @@ void main() {
     float shoreMask = 1.0 - smoothstep(0.0, 0.18, edgeDistance);
     waterColor += vec3(0.03, 0.05, 0.05) * shoreMask;
 
-    outColor = vec4(applySaturation(waterColor, uWaterSaturation), 1.0);
+    waterColor = applySaturation(waterColor, uWaterSaturation);
+    float depth = mix(mix(vColor.x, vColor.y, vLocalPos.x), mix(vColor.w, vColor.z, vLocalPos.x), vLocalPos.y);
+    float opacity = uWaterControls.w > 0.5 ? clamp(depth / 5.0, 0.0, 1.0) : 1.0;
+    float grain = fract(sin(dot(floor(vWorldPos), vec2(12.9898, 78.233))) * 43758.5453);
+    vec3 sand = vec3(0.76, 0.67, 0.46) + (grain - 0.5) * 0.045;
+    outColor = vec4(mix(sand, waterColor, opacity), 1.0);
   } else if (vTextureType > 0.5) {
     if (vTextureSource > 0.5) {
       outColor = texture(uSecondaryAtlas, vUV);
@@ -293,6 +312,7 @@ export class GameWebGLRenderer {
     this.colorCache = new Map()
     this.pixelRatio = (typeof window !== 'undefined' && window.devicePixelRatio) || 1
     this.rendersWaterSot = true
+    this.shoreDepth = new ShoreDepthField()
     this.waterTopology = null
     this.uploadedWaterTopology = null
     this.uploadedWaterTopologyVersion = -1
@@ -405,6 +425,7 @@ export class GameWebGLRenderer {
       waterSaturation: gl.getUniformLocation(this.program, 'uWaterSaturation'),
       oceanWaterEnabled: gl.getUniformLocation(this.program, 'uOceanWaterEnabled'),
       waterStrength: gl.getUniformLocation(this.program, 'uWaterStrength'),
+      waterControls: gl.getUniformLocation(this.program, 'uWaterControls'),
       atlas: gl.getUniformLocation(this.program, 'uAtlas'),
       secondaryAtlas: gl.getUniformLocation(this.program, 'uSecondaryAtlas')
     }
@@ -546,10 +567,10 @@ export class GameWebGLRenderer {
     for (const sourceRange of ranges) {
       const range = normalizeTopologyRange(sourceRange, topology.width, topology.height)
       if (!range) continue
-      const firstChunkX = Math.floor(range.left / WATER_CHUNK_SIZE)
-      const firstChunkY = Math.floor(range.top / WATER_CHUNK_SIZE)
-      const lastChunkX = Math.floor(Math.max(range.left, range.right - 1) / WATER_CHUNK_SIZE)
-      const lastChunkY = Math.floor(Math.max(range.top, range.bottom - 1) / WATER_CHUNK_SIZE)
+      const firstChunkX = Math.floor(Math.max(0, range.left - 6) / WATER_CHUNK_SIZE)
+      const firstChunkY = Math.floor(Math.max(0, range.top - 6) / WATER_CHUNK_SIZE)
+      const lastChunkX = Math.floor(Math.min(topology.width - 1, Math.max(range.left, range.right - 1) + 6) / WATER_CHUNK_SIZE)
+      const lastChunkY = Math.floor(Math.min(topology.height - 1, Math.max(range.top, range.bottom - 1) + 6) / WATER_CHUNK_SIZE)
       for (let chunkY = firstChunkY; chunkY <= lastChunkY; chunkY++) {
         for (let chunkX = firstChunkX; chunkX <= lastChunkX; chunkX++) {
           const index = chunkY * topology.chunkColumns + chunkX
@@ -589,6 +610,7 @@ export class GameWebGLRenderer {
   prepareRetainedWaterTopology(mapGrid, options = {}) {
     this.getSotMask(mapGrid)
     const revision = this.getWaterTopologyRevision(options)
+    this.shoreDepth.prepare(mapGrid, revision)
     const ranges = getTopologyRanges(options)
     const dimensionsChanged = !this.waterTopology ||
       this.waterTopology.width !== (mapGrid[0]?.length || 0) ||
@@ -713,6 +735,7 @@ export class GameWebGLRenderer {
 
   buildTileInstances(mapGrid, startX, startY, endX, endY, options = {}) {
     const { waterOnly = false } = options
+    if (!waterOnly || this.shoreDepth.map !== mapGrid) this.shoreDepth.prepare(mapGrid, this.getWaterTopologyRevision(options))
     const baseInstances = []
     const overlayInstances = []
     const resourceInstances = []
@@ -784,7 +807,7 @@ export class GameWebGLRenderer {
     return {
       translation: [tileX, tileY],
       uvRect: [0, 0, 1, 1],
-      color: this.getColor('water'),
+      color: this.shoreDepth.corners(tileX, tileY),
       textureType: 2,
       textureSource: 0,
       waterEdges: [0, 0, 0, 0],
@@ -884,7 +907,7 @@ export class GameWebGLRenderer {
     return {
       translation: [tileX, tileY],
       uvRect,
-      color: this.getColor(type),
+      color: isWaterAnimated ? this.shoreDepth.corners(tileX, tileY) : this.getColor(type),
       textureType: isWaterAnimated ? 2 : (useTexture || useSecondaryTexture) ? 1 : 0,
       textureSource: useSecondaryTexture ? 1 : 0,
       waterEdges: isWaterAnimated ? this.computeWaterEdges(mapGrid, tileX, tileY, sotMask) : [0, 0, 0, 0],
@@ -1070,9 +1093,10 @@ export class GameWebGLRenderer {
     gl.uniform1f(locations.waterTone, WATER_EFFECT_TONE)
     gl.uniform1f(locations.waterSaturation, WATER_EFFECT_SATURATION)
     gl.uniform1f(locations.waterStrength, WATER_EFFECT_STRENGTH)
+    gl.uniform4f(locations.waterControls, WATER_WAVE_DIRECTION * Math.PI / 180, 0, 0, COASTAL_SHALLOWS_ENABLED ? 1 : 0)
     gl.uniform1f(locations.oceanWaterEnabled, USE_OCEAN_WATER_RENDERING && this.hardwareGpuAvailable ? 1 : 0)
-    this.stats.uniformUploadBytes += 48
-    this.diagnostics.addCounter(RENDER_COUNTER_IDS.UPLOAD_BYTES, 48)
+    this.stats.uniformUploadBytes += 64
+    this.diagnostics.addCounter(RENDER_COUNTER_IDS.UPLOAD_BYTES, 64)
     this.capabilityUpdate.devicePixelRatio = pixelRatio
     this.diagnostics.setCapabilities(this.capabilityUpdate)
 
@@ -1207,6 +1231,7 @@ export class GameWebGLRenderer {
     gl.uniform1f(locations.waterTone, WATER_EFFECT_TONE)
     gl.uniform1f(locations.waterSaturation, WATER_EFFECT_SATURATION)
     gl.uniform1f(locations.waterStrength, WATER_EFFECT_STRENGTH)
+    gl.uniform4f(locations.waterControls, WATER_WAVE_DIRECTION * Math.PI / 180, 0, 0, COASTAL_SHALLOWS_ENABLED ? 1 : 0)
     gl.uniform1f(locations.oceanWaterEnabled, USE_OCEAN_WATER_RENDERING && this.hardwareGpuAvailable ? 1 : 0)
 
     gl.activeTexture(gl.TEXTURE0)
@@ -1275,9 +1300,9 @@ export class GameWebGLRenderer {
     const geometryUploadBytes = translations.byteLength + uvData.byteLength + colors.byteLength +
       textureType.byteLength + textureSource.byteLength + waterEdges.byteLength + clipOrientation.byteLength
     this.stats.topologyUploadBytes += geometryUploadBytes
-    this.stats.uniformUploadBytes += 48
+    this.stats.uniformUploadBytes += 64
     this.stats.drawCalls++
-    this.diagnostics.addCounter(RENDER_COUNTER_IDS.UPLOAD_BYTES, geometryUploadBytes + 48)
+    this.diagnostics.addCounter(RENDER_COUNTER_IDS.UPLOAD_BYTES, geometryUploadBytes + 64)
     this.diagnostics.addCounter(RENDER_COUNTER_IDS.DRAW_CALLS)
     this.capabilityUpdate.devicePixelRatio = pixelRatio
     this.diagnostics.setCapabilities(this.capabilityUpdate)

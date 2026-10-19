@@ -1175,6 +1175,7 @@
           <div class="config-modal__tabs" role="tablist">
             <button class="config-modal__tab config-modal__tab--active" data-config-tab="runtime" role="tab"
               aria-selected="true">Runtime Config</button>
+            <button class="config-modal__tab" data-config-tab="graphics" role="tab" aria-selected="false">Graphics</button>
             <button class="config-modal__tab" data-config-tab="keybindings" role="tab" aria-selected="false">Key
               Bindings</button>
             <button class="config-modal__tab" data-config-tab="gamepads" role="tab" aria-selected="false" data-i18n="settings.gamepad.tab">Controllers</button>
@@ -1204,14 +1205,6 @@
             Map action long press (ms)
             <input id="settingsMapActionLongPressMs" type="number" min="300" max="5000" step="50" value="1000">
           </label>
-          <label class="config-modal__checkbox-row" for="settingsFrameLimiterToggle">
-            <input id="settingsFrameLimiterToggle" type="checkbox" checked>
-            Frame limiter (cap render loop to display refresh rate)
-          </label>
-          <label class="config-modal__checkbox-row" for="settingsRadarOfflineAnimationToggle">
-            <input id="settingsRadarOfflineAnimationToggle" type="checkbox" checked>
-            Animate minimap radar-offline grain (old TV white-snow flicker)
-          </label>
           <div id="offlineCacheSettings" class="config-modal__section">
             <h3 class="config-modal__section-title" data-offline-clear-title>Offline</h3>
             <p class="config-modal__hint" data-offline-clear-hint>Removes the downloaded game files. Saved games and settings stay on this device.</p>
@@ -1237,85 +1230,6 @@
                 <span class="config-modal__mix-end" aria-hidden="true">Music</span>
               </span>
               <span id="settingsMixBalanceHint" class="config-modal__hint config-modal__mix-tip" role="tooltip">Left favours sound effects and narration, right favours music. Both follow the Volume slider.</span>
-            </label>
-          </div>
-          <div class="config-modal__section">
-            <h3 class="config-modal__section-title">Graphics</h3>
-            <label class="config-modal__field config-modal__field--toggle">
-              <input type="checkbox" id="settingsOceanWaterToggle" aria-describedby="settingsOceanWaterHint" checked>
-              <span>Use new ocean water rendering</span>
-            </label>
-            <p id="settingsOceanWaterHint" class="config-modal__hint">Uncheck for classic water. Classic water is used automatically when a hardware GPU is unavailable.</p>
-            <label class="config-modal__field" for="settingsWaterHeightRange">
-              <span class="config-modal__range-label-row">
-                <span>Water view height</span>
-                <span id="settingsWaterHeightValue" class="config-modal__range-value">5x</span>
-              </span>
-              <input type="range" id="settingsWaterHeightRange" min="0.5" max="20" step="0.5" value="5" aria-describedby="settingsWaterHeightHint">
-            </label>
-            <p id="settingsWaterHeightHint" class="config-modal__hint">Higher values make waves smaller. Applies to both water styles.</p>
-            <label class="config-modal__field" for="settingsWaterStrengthRange">
-              <span class="config-modal__range-label-row">
-                <span>Wave strength</span>
-                <span id="settingsWaterStrengthValue" class="config-modal__range-value">100%</span>
-              </span>
-              <input type="range" id="settingsWaterStrengthRange" min="0" max="2" step="0.05" value="1">
-            </label>
-            <label class="config-modal__field" for="settingsWaterSpeedRange">
-              <span class="config-modal__range-label-row">
-                <span>Animation speed</span>
-                <span id="settingsWaterSpeedValue" class="config-modal__range-value">100%</span>
-              </span>
-              <input type="range" id="settingsWaterSpeedRange" min="0" max="3" step="0.05" value="1">
-            </label>
-            <label class="config-modal__field config-modal__field--toggle">
-              <input type="checkbox" id="settingsDynamicWaterLandBlendToggle" checked>
-              <span>Blend animated water dynamically onto land shoreline tiles</span>
-            </label>
-            <label class="config-modal__field">
-              <span class="config-modal__range-label-row">
-                <span>Water tone</span>
-                <span id="settingsWaterToneValue" class="config-modal__range-value">+35%</span>
-              </span>
-              <input type="range" id="settingsWaterToneRange" min="-1" max="1" step="0.05" value="0.35">
-            </label>
-            <label class="config-modal__field">
-              <span class="config-modal__range-label-row">
-                <span>Water saturation</span>
-                <span id="settingsWaterSaturationValue" class="config-modal__range-value">40%</span>
-              </span>
-              <input type="range" id="settingsWaterSaturationRange" min="0" max="2" step="0.05" value="0.4">
-            </label>
-            <label class="config-modal__field">
-              <span class="config-modal__range-label-row">
-                <span>Mobile terrain pixel density</span>
-                <span id="settingsMobilePixelDensityValue" class="config-modal__range-value">1x</span>
-              </span>
-              <input type="range" id="settingsMobilePixelDensityRange" min="1" max="3" step="0.25" value="1">
-            </label>
-            <label class="config-modal__field config-modal__field--toggle">
-              <input type="checkbox" id="settingsTrackMarksToggle" checked>
-              <span>Track marks behind tracked vehicles on grass, sand and snow</span>
-            </label>
-            <label class="config-modal__field config-modal__field--toggle">
-              <input type="checkbox" id="settingsTrackFadeToggle">
-              <span>Fade track marks out over time</span>
-            </label>
-            <label class="config-modal__field">
-              <span class="config-modal__range-label-row">
-                <span>Track fade delay</span>
-                <span id="settingsTrackFadeDelayValue" class="config-modal__range-value">60 s</span>
-              </span>
-              <input type="range" id="settingsTrackFadeDelayRange" min="5" max="300" step="5" value="60" disabled>
-            </label>
-            <label class="config-modal__field">
-              <span>Terrain renderer</span>
-              <select id="settingsRendererBackend">
-                <option value="auto" selected>Automatic (WebGPU when available)</option>
-                <option value="webgl">WebGL</option>
-                <option value="webgpu">WebGPU</option>
-              </select>
-              <span id="settingsRendererBackendStatus" class="config-modal__hint"></span>
             </label>
           </div>
           <div class="config-modal__section">
@@ -1345,26 +1259,6 @@
               <input type="checkbox" id="desktopEdgeAutoscrollToggle">
               <span>Enable desktop edge auto-scroll</span>
             </label>
-            <div class="config-modal__hud-settings-row">
-              <div class="config-modal__hud-settings-controls">
-                <label class="config-modal__field">
-                  <span>Unit selection HUD style:</span>
-                  <select id="selectionHudModeSelect" class="config-modal__select">
-                    <option value="legacy">Classic (pre-refactor)</option>
-                    <option value="modern">Modern (outlined)</option>
-                    <option value="modern-no-border">Modern (corner crew, no border)</option>
-                    <option value="modern-donut" selected>Modern (donut arcs + edge crew)</option>
-                  </select>
-                </label>
-                <label class="config-modal__field">
-                  <span>HUD bar thickness (px):</span>
-                  <input type="number" id="selectionHudBarThicknessInput" min="1" max="8" step="1" value="4">
-                </label>
-              </div>
-              <div class="config-modal__hud-preview-wrap" aria-label="Selected tank HUD preview">
-                <canvas id="selectionHudPreviewCanvas" width="180" height="120"></canvas>
-              </div>
-            </div>
           </div>
           <div class="config-modal__section">
             <h3 class="config-modal__section-title">LLM Strategic AI</h3>
@@ -1501,6 +1395,132 @@
             <details class="config-modal__subsection config-modal__subsection--locked">
               <summary class="config-modal__subsection-summary"><h4 class="config-modal__section-title">Ollama</h4><span class="config-modal__hint">coming soon!</span></summary>
             </details>
+          </div>
+        </div>
+        <div class="config-modal__content" data-config-tab-panel="graphics" hidden>
+          <label class="config-modal__checkbox-row" for="settingsFrameLimiterToggle">
+            <input id="settingsFrameLimiterToggle" type="checkbox" checked>
+            Frame limiter (cap render loop to display refresh rate)
+          </label>
+          <label class="config-modal__checkbox-row" for="settingsRadarOfflineAnimationToggle">
+            <input id="settingsRadarOfflineAnimationToggle" type="checkbox" checked>
+            Animate minimap radar-offline grain (old TV white-snow flicker)
+          </label>
+          <div class="config-modal__section">
+            <h3 class="config-modal__section-title">Water and terrain</h3>
+            <p class="config-modal__hint">Coastal Shallows reveals sand through the water over 50 m (5 tiles). Water is fully transparent at the coast and opaque offshore. Tone and saturation apply to Ocean Surface Water and Classic Water.</p>
+            <label class="config-modal__field config-modal__field--toggle">
+              <input type="checkbox" id="settingsCoastalShallowsToggle">
+              <span>Coastal Shallows (sandy seabed and coastal transparency)</span>
+            </label>
+            <label class="config-modal__field" for="settingsWaterDirectionRange">
+              <span class="config-modal__range-label-row"><span>Wave direction (clockwise)</span><span id="settingsWaterDirectionValue" class="config-modal__range-value">0°</span></span>
+              <input type="range" id="settingsWaterDirectionRange" min="0" max="360" step="1" value="0">
+            </label>
+
+            <label class="config-modal__field config-modal__field--toggle">
+              <input type="checkbox" id="settingsOceanWaterToggle" aria-describedby="settingsOceanWaterHint" checked>
+              <span>Use new ocean water rendering</span>
+            </label>
+            <p id="settingsOceanWaterHint" class="config-modal__hint">Uncheck for classic water. Classic water is used automatically when a hardware GPU is unavailable.</p>
+            <label class="config-modal__field" for="settingsWaterHeightRange">
+              <span class="config-modal__range-label-row">
+                <span>Water view height</span>
+                <span id="settingsWaterHeightValue" class="config-modal__range-value">5x</span>
+              </span>
+              <input type="range" id="settingsWaterHeightRange" min="0.5" max="20" step="0.5" value="5" aria-describedby="settingsWaterHeightHint">
+            </label>
+            <p id="settingsWaterHeightHint" class="config-modal__hint">Higher values make waves smaller. Applies to both water styles.</p>
+            <label class="config-modal__field" for="settingsWaterStrengthRange">
+              <span class="config-modal__range-label-row">
+                <span>Wave strength</span>
+                <span id="settingsWaterStrengthValue" class="config-modal__range-value">100%</span>
+              </span>
+              <input type="range" id="settingsWaterStrengthRange" min="0" max="2" step="0.05" value="1">
+            </label>
+            <label class="config-modal__field" for="settingsWaterSpeedRange">
+              <span class="config-modal__range-label-row">
+                <span>Animation speed</span>
+                <span id="settingsWaterSpeedValue" class="config-modal__range-value">100%</span>
+              </span>
+              <input type="range" id="settingsWaterSpeedRange" min="0" max="3" step="0.05" value="1">
+            </label>
+            <label class="config-modal__field config-modal__field--toggle">
+              <input type="checkbox" id="settingsDynamicWaterLandBlendToggle" checked>
+              <span>Blend animated water dynamically onto land shoreline tiles</span>
+            </label>
+            <label class="config-modal__field">
+              <span class="config-modal__range-label-row">
+                <span>Water tone</span>
+                <span id="settingsWaterToneValue" class="config-modal__range-value">+35%</span>
+              </span>
+              <input type="range" id="settingsWaterToneRange" min="-1" max="1" step="0.05" value="0.35">
+            </label>
+            <label class="config-modal__field">
+              <span class="config-modal__range-label-row">
+                <span>Water saturation</span>
+                <span id="settingsWaterSaturationValue" class="config-modal__range-value">40%</span>
+              </span>
+              <input type="range" id="settingsWaterSaturationRange" min="0" max="2" step="0.05" value="0.4">
+            </label>
+            <label class="config-modal__field">
+              <span class="config-modal__range-label-row">
+                <span>Mobile terrain pixel density</span>
+                <span id="settingsMobilePixelDensityValue" class="config-modal__range-value">1x</span>
+              </span>
+              <input type="range" id="settingsMobilePixelDensityRange" min="1" max="3" step="0.25" value="1">
+            </label>
+            <label class="config-modal__field config-modal__field--toggle">
+              <input type="checkbox" id="settingsTrackMarksToggle" checked>
+              <span>Track marks behind tracked vehicles on grass, sand and snow</span>
+            </label>
+            <label class="config-modal__field config-modal__field--toggle">
+              <input type="checkbox" id="settingsTrackFadeToggle">
+              <span>Fade track marks out over time</span>
+            </label>
+            <label class="config-modal__field">
+              <span class="config-modal__range-label-row">
+                <span>Track fade delay</span>
+                <span id="settingsTrackFadeDelayValue" class="config-modal__range-value">60 s</span>
+              </span>
+              <input type="range" id="settingsTrackFadeDelayRange" min="5" max="300" step="5" value="60" disabled>
+            </label>
+            <label class="config-modal__field">
+              <span>Terrain renderer</span>
+              <select id="settingsRendererBackend">
+                <option value="auto" selected>Automatic (WebGPU when available)</option>
+                <option value="webgl">WebGL</option>
+                <option value="webgpu">WebGPU</option>
+              </select>
+              <span id="settingsRendererBackendStatus" class="config-modal__hint"></span>
+            </label>
+          </div>
+          <div class="config-modal__section">
+            <h3 class="config-modal__section-title">Selection appearance</h3>
+            <div class="config-modal__hud-settings-row">
+              <div class="config-modal__hud-settings-controls">
+                <label class="config-modal__field">
+                  <span>Unit selection HUD style:</span>
+                  <select id="selectionHudModeSelect" class="config-modal__select">
+                    <option value="legacy">Classic (pre-refactor)</option>
+                    <option value="modern">Modern (outlined)</option>
+                    <option value="modern-no-border">Modern (corner crew, no border)</option>
+                    <option value="modern-donut" selected>Modern (donut arcs + edge crew)</option>
+                  </select>
+                </label>
+                <label class="config-modal__field">
+                  <span>HUD bar thickness (px):</span>
+                  <input type="number" id="selectionHudBarThicknessInput" min="1" max="8" step="1" value="4">
+                </label>
+              </div>
+              <div class="config-modal__hud-preview-wrap" aria-label="Selected tank HUD preview">
+                <canvas id="selectionHudPreviewCanvas" width="180" height="120"></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="config-modal__section">
+            <h3 class="config-modal__section-title">Effects</h3>
+            <div id="settingsGraphicsEffects"></div>
           </div>
         </div>
         <div class="config-modal__content" data-config-tab-panel="keybindings" hidden>

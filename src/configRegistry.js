@@ -112,6 +112,10 @@ import {
   SAFE_RANGE_ENABLED,
   USE_OCEAN_WATER_RENDERING,
   setUseOceanWaterRendering,
+  COASTAL_SHALLOWS_ENABLED,
+  setCoastalShallowsEnabled,
+  WATER_WAVE_DIRECTION,
+  setWaterWaveDirection,
   WATER_EFFECT_TONE,
   setWaterEffectTone,
   WATER_EFFECT_SATURATION,
@@ -283,7 +287,7 @@ export const configRegistry = {
   },
 
   useOceanWaterRendering: {
-    name: 'Ocean Water Rendering',
+    name: 'Ocean Surface Water',
     description: 'Use ocean-inspired water on hardware GPUs; otherwise use classic water',
     type: 'boolean',
     get: () => USE_OCEAN_WATER_RENDERING,
@@ -291,6 +295,15 @@ export const configRegistry = {
     category: 'Graphics'
   },
 
+  coastalShallowsEnabled: {
+    name: 'Coastal Shallows', description: 'Reveal sand through water over 50 m (five tiles) from the coast', type: 'boolean',
+    get: () => COASTAL_SHALLOWS_ENABLED, set: setCoastalShallowsEnabled, category: 'Graphics'
+  },
+  waterWaveDirection: {
+    name: 'Wave direction', description: 'Rotate waves clockwise in degrees', type: 'number',
+    get: () => WATER_WAVE_DIRECTION, set: setWaterWaveDirection,
+    min: 0, max: 360, step: 1, category: 'Graphics'
+  },
   waterEffectTone: {
     name: 'Water Tone',
     description: 'Blend the procedural water palette from cooler blue toward greener teal',

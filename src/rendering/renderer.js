@@ -29,6 +29,10 @@ import { getCanvasLogicalSize } from './renderingUtils.js'
 import { selectedUnits } from '../inputHandler.js'
 import {
   RENDERER_BACKEND,
+  COASTAL_SHALLOWS_ENABLED,
+  WATER_EFFECT_TONE,
+  WATER_EFFECT_SATURATION,
+  WATER_EFFECT_ZOOM,
   TILE_SIZE,
   USE_PROCEDURAL_WATER_RENDERING,
   getRendererBackendChoice,
@@ -38,6 +42,7 @@ import {
   getRendererFrameReport,
   summarizeWebGPUFailure
 } from './rendererBackendSelection.js'
+import { RENDER_REVISION_DOMAINS } from './prepared/renderRevisionStore.js'
 import { FRAME_PHASE, framePhases } from '../performance/framePhases.js'
 import { isAirborneUnit } from '../game/movementHelpers.js'
 import { renderProfiler } from '../performance/renderProfiler.js'
@@ -107,6 +112,21 @@ export class Renderer {
       reasonCode: null,
       failureSummary: null
     }
+  }
+
+  prepareWaterResources(mapGrid) {
+    if (!mapGrid?.length) return
+    const cpu = this.mapRenderer.cpuWaterPass
+    const revision = this.mapRenderer.terrainRevisions.store?.getGeneration(RENDER_REVISION_DOMAINS.WATER) || this.mapRenderer.sotMaskVersion
+    cpu.setTopology(mapGrid, this.mapRenderer.sotMask, revision)
+    cpu.updatePalette({ tone: WATER_EFFECT_TONE, saturation: WATER_EFFECT_SATURATION, zoom: WATER_EFFECT_ZOOM })
+    const ctx = typeof document !== 'undefined' ? document.getElementById('gameCanvas')?.getContext('2d') : null
+    if (ctx && COASTAL_SHALLOWS_ENABLED) {
+      cpu.coastalStyles.prepare(ctx, cpu.shoreDepth, cpu.palette, TILE_SIZE, ctx.getTransform?.().a || 1, this.mapRenderer.sotMask)
+    }
+    if (!this.gpuRenderer) this.gpuRenderer = new GameWebGLRenderer(null, this.textureManager, this.mapRenderer)
+    this.gpuRenderer.prepareRetainedWaterTopology(mapGrid)
+    this.webgpuRenderer?.prepareRetainedWaterTopology(mapGrid)
   }
 
   publishTerrainFrame(drawing, phase, reasonCode = null, failureSummary = null) {
