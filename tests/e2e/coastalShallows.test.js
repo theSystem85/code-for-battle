@@ -9,7 +9,7 @@ test.beforeEach(async({ page }) => {
   await page.waitForFunction(() => window.gameState?.mapGrid?.length > 0, null, { timeout: 90000 })
 })
 
-test('[E00206] Graphics tab owns visual controls and persists Coastal Shallows and wave controls', async({ page }) => {
+test('[E00207] Graphics tab owns visual controls and persists Coastal Shallows and wave controls', async({ page }) => {
   await page.click('#helpBtn')
   await page.click('[data-config-tab="graphics"]')
   const graphics = page.locator('[data-config-tab-panel="graphics"]')
