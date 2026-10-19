@@ -1,8 +1,9 @@
 import { TILE_SIZE } from '../config.js'
 import { getBuildingIdentifier } from '../utils.js'
 
-// A slow, realistic crawl out of the garage: ~3.2 tiles of travel in 3.8 s (~0.85 tiles/s).
-export const FACTORY_EXIT_DURATION = 3800
+// Preserve the crawl speed, but hand off at the first outside tile beside the door.
+const FACTORY_EXIT_MS_PER_TILE = 3800 / Math.hypot(2.3, 2.3)
+export const FACTORY_EXIT_DURATION = Math.round(Math.hypot(1.3, 2.3) * FACTORY_EXIT_MS_PER_TILE)
 // The next queued vehicle starts once the previous one is about 40% out of the gate.
 export const FACTORY_EXIT_STAGGER = Math.round(FACTORY_EXIT_DURATION * 0.4)
 // How long a vehicle waits for a blocked exit tile before choosing the next free spot.
@@ -24,7 +25,7 @@ export function beginFactoryExit(unit, factory, rallyPoint = null) {
   const startY = (factory.y + 0.7) * TILE_SIZE
   unit.factoryExit = {
     factoryId: getBuildingIdentifier(factory), factoryX: factory.x, factoryY: factory.y,
-    startX, startY, endX: (factory.x - 1) * TILE_SIZE,
+    startX, startY, endX: factory.x * TILE_SIZE,
     endY: (factory.y + 3) * TILE_SIZE,
     elapsed: 0, duration: FACTORY_EXIT_DURATION, phase: 'waiting', waited: 0,
     rallyPoint: rallyPoint ? { x: rallyPoint.x, y: rallyPoint.y } : null
@@ -77,6 +78,24 @@ export function findNearestFreeTile(mapGrid, occupancyMap, cx, cy, radius = FACT
     return true
   })
   return found
+}
+
+// Only hand off outside the footprint with room for an ordinary next move.
+// At most eight neighbour checks per waiting exit, never per render or moving unit.
+function canNavigateFrom(factory, mapGrid, occupancyMap, x, y) {
+  if (x >= factory.x && x < factory.x + 3 && y >= factory.y && y < factory.y + 3) return false
+  for (let dy = -1; dy <= 1; dy++) {
+    for (let dx = -1; dx <= 1; dx++) {
+      if (!dx && !dy) continue
+      const nx = x + dx
+      const ny = y + dy
+      if (nx >= factory.x && nx < factory.x + 3 && ny >= factory.y && ny < factory.y + 3) continue
+      if (!isFree(mapGrid, occupancyMap, nx, ny)) continue
+      if (dx && dy && (!isFree(mapGrid, occupancyMap, x + dx, y) || !isFree(mapGrid, occupancyMap, x, y + dy))) continue
+      return true
+    }
+  }
+  return false
 }
 
 const isIdleFriendly = (unit, owner) => unit.owner === owner && unit.health > 0 && !unit.factoryExit && !unit.isAirUnit && !unit.isNaval &&
@@ -162,6 +181,7 @@ export function updateFactoryExits(units, buildings, mapGrid, occupancyMap, delt
   for (const building of buildings) if (building.type === 'vehicleFactory') factoriesById.set(getBuildingIdentifier(building), building)
   for (const unit of units) {
     if (unit.health <= 0 || unit.isAirUnit || unit.embarkedOnId) continue
+    if (unit.factoryExit?.phase === 'moving') claimed.add(tileKey(Math.floor((unit.factoryExit.endX + TILE_SIZE / 2) / TILE_SIZE), Math.floor((unit.factoryExit.endY + TILE_SIZE / 2) / TILE_SIZE)))
     if (!unit.factoryExit) occupied.add(tileKey(Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE), Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)))
   }
   for (const unit of units) {
@@ -176,11 +196,6 @@ export function updateFactoryExits(units, buildings, mapGrid, occupancyMap, delt
     gateLeaders.set(state.factoryId, state)
     if (state.phase === 'waiting') {
       if (leader && (leader.phase === 'waiting' || leader.elapsed < FACTORY_EXIT_STAGGER)) continue
-      // Reserve a distinct point farther along the same diagonal for a following vehicle.
-      if (leader && state.endX === leader.endX && state.endY === leader.endY) {
-        state.endX -= TILE_SIZE
-        state.endY += TILE_SIZE
-      }
       let x = Math.floor((state.endX + TILE_SIZE / 2) / TILE_SIZE)
       let y = Math.floor((state.endY + TILE_SIZE / 2) / TILE_SIZE)
       if (!mapGrid[y]?.[x]) {
@@ -193,19 +208,20 @@ export function updateFactoryExits(units, buildings, mapGrid, occupancyMap, delt
         state.endX = x * TILE_SIZE
         state.endY = y * TILE_SIZE
       }
-      if (!isFree(mapGrid, occupancyMap, x, y)) {
+      if (!isFree(mapGrid, occupancyMap, x, y) || !canNavigateFrom(factory, mapGrid, occupancyMap, x, y)) {
         // Push idle friendly vehicles aside; otherwise take the next free spot after a short wait.
         if (occupied.has(tileKey(x, y)) && isPassable(mapGrid, x, y)) nudgeIdleBlockers(units, unit.owner, x, y, mapGrid, occupancyMap, findPath)
         state.waited = (state.waited || 0) + Math.max(0, delta)
         if (state.waited < FACTORY_EXIT_BLOCKED_WAIT) continue
         const spot = findNearestFreeTile(mapGrid, occupancyMap, x, y, 2,
-          (tx, ty) => !(tx >= factory.x && tx < factory.x + 3 && ty >= factory.y && ty < factory.y + 3) && (tx < factory.x || ty >= factory.y + 3))
+          (tx, ty) => canNavigateFrom(factory, mapGrid, occupancyMap, tx, ty) && (tx < factory.x || ty >= factory.y + 3))
         if (!spot) continue
         x = spot.x
         y = spot.y
         state.endX = x * TILE_SIZE
         state.endY = y * TILE_SIZE
       }
+      state.duration = Math.max(1, Math.round(Math.hypot(state.endX - state.startX, state.endY - state.startY) / TILE_SIZE * FACTORY_EXIT_MS_PER_TILE))
       claimed.add(tileKey(x, y))
       state.phase = 'moving'
     }

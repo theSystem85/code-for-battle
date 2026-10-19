@@ -23,10 +23,10 @@ describe('light tank (M2 Bradley style IFV)', () => {
     expect(isTurretTankUnitType('lightTank')).toBe(true)
   })
 
-  it('[U02349] fires a rapid low-damage autocannon', () => {
+  it('[U02349] fires the low-damage autocannon at one third of its former rate', () => {
     expect(getBaseFireRateForTankType('lightTank')).toBe(COMBAT_CONFIG.FIRE_RATES.LIGHT_TANK)
     expect(getBaseFireRateForTankType('tank_v1')).toBe(COMBAT_CONFIG.FIRE_RATES.STANDARD)
-    expect(COMBAT_CONFIG.FIRE_RATES.LIGHT_TANK).toBeLessThan(COMBAT_CONFIG.FIRE_RATES.STANDARD / 2)
+    expect(1000 / getBaseFireRateForTankType('lightTank')).toBeCloseTo(1 / 3)
     expect(BULLET_DAMAGES.lightTank).toBeLessThan(BULLET_DAMAGES.tank_v1)
   })
 

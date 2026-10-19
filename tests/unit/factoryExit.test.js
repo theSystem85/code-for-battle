@@ -9,7 +9,7 @@ function fixture() {
   const unit = { id: 'tank', health: 100 }
   beginFactoryExit(unit, factory, { x: 12, y: 12 })
   const units = [unit]
-  const path = vi.fn(() => [{ x: 4, y: 8 }, { x: 12, y: 12 }])
+  const path = vi.fn(() => [{ x: 5, y: 8 }, { x: 12, y: 12 }])
   return { unit, units, factory, map, occupancy, path,
     tick(delta, paused = false) { updateFactoryExits(units, [factory], map, occupancy, delta, paused, path) } }
 }
@@ -29,8 +29,8 @@ describe('vehicle factory exit', () => {
     const state = { ...f.unit.factoryExit }
     expect(factoryExitEase(0)).toBe(0)
     expect(factoryExitEase(1)).toBe(1)
-    expect(FACTORY_EXIT_DURATION).toBeGreaterThanOrEqual(3500)
-    expect(FACTORY_EXIT_DURATION).toBeLessThanOrEqual(4000)
+    expect(FACTORY_EXIT_DURATION).toBeGreaterThan(0)
+    expect(FACTORY_EXIT_DURATION).toBeLessThan(3800)
     f.tick(FACTORY_EXIT_DURATION / 2)
     expect(f.unit.x).toBe((state.startX + state.endX) / 2)
     expect(f.path).not.toHaveBeenCalled()
@@ -41,8 +41,29 @@ describe('vehicle factory exit', () => {
     expect(f.unit.x).toBe(state.endX)
     expect(f.unit.y).toBe(state.endY)
     expect(f.unit.moveTarget).toEqual({ x: 12, y: 12 })
-    expect(f.occupancy[8][4]).toBe(1)
+    expect(f.occupancy[8][5]).toBe(1)
     expect(canInteractWithUnit(f.unit)).toBe(true)
+  })
+
+  it('[U05404] hands control back on the first outside tile beside the door', () => {
+    const f = fixture()
+    for (let y = 5; y < 8; y++) for (let x = 5; x < 8; x++) f.map[y][x].building = f.factory
+    f.tick(FACTORY_EXIT_DURATION)
+    expect(f.unit.factoryExit).toBeUndefined()
+    expect({ x: f.unit.tileX, y: f.unit.tileY }).toEqual({ x: 5, y: 8 })
+    expect(f.map[f.unit.tileY][f.unit.tileX].building).toBeUndefined()
+    expect(f.path).toHaveBeenCalledWith({ x: 5, y: 8 }, { x: 12, y: 12 }, f.map, f.occupancy)
+    expect(f.unit.direction).toBe(Math.PI * 3 / 4)
+  })
+
+  it('[U05405] avoids an empty exit tile trapped between blocked neighbours', () => {
+    const f = fixture()
+    for (let y = 7; y <= 9; y++) for (let x = 4; x <= 6; x++) {
+      if (x !== 5 || y !== 8) f.map[y][x].type = 'rock'
+    }
+    f.tick(FACTORY_EXIT_BLOCKED_WAIT)
+    expect(f.unit.factoryExit.phase).toBe('moving')
+    expect([f.unit.factoryExit.endX, f.unit.factoryExit.endY]).not.toEqual([5 * TILE_SIZE, 8 * TILE_SIZE])
   })
 
   it('[U01541] is deterministic and never advances while paused', () => {
@@ -60,18 +81,18 @@ describe('vehicle factory exit', () => {
 
   it('[U01542] holds inside until both terrain and unit occupancy allow departure', () => {
     const f = fixture()
-    f.map[8][4].type = 'water'
+    f.map[8][5].type = 'water'
     f.tick(200)
     expect(f.unit.factoryExit.elapsed).toBe(0)
-    f.map[8][4].type = 'land'
-    f.units.push({ id: 'blocker', health: 100, owner: 'enemy', x: 4 * TILE_SIZE, y: 8 * TILE_SIZE })
+    f.map[8][5].type = 'land'
+    f.units.push({ id: 'blocker', health: 100, owner: 'enemy', x: 5 * TILE_SIZE, y: 8 * TILE_SIZE })
     f.tick(200)
     expect(f.unit.factoryExit.phase).toBe('waiting')
     f.units.pop()
-    f.occupancy[8][4] = 1
+    f.occupancy[8][5] = 1
     f.tick(200)
     expect(f.unit.factoryExit.elapsed).toBe(0)
-    f.occupancy[8][4] = 0
+    f.occupancy[8][5] = 0
     f.tick(100)
     expect(f.unit.factoryExit.elapsed).toBe(100)
   })
@@ -84,13 +105,14 @@ describe('vehicle factory exit', () => {
     f.tick(FACTORY_EXIT_STAGGER / 2)
     expect(second.factoryExit.elapsed).toBe(0)
     f.tick(FACTORY_EXIT_STAGGER / 2)
+    f.tick(FACTORY_EXIT_BLOCKED_WAIT)
     expect(second.factoryExit.phase).toBe('moving')
     expect(second.factoryExit.elapsed).toBeLessThan(f.unit.factoryExit.elapsed)
-    expect(second.factoryExit.endX).toBeLessThan(f.unit.factoryExit.endX)
+    expect([second.factoryExit.endX, second.factoryExit.endY]).not.toEqual([f.unit.factoryExit.endX, f.unit.factoryExit.endY])
     f.tick(FACTORY_EXIT_DURATION)
     f.tick(FACTORY_EXIT_DURATION)
     expect(second.factoryExit).toBeUndefined()
-    expect(second.x).not.toBe(f.unit.x)
+    expect([second.x, second.y]).not.toEqual([f.unit.x, f.unit.y])
   })
 
   it.each(['destroyed', 'sold', 'removed'])('[U01544] finishes immediately when the factory is %s', reason => {
@@ -138,12 +160,12 @@ describe('vehicle factory exit', () => {
   it('[U01548] pushes an idle friendly unit off the exit tile instead of waiting forever', () => {
     const f = fixture()
     f.unit.owner = 'p1'
-    const idle = { id: 'idle', owner: 'p1', health: 100, x: 4 * TILE_SIZE, y: 8 * TILE_SIZE, path: [] }
+    const idle = { id: 'idle', owner: 'p1', health: 100, x: 5 * TILE_SIZE, y: 8 * TILE_SIZE, path: [] }
     f.units.push(idle)
     f.path.mockImplementation((from, to) => [from, to])
     f.tick(16)
     expect(idle.moveTarget).toBeDefined()
-    expect(idle.moveTarget).not.toEqual({ x: 4, y: 8 })
+    expect(idle.moveTarget).not.toEqual({ x: 5, y: 8 })
     expect(idle.path.length).toBe(1)
     // The pushed unit drives away; the exit then proceeds.
     idle.x = idle.moveTarget.x * TILE_SIZE
@@ -155,13 +177,13 @@ describe('vehicle factory exit', () => {
   it('[U01549] uses the next free spot when the exit is blocked by a non-movable unit (no deadlock)', () => {
     const f = fixture()
     f.unit.owner = 'p1'
-    f.units.push({ id: 'enemy', owner: 'p2', health: 100, x: 4 * TILE_SIZE, y: 8 * TILE_SIZE })
+    f.units.push({ id: 'enemy', owner: 'p2', health: 100, x: 5 * TILE_SIZE, y: 8 * TILE_SIZE })
     f.tick(FACTORY_EXIT_BLOCKED_WAIT - 16)
     expect(f.unit.factoryExit.phase).toBe('waiting')
     f.tick(16)
     expect(f.unit.factoryExit.phase).toBe('moving')
     const endTile = { x: f.unit.factoryExit.endX / TILE_SIZE, y: f.unit.factoryExit.endY / TILE_SIZE }
-    expect(endTile).not.toEqual({ x: 4, y: 8 })
+    expect(endTile).not.toEqual({ x: 5, y: 8 })
     f.tick(FACTORY_EXIT_DURATION)
     expect(f.unit.factoryExit).toBeUndefined()
     expect(f.unit.tileX < f.factory.x || f.unit.tileY >= f.factory.y + 3).toBe(true)
@@ -192,7 +214,7 @@ describe('vehicle factory exit', () => {
       const f = fixture()
       f.path.mockImplementation((from, to) => [from, to])
       f.unit.owner = 'p1'
-      f.units.push({ id: 'idle', owner: 'p1', health: 100, x: 4 * TILE_SIZE, y: 8 * TILE_SIZE, path: [] })
+      f.units.push({ id: 'idle', owner: 'p1', health: 100, x: 5 * TILE_SIZE, y: 8 * TILE_SIZE, path: [] })
       f.units.push({ id: 'parked', owner: 'p2', health: 100, x: 12 * TILE_SIZE, y: 12 * TILE_SIZE })
       return f
     }

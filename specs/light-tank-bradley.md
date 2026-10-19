@@ -11,13 +11,13 @@ A cheap, fast, lightly armored tracked combat vehicle with a rapid-fire 25 mm au
 | Armor | 0.8 (damage is divided by armor, so +25% damage taken) | none (1) |
 | Speed | 0.46 (~1.4x) | 0.33 |
 | Hull / turret rotation | 1.3x / 1.5x | 1x / 1x |
-| Weapon | 25 mm autocannon, 6 damage, 1000 ms reload, projectile speed 16 | 20 damage, 4000 ms |
+| Weapon | 25 mm autocannon, 6 damage, 3000 ms reload, projectile speed 16 | 20 damage, 4000 ms |
 | Spread | ~1 degree (Tank V2 accuracy) | ~2 degrees |
 | Ammo | 150 rounds | 42 |
 | Fuel | 1500 tank, 350 consumption | 1900 / 450 |
 | Crew | driver, commander, gunner, loader | same |
 
-Sustained DPS is 6/s against 5/s for Tank V1, but the low per-round damage is strongly reduced by armored targets.
+Sustained DPS is 2/s against 5/s for Tank V1. Each direct M2 hit makes one 1% crew-casualty roll, independent of the number of surviving crew. A successful roll selects one living member; one shot never kills multiple crew. Other weapons retain their existing casualty rules.
 
 ## Production and tech
 - Built in the Vehicle Factory; unlocked together with Tank V1 as soon as the player owns a Vehicle Factory (milestone, save/load force-unlock, AI API tech tree).
