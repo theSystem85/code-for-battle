@@ -34,6 +34,8 @@ export async function openOceanWaterFixture(page, backend = 'webgl') {
         throw error
       }
     }
+    if (backend === 'webgl') renderer.ensureInitialized()
+    if (!renderer.hardwareGpuAvailable) return { unavailable: 'Water shader validation requires a hardware GPU' }
     let density = 1
     const scroll = { x: 128, y: 128 }
     const options = { waterOnly: true, time: 1200, topologyRevision: 1 }

@@ -22,6 +22,10 @@ import {
 const RADAR_OFFLINE_ANIMATION_SETTINGS_KEY = 'rts_radar_offline_animation'
 const DYNAMIC_WATER_LAND_BLEND_KEY = 'rts_dynamic_water_land_blend'
 const WATER_SETTINGS_CONFIG_IDS = {
+  ocean: 'useOceanWaterRendering',
+  zoom: 'waterEffectZoom',
+  strength: 'waterEffectStrength',
+  speed: 'waterEffectSpeed',
   tone: 'waterEffectTone',
   saturation: 'waterEffectSaturation',
   pixelDensity: 'mobileCanvasPixelRatioCap',
@@ -38,6 +42,11 @@ function formatWaterTone(value) {
 
 function formatWaterSaturation(value) {
   return `${Math.round(Number(value) * 100)}%`
+}
+
+function waterHeightFromZoom(value) {
+  const zoom = Number(value)
+  return Number.isFinite(zoom) && zoom > 0 ? 1 / zoom : 5
 }
 
 function formatPixelDensity(value) {
@@ -57,6 +66,23 @@ function rendererBackendSelectValue(value) {
 }
 
 function syncWaterGraphicsControls(modal) {
+  const oceanToggle = modal.querySelector('#settingsOceanWaterToggle')
+  if (oceanToggle) oceanToggle.checked = getConfigValue(WATER_SETTINGS_CONFIG_IDS.ocean) !== false
+  const heightInput = modal.querySelector('#settingsWaterHeightRange')
+  const heightValue = modal.querySelector('#settingsWaterHeightValue')
+  const height = waterHeightFromZoom(getConfigValue(WATER_SETTINGS_CONFIG_IDS.zoom))
+  if (heightInput) heightInput.value = String(height)
+  if (heightValue) heightValue.textContent = `${Number(height.toFixed(1))}x`
+  const strengthInput = modal.querySelector('#settingsWaterStrengthRange')
+  const strengthValue = modal.querySelector('#settingsWaterStrengthValue')
+  const strength = Number(getConfigValue(WATER_SETTINGS_CONFIG_IDS.strength) ?? 1)
+  if (strengthInput) strengthInput.value = String(strength)
+  if (strengthValue) strengthValue.textContent = `${Math.round(strength * 100)}%`
+  const speedInput = modal.querySelector('#settingsWaterSpeedRange')
+  const speedValue = modal.querySelector('#settingsWaterSpeedValue')
+  const speed = Number(getConfigValue(WATER_SETTINGS_CONFIG_IDS.speed) ?? 1)
+  if (speedInput) speedInput.value = String(speed)
+  if (speedValue) speedValue.textContent = `${Math.round(speed * 100)}%`
   const toneInput = modal.querySelector('#settingsWaterToneRange')
   const saturationInput = modal.querySelector('#settingsWaterSaturationRange')
   const pixelDensityInput = modal.querySelector('#settingsMobilePixelDensityRange')
@@ -267,6 +293,8 @@ export function initSettingsModal() {
   const frameLimiterToggle = document.getElementById('settingsFrameLimiterToggle')
   const radarOfflineAnimationToggle = document.getElementById('settingsRadarOfflineAnimationToggle')
   const dynamicWaterLandBlendToggle = document.getElementById('settingsDynamicWaterLandBlendToggle')
+  const oceanWaterToggle = document.getElementById('settingsOceanWaterToggle')
+  const waterHeightRange = document.getElementById('settingsWaterHeightRange')
   const waterToneRange = document.getElementById('settingsWaterToneRange')
   const waterSaturationRange = document.getElementById('settingsWaterSaturationRange')
   const mobilePixelDensityRange = document.getElementById('settingsMobilePixelDensityRange')
@@ -334,6 +362,35 @@ export function initSettingsModal() {
     dynamicWaterLandBlendToggle.addEventListener('change', (event) => {
       gameState.dynamicWaterLandBlendEnabled = event.target.checked
       try { setStoredItem(DYNAMIC_WATER_LAND_BLEND_KEY, event.target.checked ? 'true' : 'false') } catch (error) { window.logger.warn('Failed to save dynamic water shoreline setting:', error) }
+    })
+  }
+
+  for (const [id, configId] of [
+    ['settingsWaterStrengthRange', WATER_SETTINGS_CONFIG_IDS.strength],
+    ['settingsWaterSpeedRange', WATER_SETTINGS_CONFIG_IDS.speed]
+  ]) {
+    const input = modal.querySelector(`#${id}`)
+    input?.addEventListener('input', event => {
+      setConfigValue(configId, Number(event.target.value))
+      syncWaterGraphicsControls(modal)
+    })
+  }
+
+  if (waterHeightRange) {
+    waterHeightRange.addEventListener('input', event => {
+      const height = Number(event.target.value)
+      if (Number.isFinite(height) && height > 0) {
+        setConfigValue(WATER_SETTINGS_CONFIG_IDS.zoom, 1 / height)
+        syncWaterGraphicsControls(modal)
+      }
+    })
+  }
+
+  if (oceanWaterToggle) {
+    oceanWaterToggle.checked = getConfigValue(WATER_SETTINGS_CONFIG_IDS.ocean) !== false
+    oceanWaterToggle.addEventListener('change', event => {
+      setConfigValue(WATER_SETTINGS_CONFIG_IDS.ocean, event.target.checked)
+      syncWaterGraphicsControls(modal)
     })
   }
 

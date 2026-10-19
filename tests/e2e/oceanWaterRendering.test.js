@@ -95,7 +95,8 @@ for (const backend of ['webgl', 'webgpu']) {
 }
 
 test('[E00203] WebGL and WebGPU ocean shading agree on rendered pixels', async({ page }) => {
-  await openOceanWaterFixture(page, 'webgl')
+  const glSetup = await openOceanWaterFixture(page, 'webgl')
+  test.skip(Boolean(glSetup.unavailable), glSetup.unavailable)
   const gl = await page.evaluate(() => Array.from(window.waterFixture.render()))
   const setup = await openOceanWaterFixture(page, 'webgpu')
   test.skip(Boolean(setup.unavailable), setup.unavailable)
@@ -113,7 +114,8 @@ test('[E00203] WebGL and WebGPU ocean shading agree on rendered pixels', async({
 
 test('[E00204] records full-screen DPR 2 water scrolling cost and retained uploads', async({ page }, testInfo) => {
   test.skip(process.env.OCEAN_WATER_BENCHMARK !== '1', 'Opt in with OCEAN_WATER_BENCHMARK=1')
-  await openOceanWaterFixture(page)
+  const setup = await openOceanWaterFixture(page)
+  test.skip(Boolean(setup.unavailable), setup.unavailable)
   const result = await page.evaluate(async() => {
     const f = window.waterFixture
     f.resize(2, 1440, 1000)

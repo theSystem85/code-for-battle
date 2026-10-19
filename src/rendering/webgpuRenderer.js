@@ -1,9 +1,12 @@
 import { withTimeout } from '../utils/assetLoading.js'
 import {
   TILE_SIZE,
+  USE_OCEAN_WATER_RENDERING,
   WATER_EFFECT_SATURATION,
   WATER_EFFECT_TONE,
   WATER_EFFECT_ZOOM,
+  WATER_EFFECT_STRENGTH,
+  WATER_EFFECT_SPEED,
   setRendererBackendFailureSummary
 } from '../config.js'
 import { PROFILER_SPAN_IDS } from '../performance/profilerIds.js'
@@ -17,6 +20,7 @@ import { estimateTextureBytes, GpuMemoryTracker } from './gpuMemory.js'
 import { summarizeWebGPUFailure } from './rendererBackendSelection.js'
 import { bootMark } from '../ui/bootTiming.js'
 import { OCEAN_WATER_WGSL } from './oceanWaterShader.js'
+import { hasHardwareGpuInfo, LEGACY_WATER_WGSL } from './waterRenderingMode.js'
 import { finishBootGpu, reportBootGpuSteps } from '../ui/bootProgress.js'
 import { getCanvasPixelRatio } from './renderingUtils.js'
 
@@ -43,7 +47,8 @@ struct Uniforms {
   zoom: f32,
   tone: f32,
   saturation: f32,
-  padding: vec2f,
+  oceanWater: f32,
+  strength: f32,
 }
 @group(0) @binding(0) var<uniform> uniforms: Uniforms;
 @group(0) @binding(1) var atlasSampler: sampler;
@@ -87,6 +92,7 @@ struct VertexOutput {
   return output;
 }
 ${OCEAN_WATER_WGSL}
+${LEGACY_WATER_WGSL}
 
 fn applySaturation(color: vec3f, saturation: f32) -> vec3f {
   let luma = dot(color, vec3f(0.2126, 0.7152, 0.0722));
@@ -107,7 +113,12 @@ fn applySaturation(color: vec3f, saturation: f32) -> vec3f {
     if (!inside) { discard; }
   }
   if (input.textureType > 1.5) {
-    var color = oceanWater(input.worldPos, uniforms.time, uniforms.zoom, uniforms.tone, waterFootprint);
+    var color: vec3f;
+    if (uniforms.oceanWater > 0.5) {
+      color = oceanWater(input.worldPos, uniforms.time, uniforms.zoom, uniforms.tone, waterFootprint, uniforms.strength);
+    } else {
+      color = legacyWater(input.worldPos, uniforms.time, uniforms.zoom, uniforms.tone, uniforms.strength);
+    }
     var edge = 1.0;
     if (input.waterEdges.x > 0.5) { edge = min(edge, input.localPos.y); }
     if (input.waterEdges.y > 0.5) { edge = min(edge, 1.0 - input.localPos.x); }
@@ -256,6 +267,7 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
       device: info.device || '',
       description: info.description || ''
     }
+    this.hardwareGpuAvailable = hasHardwareGpuInfo(this.adapterInfo, adapter?.isFallbackAdapter === true)
     const maxBufferSize = adapter?.limits?.maxBufferSize
     this.maxBufferSize = Number.isFinite(maxBufferSize) ? maxBufferSize : null
   }
@@ -742,12 +754,12 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
     this.uniformData[3] = dimensions.scrollY
     this.uniformData[4] = dimensions.tileSize
     this.uniformData[5] = dimensions.tileStep
-    this.uniformData[6] = sampledTime
+    this.uniformData[6] = sampledTime * WATER_EFFECT_SPEED
     this.uniformData[7] = WATER_EFFECT_ZOOM
     this.uniformData[8] = WATER_EFFECT_TONE
     this.uniformData[9] = WATER_EFFECT_SATURATION
-    this.uniformData[10] = 0
-    this.uniformData[11] = 0
+    this.uniformData[10] = USE_OCEAN_WATER_RENDERING && this.hardwareGpuAvailable ? 1 : 0
+    this.uniformData[11] = WATER_EFFECT_STRENGTH
     this.device.queue.writeBuffer(this.uniformBuffer, 0, this.uniformData)
     this.stats.uniformUploadBytes += this.uniformData.byteLength
     this.diagnostics.addCounter(RENDER_COUNTER_IDS.UPLOAD_BYTES, this.uniformData.byteLength)
@@ -867,8 +879,9 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
       this.device.queue.writeBuffer(this.instanceBuffer, 0, packed)
       this.uniformData.set([
         canvas.width, canvas.height, scrollX, scrollY, tileSize, tileStep,
-        Number.isFinite(options.time) ? options.time : performance.now(),
-        WATER_EFFECT_ZOOM, WATER_EFFECT_TONE, WATER_EFFECT_SATURATION, 0, 0
+        (Number.isFinite(options.time) ? options.time : performance.now()) * WATER_EFFECT_SPEED,
+        WATER_EFFECT_ZOOM, WATER_EFFECT_TONE, WATER_EFFECT_SATURATION,
+        USE_OCEAN_WATER_RENDERING && this.hardwareGpuAvailable ? 1 : 0, WATER_EFFECT_STRENGTH
       ])
       this.device.queue.writeBuffer(this.uniformBuffer, 0, this.uniformData)
       const uploadBytes = packed.byteLength + this.uniformData.byteLength
