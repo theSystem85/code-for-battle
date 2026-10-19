@@ -84,7 +84,7 @@ function bindGraphicsEffects(modal) {
   const container = modal.querySelector('#settingsGraphicsEffects')
   if (!container) return
   const dedicated = new Set(['waterEffectTone', 'waterEffectSaturation', 'waterEffectZoom',
-    'coastalShallowsEnabled', 'waterWaveDirection', 'waterEffectSpeed', 'waterEffectStrength', 'useOceanWaterRendering',
+    'coastalShallowsEnabled', 'coastalShallowsLength', 'waterWaveDirection', 'waterEffectSpeed', 'waterEffectStrength', 'useOceanWaterRendering',
     'mobileCanvasPixelRatioCap', 'rendererBackend'])
   for (const [id, config] of Object.entries(configRegistry)) {
     if (config.category !== 'Graphics' || dedicated.has(id)) continue
@@ -117,6 +117,11 @@ function syncWaterGraphicsControls(modal) {
   if (directionValue) directionValue.textContent = `${direction}°`
   const coast = modal.querySelector('#settingsCoastalShallowsToggle')
   if (coast) coast.checked = Boolean(getConfigValue('coastalShallowsEnabled'))
+  const shallowsLength = getConfigValue('coastalShallowsLength')
+  const shallowsLengthInput = modal.querySelector('#settingsCoastalShallowsLengthRange')
+  const shallowsLengthValue = modal.querySelector('#settingsCoastalShallowsLengthValue')
+  if (shallowsLengthInput) shallowsLengthInput.value = String(shallowsLength)
+  if (shallowsLengthValue) shallowsLengthValue.textContent = `${shallowsLength} m`
   const oceanToggle = modal.querySelector('#settingsOceanWaterToggle')
   if (oceanToggle) oceanToggle.checked = getConfigValue(WATER_SETTINGS_CONFIG_IDS.ocean) !== false
   const heightInput = modal.querySelector('#settingsWaterHeightRange')
@@ -383,6 +388,10 @@ export function initSettingsModal() {
   }
   modal.querySelector('#settingsCoastalShallowsToggle')?.addEventListener('change', event => {
     setConfigValue('coastalShallowsEnabled', event.target.checked)
+  })
+  modal.querySelector('#settingsCoastalShallowsLengthRange')?.addEventListener('input', event => {
+    setConfigValue('coastalShallowsLength', Number(event.target.value))
+    syncWaterGraphicsControls(modal)
   })
   initLlmSettingsPanel()
 

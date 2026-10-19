@@ -1,9 +1,11 @@
 // Distances are in tiles (10 m). Shared lattice vertices keep adjoining water
 // instances continuous. No terrain scans or allocations on animation frames.
 export const SHORE_DEPTH_TILES = 5
+export const SHORE_DEPTH_MAX_TILES = 10
 
 export class ShoreDepthField {
-  constructor() {
+  constructor(maxTiles = SHORE_DEPTH_TILES) {
+    this.maxTiles = maxTiles
     this.map = null
     this.revision = null
     this.width = 0
@@ -25,15 +27,16 @@ export class ShoreDepthField {
   }
 
   at(x, y) {
-    if (!this.map) return SHORE_DEPTH_TILES
+    if (!this.map) return this.maxTiles
     const index = y * this.width + x
     if (this.values[index] >= 0) return this.values[index]
-    let squaredDistance = SHORE_DEPTH_TILES ** 2
+    let squaredDistance = this.maxTiles ** 2
     // Distance to solid tile rectangles, including diagonal shores. Missing
     // cells beyond the map are open ocean, never artificial coastlines.
-    for (let ty = Math.max(0, y - 6); ty < Math.min(this.map.length, y + 5); ty++) {
+    const searchRadius = Math.ceil(this.maxTiles)
+    for (let ty = Math.max(0, y - searchRadius - 1); ty < Math.min(this.map.length, y + searchRadius); ty++) {
       const row = this.map[ty]
-      for (let tx = Math.max(0, x - 6); tx < Math.min(row.length, x + 5); tx++) {
+      for (let tx = Math.max(0, x - searchRadius - 1); tx < Math.min(row.length, x + searchRadius); tx++) {
         if (row[tx]?.type === 'water' && !row[tx].airstripStreet) continue
         const dx = Math.max(tx - x, x - tx - 1, 0)
         const dy = Math.max(ty - y, y - ty - 1, 0)
@@ -50,8 +53,8 @@ export class ShoreDepthField {
   }
 }
 
-export function shoreOpacity(corners, u, v) {
+export function shoreOpacity(corners, u, v, maxDepth = SHORE_DEPTH_TILES) {
   const top = corners[0] + (corners[1] - corners[0]) * u
   const bottom = corners[3] + (corners[2] - corners[3]) * u
-  return Math.max(0, Math.min(1, (top + (bottom - top) * v) / SHORE_DEPTH_TILES))
+  return Math.max(0, Math.min(1, (top + (bottom - top) * v) / maxDepth))
 }

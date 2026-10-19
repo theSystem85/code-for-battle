@@ -14,11 +14,18 @@ test('[E00207] Graphics tab owns visual controls and persists Coastal Shallows a
   await page.click('[data-config-tab="graphics"]')
   const graphics = page.locator('[data-config-tab-panel="graphics"]')
   await expect(graphics).toBeVisible()
-  for (const selector of ['#settingsWaterToneRange', '#settingsWaterSaturationRange', '#settingsFrameLimiterToggle', '#settingsRadarOfflineAnimationToggle', '#settingsTrackMarksToggle', '#selectionHudModeSelect', '#settingsGraphics-maxSmokeParticles']) {
+  for (const selector of ['#settingsWaterToneRange', '#settingsWaterSaturationRange', '#settingsFrameLimiterToggle', '#settingsRadarOfflineAnimationToggle', '#settingsTrackMarksToggle', '#selectionHudModeSelect', '#settingsGraphics-maxSmokeParticles', '#settingsCoastalShallowsLengthRange']) {
     await expect(graphics.locator(selector)).toHaveCount(1)
     await expect(page.locator('[data-config-tab-panel="runtime"]').locator(selector)).toHaveCount(0)
   }
-  await page.locator('#settingsCoastalShallowsToggle').uncheck()
+  await expect(page.locator('#settingsCoastalShallowsToggle')).not.toBeChecked()
+  await expect(page.locator('#settingsCoastalShallowsLengthRange')).toHaveValue('20')
+  await expect(page.locator('#settingsCoastalShallowsLengthValue')).toHaveText('20 m')
+  await page.locator('#settingsCoastalShallowsLengthRange').evaluate((input, value) => {
+    input.value = String(value)
+    input.dispatchEvent(new window.Event('input', { bubbles: true }))
+  }, 75)
+  await expect(page.locator('#settingsCoastalShallowsLengthValue')).toHaveText('75 m')
   for (const [name, value] of [['Direction', 135], ['Speed', 1.5], ['Strength', 0.6], ['Height', 2]]) {
     await page.locator(`#settingsWater${name}Range`).evaluate((input, value) => {
       input.value = String(value)
@@ -34,6 +41,8 @@ test('[E00207] Graphics tab owns visual controls and persists Coastal Shallows a
   await page.click('#helpBtn')
   await page.click('[data-config-tab="graphics"]')
   await expect(page.locator('#settingsCoastalShallowsToggle')).not.toBeChecked()
+  await expect(page.locator('#settingsCoastalShallowsLengthRange')).toHaveValue('75')
+  await expect(page.locator('#settingsCoastalShallowsLengthValue')).toHaveText('75 m')
   for (const [name, value] of [['Direction', '135'], ['Speed', '1.5'], ['Strength', '0.6'], ['Height', '2']]) {
     await expect(page.locator(`#settingsWater${name}Range`)).toHaveValue(value)
   }

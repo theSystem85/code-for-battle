@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { ShoreDepthField, shoreOpacity } from '../../src/rendering/prepared/shoreDepthField.js'
 import { GameWebGLRenderer } from '../../src/rendering/webglRenderer.js'
+import { setCoastalShallowsLength, COASTAL_SHALLOWS_LENGTH } from '../../src/config.js'
 
 function straightCoast(width = 12, height = 8) {
   return Array.from({ length: height }, () => Array.from({ length: width }, (_, x) => ({ type: x < 2 ? 'land' : 'water' })))
@@ -63,5 +64,22 @@ describe('prepared coastal depth', () => {
     expect(topology.dirtyChunks).not.toContain(2)
     expect(topology.data).toBe(data)
     expect(renderer.shoreDepth.at(17, 8)).toBe(2)
+  })
+
+  it('[U05414] supports adjustable gradient length and custom maxTiles', () => {
+    const field = new ShoreDepthField(10)
+    field.prepare(straightCoast(16, 8))
+    expect(field.at(10, 3)).toBe(8)
+    const corners = field.corners(5, 3)
+    expect(shoreOpacity(corners, 0, 0, 3)).toBe(1)
+    expect(shoreOpacity(corners, 0, 0, 8)).toBeCloseTo(3 / 8)
+  })
+
+  it('[U05415] updates coastal shallows gradient length within valid range', () => {
+    expect(setCoastalShallowsLength(75)).toBe(75)
+    expect(COASTAL_SHALLOWS_LENGTH).toBe(75)
+    expect(setCoastalShallowsLength(5)).toBe(10)
+    expect(setCoastalShallowsLength(150)).toBe(100)
+    setCoastalShallowsLength(20)
   })
 })
