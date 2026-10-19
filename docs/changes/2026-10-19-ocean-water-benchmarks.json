@@ -1,0 +1,587 @@
+{
+  "certification": "diagnostic-only; qualifying hardware acceptance outstanding",
+  "baseline": "a041785abba167c28a759cfd60dc220c06174abe",
+  "viewport": {
+    "width": 1440,
+    "height": 1000,
+    "dpr": 2
+  },
+  "fullWater": {
+    "before": {
+      "frames": {
+        "frameCount": 119,
+        "durationMs": 29748.8,
+        "fps": 4.000161351046093,
+        "meanFrameMs": 249.98991596638655,
+        "p95FrameMs": 300.10000000000036,
+        "p99FrameMs": 383.3000000000011,
+        "maxFrameMs": 916.7,
+        "deadlineMs": 13.333333333333334,
+        "missedDeadlineFrames": 119,
+        "missedDeadlineRatio": 1,
+        "passed75Fps": false
+      },
+      "cpuSubmit": {
+        "frameCount": 120,
+        "durationMs": 38.000000000349246,
+        "fps": 3157.894736813082,
+        "meanFrameMs": 0.31666666666957705,
+        "p95FrameMs": 0.8999999999650754,
+        "p99FrameMs": 2.2999999999883585,
+        "maxFrameMs": 3.400000000023283,
+        "deadlineMs": 13.333333333333334,
+        "missedDeadlineFrames": 0,
+        "missedDeadlineRatio": 0,
+        "passed75Fps": true
+      },
+      "gpu": {
+        "available": true,
+        "reason": null,
+        "milliseconds": 300.042493
+      },
+      "heapBefore": 27972485,
+      "heapAfter": 4066972,
+      "uploadsBefore": 278528,
+      "uploadsAfter": 278528,
+      "dpr": 2,
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+    },
+    "after": {
+      "frames": {
+        "frameCount": 119,
+        "durationMs": 49164.7,
+        "fps": 2.420435800482867,
+        "meanFrameMs": 413.1487394957983,
+        "p95FrameMs": 650,
+        "p99FrameMs": 933.2999999999997,
+        "maxFrameMs": 2583.2,
+        "deadlineMs": 13.333333333333334,
+        "missedDeadlineFrames": 119,
+        "missedDeadlineRatio": 1,
+        "passed75Fps": false
+      },
+      "cpuSubmit": {
+        "frameCount": 120,
+        "durationMs": 36.20000000006985,
+        "fps": 3314.917127065427,
+        "meanFrameMs": 0.30166666666724873,
+        "p95FrameMs": 0.6999999999534339,
+        "p99FrameMs": 2,
+        "maxFrameMs": 5.400000000023283,
+        "deadlineMs": 13.333333333333334,
+        "missedDeadlineFrames": 0,
+        "missedDeadlineRatio": 0,
+        "passed75Fps": true
+      },
+      "gpu": {
+        "available": true,
+        "reason": null,
+        "milliseconds": 306.416564
+      },
+      "heapBefore": 28002091,
+      "heapAfter": 4706814,
+      "uploadsBefore": 278528,
+      "uploadsAfter": 278528,
+      "dpr": 2,
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+    }
+  },
+  "combatTraversal": {
+    "before": {
+      "frames": {
+        "frameCount": 12,
+        "durationMs": 15099.4,
+        "fps": 0.7947335655721419,
+        "meanFrameMs": 1258.2833333333333,
+        "p95FrameMs": 4299.800000000001,
+        "p99FrameMs": 4299.800000000001,
+        "maxFrameMs": 4299.800000000001,
+        "deadlineMs": 13.333333333333334,
+        "missedDeadlineFrames": 12,
+        "missedDeadlineRatio": 1,
+        "passed75Fps": false
+      },
+      "cpuTails": {
+        "update": {
+          "samples": 16,
+          "p50Ms": 70.09999999997672,
+          "p95Ms": 172.5,
+          "p99Ms": 172.5,
+          "maxMs": 172.5,
+          "missedDeadlines": 16
+        },
+        "render": {
+          "samples": 16,
+          "p50Ms": 7.7000000000116415,
+          "p95Ms": 4027.0999999999767,
+          "p99Ms": 4027.0999999999767,
+          "maxMs": 4027.0999999999767,
+          "missedDeadlines": 7
+        },
+        "work": {
+          "samples": 16,
+          "p50Ms": 90.29999999998836,
+          "p95Ms": 4097.899999999965,
+          "p99Ms": 4097.899999999965,
+          "maxMs": 4097.899999999965,
+          "missedDeadlines": 16
+        }
+      },
+      "counts": [
+        {
+          "atMs": 0,
+          "units": 120,
+          "bullets": 11,
+          "explosions": 12,
+          "heapBytes": 105656002,
+          "gpuPassMs": 1799.210526
+        },
+        {
+          "atMs": 4299.800000000001,
+          "units": 120,
+          "bullets": 11,
+          "explosions": 12,
+          "heapBytes": 105656002,
+          "gpuPassMs": 1799.210526
+        },
+        {
+          "atMs": 4316.4,
+          "units": 120,
+          "bullets": 11,
+          "explosions": 12,
+          "heapBytes": 110572747,
+          "gpuPassMs": 1109.990272
+        },
+        {
+          "atMs": 4733.1,
+          "units": 117,
+          "bullets": 1,
+          "explosions": 25,
+          "heapBytes": 98809876,
+          "gpuPassMs": 737.404439
+        },
+        {
+          "atMs": 7399.699999999999,
+          "units": 117,
+          "bullets": 1,
+          "explosions": 25,
+          "heapBytes": 98809876,
+          "gpuPassMs": 737.404439
+        },
+        {
+          "atMs": 7416.300000000001,
+          "units": 117,
+          "bullets": 0,
+          "explosions": 26,
+          "heapBytes": 106923826,
+          "gpuPassMs": 84.163381
+        },
+        {
+          "atMs": 8383.000000000002,
+          "units": 117,
+          "bullets": 0,
+          "explosions": 26,
+          "heapBytes": 100812428,
+          "gpuPassMs": 102.316534
+        },
+        {
+          "atMs": 8416.300000000001,
+          "units": 117,
+          "bullets": 0,
+          "explosions": 23,
+          "heapBytes": 105725789,
+          "gpuPassMs": 102.316534
+        },
+        {
+          "atMs": 12516.1,
+          "units": 117,
+          "bullets": 0,
+          "explosions": 23,
+          "heapBytes": 105725789,
+          "gpuPassMs": 102.316534
+        },
+        {
+          "atMs": 12532.800000000001,
+          "units": 117,
+          "bullets": 0,
+          "explosions": 18,
+          "heapBytes": 109976908,
+          "gpuPassMs": 2023.732637
+        },
+        {
+          "atMs": 13499.4,
+          "units": 117,
+          "bullets": 0,
+          "explosions": 15,
+          "heapBytes": 107540203,
+          "gpuPassMs": 2023.732637
+        },
+        {
+          "atMs": 14832.699999999999,
+          "units": 117,
+          "bullets": 0,
+          "explosions": 15,
+          "heapBytes": 112754708,
+          "gpuPassMs": 35.412402
+        },
+        {
+          "atMs": 15099.4,
+          "units": 117,
+          "bullets": 0,
+          "explosions": 14,
+          "heapBytes": 104868072,
+          "gpuPassMs": 35.412402
+        }
+      ],
+      "routeCycles": 1,
+      "travelledPx": 36238.56,
+      "display": {
+        "screenX": 10,
+        "screenY": 10,
+        "width": 1440,
+        "height": 1000,
+        "availWidth": 1440,
+        "availHeight": 1000,
+        "devicePixelRatio": 2,
+        "emulatedScreenSize": true
+      },
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "errors": [],
+      "timingMs": {
+        "frameInterval": {
+          "samples": 16,
+          "averageMs": 974.79,
+          "minMs": 28.2,
+          "maxMs": 4714.8,
+          "slowFrames": 16
+        },
+        "update": {
+          "samples": 16,
+          "averageMs": 69.98,
+          "minMs": 21,
+          "maxMs": 172.5,
+          "slowFrames": 16
+        },
+        "render": {
+          "samples": 16,
+          "averageMs": 312.11,
+          "minMs": 2.1,
+          "maxMs": 4027.1,
+          "slowFrames": 7
+        },
+        "minimap": {
+          "samples": 16,
+          "averageMs": 0.21,
+          "minMs": 0.1,
+          "maxMs": 0.5,
+          "slowFrames": 0
+        },
+        "frameWork": {
+          "samples": 16,
+          "averageMs": 382.3,
+          "minMs": 23.7,
+          "maxMs": 4097.9,
+          "slowFrames": 16
+        },
+        "unattributedWait": {
+          "samples": 16,
+          "averageMs": 853.17,
+          "minMs": 0,
+          "maxMs": 4628.7,
+          "slowFrames": 10
+        },
+        "schedulerDelay": {
+          "samples": 16,
+          "averageMs": 0,
+          "minMs": 0,
+          "maxMs": 0,
+          "slowFrames": 0
+        },
+        "terrain": {
+          "samples": 16,
+          "averageMs": 14.61,
+          "minMs": 0.5,
+          "maxMs": 87.9,
+          "slowFrames": 4
+        },
+        "entities": {
+          "samples": 16,
+          "averageMs": 292.24,
+          "minMs": 0.1,
+          "maxMs": 4015.3,
+          "slowFrames": 3
+        },
+        "effects": {
+          "samples": 16,
+          "averageMs": 0.88,
+          "minMs": 0.1,
+          "maxMs": 5.7,
+          "slowFrames": 0
+        },
+        "ui": {
+          "samples": 16,
+          "averageMs": 0.91,
+          "minMs": 0.1,
+          "maxMs": 7,
+          "slowFrames": 0
+        }
+      }
+    },
+    "after": {
+      "frames": {
+        "frameCount": 22,
+        "durationMs": 15232.8,
+        "fps": 1.4442518775274409,
+        "meanFrameMs": 692.4,
+        "p95FrameMs": 1733.2999999999993,
+        "p99FrameMs": 1933.2000000000007,
+        "maxFrameMs": 1933.2000000000007,
+        "deadlineMs": 13.333333333333334,
+        "missedDeadlineFrames": 22,
+        "missedDeadlineRatio": 1,
+        "passed75Fps": false
+      },
+      "cpuTails": {
+        "update": {
+          "samples": 37,
+          "p50Ms": 34.5,
+          "p95Ms": 89.89999999996508,
+          "p99Ms": 138.09999999997672,
+          "maxMs": 138.09999999997672,
+          "missedDeadlines": 32
+        },
+        "render": {
+          "samples": 37,
+          "p50Ms": 5.2000000000116415,
+          "p95Ms": 56.40000000002328,
+          "p99Ms": 1566.5,
+          "maxMs": 1566.5,
+          "missedDeadlines": 7
+        },
+        "work": {
+          "samples": 37,
+          "p50Ms": 47.399999999965075,
+          "p95Ms": 179.70000000001164,
+          "p99Ms": 1643.2000000000116,
+          "maxMs": 1643.2000000000116,
+          "missedDeadlines": 32
+        }
+      },
+      "counts": [
+        {
+          "atMs": 0,
+          "units": 120,
+          "bullets": 11,
+          "explosions": 12,
+          "heapBytes": 102426695,
+          "gpuPassMs": 1597.072125
+        },
+        {
+          "atMs": 1283.3999999999978,
+          "units": 120,
+          "bullets": 11,
+          "explosions": 12,
+          "heapBytes": 102426695,
+          "gpuPassMs": 1597.072125
+        },
+        {
+          "atMs": 3199.899999999998,
+          "units": 120,
+          "bullets": 10,
+          "explosions": 13,
+          "heapBytes": 106122924,
+          "gpuPassMs": 90.263607
+        },
+        {
+          "atMs": 3416.5,
+          "units": 120,
+          "bullets": 1,
+          "explosions": 22,
+          "heapBytes": 104655002,
+          "gpuPassMs": 90.263607
+        },
+        {
+          "atMs": 5299.799999999999,
+          "units": 119,
+          "bullets": 0,
+          "explosions": 24,
+          "heapBytes": 103160909,
+          "gpuPassMs": 23.504771
+        },
+        {
+          "atMs": 5433.200000000001,
+          "units": 119,
+          "bullets": 0,
+          "explosions": 18,
+          "heapBytes": 115399673,
+          "gpuPassMs": 23.504771
+        },
+        {
+          "atMs": 6816.399999999998,
+          "units": 119,
+          "bullets": 0,
+          "explosions": 13,
+          "heapBytes": 112731199,
+          "gpuPassMs": 157.576903
+        },
+        {
+          "atMs": 7199.799999999999,
+          "units": 119,
+          "bullets": 0,
+          "explosions": 13,
+          "heapBytes": 113734813,
+          "gpuPassMs": 157.576903
+        },
+        {
+          "atMs": 8399.7,
+          "units": 119,
+          "bullets": 0,
+          "explosions": 13,
+          "heapBytes": 113734813,
+          "gpuPassMs": 157.576903
+        },
+        {
+          "atMs": 10499.599999999999,
+          "units": 119,
+          "bullets": 0,
+          "explosions": 12,
+          "heapBytes": 106054918,
+          "gpuPassMs": 604.682682
+        },
+        {
+          "atMs": 10516.3,
+          "units": 119,
+          "bullets": 0,
+          "explosions": 12,
+          "heapBytes": 106054918,
+          "gpuPassMs": 604.682682
+        },
+        {
+          "atMs": 11149.599999999999,
+          "units": 119,
+          "bullets": 0,
+          "explosions": 12,
+          "heapBytes": 115359445,
+          "gpuPassMs": 604.682682
+        },
+        {
+          "atMs": 12882.899999999998,
+          "units": 119,
+          "bullets": 0,
+          "explosions": 12,
+          "heapBytes": 120233224,
+          "gpuPassMs": 893.53489
+        },
+        {
+          "atMs": 13032.8,
+          "units": 119,
+          "bullets": 0,
+          "explosions": 12,
+          "heapBytes": 108663969,
+          "gpuPassMs": 893.53489
+        },
+        {
+          "atMs": 15232.8,
+          "units": 119,
+          "bullets": 0,
+          "explosions": 12,
+          "heapBytes": 121568700,
+          "gpuPassMs": 550.482536
+        }
+      ],
+      "routeCycles": 1,
+      "travelledPx": 36558.72,
+      "display": {
+        "screenX": 10,
+        "screenY": 10,
+        "width": 1440,
+        "height": 1000,
+        "availWidth": 1440,
+        "availHeight": 1000,
+        "devicePixelRatio": 2,
+        "emulatedScreenSize": true
+      },
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "errors": [],
+      "timingMs": {
+        "frameInterval": {
+          "samples": 37,
+          "averageMs": 416.1,
+          "minMs": 11.8,
+          "maxMs": 2288,
+          "slowFrames": 36
+        },
+        "update": {
+          "samples": 37,
+          "averageMs": 43.05,
+          "minMs": 3.5,
+          "maxMs": 138.1,
+          "slowFrames": 32
+        },
+        "render": {
+          "samples": 37,
+          "averageMs": 51.84,
+          "minMs": 1.6,
+          "maxMs": 1566.5,
+          "slowFrames": 7
+        },
+        "minimap": {
+          "samples": 37,
+          "averageMs": 0.47,
+          "minMs": 0.1,
+          "maxMs": 4.7,
+          "slowFrames": 0
+        },
+        "frameWork": {
+          "samples": 37,
+          "averageMs": 94.95,
+          "minMs": 5.1,
+          "maxMs": 1643.2,
+          "slowFrames": 32
+        },
+        "unattributedWait": {
+          "samples": 37,
+          "averageMs": 368.78,
+          "minMs": 0,
+          "maxMs": 2189.6,
+          "slowFrames": 26
+        },
+        "schedulerDelay": {
+          "samples": 37,
+          "averageMs": 0,
+          "minMs": 0,
+          "maxMs": 0,
+          "slowFrames": 0
+        },
+        "terrain": {
+          "samples": 37,
+          "averageMs": 6.26,
+          "minMs": 0.6,
+          "maxMs": 51.1,
+          "slowFrames": 5
+        },
+        "entities": {
+          "samples": 37,
+          "averageMs": 43.14,
+          "minMs": 0,
+          "maxMs": 1560.7,
+          "slowFrames": 1
+        },
+        "effects": {
+          "samples": 37,
+          "averageMs": 0.56,
+          "minMs": 0,
+          "maxMs": 2.4,
+          "slowFrames": 0
+        },
+        "ui": {
+          "samples": 37,
+          "averageMs": 0.83,
+          "minMs": 0,
+          "maxMs": 5.2,
+          "slowFrames": 0
+        }
+      }
+    }
+  }
+}

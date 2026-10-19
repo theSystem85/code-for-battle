@@ -16,6 +16,7 @@ import {
 import { estimateTextureBytes, GpuMemoryTracker } from './gpuMemory.js'
 import { summarizeWebGPUFailure } from './rendererBackendSelection.js'
 import { bootMark } from '../ui/bootTiming.js'
+import { OCEAN_WATER_WGSL } from './oceanWaterShader.js'
 import { finishBootGpu, reportBootGpuSteps } from '../ui/bootProgress.js'
 import { getCanvasPixelRatio } from './renderingUtils.js'
 
@@ -79,12 +80,14 @@ struct VertexOutput {
   output.color = input.color;
   output.textureType = input.textureType;
   output.localPos = input.position;
-  output.worldPos = input.translation * uniforms.tile.y + input.position * uniforms.tile.x;
+  output.worldPos = (input.translation * uniforms.tile.y + input.position * uniforms.tile.x) * (f32(${TILE_SIZE}) / uniforms.tile.y);
   output.waterEdges = input.waterEdges;
   output.clipOrientation = input.clipOrientation;
   output.textureSource = input.textureSource;
   return output;
 }
+${OCEAN_WATER_WGSL}
+
 fn applySaturation(color: vec3f, saturation: f32) -> vec3f {
   let luma = dot(color, vec3f(0.2126, 0.7152, 0.0722));
   return mix(vec3f(luma), color, max(saturation, 0.0));
@@ -94,6 +97,7 @@ fn applySaturation(color: vec3f, saturation: f32) -> vec3f {
   // before any per-fragment branch or discard, then select the color.
   let primarySample = textureSample(atlas, atlasSampler, input.uv);
   let secondarySample = textureSample(secondaryAtlas, atlasSampler, input.uv);
+  let waterFootprint = max(length(dpdx(input.worldPos)), length(dpdy(input.worldPos)));
   if (input.clipOrientation > 0.5) {
     var inside = true;
     if (input.clipOrientation < 1.5) { inside = input.localPos.x + input.localPos.y <= 1.0; }
@@ -103,28 +107,14 @@ fn applySaturation(color: vec3f, saturation: f32) -> vec3f {
     if (!inside) { discard; }
   }
   if (input.textureType > 1.5) {
-    let t = uniforms.time * 0.001;
-    let scale = 1.0 / max(uniforms.zoom, 0.001);
-    let flow = vec2f(
-      sin(input.worldPos.y * (0.031 * scale) + t * 0.82),
-      cos(input.worldPos.x * (0.029 * scale) - t * 0.74)
-    );
-    let p = input.worldPos * (0.052 * scale) + flow * 1.15;
-    let wave = (sin(p.x * 1.2 + t * 1.1) + cos(p.y * 1.35 - t * 1.25) + sin((p.x - p.y) * 0.92 + t * 0.63)) / 3.0;
-    let shimmer = 0.5 + 0.5 * sin((p.x * 1.2 - p.y * 1.05) + t * 1.65);
-    let toneBlend = clamp((uniforms.tone + 1.0) * 0.5, 0.0, 1.0);
-    let deep = mix(vec3f(0.04, 0.18, 0.32), vec3f(0.09, 0.27, 0.30), toneBlend);
-    let bright = mix(vec3f(0.08, 0.39, 0.58), vec3f(0.13, 0.52, 0.43), toneBlend);
-    var color = mix(deep, bright, clamp(0.5 + wave * 0.45, 0.0, 1.0));
-    color += vec3f(0.04, 0.08, 0.10) * shimmer * 0.42;
-    color = applySaturation(color, uniforms.saturation);
+    var color = oceanWater(input.worldPos, uniforms.time, uniforms.zoom, uniforms.tone, waterFootprint);
     var edge = 1.0;
     if (input.waterEdges.x > 0.5) { edge = min(edge, input.localPos.y); }
     if (input.waterEdges.y > 0.5) { edge = min(edge, 1.0 - input.localPos.x); }
     if (input.waterEdges.z > 0.5) { edge = min(edge, 1.0 - input.localPos.y); }
     if (input.waterEdges.w > 0.5) { edge = min(edge, input.localPos.x); }
-    if (edge < 0.09) { color += vec3f(0.03, 0.05, 0.05); }
-    return vec4f(color, 1.0);
+    color += vec3f(0.03, 0.05, 0.05) * (1.0 - smoothstep(0.0, 0.18, edge));
+    return vec4f(applySaturation(color, uniforms.saturation), 1.0);
   }
   if (input.textureType > 0.5) {
     if (input.textureSource > 0.5) { return secondarySample; }
