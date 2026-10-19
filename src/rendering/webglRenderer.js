@@ -11,6 +11,7 @@ import { renderProfiler } from '../performance/renderProfiler.js'
 import { RENDER_COUNTER_IDS, renderDiagnostics } from '../performance/renderDiagnostics.js'
 import { getCanvasPixelRatio } from './renderingUtils.js'
 import { bootMark } from '../ui/bootTiming.js'
+import { OCEAN_WATER_GLSL } from './oceanWaterShader.js'
 
 export const WATER_INSTANCE_FLOATS = 17
 export const WATER_INSTANCE_STRIDE = WATER_INSTANCE_FLOATS * 4
@@ -86,7 +87,7 @@ void main() {
   vColor = aColor;
   vTextureType = aTextureType;
   vLocalPos = aPosition;
-  vWorldPos = worldSamplePos;
+  vWorldPos = worldSamplePos * (float(${TILE_SIZE}) / uTileStep);
   vWaterEdges = aWaterEdges;
   vClipOrientation = aClipOrientation;
   vTextureSource = aTextureSource;
@@ -114,12 +115,16 @@ in float vTextureSource;
 
 out vec4 outColor;
 
+${OCEAN_WATER_GLSL}
+
 vec3 applySaturation(vec3 color, float saturation) {
   float luma = dot(color, vec3(0.2126, 0.7152, 0.0722));
   return mix(vec3(luma), color, max(saturation, 0.0));
 }
 
 void main() {
+  // Derivatives must be evaluated before non-uniform branches/discard.
+  float waterFootprint = max(length(dFdx(vWorldPos)), length(dFdy(vWorldPos)));
   if (vClipOrientation > 0.5) {
     bool insideClip = true;
     if (vClipOrientation < 1.5) {
@@ -138,26 +143,7 @@ void main() {
   }
 
   if (vTextureType > 1.5) {
-    float t = uTime * 0.001;
-    float worldScale = 1.0 / max(uWaterZoom, 0.001);
-    vec2 flow = vec2(
-      sin(vWorldPos.y * (0.031 * worldScale) + t * 0.82),
-      cos(vWorldPos.x * (0.029 * worldScale) - t * 0.74)
-    );
-    vec2 p = vWorldPos * (0.052 * worldScale) + flow * 1.15;
-    float waveA = sin(p.x * 1.2 + t * 1.1);
-    float waveB = cos(p.y * 1.35 - t * 1.25);
-    float waveC = sin((p.x - p.y) * 0.92 + t * 0.63);
-    float wave = (waveA + waveB + waveC) / 3.0;
-    float shimmer = 0.5 + 0.5 * sin((p.x * 1.2 - p.y * 1.05) + t * 1.65);
-    float toneBlend = clamp((uWaterTone + 1.0) * 0.5, 0.0, 1.0);
-
-    vec3 deepColor = mix(vec3(0.04, 0.18, 0.32), vec3(0.09, 0.27, 0.30), toneBlend);
-    vec3 brightColor = mix(vec3(0.08, 0.39, 0.58), vec3(0.13, 0.52, 0.43), toneBlend);
-    float contrast = clamp(0.5 + wave * 0.45, 0.0, 1.0);
-    vec3 waterColor = mix(deepColor, brightColor, contrast);
-    waterColor += vec3(0.04, 0.08, 0.10) * shimmer * 0.42;
-    waterColor = applySaturation(waterColor, uWaterSaturation);
+    vec3 waterColor = oceanWater(vWorldPos, uTime, uWaterZoom, uWaterTone, waterFootprint);
 
     float edgeDistance = 1.0;
     if (vWaterEdges.x > 0.5) edgeDistance = min(edgeDistance, vLocalPos.y);
@@ -165,10 +151,10 @@ void main() {
     if (vWaterEdges.z > 0.5) edgeDistance = min(edgeDistance, 1.0 - vLocalPos.y);
     if (vWaterEdges.w > 0.5) edgeDistance = min(edgeDistance, vLocalPos.x);
 
-    float shoreMask = edgeDistance < 0.09 ? 1.0 : 0.0;
+    float shoreMask = 1.0 - smoothstep(0.0, 0.18, edgeDistance);
     waterColor += vec3(0.03, 0.05, 0.05) * shoreMask;
 
-    outColor = vec4(waterColor, 1.0);
+    outColor = vec4(applySaturation(waterColor, uWaterSaturation), 1.0);
   } else if (vTextureType > 0.5) {
     if (vTextureSource > 0.5) {
       outColor = texture(uSecondaryAtlas, vUV);
