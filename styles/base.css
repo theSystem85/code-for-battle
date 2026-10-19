@@ -2322,7 +2322,9 @@ body.mobile-portrait.sidebar-condensed #mobileBuildMenuContainer #productionTabs
   flex-direction: column;
   order: 2;
   height: 100%;
-  flex-shrink: 0;
+  flex: 0 0 var(--portrait-condensed-toggle-width);
+  width: var(--portrait-condensed-toggle-width);
+  min-width: 0;
   background: transparent;
   box-shadow: none;
   border: none;
