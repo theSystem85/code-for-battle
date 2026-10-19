@@ -2157,7 +2157,7 @@ body.mobile-portrait.sidebar-condensed:not(.pwa-standalone) #mobileBuildMenuCont
 }
 
 body.mobile-portrait.sidebar-condensed:not(.pwa-standalone) #mobileBuildMenuContainer #productionArea {
-  padding-right: var(--portrait-condensed-toggle-width);
+  padding-right: calc(var(--portrait-condensed-toggle-width) * 0.5);
   box-sizing: border-box;
 }
 
@@ -2170,7 +2170,7 @@ body.mobile-portrait.sidebar-condensed:not(.pwa-standalone) #mobileBuildMenuCont
   flex-direction: column;
   align-items: stretch;
   justify-content: space-between;
-  width: var(--portrait-condensed-toggle-width);
+  width: calc(var(--portrait-condensed-toggle-width) * 0.5);
   padding: 0;
   margin: 0;
   background-color: var(--sidebar-shared-bg-color);
