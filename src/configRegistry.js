@@ -110,10 +110,16 @@ import {
   getMobileApacheJoystickMapping,
   setMobileApacheJoystickMapping,
   SAFE_RANGE_ENABLED,
+  USE_OCEAN_WATER_RENDERING,
+  setUseOceanWaterRendering,
   WATER_EFFECT_TONE,
   setWaterEffectTone,
   WATER_EFFECT_SATURATION,
   setWaterEffectSaturation,
+  WATER_EFFECT_STRENGTH,
+  setWaterEffectStrength,
+  WATER_EFFECT_SPEED,
+  setWaterEffectSpeed,
   WATER_EFFECT_ZOOM,
   setWaterEffectZoom,
   MOBILE_CANVAS_PIXEL_RATIO_CAP,
@@ -276,6 +282,15 @@ export const configRegistry = {
     min: 0, max: 0.01, step: 0.0001, category: 'Graphics'
   },
 
+  useOceanWaterRendering: {
+    name: 'Ocean Water Rendering',
+    description: 'Use ocean-inspired water on hardware GPUs; otherwise use classic water',
+    type: 'boolean',
+    get: () => USE_OCEAN_WATER_RENDERING,
+    set: setUseOceanWaterRendering,
+    category: 'Graphics'
+  },
+
   waterEffectTone: {
     name: 'Water Tone',
     description: 'Blend the procedural water palette from cooler blue toward greener teal',
@@ -298,6 +313,18 @@ export const configRegistry = {
     max: 2,
     step: 0.05,
     category: 'Graphics'
+  },
+
+  waterEffectStrength: {
+    name: 'Water Wave Strength', description: 'Strength of wave slopes and highlights', type: 'number',
+    get: () => WATER_EFFECT_STRENGTH, set: setWaterEffectStrength,
+    min: 0, max: 2, step: 0.05, category: 'Graphics'
+  },
+
+  waterEffectSpeed: {
+    name: 'Water Animation Speed', description: 'Water animation speed multiplier; zero pauses the waves', type: 'number',
+    get: () => WATER_EFFECT_SPEED, set: setWaterEffectSpeed,
+    min: 0, max: 3, step: 0.05, category: 'Graphics'
   },
 
   waterEffectZoom: {

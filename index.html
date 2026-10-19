@@ -1236,6 +1236,33 @@
           <div class="config-modal__section">
             <h3 class="config-modal__section-title">Graphics</h3>
             <label class="config-modal__field config-modal__field--toggle">
+              <input type="checkbox" id="settingsOceanWaterToggle" aria-describedby="settingsOceanWaterHint" checked>
+              <span>Use new ocean water rendering</span>
+            </label>
+            <p id="settingsOceanWaterHint" class="config-modal__hint">Uncheck for classic water. Classic water is used automatically when a hardware GPU is unavailable.</p>
+            <label class="config-modal__field" for="settingsWaterHeightRange">
+              <span class="config-modal__range-label-row">
+                <span>Water view height</span>
+                <span id="settingsWaterHeightValue" class="config-modal__range-value">5x</span>
+              </span>
+              <input type="range" id="settingsWaterHeightRange" min="0.5" max="20" step="0.5" value="5" aria-describedby="settingsWaterHeightHint">
+            </label>
+            <p id="settingsWaterHeightHint" class="config-modal__hint">Higher values make waves smaller. Applies to both water styles.</p>
+            <label class="config-modal__field" for="settingsWaterStrengthRange">
+              <span class="config-modal__range-label-row">
+                <span>Wave strength</span>
+                <span id="settingsWaterStrengthValue" class="config-modal__range-value">100%</span>
+              </span>
+              <input type="range" id="settingsWaterStrengthRange" min="0" max="2" step="0.05" value="1">
+            </label>
+            <label class="config-modal__field" for="settingsWaterSpeedRange">
+              <span class="config-modal__range-label-row">
+                <span>Animation speed</span>
+                <span id="settingsWaterSpeedValue" class="config-modal__range-value">100%</span>
+              </span>
+              <input type="range" id="settingsWaterSpeedRange" min="0" max="3" step="0.05" value="1">
+            </label>
+            <label class="config-modal__field config-modal__field--toggle">
               <input type="checkbox" id="settingsDynamicWaterLandBlendToggle" checked>
               <span>Blend animated water dynamically onto land shoreline tiles</span>
             </label>

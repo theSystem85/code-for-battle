@@ -6,7 +6,9 @@ import {
   USE_PROCEDURAL_WATER_RENDERING,
   WATER_EFFECT_TONE,
   WATER_EFFECT_SATURATION,
-  WATER_EFFECT_ZOOM
+  WATER_EFFECT_ZOOM,
+  WATER_EFFECT_STRENGTH,
+  WATER_EFFECT_SPEED
 } from '../config.js'
 import { getSotDrawOffset, OrganicTerrain, shorelineCornerMask } from './organicTerrain.js'
 import { getTileDecalSignature, isDecalBlockedTile } from '../game/tileDecals.js'
@@ -1896,7 +1898,7 @@ export class MapRenderer {
 
   drawProceduralWater(ctx, screenX, screenY, size, tileX, tileY) {
     const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()
-    const t = now * 0.0018
+    const t = now * 0.0018 * WATER_EFFECT_SPEED
     const originX = tileX * TILE_SIZE
     const originY = tileY * TILE_SIZE
     const zoom = Math.max(WATER_EFFECT_ZOOM, 0.001)
@@ -1918,7 +1920,7 @@ export class MapRenderer {
       const offset = Math.sin(phase) * 2
       const y = screenY + (i + 1) * bandHeight + offset
       const alpha = 0.22 + 0.08 * Math.sin(phase * 1.4)
-      ctx.fillStyle = toRgba(bandColor, Math.max(0.12, Math.min(0.36, alpha)).toFixed(3))
+      ctx.fillStyle = toRgba(bandColor, (Math.max(0.12, Math.min(0.36, alpha)) * WATER_EFFECT_STRENGTH).toFixed(3))
       ctx.fillRect(screenX, Math.floor(y), size, 1)
     }
 
@@ -1929,14 +1931,14 @@ export class MapRenderer {
       const offset = Math.cos(phase) * 1.5
       const x = screenX + (i + 1) * colWidth + offset
       const alpha = 0.1 + 0.08 * Math.cos(phase * 1.7)
-      ctx.fillStyle = toRgba(columnColor, Math.max(0.05, Math.min(0.24, alpha)).toFixed(3))
+      ctx.fillStyle = toRgba(columnColor, (Math.max(0.05, Math.min(0.24, alpha)) * WATER_EFFECT_STRENGTH).toFixed(3))
       ctx.fillRect(Math.floor(x), screenY, 1, size)
     }
 
     const shimmer = 0.5 + 0.5 * Math.sin((originX - originY) * (0.03 / zoom) + t * 1.65)
-    ctx.fillStyle = toRgba(brightColor, 0.16 + shimmer * 0.08)
+    ctx.fillStyle = toRgba(brightColor, 0.16 + shimmer * 0.08 * WATER_EFFECT_STRENGTH)
     ctx.fillRect(screenX, screenY, size, size)
-    ctx.fillStyle = toRgba(shimmerColor, 0.08 + shimmer * 0.05)
+    ctx.fillStyle = toRgba(shimmerColor, 0.08 + shimmer * 0.05 * WATER_EFFECT_STRENGTH)
     ctx.fillRect(screenX, screenY, size, size)
   }
 

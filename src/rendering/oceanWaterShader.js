@@ -38,9 +38,10 @@ float fresnelWater(float c) {
   return 0.02 + 0.98 * x2 * x2 * x;
 }
 
-vec3 oceanWater(vec2 world, float time, float zoom, float tone, float footprint) {
+vec3 oceanWater(vec2 world, float time, float zoom, float tone, float footprint, float strength) {
+  // Four times smaller waves give the higher top-down viewpoint.
   // Coordinates are logical map pixels, independent of camera and display DPR.
-  float scale = 0.2 / max(zoom, 0.001);
+  float scale = 0.8 / max(zoom, 0.001);
   float t = time * 0.001;
   vec2 p = world * scale;
   // Long cross swells bend the wave trains, avoiding a repeating diagonal grid.
@@ -56,11 +57,11 @@ vec3 oceanWater(vec2 world, float time, float zoom, float tone, float footprint)
   vec4 filtered = vec4(1.0) - smoothstep(vec4(0.7), vec4(2.8), frequency * footprint * scale);
   vec4 waves = sin(phase);
   vec4 slopes = cos(phase) * (vec4(1.0) + 0.44 * waves)
-    * vec4(0.28, 0.19, 0.12, 0.07) * filtered;
+    * vec4(0.28, 0.19, 0.12, 0.07) * filtered * strength;
   vec2 slope = vec2(dot(slopes, directionX), dot(slopes, directionY));
   slope = vec2(slope.x * (1.0 + 0.013 * bendDerivative.x) - slope.y * 0.018 * bendDerivative.y,
     slope.y * (1.0 + 0.011 * bendDerivative.y) + slope.x * 0.021 * bendDerivative.x);
-  float height = dot((waves + 0.22 * waves * waves) * filtered, vec4(0.55, 0.27, 0.12, 0.06));
+  float height = dot((waves + 0.22 * waves * waves) * filtered, vec4(0.55, 0.27, 0.12, 0.06)) * strength;
   vec3 normal = normalize(vec3(-slope, 1.0));
   vec3 light = normalize(vec3(-0.36, -0.48, 0.80));
   vec3 halfVector = normalize(light + vec3(0.0, 0.0, 1.0));
@@ -96,8 +97,8 @@ fn fresnelWater(c: f32) -> f32 {
   return 0.02 + 0.98 * x2 * x2 * x;
 }
 
-fn oceanWater(world: vec2f, time: f32, zoom: f32, tone: f32, footprint: f32) -> vec3f {
-  let scale = 0.2 / max(zoom, 0.001);
+fn oceanWater(world: vec2f, time: f32, zoom: f32, tone: f32, footprint: f32, strength: f32) -> vec3f {
+  let scale = 0.8 / max(zoom, 0.001);
   let t = time * 0.001;
   var p = world * scale;
   let bendPhase = vec2f(dot(p, vec2f(0.013, 0.021)), dot(p, vec2f(-0.018, 0.011))) - t * vec2f(0.12, 0.18);
@@ -111,11 +112,11 @@ fn oceanWater(world: vec2f, time: f32, zoom: f32, tone: f32, footprint: f32) -> 
   let filtered = vec4f(1.0) - smoothstep(vec4f(0.7), vec4f(2.8), frequency * footprint * scale);
   let waves = sin(phase);
   let slopes = cos(phase) * (vec4f(1.0) + 0.44 * waves)
-    * vec4f(0.28, 0.19, 0.12, 0.07) * filtered;
+    * vec4f(0.28, 0.19, 0.12, 0.07) * filtered * strength;
   var slope = vec2f(dot(slopes, directionX), dot(slopes, directionY));
   slope = vec2f(slope.x * (1.0 + 0.013 * bendDerivative.x) - slope.y * 0.018 * bendDerivative.y,
     slope.y * (1.0 + 0.011 * bendDerivative.y) + slope.x * 0.021 * bendDerivative.x);
-  let height = dot((waves + 0.22 * waves * waves) * filtered, vec4f(0.55, 0.27, 0.12, 0.06));
+  let height = dot((waves + 0.22 * waves * waves) * filtered, vec4f(0.55, 0.27, 0.12, 0.06)) * strength;
   let normal = normalize(vec3f(-slope, 1.0));
   let light = normalize(vec3f(-0.36, -0.48, 0.80));
   let halfVector = normalize(light + vec3f(0.0, 0.0, 1.0));

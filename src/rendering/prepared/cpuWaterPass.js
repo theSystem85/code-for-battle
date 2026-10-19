@@ -2,7 +2,9 @@ import {
   TILE_SIZE,
   WATER_EFFECT_SATURATION,
   WATER_EFFECT_TONE,
-  WATER_EFFECT_ZOOM
+  WATER_EFFECT_ZOOM,
+  WATER_EFFECT_STRENGTH,
+  WATER_EFFECT_SPEED
 } from '../../config.js'
 import { PROFILER_SPAN_IDS } from '../../performance/profilerIds.js'
 import { renderProfiler } from '../../performance/renderProfiler.js'
@@ -243,7 +245,7 @@ export class CpuWaterPass {
     this.prepareVisible(startX, startY, endX, endY, drawBase, drawSot)
     const sampledTime = Number.isFinite(time) ? time : this.now()
     this.stats.sampledTime = sampledTime
-    const animationPhase = sampledTime * 0.0018
+    const animationPhase = sampledTime * 0.0018 * WATER_EFFECT_SPEED
     const offsetX = scrollOffset?.x || 0
     const offsetY = scrollOffset?.y || 0
     let drawCalls = 0
@@ -302,7 +304,7 @@ export class CpuWaterPass {
     for (let index = 0; index < 5; index++) {
       const phase = animationPhase + originX * this.coefficients[0] + originY * this.coefficients[1] + index * 1.17
       const alpha = Math.max(0.12, Math.min(0.36, 0.22 + 0.08 * Math.sin(phase * 1.4)))
-      ctx.globalAlpha = baseAlpha * (Math.round(alpha * 1000) / 1000)
+      ctx.globalAlpha = baseAlpha * (Math.round(alpha * 1000) / 1000) * WATER_EFFECT_STRENGTH
       ctx.fillRect(screenX, Math.floor(screenY + (index + 1) * bandHeight + Math.sin(phase) * 2), size, 1)
     }
 
@@ -311,16 +313,16 @@ export class CpuWaterPass {
     for (let index = 0; index < 3; index++) {
       const phase = animationPhase * 0.72 + originX * this.coefficients[2] - originY * this.coefficients[0] + index * 1.9
       const alpha = Math.max(0.05, Math.min(0.24, 0.1 + 0.08 * Math.cos(phase * 1.7)))
-      ctx.globalAlpha = baseAlpha * (Math.round(alpha * 1000) / 1000)
+      ctx.globalAlpha = baseAlpha * (Math.round(alpha * 1000) / 1000) * WATER_EFFECT_STRENGTH
       ctx.fillRect(Math.floor(screenX + (index + 1) * columnWidth + Math.cos(phase) * 1.5), screenY, 1, size)
     }
 
     const shimmer = 0.5 + 0.5 * Math.sin((originX - originY) * this.coefficients[3] + animationPhase * 1.65)
     ctx.fillStyle = this.palette.bright
-    ctx.globalAlpha = baseAlpha * (0.16 + shimmer * 0.08)
+    ctx.globalAlpha = baseAlpha * (0.16 + shimmer * 0.08 * WATER_EFFECT_STRENGTH)
     ctx.fillRect(screenX, screenY, size, size)
     ctx.fillStyle = this.palette.shimmer
-    ctx.globalAlpha = baseAlpha * (0.08 + shimmer * 0.05)
+    ctx.globalAlpha = baseAlpha * (0.08 + shimmer * 0.05 * WATER_EFFECT_STRENGTH)
     ctx.fillRect(screenX, screenY, size, size)
     ctx.restore()
     return 11

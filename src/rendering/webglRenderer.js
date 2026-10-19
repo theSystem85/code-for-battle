@@ -2,9 +2,12 @@ import {
   TILE_COLORS,
   TILE_SIZE,
   USE_TEXTURES,
+  USE_OCEAN_WATER_RENDERING,
   WATER_EFFECT_TONE,
   WATER_EFFECT_SATURATION,
-  WATER_EFFECT_ZOOM
+  WATER_EFFECT_ZOOM,
+  WATER_EFFECT_STRENGTH,
+  WATER_EFFECT_SPEED
 } from '../config.js'
 import { PROFILER_SPAN_IDS } from '../performance/profilerIds.js'
 import { renderProfiler } from '../performance/renderProfiler.js'
@@ -12,6 +15,7 @@ import { RENDER_COUNTER_IDS, renderDiagnostics } from '../performance/renderDiag
 import { getCanvasPixelRatio } from './renderingUtils.js'
 import { bootMark } from '../ui/bootTiming.js'
 import { OCEAN_WATER_GLSL } from './oceanWaterShader.js'
+import { hasWebGlHardwareGpu, LEGACY_WATER_GLSL } from './waterRenderingMode.js'
 
 export const WATER_INSTANCE_FLOATS = 17
 export const WATER_INSTANCE_STRIDE = WATER_INSTANCE_FLOATS * 4
@@ -103,6 +107,8 @@ uniform float uTime;
 uniform float uWaterZoom;
 uniform float uWaterTone;
 uniform float uWaterSaturation;
+uniform float uOceanWaterEnabled;
+uniform float uWaterStrength;
 
 in vec2 vUV;
 in vec4 vColor;
@@ -116,6 +122,7 @@ in float vTextureSource;
 out vec4 outColor;
 
 ${OCEAN_WATER_GLSL}
+${LEGACY_WATER_GLSL}
 
 vec3 applySaturation(vec3 color, float saturation) {
   float luma = dot(color, vec3(0.2126, 0.7152, 0.0722));
@@ -143,7 +150,12 @@ void main() {
   }
 
   if (vTextureType > 1.5) {
-    vec3 waterColor = oceanWater(vWorldPos, uTime, uWaterZoom, uWaterTone, waterFootprint);
+    vec3 waterColor;
+    if (uOceanWaterEnabled > 0.5) {
+      waterColor = oceanWater(vWorldPos, uTime, uWaterZoom, uWaterTone, waterFootprint, uWaterStrength);
+    } else {
+      waterColor = legacyWater(vWorldPos, uTime, uWaterZoom, uWaterTone, uWaterStrength);
+    }
 
     float edgeDistance = 1.0;
     if (vWaterEdges.x > 0.5) edgeDistance = min(edgeDistance, vLocalPos.y);
@@ -284,6 +296,7 @@ export class GameWebGLRenderer {
     this.waterTopology = null
     this.uploadedWaterTopology = null
     this.uploadedWaterTopologyVersion = -1
+    this.hardwareGpuAvailable = false
     this.contextLost = false
     this.timerExtension = null
     this.timerQueries = []
@@ -318,6 +331,7 @@ export class GameWebGLRenderer {
     this.secondaryAtlasSize = { ...DEFAULT_ATLAS_SIZE }
     this.uploadedWaterTopology = null
     this.uploadedWaterTopologyVersion = -1
+    this.hardwareGpuAvailable = false
     this.contextLost = false
     this.timerExtension = null
     this.timerQueries.length = 0
@@ -350,6 +364,7 @@ export class GameWebGLRenderer {
     if (this.program) return true
 
     const gl = this.gl
+    this.hardwareGpuAvailable = hasWebGlHardwareGpu(gl)
     bootMark('webgl-shader:start')
     this.program = createProgram(gl, VERTEX_SHADER_SOURCE, FRAGMENT_SHADER_SOURCE)
     bootMark('webgl-shader:end')
@@ -388,6 +403,8 @@ export class GameWebGLRenderer {
       waterZoom: gl.getUniformLocation(this.program, 'uWaterZoom'),
       waterTone: gl.getUniformLocation(this.program, 'uWaterTone'),
       waterSaturation: gl.getUniformLocation(this.program, 'uWaterSaturation'),
+      oceanWaterEnabled: gl.getUniformLocation(this.program, 'uOceanWaterEnabled'),
+      waterStrength: gl.getUniformLocation(this.program, 'uWaterStrength'),
       atlas: gl.getUniformLocation(this.program, 'uAtlas'),
       secondaryAtlas: gl.getUniformLocation(this.program, 'uSecondaryAtlas')
     }
@@ -455,6 +472,7 @@ export class GameWebGLRenderer {
   }
 
   handleContextLost() {
+    this.hardwareGpuAvailable = false
     this.contextLost = true
     this.program = null
     this.uniformLocations = null
@@ -470,6 +488,7 @@ export class GameWebGLRenderer {
 
   handleContextRestored(gl = this.gl) {
     this.gl = gl
+    this.hardwareGpuAvailable = false
     this.contextLost = false
     this.program = null
     this.uniformLocations = null
@@ -1046,12 +1065,14 @@ export class GameWebGLRenderer {
     gl.uniform2f(locations.scroll, scrollX, scrollY)
     gl.uniform1f(locations.tileSize, tileSize)
     gl.uniform1f(locations.tileStep, tileStep)
-    gl.uniform1f(locations.time, sampledTime)
+    gl.uniform1f(locations.time, sampledTime * WATER_EFFECT_SPEED)
     gl.uniform1f(locations.waterZoom, WATER_EFFECT_ZOOM)
     gl.uniform1f(locations.waterTone, WATER_EFFECT_TONE)
     gl.uniform1f(locations.waterSaturation, WATER_EFFECT_SATURATION)
-    this.stats.uniformUploadBytes += 40
-    this.diagnostics.addCounter(RENDER_COUNTER_IDS.UPLOAD_BYTES, 40)
+    gl.uniform1f(locations.waterStrength, WATER_EFFECT_STRENGTH)
+    gl.uniform1f(locations.oceanWaterEnabled, USE_OCEAN_WATER_RENDERING && this.hardwareGpuAvailable ? 1 : 0)
+    this.stats.uniformUploadBytes += 48
+    this.diagnostics.addCounter(RENDER_COUNTER_IDS.UPLOAD_BYTES, 48)
     this.capabilityUpdate.devicePixelRatio = pixelRatio
     this.diagnostics.setCapabilities(this.capabilityUpdate)
 
@@ -1179,12 +1200,14 @@ export class GameWebGLRenderer {
     gl.uniform2f(locations.scroll, scrollX, scrollY)
     gl.uniform1f(locations.tileSize, tileSize)
     gl.uniform1f(locations.tileStep, tileStep)
-    gl.uniform1f(locations.time, Number.isFinite(options.time)
+    gl.uniform1f(locations.time, (Number.isFinite(options.time)
       ? options.time
-      : (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now()))
+      : (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now())) * WATER_EFFECT_SPEED)
     gl.uniform1f(locations.waterZoom, WATER_EFFECT_ZOOM)
     gl.uniform1f(locations.waterTone, WATER_EFFECT_TONE)
     gl.uniform1f(locations.waterSaturation, WATER_EFFECT_SATURATION)
+    gl.uniform1f(locations.waterStrength, WATER_EFFECT_STRENGTH)
+    gl.uniform1f(locations.oceanWaterEnabled, USE_OCEAN_WATER_RENDERING && this.hardwareGpuAvailable ? 1 : 0)
 
     gl.activeTexture(gl.TEXTURE0)
     gl.bindTexture(gl.TEXTURE_2D, this.atlasTexture)
@@ -1252,9 +1275,9 @@ export class GameWebGLRenderer {
     const geometryUploadBytes = translations.byteLength + uvData.byteLength + colors.byteLength +
       textureType.byteLength + textureSource.byteLength + waterEdges.byteLength + clipOrientation.byteLength
     this.stats.topologyUploadBytes += geometryUploadBytes
-    this.stats.uniformUploadBytes += 40
+    this.stats.uniformUploadBytes += 48
     this.stats.drawCalls++
-    this.diagnostics.addCounter(RENDER_COUNTER_IDS.UPLOAD_BYTES, geometryUploadBytes + 40)
+    this.diagnostics.addCounter(RENDER_COUNTER_IDS.UPLOAD_BYTES, geometryUploadBytes + 48)
     this.diagnostics.addCounter(RENDER_COUNTER_IDS.DRAW_CALLS)
     this.capabilityUpdate.devicePixelRatio = pixelRatio
     this.diagnostics.setCapabilities(this.capabilityUpdate)
