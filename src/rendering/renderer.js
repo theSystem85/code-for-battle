@@ -2,7 +2,7 @@ import { withTimeout } from '../utils/assetLoading.js'
 import { renderCityHealthBars } from '../game/cityBuildings.js'
 import { setDecalSurfaceBlocker } from '../game/tileDecals.js'
 import { factoryExitVisibility } from '../game/factoryExit.js'
-import { renderFactoryInterior, renderFactoryExitEffects, clipOutsideFactoryBody } from './factoryExitRenderer.js'
+import { renderFactoryExitEffects, clipOutsideFactoryBody } from './factoryExitRenderer.js'
 // rendering/renderer.js
 import { TextureManager } from './textureManager.js'
 import { performanceMonitor } from '../performance/performanceMonitor.js'
@@ -607,7 +607,6 @@ export class Renderer {
     // Ground track marks sit on the terrain, beneath buildings, wrecks and units.
     this.trackMarksRenderer.render(gameCtx, scrollOffset, gameState)
     const exitRegistry = this.buildingRenderer.preparedSpriteRegistry
-    for (const building of visibleBuildings) renderFactoryInterior(gameCtx, building, scrollOffset, exitRegistry)
     for (const unit of visibleExitingUnits) {
       const visibility = factoryExitVisibility(unit)
       if (visibility <= 0) continue

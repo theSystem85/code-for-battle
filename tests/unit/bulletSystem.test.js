@@ -1294,6 +1294,33 @@ describe('Bullet System', () => {
       expect(recordCriticalDamageSoundPlayed).toHaveBeenCalledWith(playerUnit, 1800)
     })
 
+    it.each(['tank', 'tank_v1', 'tank-v2', 'tank-v3', 'tank_v2', 'tank_v3', 'lightTank', 'rocketTank', 'howitzer'])('[U05402] gives an M2 shot one 1% casualty roll against %s', type => {
+      for (const roll of [0.009999, 0.01, 0.1]) {
+        gameRandom.mockReturnValue(roll)
+        const target = createMockUnit({ type, crew: { driver: true, commander: true, gunner: true, loader: true } })
+        const bullet = createMockBullet({
+          x: target.x + TILE_SIZE / 2, y: target.y + TILE_SIZE / 2,
+          vx: 0, vy: 0, baseDamage: 6, noSplash: true,
+          shooter: { id: 'm2', owner: 'player', type: 'lightTank' }
+        })
+        updateBullets([bullet], [target], [], createGameState(), mapGrid)
+        expect(target.health).toBeLessThan(100)
+        expect(Object.values(target.crew).filter(alive => !alive)).toHaveLength(roll < 0.01 ? 1 : 0)
+      }
+    })
+
+    it('[U05403] selects only surviving crew for an M2 casualty', () => {
+      gameRandom.mockReturnValue(0)
+      const target = createMockUnit({ crew: { driver: false, commander: true, gunner: false, loader: true } })
+      const bullet = createMockBullet({
+        x: target.x + TILE_SIZE / 2, y: target.y + TILE_SIZE / 2,
+        vx: 0, vy: 0, baseDamage: 6, noSplash: true,
+        shooter: { id: 'm2', owner: 'player', type: 'lightTank' }
+      })
+      updateBullets([bullet], [target], [], createGameState(), mapGrid)
+      expect(target.crew).toEqual({ driver: false, commander: false, gunner: false, loader: true })
+    })
+
     it('[U00773] applies extra explosion damage when rocket turret rockets hit airborne apaches', () => {
       const apache = createMockUnit({
         id: 'apache-air-1',

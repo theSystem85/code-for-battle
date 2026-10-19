@@ -7,7 +7,7 @@ export const COMBAT_CONFIG = {
   },
   FIRE_RATES: {
     STANDARD: 4000,  // Doubled from 2000ms to 4000ms
-    LIGHT_TANK: 1000, // Light tank autocannon: rapid fire, low damage per round
+    LIGHT_TANK: 3000, // One third of the previous firing rate (one shot per second)
     ROCKET: 12000    // Doubled from 6000ms to 12000ms
   },
   APACHE: {
@@ -33,6 +33,7 @@ export const COMBAT_CONFIG = {
   // M2 Bradley-style 25 mm autocannon: fast, direct-fire kinetic rounds with a tiny impact
   // flash and no splash damage. SPEED is in px per frame like TANK_BULLET_SPEED (8).
   LIGHT_TANK_PROJECTILE: {
+    CREW_KILL_CHANCE: 0.01, // One roll per hit, at most one casualty
     SPEED: 16,
     IMPACT_VISUAL_RADIUS_TILES: 0.35,
     SPREAD_RADIANS: 0.005

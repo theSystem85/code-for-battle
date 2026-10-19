@@ -1,3 +1,4 @@
+import { COMBAT_CONFIG } from './unitCombat/combatConfig.js'
 import { getCityAtWorld, applyCityDamage } from './cityBuildings.js'
 import { gameState } from '../gameState.js'
 import { recordMusicAttack } from '../audio/musicDirector.js'
@@ -797,9 +798,15 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
               updateUnitSpeedModifier(unit)
               let crewLossOccurred = false
               if (unit.crew) {
+                const isM2Hit = (bullet.originType || bullet.shooter?.type) === 'lightTank'
+                const members = Object.keys(unit.crew)
+                // A single 1% roll for the entire shot, independent of crew size.
+                const m2Casualty = isM2Hit && gameRandom() < COMBAT_CONFIG.LIGHT_TANK_PROJECTILE.CREW_KILL_CHANCE
+                  ? members.filter(member => unit.crew[member]) : null
+                const casualty = m2Casualty?.length ? m2Casualty[Math.floor(gameRandom() * m2Casualty.length)] : null
                 const crewKillChance = unit.type === 'destroyer' ? 0.05 : CREW_KILL_CHANCE
-                for (const member of Object.keys(unit.crew)) {
-                  if (unit.crew[member] && gameRandom() < crewKillChance) {
+                for (const member of members) {
+                  if (unit.crew[member] && (isM2Hit ? member === casualty : gameRandom() < crewKillChance)) {
                     unit.crew[member] = false
                     crewLossOccurred = true
                     // Only play sound for human player units
