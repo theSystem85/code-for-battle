@@ -1022,6 +1022,33 @@ describe('Bullet System', () => {
       expect(bullets).toHaveLength(0)
     })
 
+    it.each(['unit', 'building', 'factory', 'wreck', 'miss'])('[U05406] keeps M2 %s impacts decal-free while preserving normal tank decals and impact flashes', kind => {
+      for (const source of [
+        { type: 'lightTank' },
+        { type: 'tank_v1', originType: 'lightTank' },
+        { type: 'tank_v1' }
+      ]) {
+        vi.clearAllMocks()
+        gameRandom.mockReturnValue(0)
+        const isM2 = source.type === 'lightTank' || source.originType === 'lightTank'
+        const target = kind === 'unit' ? createMockUnit({ tileX: 2, tileY: 2 })
+          : kind === 'wreck' ? createMockWreck({ x: 64, y: 64 })
+            : kind === 'factory' ? createMockFactory({ x: 2, y: 2, width: 1, height: 1 })
+              : createMockBuilding({ x: 2, y: 2, width: 1, height: 1 })
+        const state = createGameState({ simulationTime: kind === 'miss' ? 4001 : 100,
+          buildings: kind === 'building' ? [target] : [], unitWrecks: kind === 'wreck' ? [target] : [] })
+        const bullet = createMockBullet({ x: 80, y: 80, vx: 0, vy: 0, startTime: 1,
+          shooter: { id: 'shooter', owner: 'player', type: source.type }, originType: source.originType, noSplash: isM2 })
+        const bullets = [bullet]
+        updateBullets(bullets, kind === 'unit' ? [target] : [], kind === 'factory' ? [target] : [], state, mapGrid)
+        expect(bullets).toHaveLength(0)
+        expect(triggerExplosion).toHaveBeenCalledTimes(1)
+        expect(setWorldDecal).toHaveBeenCalledTimes(isM2 ? 0 : 1)
+        if (kind === 'wreck') expect(applyDamageToWreck).toHaveBeenCalled()
+        else if (kind !== 'miss') expect(target.health).toBeLessThan(target.maxHealth)
+      }
+    })
+
     it('[U00759] stamps a crater decal when a howitzer shell detonates', () => {
       const bullet = createMockBullet({
         parabolic: true,

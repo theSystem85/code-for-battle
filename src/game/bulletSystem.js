@@ -57,6 +57,8 @@ function shouldSpawnImpactDecal(bullet) {
     bullet.shooter &&
     typeof bullet.shooter === 'object' &&
     typeof bullet.shooter.type === 'string' &&
+    bullet.shooter.type !== 'lightTank' &&
+    bullet.originType !== 'lightTank' &&
     bullet.projectileType !== 'ammoParticle'
   )
 }
