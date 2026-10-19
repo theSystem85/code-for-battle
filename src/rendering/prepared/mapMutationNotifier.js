@@ -28,6 +28,8 @@ export const M10_RENDER_DEPENDENCIES = Object.freeze({
     'biomeBlend.angle',
     'biomeBlend.cornerWeights',
     'biomeBlend.featherPixels',
+    'biomeBlend.layers',
+    'biomeBlend.layersKey',
     'building'
   ]),
   resource: Object.freeze(['ore', 'oreDensity', 'seedCrystal', 'seedCrystalDensity']),

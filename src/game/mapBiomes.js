@@ -55,6 +55,64 @@ function getShorelineCornerWeights(grid, oceanDistances, width, x, y, shorelineW
   })
 }
 
+// Resolve all materials before blending. Sampling the already blended tiles
+// would make coverage depend on traversal order and lose third/fourth biomes.
+function addSharedBiomeTransitions(grid, surfaces, featherPixels) {
+  for (let y = 0; y < grid.length; y++) for (let x = 0; x < grid[y].length; x++) {
+    const tile = grid[y][x]
+    if (!isBiomeTerrainTile(tile)) continue
+    const weights = Object.fromEntries(BIOMES.map(biome => [biome, [0, 0, 0, 0]]))
+    for (let corner = 0; corner < 4; corner++) {
+      const [cx, cy] = BIOME_BLEND_CORNERS[corner]
+      let count = 0
+      for (let dy = cy - 1; dy <= cy; dy++) for (let dx = cx - 1; dx <= cx; dx++) {
+        if (!isBiomeTerrainTile(grid[y + dy]?.[x + dx])) continue
+        weights[surfaces[y + dy][x + dx]][corner]++
+        count++
+      }
+      for (const biome of BIOMES) weights[biome][corner] /= count
+    }
+    const materials = BIOMES.filter(biome => weights[biome].some(weight => weight > 0))
+    if (materials.length < 2) {
+      tile.biome = surfaces[y][x]
+      delete tile.biomeBlend
+      continue
+    }
+    const underlayWeights = [0, 0, 0, 0]
+    const layers = materials.map(biome => {
+      const layer = { biome, alpha: 0.5, cornerWeights: weights[biome], underlayWeights: [...underlayWeights] }
+      for (let corner = 0; corner < 4; corner++) underlayWeights[corner] += weights[biome][corner]
+      return layer
+    })
+    tile.biomeBlend ||= { biome: surfaces[y][x], alpha: 0.5, angle: 0, featherPixels, cornerWeights: weights[surfaces[y][x]] }
+    tile.biomeBlend.layers = layers
+    // Reuse one immutable signature in the legacy chunk validator.
+    tile.biomeBlend.layersKey = biomeLayersSignature(layers)
+  }
+}
+
+export function biomeLayersSignature(layers) {
+  let hash = 2166136261
+  for (const layer of layers) {
+    hash = Math.imul(hash ^ BIOMES.indexOf(layer.biome), 16777619)
+    for (const weight of [...layer.cornerWeights, ...layer.underlayWeights]) {
+      hash = Math.imul(hash ^ Math.round(weight * 12), 16777619)
+    }
+  }
+  return hash >>> 0
+}
+
+// Older saves contain the original material in the single blend's source.
+// Upgrade once at load time so existing maps receive the same seam repair.
+export function upgradeBiomeTransitions(grid) {
+  if (!grid.some(row => row.some(tile => isBiomeTerrainTile(tile) && tile.biomeBlend && !tile.biomeBlend.layers))) return
+  const surfaces = grid.map(row => row.map(tile => {
+    const biome = tile.biomeBlend?.biome || tile.biome
+    return BIOMES.includes(biome) ? biome : 'grass'
+  }))
+  addSharedBiomeTransitions(grid, surfaces, 8)
+}
+
 function seededRandom(seed) {
   let state = (Number(seed) || 1) >>> 0
   return () => {
@@ -300,6 +358,13 @@ function assignMapBiomesInTransaction(grid, seed, rawSettings) {
     }
   }
 
+  const surfaces = Array.from({ length: height }, (_, y) => Array.from({ length: width }, (_, x) => {
+    if (settings.snowOnPlateaus && isPlateauSurfaceTile(grid, x, y)) return 'snow'
+    if (grid[y][x].type !== 'water' && settings.shorelineWidth > 0 &&
+      (oceanDistances?.[y * width + x] ?? Infinity) <= settings.shorelineWidth) return 'sand'
+    return colors[regions[y][x]]
+  }))
+
   for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
     const tile = grid[y][x]
     delete tile.shorelineBiome
@@ -380,6 +445,7 @@ function assignMapBiomesInTransaction(grid, seed, rawSettings) {
       delete tile.biomeBlend
     }
   }
+  addSharedBiomeTransitions(grid, surfaces, settings.transitionPixels)
 }
 
 export { BIOMES }

@@ -243,3 +243,31 @@ describe('terrain preparation lifecycle', () => {
     })).rejects.toThrow(/usable dimensions/)
   })
 })
+
+
+it('[U05413] prepares distinct conditional masks for every material at a multi-biome junction', async() => {
+  const pipeline = new TerrainPreparationPipeline({
+    byteBudget: createTerrainByteBudget(limits()),
+    assetLoader: async() => ({ naturalWidth: 4, naturalHeight: 4 }),
+    canvasFactory: size => {
+      const canvas = { width: size, height: size }
+      canvas.getContext = () => ({
+        createImageData: (width, height) => ({ data: new Uint8ClampedArray(width * height * 4) }),
+        putImageData: pixels => { canvas.pixels = pixels.data }
+      })
+      return canvas
+    }
+  })
+  const layer = (biome, weight, underlay) => ({ biome, alpha: 0.5,
+    cornerWeights: Array(4).fill(weight), underlayWeights: Array(4).fill(underlay) })
+  const grid = [[{ type: 'land', biome: 'grass', biomeBlend: {
+    biome: 'snow', alpha: 0.5,
+    layers: [layer('grass', 0.5, 0), layer('soil', 0.25, 0.5), layer('snow', 0.25, 0.75)]
+  } }]]
+  const prepared = await pipeline.prepare({ grid, generation: 1, assetGeneration: 1, density: 2, tileSize: 32, assets })
+  const masks = [...prepared.resources.preparedMasks.values()]
+  expect(masks).toHaveLength(2)
+  expect(masks.map(mask => mask.width)).toEqual([64, 64])
+  expect(masks.map(mask => mask.pixels[3])).toEqual([85, 64])
+  expect(prepared.byteUsage.preparedRasterBytes).toBe(2 * 64 * 64 * 4)
+})

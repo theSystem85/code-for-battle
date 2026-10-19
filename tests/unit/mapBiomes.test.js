@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { assignMapBiomes } from '../../src/game/mapBiomes.js'
+import { assignMapBiomes, upgradeBiomeTransitions } from '../../src/game/mapBiomes.js'
+import { biomeTransitionCoverage } from '../../src/rendering/organicTerrain.js'
 
 function makeGrid(width, height, type = 'land') {
   return Array.from({ length: height }, () => Array.from({ length: width }, () => ({ type })))
@@ -154,4 +155,56 @@ describe('mixed map biomes', () => {
     expect(grid[3][10].biomeBlend?.biome).toBe('sand')
     expect(grid[4][10].biomeBlend?.biome).not.toBe('sand')
   })
+})
+
+function materialCoverage(tile, u, v) {
+  const result = { grass: 0, soil: 0, sand: 0, snow: 0 }
+  const layers = tile.biomeBlend?.layers
+  result[layers?.[0]?.biome || tile.biome] = 1
+  for (const layer of layers?.slice(1) || []) {
+    const alpha = biomeTransitionCoverage(layer.cornerWeights, u, v, layer.underlayWeights)
+    for (const biome of Object.keys(result)) result[biome] *= 1 - alpha
+    result[layer.biome] += alpha
+  }
+  return Object.values(result)
+}
+
+it('[U05411] keeps every material continuous across curved shores and multi-biome junctions', () => {
+  const grid = makeGrid(60, 60)
+  for (let y = 0; y < 60; y++) for (let x = 0; x < 60; x++) {
+    if (x < 5 + Math.floor(3 * Math.sin(y / 4))) grid[y][x].type = 'water'
+  }
+  const topology = grid.map(row => row.map(tile => tile.type))
+  assignMapBiomes(grid, 9123, { ...mixedSettings, mapBiomeRegionCount: 32 })
+  let junctions = 0, shorelineEdges = 0
+  for (let y = 0; y < 60; y++) for (let x = 0; x < 60; x++) {
+    const tile = grid[y][x]
+    if (tile.type === 'water') continue
+    if (tile.biomeBlend?.layers?.length >= 3) junctions++
+    for (const [dx, dy] of [[1, 0], [0, 1]]) {
+      const neighbor = grid[y + dy]?.[x + dx]
+      if (!neighbor || neighbor.type === 'water') continue
+      if (tile.shorelineBiome || neighbor.shorelineBiome) shorelineEdges++
+      for (const t of [0, 0.25, 0.5, 0.75, 1]) {
+        const left = materialCoverage(tile, dx ? 1 : t, dy ? 1 : t)
+        const right = materialCoverage(neighbor, dx ? 0 : t, dy ? 0 : t)
+        left.forEach((coverage, i) => expect(coverage).toBeCloseTo(right[i], 10))
+        expect(left.reduce((sum, value) => sum + value, 0)).toBeCloseTo(1, 10)
+      }
+    }
+  }
+  expect(junctions).toBeGreaterThan(0)
+  expect(shorelineEdges).toBeGreaterThan(0)
+  expect(grid.map(row => row.map(tile => tile.type))).toEqual(topology)
+})
+
+it('[U05412] upgrades old single-source transitions once without changing prepared layer identities', () => {
+  const grid = makeGrid(3, 3)
+  for (const row of grid) for (const tile of row) tile.biome = 'grass'
+  grid[1][1].biomeBlend = { biome: 'sand', alpha: 0.5, cornerWeights: [0.5, 1, 1, 0.5] }
+  upgradeBiomeTransitions(grid)
+  expect(grid[1][1].biomeBlend.layers.map(layer => layer.biome)).toEqual(['grass', 'sand'])
+  const layers = grid[1][1].biomeBlend.layers
+  upgradeBiomeTransitions(grid)
+  expect(grid[1][1].biomeBlend.layers).toBe(layers)
 })

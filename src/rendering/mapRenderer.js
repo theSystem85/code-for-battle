@@ -1149,7 +1149,7 @@ export class MapRenderer {
         mixSignature(tile.seedCrystalDensity || 0)
         mixSignature(tile.biome || '')
         mixSignature(tile.shorelineBiome || '')
-        mixSignature(tile.biomeBlend?.biome || '')
+        mixSignature(tile.biomeBlend?.layersKey || tile.biomeBlend?.biome || '')
         mixSignature(tile.biomeBlend?.alpha || 0)
         mixSignature(tile.biomeBlend?.angle || 0)
         mixSignature(tile.biomeBlend?.featherPixels || 0)
@@ -1771,7 +1771,7 @@ export class MapRenderer {
     this.drawIntegratedTileImage(blendContext, integratedTile, 0, 0)
     blendContext.globalCompositeOperation = 'destination-in'
     blendContext.drawImage(Array.isArray(blend.cornerWeights) && blend.cornerWeights.length === 4
-      ? this.organicTerrain.getBiomeTransitionMask(TILE_SIZE, blend.cornerWeights)
+      ? this.organicTerrain.getBiomeTransitionMask(TILE_SIZE, blend.cornerWeights, blend.underlayWeights)
       : this.organicTerrain.getBiomeBlendMask(TILE_SIZE, tileX, tileY, blend), 0, 0)
     blendContext.globalCompositeOperation = 'source-over'
     ctx.drawImage(this.integratedBiomeBlendCanvas, screenX, screenY)
@@ -1885,8 +1885,17 @@ export class MapRenderer {
         }
         const blend = mapGrid?.[tileY]?.[tileX]?.biomeBlend
         if (type === 'land' && blend?.biome && blend.alpha > 0) {
-          const blendTile = this.textureManager.getIntegratedTileForMapTile('land', tileX, tileY, { mapGrid, biomeTag: blend.biome })
-          this.drawIntegratedBiomeTransition(ctx, blendTile, screenX, screenY, tileX, tileY, blend)
+          if (blend.layers) {
+            for (let i = 0; i < blend.layers.length; i++) {
+              const layer = blend.layers[i]
+              const blendTile = this.textureManager.getIntegratedTileForMapTile('land', tileX, tileY, { mapGrid, biomeTag: layer.biome })
+              if (i === 0) this.drawIntegratedTileImage(ctx, blendTile, screenX, screenY)
+              else this.drawIntegratedBiomeTransition(ctx, blendTile, screenX, screenY, tileX, tileY, layer)
+            }
+          } else {
+            const blendTile = this.textureManager.getIntegratedTileForMapTile('land', tileX, tileY, { mapGrid, biomeTag: blend.biome })
+            this.drawIntegratedBiomeTransition(ctx, blendTile, screenX, screenY, tileX, tileY, blend)
+          }
         }
         return
       }

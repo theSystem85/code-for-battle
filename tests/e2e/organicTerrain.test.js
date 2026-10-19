@@ -9,7 +9,7 @@ test('[E00081] all eight organic shoreline corners have continuous rendered alph
     const { TextureManager } = await import('/src/rendering/textureManager.js')
     const manager = new TextureManager()
     const renderer = new MapRenderer(manager)
-    await Promise.all(Object.values(renderer.organicTerrain.biomeImages).flat().map(image => image.decode()))
+    await renderer.organicTerrain.readiness
     renderer.useOrganicTerrain = () => true
     const gallery = document.createElement('canvas')
     gallery.width = 4 * 224
@@ -64,7 +64,7 @@ test('[E00082] land biome turns share junction coverage', async({ page }) => {
     const manager = new TextureManager()
     await new Promise(resolve => manager.preloadAllTextures(resolve))
     const renderer = new MapRenderer(manager)
-    await Promise.all([renderer.organicTerrain.image.decode(), renderer.organicTerrain.details.decode()])
+    await renderer.organicTerrain.readiness
 
     const biomeGrid = Array.from({ length: 6 }, () => Array.from({ length: 6 }, () => ({ type: 'land', biome: 'target' })))
     for (let y = 0; y < 6; y++) for (let x = 0; x < 6; x++) if (x < 2 || y < 2) biomeGrid[y][x].biome = 'source'
@@ -127,10 +127,17 @@ test('[E00083] organic terrain is identical across chunk seams and map edits', a
     const manager = new TextureManager()
     await new Promise(resolve => manager.preloadAllTextures(resolve))
     const renderer = new MapRenderer(manager)
-    await Promise.all([renderer.organicTerrain.image.decode(), renderer.organicTerrain.details.decode(), renderer.organicTerrain.cliffs.decode()])
+    await renderer.organicTerrain.readiness
     const grid = Array.from({ length: 32 }, (_, y) => Array.from({ length: 32 }, (_, x) => ({
       type: x > 22 + Math.floor(Math.sin(y / 3) * 2) ? 'water' : Math.abs(x - y) < 2 ? 'street' : x > 7 && x < 23 && y > 4 && y < 28 ? 'rock' : 'land'
     })))
+    const { assignMapBiomes } = await import('/src/game/mapBiomes.js')
+    assignMapBiomes(grid, 9123, {
+      activeSpriteSheetBiomeTag: 'mixed', mapBiomeRegionCount: 16,
+      mapBiomeWeights: { grass: 25, soil: 25, sand: 25, snow: 25 },
+      mapSnowOnPlateaus: false
+    })
+    renderer.ensureCacheValidity(grid, true)
     const before = JSON.stringify(grid)
     const options = { skipWaterBase: true, skipWaterSot: true }
     const direct = document.createElement('canvas')
@@ -262,7 +269,7 @@ test('[E00086] mixed-biome cached terrain stays within the static chunk-bake bud
     const manager = new TextureManager()
     await new Promise(resolve => manager.preloadAllTextures(resolve))
     const renderer = new MapRenderer(manager)
-    await Promise.all(Object.values(renderer.organicTerrain.biomeImages).flat().map(image => image.decode()))
+    await renderer.organicTerrain.readiness
     const buildGrid = () => Array.from({ length: 100 }, (_, y) => Array.from({ length: 100 }, (_, x) => ({
       type: x > 90 + Math.floor(Math.sin(y / 5) * 3) ? 'water' : x > 35 && x < 65 && y > 20 && y < 80 ? 'rock' : 'land'
     })))
@@ -337,7 +344,7 @@ test('[E00088] outward and inward SOT corners share stitched bounds in all four 
     const { getSotDrawBounds } = await import('/src/rendering/organicTerrain.js')
     const { MapRenderer } = await import('/src/rendering/mapRenderer.js')
     const renderer = new MapRenderer({ integratedSpriteSheetMode: false })
-    await renderer.organicTerrain.details.decode()
+    await renderer.organicTerrain.readiness
 
     const orientations = ['top-left', 'top-right', 'bottom-right', 'bottom-left']
     const triangleCalls = []
@@ -429,7 +436,7 @@ test('[E00090] CPU animated water does not erase the cached grass shore', async(
     const manager = new TextureManager()
     await new Promise(resolve => manager.preloadAllTextures(resolve))
     const renderer = new MapRenderer(manager)
-    await Promise.all([renderer.organicTerrain.image.decode(), renderer.organicTerrain.details.decode(), renderer.organicTerrain.cliffs.decode()])
+    await renderer.organicTerrain.readiness
     const grid = Array.from({ length: 16 }, () => Array.from({ length: 16 }, (_, x) => ({ type: x < 8 ? 'land' : 'water' })))
     const canvas = document.createElement('canvas'); canvas.width = canvas.height = 512
     const ctx = canvas.getContext('2d')
@@ -438,4 +445,90 @@ test('[E00090] CPU animated water does not erase the cached grass shore', async(
   })
   expect(pixel[3]).toBe(255)
   expect(pixel[1] - pixel[2]).toBeGreaterThan(10)
+})
+
+test('[E00208] curved beaches and multi-biome junctions render without tile-edge color jumps in both terrain paths', async({ page }) => {
+  await page.goto('/?seed=4')
+  const result = await page.evaluate(async() => {
+    const { assignMapBiomes } = await import('/src/game/mapBiomes.js')
+    const { OrganicTerrain } = await import('/src/rendering/organicTerrain.js')
+    const { MapRenderer } = await import('/src/rendering/mapRenderer.js')
+    const colors = { grass: '#20c030', soil: '#a04020', sand: '#f0d080', snow: '#d0e0ff' }
+    const images = Object.fromEntries(Object.entries(colors).map(([biome, color]) => {
+      const image = document.createElement('canvas')
+      image.width = image.height = 32
+      const ctx = image.getContext('2d')
+      ctx.fillStyle = color
+      ctx.fillRect(0, 0, 32, 32)
+      return [biome, { image, rect: { x: 0, y: 0, width: 32, height: 32 }, tags: [] }]
+    }))
+    const terrain = Object.create(OrganicTerrain.prototype)
+    terrain.biomeBlendMasks = new Map()
+    terrain.biomeTransitionTileCache = new Map()
+    terrain.drawBiome = (ctx, _x, _y, sx, sy, size, biome) => {
+      ctx.fillStyle = colors[biome]
+      ctx.fillRect(sx, sy, size, size)
+    }
+    const renderer = Object.create(MapRenderer.prototype)
+    renderer.organicTerrain = terrain
+    renderer.canUseOffscreen = true
+    renderer.textureManager = {
+      integratedSpriteSheetMode: true,
+      getIntegratedTileForMapTile: (_type, _x, _y, { biomeTag }) => images[biomeTag]
+    }
+    renderer.useOrganicTerrain = () => false
+    let maxJump = 0, edges = 0, junctions = 0, partialPixels = 0, holes = 0, worst = null
+    for (let rotation = 0; rotation < 4; rotation++) {
+      let grid = Array.from({ length: 36 }, (_, y) => Array.from({ length: 36 }, (_, x) => ({
+        type: x < 4 + Math.floor(3 * Math.sin(y / 3)) ? 'water' : 'land'
+      })))
+      for (let r = 0; r < rotation; r++) grid = grid[0].map((_, x) => grid.map(row => row[x]).reverse())
+      assignMapBiomes(grid, 9123, {
+        activeSpriteSheetBiomeTag: 'mixed', mapBiomeRegionCount: 32,
+        mapBiomeWeights: { grass: 25, soil: 25, sand: 25, snow: 25 },
+        mapShorelineWidth: 2, mapSnowOnPlateaus: false
+      })
+      renderer.groupingMapGrid = grid
+      junctions += grid.flat().filter(tile => tile.biomeBlend?.layers?.length >= 3).length
+      for (const integrated of [false, true]) {
+        const canvas = document.createElement('canvas')
+        canvas.width = canvas.height = 36 * 32
+        const ctx = canvas.getContext('2d')
+        for (let y = 0; y < 36; y++) for (let x = 0; x < 36; x++) {
+          if (grid[y][x].type === 'water') continue
+          if (integrated) renderer.drawTileBase(ctx, x, y, 'land', x * 32, y * 32, true, null)
+          else terrain.drawGrass(ctx, x, y, x * 32, y * 32, 32, grid[y][x])
+        }
+        const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data
+        const pixelAt = (x, y) => (y * canvas.width + x) * 4
+        for (let y = 0; y < 36; y++) for (let x = 0; x < 36; x++) {
+          if (grid[y][x].type === 'water') continue
+          const center = pixelAt(x * 32 + 16, y * 32 + 16)
+          if (pixels[center + 3] !== 255) holes++
+          if (grid[y][x].biomeBlend?.layers) partialPixels++
+          for (const [dx, dy] of [[1, 0], [0, 1]]) {
+            if (grid[y + dy]?.[x + dx]?.type !== 'land') continue
+            edges++
+            for (let t = 0; t < 32; t++) {
+              const a = pixelAt(x * 32 + (dx ? 31 : t), y * 32 + (dy ? 31 : t))
+              const b = pixelAt(x * 32 + (dx ? 32 : t), y * 32 + (dy ? 32 : t))
+              for (let channel = 0; channel < 4; channel++) {
+                const jump = Math.abs(pixels[a + channel] - pixels[b + channel])
+                if (jump > maxJump) {
+                  maxJump = jump
+                  worst = { integrated, rotation, x, y, dx, dy, t, channel, a: [...pixels.slice(a, a + 4)], b: [...pixels.slice(b, b + 4)], tile: grid[y][x], neighbor: grid[y + dy][x + dx] }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    return { maxJump, edges, junctions, partialPixels, holes, worst }
+  })
+  expect(result.edges).toBeGreaterThan(10000)
+  expect(result.junctions).toBeGreaterThan(0)
+  expect(result.partialPixels).toBeGreaterThan(0)
+  expect(result.holes).toBe(0)
+  expect(result.maxJump, JSON.stringify(result.worst)).toBeLessThanOrEqual(2)
 })
