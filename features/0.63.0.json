@@ -1,0 +1,27 @@
+{
+  "version": "0.63.0",
+  "features": [
+    "The dev test deploy tells you when an update is available: style changes load live with no reload, and code changes reload with your game restored once you agree.",
+    "Safe dev deploys can replace compatible game logic between simulation ticks without reloading.",
+    "Saved battles now migrate safely across live game-state schema updates.",
+    "Reveal sandy coastal shallows and tune waves in the new Graphics settings tab.",
+    "Choose classic or ocean water and adjust view height, wave strength and animation speed in Graphics settings."
+  ],
+  "improvements": [
+    "The money and power numbers in the phone status bar are larger and bolder, matching the taller bars.",
+    "Adjustable coastal shallows gradient length slider in meters in graphics settings.",
+    "Vehicles leave factory animations on the first clear outside tile; added garage door shading is removed.",
+    "Story intro narration stays clear above a substantially ducked music bed, which returns smoothly after the briefing.",
+    "Loading now advances smoothly based on recent startup times, wraps update notes, and uses the blurred landing-page battlefield backdrop.",
+    "M2 fires at one third of its former rate, with a 1% chance per hit of one crew casualty.",
+    "M2 autocannon impacts no longer leave ground decals.",
+    "Dynamic water gains rolling swells, sun glints, subtle crest foam and consistent wave size across displays.",
+    "Update notifications show readable full-width text below their action buttons."
+  ],
+  "bugfixes": [
+    "CSS-only dev updates now reach open games reliably without a reload.",
+    "The money and power bars on phones now fill the whole status bar height instead of a thin strip, with the text centered.",
+    "Safe live updates no longer ask for a reload, and the portrait build bar now fits beside its wider category tab.",
+    "Smooth sharp tile edges at curved beaches and intersections of multiple biomes."
+  ]
+}
