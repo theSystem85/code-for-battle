@@ -21,6 +21,10 @@ RULES for agentic codeing
 19) Codebase prompt-history entries are always written in English, regardless of the language of the user's message. When the user wrote the request in German or any other language, translate it into English in the new file under `prompt-history/`. Do not rewrite older prompt-history files.
 20) Before every commit, run `npm run lint` and fix every reported issue. Never weaken, disable, or skip lint rules to make CI pass, and never omit the lint step from CI.
 
+## Standing execution preferences
+
+Patrick preauthorizes Vitest runs in this repository, including required test subprocesses. Do not ask for confirmation for routine Vitest execution. Sandbox/tool enforcement may still require the supported permission mechanism; this preference does not disable platform controls.
+
 ## Git / Workflow
 
 Patrick has pre-authorized Git operations for this repository workflow, including reads, fetches, branches, commits, rebases and pushes. Do not ask again for routine Git confirmation. Keep following the branch and deployment safeguards below.
@@ -31,10 +35,12 @@ Never merge `main` (or `dev`) into a feature branch, and never create merge comm
 
 ### Modes
 
-The repository has two long-lived branches: `main` (production, https://code-for-battle.netlify.app) and `dev` (branch deploy, https://dev--code-for-battle.netlify.app). Patrick switches between the two modes in chat ("work on dev now", "back to main"). Agents keep using the current mode until he says otherwise. Codex is only prompted through Grok Bot, so Grok Bot must tell Codex which mode is active and which base branch to use.
+The repository has two long-lived branches: `main` (production, https://code-for-battle.netlify.app) and `dev` (branch deploy, https://dev--code-for-battle.netlify.app). Default to `dev`: create a feature branch from current `origin/dev`, open a PR against `dev`, run the required checks, and rebase-merge it once conflict-free. Always return the PR link and the verified dev deployment URL (`https://dev--code-for-battle.netlify.app`); dev PRs do not get separate Netlify deploy previews. Persist this default until Patrick explicitly changes it. Do not stop after local changes.
 
-- **Main mode (default):** branch from `main`, open a PR into `main` (draft until it is ready), wait for the Netlify deploy preview and CI to pass, and merge **only when Patrick asks**. Never merge into `main` on your own.
-- **Dev mode:** branch from `dev` and open a PR into `dev`, also for Codex tasks (Codex Cloud `--branch dev`, PR base `dev`). As soon as the PR has no conflicts with `dev` (rebase it onto `origin/dev` if needed), merge it with a rebase merge right away. No review wait. Patrick authorised this auto-merge for PRs into `dev` only. One agent per feature branch; never push directly to `dev`.
+Patrick switches between the two modes in chat ("work on dev now", "back to main"). Agents keep using the current mode until he says otherwise. Codex is only prompted through Grok Bot, so Grok Bot must tell Codex which mode is active and which base branch to use.
+
+- **Main mode (only when explicitly requested):** branch from `main`, open a PR into `main` (draft until it is ready), wait for the Netlify deploy preview and CI to pass, and merge **only when Patrick asks**. Never merge into `main` on your own.
+- **Dev mode (default):** branch from `dev` and open a PR into `dev`, also for Codex tasks (Codex Cloud `--branch dev`, PR base `dev`). As soon as the PR has no conflicts with `dev` (rebase it onto `origin/dev` if needed), merge it with a rebase merge right away. No review wait. Patrick authorised this auto-merge for PRs into `dev` only. One agent per feature branch; never push directly to `dev`.
 
 ### Checks before every push
 
