@@ -51,6 +51,12 @@ function ensureRoot() {
   root.setAttribute('aria-busy', 'true')
   root.setAttribute('aria-label', 'Loading Code for Battle')
   root.innerHTML = `
+    <div class="loading-screen__backdrop" aria-hidden="true">
+      <picture>
+        <source media="(max-width: 700px)" srcset="/images/docs/GamePlayBackdropMobile.webp" type="image/webp">
+        <img src="/images/docs/GamePlayBackdrop.webp" alt="" width="1920" height="1080" decoding="async" fetchpriority="low">
+      </picture>
+    </div>
     <div class="loading-screen__panel">
       <p class="loading-screen__kicker" id="loadingScreenKicker"></p>
       <h1 class="loading-screen__title" id="loadingScreenTitle">Code for Battle</h1>

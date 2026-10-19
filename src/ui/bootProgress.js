@@ -3,6 +3,8 @@
 // milliseconds, drive the bar. See specs/080-loading-screen.md.
 
 const COMPLETION_CAP = 0.994
+const DEFAULT_BOOT_DURATION_MS = 10000
+const LAST_DURATION_KEY = 'cfb-last-boot-duration-ms'
 
 const WEBGL_EXPECTED_MS = Object.freeze({
   storage: 46,
@@ -151,6 +153,8 @@ export function createBootProgress(phases, options = {}) {
   let displayed = clamp01(options.floor ?? 0)
   let finished = false
   let activeId = items.find(phase => phase.state === 'active')?.id || 'boot'
+  let lastSampleAt = nowMs(options.startedAt)
+  const expectedDuration = Math.max(1, Number(options.expectedDuration) || DEFAULT_BOOT_DURATION_MS)
 
   function findPhase(id) {
     return items.find(phase => phase.id === id) || null
@@ -279,8 +283,13 @@ export function createBootProgress(phases, options = {}) {
     sample(now) {
       const at = nowMs(now)
       if (finished) return 1
-      const next = Math.min(COMPLETION_CAP, Math.max(displayed, compute(at)))
+      // Recent load time supplies a continuously moving baseline. Real
+      // milestones may move ahead of it, but can never pull it backwards.
+      const elapsed = Math.max(0, at - lastSampleAt)
+      const timeline = displayed + (COMPLETION_CAP - displayed) * (1 - Math.exp(-3 * elapsed / expectedDuration))
+      const next = Math.min(COMPLETION_CAP, Math.max(displayed, compute(at), timeline))
       displayed = next
+      lastSampleAt = Math.max(lastSampleAt, at)
       return displayed
     },
     finishAll() {
@@ -306,9 +315,18 @@ export function createBootProgress(phases, options = {}) {
 
 let activeBootProgress = null
 
-export function beginBootProgress(now = 0) {
+export function beginBootProgress(now) {
   lastBootPaintPercent = -1
-  activeBootProgress = createBootProgress(bootPhasesForBackend('webgpu'), { floor: 0.04, now })
+  const startedAt = nowMs(now)
+  let expectedDuration = DEFAULT_BOOT_DURATION_MS
+  try {
+    expectedDuration = Math.max(1, Number(localStorage.getItem(LAST_DURATION_KEY)) || DEFAULT_BOOT_DURATION_MS)
+  } catch { /* Storage may be unavailable in private browsing. */ }
+  activeBootProgress = createBootProgress(bootPhasesForBackend('webgpu'), {
+    floor: 0.04,
+    startedAt,
+    expectedDuration
+  })
   return activeBootProgress
 }
 
