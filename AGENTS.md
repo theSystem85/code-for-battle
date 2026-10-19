@@ -23,6 +23,8 @@ RULES for agentic codeing
 
 ## Git / Workflow
 
+Patrick has pre-authorized Git operations for this repository workflow, including reads, fetches, branches, commits, rebases and pushes. Do not ask again for routine Git confirmation. Keep following the branch and deployment safeguards below.
+
 Never merge `main` (or `dev`) into a feature branch, and never create merge commits. Update a feature branch with `git fetch && git rebase origin/<target>` (`main` in main mode, `dev` in dev mode, see Deployment), then push with `git push --force-with-lease`. Merge pull requests with **rebase merge** so every commit is kept; do not squash unless Patrick asks for it.
 
 ## Deployment

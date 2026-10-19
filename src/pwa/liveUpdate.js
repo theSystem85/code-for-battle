@@ -186,8 +186,12 @@ export function createUpdateNoticeUi(doc = document) {
       if (row) row.after(line)
       else anchor.prepend(line)
     }
-    line.textContent = text
+    line.textContent = ''
     if (action) line.appendChild(action)
+    const label = doc.createElement('span')
+    label.className = 'live-update-status__text'
+    label.textContent = text
+    line.appendChild(label)
   }
 
   function render(text, buttons, { kind, autoHideMs = 0 }) {
@@ -198,8 +202,13 @@ export function createUpdateNoticeUi(doc = document) {
     const label = doc.createElement('span')
     label.className = 'live-update-bubble__text'
     label.textContent = text
+    if (buttons.length) {
+      const actions = doc.createElement('div')
+      actions.className = 'live-update-bubble__actions'
+      buttons.forEach(button => actions.appendChild(button))
+      el.appendChild(actions)
+    }
     el.appendChild(label)
-    buttons.forEach(button => el.appendChild(button))
     el.hidden = false
     if (autoHideMs) hideTimer = setTimeout(() => { el.hidden = true }, autoHideMs)
   }

@@ -366,8 +366,12 @@ function saveGraphicsSettingsToIndexedDb() {
       GRAPHICS_SETTINGS_STORAGE_KEY,
       JSON.stringify({
         useProceduralWaterRendering: USE_PROCEDURAL_WATER_RENDERING,
+        useOceanWaterRendering: USE_OCEAN_WATER_RENDERING,
         waterEffectTone: WATER_EFFECT_TONE,
         waterEffectSaturation: WATER_EFFECT_SATURATION,
+        waterEffectZoom: WATER_EFFECT_ZOOM,
+        waterEffectStrength: WATER_EFFECT_STRENGTH,
+        waterEffectSpeed: WATER_EFFECT_SPEED,
         mobileCanvasPixelRatioCap: MOBILE_CANVAS_PIXEL_RATIO_CAP,
         rendererBackend: persistedRendererBackend(),
         rendererBackendChoice: RENDERER_BACKEND_CHOICE
@@ -397,8 +401,12 @@ export function loadGraphicsSettingsFromIndexedDb() {
     // Procedural water is the only water renderer; a stored legacy
     // useProceduralWaterRendering=false value is ignored.
 
+    USE_OCEAN_WATER_RENDERING = parsed?.useOceanWaterRendering !== false
     WATER_EFFECT_TONE = clampNumber(parsed?.waterEffectTone, -1, 1, WATER_EFFECT_TONE)
     WATER_EFFECT_SATURATION = clampNumber(parsed?.waterEffectSaturation, 0, 2, WATER_EFFECT_SATURATION)
+    WATER_EFFECT_ZOOM = clampNumber(parsed?.waterEffectZoom, 0.05, 2, WATER_EFFECT_ZOOM)
+    WATER_EFFECT_STRENGTH = clampNumber(parsed?.waterEffectStrength, 0, 2, WATER_EFFECT_STRENGTH)
+    WATER_EFFECT_SPEED = clampNumber(parsed?.waterEffectSpeed, 0, 3, WATER_EFFECT_SPEED)
     MOBILE_CANVAS_PIXEL_RATIO_CAP = clampNumber(parsed?.mobileCanvasPixelRatioCap, 1, 3, MOBILE_CANVAS_PIXEL_RATIO_CAP)
     applyStoredRendererBackendChoice(parsed)
   } catch (error) {
@@ -428,6 +436,16 @@ export const USE_PROCEDURAL_WATER_RENDERING = true
 
 export function setUseProceduralWaterRendering() {
   return USE_PROCEDURAL_WATER_RENDERING
+}
+
+// The preference stays enabled even when a renderer temporarily falls back.
+export let USE_OCEAN_WATER_RENDERING = true
+
+export function setUseOceanWaterRendering(enabled) {
+  USE_OCEAN_WATER_RENDERING = Boolean(enabled)
+  saveGraphicsSettingsToIndexedDb()
+  requestGraphicsSettingsRender()
+  return USE_OCEAN_WATER_RENDERING
 }
 
 // Mobile terrain (map ground) DPR cap. 2x keeps the ground sharp on retina phones; the
@@ -619,8 +637,26 @@ export function setWaterEffectZoom(value) {
   }
 
   WATER_EFFECT_ZOOM = numericValue
+  saveGraphicsSettingsToIndexedDb()
   requestGraphicsSettingsRender()
   return WATER_EFFECT_ZOOM
+}
+
+export let WATER_EFFECT_STRENGTH = 1
+export let WATER_EFFECT_SPEED = 1
+
+export function setWaterEffectStrength(value) {
+  WATER_EFFECT_STRENGTH = clampNumber(value, 0, 2, WATER_EFFECT_STRENGTH)
+  saveGraphicsSettingsToIndexedDb()
+  requestGraphicsSettingsRender()
+  return WATER_EFFECT_STRENGTH
+}
+
+export function setWaterEffectSpeed(value) {
+  WATER_EFFECT_SPEED = clampNumber(value, 0, 3, WATER_EFFECT_SPEED)
+  saveGraphicsSettingsToIndexedDb()
+  requestGraphicsSettingsRender()
+  return WATER_EFFECT_SPEED
 }
 
 loadGraphicsSettingsFromIndexedDb()
@@ -1871,9 +1907,12 @@ const EXPORTED_CONFIG_VARIABLES = [
   'TANKER_SUPPLY_CAPACITY',
   'TILE_COLORS',
   'USE_PROCEDURAL_WATER_RENDERING',
+  'USE_OCEAN_WATER_RENDERING',
   'WATER_EFFECT_TONE',
   'WATER_EFFECT_SATURATION',
   'WATER_EFFECT_ZOOM',
+  'WATER_EFFECT_STRENGTH',
+  'WATER_EFFECT_SPEED',
   'MOBILE_CANVAS_PIXEL_RATIO_CAP',
   'RENDERER_BACKEND',
   'USE_TEXTURES',
