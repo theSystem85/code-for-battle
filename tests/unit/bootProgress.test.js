@@ -121,4 +121,22 @@ describe('bootProgress', () => {
     expect(limited).toBeLessThan(shareOf(bootPhasesForBackend('webgl'), 'assets') * 0.4)
   })
 
+  it('[U05250] advances continuously on the expected duration while respecting milestones', () => {
+    const boot = createBootProgress(bootPhasesForBackend('webgl'), {
+      floor: 0.04,
+      startedAt: 100,
+      expectedDuration: 4000
+    })
+    const initial = boot.sample(100)
+    const eased = boot.sample(1100)
+    expect(eased).toBeGreaterThan(initial)
+    expect(eased).toBeLessThan(1)
+
+    boot.finish('storage', 1100)
+    boot.finish('assets', 1100)
+    const milestone = boot.sample(1100)
+    expect(milestone).toBeGreaterThanOrEqual(eased)
+    expect(boot.sample(1200)).toBeGreaterThan(milestone)
+  })
+
 })
