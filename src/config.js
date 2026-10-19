@@ -9,8 +9,7 @@ import {
   probeWebGPUAvailability,
   recordRendererFrame,
   resetRendererFrameReport,
-  resolveRequestedRendererBackend
-} from './rendering/rendererBackendSelection.js'
+  resolveRequestedRendererBackend } from './rendering/rendererBackendSelection.js'
 
 const configRegistry = new Map()
 const activeOverrides = new Map()
@@ -372,6 +371,8 @@ function saveGraphicsSettingsToIndexedDb() {
         waterEffectZoom: WATER_EFFECT_ZOOM,
         waterEffectStrength: WATER_EFFECT_STRENGTH,
         waterEffectSpeed: WATER_EFFECT_SPEED,
+        coastalShallowsEnabled: COASTAL_SHALLOWS_ENABLED,
+        waterWaveDirection: WATER_WAVE_DIRECTION,
         mobileCanvasPixelRatioCap: MOBILE_CANVAS_PIXEL_RATIO_CAP,
         rendererBackend: persistedRendererBackend(),
         rendererBackendChoice: RENDERER_BACKEND_CHOICE
@@ -387,6 +388,7 @@ function requestGraphicsSettingsRender() {
     return
   }
 
+  document.dispatchEvent(new window.CustomEvent('water-graphics-preparation'))
   window.gameInstance?.gameLoop?.requestRender?.()
 }
 
@@ -408,6 +410,8 @@ export function loadGraphicsSettingsFromIndexedDb() {
     WATER_EFFECT_STRENGTH = clampNumber(parsed?.waterEffectStrength, 0, 2, WATER_EFFECT_STRENGTH)
     WATER_EFFECT_SPEED = clampNumber(parsed?.waterEffectSpeed, 0, 3, WATER_EFFECT_SPEED)
     MOBILE_CANVAS_PIXEL_RATIO_CAP = clampNumber(parsed?.mobileCanvasPixelRatioCap, 1, 3, MOBILE_CANVAS_PIXEL_RATIO_CAP)
+    COASTAL_SHALLOWS_ENABLED = typeof parsed?.coastalShallowsEnabled === 'boolean' ? parsed.coastalShallowsEnabled : COASTAL_SHALLOWS_ENABLED
+    WATER_WAVE_DIRECTION = clampNumber(parsed?.waterWaveDirection, 0, 360, WATER_WAVE_DIRECTION)
     applyStoredRendererBackendChoice(parsed)
   } catch (error) {
     window.logger?.warn('Failed to load graphics settings from IndexedDB:', error)
@@ -657,6 +661,21 @@ export function setWaterEffectSpeed(value) {
   saveGraphicsSettingsToIndexedDb()
   requestGraphicsSettingsRender()
   return WATER_EFFECT_SPEED
+}
+
+export let COASTAL_SHALLOWS_ENABLED = true
+export let WATER_WAVE_DIRECTION = 0
+export function setCoastalShallowsEnabled(value) {
+  COASTAL_SHALLOWS_ENABLED = Boolean(value)
+  saveGraphicsSettingsToIndexedDb()
+  requestGraphicsSettingsRender()
+  return COASTAL_SHALLOWS_ENABLED
+}
+export function setWaterWaveDirection(value) {
+  WATER_WAVE_DIRECTION = clampNumber(value, 0, 360, WATER_WAVE_DIRECTION)
+  saveGraphicsSettingsToIndexedDb()
+  requestGraphicsSettingsRender()
+  return WATER_WAVE_DIRECTION
 }
 
 loadGraphicsSettingsFromIndexedDb()

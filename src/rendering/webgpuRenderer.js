@@ -1,28 +1,40 @@
-import { withTimeout } from '../utils/assetLoading.js'
+import { withTimeout
+} from '../utils/assetLoading.js'
 import {
   TILE_SIZE,
   USE_OCEAN_WATER_RENDERING,
   WATER_EFFECT_SATURATION,
   WATER_EFFECT_TONE,
-  WATER_EFFECT_ZOOM,
-  WATER_EFFECT_STRENGTH,
+  COASTAL_SHALLOWS_ENABLED,
+  WATER_WAVE_DIRECTION,
   WATER_EFFECT_SPEED,
+  WATER_EFFECT_STRENGTH,
+  WATER_EFFECT_ZOOM,
   setRendererBackendFailureSummary
 } from '../config.js'
-import { PROFILER_SPAN_IDS } from '../performance/profilerIds.js'
-import { RENDER_COUNTER_IDS } from '../performance/renderDiagnostics.js'
+import { PROFILER_SPAN_IDS
+} from '../performance/profilerIds.js'
+import { RENDER_COUNTER_IDS
+} from '../performance/renderDiagnostics.js'
 import {
   GameWebGLRenderer,
   WATER_INSTANCE_FLOATS,
   WATER_INSTANCE_STRIDE
 } from './webglRenderer.js'
-import { estimateTextureBytes, GpuMemoryTracker } from './gpuMemory.js'
-import { summarizeWebGPUFailure } from './rendererBackendSelection.js'
-import { bootMark } from '../ui/bootTiming.js'
-import { OCEAN_WATER_WGSL } from './oceanWaterShader.js'
-import { hasHardwareGpuInfo, LEGACY_WATER_WGSL } from './waterRenderingMode.js'
-import { finishBootGpu, reportBootGpuSteps } from '../ui/bootProgress.js'
-import { getCanvasPixelRatio } from './renderingUtils.js'
+import { estimateTextureBytes, GpuMemoryTracker
+} from './gpuMemory.js'
+import { summarizeWebGPUFailure
+} from './rendererBackendSelection.js'
+import { bootMark
+} from '../ui/bootTiming.js'
+import { OCEAN_WATER_WGSL
+} from './oceanWaterShader.js'
+import { hasHardwareGpuInfo, LEGACY_WATER_WGSL
+} from './waterRenderingMode.js'
+import { finishBootGpu, reportBootGpuSteps
+} from '../ui/bootProgress.js'
+import { getCanvasPixelRatio
+} from './renderingUtils.js'
 
 const BUFFER_USAGE = { COPY_DST: 8, VERTEX: 32, UNIFORM: 64 }
 const QUERY_BUFFER_USAGE = { MAP_READ: 1, COPY_SRC: 4, COPY_DST: 8, QUERY_RESOLVE: 512 }
@@ -49,6 +61,7 @@ struct Uniforms {
   saturation: f32,
   oceanWater: f32,
   strength: f32,
+  waterControls: vec4f,
 }
 @group(0) @binding(0) var<uniform> uniforms: Uniforms;
 @group(0) @binding(1) var atlasSampler: sampler;
@@ -113,11 +126,14 @@ fn applySaturation(color: vec3f, saturation: f32) -> vec3f {
     if (!inside) { discard; }
   }
   if (input.textureType > 1.5) {
+    let c = cos(uniforms.waterControls.x);
+    let s = sin(uniforms.waterControls.x);
+    let wavePos = vec2f(c * input.worldPos.x + s * input.worldPos.y, -s * input.worldPos.x + c * input.worldPos.y);
     var color: vec3f;
     if (uniforms.oceanWater > 0.5) {
-      color = oceanWater(input.worldPos, uniforms.time, uniforms.zoom, uniforms.tone, waterFootprint, uniforms.strength);
+      color = oceanWater(wavePos, uniforms.time, uniforms.zoom, uniforms.tone, waterFootprint, uniforms.strength);
     } else {
-      color = legacyWater(input.worldPos, uniforms.time, uniforms.zoom, uniforms.tone, uniforms.strength);
+      color = legacyWater(wavePos, uniforms.time, uniforms.zoom, uniforms.tone, uniforms.strength);
     }
     var edge = 1.0;
     if (input.waterEdges.x > 0.5) { edge = min(edge, input.localPos.y); }
@@ -125,7 +141,12 @@ fn applySaturation(color: vec3f, saturation: f32) -> vec3f {
     if (input.waterEdges.z > 0.5) { edge = min(edge, 1.0 - input.localPos.y); }
     if (input.waterEdges.w > 0.5) { edge = min(edge, input.localPos.x); }
     color += vec3f(0.03, 0.05, 0.05) * (1.0 - smoothstep(0.0, 0.18, edge));
-    return vec4f(applySaturation(color, uniforms.saturation), 1.0);
+    color = applySaturation(color, uniforms.saturation);
+    let depth = mix(mix(input.color.x, input.color.y, input.localPos.x), mix(input.color.w, input.color.z, input.localPos.x), input.localPos.y);
+    let opacity = select(1.0, clamp(depth / 5.0, 0.0, 1.0), uniforms.waterControls.w > 0.5);
+    let grain = fract(sin(dot(floor(input.worldPos), vec2f(12.9898, 78.233))) * 43758.5453);
+    let sand = vec3f(0.76, 0.67, 0.46) + (grain - 0.5) * 0.045;
+    return vec4f(mix(sand, color, opacity), 1.0);
   }
   if (input.textureType > 0.5) {
     if (input.textureSource > 0.5) { return secondarySample; }
@@ -158,7 +179,7 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
     this.timestampResolveBuffer = null
     this.timestampReadBuffer = null
     this.timestampReadPending = false
-    this.uniformData = new Float32Array(12)
+    this.uniformData = new Float32Array(16)
     this.gpuTiming = { available: false, reason: 'not-initialized', milliseconds: null }
     this.needsRestore = false
     this.gpuMemory = new GpuMemoryTracker()
@@ -325,8 +346,8 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
     })
     this.uniformBuffer = this.replaceResource(
       this.uniformBuffer,
-      this.device.createBuffer({ size: 48, usage: BUFFER_USAGE.UNIFORM | BUFFER_USAGE.COPY_DST }),
-      48,
+      this.device.createBuffer({ size: 64, usage: BUFFER_USAGE.UNIFORM | BUFFER_USAGE.COPY_DST }),
+      64,
       { destroy: true }
     )
     this.quadBuffer = this.replaceResource(
@@ -744,6 +765,13 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
     return drawCalls
   }
 
+  updateWaterControls() {
+    this.uniformData[12] = WATER_WAVE_DIRECTION * Math.PI / 180
+    this.uniformData[13] = WATER_EFFECT_SPEED
+    this.uniformData[14] = WATER_EFFECT_STRENGTH
+    this.uniformData[15] = COASTAL_SHALLOWS_ENABLED ? 1 : 0
+  }
+
   renderRetainedWater(mapGrid, scrollOffset, canvas, options, dimensions) {
     const topology = this.prepareRetainedWaterTopology(mapGrid, options)
     this.uploadRetainedWaterTopology(topology)
@@ -760,6 +788,7 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
     this.uniformData[9] = WATER_EFFECT_SATURATION
     this.uniformData[10] = USE_OCEAN_WATER_RENDERING && this.hardwareGpuAvailable ? 1 : 0
     this.uniformData[11] = WATER_EFFECT_STRENGTH
+    this.updateWaterControls()
     this.device.queue.writeBuffer(this.uniformBuffer, 0, this.uniformData)
     this.stats.uniformUploadBytes += this.uniformData.byteLength
     this.diagnostics.addCounter(RENDER_COUNTER_IDS.UPLOAD_BYTES, this.uniformData.byteLength)
@@ -883,6 +912,7 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
         WATER_EFFECT_ZOOM, WATER_EFFECT_TONE, WATER_EFFECT_SATURATION,
         USE_OCEAN_WATER_RENDERING && this.hardwareGpuAvailable ? 1 : 0, WATER_EFFECT_STRENGTH
       ])
+      this.updateWaterControls()
       this.device.queue.writeBuffer(this.uniformBuffer, 0, this.uniformData)
       const uploadBytes = packed.byteLength + this.uniformData.byteLength
       this.stats.topologyUploadBytes += packed.byteLength

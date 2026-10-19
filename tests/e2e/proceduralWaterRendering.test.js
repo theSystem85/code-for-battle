@@ -159,8 +159,8 @@ test.describe('Procedural WebGL water rendering', () => {
     await page.locator('#helpBtn').click()
     await page.locator('[data-config-tab="runtime"]').click()
     await expect(page.locator('#configSettingsModal')).toHaveClass(/config-modal--open/)
-    await expect(page.locator('[data-config-tab="runtime"]')).toHaveClass(/config-modal__tab--active/)
 
+    await page.locator('[data-config-tab="graphics"]').click()
     const toneSlider = page.locator('#settingsWaterToneRange')
     const saturationSlider = page.locator('#settingsWaterSaturationRange')
 
@@ -190,6 +190,7 @@ test.describe('Procedural WebGL water rendering', () => {
     await page.locator('#helpBtn').click()
     await page.locator('[data-config-tab="runtime"]').click()
     await expect(page.locator('#configSettingsModal')).toHaveClass(/config-modal--open/)
+    await page.locator('[data-config-tab="graphics"]').click()
     await expect(toneSlider).toHaveValue('0.7')
     await expect(saturationSlider).toHaveValue('1.6')
 
