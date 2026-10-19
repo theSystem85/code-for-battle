@@ -4,7 +4,7 @@ import { gameState } from '../../src/gameState.js'
 import { resetGameStorageForTests } from '../../src/storage/indexedDbStorage.js'
 import {
   STORY_INTRO_MUSIC_DUCK,
-  STORY_INTRO_MUSIC_RAMP_MS,
+  STORY_INTRO_MUSIC_RESTORE_MS,
   STORY_INTRO_STORAGE_KEY,
   closeStoryIntro,
   getActiveStoryIntroIndex,
@@ -106,7 +106,7 @@ describe('story intro', () => {
     fireLatestTimer(timers)
     expect(isStoryIntroOpen()).toBe(false)
     expect(getStoryIntroStatus()).toBe('seen')
-    expect(ducks[ducks.length - 1]).toBe(1)
+    expect(ducks).toEqual([STORY_INTRO_MUSIC_DUCK])
     expect(gameState.gamePaused).toBe(false)
   })
 
@@ -208,7 +208,7 @@ describe('story intro', () => {
     expect(audios).toHaveLength(1)
   })
 
-  it('[U04316] keeps music a quiet bed and swells it to full level over the last seconds of narration', async() => {
+  it('[U04316] keeps music ducked throughout narration and restores it smoothly afterwards', async() => {
     const { deps, timers, ducks } = fakeDeps()
     const ramps = []
     deps.rampDuck = (target, ms) => ramps.push({ target, ms })
@@ -217,13 +217,14 @@ describe('story intro', () => {
       { id: 'b', audio: 'b.mp3', durationMs: 5000, focus: STORY_SEGMENTS[0].focus, caption: 'b' }
     ]
     playStoryIntro({ fromGesture: true, deps, segments, gapMs: 500 })
-    expect(STORY_INTRO_MUSIC_DUCK).toBeLessThanOrEqual(0.12)
+    expect(STORY_INTRO_MUSIC_DUCK).toBeGreaterThanOrEqual(0.25)
+    expect(STORY_INTRO_MUSIC_DUCK).toBeLessThanOrEqual(0.3)
     expect(ducks[0]).toBe(STORY_INTRO_MUSIC_DUCK)
-    // Remaining 15.5 s: ramp starts 8.5 s in, scheduled before the segment timer.
-    const ramp = timers.find(t => t.ms === 15500 - STORY_INTRO_MUSIC_RAMP_MS)
-    expect(ramp).toBeTruthy()
-    ramp.fn()
-    expect(ramps).toEqual([{ target: 1, ms: STORY_INTRO_MUSIC_RAMP_MS }])
+    expect(ramps).toEqual([])
+    fireLatestTimer(timers)
+    await flush()
+    fireLatestTimer(timers)
+    expect(ramps).toEqual([{ target: 1, ms: STORY_INTRO_MUSIC_RESTORE_MS }])
   })
 
   it('[U04317] fits and centers the focus rectangle', () => {

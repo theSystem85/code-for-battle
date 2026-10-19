@@ -8,14 +8,13 @@ import {
 } from './storyIntroSegments.js'
 
 export const STORY_INTRO_STORAGE_KEY = 'cfb-story-intro-v1'
-// Music is a quiet bed under the narration: 0.1 of the normal music level
-// against narration at 1.0 of the effects level. With the default balance
-// (music 50 %) the bed is 5 % of the narration amplitude (~-26 dB). During the last STORY_INTRO_MUSIC_RAMP_MS of the
-// narration it rises smoothly to full music level, announcing the game start.
-export const STORY_INTRO_MUSIC_DUCK = 0.1
+// Music remains a quiet bed for the whole narration, at 27.5% of the level
+// selected by the user's master and music-balance settings.
+export const STORY_INTRO_MUSIC_DUCK = 0.275
 // Same relative narration gain as the tutorial (NARRATION_GAIN in sound.js).
 export const STORY_INTRO_VOICE_GAIN = 1
-export const STORY_INTRO_MUSIC_RAMP_MS = 7000
+// Bring the user's normal music level back gently only after narration ends.
+export const STORY_INTRO_MUSIC_RESTORE_MS = 1500
 export const STORY_INTRO_CLOSED_EVENT = 'story-intro-closed'
 // Late clips (still decoding) join their segment mid-way, unless almost over.
 const LATE_CLIP_MAX_SECONDS = 1.5
@@ -237,33 +236,8 @@ function showSegment(state, index) {
   state.segmentStartedAt = state.deps.now()
   playVoice(state, segment, index)
   state.onSegment?.(segment, index)
-  scheduleMusicRamp(state, index)
   state.deps.clearTimer(state.timer)
   state.timer = state.deps.setTimer(() => showSegment(state, index + 1), segment.durationMs + state.gapMs)
-}
-
-function remainingNarrationMs(state, index) {
-  let total = 0
-  for (let i = index; i < state.segments.length; i++) {
-    total += state.segments[i].durationMs + (i < state.segments.length - 1 ? state.gapMs : 0)
-  }
-  return total
-}
-
-// Schedules the music swell so it ends with the narration.
-function scheduleMusicRamp(state, index) {
-  if (state.rampScheduled || !state.audioStarted) return
-  const remaining = remainingNarrationMs(state, index)
-  const segment = state.segments[index]
-  if (remaining - STORY_INTRO_MUSIC_RAMP_MS > segment.durationMs + state.gapMs) return
-  state.rampScheduled = true
-  const delay = Math.max(0, remaining - STORY_INTRO_MUSIC_RAMP_MS)
-  const rampMs = Math.min(STORY_INTRO_MUSIC_RAMP_MS, remaining)
-  state.rampTimer = state.deps.setTimer(() => {
-    if (state.closed) return
-    state.deps.log({ event: 'music-ramp', from: STORY_INTRO_MUSIC_DUCK, to: 1, ms: rampMs })
-    state.deps.rampDuck(1, rampMs)
-  }, delay)
 }
 
 function holdGame(state) {
@@ -283,9 +257,8 @@ export function closeStoryIntro(status = 'skipped') {
   state.deps.log({ event: 'intro-closed', status })
   state.closed = true
   state.deps.clearTimer(state.timer)
-  state.deps.clearTimer(state.rampTimer)
   stopVoice(state)
-  state.deps.setDuck(1)
+  state.deps.rampDuck(1, STORY_INTRO_MUSIC_RESTORE_MS)
   state.gestureEvents.forEach(type => state.win.removeEventListener(type, state.onGesture, true))
   try {
     state.deps.endMusic(state.withMusic, status)
@@ -330,8 +303,6 @@ export function playStoryIntro(options = {}) {
     audioStarted: false,
     musicStarted: false,
     awaitingStart: false,
-    rampScheduled: false,
-    rampTimer: null,
     fromGesture: Boolean(options.fromGesture),
     gestureEvents: ['pointerdown', 'keydown', 'touchend'],
     started: false,
