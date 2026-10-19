@@ -114,6 +114,8 @@ import {
   setUseOceanWaterRendering,
   COASTAL_SHALLOWS_ENABLED,
   setCoastalShallowsEnabled,
+  COASTAL_SHALLOWS_LENGTH,
+  setCoastalShallowsLength,
   WATER_WAVE_DIRECTION,
   setWaterWaveDirection,
   WATER_EFFECT_TONE,
@@ -296,8 +298,19 @@ export const configRegistry = {
   },
 
   coastalShallowsEnabled: {
-    name: 'Coastal Shallows', description: 'Reveal sand through water over 50 m (five tiles) from the coast', type: 'boolean',
+    name: 'Coastal Shallows', description: 'Reveal sand through water near the coast', type: 'boolean',
     get: () => COASTAL_SHALLOWS_ENABLED, set: setCoastalShallowsEnabled, category: 'Graphics'
+  },
+  coastalShallowsLength: {
+    name: 'Coastal shallows length',
+    description: 'Length in meters of the coastal shallows transparency gradient (1 tile is 10 m)',
+    type: 'number',
+    get: () => COASTAL_SHALLOWS_LENGTH,
+    set: setCoastalShallowsLength,
+    min: 10,
+    max: 100,
+    step: 5,
+    category: 'Graphics'
   },
   waterWaveDirection: {
     name: 'Wave direction', description: 'Rotate waves clockwise in degrees', type: 'number',

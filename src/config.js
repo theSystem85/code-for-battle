@@ -372,6 +372,7 @@ function saveGraphicsSettingsToIndexedDb() {
         waterEffectStrength: WATER_EFFECT_STRENGTH,
         waterEffectSpeed: WATER_EFFECT_SPEED,
         coastalShallowsEnabled: COASTAL_SHALLOWS_ENABLED,
+        coastalShallowsLength: COASTAL_SHALLOWS_LENGTH,
         waterWaveDirection: WATER_WAVE_DIRECTION,
         mobileCanvasPixelRatioCap: MOBILE_CANVAS_PIXEL_RATIO_CAP,
         rendererBackend: persistedRendererBackend(),
@@ -411,6 +412,7 @@ export function loadGraphicsSettingsFromIndexedDb() {
     WATER_EFFECT_SPEED = clampNumber(parsed?.waterEffectSpeed, 0, 3, WATER_EFFECT_SPEED)
     MOBILE_CANVAS_PIXEL_RATIO_CAP = clampNumber(parsed?.mobileCanvasPixelRatioCap, 1, 3, MOBILE_CANVAS_PIXEL_RATIO_CAP)
     COASTAL_SHALLOWS_ENABLED = typeof parsed?.coastalShallowsEnabled === 'boolean' ? parsed.coastalShallowsEnabled : COASTAL_SHALLOWS_ENABLED
+    COASTAL_SHALLOWS_LENGTH = clampNumber(parsed?.coastalShallowsLength, 10, 100, COASTAL_SHALLOWS_LENGTH)
     WATER_WAVE_DIRECTION = clampNumber(parsed?.waterWaveDirection, 0, 360, WATER_WAVE_DIRECTION)
     applyStoredRendererBackendChoice(parsed)
   } catch (error) {
@@ -663,13 +665,20 @@ export function setWaterEffectSpeed(value) {
   return WATER_EFFECT_SPEED
 }
 
-export let COASTAL_SHALLOWS_ENABLED = true
+export let COASTAL_SHALLOWS_ENABLED = false
+export let COASTAL_SHALLOWS_LENGTH = 20
 export let WATER_WAVE_DIRECTION = 0
 export function setCoastalShallowsEnabled(value) {
   COASTAL_SHALLOWS_ENABLED = Boolean(value)
   saveGraphicsSettingsToIndexedDb()
   requestGraphicsSettingsRender()
   return COASTAL_SHALLOWS_ENABLED
+}
+export function setCoastalShallowsLength(value) {
+  COASTAL_SHALLOWS_LENGTH = clampNumber(value, 10, 100, COASTAL_SHALLOWS_LENGTH)
+  saveGraphicsSettingsToIndexedDb()
+  requestGraphicsSettingsRender()
+  return COASTAL_SHALLOWS_LENGTH
 }
 export function setWaterWaveDirection(value) {
   WATER_WAVE_DIRECTION = clampNumber(value, 0, 360, WATER_WAVE_DIRECTION)

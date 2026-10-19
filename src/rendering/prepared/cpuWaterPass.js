@@ -1,6 +1,7 @@
 import {
   TILE_SIZE,
   COASTAL_SHALLOWS_ENABLED,
+  COASTAL_SHALLOWS_LENGTH,
   WATER_WAVE_DIRECTION,
   WATER_EFFECT_SPEED,
   WATER_EFFECT_STRENGTH,
@@ -15,7 +16,7 @@ import { renderProfiler
 import { RENDER_COUNTER_IDS, renderDiagnostics
 } from '../../performance/renderDiagnostics.js'
 
-import { ShoreDepthField
+import { ShoreDepthField, SHORE_DEPTH_MAX_TILES
 } from './shoreDepthField.js'
 import { CoastalWaterStyles
 } from './coastalWaterStyles.js'
@@ -96,7 +97,7 @@ export class CpuWaterPass {
     this.tileSize = tileSize
     this.profiler = profiler
     this.diagnostics = diagnostics
-    this.shoreDepth = new ShoreDepthField()
+    this.shoreDepth = new ShoreDepthField(SHORE_DEPTH_MAX_TILES)
     this.coastalStyles = new CoastalWaterStyles()
     this.waveCos = 1
     this.waveSin = 0
@@ -264,7 +265,7 @@ export class CpuWaterPass {
     this.waveCos = Math.cos(WATER_WAVE_DIRECTION * Math.PI / 180)
     this.waveSin = Math.sin(WATER_WAVE_DIRECTION * Math.PI / 180)
     if (COASTAL_SHALLOWS_ENABLED) {
-      this.coastalStyles.prepare(ctx, this.shoreDepth, this.palette, this.tileSize, ctx.getTransform?.().a || 1, sotMask)
+      this.coastalStyles.prepare(ctx, this.shoreDepth, this.palette, this.tileSize, ctx.getTransform?.().a || 1, sotMask, COASTAL_SHALLOWS_LENGTH)
     }
     const offsetX = scrollOffset?.x || 0
     const offsetY = scrollOffset?.y || 0

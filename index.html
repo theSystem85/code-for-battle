@@ -1408,10 +1408,17 @@
           </label>
           <div class="config-modal__section">
             <h3 class="config-modal__section-title">Water and terrain</h3>
-            <p class="config-modal__hint">Coastal Shallows reveals sand through the water over 50 m (5 tiles). Water is fully transparent at the coast and opaque offshore. Tone and saturation apply to Ocean Surface Water and Classic Water.</p>
+            <p class="config-modal__hint">Coastal Shallows reveals sand through the water near the coast. Water is fully transparent at the coast and transitions to opaque offshore (1 tile is 10 m). Tone and saturation apply to Ocean Surface Water and Classic Water.</p>
             <label class="config-modal__field config-modal__field--toggle">
               <input type="checkbox" id="settingsCoastalShallowsToggle">
               <span>Coastal Shallows (sandy seabed and coastal transparency)</span>
+            </label>
+            <label class="config-modal__field" for="settingsCoastalShallowsLengthRange">
+              <span class="config-modal__range-label-row">
+                <span>Coastal shallows length</span>
+                <span id="settingsCoastalShallowsLengthValue" class="config-modal__range-value">20 m</span>
+              </span>
+              <input type="range" id="settingsCoastalShallowsLengthRange" min="10" max="100" step="5" value="20">
             </label>
             <label class="config-modal__field" for="settingsWaterDirectionRange">
               <span class="config-modal__range-label-row"><span>Wave direction (clockwise)</span><span id="settingsWaterDirectionValue" class="config-modal__range-value">0°</span></span>
