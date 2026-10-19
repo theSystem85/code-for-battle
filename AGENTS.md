@@ -23,7 +23,7 @@ RULES for agentic codeing
 
 ## Standing execution preferences
 
-Patrick preauthorizes Vitest runs in this repository, including required test subprocesses. Do not ask for confirmation for routine Vitest execution. Sandbox/tool enforcement may still require the supported permission mechanism; this preference does not disable platform controls.
+Patrick preauthorizes Vitest runs in this repository, including required test subprocesses. Routine `npm ci` and Playwright runs in this repository are also preauthorized. Do not ask for confirmation for routine Vitest execution. Sandbox/tool enforcement may still require the supported permission mechanism; this preference does not disable platform controls.
 
 ## Git / Workflow
 
