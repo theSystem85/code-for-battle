@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   completeBoot, createReleaseDigest, getBootReleaseDigest, getHighlightIndex,
   getLoadingHighlights, getManualReleaseDigest, getReleaseDigest,
-  LAST_DURATION_KEY, LAST_VERSION_KEY, buildUnreleasedRelease, mergeReleaseEntries
+  DURATION_HISTORY_KEY, LAST_DURATION_KEY, LAST_VERSION_KEY, buildUnreleasedRelease, mergeReleaseEntries
 } from '../../src/ui/releaseDigest.js'
 import { APP_VERSION } from '../../src/version.js'
 
@@ -62,6 +62,12 @@ describe('release digest', () => {
     const spy = vi.spyOn(window.Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('denied') })
     expect(() => completeBoot(2000, null)).not.toThrow()
     spy.mockRestore()
+  })
+
+  it('[U05251] paces future loads with a rolling average of five successful boots', () => {
+    for (const duration of [1000, 2000, 3000, 4000, 5000, 6000]) completeBoot(duration, null)
+    expect(JSON.parse(localStorage.getItem(DURATION_HISTORY_KEY))).toEqual([2000, 3000, 4000, 5000, 6000])
+    expect(localStorage.getItem(LAST_DURATION_KEY)).toBe('4000')
   })
 })
 

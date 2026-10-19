@@ -31,6 +31,7 @@ export function mergeReleaseEntries(released, unreleased) {
 const releases = mergeReleaseEntries(releasedFiles, buildUnreleasedRelease(unreleasedFiles))
 export const LAST_VERSION_KEY = 'cfb-last-loaded-version'
 export const LAST_DURATION_KEY = 'cfb-last-boot-duration-ms'
+export const DURATION_HISTORY_KEY = 'cfb-boot-duration-history-ms'
 const PREVIOUS_VERSION_KEY = 'cfb-release-digest-from-version'
 
 export function readBootStorage(key) {
@@ -73,7 +74,16 @@ export function getManualReleaseDigest() {
 }
 
 export function completeBoot(duration, digest) {
-  writeBootStorage(LAST_DURATION_KEY, Math.max(1, Math.round(duration)))
+  const measured = Math.max(1, Math.round(duration))
+  let history = []
+  try {
+    const stored = JSON.parse(readBootStorage(DURATION_HISTORY_KEY) || '[]')
+    if (Array.isArray(stored)) history = stored.filter(value => Number.isFinite(value) && value > 0)
+  } catch { /* Ignore malformed data left by an older build. */ }
+  history = [...history.slice(-4), measured]
+  const average = Math.round(history.reduce((sum, value) => sum + value, 0) / history.length)
+  writeBootStorage(DURATION_HISTORY_KEY, JSON.stringify(history))
+  writeBootStorage(LAST_DURATION_KEY, average)
   if (digest) writeBootStorage(PREVIOUS_VERSION_KEY, digest.fromVersion)
   writeBootStorage(LAST_VERSION_KEY, APP_VERSION)
 }
@@ -107,7 +117,6 @@ export function createReleaseDigest(digest, { compact = false } = {}) {
       if (index === lastIndex) return
       lastIndex = index
       row.textContent = highlights[index] || 'Preparing the updated game'
-      row.title = row.textContent
     } }
   }
   for (const category of ['features', 'improvements', 'bugfixes']) {
