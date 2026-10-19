@@ -7,7 +7,7 @@ export const COMBAT_CONFIG = {
   },
   FIRE_RATES: {
     STANDARD: 4000,  // Doubled from 2000ms to 4000ms
-    LIGHT_TANK: 3000, // One third of the previous firing rate (one shot per second)
+    LIGHT_TANK: 1500, // About 33% slower than the original one shot per second
     ROCKET: 12000    // Doubled from 6000ms to 12000ms
   },
   APACHE: {
