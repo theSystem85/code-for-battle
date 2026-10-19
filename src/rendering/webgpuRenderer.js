@@ -126,8 +126,8 @@ fn applySaturation(color: vec3f, saturation: f32) -> vec3f {
     if (!inside) { discard; }
   }
   if (input.textureType > 1.5) {
-    let c = cos(uniforms.waterControls.x);
-    let s = sin(uniforms.waterControls.x);
+    let c = uniforms.waterControls.x;
+    let s = uniforms.waterControls.y;
     let wavePos = vec2f(c * input.worldPos.x + s * input.worldPos.y, -s * input.worldPos.x + c * input.worldPos.y);
     var color: vec3f;
     if (uniforms.oceanWater > 0.5) {
@@ -142,11 +142,17 @@ fn applySaturation(color: vec3f, saturation: f32) -> vec3f {
     if (input.waterEdges.w > 0.5) { edge = min(edge, input.localPos.x); }
     color += vec3f(0.03, 0.05, 0.05) * (1.0 - smoothstep(0.0, 0.18, edge));
     color = applySaturation(color, uniforms.saturation);
-    let depth = mix(mix(input.color.x, input.color.y, input.localPos.x), mix(input.color.w, input.color.z, input.localPos.x), input.localPos.y);
-    let opacity = select(1.0, clamp(depth / 5.0, 0.0, 1.0), uniforms.waterControls.w > 0.5);
-    let grain = fract(sin(dot(floor(input.worldPos), vec2f(12.9898, 78.233))) * 43758.5453);
-    let sand = vec3f(0.76, 0.67, 0.46) + (grain - 0.5) * 0.045;
-    return vec4f(mix(sand, color, opacity), 1.0);
+    if (uniforms.waterControls.w > 0.5) {
+      let depth = mix(mix(input.color.x, input.color.y, input.localPos.x), mix(input.color.w, input.color.z, input.localPos.x), input.localPos.y);
+      if (depth < 5.0) {
+        let opacity = clamp(depth / 5.0, 0.0, 1.0);
+        let grainBits = u32(floor(input.worldPos.x)) * 1664525u ^ u32(floor(input.worldPos.y)) * 1013904223u;
+        let grain = f32(grainBits & 255u) / 255.0;
+        let sand = vec3f(0.76, 0.67, 0.46) + (grain - 0.5) * 0.045;
+        color = mix(sand, color, opacity);
+      }
+    }
+    return vec4f(color, 1.0);
   }
   if (input.textureType > 0.5) {
     if (input.textureSource > 0.5) { return secondarySample; }
@@ -766,9 +772,9 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
   }
 
   updateWaterControls() {
-    this.uniformData[12] = WATER_WAVE_DIRECTION * Math.PI / 180
-    this.uniformData[13] = WATER_EFFECT_SPEED
-    this.uniformData[14] = WATER_EFFECT_STRENGTH
+    this.uniformData[12] = Math.cos(WATER_WAVE_DIRECTION * Math.PI / 180)
+    this.uniformData[13] = Math.sin(WATER_WAVE_DIRECTION * Math.PI / 180)
+    this.uniformData[14] = 0
     this.uniformData[15] = COASTAL_SHALLOWS_ENABLED ? 1 : 0
   }
 
