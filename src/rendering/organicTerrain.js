@@ -64,8 +64,22 @@ export function shorelineCornerMask(grid, x, y) {
   return mask
 }
 
-export function biomeTransitionCoverage(cornerWeights, u, v) {
+function interpolateCornerWeights(weights, u, v) {
+  return (weights[0] * (1 - u) + weights[1] * u) * (1 - v) +
+    (weights[3] * (1 - u) + weights[2] * u) * v
+}
+
+export function biomeTransitionCoverage(cornerWeights, u, v, underlayWeights = null) {
   if (!Array.isArray(cornerWeights) || cornerWeights.length !== 4) return 0
+  if (underlayWeights) {
+    // Smooth spatial interpolation preserves the partition of unity at every
+    // junction. Conditional alpha reconstructs these weights with source-over,
+    // even when adjacent tiles contain different subsets of the four materials.
+    const su = u * u * (3 - 2 * u), sv = v * v * (3 - 2 * v)
+    const source = interpolateCornerWeights(cornerWeights, su, sv)
+    const total = source + interpolateCornerWeights(underlayWeights, su, sv)
+    return total > 0 ? source / total : 0
+  }
   const top = cornerWeights[0] * (1 - u) + cornerWeights[1] * u
   const bottom = cornerWeights[3] * (1 - u) + cornerWeights[2] * u
   const field = top * (1 - v) + bottom * v
@@ -386,8 +400,8 @@ export class OrganicTerrain {
     return canvas
   }
 
-  getBiomeTransitionMask(size, cornerWeights) {
-    const key = `biome|${size}|${cornerWeights.join(':')}`
+  getBiomeTransitionMask(size, cornerWeights, underlayWeights = null) {
+    const key = `biome|${size}|${cornerWeights.join(':')}|${underlayWeights?.join(':') || 'legacy'}`
     let alphaMask = this.biomeBlendMasks.get(key)
     if (alphaMask) return alphaMask
     alphaMask = document.createElement('canvas')
@@ -398,7 +412,8 @@ export class OrganicTerrain {
       pixels.data[(py * size + px) * 4 + 3] = Math.round(255 * biomeTransitionCoverage(
         cornerWeights,
         px / (size - 1),
-        py / (size - 1)
+        py / (size - 1),
+        underlayWeights
       ))
     }
     context.putImageData(pixels, 0, 0)
@@ -408,7 +423,7 @@ export class OrganicTerrain {
 
   drawBiomeTransition(ctx, x, y, sx, sy, size, blend) {
     const cornerWeights = Array.isArray(blend.cornerWeights) && blend.cornerWeights.length === 4 ? blend.cornerWeights : null
-    const key = `${size}|${x}|${y}|${blend.biome}|${blend.alpha}|${blend.angle}|${blend.featherPixels || 0}|${cornerWeights?.join(':') || 'directional'}`
+    const key = `${size}|${x}|${y}|${blend.biome}|${blend.alpha}|${blend.angle}|${blend.featherPixels || 0}|${cornerWeights?.join(':') || 'directional'}|${blend.underlayWeights?.join(':') || 'legacy'}`
     let canvas = this.biomeTransitionTileCache.get(key)
     if (!canvas) {
       canvas = document.createElement('canvas')
@@ -418,7 +433,7 @@ export class OrganicTerrain {
       blendContext.globalCompositeOperation = 'destination-in'
       blendContext.drawImage(cornerWeights === null
         ? this.getBiomeBlendMask(size, x, y, blend)
-        : this.getBiomeTransitionMask(size, cornerWeights), 0, 0)
+        : this.getBiomeTransitionMask(size, cornerWeights, blend.underlayWeights), 0, 0)
       blendContext.globalCompositeOperation = 'source-over'
       if (this.biomeTransitionTileCache.size >= TERRAIN_TRANSITION_CACHE_LIMIT) {
         this.biomeTransitionTileCache.delete(this.biomeTransitionTileCache.keys().next().value)
@@ -497,10 +512,12 @@ export class OrganicTerrain {
   drawGrass(ctx, x, y, sx, sy, size, tile = null) {
     const configuredBiome = this.textureManager?.integratedBiomeTag || 'grass'
     const primaryBiome = tile?.biome || (configuredBiome === 'mixed' ? 'grass' : configuredBiome)
-    this.drawBiome(ctx, x, y, sx, sy, size, primaryBiome)
     const blend = tile?.biomeBlend
+    this.drawBiome(ctx, x, y, sx, sy, size, blend?.layers?.[0]?.biome || primaryBiome)
     if (!blend?.biome || !(blend.alpha > 0)) return
-    this.drawBiomeTransition(ctx, x, y, sx, sy, size, blend)
+    if (blend.layers) {
+      for (let i = 1; i < blend.layers.length; i++) this.drawBiomeTransition(ctx, x, y, sx, sy, size, blend.layers[i])
+    } else this.drawBiomeTransition(ctx, x, y, sx, sy, size, blend)
   }
 
   drawRoad(ctx, grid, x, y, sx, sy, size) {

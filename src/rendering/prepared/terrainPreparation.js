@@ -114,10 +114,12 @@ function directionalBlendCoverage(descriptor, pixelSize, px, py) {
 
 function exactBlendDescriptor(size, density, blend) {
   const cornerWeights = blend.cornerWeights.map(Number)
+  const underlayWeights = blend.underlayWeights ? Object.freeze(blend.underlayWeights.map(Number)) : null
   return Object.freeze({
     kind: 'corner-biome',
-    key: `biome-corner|${size}|${density}|${cornerWeights.join(':')}`,
-    cornerWeights: Object.freeze(cornerWeights)
+    key: `biome-corner|${size}|${density}|${cornerWeights.join(':')}|${underlayWeights?.join(':') || 'legacy'}`,
+    cornerWeights: Object.freeze(cornerWeights),
+    underlayWeights
   })
 }
 
@@ -134,7 +136,7 @@ function rasterizeMask(descriptor, logicalSize, density, canvasFactory) {
   const pixelSize = Math.max(1, Math.round(logicalSize * density))
   if (descriptor.kind === 'corner-biome') {
     return createAlphaMask(pixelSize,
-      (u, v) => biomeTransitionCoverage(descriptor.cornerWeights, u, v), canvasFactory)
+      (u, v) => biomeTransitionCoverage(descriptor.cornerWeights, u, v, descriptor.underlayWeights), canvasFactory)
   }
   if (descriptor.kind === 'shoreline') {
     return createAlphaMask(pixelSize,
@@ -343,10 +345,14 @@ export class TerrainPreparationPipeline {
           }
           const blend = tile.biomeBlend
           if (blend?.biome && blend.alpha > 0) {
-            const descriptor = Array.isArray(blend.cornerWeights) && blend.cornerWeights.length === 4
-              ? exactBlendDescriptor(tileSize, density, blend)
-              : directionalBlendDescriptor(tileSize, density, x, y, blend)
-            blendMaskIds[index] = idForMask(descriptor)
+            const layers = blend.layers || [blend]
+            for (let layerIndex = blend.layers ? 1 : 0; layerIndex < layers.length; layerIndex++) {
+              const layer = layers[layerIndex]
+              const descriptor = Array.isArray(layer.cornerWeights) && layer.cornerWeights.length === 4
+                ? exactBlendDescriptor(tileSize, density, layer)
+                : directionalBlendDescriptor(tileSize, density, x, y, layer)
+              blendMaskIds[index] = idForMask(descriptor)
+            }
           }
           if (tile.type === 'water' && !tile.airstripStreet && shorelineMasks[index]) {
             for (const [offsetX, offsetY] of SHORE_SOURCE_OFFSETS) {

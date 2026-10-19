@@ -440,6 +440,13 @@ describe('saveGame.js', () => {
       mapGrid[1][2].biomeRegion = 4
       mapGrid[1][2].biomeBlend = { biome: 'grass', alpha: 0.5, angle: Math.PI / 4, cornerWeights: [0, 0.5, 0.75, 1] }
 
+      const layers = [
+        { biome: 'grass', alpha: 0.5, cornerWeights: [1, 0.5, 0.25, 0], underlayWeights: [0, 0, 0, 0] },
+        { biome: 'sand', alpha: 0.5, cornerWeights: [0, 0.5, 0.75, 1], underlayWeights: [1, 0.5, 0.25, 0] }
+      ]
+      mapGrid[1][2].biomeBlend.layers = layers
+      const { biomeLayersSignature } = await import('../../src/game/mapBiomes.js')
+      const layersKey = biomeLayersSignature(layers)
       saveGameModule.saveGame('MapStateTest')
 
       const saved = localStorage.getItem('rts_save_MapStateTest')
@@ -459,7 +466,7 @@ describe('saveGame.js', () => {
         passable: undefined,
         biome: 'soil',
         biomeRegion: 4,
-        biomeBlend: { biome: 'grass', alpha: 0.5, angle: Math.PI / 4, cornerWeights: [0, 0.5, 0.75, 1] }
+        biomeBlend: { biome: 'grass', alpha: 0.5, angle: Math.PI / 4, cornerWeights: [0, 0.5, 0.75, 1], layers, layersKey }
       })
     })
 
@@ -812,6 +819,11 @@ describe('saveGame.js', () => {
         orePositions: [],
         targetedOreTiles: {}
       }
+      const layers = [
+        { biome: 'grass', alpha: 0.5, cornerWeights: [1, 0.5, 0.25, 0], underlayWeights: [0, 0, 0, 0] },
+        { biome: 'sand', alpha: 0.5, cornerWeights: [0, 0.5, 0.75, 1], underlayWeights: [1, 0.5, 0.25, 0] }
+      ]
+      saveData.mapTileState[4][4].biomeBlend = { biome: 'sand', alpha: 0.5, layers }
       localStorage.setItem('rts_save_MapLoadTest', JSON.stringify({
         label: 'MapLoadTest',
         time: Date.now(),
@@ -831,6 +843,8 @@ describe('saveGame.js', () => {
       expect(mapGrid[4][4].type).toBe('water')
       expect(mapGrid[4][4].ore).toBe(true)
       expect(mapGrid[4][4].seedCrystal).toBe(true)
+      expect(mapGrid[4][4].biomeBlend.layers).toEqual(layers)
+      expect(mapGrid[4][4].biomeBlend.layers).not.toBe(layers)
       expect(widthInput.value).toBe('64')
       expect(heightInput.value).toBe('48')
       expect(seedInput.value).toBe('loaded-seed')

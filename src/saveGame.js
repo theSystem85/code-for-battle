@@ -1,3 +1,4 @@
+import { BIOMES, biomeLayersSignature, upgradeBiomeTransitions } from './game/mapBiomes.js'
 import { findCityBuildingById } from './game/cityBuildings.js'
 import { normalizeDecorationSettings } from './game/decorationSettings.js'
 import { exportAutomationSession, restoreAutomationSession, resetPolicyStore } from './policies/policyStore.js'
@@ -348,6 +349,33 @@ function ensureMapGridMatchesDimensions(grid, width, height) {
   return grid
 }
 
+function copyBiomeBlend(blend) {
+  if (!blend || typeof blend.biome !== 'string') return undefined
+  const weights = values => Array.isArray(values) && values.length === 4
+    ? values.map(value => Math.max(0, Math.min(1, Number(value) || 0))) : undefined
+  const copy = {
+    biome: blend.biome,
+    alpha: Number(blend.alpha) || 0,
+    angle: Number(blend.angle) || 0,
+    featherPixels: Number.isFinite(blend.featherPixels) ? Math.max(0, blend.featherPixels) : undefined,
+    cornerWeights: weights(blend.cornerWeights)
+  }
+  if (Array.isArray(blend.layers)) {
+    const layers = blend.layers.slice(0, 4).filter(layer => BIOMES.includes(layer?.biome) &&
+      weights(layer.cornerWeights) && weights(layer.underlayWeights)).map(layer => ({
+      biome: layer.biome,
+      alpha: 0.5,
+      cornerWeights: weights(layer.cornerWeights),
+      underlayWeights: weights(layer.underlayWeights)
+    }))
+    if (layers.length > 1) {
+      copy.layers = layers
+      copy.layersKey = biomeLayersSignature(layers)
+    }
+  }
+  return copy
+}
+
 function createSerializableMapTile(tile = {}) {
   return {
     cityBuilding: tile.cityBuilding ? { ...tile.cityBuilding } : undefined,
@@ -373,19 +401,7 @@ function createSerializableMapTile(tile = {}) {
     biome: typeof tile.biome === 'string' ? tile.biome : undefined,
     shorelineBiome: typeof tile.shorelineBiome === 'string' ? tile.shorelineBiome : undefined,
     biomeRegion: Number.isFinite(tile.biomeRegion) ? tile.biomeRegion : undefined,
-    biomeBlend: tile.biomeBlend && typeof tile.biomeBlend.biome === 'string'
-      ? {
-        biome: tile.biomeBlend.biome,
-        alpha: Number(tile.biomeBlend.alpha) || 0,
-        angle: Number(tile.biomeBlend.angle) || 0,
-        featherPixels: Number.isFinite(tile.biomeBlend.featherPixels)
-          ? Math.max(0, tile.biomeBlend.featherPixels)
-          : undefined,
-        cornerWeights: Array.isArray(tile.biomeBlend.cornerWeights)
-          ? tile.biomeBlend.cornerWeights.slice(0, 4).map(weight => Math.max(0, Math.min(1, Number(weight) || 0)))
-          : undefined
-      }
-      : undefined
+    biomeBlend: copyBiomeBlend(tile.biomeBlend)
   }
 }
 
@@ -443,19 +459,7 @@ function restoreStaticMapTiles(loaded, targetMapGrid) {
         targetTile.biome = typeof savedTile?.biome === 'string' ? savedTile.biome : (targetTile.biome || 'grass')
         targetTile.shorelineBiome = typeof savedTile?.shorelineBiome === 'string' ? savedTile.shorelineBiome : undefined
         targetTile.biomeRegion = Number.isFinite(savedTile?.biomeRegion) ? savedTile.biomeRegion : undefined
-        targetTile.biomeBlend = savedTile?.biomeBlend && typeof savedTile.biomeBlend.biome === 'string'
-          ? {
-            biome: savedTile.biomeBlend.biome,
-            alpha: Number(savedTile.biomeBlend.alpha) || 0,
-            angle: Number(savedTile.biomeBlend.angle) || 0,
-            featherPixels: Number.isFinite(savedTile.biomeBlend.featherPixels)
-              ? Math.max(0, savedTile.biomeBlend.featherPixels)
-              : undefined,
-            cornerWeights: Array.isArray(savedTile.biomeBlend.cornerWeights) && savedTile.biomeBlend.cornerWeights.length === 4
-              ? savedTile.biomeBlend.cornerWeights.map(weight => Math.max(0, Math.min(1, Number(weight) || 0)))
-              : undefined
-          }
-          : undefined
+        targetTile.biomeBlend = copyBiomeBlend(savedTile?.biomeBlend)
 
         if (typeof savedTile?.walkable === 'boolean') {
           targetTile.walkable = savedTile.walkable
@@ -470,6 +474,7 @@ function restoreStaticMapTiles(loaded, targetMapGrid) {
         }
       }
     }
+    upgradeBiomeTransitions(targetMapGrid)
     return
   }
 
