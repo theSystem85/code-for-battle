@@ -7,7 +7,7 @@ function straightCoast(width = 12, height = 8) {
 }
 
 describe('prepared coastal depth', () => {
-  it('[U05406] fades continuously from transparent shore to opaque water at five tiles', () => {
+  it('[U05410] fades continuously from transparent shore to opaque water at five tiles', () => {
     const field = new ShoreDepthField()
     field.prepare(straightCoast())
     for (let tile = 0; tile < 6; tile++) {
