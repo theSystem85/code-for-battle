@@ -5,6 +5,7 @@ import {
   USE_OCEAN_WATER_RENDERING,
   WATER_EFFECT_TONE,
   COASTAL_SHALLOWS_ENABLED,
+  COASTAL_SHALLOWS_LENGTH,
   WATER_WAVE_DIRECTION,
   WATER_EFFECT_SPEED,
   WATER_EFFECT_STRENGTH,
@@ -21,7 +22,7 @@ import { getCanvasPixelRatio
 } from './renderingUtils.js'
 import { bootMark
 } from '../ui/bootTiming.js'
-import { ShoreDepthField
+import { ShoreDepthField, SHORE_DEPTH_MAX_TILES
 } from './prepared/shoreDepthField.js'
 import { OCEAN_WATER_GLSL
 } from './oceanWaterShader.js'
@@ -183,8 +184,9 @@ void main() {
     waterColor = applySaturation(waterColor, uWaterSaturation);
     if (uWaterControls.w > 0.5) {
       float depth = mix(mix(vColor.x, vColor.y, vLocalPos.x), mix(vColor.w, vColor.z, vLocalPos.x), vLocalPos.y);
-      if (depth < 5.0) {
-        float opacity = clamp(depth / 5.0, 0.0, 1.0);
+      float maxDepth = max(uWaterControls.z, 0.001);
+      if (depth < maxDepth) {
+        float opacity = clamp(depth / maxDepth, 0.0, 1.0);
         uint grainBits = uint(floor(vWorldPos.x)) * 1664525u ^ uint(floor(vWorldPos.y)) * 1013904223u;
         float grain = float(grainBits & 255u) / 255.0;
         vec3 sand = vec3(0.76, 0.67, 0.46) + (grain - 0.5) * 0.045;
@@ -318,7 +320,7 @@ export class GameWebGLRenderer {
     this.colorCache = new Map()
     this.pixelRatio = (typeof window !== 'undefined' && window.devicePixelRatio) || 1
     this.rendersWaterSot = true
-    this.shoreDepth = new ShoreDepthField()
+    this.shoreDepth = new ShoreDepthField(SHORE_DEPTH_MAX_TILES)
     this.waterTopology = null
     this.uploadedWaterTopology = null
     this.uploadedWaterTopologyVersion = -1
@@ -573,10 +575,11 @@ export class GameWebGLRenderer {
     for (const sourceRange of ranges) {
       const range = normalizeTopologyRange(sourceRange, topology.width, topology.height)
       if (!range) continue
-      const firstChunkX = Math.floor(Math.max(0, range.left - 6) / WATER_CHUNK_SIZE)
-      const firstChunkY = Math.floor(Math.max(0, range.top - 6) / WATER_CHUNK_SIZE)
-      const lastChunkX = Math.floor(Math.min(topology.width - 1, Math.max(range.left, range.right - 1) + 6) / WATER_CHUNK_SIZE)
-      const lastChunkY = Math.floor(Math.min(topology.height - 1, Math.max(range.top, range.bottom - 1) + 6) / WATER_CHUNK_SIZE)
+      const margin = SHORE_DEPTH_MAX_TILES + 1
+      const firstChunkX = Math.floor(Math.max(0, range.left - margin) / WATER_CHUNK_SIZE)
+      const firstChunkY = Math.floor(Math.max(0, range.top - margin) / WATER_CHUNK_SIZE)
+      const lastChunkX = Math.floor(Math.min(topology.width - 1, Math.max(range.left, range.right - 1) + margin) / WATER_CHUNK_SIZE)
+      const lastChunkY = Math.floor(Math.min(topology.height - 1, Math.max(range.top, range.bottom - 1) + margin) / WATER_CHUNK_SIZE)
       for (let chunkY = firstChunkY; chunkY <= lastChunkY; chunkY++) {
         for (let chunkX = firstChunkX; chunkX <= lastChunkX; chunkX++) {
           const index = chunkY * topology.chunkColumns + chunkX
@@ -1099,7 +1102,7 @@ export class GameWebGLRenderer {
     gl.uniform1f(locations.waterTone, WATER_EFFECT_TONE)
     gl.uniform1f(locations.waterSaturation, WATER_EFFECT_SATURATION)
     gl.uniform1f(locations.waterStrength, WATER_EFFECT_STRENGTH)
-    gl.uniform4f(locations.waterControls, Math.cos(WATER_WAVE_DIRECTION * Math.PI / 180), Math.sin(WATER_WAVE_DIRECTION * Math.PI / 180), 0, COASTAL_SHALLOWS_ENABLED ? 1 : 0)
+    gl.uniform4f(locations.waterControls, Math.cos(WATER_WAVE_DIRECTION * Math.PI / 180), Math.sin(WATER_WAVE_DIRECTION * Math.PI / 180), COASTAL_SHALLOWS_LENGTH / 10, COASTAL_SHALLOWS_ENABLED ? 1 : 0)
     gl.uniform1f(locations.oceanWaterEnabled, USE_OCEAN_WATER_RENDERING && this.hardwareGpuAvailable ? 1 : 0)
     this.stats.uniformUploadBytes += 64
     this.diagnostics.addCounter(RENDER_COUNTER_IDS.UPLOAD_BYTES, 64)
@@ -1237,7 +1240,7 @@ export class GameWebGLRenderer {
     gl.uniform1f(locations.waterTone, WATER_EFFECT_TONE)
     gl.uniform1f(locations.waterSaturation, WATER_EFFECT_SATURATION)
     gl.uniform1f(locations.waterStrength, WATER_EFFECT_STRENGTH)
-    gl.uniform4f(locations.waterControls, Math.cos(WATER_WAVE_DIRECTION * Math.PI / 180), Math.sin(WATER_WAVE_DIRECTION * Math.PI / 180), 0, COASTAL_SHALLOWS_ENABLED ? 1 : 0)
+    gl.uniform4f(locations.waterControls, Math.cos(WATER_WAVE_DIRECTION * Math.PI / 180), Math.sin(WATER_WAVE_DIRECTION * Math.PI / 180), COASTAL_SHALLOWS_LENGTH / 10, COASTAL_SHALLOWS_ENABLED ? 1 : 0)
     gl.uniform1f(locations.oceanWaterEnabled, USE_OCEAN_WATER_RENDERING && this.hardwareGpuAvailable ? 1 : 0)
 
     gl.activeTexture(gl.TEXTURE0)

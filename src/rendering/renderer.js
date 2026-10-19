@@ -30,6 +30,7 @@ import { selectedUnits } from '../inputHandler.js'
 import {
   RENDERER_BACKEND,
   COASTAL_SHALLOWS_ENABLED,
+  COASTAL_SHALLOWS_LENGTH,
   WATER_EFFECT_TONE,
   WATER_EFFECT_SATURATION,
   WATER_EFFECT_ZOOM,
@@ -122,7 +123,7 @@ export class Renderer {
     cpu.updatePalette({ tone: WATER_EFFECT_TONE, saturation: WATER_EFFECT_SATURATION, zoom: WATER_EFFECT_ZOOM })
     const ctx = typeof document !== 'undefined' ? document.getElementById('gameCanvas')?.getContext('2d') : null
     if (ctx && COASTAL_SHALLOWS_ENABLED) {
-      cpu.coastalStyles.prepare(ctx, cpu.shoreDepth, cpu.palette, TILE_SIZE, ctx.getTransform?.().a || 1, this.mapRenderer.sotMask)
+      cpu.coastalStyles.prepare(ctx, cpu.shoreDepth, cpu.palette, TILE_SIZE, ctx.getTransform?.().a || 1, this.mapRenderer.sotMask, COASTAL_SHALLOWS_LENGTH)
     }
     if (!this.gpuRenderer) this.gpuRenderer = new GameWebGLRenderer(null, this.textureManager, this.mapRenderer)
     this.gpuRenderer.prepareRetainedWaterTopology(mapGrid)

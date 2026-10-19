@@ -14,13 +14,14 @@ export class CoastalWaterStyles {
     this.builds = 0
   }
 
-  prepare(ctx, depth, palette, tileSize, density = 1, sotMask = null) {
-    if (this.depthBuilds === depth.builds && this.map === depth.map && this.tone === palette.tone && this.saturation === palette.saturation && this.density === density) return
+  prepare(ctx, depth, palette, tileSize, density = 1, sotMask = null, length = 20) {
+    if (this.depthBuilds === depth.builds && this.map === depth.map && this.tone === palette.tone && this.saturation === palette.saturation && this.density === density && this.length === length) return
     this.depthBuilds = depth.builds
     this.map = depth.map
     this.tone = palette.tone
     this.saturation = palette.saturation
     this.density = density
+    this.length = length
     this.tiles.clear()
     this.bytes = 0
     if (!ctx.createPattern || typeof document === 'undefined') return
@@ -28,11 +29,12 @@ export class CoastalWaterStyles {
     const size = Math.ceil((tileSize + 1) * density)
     const colors = LAYERS.map(layer => palette[layer].match(/[\d.]+/g).map(Number))
     const map = depth.map
+    const maxTiles = Math.max(0.1, length / 10)
     for (let y = 0; y < map.length; y++) for (let x = 0; x < map[y].length; x++) {
       // Include SOT host cells as well as water and street underlays.
       if (map[y][x]?.type !== 'water' && map[y][x]?.type !== 'street' && sotMask?.[y]?.[x]?.type !== 'water') continue
       const corners = depth.corners(x, y)
-      if (corners.every(value => value >= 5)) continue
+      if (corners.every(value => value >= maxTiles)) continue
       const shapeKey = corners.join(',')
       let styles = shapes.get(shapeKey)
       if (!styles) {
@@ -48,7 +50,7 @@ export class CoastalWaterStyles {
           const pixels = source.createImageData(size, size)
           const color = colors[layer]
           for (let py = 0; py < size; py++) for (let px = 0; px < size; px++) {
-            const opacity = shoreOpacity(corners, px / (tileSize * density), py / (tileSize * density))
+            const opacity = shoreOpacity(corners, px / (tileSize * density), py / (tileSize * density), maxTiles)
             const index = (py * size + px) * 4
             for (let channel = 0; channel < 3; channel++) {
               const sand = SAND[channel]

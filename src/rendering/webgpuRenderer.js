@@ -6,6 +6,7 @@ import {
   WATER_EFFECT_SATURATION,
   WATER_EFFECT_TONE,
   COASTAL_SHALLOWS_ENABLED,
+  COASTAL_SHALLOWS_LENGTH,
   WATER_WAVE_DIRECTION,
   WATER_EFFECT_SPEED,
   WATER_EFFECT_STRENGTH,
@@ -144,8 +145,9 @@ fn applySaturation(color: vec3f, saturation: f32) -> vec3f {
     color = applySaturation(color, uniforms.saturation);
     if (uniforms.waterControls.w > 0.5) {
       let depth = mix(mix(input.color.x, input.color.y, input.localPos.x), mix(input.color.w, input.color.z, input.localPos.x), input.localPos.y);
-      if (depth < 5.0) {
-        let opacity = clamp(depth / 5.0, 0.0, 1.0);
+      let maxDepth = max(uniforms.waterControls.z, 0.001);
+      if (depth < maxDepth) {
+        let opacity = clamp(depth / maxDepth, 0.0, 1.0);
         let grainBits = u32(floor(input.worldPos.x)) * 1664525u ^ u32(floor(input.worldPos.y)) * 1013904223u;
         let grain = f32(grainBits & 255u) / 255.0;
         let sand = vec3f(0.76, 0.67, 0.46) + (grain - 0.5) * 0.045;
@@ -774,7 +776,7 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
   updateWaterControls() {
     this.uniformData[12] = Math.cos(WATER_WAVE_DIRECTION * Math.PI / 180)
     this.uniformData[13] = Math.sin(WATER_WAVE_DIRECTION * Math.PI / 180)
-    this.uniformData[14] = 0
+    this.uniformData[14] = COASTAL_SHALLOWS_LENGTH / 10
     this.uniformData[15] = COASTAL_SHALLOWS_ENABLED ? 1 : 0
   }
 
