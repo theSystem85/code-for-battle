@@ -1,22 +1,26 @@
 import { shoreOpacity } from './shoreDepthField.js'
 
 const LAYERS = ['deep', 'band', 'column', 'bright', 'shimmer']
+const SAND = [194, 171, 117]
 const BYTE_BUDGET = 64 * 1024 * 1024
 
 // CPU fallback only: prepare exact bilinear seabed/mask patterns, shared by
 // identical corner distances. Animation still uses the existing eleven fills.
 export class CoastalWaterStyles {
   constructor() {
-    this.key = ''
+    this.depthBuilds = -1
     this.tiles = new Map()
     this.bytes = 0
     this.builds = 0
   }
 
   prepare(ctx, depth, palette, tileSize, density = 1, sotMask = null) {
-    const key = `${depth.builds}|${palette.tone}|${palette.saturation}|${density}`
-    if (this.key === key) return
-    this.key = key
+    if (this.depthBuilds === depth.builds && this.map === depth.map && this.tone === palette.tone && this.saturation === palette.saturation && this.density === density) return
+    this.depthBuilds = depth.builds
+    this.map = depth.map
+    this.tone = palette.tone
+    this.saturation = palette.saturation
+    this.density = density
     this.tiles.clear()
     this.bytes = 0
     if (!ctx.createPattern || typeof document === 'undefined') return
@@ -47,7 +51,7 @@ export class CoastalWaterStyles {
             const opacity = shoreOpacity(corners, px / (tileSize * density), py / (tileSize * density))
             const index = (py * size + px) * 4
             for (let channel = 0; channel < 3; channel++) {
-              const sand = [194, 171, 117][channel]
+              const sand = SAND[channel]
               pixels.data[index + channel] = layer === 0 ? sand + (color[channel] - sand) * opacity : color[channel]
             }
             pixels.data[index + 3] = layer === 0 ? 255 : Math.round(opacity * 255)
@@ -56,7 +60,7 @@ export class CoastalWaterStyles {
           const pattern = ctx.createPattern(canvas, 'repeat')
           if (!pattern) {
             this.tiles.clear()
-            this.key = ''
+            this.depthBuilds = -1
             return
           }
           pattern.setTransform(new window.DOMMatrix().scale(1 / density))

@@ -94,14 +94,14 @@ function bindGraphicsEffects(modal) {
     text.textContent = config.name
     const input = document.createElement('input')
     input.id = `settingsGraphics-${id}`
-    input.type = config.type === 'boolean' ? 'checkbox' : 'number'
+    input.type = config.type === 'boolean' ? 'checkbox' : config.type === 'number' ? 'number' : 'text'
     if (config.type === 'boolean') input.checked = Boolean(getConfigValue(id))
     else input.value = String(getConfigValue(id))
     for (const field of ['min', 'max', 'step']) if (config[field] != null) input[field] = config[field]
     input.disabled = typeof config.set !== 'function'
     input.title = config.description
     input.addEventListener('change', () => {
-      setConfigValue(id, config.type === 'boolean' ? input.checked : Number(input.value))
+      setConfigValue(id, config.type === 'boolean' ? input.checked : config.type === 'number' ? Number(input.value) : input.value)
       if (config.type !== 'boolean') input.value = String(getConfigValue(id))
     })
     label.append(text, input)

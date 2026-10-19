@@ -162,7 +162,7 @@ void main() {
   }
 
   if (vTextureType > 1.5) {
-    float c = cos(uWaterControls.x), s = sin(uWaterControls.x);
+    float c = uWaterControls.x, s = uWaterControls.y;
     vec2 wavePos = vec2(c * vWorldPos.x + s * vWorldPos.y, -s * vWorldPos.x + c * vWorldPos.y);
     vec3 waterColor;
     if (uOceanWaterEnabled > 0.5) {
@@ -181,11 +181,17 @@ void main() {
     waterColor += vec3(0.03, 0.05, 0.05) * shoreMask;
 
     waterColor = applySaturation(waterColor, uWaterSaturation);
-    float depth = mix(mix(vColor.x, vColor.y, vLocalPos.x), mix(vColor.w, vColor.z, vLocalPos.x), vLocalPos.y);
-    float opacity = uWaterControls.w > 0.5 ? clamp(depth / 5.0, 0.0, 1.0) : 1.0;
-    float grain = fract(sin(dot(floor(vWorldPos), vec2(12.9898, 78.233))) * 43758.5453);
-    vec3 sand = vec3(0.76, 0.67, 0.46) + (grain - 0.5) * 0.045;
-    outColor = vec4(mix(sand, waterColor, opacity), 1.0);
+    if (uWaterControls.w > 0.5) {
+      float depth = mix(mix(vColor.x, vColor.y, vLocalPos.x), mix(vColor.w, vColor.z, vLocalPos.x), vLocalPos.y);
+      if (depth < 5.0) {
+        float opacity = clamp(depth / 5.0, 0.0, 1.0);
+        uint grainBits = uint(floor(vWorldPos.x)) * 1664525u ^ uint(floor(vWorldPos.y)) * 1013904223u;
+        float grain = float(grainBits & 255u) / 255.0;
+        vec3 sand = vec3(0.76, 0.67, 0.46) + (grain - 0.5) * 0.045;
+        waterColor = mix(sand, waterColor, opacity);
+      }
+    }
+    outColor = vec4(waterColor, 1.0);
   } else if (vTextureType > 0.5) {
     if (vTextureSource > 0.5) {
       outColor = texture(uSecondaryAtlas, vUV);
@@ -1093,7 +1099,7 @@ export class GameWebGLRenderer {
     gl.uniform1f(locations.waterTone, WATER_EFFECT_TONE)
     gl.uniform1f(locations.waterSaturation, WATER_EFFECT_SATURATION)
     gl.uniform1f(locations.waterStrength, WATER_EFFECT_STRENGTH)
-    gl.uniform4f(locations.waterControls, WATER_WAVE_DIRECTION * Math.PI / 180, 0, 0, COASTAL_SHALLOWS_ENABLED ? 1 : 0)
+    gl.uniform4f(locations.waterControls, Math.cos(WATER_WAVE_DIRECTION * Math.PI / 180), Math.sin(WATER_WAVE_DIRECTION * Math.PI / 180), 0, COASTAL_SHALLOWS_ENABLED ? 1 : 0)
     gl.uniform1f(locations.oceanWaterEnabled, USE_OCEAN_WATER_RENDERING && this.hardwareGpuAvailable ? 1 : 0)
     this.stats.uniformUploadBytes += 64
     this.diagnostics.addCounter(RENDER_COUNTER_IDS.UPLOAD_BYTES, 64)
@@ -1231,7 +1237,7 @@ export class GameWebGLRenderer {
     gl.uniform1f(locations.waterTone, WATER_EFFECT_TONE)
     gl.uniform1f(locations.waterSaturation, WATER_EFFECT_SATURATION)
     gl.uniform1f(locations.waterStrength, WATER_EFFECT_STRENGTH)
-    gl.uniform4f(locations.waterControls, WATER_WAVE_DIRECTION * Math.PI / 180, 0, 0, COASTAL_SHALLOWS_ENABLED ? 1 : 0)
+    gl.uniform4f(locations.waterControls, Math.cos(WATER_WAVE_DIRECTION * Math.PI / 180), Math.sin(WATER_WAVE_DIRECTION * Math.PI / 180), 0, COASTAL_SHALLOWS_ENABLED ? 1 : 0)
     gl.uniform1f(locations.oceanWaterEnabled, USE_OCEAN_WATER_RENDERING && this.hardwareGpuAvailable ? 1 : 0)
 
     gl.activeTexture(gl.TEXTURE0)
