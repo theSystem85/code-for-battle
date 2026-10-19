@@ -396,7 +396,7 @@ export class RuntimeConfigDialog {
     dialog.className = 'runtime-config-dialog'
 
     // Get categories
-    const categories = getConfigCategories()
+    const categories = getConfigCategories().filter(category => category !== 'Graphics')
     this.selectedCategory = categories[0] || null
     this.searchQuery = ''
 
@@ -591,6 +591,7 @@ export class RuntimeConfigDialog {
     if (!query) return []
 
     return Object.entries(configRegistry).filter(([id, entry]) => {
+      if (entry.category === 'Graphics') return false
       const value = this.formatValue(getConfigValue(id), entry.type).toLowerCase()
       return this.matchesSearchTerm(entry.name, query) || this.matchesSearchTerm(id, query) || this.matchesSearchTerm(value, query)
     })

@@ -1,16 +1,26 @@
 // settingsModal.js
 // Tabbed settings modal that hosts runtime config shortcuts and the keybindings editor
 
-import { runtimeConfigDialog } from './runtimeConfigDialog.js'
-import { renderKeybindingsEditor } from './keybindingsEditor.js'
-import { renderGamepadMappingMenu, stopGamepadMenu } from './gamepadMappingMenu.js'
-import { uiText } from './uiText.js'
-import { initLlmSettingsPanel } from './llmSettingsPanel.js'
-import { gameState } from '../gameState.js'
-import { getConfigValue, setConfigValue } from '../configRegistry.js'
-import { getRendererBackendStatusText, whenRendererBackendResolved } from '../config.js'
-import { getStoredItem, setStoredItem } from '../storage/indexedDbStorage.js'
-import { getMixBalance, setMixBalance } from '../sound.js'
+import { runtimeConfigDialog
+} from './runtimeConfigDialog.js'
+import { renderKeybindingsEditor
+} from './keybindingsEditor.js'
+import { renderGamepadMappingMenu, stopGamepadMenu
+} from './gamepadMappingMenu.js'
+import { uiText
+} from './uiText.js'
+import { initLlmSettingsPanel
+} from './llmSettingsPanel.js'
+import { gameState
+} from '../gameState.js'
+import { configRegistry, getConfigValue, setConfigValue
+} from '../configRegistry.js'
+import { getRendererBackendStatusText, whenRendererBackendResolved
+} from '../config.js'
+import { getStoredItem, setStoredItem
+} from '../storage/indexedDbStorage.js'
+import { getMixBalance, setMixBalance
+} from '../sound.js'
 import {
   loadTrackMarkSettings,
   trackMarkSettings,
@@ -65,7 +75,48 @@ function rendererBackendSelectValue(value) {
   return value === 'webgl' || value === 'webgpu' || value === 'auto' ? value : 'auto'
 }
 
+const EXTRA_WATER_CONTROLS = [
+  ['Direction', 'waterWaveDirection', '°']
+]
+
+// Automatically place future Graphics registry entries in the Graphics tab too.
+function bindGraphicsEffects(modal) {
+  const container = modal.querySelector('#settingsGraphicsEffects')
+  if (!container) return
+  const dedicated = new Set(['waterEffectTone', 'waterEffectSaturation', 'waterEffectZoom',
+    'coastalShallowsEnabled', 'waterWaveDirection', 'waterEffectSpeed', 'waterEffectStrength', 'useOceanWaterRendering',
+    'mobileCanvasPixelRatioCap', 'rendererBackend'])
+  for (const [id, config] of Object.entries(configRegistry)) {
+    if (config.category !== 'Graphics' || dedicated.has(id)) continue
+    const label = document.createElement('label')
+    label.className = 'config-modal__field'
+    const text = document.createElement('span')
+    text.textContent = config.name
+    const input = document.createElement('input')
+    input.id = `settingsGraphics-${id}`
+    input.type = config.type === 'boolean' ? 'checkbox' : 'number'
+    if (config.type === 'boolean') input.checked = Boolean(getConfigValue(id))
+    else input.value = String(getConfigValue(id))
+    for (const field of ['min', 'max', 'step']) if (config[field] != null) input[field] = config[field]
+    input.disabled = typeof config.set !== 'function'
+    input.title = config.description
+    input.addEventListener('change', () => {
+      setConfigValue(id, config.type === 'boolean' ? input.checked : Number(input.value))
+      if (config.type !== 'boolean') input.value = String(getConfigValue(id))
+    })
+    label.append(text, input)
+    container.append(label)
+  }
+}
+
 function syncWaterGraphicsControls(modal) {
+  const direction = getConfigValue('waterWaveDirection')
+  const directionInput = modal.querySelector('#settingsWaterDirectionRange')
+  const directionValue = modal.querySelector('#settingsWaterDirectionValue')
+  if (directionInput) directionInput.value = String(direction)
+  if (directionValue) directionValue.textContent = `${direction}°`
+  const coast = modal.querySelector('#settingsCoastalShallowsToggle')
+  if (coast) coast.checked = Boolean(getConfigValue('coastalShallowsEnabled'))
   const oceanToggle = modal.querySelector('#settingsOceanWaterToggle')
   if (oceanToggle) oceanToggle.checked = getConfigValue(WATER_SETTINGS_CONFIG_IDS.ocean) !== false
   const heightInput = modal.querySelector('#settingsWaterHeightRange')
@@ -323,6 +374,16 @@ export function initSettingsModal() {
     })
   }
   bindTabs(modal)
+  bindGraphicsEffects(modal)
+  for (const [name, id] of EXTRA_WATER_CONTROLS) {
+    modal.querySelector(`#settingsWater${name}Range`)?.addEventListener('input', event => {
+      setConfigValue(id, Number(event.target.value))
+      syncWaterGraphicsControls(modal)
+    })
+  }
+  modal.querySelector('#settingsCoastalShallowsToggle')?.addEventListener('change', event => {
+    setConfigValue('coastalShallowsEnabled', event.target.checked)
+  })
   initLlmSettingsPanel()
 
   if (closeBtn) {

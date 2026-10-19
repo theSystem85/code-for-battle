@@ -1,14 +1,24 @@
 import {
   TILE_SIZE,
+  COASTAL_SHALLOWS_ENABLED,
+  WATER_WAVE_DIRECTION,
+  WATER_EFFECT_SPEED,
+  WATER_EFFECT_STRENGTH,
   WATER_EFFECT_SATURATION,
   WATER_EFFECT_TONE,
-  WATER_EFFECT_ZOOM,
-  WATER_EFFECT_STRENGTH,
-  WATER_EFFECT_SPEED
+  WATER_EFFECT_ZOOM
 } from '../../config.js'
-import { PROFILER_SPAN_IDS } from '../../performance/profilerIds.js'
-import { renderProfiler } from '../../performance/renderProfiler.js'
-import { RENDER_COUNTER_IDS, renderDiagnostics } from '../../performance/renderDiagnostics.js'
+import { PROFILER_SPAN_IDS
+} from '../../performance/profilerIds.js'
+import { renderProfiler
+} from '../../performance/renderProfiler.js'
+import { RENDER_COUNTER_IDS, renderDiagnostics
+} from '../../performance/renderDiagnostics.js'
+
+import { ShoreDepthField
+} from './shoreDepthField.js'
+import { CoastalWaterStyles
+} from './coastalWaterStyles.js'
 
 const ORIENTATION_NONE = 0
 const ORIENTATION_TOP_LEFT = 1
@@ -86,6 +96,10 @@ export class CpuWaterPass {
     this.tileSize = tileSize
     this.profiler = profiler
     this.diagnostics = diagnostics
+    this.shoreDepth = new ShoreDepthField()
+    this.coastalStyles = new CoastalWaterStyles()
+    this.waveCos = 1
+    this.waveSin = 0
     this.mapGrid = null
     this.sotMask = null
     this.topologyRevision = null
@@ -130,6 +144,7 @@ export class CpuWaterPass {
     this.sotMask = sotMask
     this.topologyRevision = topologyRevision
     this.visibleRevision = null
+    this.shoreDepth.prepare(mapGrid, topologyRevision)
     this.stats.topologyBuilds++
     return true
   }
@@ -246,6 +261,11 @@ export class CpuWaterPass {
     const sampledTime = Number.isFinite(time) ? time : this.now()
     this.stats.sampledTime = sampledTime
     const animationPhase = sampledTime * 0.0018 * WATER_EFFECT_SPEED
+    this.waveCos = Math.cos(WATER_WAVE_DIRECTION * Math.PI / 180)
+    this.waveSin = Math.sin(WATER_WAVE_DIRECTION * Math.PI / 180)
+    if (COASTAL_SHALLOWS_ENABLED) {
+      this.coastalStyles.prepare(ctx, this.shoreDepth, this.palette, this.tileSize, ctx.getTransform?.().a || 1, sotMask)
+    }
     const offsetX = scrollOffset?.x || 0
     const offsetY = scrollOffset?.y || 0
     let drawCalls = 0
@@ -292,15 +312,24 @@ export class CpuWaterPass {
   }
 
   drawTile(ctx, screenX, screenY, size, tileX, tileY, animationPhase) {
-    const originX = tileX * this.tileSize
-    const originY = tileY * this.tileSize
+    const worldX = tileX * this.tileSize
+    const worldY = tileY * this.tileSize
+    const originX = this.waveCos * worldX + this.waveSin * worldY
+    const originY = -this.waveSin * worldX + this.waveCos * worldY
+    const palette = COASTAL_SHALLOWS_ENABLED
+      ? this.coastalStyles.tiles.get(tileY * this.shoreDepth.width + tileX) || this.palette
+      : this.palette
     const baseAlpha = Number.isFinite(ctx.globalAlpha) ? ctx.globalAlpha : 1
     ctx.save()
-    ctx.fillStyle = this.palette.deep
+    if (palette !== this.palette) {
+      ctx.translate(screenX, screenY)
+      screenX = screenY = 0
+    }
+    ctx.fillStyle = palette.deep
     ctx.fillRect(screenX, screenY, size, size)
 
     const bandHeight = size / 6
-    ctx.fillStyle = this.palette.band
+    ctx.fillStyle = palette.band
     for (let index = 0; index < 5; index++) {
       const phase = animationPhase + originX * this.coefficients[0] + originY * this.coefficients[1] + index * 1.17
       const alpha = Math.max(0.12, Math.min(0.36, 0.22 + 0.08 * Math.sin(phase * 1.4)))
@@ -309,7 +338,7 @@ export class CpuWaterPass {
     }
 
     const columnWidth = size / 4
-    ctx.fillStyle = this.palette.column
+    ctx.fillStyle = palette.column
     for (let index = 0; index < 3; index++) {
       const phase = animationPhase * 0.72 + originX * this.coefficients[2] - originY * this.coefficients[0] + index * 1.9
       const alpha = Math.max(0.05, Math.min(0.24, 0.1 + 0.08 * Math.cos(phase * 1.7)))
@@ -319,10 +348,10 @@ export class CpuWaterPass {
 
     const shimmer = 0.5 + 0.5 * Math.sin((originX - originY) * this.coefficients[3] + animationPhase * 1.65)
     ctx.fillStyle = this.palette.bright
-    ctx.globalAlpha = baseAlpha * (0.16 + shimmer * 0.08 * WATER_EFFECT_STRENGTH)
+    ctx.globalAlpha = baseAlpha * (0.16 + shimmer * 0.08) * WATER_EFFECT_STRENGTH
     ctx.fillRect(screenX, screenY, size, size)
     ctx.fillStyle = this.palette.shimmer
-    ctx.globalAlpha = baseAlpha * (0.08 + shimmer * 0.05 * WATER_EFFECT_STRENGTH)
+    ctx.globalAlpha = baseAlpha * (0.08 + shimmer * 0.05) * WATER_EFFECT_STRENGTH
     ctx.fillRect(screenX, screenY, size, size)
     ctx.restore()
     return 11

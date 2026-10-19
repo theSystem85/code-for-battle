@@ -11,6 +11,12 @@ export { RENDER_REVISION_DOMAINS }
 
 // Create a single renderer instance
 const gameRenderer = new Renderer()
+if (typeof document !== 'undefined') {
+  document.addEventListener('water-graphics-preparation', () => {
+    const mapGrid = gameRenderer.mapRenderer.cpuWaterPass.mapGrid
+    if (mapGrid?.length) gameRenderer.prepareWaterResources(mapGrid)
+  })
+}
 // Export main rendering functions for compatibility with existing code
 export function renderGame(gameCtx, gameCanvas, mapGrid, factories, units, bullets, buildings, scrollOffset, selectionActive, selectionStart, selectionEnd, gameState, gpuContext = null, gpuCanvas = null, webgpuCanvas = null) {
   return gameRenderer.renderGame(gameCtx, gameCanvas, mapGrid, factories, units, bullets, buildings, scrollOffset, selectionActive, selectionStart, selectionEnd, gameState, gpuContext, gpuCanvas, webgpuCanvas)
@@ -78,7 +84,10 @@ export function publishPreparedRuntimeMap(mapGrid) {
   if (!mapGrid?.length) return Promise.resolve(null)
   if (gameRenderer.textureManager.integratedSpriteSheetMode) gameRenderer.textureManager.getDecorationLayout(mapGrid)
   if (mapRenderer && !mapRenderer.sotMask) mapRenderer.computeSOTMask(mapGrid)
-  return prepareRuntimeMap({ grid: mapGrid, sotMask: mapRenderer?.sotMask }).catch(error => {
+  return prepareRuntimeMap({ grid: mapGrid, sotMask: mapRenderer?.sotMask }).then(prepared => {
+    gameRenderer.prepareWaterResources(mapGrid)
+    return prepared
+  }).catch(error => {
     if (typeof window !== 'undefined') window.logger?.warn?.('Prepared map generation failed', error)
     return null
   })
