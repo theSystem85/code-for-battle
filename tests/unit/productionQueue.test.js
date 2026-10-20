@@ -165,6 +165,61 @@ describe('Production Queue System', () => {
     })
   })
 
+  it('[U05420] pauses multiple stacks, skips them, resumes paid progress and refunds suspended cancellation', () => {
+    gameState.buildings = [{ type: 'constructionYard', owner: gameState.humanPlayer, health: 100 }]
+    const buttons = ['powerPlant', 'oreRefinery', 'vehicleFactory'].map(type => {
+      const button = document.createElement('button')
+      button.dataset.buildingType = type
+      button.innerHTML = '<div class="production-progress"></div><div class="batch-counter"></div>'
+      return button
+    })
+    const [first, second, third] = buttons
+    productionQueue.addItem('powerPlant', first, true)
+    productionQueue.addItem('powerPlant', first, true)
+    productionQueue.addItem('oreRefinery', second, true)
+    productionQueue.addItem('vehicleFactory', third, true)
+    productionQueue.currentBuilding.progress = 0.4
+    productionQueue.buildingPaid = 200
+    expect(productionQueue.setStackPaused(first, true, true)).toBe(true)
+    expect(productionQueue.buildingItems.filter(item => item.button === first)).toHaveLength(2)
+    expect(first.classList.contains('paused')).toBe(true)
+    expect(productionQueue.currentBuilding.button).toBe(second)
+    expect(productionQueue.setStackPaused(second, true, true)).toBe(true)
+    expect(productionQueue.currentBuilding.button).toBe(third)
+    expect(productionQueue.setStackPaused(first, true, true)).toBe(false)
+    productionQueue.removeQueuedBuildingByButton(first)
+    expect(productionQueue.buildingItems.filter(item => item.button === first)).toHaveLength(1)
+    const saved = productionQueue.getSerializableState()
+    productionQueue.productionController = { buildingButtons: new Map(buttons.map(button => [button.dataset.buildingType, button])) }
+    productionQueue.restoreFromSerializableState(saved)
+    expect(first.classList.contains('paused')).toBe(true)
+    expect(first.querySelector('.batch-counter').style.display).toBe('flex')
+    expect(third.classList.contains('active')).toBe(true)
+    productionQueue.setStackPaused(first, true, false)
+    expect(productionQueue.currentBuilding.button).toBe(first)
+    expect(productionQueue.currentBuilding.progress).toBe(0.4)
+    expect(productionQueue.buildingPaid).toBe(200)
+    productionQueue.setStackPaused(first, true, true)
+    const money = gameState.money
+    productionQueue.removeQueuedBuildingByButton(first)
+    expect(gameState.money).toBe(money + 200)
+    expect(first.classList.contains('paused')).toBe(false)
+  })
+
+  it('[U05421] leaves a unit lane idle when every stack is paused and resumes without adding items', () => {
+    gameState.buildings = [{ type: 'vehicleFactory', owner: gameState.humanPlayer, health: 100 }]
+    const button = document.createElement('button')
+    button.innerHTML = '<div class="batch-counter"></div>'
+    productionQueue.addItem('tank_v1', button)
+    productionQueue.setStackPaused(button, false, true)
+    expect(productionQueue.currentUnit).toBeNull()
+    productionQueue.startNextUnitProduction()
+    expect(productionQueue.currentUnit).toBeNull()
+    productionQueue.setStackPaused(button, false, false)
+    expect(productionQueue.currentUnit.button).toBe(button)
+    expect(productionQueue.unitItems).toHaveLength(1)
+  })
+
   it('[U03487] keeps a remote completion receipt pending until the exact host acknowledgement, including duplicate acknowledgement', () => {
     const receiptId = createCompletionReceipt('player', 'remote-stack', 2)
     const itemId = `${receiptId}:0`

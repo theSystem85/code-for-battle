@@ -35,7 +35,7 @@ describe('production hover motion contract', () => {
   let targets
 
   beforeEach(() => {
-    document.body.innerHTML = `<button class="production-button unlocked">
+    document.body.innerHTML = `<button class="production-button unlocked production-label-hover">
       <div class="production-hover-sheet"><span class="building-name">Power Plant</span>
         <div class="production-hover-stats"><span>Cost: $2000</span></div></div>
       <div class="new-label">NEW</div><div class="batch-counter">2</div><div class="ready-counter">1</div>

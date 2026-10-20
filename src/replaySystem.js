@@ -970,6 +970,14 @@ function executeReplayCommand(entry) {
       return
     }
 
+    if (command.type === 'production_stack_pause') {
+      const isBuilding = command.queueType === 'building'
+      const button = document.querySelector(`.production-button[data-${isBuilding ? 'building' : 'unit'}-type="${command.itemType}"]`)
+      const lane = isBuilding ? productionQueue : productionQueue.getUnitLane(command.itemType)
+      if (button) lane.setStackPaused(button, isBuilding, command.paused, { record: false })
+      return
+    }
+
     if (command.type === 'production_pause') {
       if (command.queueType === 'unit') {
         productionQueue.setUnitPaused(command.paused, { record: false })
@@ -985,9 +993,9 @@ function executeReplayCommand(entry) {
         const button = document.querySelector(selector)
         if (button) {
           if (command.scope === 'queued') {
-            productionQueue.removeQueuedUnitByButton(button, { record: false })
+            productionQueue.getUnitLane(command.itemType).removeQueuedUnitByButton(button, { record: false })
           } else {
-            productionQueue.cancelUnitProduction({ record: false })
+            productionQueue.getUnitLane(command.itemType).cancelUnitProduction({ record: false })
           }
         }
       } else if (command.queueType === 'building') {

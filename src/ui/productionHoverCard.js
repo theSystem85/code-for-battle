@@ -137,6 +137,17 @@ export function setupProductionHoverCard(button, context, state, queue) {
 
   sheet.append(name, stats)
   button.appendChild(sheet)
+  button.addEventListener('pointermove', event => {
+    if (event.pointerType === 'touch') return
+    const rect = button.getBoundingClientRect()
+    // Keep the hit region fixed as the sheet moves away from the bottom label.
+    button.classList.toggle('production-label-hover', event.clientY >= rect.bottom - 24)
+    button.dataset.stackHover = event.clientY <= rect.top + rect.height / 2 ? 'increase' : 'decrease'
+  })
+  button.addEventListener('pointerleave', () => {
+    button.classList.remove('production-label-hover')
+    delete button.dataset.stackHover
+  })
   button.addEventListener('pointerenter', refreshDetails)
   button.addEventListener('focus', refreshDetails)
 }
