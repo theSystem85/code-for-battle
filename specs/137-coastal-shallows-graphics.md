@@ -2,7 +2,7 @@
 
 ## Behavior
 
-- Coastal Shallows (enabled by default) reveals a sandy seabed at all solid coasts. Water transparency decreases continuously from 100% at the coast to 0% at 50 m / five tiles offshore. Deep water is unchanged. Narrow channels, islands and diagonal coasts use the nearest solid coast; the map boundary is open water.
+- Coastal Shallows (enabled by default) reveals a sandy seabed at natural solid coasts. Street tiles and airstrip pavement do not seed sand gradients, and their water underlays and cutouts remain opaque even beside natural coastlines. Water transparency decreases continuously from 100% at the coast to 0% at 50 m / five tiles offshore. Deep water is unchanged. Narrow channels, islands and diagonal coasts use the nearest natural solid coast; the map boundary is open water.
 - A persistent checkbox switches between coastal and opaque water.
 - Graphics has a dedicated Settings tab. Frame pacing, radar noise animation, terrain backend/density, tracks, selection HUD appearance, water and all Graphics registry entries belong there. Future registry Graphics entries appear there automatically. Advanced runtime configuration excludes Graphics.
 - Persistent sliders: wave direction (0–360 degrees clockwise), speed (0–3x), strength (0–2x), and existing view height (0.5–20x; controls pattern scale). Existing tone and saturation control both water appearances on WebGL, WebGPU and Canvas fallback.
@@ -26,6 +26,8 @@ Commands:
 Before switching to dev and reading its stricter hardware-only test policy, an initial baseline diagnostic on Chromium/SwiftShader, 1440×1000 DPR 2, 100×100 map, seed 11, 200 combat units, selected units and 1800 px/s two-lap traversal: 8.25 FPS; frame interval p95 233.3 ms, p99 300 ms, max 350 ms; 496/496 intervals exceed 13.333 ms. CPU render p95 46.1 ms, p99 72.9 ms, max 146.6 ms. This initial baseline overlapped a unit-test run and is contaminated, not an acceptance comparison.
 
 75 presented FPS certification remains outstanding. A headless, software-only cloud browser cannot certify the physical reference device/display. Qualifying hardware must cover cold traversal, repeated scrolling, movement, firing and layered selected units at unchanged quality, reporting FPS, p95/p99/max, missed deadlines, CPU/GPU timing and heap/GC evidence. Do not interpret passing lint/unit tests as performance certification.
+
+Street exclusion regression coverage: U05416 checks paved shore sources and topology edits, U05417 checks opaque paved underlays beside natural shores, and U05418 checks Canvas pattern exclusion. These checks exercise preparation without a GPU. The exclusion adds no per-frame work; hardware performance acceptance remains pending.
 
 Dev integration preserves existing Ocean Surface Water / Classic Water selection, wave height, strength and speed settings. Ocean Surface Water and Classic Water share the new direction and coastal shader composition. Existing settings are reused; no speed/strength aliases or lost user preferences. Per current dev AGENTS.md rule 14, further GPU and performance runs are skipped on this verified SwiftShader worker.
 

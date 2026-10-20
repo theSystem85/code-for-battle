@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   bindSidebarAccordions,
   isSidebarAccordionOpen,
@@ -26,6 +26,15 @@ function mountAccordion(idPrefix) {
 }
 
 describe('sidebar accordion', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+  })
+
+  afterEach(() => {
+    vi.runOnlyPendingTimers()
+    vi.useRealTimers()
+  })
+
   it('[U04017] toggles open and closed like Map Settings', () => {
     const { toggle, content, icon } = mountAccordion('saveLoad')
     bindSidebarAccordions()
@@ -53,7 +62,6 @@ describe('sidebar accordion', () => {
   })
 
   it('[U04019] scrolls the opened section to the top of the sidebar when it is outside the viewport', () => {
-    vi.useFakeTimers()
     const { toggle, content } = mountAccordion('mapSettings')
     const sidebarScroll = document.getElementById('sidebarScroll')
     sidebarScroll.scrollTop = 40
@@ -69,7 +77,6 @@ describe('sidebar accordion', () => {
       top: 332,
       behavior: 'smooth'
     })
-    vi.useRealTimers()
   })
 
   it('[U04020] sets the closed chevron without scrolling', () => {

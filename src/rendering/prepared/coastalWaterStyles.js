@@ -31,8 +31,11 @@ export class CoastalWaterStyles {
     const map = depth.map
     const maxTiles = Math.max(0.1, length / 10)
     for (let y = 0; y < map.length; y++) for (let x = 0; x < map[y].length; x++) {
-      // Include SOT host cells as well as water and street underlays.
-      if (map[y][x]?.type !== 'water' && map[y][x]?.type !== 'street' && sotMask?.[y]?.[x]?.type !== 'water') continue
+      const tile = map[y][x]
+      // Pavement underlays keep the ordinary water palette, even beside sand.
+      if (tile?.type === 'street' || tile?.airstripStreet) continue
+      // Include SOT host cells as well as water.
+      if (tile?.type !== 'water' && sotMask?.[y]?.[x]?.type !== 'water') continue
       const corners = depth.corners(x, y)
       if (corners.every(value => value >= maxTiles)) continue
       const shapeKey = corners.join(',')

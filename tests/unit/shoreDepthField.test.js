@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { ShoreDepthField, shoreOpacity } from '../../src/rendering/prepared/shoreDepthField.js'
+import { CoastalWaterStyles } from '../../src/rendering/prepared/coastalWaterStyles.js'
 import { GameWebGLRenderer } from '../../src/rendering/webglRenderer.js'
 import { setCoastalShallowsLength, COASTAL_SHALLOWS_LENGTH } from '../../src/config.js'
 
@@ -8,6 +9,54 @@ function straightCoast(width = 12, height = 8) {
 }
 
 describe('prepared coastal depth', () => {
+  it.each([
+    { type: 'street' },
+    { type: 'street', airstripStreet: true },
+    { type: 'land', airstripStreet: true },
+    { type: 'water', airstripStreet: true }
+  ])('[U05416] keeps water beside paved coasts opaque: %j', pavement => {
+    const map = Array.from({ length: 8 }, () => Array.from({ length: 12 }, () => ({ type: 'water' })))
+    map[3][3] = pavement
+    const field = new ShoreDepthField()
+    field.prepare(map)
+    expect(field.at(4, 3)).toBe(field.maxTiles)
+    expect(shoreOpacity(field.corners(4, 3), 0, 0.5)).toBe(1)
+    // Natural coast still contributes sand; paving it invalidates the depth.
+    map[3][6] = { type: 'land' }
+    field.prepare(map, 1)
+    expect(field.at(6, 3)).toBe(0)
+    map[3][6] = pavement
+    field.prepare(map, 2)
+    expect(field.at(6, 3)).toBe(field.maxTiles)
+  })
+
+  it('[U05417] keeps paved water underlays opaque even beside a natural sandy coast', () => {
+    const map = straightCoast()
+    map[3][2] = { type: 'street' }
+    map[4][2] = { type: 'land', airstripStreet: true }
+    const field = new ShoreDepthField()
+    field.prepare(map)
+    for (const y of [3, 4]) {
+      expect(field.corners(2, y)).toEqual([5, 5, 5, 5])
+      expect(shoreOpacity(field.corners(2, y), 0, 0)).toBe(1)
+    }
+    expect(shoreOpacity(field.corners(2, 2), 0, 0)).toBe(0)
+  })
+
+  it('[U05418] omits sand patterns for paved SOT hosts in the Canvas fallback', () => {
+    const field = new ShoreDepthField()
+    field.prepare([[{ type: 'street' }, { type: 'land', airstripStreet: true }]])
+    const corners = vi.spyOn(field, 'corners')
+    const ctx = { createPattern: vi.fn() }
+    const palette = Object.fromEntries(['deep', 'band', 'column', 'bright', 'shimmer'].map(layer => [layer, 'rgb(0, 50, 100)']))
+    const styles = new CoastalWaterStyles()
+    styles.prepare(ctx, field, palette, 32, 1, [[{ type: 'water' }, { type: 'water' }]])
+    expect(corners).not.toHaveBeenCalled()
+    expect(ctx.createPattern).not.toHaveBeenCalled()
+    expect(styles.tiles.size).toBe(0)
+    expect(styles.bytes).toBe(0)
+  })
+
   it('[U05410] fades continuously from transparent shore to opaque water at five tiles', () => {
     const field = new ShoreDepthField()
     field.prepare(straightCoast())
