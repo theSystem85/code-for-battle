@@ -150,9 +150,12 @@ export function setupUnitButtons(controller) {
       controller.showStackDirectionIndicator(button, isUpperHalf ? 'increase' : 'decrease')
 
       if (!isUpperHalf) {
-        controller.removeQueuedUnit(button)
+        const lane = productionQueue.getUnitLane(unitType)
+        if (!lane.setStackPaused(button, false, true)) controller.removeQueuedUnit(button)
         return
       }
+
+      if (productionQueue.getUnitLane(unitType).setStackPaused(button, false, false)) return
 
       if (gameState.mapEditMode) {
         applyProductionBrush('unit', unitType)
@@ -272,6 +275,11 @@ export function setupUnitButtons(controller) {
       if (gameState.gamePaused) return
 
       const unitLane = productionQueue.getUnitLane(unitType)
+
+      if (unitLane.unitItems.some(item => item.button === button && item.stackPaused)) {
+        unitLane.removeQueuedUnitByButton(button)
+        return
+      }
 
       // Check if this button has the current production in its factory lane
       if (unitLane.currentUnit && unitLane.currentUnit.button === button) {
@@ -515,9 +523,11 @@ export function setupBuildingButtons(controller) {
       controller.showStackDirectionIndicator(button, isUpperHalf ? 'increase' : 'decrease')
 
       if (!isUpperHalf) {
-        controller.removeQueuedBuilding(button)
+        if (!productionQueue.setStackPaused(button, true, true)) controller.removeQueuedBuilding(button)
         return
       }
+
+      if (productionQueue.setStackPaused(button, true, false)) return
 
       if (gameState.mapEditMode) {
         applyProductionBrush('building', buildingType)
@@ -580,6 +590,11 @@ export function setupBuildingButtons(controller) {
 
     button.addEventListener('contextmenu', (e) => {
       e.preventDefault()
+
+      if (productionQueue.buildingItems.some(item => item.button === button && item.stackPaused)) {
+        productionQueue.removeQueuedBuildingByButton(button)
+        return
+      }
 
       // If this is a ready-for-placement building, handle cancellation properly
       if (button.classList.contains('ready-for-placement')) {

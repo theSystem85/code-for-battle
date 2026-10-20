@@ -64,6 +64,8 @@ export const productionQueue = {
         batchCounter.style.display = 'none'
         button.classList.remove('active')
         button.classList.remove('paused')
+        const progressBar = button.querySelector('.production-progress')
+        if (progressBar) progressBar.style.width = '0%'
       } else {
         batchCounter.textContent = count
         batchCounter.style.display = 'flex'
@@ -75,6 +77,72 @@ export const productionQueue = {
     if (item && item.blueprint) {
       gameState.blueprints = gameState.blueprints.filter(bp => bp !== item.blueprint)
     }
+  },
+
+  refundSuspendedProduction: function(item) {
+    if (isHost() || !gameState.multiplayerSession?.isRemote) {
+      gameState.money += item.suspendedProduction?.paid || 0
+    }
+  },
+
+  // Stack changes run only on player input or queue transitions, never per tick.
+  setStackPaused: function(button, isBuilding, paused, options = {}) {
+    const items = isBuilding ? this.buildingItems : this.unitItems
+    const currentKey = isBuilding ? 'currentBuilding' : 'currentUnit'
+    const paidKey = isBuilding ? 'buildingPaid' : 'unitPaid'
+    const pausedKey = isBuilding ? 'pausedBuilding' : 'pausedUnit'
+    const matching = items.filter(item => item.button === button)
+    if (!matching.length || Boolean(matching[0].stackPaused) === paused) return false
+
+    const current = this[currentKey]
+    // Preserve paid progress when yielding the lane, including when a resumed
+    // stack takes priority over the stack that ran during its pause.
+    if (current && (current.button === button || !paused)) {
+      items[0].suspendedProduction = {
+        progress: current.progress, duration: current.duration, paid: this[paidKey]
+      }
+      current.button.classList.remove('active')
+      this[currentKey] = null
+      this[paidKey] = 0
+      this[pausedKey] = false
+    }
+    matching.forEach(item => { item.stackPaused = paused })
+    button.classList.toggle('paused', paused)
+    if (!paused) {
+      const index = items.indexOf(matching[0])
+      items.splice(index, 1)
+      items.unshift(matching[0])
+    }
+    if (!this[currentKey]) {
+      if (isBuilding) this.startNextBuildingProduction()
+      else this.startNextUnitProduction()
+    }
+    if (options.record !== false) {
+      recordReplayCommand({
+        type: 'production_stack_pause', queueType: isBuilding ? 'building' : 'unit',
+        itemType: matching[0].type, paused
+      }, { source: options.source || 'human' })
+    }
+    return true
+  },
+
+  selectNextUnpausedItem: function(items) {
+    const index = items.findIndex(item => !item.stackPaused)
+    if (index < 0) return false
+    if (index > 0) items.unshift(items.splice(index, 1)[0])
+    return true
+  },
+
+  restoreSuspendedProduction: function(item, current, paidKey) {
+    const saved = item.suspendedProduction
+    if (!saved) return
+    current.progress = saved.progress
+    current.duration = saved.duration
+    current.startTime = getSimulationTime(gameState) - saved.progress * saved.duration
+    this[paidKey] = saved.paid
+    const bar = item.button.querySelector('.production-progress')
+    if (bar) bar.style.width = `${saved.progress * 100}%`
+    delete item.suspendedProduction
   },
 
   removeQueuedUnitByButton: function(button, options = {}) {
@@ -94,6 +162,7 @@ export const productionQueue = {
       this.tryResumeProduction()
       failCompletionReceipt(this.unitItems[i]?.completionReceiptId)
       this.unitItems.splice(i, 1)
+      this.refundSuspendedProduction(queued)
       this.updateBatchCounter(button, this.unitItems.filter(item => item.button === button).length)
 
       if (options.record !== false) {
@@ -128,6 +197,7 @@ export const productionQueue = {
       this.tryResumeProduction()
       failCompletionReceipt(this.buildingItems[i]?.completionReceiptId)
       this.buildingItems.splice(i, 1)
+      this.refundSuspendedProduction(queued)
       this.removeBlueprint(queued)
       this.updateBatchCounter(button, this.buildingItems.filter(item => item.button === button).length)
 
@@ -188,6 +258,7 @@ export const productionQueue = {
           affectedButtons.add(item.button)
         }
         failCompletionReceipt(this.buildingItems[i]?.completionReceiptId)
+        this.refundSuspendedProduction(item)
         this.buildingItems.splice(i, 1)
         cancelledCount += 1
       }
@@ -257,7 +328,7 @@ export const productionQueue = {
         const label = button.querySelector('.new-label')
         if (label) label.style.display = 'none'
       }
-      this.buildingItems.push({ type, button, isBuilding, blueprint, completionReceiptId: options.completionReceiptId || null })
+      this.buildingItems.push({ type, button, isBuilding, blueprint, stackPaused: this.buildingItems.some(item => item.button === button && item.stackPaused), completionReceiptId: options.completionReceiptId || null })
       const currentCount = this.buildingItems.filter(item => item.button === button).length
       this.updateBatchCounter(button, currentCount)
 
@@ -274,6 +345,7 @@ export const productionQueue = {
         type,
         button,
         isBuilding,
+        stackPaused: this.unitItems.some(item => item.button === button && item.stackPaused),
         rallyPoint,
         completionReceiptId: options.completionReceiptId || null,
         completionItemId: options.completionItemId || null,
@@ -314,6 +386,7 @@ export const productionQueue = {
       return
     }
 
+    if (!this.selectNextUnpausedItem(this.unitItems)) return
     const item = this.unitItems[0]
     const cost = unitCosts[item.type] || 0
 
@@ -384,6 +457,8 @@ export const productionQueue = {
       automationDelivery: item.automationDelivery || null
     }
 
+    this.restoreSuspendedProduction(item, this.currentUnit, 'unitPaid')
+
     // Warm the milestone clip before the unit exists. Playback waits for the milestone.
     preloadMilestoneForProduction(item.type, false)
 
@@ -430,6 +505,7 @@ export const productionQueue = {
       return
     }
 
+    if (!this.selectNextUnpausedItem(this.buildingItems)) return
     const item = this.buildingItems[0]
 
     const yardMultiplier = this.getConstructionYardMultiplier()
@@ -494,6 +570,8 @@ export const productionQueue = {
       completionItemId: item.completionItemId || null,
       blueprint: item.blueprint || null
     }
+
+    this.restoreSuspendedProduction(item, this.currentBuilding, 'buildingPaid')
 
     // Warm the milestone clip before the building exists. Playback waits for the milestone.
     preloadMilestoneForProduction(item.type, true)
@@ -1370,6 +1448,8 @@ export const productionQueue = {
 
     const serializeQueueItem = (item) => ({
       type: item.type,
+      stackPaused: Boolean(item.stackPaused),
+      suspendedProduction: item.suspendedProduction ? { ...item.suspendedProduction } : null,
       rallyPoint: serializeRallyPoint(item.rallyPoint),
       blueprint: serializeBlueprint(item.blueprint),
       factoryId: item.factoryId || null,
@@ -1441,9 +1521,11 @@ export const productionQueue = {
 
     if (this.productionController) {
       if (this.productionController.unitButtons instanceof Map) {
-        this.productionController.unitButtons.forEach(resetButtonState)
+        this.productionController.unitButtons.forEach((button, type) => {
+          if (productionQueue.getUnitLane(type) === this) resetButtonState(button)
+        })
       }
-      if (this.productionController.buildingButtons instanceof Map) {
+      if (this === productionQueue && this.productionController.buildingButtons instanceof Map) {
         this.productionController.buildingButtons.forEach(resetButtonState)
       }
     }
@@ -1519,6 +1601,8 @@ export const productionQueue = {
         this.unitItems.push({
           type: item.type,
           button,
+          stackPaused: Boolean(item.stackPaused),
+          suspendedProduction: item.suspendedProduction ? { ...item.suspendedProduction } : null,
           isBuilding: false,
           rallyPoint,
           factoryId: item.factoryId || null,
@@ -1537,6 +1621,8 @@ export const productionQueue = {
         this.buildingItems.push({
           type: item.type,
           button,
+          stackPaused: Boolean(item.stackPaused),
+          suspendedProduction: item.suspendedProduction ? { ...item.suspendedProduction } : null,
           isBuilding: true,
           completionReceiptId: item.completionReceiptId || null,
           completionItemId: item.completionItemId || null,
@@ -1774,4 +1860,9 @@ productionQueue.restoreFromSerializableState = function(state) {
   unitLaneMethods.restoreFromSerializableState.call(this, state)
   unitLaneMethods.restoreFromSerializableState.call(this.unitQueues.naval, state?.unitProductionLanes?.naval || {})
   unitLaneMethods.restoreFromSerializableState.call(this.unitQueues.air, state?.unitProductionLanes?.air || {})
+  for (const items of [this.unitItems, this.buildingItems, this.unitQueues.naval.unitItems, this.unitQueues.air.unitItems]) {
+    for (const item of items) {
+      if (item.stackPaused) item.button.classList.add('paused')
+    }
+  }
 }

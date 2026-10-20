@@ -24,12 +24,7 @@ export function removeQueuedUnit(controller, button) {
 export function getBuildingProductionCount(_controller, button) {
   if (!button) return 0
 
-  let count = productionQueue.buildingItems.filter(item => item.button === button).length
-  if (productionQueue.currentBuilding && productionQueue.currentBuilding.button === button) {
-    count += 1
-  }
-
-  return count
+  return productionQueue.buildingItems.filter(item => item.button === button).length
 }
 
 export function removeQueuedBuilding(controller, button) {

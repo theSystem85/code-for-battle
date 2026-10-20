@@ -4,6 +4,25 @@ import { GAME_STATE_SCHEMA_VERSION } from './gameStateSchema.js'
 // live/save state shape changes. Version 1 is the original, unmigrated shape.
 export const migrations = Object.create(null)
 
+// Old queues have no manually suspended stacks; preserve their lane pause state.
+migrations[2] = state => {
+  const migrateQueue = queue => {
+    if (!queue) return queue
+    const result = { ...queue }
+    for (const key of ['unitItems', 'buildingItems']) {
+      if (Array.isArray(queue[key])) {
+        result[key] = queue[key].map(item => ({ ...item, stackPaused: false, suspendedProduction: null }))
+      }
+    }
+    if (queue.unitProductionLanes) {
+      result.unitProductionLanes = Object.fromEntries(Object.entries(queue.unitProductionLanes)
+        .map(([key, lane]) => [key, migrateQueue(lane)]))
+    }
+    return result
+  }
+  return { ...state, productionQueueState: migrateQueue(state.productionQueueState) }
+}
+
 function assertSchemaVersion(version, label) {
   if (!Number.isSafeInteger(version) || version < 1) {
     throw new TypeError(`Live state migration ${label} must be a positive integer; received ${String(version)}`)
