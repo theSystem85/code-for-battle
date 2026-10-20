@@ -1,3 +1,5 @@
+import { bindStackedPlacementCancellation } from './ui/productionPlacementBridge.js'
+import { getProductionPlacementSettings } from './ui/productionPlacementSettings.js'
 import { getProductionDuration, vehicleFactorySpeedUnitTypes } from './production/timing.js'
 import { completeProductionItem, failCompletionReceipt, noteProductionBlocked } from './policies/completionReceipts.js'
 import { spawnUnit, findPath } from './units.js'
@@ -42,7 +44,8 @@ export const productionQueue = {
   currentBuilding: null,
   pausedUnit: false,
   pausedBuilding: false,
-  completedBuildings: [], // Changed from completedBuilding to array
+  completedBuildings: [], // Ready buildings in completion order.
+  stackedPlacementActive: false,
 
   // Store how much money has been paid so far for current productions
   unitPaid: 0,
@@ -917,6 +920,7 @@ export const productionQueue = {
           { buildDuration: this.currentUnit.duration }
         )
         if (newUnit) {
+          newUnit.productionCompletedAt = getSimulationTime(gameState)
           units.push(newUnit)
           itemSpawned = true
           completeProductionItem(completionReceiptId, this.currentUnit.completionItemId)
@@ -1010,14 +1014,14 @@ export const productionQueue = {
         this.completedBuildings.push({ type: this.currentBuilding.type, button: this.currentBuilding.button, completionReceiptId: this.currentBuilding.completionReceiptId || null })
         this.currentBuilding.button.classList.add('ready-for-placement')
         this.updateReadyBuildingCounter(this.currentBuilding.button)
-        showNotification(`${buildingData[this.currentBuilding.type].displayName} ready! Click build button to place.`)
+        showNotification(`${buildingData[this.currentBuilding.type].displayName} ready to place.`)
       }
       this.removeBlueprint(this.currentBuilding)
     } else {
       this.completedBuildings.push({ type: this.currentBuilding.type, button: this.currentBuilding.button, completionReceiptId: this.currentBuilding.completionReceiptId || null })
       this.currentBuilding.button.classList.add('ready-for-placement')
       this.updateReadyBuildingCounter(this.currentBuilding.button)
-      showNotification(`${buildingData[this.currentBuilding.type].displayName} ready! Click build button to place.`)
+      showNotification(`${buildingData[this.currentBuilding.type].displayName} ready to place.`)
     }
 
     this.currentBuilding.button.classList.remove('active')
@@ -1025,6 +1029,13 @@ export const productionQueue = {
     const progressBar = this.currentBuilding.button.querySelector('.production-progress')
     if (progressBar) {
       progressBar.style.width = '0%'
+    }
+
+    if (getProductionPlacementSettings().autoActivate && !gameState.buildingPlacementMode &&
+        !gameState.draggedBuildingType && !gameState.chainBuildMode && !gameState.mapEditMode &&
+        !gameState.repairMode && !gameState.sellMode &&
+        !isReplayModeActive() && !isLocalPartyAutomationLocked()) {
+      this.startReadyBuildingPlacement(false)
     }
 
     playSound('constructionComplete', 1.0, 0, true)
@@ -1238,6 +1249,7 @@ export const productionQueue = {
     this.completedBuildings.splice(completedBuildingIndex, 1)
 
     // Clear building placement mode
+    this.stackedPlacementActive = false
     gameState.buildingPlacementMode = false
     gameState.currentBuildingType = null
 
@@ -1247,6 +1259,8 @@ export const productionQueue = {
       button.classList.remove('ready-for-placement')
     }
 
+    this.updateReadyBuildingCounter(button)
+
     // Show notification
     showNotification(`${buildingData[type].displayName} construction canceled`)
 
@@ -1255,12 +1269,14 @@ export const productionQueue = {
   },
 
   // Method to enable building placement mode for a ready building
-  enableBuildingPlacementMode: function(buildingType, button) {
+  enableBuildingPlacementMode: function(buildingType, button, options = {}) {
     // Find the completed building for this button
     const completedBuilding = this.completedBuildings.find(building => building.button === button)
     if (!completedBuilding) {
       return false
     }
+
+    this.stackedPlacementActive = options.stacked === true
 
     // Enable placement mode
     gameState.buildingPlacementMode = true
@@ -1272,11 +1288,29 @@ export const productionQueue = {
     return true
   },
 
+  startReadyBuildingPlacement: function(stacked = true) {
+    const next = this.completedBuildings[0]
+    if (!next || gameState.mapEditMode || isReplayModeActive() || isLocalPartyAutomationLocked()) return false
+    return this.enableBuildingPlacementMode(next.type, next.button, { stacked })
+  },
+
+  advanceReadyBuildingPlacement: function() {
+    const shouldAdvance = this.stackedPlacementActive || getProductionPlacementSettings().autoAdvance
+    if (shouldAdvance && this.startReadyBuildingPlacement(this.stackedPlacementActive)) return true
+    this.stackedPlacementActive = false
+    return false
+  },
+
+  refreshReadyBuildingTab: function() {
+    document.querySelector('#productionTabs [data-tab="buildings"]')?.classList.toggle('has-ready-buildings', this.completedBuildings.length > 0)
+  },
+
   // Method to exit building placement mode without canceling the building
   exitBuildingPlacementMode: function() {
     if (!gameState.buildingPlacementMode) return
 
     // Clear building placement mode
+    this.stackedPlacementActive = false
     gameState.buildingPlacementMode = false
     gameState.currentBuildingType = null
 
@@ -1397,6 +1431,7 @@ export const productionQueue = {
 
   // Method to update the ready building counter display
   updateReadyBuildingCounter: function(button) {
+    this.refreshReadyBuildingTab()
     const readyCount = this.completedBuildings.filter(building => building.button === button).length
 
     let readyCounter = button.querySelector('.ready-counter')
@@ -1486,6 +1521,7 @@ export const productionQueue = {
       pausedBuilding: Boolean(this.pausedBuilding),
       unitPaid: Number.isFinite(this.unitPaid) ? this.unitPaid : 0,
       buildingPaid: Number.isFinite(this.buildingPaid) ? this.buildingPaid : 0,
+      stackedPlacementActive: Boolean(this.stackedPlacementActive),
       completedBuildings: this.completedBuildings.map(item => ({ type: item.type, completionReceiptId: item.completionReceiptId || null }))
     }
   },
@@ -1512,6 +1548,7 @@ export const productionQueue = {
     this.unitItems = []
     this.buildingItems = []
     this.completedBuildings = []
+    this.stackedPlacementActive = Boolean(state?.stackedPlacementActive)
     this.currentUnit = null
     this.currentBuilding = null
     this.unitPaid = 0
@@ -1796,7 +1833,7 @@ const createUnitLane = () => {
   Object.assign(lane, {
     unitItems: [], currentUnit: null, pausedUnit: false, unitPaid: 0,
     buildingItems: [], currentBuilding: null, pausedBuilding: false, buildingPaid: 0,
-    completedBuildings: [],
+    completedBuildings: [], stackedPlacementActive: false,
     updateProgress: unitLaneMethods.updateProgress,
     tryResumeProduction: unitLaneMethods.tryResumeProduction,
     resumeProductionAfterUnpause: unitLaneMethods.resumeProductionAfterUnpause
@@ -1860,9 +1897,12 @@ productionQueue.restoreFromSerializableState = function(state) {
   unitLaneMethods.restoreFromSerializableState.call(this, state)
   unitLaneMethods.restoreFromSerializableState.call(this.unitQueues.naval, state?.unitProductionLanes?.naval || {})
   unitLaneMethods.restoreFromSerializableState.call(this.unitQueues.air, state?.unitProductionLanes?.air || {})
+  this.refreshReadyBuildingTab()
   for (const items of [this.unitItems, this.buildingItems, this.unitQueues.naval.unitItems, this.unitQueues.air.unitItems]) {
     for (const item of items) {
       if (item.stackPaused) item.button.classList.add('paused')
     }
   }
 }
+
+bindStackedPlacementCancellation(() => { productionQueue.stackedPlacementActive = false })

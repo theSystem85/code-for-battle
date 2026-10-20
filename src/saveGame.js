@@ -619,6 +619,7 @@ function buildSaveObject(label) {
       factoryExit: u.factoryExit ? { ...u.factoryExit } : null,
       type: u.type,
       owner: u.owner,
+      productionCompletedAt: u.productionCompletedAt ?? null,
       x: u.x,
       y: u.y,
       tileX: u.tileX,

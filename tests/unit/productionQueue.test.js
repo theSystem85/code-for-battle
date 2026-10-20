@@ -1,3 +1,5 @@
+import { cancelStackedPlacement } from '../../src/ui/productionPlacementBridge.js'
+import { getProductionPlacementSettings, setProductionPlacementSetting } from '../../src/ui/productionPlacementSettings.js'
 /**
  * Tests for Production Queue System
  *
@@ -117,6 +119,15 @@ describe('Production Queue System', () => {
 
   beforeEach(() => {
     resetGameState()
+    gameState.buildingPlacementMode = false
+    gameState.currentBuildingType = null
+    gameState.draggedBuildingType = null
+    gameState.chainBuildMode = false
+    gameState.repairMode = false
+    gameState.sellMode = false
+    productionQueue.stackedPlacementActive = false
+    setProductionPlacementSetting('autoActivate', true)
+    setProductionPlacementSetting('autoAdvance', true)
     gameState.mapGrid = createTestMapGrid(50, 50)
     gameState.gamePaused = false
     gameState.gameStarted = true
@@ -163,6 +174,38 @@ describe('Production Queue System', () => {
       lane.pausedUnit = false
       lane.unitPaid = 0
     })
+  })
+
+  it('[U05425] automatically enters placement on completion and advances through ready types', () => {
+    productionQueue.currentBuilding = { type: 'powerPlant', button: mockButton }
+    productionQueue.buildingItems = [productionQueue.currentBuilding]
+    productionQueue.completeCurrentBuildingProduction()
+    expect(gameState.buildingPlacementMode).toBe(true)
+    expect(gameState.currentBuildingType).toBe('powerPlant')
+    const second = { type: 'oreRefinery', button: mockButton }
+    productionQueue.completedBuildings.push(second)
+    productionQueue.completedBuildings.shift()
+    gameState.buildingPlacementMode = false
+    gameState.currentBuildingType = null
+    expect(productionQueue.advanceReadyBuildingPlacement()).toBe(true)
+    expect(gameState.currentBuildingType).toBe('oreRefinery')
+  })
+
+  it('[U05426] honors independent settings while an explicit stacked placement overrides auto-advance', () => {
+    setProductionPlacementSetting('autoActivate', false)
+    setProductionPlacementSetting('autoAdvance', false)
+    productionQueue.currentBuilding = { type: 'powerPlant', button: mockButton }
+    productionQueue.buildingItems = [productionQueue.currentBuilding]
+    productionQueue.completeCurrentBuildingProduction()
+    expect(gameState.buildingPlacementMode).toBe(false)
+    productionQueue.completedBuildings.push({ type: 'oreRefinery', button: mockButton })
+    expect(productionQueue.startReadyBuildingPlacement()).toBe(true)
+    productionQueue.completedBuildings.shift()
+    expect(productionQueue.advanceReadyBuildingPlacement()).toBe(true)
+    expect(gameState.currentBuildingType).toBe('oreRefinery')
+    productionQueue.exitBuildingPlacementMode()
+    expect(productionQueue.stackedPlacementActive).toBe(false)
+    expect(getProductionPlacementSettings()).toEqual({ autoActivate: false, autoAdvance: false })
   })
 
   it('[U05420] pauses multiple stacks, skips them, resumes paid progress and refunds suspended cancellation', () => {
@@ -218,6 +261,36 @@ describe('Production Queue System', () => {
     productionQueue.setStackPaused(button, false, false)
     expect(productionQueue.currentUnit.button).toBe(button)
     expect(productionQueue.unitItems).toHaveLength(1)
+  })
+
+  it('[U05429] preserves explicit stacked placement and ready buildings through serialization', () => {
+    const container = document.createElement('div')
+    container.innerHTML = '<div id="productionTabs"><button data-tab="buildings"></button></div>' +
+      '<button data-building-type="powerPlant"><div class="ready-counter"></div></button>' +
+      '<button data-building-type="oreRefinery"><div class="ready-counter"></div></button>'
+    document.body.appendChild(container)
+    const first = container.querySelector('[data-building-type="powerPlant"]')
+    const second = container.querySelector('[data-building-type="oreRefinery"]')
+    productionQueue.productionController = { buildingButtons: new Map([['powerPlant', first], ['oreRefinery', second]]) }
+    productionQueue.completedBuildings = [{ type: 'powerPlant', button: first }, { type: 'oreRefinery', button: second }]
+    productionQueue.startReadyBuildingPlacement()
+    const saved = productionQueue.getSerializableState()
+    productionQueue.restoreFromSerializableState(saved)
+    expect(productionQueue.stackedPlacementActive).toBe(true)
+    cancelStackedPlacement()
+    expect(productionQueue.stackedPlacementActive).toBe(false)
+    expect(productionQueue.completedBuildings.map(item => item.type)).toEqual(['powerPlant', 'oreRefinery'])
+    expect(container.querySelector('[data-tab="buildings"]').classList.contains('has-ready-buildings')).toBe(true)
+    container.remove()
+  })
+
+  it.each(['repairMode', 'sellMode'])('[U05431] does not interrupt %s when a building becomes ready', mode => {
+    gameState[mode] = true
+    productionQueue.currentBuilding = { type: 'powerPlant', button: mockButton }
+    productionQueue.buildingItems = [productionQueue.currentBuilding]
+    productionQueue.completeCurrentBuildingProduction()
+    expect(gameState.buildingPlacementMode).toBe(false)
+    expect(productionQueue.completedBuildings).toHaveLength(1)
   })
 
   it('[U03487] keeps a remote completion receipt pending until the exact host acknowledgement, including duplicate acknowledgement', () => {
@@ -993,6 +1066,7 @@ describe('Production Queue System', () => {
 
       productionQueue.completeCurrentUnitProduction()
 
+      expect(units[0].productionCompletedAt).toBeGreaterThanOrEqual(0)
       expect(units[0].oreField).toEqual({ x: 6, y: 7 })
       expect(units[0].moveTarget).toEqual({ x: 6, y: 7 })
       expect(units[0].path).toEqual([{ x: 6, y: 7 }])

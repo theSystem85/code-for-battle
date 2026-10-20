@@ -1,3 +1,4 @@
+import { cancelStackedPlacement } from '../ui/productionPlacementBridge.js'
 import { getSimulationTime } from '../game/time.js'
 import { noteDefenceDirectOrder } from '../policies/defenceCommandApi.js'
 // keyboardHandler.js
@@ -478,6 +479,7 @@ export class KeyboardHandler {
 
     // Cancel any other active modes
     if (gameState.buildingPlacementMode) {
+      cancelStackedPlacement()
       gameState.buildingPlacementMode = false
       gameState.selectedBuilding = null
       modeWasCanceled = true

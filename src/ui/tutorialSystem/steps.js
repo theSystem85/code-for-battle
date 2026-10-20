@@ -81,6 +81,7 @@ export function buildTutorialSteps() {
     },
     {
       id: 'build-power',
+      additionalGuidance: 'Finished buildings enter placement mode automatically and continue to the next ready building; both options can be changed in Settings. Click or tap the already-open Buildings tab to place all ready buildings one by one. Its inward glow shows that buildings are ready.',
       title: 'Build a Power Plant',
       text: {
         desktop: 'Open the Buildings tab and queue a Power Plant. Power is required for almost every structure.',
@@ -247,6 +248,7 @@ export function buildTutorialSteps() {
     },
     {
       id: 'tank-control',
+      additionalGuidance: 'Click or tap the already-open Units tab to smoothly focus produced units from newest to oldest. Whenever a new unit finishes, the next click starts again at the newest unit.',
       title: 'Command & Remote Control Tanks',
       text: {
         desktop: 'When the tank finishes, left-click to move it, or hold the arrow keys (and Space to fire) for remote control driving.',

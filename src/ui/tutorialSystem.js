@@ -510,7 +510,7 @@ class TutorialSystem {
       this.stepTitle.textContent = step.title
     }
     if (this.stepText) {
-      this.stepText.textContent = getTextForDevice(step, this.getInputMethod())
+      this.stepText.textContent = [getTextForDevice(step, this.getInputMethod()), step.additionalGuidance].filter(Boolean).join(' ')
     }
     if (this.stepHint) {
       this.stepHint.textContent = getHintForDevice(step, this.getInputMethod())

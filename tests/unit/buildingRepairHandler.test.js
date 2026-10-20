@@ -128,7 +128,8 @@ describe('buildingRepairHandler.js', () => {
 
     productionQueue = {
       completedBuildings: [],
-      updateReadyBuildingCounter: vi.fn()
+      updateReadyBuildingCounter: vi.fn(),
+      advanceReadyBuildingPlacement: vi.fn()
     }
   })
 

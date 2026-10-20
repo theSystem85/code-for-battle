@@ -23,6 +23,16 @@ migrations[2] = state => {
   return { ...state, productionQueueState: migrateQueue(state.productionQueueState) }
 }
 
+migrations[3] = state => ({
+  ...state,
+  units: Array.isArray(state.units)
+    ? state.units.map(unit => ({ ...unit, productionCompletedAt: unit.productionCompletedAt ?? null }))
+    : state.units,
+  productionQueueState: state.productionQueueState
+    ? { ...state.productionQueueState, stackedPlacementActive: false }
+    : state.productionQueueState
+})
+
 function assertSchemaVersion(version, label) {
   if (!Number.isSafeInteger(version) || version < 1) {
     throw new TypeError(`Live state migration ${label} must be a positive integer; received ${String(version)}`)

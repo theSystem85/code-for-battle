@@ -237,8 +237,8 @@
 
       <div id="productionArea">
         <div id="productionTabs">
-          <button class="tab-button" data-tab="units">Units</button>
-          <button class="tab-button active" data-tab="buildings">Buildings</button>
+          <button class="tab-button" data-tab="units" title="Click again to focus produced units, newest first">Units</button>
+          <button class="tab-button active" data-tab="buildings" title="Click again to place all ready buildings">Buildings<span class="production-ready-glow" aria-hidden="true"></span></button>
           <button id="mobileCategoryToggle" class="tab-toggle-button" type="button" aria-pressed="false"
             aria-label="Switch to Units build options">
             Buildings
@@ -1205,6 +1205,18 @@
             Map action long press (ms)
             <input id="settingsMapActionLongPressMs" type="number" min="300" max="5000" step="50" value="1000">
           </label>
+          <div class="config-modal__section">
+            <h3 class="config-modal__section-title">Building placement</h3>
+            <label class="config-modal__checkbox-row" for="settingsAutoActivatePlacement">
+              <input id="settingsAutoActivatePlacement" type="checkbox" checked>
+              Enter placement mode when a building finishes
+            </label>
+            <label class="config-modal__checkbox-row" for="settingsAutoAdvancePlacement">
+              <input id="settingsAutoAdvancePlacement" type="checkbox" checked>
+              Continue with the next ready building after placement
+            </label>
+            <p class="config-modal__hint">Click the active Buildings tab to place all ready buildings one by one, even when automatic continuation is off.</p>
+          </div>
           <div id="offlineCacheSettings" class="config-modal__section">
             <h3 class="config-modal__section-title" data-offline-clear-title>Offline</h3>
             <p class="config-modal__hint" data-offline-clear-hint>Removes the downloaded game files. Saved games and settings stay on this device.</p>

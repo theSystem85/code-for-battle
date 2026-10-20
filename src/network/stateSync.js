@@ -495,6 +495,7 @@ export function createGameStateSnapshot({ fullAutomation = false } = {}) {
     automationCompletion: unit.automationCompletion || null,
     type: unit.type,
     owner: unit.owner,
+    productionCompletedAt: unit.productionCompletedAt ?? null,
     x: unit.x,
     y: unit.y,
     tileX: unit.tileX,

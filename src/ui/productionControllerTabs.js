@@ -1,3 +1,5 @@
+import { productionQueue } from '../productionQueue.js'
+import { focusProducedUnit } from './productionUnitFocus.js'
 import { gameState } from '../gameState.js'
 
 export function ensureMobileToggle(controller) {
@@ -138,14 +140,23 @@ export function initProductionTabs(controller) {
   const tabButtons = document.querySelectorAll('.tab-button[data-tab]')
 
   tabButtons.forEach(button => {
-    button.addEventListener('click', () => {
+    // Resetting a game can initialize these same buttons again.
+    if (button._productionTabClickHandler) {
+      button.removeEventListener('click', button._productionTabClickHandler)
+    }
+    button._productionTabClickHandler = () => {
       if (button.classList.contains('disabled')) {
         return
       }
 
       const tabName = button.getAttribute('data-tab')
+      if (button.classList.contains('active')) {
+        if (tabName === 'buildings') productionQueue.startReadyBuildingPlacement()
+        else if (tabName === 'units') focusProducedUnit(controller)
+      }
       controller.activateTab(tabName, { scrollIntoView: true })
-    })
+    }
+    button.addEventListener('click', button._productionTabClickHandler)
   })
 
   const activeButton = document.querySelector('.tab-button.active[data-tab]')

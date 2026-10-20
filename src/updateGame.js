@@ -452,6 +452,7 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
             )
             if (newUnit) {
               newUnit.owner = partyId
+              newUnit.productionCompletedAt = getSimulationTime(gameState)
               mainUnits.push(newUnit)
               applyUnitBuildDelivery(newUnit, automationDelivery)
               if (automationCompletion) newUnit.automationCompletion = { ...automationCompletion, ownerId: partyId }

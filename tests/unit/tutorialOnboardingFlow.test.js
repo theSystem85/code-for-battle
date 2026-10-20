@@ -31,6 +31,18 @@ beforeEach(() => {
 afterEach(() => { tutorial?.stop(); vi.clearAllTimers(); vi.useRealTimers() })
 
 describe('tutorial input onboarding flow', () => {
+  it('[U05430] shows ready-placement and produced-unit shortcuts as additional tutorial guidance', () => {
+    tutorial = initTutorialSystem()
+    tutorial.start({ reset: true, manual: true })
+    const buildStep = tutorial.steps.find(step => step.id === 'build-power')
+    tutorial.renderStep(buildStep)
+    expect(tutorial.stepText.textContent).toContain('already-open Buildings tab')
+    expect(tutorial.stepText.textContent).toContain('both options can be changed in Settings')
+    const unitStep = tutorial.steps.find(step => step.id === 'tank-control')
+    tutorial.renderStep(unitStep)
+    expect(tutorial.stepText.textContent).toContain('newest to oldest')
+  })
+
   it('[U04509] requires a choice, persists it, opens settings, then continues to the original welcome', () => {
     tutorial = initTutorialSystem()
     tutorial.start({ reset: true, manual: true })
