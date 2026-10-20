@@ -37,7 +37,9 @@ export class ShoreDepthField {
     for (let ty = Math.max(0, y - searchRadius - 1); ty < Math.min(this.map.length, y + searchRadius); ty++) {
       const row = this.map[ty]
       for (let tx = Math.max(0, x - searchRadius - 1); tx < Math.min(row.length, x + searchRadius); tx++) {
-        if (row[tx]?.type === 'water' && !row[tx].airstripStreet) continue
+        const tile = row[tx]
+        // Paved coasts must not seed a sandy seabed, including airstrip streets.
+        if (!tile || tile.type === 'water' || tile.type === 'street' || tile.airstripStreet) continue
         const dx = Math.max(tx - x, x - tx - 1, 0)
         const dy = Math.max(ty - y, y - ty - 1, 0)
         squaredDistance = Math.min(squaredDistance, dx * dx + dy * dy)
@@ -49,6 +51,11 @@ export class ShoreDepthField {
   }
 
   corners(x, y) {
+    const tile = this.map?.[y]?.[x]
+    // Water underlays and SOT cutouts on pavement stay opaque on every backend.
+    if (tile?.type === 'street' || tile?.airstripStreet) {
+      return [this.maxTiles, this.maxTiles, this.maxTiles, this.maxTiles]
+    }
     return [this.at(x, y), this.at(x + 1, y), this.at(x + 1, y + 1), this.at(x, y + 1)]
   }
 }
