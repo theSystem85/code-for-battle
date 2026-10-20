@@ -137,6 +137,10 @@ export function setupProductionHoverCard(button, context, state, queue) {
 
   sheet.append(name, stats)
   button.appendChild(sheet)
+  const readyGlow = document.createElement('span')
+  readyGlow.className = 'production-ready-glow'
+  readyGlow.setAttribute('aria-hidden', 'true')
+  button.appendChild(readyGlow)
   button.addEventListener('pointermove', event => {
     if (event.pointerType === 'touch') return
     const rect = button.getBoundingClientRect()

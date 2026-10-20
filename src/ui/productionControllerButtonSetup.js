@@ -568,8 +568,11 @@ export function setupBuildingButtons(controller) {
         return
       }
 
-      // If a building placement is already in progress, don't queue another one
-      if (gameState.buildingPlacementMode) {
+      // A ready building can wait at the cursor while other builds are queued.
+      // Keep the existing protection for unfinished blueprint/drag placement.
+      if (gameState.buildingPlacementMode && !productionQueue.completedBuildings.some(
+        item => item.type === gameState.currentBuildingType
+      )) {
         return
       }
 

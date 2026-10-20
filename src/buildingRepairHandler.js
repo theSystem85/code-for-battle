@@ -172,6 +172,7 @@ export function buildingRepairHandler(e, gameState, gameCanvas, mapGrid, units, 
           // Update ready building counter for remaining buildings
           productionQueue.updateReadyBuildingCounter(building.button)
         })
+        productionQueue.advanceReadyBuildingPlacement()
       } else {
         // Play error sound for invalid placement
         playSound('constructionObstructed', 1.0, 0, true)

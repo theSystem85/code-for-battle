@@ -3,9 +3,20 @@ import { getMissingMigrationVersions, migrateLiveState, migrations } from '../..
 
 describe('live game-state migrations', () => {
   const migrateStacks = migrations[2]
+  const migrateReadyPlacement = migrations[3]
   afterEach(() => {
     delete migrations[2]
     delete migrations[3]
+  })
+
+  it('[U05422] migrates ready-placement state and production history without changing the source', () => {
+    const unit = Object.freeze({ id: 'legacy' })
+    const original = { gameState: {}, units: [unit], productionQueueState: Object.freeze({ completedBuildings: [] }) }
+    const result = migrateReadyPlacement(original)
+    expect(result.units[0].productionCompletedAt).toBeNull()
+    expect(result.productionQueueState.stackedPlacementActive).toBe(false)
+    expect(original.units[0]).toEqual({ id: 'legacy' })
+    expect(original.productionQueueState).not.toHaveProperty('stackedPlacementActive')
   })
 
   it('[U05419] migrates legacy stacks in every production lane without mutating the save', () => {

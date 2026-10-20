@@ -1636,6 +1636,8 @@ class Game {
       productionQueue.unitItems.length = 0
       productionQueue.buildingItems.length = 0
       productionQueue.completedBuildings.length = 0
+      productionQueue.stackedPlacementActive = false
+      productionQueue.refreshReadyBuildingTab()
       productionQueue.currentUnit = null
       productionQueue.currentBuilding = null
       productionQueue.pausedUnit = false
@@ -1799,6 +1801,8 @@ class Game {
       productionQueue.unitItems.length = 0
       productionQueue.buildingItems.length = 0
       productionQueue.completedBuildings.length = 0
+      productionQueue.stackedPlacementActive = false
+      productionQueue.refreshReadyBuildingTab()
       productionQueue.currentUnit = null
       productionQueue.currentBuilding = null
       productionQueue.pausedUnit = false

@@ -1,3 +1,4 @@
+import { getProductionPlacementSettings, setProductionPlacementSetting } from './productionPlacementSettings.js'
 // settingsModal.js
 // Tabbed settings modal that hosts runtime config shortcuts and the keybindings editor
 
@@ -238,6 +239,10 @@ function bindTabs(modal) {
 
 function openModal(modal, defaultTab = 'keybindings') {
   setActiveTab(modal, defaultTab)
+  for (const [name, id] of [['autoActivate', 'settingsAutoActivatePlacement'], ['autoAdvance', 'settingsAutoAdvancePlacement']]) {
+    const input = modal.querySelector(`#${id}`)
+    if (input) input.checked = getProductionPlacementSettings()[name]
+  }
   const mapHoldInput = modal.querySelector('#settingsMapActionLongPressMs')
   if (mapHoldInput) mapHoldInput.value = String(getConfigValue('mapActionLongPressMs'))
   modal.classList.add('config-modal--open')
@@ -377,6 +382,12 @@ export function initSettingsModal() {
       setConfigValue('mapActionLongPressMs', Number(mapHoldInput.value))
       mapHoldInput.value = String(getConfigValue('mapActionLongPressMs'))
     })
+  }
+  for (const [name, id] of [['autoActivate', 'settingsAutoActivatePlacement'], ['autoAdvance', 'settingsAutoAdvancePlacement']]) {
+    const input = modal.querySelector(`#${id}`)
+    if (!input) continue
+    input.checked = getProductionPlacementSettings()[name]
+    input.addEventListener('change', () => setProductionPlacementSetting(name, input.checked))
   }
   bindTabs(modal)
   bindGraphicsEffects(modal)

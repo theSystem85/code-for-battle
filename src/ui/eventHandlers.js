@@ -230,7 +230,7 @@ export class EventHandlers {
     // Add building repair handling to the canvas click event
     gameCanvas.addEventListener('click', (e) => {
       if (gameState.mapEditMode || isReplayInteractionLocked()) return
-      buildingRepairHandler(e, gameState, gameCanvas, gameState.mapGrid, this.units, this.factories, productionQueue, this.moneyEl)
+      if (gameState.repairMode) buildingRepairHandler(e, gameState, gameCanvas, gameState.mapGrid, this.units, this.factories, productionQueue, this.moneyEl)
     })
 
     // Add building sell handling to the canvas click event
@@ -847,6 +847,8 @@ export class EventHandlers {
             // Update ready building counter for remaining buildings
             productionQueue.updateReadyBuildingCounter(building.button)
           })
+
+          productionQueue.advanceReadyBuildingPlacement()
 
           // Suppress rapid sound spam for mass street placement.
           if (buildingType !== 'street') {

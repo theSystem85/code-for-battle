@@ -69,7 +69,7 @@ function getUnitDisplayName(unitType) {
   return UNIT_TYPE_DISPLAY_NAMES[unitType] || unitType.replace(/[_-]/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase())
 }
 
-function focusAndSelectUnit(unit) {
+export function focusAndSelectUnit(unit) {
   if (!unit || unit.health <= 0) return
 
   const units = gameState.units || []
