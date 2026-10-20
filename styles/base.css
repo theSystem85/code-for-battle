@@ -2495,6 +2495,7 @@ body.mobile-portrait.sidebar-condensed #mobileBuildMenuContainer .tab-content.ac
 
 .loading-screen {
   position: fixed;
+  overflow: hidden;
   inset: 0;
   z-index: var(--z-loading);
   display: flex;
@@ -2516,7 +2517,8 @@ body.mobile-portrait.sidebar-condensed #mobileBuildMenuContainer .tab-content.ac
 
 .loading-screen__backdrop {
   position: absolute;
-  inset: -12%;
+  /* Keep the existing blur outside the viewport throughout the flyover. */
+  inset: -8px;
   z-index: 0;
   overflow: hidden;
 }
@@ -2541,9 +2543,42 @@ body.mobile-portrait.sidebar-condensed #mobileBuildMenuContainer .tab-content.ac
 }
 
 .loading-screen__backdrop img {
+  /* Both responsive sources are 16:9. Give the image its actual cover size
+     so transforms can travel across the cropped area without exposing edges.
+     Near a matching aspect ratio neither axis has useful crop: zoom first. */
+  width: max(100%, 220.444444vh);
+  height: max(100%, 124vh);
   object-fit: cover;
   filter: blur(6px);
-  transform: translate3d(0, 0, 0) scale(1.14);
+  /* One continuous pass; slow further on long waits rather than loop or reverse. */
+  animation: loading-screen-flyover-down 600s cubic-bezier(0.2, 0.6, 0.4, 1) both;
+}
+
+/* Prefer downward travel once cover alone leaves at least ~12% vertical room. */
+@media (min-aspect-ratio: 2/1) {
+  .loading-screen__backdrop img {
+    width: max(100%, calc(177.777778vh + 28.444444px));
+    height: max(100%, calc(56.25vw + 9px));
+  }
+}
+
+/* Narrow viewports already crop the sides: use that room without more zoom. */
+@media (max-aspect-ratio: 8/5) {
+  .loading-screen__backdrop img {
+    width: max(100%, calc(177.777778vh + 28.444444px));
+    height: max(100%, calc(56.25vw + 9px));
+    animation-name: loading-screen-flyover-right;
+  }
+}
+
+@keyframes loading-screen-flyover-down {
+  from { transform: translate3d(calc((100vw + 16px - 100%) / 2), calc(100vh + 16px - 100%), 0); }
+  to { transform: translate3d(calc((100vw + 16px - 100%) / 2), 0, 0); }
+}
+
+@keyframes loading-screen-flyover-right {
+  from { transform: translate3d(calc(100vw + 16px - 100%), calc((100vh + 16px - 100%) / 2), 0); }
+  to { transform: translate3d(0, calc((100vh + 16px - 100%) / 2), 0); }
 }
 
 .loading-screen--hidden,
@@ -2684,8 +2719,13 @@ body.mobile-portrait.sidebar-condensed #mobileBuildMenuContainer .tab-content.ac
   }
 
   .loading-screen__bar::after,
-  .loading-screen__bar.is-indeterminate {
+  .loading-screen__bar.is-indeterminate,
+  .loading-screen__backdrop img {
     animation: none;
+  }
+
+  .loading-screen__backdrop img {
+    transform: translate3d(calc((100vw + 16px - 100%) / 2), calc((100vh + 16px - 100%) / 2), 0);
   }
 
   .loading-screen__bar.is-indeterminate {
