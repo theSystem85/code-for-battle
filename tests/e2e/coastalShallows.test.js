@@ -7,6 +7,7 @@ test.beforeEach(async({ page }) => {
   })
   await page.goto('/?seed=9&size=40')
   await page.waitForFunction(() => window.gameState?.mapGrid?.length > 0, null, { timeout: 90000 })
+  await expect(page.locator('#loadingScreen')).toBeHidden({ timeout: 90000 })
 })
 
 test('[E00207] Graphics tab owns visual controls and persists Coastal Shallows and wave controls', async({ page }) => {
@@ -38,6 +39,7 @@ test('[E00207] Graphics tab owns visual controls and persists Coastal Shallows a
   })
   await page.reload()
   await page.waitForFunction(() => window.gameState?.mapGrid?.length > 0)
+  await expect(page.locator('#loadingScreen')).toBeHidden({ timeout: 90000 })
   await page.click('#helpBtn')
   await page.click('[data-config-tab="graphics"]')
   await expect(page.locator('#settingsCoastalShallowsToggle')).not.toBeChecked()
