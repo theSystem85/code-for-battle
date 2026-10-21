@@ -143,3 +143,36 @@ describe('city streets', () => {
     expect(bent.cities[0].streets[0].tiles.length).toBeGreaterThanOrEqual(main.length - 1)
   })
 })
+
+it('[U05432] places large city buildings closer to the center while keeping small houses on outer streets', () => {
+  const groups = [1, 2, 3].map(size => {
+    const tags = ['grass', 'decorative', 'city', 'impassable']
+    return { width: size, height: size, groupLabel: `city-${size}`, tagSet: new Set(tags),
+      tilesByOffset: Object.fromEntries(Array.from({ length: size * size }, (_, i) => [`${i % size},${Math.floor(i / size)}`, { tags }])) }
+  })
+  const distances = [[], [], []]
+  for (const seed of [1, 2, 3, 688]) {
+    const map = Array.from({ length: 96 }, () => Array.from({ length: 96 }, () => ({ type: 'land', biome: 'grass' })))
+    const pools = buildDecorationPools(groups)
+    const settings = { salt: seed, citySeeds: 2, cityClusterSize: 8 }
+    const layout = buildDecorationLayout(map, pools, settings)
+    const centers = buildRuinClusters(map, { salt: seed + 7919, count: 2, radius: 8, minDistance: 1 }).centers
+    const seen = new Set()
+    for (const cell of layout.cells) {
+      if (!cell || seen.has(`${cell.anchorX},${cell.anchorY}`)) continue
+      seen.add(`${cell.anchorX},${cell.anchorY}`)
+      const { group, anchorX: x, anchorY: y } = cell
+      const distance = Math.min(...centers.map(center => Math.hypot(x + (group.width - 1) / 2 - center.x, y + (group.height - 1) / 2 - center.y)))
+      distances[group.width - 1].push(distance)
+      for (let dy = 0; dy < group.height; dy++) for (let dx = 0; dx < group.width; dx++) {
+        expect(layout.cells[(y + dy) * 96 + x + dx].group).toBe(group)
+        expect(layout.cityStreets).not.toContain((y + dy) * 96 + x + dx)
+      }
+    }
+    expect(buildDecorationLayout(map, pools, settings).cells).toEqual(layout.cells)
+  }
+  const means = distances.map(values => values.reduce((sum, value) => sum + value, 0) / values.length)
+  expect(distances.every(values => values.length > 0)).toBe(true)
+  expect(means[2]).toBeLessThan(means[1])
+  expect(means[1]).toBeLessThan(means[0])
+})

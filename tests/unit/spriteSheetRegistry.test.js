@@ -35,7 +35,8 @@ describe('sprite sheet registry', () => {
   it('[U04163] enables every dtv sheet by default and retires removed sheets', () => {
     expect(OPTIONAL_SSE_SHEETS).toHaveLength(0)
     expect(DEFAULT_SSE_SHEETS).toContain('images/map/sprite_sheets/dtv3_winter.webp')
-    expect(DEFAULT_SSE_SHEETS.filter(path => /\/dtv[23]_/.test(path))).toHaveLength(9)
+    expect(DEFAULT_SSE_SHEETS.filter(path => /\/dtv\d+_/.test(path))).toHaveLength(13)
+    expect(DEFAULT_SSE_SHEETS).toEqual(expect.arrayContaining(['dtv4_city_sand', 'dtv4_city_snow', 'dtv4_nature_sand', 'dtv4_nature_snow'].map(name => `images/map/sprite_sheets/${name}.webp`)))
     expect(isRetiredSpriteSheetPath('images/map/sprite_sheets/seasons_1024_q90_2.webp')).toBe(true)
     expect(isRetiredSpriteSheetPath('images/map/sprite_sheets/streets24_q90_1024x1024.webp')).toBe(true)
     expect(isRetiredSpriteSheetPath('images/map/sprite_sheets/rockCliffsMountains_64x64_1024x1024.webp')).toBe(true)
@@ -120,4 +121,20 @@ describe('opt-out sheet selection', () => {
     expect(selection).toEqual(DEFAULT_SSE_SHEETS.filter(path => path !== city))
     expect(disabledFromSelection([...DEFAULT_SSE_SHEETS], selection, ['blob:gone'])).toEqual(['blob:gone', city])
   })
+})
+
+it('[U05434] drops old city-grid overrides while preserving edits for the replacement layout', async() => {
+  const { sanitizeAppliedSheetMetadata } = await import('../../src/ui/spriteSheetRegistry.js')
+  const path = 'images/map/sprite_sheets/dtv3_city.webp'
+  const old = { sheetPath: path, columns: 6, rows: 8, tiles: { '0,0': { tags: ['city'] } } }
+  const current = { ...old, layoutVersion: 2, columns: 16 }
+  const storage = memoryStorage({ [`rts-sse-metadata:${path}`]: JSON.stringify(old), 'rts-sse-applied-metadata': JSON.stringify(old) })
+  purgeRetiredSheetStorage(storage)
+  expect(storage.map.size).toBe(0)
+  expect(sanitizeAppliedSheetMetadata(old)).toBeNull()
+  expect(migrateSavedSpriteSheetState({ activeSpriteSheetMetadata: old }).activeSpriteSheetMetadata).toBeNull()
+  storage.setStoredItem(`rts-sse-metadata:${path}`, JSON.stringify(current))
+  purgeRetiredSheetStorage(storage)
+  expect(storage.map.size).toBe(1)
+  expect(sanitizeAppliedSheetMetadata(current)).toBe(current)
 })

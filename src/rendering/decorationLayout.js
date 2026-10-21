@@ -931,7 +931,7 @@ export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'g
       const categories = new Map()
       for (const group of pools[biome]?.[kind] || []) {
         // Shore, roadside, stones and city props have their own passes.
-        if (group.tagSet.has('shore') || group.tagSet.has('roadside') || group.tagSet.has('stones') || group.tagSet.has('city')) continue
+        if (group.tagSet.has('shore') || group.tagSet.has('roadside') || group.tagSet.has('stones') || group.tagSet.has('city') || group.tagSet.has('ruins')) continue
         const category = group.tagSet.has('farm') ? 'farm' : CLUSTER_CATEGORIES.find(tag => group.tagSet.has(tag)) || 'other'
         if (!categories.has(category)) categories.set(category, [])
         categories.get(category).push(group)
@@ -978,40 +978,73 @@ export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'g
   // City pass: houses only directly beside a planned street, with one full
   // side facing it (rows without gaps are fine; no interior blocks).
   if (cityPlan) {
-    const cityBags = Object.fromEntries(DECORATION_BIOMES.map(biome => [biome,
-      createDecorationBag([...(pools[biome]?.multi || []), ...(pools[biome]?.single || [])].filter(group => group.tagSet.has('city')), salt + 5)
-    ]))
+    // Preparation only: keep varied bags per footprint size. Large structures
+    // get central lots first; the outer street ends favour single-tile houses.
+    const cityBags = Object.fromEntries(DECORATION_BIOMES.map(biome => {
+      const groups = [...(pools[biome]?.multi || []), ...(pools[biome]?.single || [])].filter(group => group.tagSet.has('city'))
+      return [biome, [1, 2, 3].map(size => createDecorationBag(
+        groups.filter(group => Math.min(3, Math.max(group.width, group.height)) === size), salt + 5))]
+    }))
+    function* cityCandidates(bags, preferredSize) {
+      const allowed = bags.slice(0, preferredSize).filter(bag => bag.size)
+      // A catalog with only one building size remains usable at every radius.
+      if (!allowed.length) allowed.push(...bags.filter(bag => bag.size).slice(0, 1))
+      for (const bag of allowed.reverse()) for (let attempt = 0; attempt < bag.size; attempt++) yield bag.next()
+    }
     const coversReserved = (x, y, group) => {
       for (let dy = 0; dy < group.height; dy++) for (let dx = 0; dx < group.width; dx++) if (cityPlan.reserved.has((y + dy) * width + x + dx)) return true
       return false
     }
     for (const city of cityPlan.cities) {
-      for (const street of city.streets) {
-        for (const offset of street.tiles) {
-          const sx = offset % width
-          const sy = (offset - sx) / width
-          const biome = resolveBiome(mapGrid[sy][sx], defaultBiome)
-          const bag = cityBags[biome]
-          for (let side = 0; side < 4; side++) {
-            for (let attempt = 0; attempt < bag.size; attempt++) {
-              const group = bag.next()
-              const anchors = cityHouseAnchors(sx, sy, group.width, group.height)
-                .filter((_, index) => index % 2 === side % 2 && (side < 2 ? index < group.width * 2 : index >= group.width * 2))
-              const hit = anchors.find(({ x, y, facing }) => !coversReserved(x, y, group) && facing.every(([fx, fy]) => fx >= 0 && fy >= 0 && fx < width && fy < height && cityLattice[fy * width + fx]) &&
+      const distance = offset => Math.hypot(offset % width - city.center.x, Math.floor(offset / width) - city.center.y)
+      const lots = [...new Set(city.streets.flatMap(street => street.tiles))].sort((a, b) => distance(a) - distance(b) || a - b)
+      for (const offset of lots) {
+        const sx = offset % width
+        const sy = (offset - sx) / width
+        const biome = resolveBiome(mapGrid[sy][sx], defaultBiome)
+        const radius = distance(offset) / cities.radius
+        const preferredSize = radius < 0.45 ? 3 : radius < 0.8 ? 2 : 1
+        for (let side = 0; side < 4; side++) {
+          for (const group of cityCandidates(cityBags[biome], preferredSize)) {
+            const anchors = cityHouseAnchors(sx, sy, group.width, group.height)
+              .filter((_, index) => index % 2 === side % 2 && (side < 2 ? index < group.width * 2 : index >= group.width * 2))
+            const hit = anchors.find(({ x, y, facing }) => !coversReserved(x, y, group) && facing.every(([fx, fy]) => fx >= 0 && fy >= 0 && fx < width && fy < height && cityLattice[fy * width + fx]) &&
                 fits({ group, anchorX: x, anchorY: y, biome: resolveBiome(mapGrid[y]?.[x], defaultBiome), cityHouse: true }))
-              if (!hit) continue
-              const placement = { group, anchorX: hit.x, anchorY: hit.y, biome: resolveBiome(mapGrid[hit.y][hit.x], defaultBiome) }
-              if (group.width * group.height > 1) placements.push(placement)
-              for (let dy = 0; dy < group.height; dy++) for (let dx = 0; dx < group.width; dx++) {
-                const cell = (hit.y + dy) * width + hit.x + dx
-                cells[cell] = { ...placement, offsetX: dx, offsetY: dy }
-                occupied[cell] = placement
-              }
-              break
+            if (!hit) continue
+            const placement = { group, anchorX: hit.x, anchorY: hit.y, biome: resolveBiome(mapGrid[hit.y][hit.x], defaultBiome) }
+            if (group.width * group.height > 1) placements.push(placement)
+            for (let dy = 0; dy < group.height; dy++) for (let dx = 0; dx < group.width; dx++) {
+              const cell = (hit.y + dy) * width + hit.x + dx
+              cells[cell] = { ...placement, offsetX: dx, offsetY: dy }
+              occupied[cell] = placement
             }
+            break
           }
         }
       }
+    }
+  }
+  // Ruin anchors are scarce. Give their catalog a dedicated pass so adding
+  // ordinary vegetation cannot crowd a ruin out of every valid site.
+  const ruinBags = Object.fromEntries(DECORATION_BIOMES.map(biome => [biome,
+    createDecorationBag([...(pools[biome]?.multi || []), ...(pools[biome]?.single || [])]
+      .filter(group => group.tagSet.has('ruins') && !group.tagSet.has('city') && !group.tagSet.has('roadside') && !group.tagSet.has('shore') && !group.tagSet.has('stones')), salt + 8)
+  ]))
+  for (const { x, y, biome } of ruins.anchors) {
+    const bag = ruinBags[biome]
+    for (let attempt = 0; attempt < bag.size; attempt++) {
+      const group = bag.next()
+      const placement = { group, anchorX: x, anchorY: y, biome }
+      if (!fits(placement)) continue
+      if (group.width * group.height > 1) placements.push(placement)
+      if (group.tagSet.has('landmark')) landmarks.push(placement)
+      if (group.tagSet.has('rare')) rarePlaced.add(decorationIdentity(group))
+      for (let dy = 0; dy < group.height; dy++) for (let dx = 0; dx < group.width; dx++) {
+        const offset = (y + dy) * width + x + dx
+        cells[offset] = { ...placement, offsetX: dx, offsetY: dy }
+        occupied[offset] = placement
+      }
+      break
     }
   }
   // Preparation-only coast pass: one attempt per 14 coast tiles, with the

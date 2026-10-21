@@ -2,7 +2,7 @@ import { fitSprite, resetSourceImports, SPRITE_ANCHORS } from './sseFit.js'
 import { clearTargetTiles, encodeLosslessWebP, exportMetadata, exportOptions } from './sseExport.js'
 import { bindSseSplit, bindSseViewport, bindSseZoomInput } from './sseViewport.js'
 import { detectSprites } from './sseDetect.js'
-import { isolateComponent } from './sseIsolate.js'
+import { hasTransparency, isolateComponent, validateAlphaOptions } from './sseIsolate.js'
 import { compactSprites, findPackingRegion, MAX_SSE_PIXELS, validateGrid } from './ssePack.js'
 
 function canvas(width, height) {
@@ -68,8 +68,12 @@ export function initSseExtend(state, adapters) {
     <button id="sseExtractAll" type="button">Extract all</button>
     <button id="sseRemoveSprite" type="button">Remove sprite</button>
     <button id="sseCompact" type="button">Compact</button>
-    <label>Near-black cutoff <input id="sseCutoff" type="number" min="0" max="255" value="16"></label>
-    <label><input id="sseInnerCuts" type="checkbox"> Inner cuts (also cut enclosed black background; tags the sprite inner_cuts)</label>
+    <div id="sseBlackDetection"><label>Near-black cutoff <input id="sseCutoff" type="number" min="0" max="255" value="16"></label>
+    <label><input id="sseInnerCuts" type="checkbox"> Inner cuts (also cut enclosed black background; tags the sprite inner_cuts)</label></div>
+    <div id="sseAlphaDetection" hidden><p>Transparent sources: isolate sprites by their alpha contours, preserving black detail and transparent holes.</p>
+    <label>Alpha cutoff <input id="sseAlphaCutoff" type="number" min="0" max="254" value="0" title="Ignore pixels whose alpha is at or below this value (0 keeps all visible pixels)."></label>
+    <label>Bridge gap (px) <input id="sseAlphaGap" type="number" min="0" max="2" value="0" title="Group nearby parts separated by up to this many transparent pixels."></label>
+    <label>Minimum sprite pixels <input id="sseAlphaMinArea" type="number" min="2" value="2" title="Ignore components smaller than this number of visible pixels."></label></div>
     <label><input id="sseClearMode" type="checkbox"> Select tiles to clear (click, shift-click or drag)</label>
     <button id="sseClearTiles" type="button">Clear tiles</button>
     <p id="sseSelectionStatus" role="status">0 tiles selected</p>
@@ -94,6 +98,16 @@ export function initSseExtend(state, adapters) {
     wrapper.appendChild(caption)
   })
   state.root.querySelector('aside').appendChild(panel)
+  const updateDetectionControls = () => {
+    const items = [...sources.values()]
+    panel.querySelector('#sseBlackDetection').hidden = items.length > 0 && items.every(item => item.transparent)
+    panel.querySelector('#sseAlphaDetection').hidden = !items.some(item => item.transparent)
+  }
+  const alphaOptions = () => ({
+    alphaCutoff: Number(panel.querySelector('#sseAlphaCutoff').value),
+    gap: Number(panel.querySelector('#sseAlphaGap').value),
+    minArea: Number(panel.querySelector('#sseAlphaMinArea').value)
+  })
   const sourcePane = document.createElement('section')
   sourcePane.id = 'sseSourcePane'
   sourcePane.hidden = true
@@ -298,12 +312,13 @@ export function initSseExtend(state, adapters) {
     const context = image.getContext('2d')
     context.drawImage(state.image, 0, 0)
     const pixels = context.getImageData(0, 0, image.width, image.height)
+    const transparent = hasTransparency(pixels)
     const occupied = new Set(data.extension?.occupiedTiles || [])
     for (const key of Object.keys(data.tiles)) occupied.add(key)
     for (let y = 0; y < image.height; y++) {
       for (let x = 0; x < image.width; x++) {
         const i = (y * image.width + x) * 4
-        if (pixels.data[i + 3] && Math.max(pixels.data[i], pixels.data[i + 1], pixels.data[i + 2]) > 16) {
+        if (pixels.data[i + 3] && (transparent || Math.max(pixels.data[i], pixels.data[i + 1], pixels.data[i + 2]) > 16)) {
           occupied.add(`${Math.floor(x / data.tileSize)},${Math.floor(y / data.rowHeight)}`)
         }
       }
@@ -317,7 +332,7 @@ export function initSseExtend(state, adapters) {
       ids.add(id)
       return { ...item, id }
     })
-    target = { data, image, occupied, imports: normalizedImports, columns, rows, tileSize: data.tileSize, rowHeight: data.rowHeight, borderWidth: data.borderWidth }
+    target = { data, image, transparent, occupied, imports: normalizedImports, columns, rows, tileSize: data.tileSize, rowHeight: data.rowHeight, borderWidth: data.borderWidth }
     targets.set(data.sheetPath, target)
     state.image = image
     return target
@@ -382,7 +397,8 @@ export function initSseExtend(state, adapters) {
     }
     const ctx = target.image.getContext('2d')
     ctx.fillStyle = '#000'
-    ctx.fillRect(sprite.placedAt.column * target.tileSize, sprite.placedAt.row * target.rowHeight,
+    const clear = target.transparent ? ctx.clearRect.bind(ctx) : ctx.fillRect.bind(ctx)
+    clear(sprite.placedAt.column * target.tileSize, sprite.placedAt.row * target.rowHeight,
       sprite.tileSpan.columns * target.tileSize, sprite.tileSpan.rows * target.rowHeight)
     Object.assign(sprite, next, { tags: [...tags] })
     for (let y = 0; y < sprite.tileSpan.rows; y++) {
@@ -414,8 +430,7 @@ export function initSseExtend(state, adapters) {
     if (region.rows > oldRows) {
       const grown = canvas(target.image.width, region.rows * target.rowHeight)
       const ctx = grown.getContext('2d')
-      ctx.fillStyle = '#000'
-      ctx.fillRect(0, 0, grown.width, grown.height)
+      if (!target.transparent) { ctx.fillStyle = '#000'; ctx.fillRect(0, 0, grown.width, grown.height) }
       ctx.drawImage(target.image, 0, 0)
       target.image = grown
       target.rows = region.rows
@@ -509,8 +524,7 @@ export function initSseExtend(state, adapters) {
         checkTargetBudget(target.data.sheetPath, target.image.width * needed * target.rowHeight)
         const grown = canvas(target.image.width, needed * target.rowHeight)
         const ctx = grown.getContext('2d')
-        ctx.fillStyle = '#000'
-        ctx.fillRect(0, 0, grown.width, grown.height)
+        if (!target.transparent) { ctx.fillStyle = '#000'; ctx.fillRect(0, 0, grown.width, grown.height) }
         ctx.drawImage(target.image, 0, 0)
         target.image = grown
         target.rows = needed
@@ -539,7 +553,7 @@ export function initSseExtend(state, adapters) {
       try {
         for (const item of selectedSources) {
           source = item
-          const components = detectSprites(source.pixels, { cutoff: Number(field('sseCutoff').value), innerCuts: field('sseInnerCuts').checked, ...options })
+          const components = detectSprites(source.pixels, { cutoff: Number(field('sseCutoff').value), innerCuts: field('sseInnerCuts').checked, ...(source.transparent ? alphaOptions() : {}), ...options, transparent: source.transparent })
           for (const component of components) {
             // A prior click may have extracted a subset of a gap-merged component.
             if (!componentOverlaps(component)) results.push(placeComponent(component, target, false))
@@ -586,8 +600,7 @@ export function initSseExtend(state, adapters) {
       checkTargetBudget(state.activeData.sheetPath, target.image.width * packed.rows * target.rowHeight)
       const image = canvas(target.image.width, packed.rows * target.rowHeight)
       const ctx = image.getContext('2d')
-      ctx.fillStyle = '#000'
-      ctx.fillRect(0, 0, image.width, image.height)
+      if (!target.transparent) { ctx.fillStyle = '#000'; ctx.fillRect(0, 0, image.width, image.height) }
       const tiles = {}
       for (const key of fixed) {
         const [x, y] = key.split(',').map(Number)
@@ -648,7 +661,7 @@ export function initSseExtend(state, adapters) {
     clearTiles: guard(async cells => {
       const target = currentTarget()
       const previousImports = target.imports
-      const cleared = clearTargetTiles(target, cells)
+      const cleared = clearTargetTiles(target, cells, target.transparent ? null : '#000')
       for (const item of previousImports) {
         if (!target.imports.includes(item)) spriteImages.delete(`${target.data.sheetPath}:${item.id}`)
       }
@@ -693,7 +706,7 @@ export function initSseExtend(state, adapters) {
     }),
     getState: () => {
       const target = targets.get(state.activeData?.sheetPath)
-      return { mode: 'extend', anchor, sizeRatio, targetSheetPath: state.activeData?.sheetPath || null, sourceLoaded: Boolean(source), sources: [...sources.values()].map(item => ({ sourceId: item.id, width: item.pixels.width, height: item.pixels.height })),
+      return { mode: 'extend', anchor, sizeRatio, targetSheetPath: state.activeData?.sheetPath || null, sourceLoaded: Boolean(source), sources: [...sources.values()].map(item => ({ sourceId: item.id, width: item.pixels.width, height: item.pixels.height, transparent: item.transparent })),
         tileSize: state.activeData?.tileSize, rowHeight: state.activeData?.rowHeight, borderWidth: state.activeData?.borderWidth,
         columns: target?.columns, rows: target?.rows, occupiedTiles: target ? [...target.occupied] : [],
         sprites: target?.imports || [], selectedSpriteId, pendingSprites: 0, importedSprites: target?.imports.length || 0, status }
@@ -704,12 +717,9 @@ export function initSseExtend(state, adapters) {
       checkTargetBudget(path, columns * tileSize * rows * rowHeight)
       await adapters.staticMode()
       const image = canvas(columns * tileSize, rows * rowHeight)
-      const ctx = image.getContext('2d')
-      ctx.fillStyle = '#000'
-      ctx.fillRect(0, 0, image.width, image.height)
       const data = adapters.newData(path, { tileSize, rowHeight, borderWidth })
       adapters.register(path, name, image, data)
-      targets.set(path, { data, image, columns, rows, tileSize, rowHeight, borderWidth, occupied: new Set(), imports: [] })
+      targets.set(path, { data, image, transparent: true, columns, rows, tileSize, rowHeight, borderWidth, occupied: new Set(), imports: [] })
       activeTargetPath = path
       sources.forEach(resetSourceImports)
       drawSource()
@@ -773,8 +783,9 @@ export function initSseExtend(state, adapters) {
         frame.style.height = `${image.height}px`
         frame.appendChild(sourceCanvas)
         sourceStrip.appendChild(frame)
-        source = { id: `source-${++sourceSequence}`, canvas: sourceCanvas, pixels, isolated: new Set(), masks: new Map() }
+        source = { id: `source-${++sourceSequence}`, canvas: sourceCanvas, pixels, transparent: hasTransparency(pixels), isolated: new Set(), masks: new Map() }
         sources.set(source.id, source)
+        updateDetectionControls()
         const sourceId = source.id
         sourceCanvas.dataset.sourceId = sourceId
         const item = source
@@ -816,8 +827,12 @@ export function initSseExtend(state, adapters) {
       source = sources.get(sourceId)
       if (!source) throw new Error('Source image not found.')
       const target = currentTarget()
-      const component = isolateComponent(source.pixels, x, y, cutoff, { innerCuts: Boolean(innerCuts) })
-      if (!component || component.area < 2) throw new Error('Click a non-black sprite containing at least two pixels.')
+      const options = source.transparent ? alphaOptions() : { minArea: 2 }
+      if (source.transparent) validateAlphaOptions(options)
+      const component = isolateComponent(source.pixels, x, y, cutoff, { innerCuts: Boolean(innerCuts), ...options, transparent: source.transparent })
+      if (!component || component.area < options.minArea) throw new Error(source.transparent
+        ? `Click a visible sprite containing at least ${options.minArea} pixels.`
+        : 'Click a non-black sprite containing at least two pixels.')
       return placeComponent(component, target)
     }),
     toggleSourceSprite: guard(async({ sourceId = [...sources.keys()].at(-1), x, y, cutoff }) => {

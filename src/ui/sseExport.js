@@ -107,10 +107,11 @@ export function clearTargetTiles(target, cells, background = '#000') {
   context.save()
   context.globalAlpha = 1
   context.globalCompositeOperation = 'source-over'
-  context.fillStyle = background
+  if (background !== null) context.fillStyle = background
   for (const key of keys) {
     const [col, row] = key.split(',').map(Number)
-    context.fillRect(col * target.tileSize, row * target.rowHeight, target.tileSize, target.rowHeight)
+    if (background === null) context.clearRect(col * target.tileSize, row * target.rowHeight, target.tileSize, target.rowHeight)
+    else context.fillRect(col * target.tileSize, row * target.rowHeight, target.tileSize, target.rowHeight)
     target.occupied.delete(key)
     delete target.data.tiles[key]
   }

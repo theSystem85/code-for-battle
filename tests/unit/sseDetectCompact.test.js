@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { isolateComponent, hasTransparency } from '../../src/ui/sseIsolate.js'
 import { detectSprites } from '../../src/ui/sseDetect.js'
 import { compactSprites } from '../../src/ui/ssePack.js'
 
@@ -48,4 +49,25 @@ describe('compaction', () => {
     expect(result.occupied).toEqual(cells)
     expect(JSON.stringify(sprites)).toBe(before)
   })
+})
+
+
+it('[U05435] follows alpha contours including diagonal black edges and preserves holes and semitransparent pixels', () => {
+  const image = { width: 12, height: 8, data: new Uint8ClampedArray(12 * 8 * 4) }
+  for (const [x, y, alpha] of [[1, 1, 255], [2, 1, 255], [3, 1, 255], [1, 2, 255], [3, 2, 255], [1, 3, 255], [2, 3, 255], [3, 3, 255], [4, 4, 90], [9, 1, 255], [9, 2, 255]]) {
+    image.data.set([0, 0, 0, alpha], (y * image.width + x) * 4)
+  }
+  expect(hasTransparency(image)).toBe(true)
+  const options = { transparent: true, gap: 0, innerCuts: true }
+  const components = detectSprites(image, options)
+  const clicked = isolateComponent(image, 1, 1, 16, options)
+  expect(components).toHaveLength(2)
+  expect(clicked).toEqual(components[0])
+  expect(clicked.bbox).toEqual({ x: 1, y: 1, width: 4, height: 4 })
+  expect(clicked.innerCuts).toBe(false)
+  expect(clicked.pixels[(1 * 4 + 1) * 4 + 3]).toBe(0)
+  expect(clicked.pixels[(3 * 4 + 3) * 4 + 3]).toBe(90)
+  expect(detectSprites(image, { ...options, alphaCutoff: 100 })[0].bbox.width).toBe(3)
+  expect(() => detectSprites(image, { ...options, alphaCutoff: 255 })).toThrow()
+  expect(() => isolateComponent(image, 1, 1, 16, { ...options, gap: -1 })).toThrow()
 })

@@ -8,7 +8,7 @@ const CATEGORIES = ['trees', 'shrubs', 'rocks', 'stones', 'farm', 'landmark', 'r
 describe('default dtv generator catalog', () => {
   it('[U01220] gives every tile and multi-tile group a generator placement path', () => {
     const offenders = []
-    for (const sheetPath of DEFAULT_SSE_SHEETS.filter(path => /\/dtv[23]_/.test(path))) {
+    for (const sheetPath of DEFAULT_SSE_SHEETS.filter(path => /\/dtv\d+_/.test(path))) {
       const metadata = JSON.parse(readFileSync(`public/${sheetPath.replace('.webp', '.json')}`, 'utf8'))
       for (const [coordinate, tile] of Object.entries(metadata.tiles || {})) {
         const tags = new Set(tile.tags || [])
