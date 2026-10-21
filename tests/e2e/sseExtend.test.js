@@ -72,7 +72,7 @@ test('[E00113] light SSE imports two ungridded source sprites, grows target and 
     context.drawImage(image, 0, 0)
     return { pixel: [...context.getImageData(3, 3, 1, 1).data], imports: json.extension.imports.length, occupied: json.extension.occupiedTiles }
   })
-  expect(cleared.pixel).toEqual([0, 0, 0, 255])
+  expect(cleared.pixel).toEqual([0, 0, 0, 0])
   expect(cleared.imports).toBe(1)
   expect(cleared.occupied).toEqual(['0,1'])
 })
@@ -161,7 +161,7 @@ test('[E00115] extract all, source masks, removal and compaction share UI and AP
   })
   expect(result.sprites.map(item => item.id)).toEqual([initial.sprites[0].id, initial.sprites[2].id])
   expect(result.sprites.map(item => item.placedAt.column)).toEqual([0, 1])
-  expect(result.pixels).toEqual([[255, 0, 0, 255], [0, 0, 255, 255], [0, 0, 0, 255]])
+  expect(result.pixels).toEqual([[255, 0, 0, 255], [0, 0, 255, 255], [0, 0, 0, 0]])
   // Click the target sprite, then use the same remove action via Delete.
   await page.locator('#sseTileCanvas').evaluate(canvas => {
     const rect = canvas.getBoundingClientRect()
@@ -315,4 +315,98 @@ test('[E00118] Extract all imports both source sheets in order with independent 
   await page.evaluate(id => window.__SSE__.removeSprite(id), result.sprites[0].id)
   expect(await page.evaluate(sourceId => window.__SSE__.extractAll({ sourceId }), ids[1])).toEqual([])
   expect(await page.evaluate(sourceId => window.__SSE__.extractAll({ sourceId }), ids[0])).toHaveLength(1)
+})
+
+
+test('[E00218] transparent sources preserve black contours, holes and alpha through click, bulk, edit and WebP export', async({ page }) => {
+  await page.goto('/sse')
+  await page.waitForFunction(() => Boolean(window.__SSE__))
+  await page.evaluate(async() => {
+    await window.__SSE__.newSheet({ cols: 1, rows: 1, tileSize: 16 })
+    const canvas = document.createElement('canvas')
+    canvas.width = 40
+    canvas.height = 16
+    const ctx = canvas.getContext('2d')
+    ctx.fillStyle = '#000'
+    ctx.fillRect(2, 2, 8, 8)
+    ctx.clearRect(4, 4, 2, 2)
+    ctx.fillStyle = 'rgba(0,0,0,0.5)'
+    ctx.fillRect(10, 3, 1, 2)
+    ctx.fillStyle = '#050505'
+    ctx.fillRect(22, 2, 6, 8)
+    await window.__SSE__.loadSourceImage(canvas.toDataURL('image/webp'))
+  })
+  await expect(page.locator('#sseCutoff')).toBeHidden()
+  await expect(page.locator('#sseInnerCuts')).toBeHidden()
+  await expect(page.locator('#sseAlphaCutoff')).toBeVisible()
+  await page.locator('#sseSourceCanvas').evaluate(canvas => {
+    const rect = canvas.getBoundingClientRect()
+    canvas.dispatchEvent(new MouseEvent('click', { clientX: rect.left + 3 * rect.width / canvas.width, clientY: rect.top + 3 * rect.height / canvas.height }))
+  })
+  await expect(page.locator('#sseExtendStatus')).toContainText('1 imported')
+  await page.locator('#sseExtractAll').click()
+  await expect(page.locator('#sseExtendStatus')).toContainText('Extracted 1 sprites')
+  const result = await page.evaluate(async() => {
+    const api = window.__SSE__
+    const first = api.getState().sprites[0]
+    await api.setSpriteAnchor(first.id, 'top-left')
+    await api.compact()
+    const { webpBlob, json } = await api.exportSheet()
+    const image = await window.createImageBitmap(webpBlob)
+    const canvas = document.createElement('canvas')
+    canvas.width = image.width
+    canvas.height = image.height
+    const ctx = canvas.getContext('2d')
+    ctx.drawImage(image, 0, 0)
+    const sprite = json.extension.imports[0]
+    const x = sprite.placedAt.column * 16 + sprite.renderRect.x
+    const y = sprite.placedAt.row * 16 + sprite.renderRect.y
+    const pixel = (dx, dy) => [...ctx.getImageData(x + dx, y + dy, 1, 1).data]
+    const samples = { black: pixel(0, 0), hole: pixel(2, 2), edge: pixel(8, 1), empty: [...ctx.getImageData(15, 15, 1, 1).data] }
+    await api.removeSprite(first.id)
+    const cleared = await api.exportSheet()
+    const clearedImage = await window.createImageBitmap(cleared.webpBlob)
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    ctx.drawImage(clearedImage, 0, 0)
+    return { ...samples, cleared: [...ctx.getImageData(x, y, 1, 1).data], count: json.extension.imports.length, rows: json.rows, type: webpBlob.type }
+  })
+  expect(result).toMatchObject({ black: [0, 0, 0, 255], hole: [0, 0, 0, 0], empty: [0, 0, 0, 0], cleared: [0, 0, 0, 0], count: 2, rows: 2, type: 'image/webp' })
+  expect(result.edge[3]).toBeGreaterThan(120)
+  expect(result.edge[3]).toBeLessThan(135)
+  // Replacing a transparent source with an opaque one restores black controls.
+  await page.evaluate(async() => {
+    const canvas = document.createElement('canvas')
+    canvas.width = canvas.height = 8
+    const ctx = canvas.getContext('2d')
+    ctx.fillStyle = '#000'
+    ctx.fillRect(0, 0, 8, 8)
+    await window.__SSE__.loadSourceImage(canvas.toDataURL('image/webp'))
+  })
+  await expect(page.locator('#sseCutoff')).toBeVisible()
+  await expect(page.locator('#sseInnerCuts')).toBeVisible()
+  await expect(page.locator('#sseAlphaCutoff')).toBeHidden()
+})
+
+test('[E00219] tag rows stay readable with independent radio controls and scrolling on desktop and mobile', async({ page }) => {
+  await page.goto('/sse')
+  await page.waitForFunction(() => Boolean(window.__SSE__))
+  for (const width of [1280, 390]) {
+    await page.setViewportSize({ width, height: 900 })
+    const tags = page.locator('#sseTagList')
+    await tags.scrollIntoViewIfNeeded()
+    const layout = await tags.evaluate(list => {
+      const rows = [...list.querySelectorAll('label')]
+      return { count: rows.length, scrollable: list.scrollHeight > list.clientHeight,
+        overlap: rows.some((row, i) => i > 0 && row.getBoundingClientRect().top < rows[i - 1].getBoundingClientRect().bottom),
+        radioWidths: rows.map(row => row.querySelector('input').getBoundingClientRect().width) }
+    })
+    expect(layout.count).toBeGreaterThan(10)
+    expect(layout.scrollable).toBe(true)
+    expect(layout.overlap).toBe(false)
+    expect(layout.radioWidths.every(value => value === 14)).toBe(true)
+    const option = tags.locator('label').nth(3)
+    const tag = await option.locator('input').inputValue()
+    await option.click()
+    await expect(tags.locator(`input[value="${tag}"]`)).toBeChecked()
+  }
 })

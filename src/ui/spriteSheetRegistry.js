@@ -135,13 +135,19 @@ export function filterRetiredSheetPaths(sheetPaths) {
     !isRetiredSpriteSheetPath(path) && !NON_SELECTABLE_SPRITE_SHEET_PATHS.has(normalizeSheetPath(path)))
 }
 
+// The city atlas now has a different grid. Saved editor overrides for its
+// previous 6x8 layout cannot be applied to the new pixels.
+export function isSupersededSheetMetadata(metadata) {
+  return normalizeSheetPath(metadata?.sheetPath) === `${SHEET_DIR}dtv3_city.webp` && metadata.layoutVersion !== 2
+}
+
 /**
  * Drop applied metadata that references a retired sheet.
  * Returns null when the metadata is unusable so callers fall back to defaults.
  */
 export function sanitizeAppliedSheetMetadata(metadata) {
   if (!metadata || typeof metadata !== 'object') return null
-  if (isRetiredSpriteSheetPath(metadata.sheetPath)) return null
+  if (isRetiredSpriteSheetPath(metadata.sheetPath) || isSupersededSheetMetadata(metadata)) return null
   return metadata
 }
 
@@ -167,12 +173,12 @@ export function purgeRetiredSheetStorage(storage) {
   try {
     const keys = typeof storage.getStoredKeys === 'function' ? storage.getStoredKeys('rts-sse-metadata:') : []
     keys.forEach((key) => {
-      if (isRetiredSpriteSheetPath(key.slice('rts-sse-metadata:'.length))) remove(key)
+      if (isRetiredSpriteSheetPath(key.slice('rts-sse-metadata:'.length)) || isSupersededSheetMetadata({ ...parse(storage.getStoredItem(key)), sheetPath: key.slice('rts-sse-metadata:'.length) })) remove(key)
     })
     const lastSheet = storage.getStoredItem('rts-sse-last-sheet')
     if (lastSheet && isRetiredSpriteSheetPath(lastSheet)) remove('rts-sse-last-sheet')
     const applied = storage.getStoredItem('rts-sse-applied-metadata')
-    if (applied && isRetiredSpriteSheetPath(parse(applied)?.sheetPath)) remove('rts-sse-applied-metadata')
+    if (applied && (isRetiredSpriteSheetPath(parse(applied)?.sheetPath) || isSupersededSheetMetadata(parse(applied)))) remove('rts-sse-applied-metadata')
     const selected = parse(storage.getStoredItem('rts-integrated-spritesheet-selected-sheets'))
     if (Array.isArray(selected) && selected.some(path => isRetiredSpriteSheetPath(path) || NON_SELECTABLE_SPRITE_SHEET_PATHS.has(normalizeSheetPath(path)))) {
       storage.setStoredItem('rts-integrated-spritesheet-selected-sheets', JSON.stringify(filterRetiredSheetPaths(selected)))
@@ -189,7 +195,7 @@ export function migrateSavedSpriteSheetState(savedGameState) {
   if (isRetiredSpriteSheetPath(savedGameState.activeSpriteSheetPath)) {
     savedGameState.activeSpriteSheetPath = null
   }
-  if (savedGameState.activeSpriteSheetMetadata && isRetiredSpriteSheetPath(savedGameState.activeSpriteSheetMetadata.sheetPath)) {
+  if (savedGameState.activeSpriteSheetMetadata && !sanitizeAppliedSheetMetadata(savedGameState.activeSpriteSheetMetadata)) {
     savedGameState.activeSpriteSheetMetadata = null
   }
   return savedGameState

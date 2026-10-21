@@ -528,7 +528,7 @@ export class TextureManager {
     this.hasShoreDecorations = preparedGroups.some(group => group.tagSet.has('shore'))
     this.integratedDecorationPools = buildDecorationPools(preparedGroups)
     this.hasGroundDetails = preparedGroups.some(group => group.tagSet.has('ground_detail'))
-    this.naturalDecorationRules = normalizedEntries.some(entry => /\/dtv[23]_/.test(entry.sheetPath))
+    this.naturalDecorationRules = normalizedEntries.some(entry => /\/dtv\d+_/.test(entry.sheetPath))
     this.decorationLayoutCache = null
     this.integratedBiomeTag = ['soil', 'sand', 'grass', 'snow', 'mixed'].includes(config?.biomeTag) ? config.biomeTag : 'grass'
     this.integratedBlendMode = normalizeSpriteSheetBlendMode(normalizedEntries[0].metadata?.blendMode)

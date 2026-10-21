@@ -183,7 +183,7 @@
   flex-direction: column;
   gap: 6px;
   min-height: 220px;
-  flex: 1 1 auto;
+  flex: 1 0 220px;
   overflow: hidden;
 }
 
@@ -197,7 +197,7 @@
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 0;
   background: #111821;
-  max-height: none;
+  max-height: 360px;
   min-height: 140px;
   flex: 1;
   overflow-y: auto;
@@ -245,11 +245,39 @@
 }
 
 .sprite-sheet-editor__tag-option {
-  display: inline-flex;
+  display: flex;
+  flex: 0 0 auto;
+  min-width: 0;
+  min-height: 28px;
+  padding: 4px 6px;
+  cursor: pointer;
   align-items: center;
   gap: 6px;
   font-size: 13px;
   color: #d8e0ea;
+}
+
+.sprite-sheet-editor__tag-option input[type="radio"] {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  accent-color: #6bb8ff;
+}
+
+.sprite-sheet-editor__tag-option span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.sprite-sheet-editor__tag-option:has(input:checked) {
+  background: #263c50;
+  border-radius: 3px;
+}
+
+.sprite-sheet-editor__tag-option:focus-within {
+  outline: 1px solid #6bb8ff;
+  outline-offset: -1px;
 }
 
 .sprite-sheet-editor__status {

@@ -1,10 +1,23 @@
+export function hasTransparency({ data }) {
+  for (let i = 3; i < data.length; i += 4) if (data[i] < 255) return true
+  return false
+}
+
+export function validateAlphaOptions({ alphaCutoff = 0, gap = 0, minArea = 2 }) {
+  if (!Number.isInteger(alphaCutoff) || alphaCutoff < 0 || alphaCutoff > 254
+    || !Number.isInteger(gap) || gap < 0 || gap > 2
+    || !Number.isInteger(minArea) || minArea < 2) throw new Error('Invalid transparency detection options.')
+}
+
 // Event-driven image processing only; no simulation/render-loop work.
-export function isolateComponent(image, x, y, cutoff = 16, { innerCuts = false } = {}) {
+export function isolateComponent(image, x, y, cutoff = 16, { innerCuts = false, transparent = false, alphaCutoff = 0, gap = 0 } = {}) {
   const { width, height, data } = image
   x = Math.floor(x)
   y = Math.floor(y)
-  if (!Number.isFinite(cutoff) || cutoff < 0 || cutoff > 255) throw new Error('Cutoff must be between 0 and 255.')
-  const foreground = (index) => data[index * 4 + 3] > 0 && Math.max(data[index * 4], data[index * 4 + 1], data[index * 4 + 2]) > cutoff
+  if (!transparent && (!Number.isFinite(cutoff) || cutoff < 0 || cutoff > 255)) throw new Error('Cutoff must be between 0 and 255.')
+  if (transparent) validateAlphaOptions({ alphaCutoff, gap })
+  innerCuts = !transparent && innerCuts
+  const foreground = (index) => transparent ? data[index * 4 + 3] > alphaCutoff : data[index * 4 + 3] > 0 && Math.max(data[index * 4], data[index * 4 + 1], data[index * 4 + 2]) > cutoff
   if (!Number.isFinite(x) || !Number.isFinite(y) || x < 0 || y < 0 || x >= width || y >= height || !foreground(y * width + x)) return null
   const visited = new Uint8Array(width * height)
   const queue = new Int32Array(width * height)
@@ -30,13 +43,22 @@ export function isolateComponent(image, x, y, cutoff = 16, { innerCuts = false }
         queue[tail++] = next
       }
     }
-    if (px > 0) visit(index - 1)
-    if (px + 1 < width) visit(index + 1)
-    if (py > 0) visit(index - width)
-    if (py + 1 < height) visit(index + width)
+    if (transparent) {
+      // Eight-connected alpha contours keep diagonal outlines together. Gap
+      // bridging groups detached nearby pixels without painting the gap.
+      const radius = gap + 1
+      for (let ny = Math.max(0, py - radius); ny <= Math.min(height - 1, py + radius); ny++) {
+        for (let nx = Math.max(0, px - radius); nx <= Math.min(width - 1, px + radius); nx++) visit(ny * width + nx)
+      }
+    } else {
+      if (px > 0) visit(index - 1)
+      if (px + 1 < width) visit(index + 1)
+      if (py > 0) visit(index - width)
+      if (py + 1 < height) visit(index + width)
+    }
   }
   const bbox = { x: left, y: top, width: right - left + 1, height: bottom - top + 1 }
-  const { pixels, holes } = innerCuts ? copyComponentOnly(image, bbox, queue, tail) : copyComponentWithInterior(image, bbox, queue, tail)
+  const { pixels, holes } = (transparent || innerCuts) ? copyComponentOnly(image, bbox, queue, tail) : copyComponentWithInterior(image, bbox, queue, tail)
   return { bbox, pixels, area: tail, holes, innerCuts }
 }
 

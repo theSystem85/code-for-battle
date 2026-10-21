@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
-import { buildDecorationLayout, buildDecorationPools, buildDecorationConstraints } from '../../src/rendering/decorationLayout.js'
+import { buildDecorationLayout, buildDecorationPools, buildDecorationConstraints, buildRuinClusters } from '../../src/rendering/decorationLayout.js'
 
 const grid = (size = 96) => Array.from({ length: size }, () => Array.from({ length: size }, () => ({ type: 'land', biome: 'grass' })))
 function group(id, tags = [], width = 1, height = width) {
@@ -50,4 +50,17 @@ describe('roadside, ruins and rare props', () => {
       }
     }
   })
+})
+
+
+it('[U05438] keeps ruin anchors available when hundreds of ordinary props share their biome', () => {
+  const map = grid()
+  const props = Array.from({ length: 200 }, (_, i) => group(`ordinary-${i}`, ['passable']))
+  const pools = buildDecorationPools([...props, group('ruined-arch', ['ruins', 'impassable'])])
+  const settings = { salt: 9, ruinSeeds: 3, ruinClusterSize: 7, citySeeds: 0 }
+  const layout = buildDecorationLayout(map, pools, settings)
+  const ruinSites = buildRuinClusters(map, { salt: 9, count: 3, radius: 7 }).anchorKeys
+  const placed = anchors(layout).filter(cell => cell.group.groupLabel === 'ruined-arch')
+  expect(placed.length).toBeGreaterThan(0)
+  for (const cell of placed) expect(ruinSites.has(`${cell.anchorX},${cell.anchorY}`)).toBe(true)
 })

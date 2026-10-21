@@ -8,7 +8,7 @@ function controller(sourcePixels) {
     for (let x = 1; x < 19; x++) pixels.data.set([255, 0, 0, 255], (y * 20 + x) * 4)
   }
   const context = { drawImage: vi.fn(), putImageData: vi.fn(), getImageData: () => sourcePixels || pixels,
-    fillRect: vi.fn(), save: vi.fn(), restore: vi.fn(), beginPath: vi.fn(), rect: vi.fn(), clip: vi.fn() }
+    fillRect: vi.fn(), clearRect: vi.fn(), save: vi.fn(), restore: vi.fn(), beginPath: vi.fn(), rect: vi.fn(), clip: vi.fn() }
   // The shared setup installs getContext on each newly created canvas.
   // Override those instances too, so staging canvases read the source fixture.
   vi.spyOn(window.HTMLCanvasElement.prototype, 'getContext').mockReturnValue(context)
@@ -240,4 +240,41 @@ it('[U04197] extracts every source in order, skips imports and supports a source
     expect(input.parentElement.classList.contains('floating-label-input')).toBe(true)
     expect(input.parentElement.querySelector('label').htmlFor).toBe(input.id)
   }
+})
+
+
+it('[U05436] uses alpha contours for black sprites in both click and bulk extraction and hides black controls', async() => {
+  const pixels = sourceFixture([[2, 2, 4, 4], [20, 2, 4, 4]])
+  for (let i = 0; i < pixels.data.length; i += 4) pixels.data[i] = 0
+  const { api, context } = controller(pixels)
+  await api.newSheet({ cols: 1, rows: 1, tileSize: 16 })
+  expect(context.fillRect).not.toHaveBeenCalled()
+  await api.loadSourceImage('data:image/webp;base64,test')
+  expect(document.querySelector('#sseBlackDetection').hidden).toBe(true)
+  expect(document.querySelector('#sseAlphaDetection').hidden).toBe(false)
+  document.querySelector('#sseInnerCuts').checked = true
+  const clicked = await api.isolateAt({ x: 2, y: 2 })
+  const bulk = await api.extractAll()
+  expect(clicked.bbox).toEqual({ x: 2, y: 2, width: 4, height: 4 })
+  expect(bulk).toHaveLength(1)
+  expect(bulk[0].bbox).toEqual({ x: 20, y: 2, width: 4, height: 4 })
+  expect(clicked.innerCuts).toBeUndefined()
+  await api.setSpriteAnchor(clicked.id, 'bottom-left')
+  await api.compact()
+  await api.removeSprite(clicked.id)
+  expect(context.clearRect).toHaveBeenCalled()
+  expect(context.fillRect).not.toHaveBeenCalled()
+})
+
+it('[U05437] applies transparency noise and gap controls consistently to click and bulk imports', async() => {
+  const pixels = sourceFixture([[2, 2, 2, 2], [5, 2, 2, 2], [20, 2, 1, 2]])
+  const { api } = controller(pixels)
+  await api.newSheet({ cols: 3, rows: 1, tileSize: 16 })
+  await api.loadSourceImage('data:image/webp;base64,test')
+  document.querySelector('#sseAlphaGap').value = '1'
+  document.querySelector('#sseAlphaMinArea').value = '3'
+  const clicked = await api.isolateAt({ x: 2, y: 2 })
+  expect(clicked.bbox).toEqual({ x: 2, y: 2, width: 5, height: 2 })
+  await api.removeSprite(clicked.id)
+  expect((await api.extractAll()).map(item => item.bbox)).toEqual([clicked.bbox])
 })

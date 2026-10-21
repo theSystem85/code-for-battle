@@ -1,3 +1,4 @@
+import { isSupersededSheetMetadata } from './spriteSheetRegistry.js'
 import { zoomSseView } from './sseViewport.js'
 import { toggleSpriteTag } from './sseTags.js'
 import { compressionLabel, detectWebPCompression } from './sseExport.js'
@@ -187,6 +188,7 @@ function normalizeSheetDataForTags(raw, sheetPath, baseTags = DEFAULT_SSE_TAGS) 
     ? Array.from(new Set([...expandedRaw.tags.filter(Boolean), ...baseTags]))
     : [...baseTags]
   const data = {
+    layoutVersion: expandedRaw?.layoutVersion,
     extension: expandedRaw?.extension,
     compression: expandedRaw?.compression,
     schemaVersion: 1,
@@ -261,6 +263,7 @@ function toSerializableData(data, image) {
 
   return {
     schemaVersion: 1,
+    layoutVersion: data.layoutVersion,
     extension: data.extension,
     compression: data.compression,
     sheetPath: data.sheetPath,
@@ -883,7 +886,7 @@ async function loadMetadataFromSourcesForMode(sheetPath, mode = 'static') {
   const metadataPrefix = mode === 'animated' ? SSE_ANIMATION_METADATA_PREFIX : SSE_METADATA_PREFIX
   const baseTags = mode === 'animated' ? DEFAULT_SSE_ANIMATION_TAGS : DEFAULT_SSE_TAGS
   const local = safeParseJson(getStoredItem(`${metadataPrefix}${sheetPath}`), null)
-  if (local) return normalizeSheetDataForTags(local, sheetPath, baseTags)
+  if (local && !isSupersededSheetMetadata({ ...local, sheetPath })) return normalizeSheetDataForTags(local, sheetPath, baseTags)
 
   const sidecarPath = buildMetaPath(sheetPath)
   try {
