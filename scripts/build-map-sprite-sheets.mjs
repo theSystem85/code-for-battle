@@ -5,7 +5,6 @@ import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
 import { detectSprites } from '../src/ui/sseDetect.js'
 import { findPackingRegion } from '../src/ui/ssePack.js'
-import { fitSprite } from '../src/ui/sseFit.js'
 import { exportMetadata } from '../src/ui/sseExport.js'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -82,15 +81,14 @@ export async function buildMapSpriteSheet(profile) {
     const component = components[index], b = component.bbox
     const categories = classifyMapSprite(component, profile)
     const tags = [...profile.biomes, 'decorative', ...categories, `group_${index + 1}`]
-    const spanX = Math.max(1, Math.round(b.width / tileSize)), spanY = Math.max(1, Math.round(b.height / tileSize))
+    const spanX = Math.max(1, Math.ceil((b.width + 4) / tileSize)), spanY = Math.max(1, Math.ceil((b.height + 4) / tileSize))
     const region = findPackingRegion({ columns, rows, tileSize, borderWidth, occupied, width: spanX * tileSize, height: spanY * tileSize })
     rows = region.rows
-    const fit = fitSprite(b.width, b.height, spanX * tileSize - 4, spanY * tileSize - 4)
-    const width = Math.max(1, Math.round(fit.width)), height = Math.max(1, Math.round(fit.height))
+    // Grow the footprint to fit the source, never resize the isolated pixels.
+    const width = b.width, height = b.height
     const left = region.x * tileSize + Math.floor((spanX * tileSize - width) / 2)
     const top = region.y * tileSize + Math.floor((spanY * tileSize - height) / 2)
-    const crop = await sharp(Buffer.from(component.pixels), { raw: { width: b.width, height: b.height, channels: 4 } })
-      .resize(width, height, { kernel: 'lanczos3' }).raw().toBuffer()
+    const crop = Buffer.from(component.pixels)
     overlays.push({ input: crop, raw: { width, height, channels: 4 }, left, top })
     for (let dy = 0; dy < spanY; dy++) for (let dx = 0; dx < spanX; dx++) {
       const col = region.x + dx, row = region.y + dy
@@ -104,8 +102,8 @@ export async function buildMapSpriteSheet(profile) {
     propLayout.push({ id, col: region.x, row: region.y, w: spanX, h: spanY, groupId: index + 1, tags, sourceRect: b })
   }
   const source = { path: sourcePath.replace(/^public\//, ''), sha256: createHash('sha256').update(bytes).digest('hex'),
-    width: info.width, height: info.height, detection: DETECTION_OPTIONS, guides: profile.guides || [], spriteCount: components.length }
-  const metadata = exportMetadata({ schemaVersion: 1, layoutVersion: 2, tileSize, rowHeight: tileSize, borderWidth, columns, rows,
+    width: info.width, height: info.height, detection: DETECTION_OPTIONS, guides: profile.guides || [], spriteCount: components.length, packing: { scale: 1, padding: 2 } }
+  const metadata = exportMetadata({ schemaVersion: 1, layoutVersion: 3, tileSize, rowHeight: tileSize, borderWidth, columns, rows,
     blendMode: 'alpha', tags: [...new Set(Object.values(tiles).flatMap(tile => tile.tags).filter(tag => !/^group_/.test(tag)))], tiles, propLayout,
     source, extension: { imports, occupiedTiles: [...occupied] } }, profile.name, { lossless: false, quality: MAP_SHEET_QUALITY })
   metadata.sheetPath = `images/map/sprite_sheets/${profile.name}.webp`
@@ -117,5 +115,7 @@ export async function buildMapSpriteSheet(profile) {
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  for (const profile of SOURCE_PROFILES) await buildMapSpriteSheet(profile)
+  const kind = process.argv.find(arg => arg.startsWith('--kind='))?.slice(7)
+  if (kind && !['city', 'nature'].includes(kind)) throw new Error('Expected --kind=city or --kind=nature')
+  for (const profile of SOURCE_PROFILES.filter(profile => !kind || profile.kind === kind)) await buildMapSpriteSheet(profile)
 }

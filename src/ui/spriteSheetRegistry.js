@@ -135,10 +135,11 @@ export function filterRetiredSheetPaths(sheetPaths) {
     !isRetiredSpriteSheetPath(path) && !NON_SELECTABLE_SPRITE_SHEET_PATHS.has(normalizeSheetPath(path)))
 }
 
-// The city atlas now has a different grid. Saved editor overrides for its
-// previous 6x8 layout cannot be applied to the new pixels.
+// Native-size city atlases have new grids. Saved editor coordinates from
+// earlier layouts cannot be applied to their repacked pixels.
 export function isSupersededSheetMetadata(metadata) {
-  return normalizeSheetPath(metadata?.sheetPath) === `${SHEET_DIR}dtv3_city.webp` && metadata.layoutVersion !== 2
+  const path = normalizeSheetPath(metadata?.sheetPath)
+  return ['dtv3_city', 'dtv4_city_sand', 'dtv4_city_snow'].some(name => path === `${SHEET_DIR}${name}.webp`) && metadata.layoutVersion !== 3
 }
 
 /**

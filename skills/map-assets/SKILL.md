@@ -10,14 +10,14 @@ Use this checklist when creating decorative map tiles (DT), biome props, or new 
 ## Locked product decisions
 - **Hybrid:** ship new DT sheets alongside existing organic DT until organic is turned off later. Do not delete organic grass decorative paths.
 - **WebP quality:** new map sheets use **85%** compression (`.webp`).
-- **Load policy (current):** load **selected** optional decorative sheets during preparation (no per-biome lazy-load yet). Design sheet naming so single-biome skipping remains possible later.
+- **Load policy (current):** load enabled bundled `dtv<N>_*` WebP/JSON pairs by default during preparation (players can opt out) (no per-biome lazy-load yet). Design sheet naming so single-biome skipping remains possible later.
 - **Camera (new DT art only):** ~**65°** top-down (not 90° orthographic, not isometric), ~**300 m** altitude, photorealistic.
 - **Biome-independent tag:** `universal` (not a fifth map biome).
 - **Seasons:** encode as SSE tags on sprites: `spring` | `summer` | `autumn` | `winter`.
 - **Mixed maps:** multi-tile DT footprints must stay entirely inside **one** biome.
 - **Winter/frozen lakes:** tagged `impassable` (and usually `water` + `winter`).
 - **Rocks/stones:** include biome-tagged rock groups on the new DT sheets.
-- **Cliffs/boulders:** keep on the organic terrain system (`type === 'rock'` cells drawn with `images/terrain/terraced-cliffs.webp`). The restored `rockCliffsMountains_*` sheet remains a default; do **not** add cliffs to DT sheets.
+- **Cliffs/boulders:** keep on the organic terrain system (`type === 'rock'` cells drawn with `images/terrain/terraced-cliffs.webp`). Retired `rockCliffsMountains_*` sheets stay retired; do **not** add cliffs to DT sheets.
 - **Ground:** plain ground always comes from the organic terrain art in `public/images/terrain/`. Do not add custom grass/soil/sand/snow ground sheets; DT sheets only carry decorations.
 - **Multi-tile placement:** the map generator places multi-tile `group` sprites first from the sheet JSON (see spec 120), so a group must be fully tagged on the sheet with its biome and `decorative`.
 
@@ -34,20 +34,20 @@ Create **separate decorative sheets per biome** plus one **universal** sheet:
 | Snow DT | `.../dtv2_snow.webp` + `.json` |
 | Universal DT | `.../dtv2_universal.webp` + `.json` |
 
-Register dtv2 sheets in `OPTIONAL_SSE_SHEETS` in `src/ui/spriteSheetRegistry.js`.
-Keep `DEFAULT_SSE_SHEETS` and `index.json` aligned with the seven main defaults.
-Both Map Settings and SSE offer optional sheets; they start unchecked in Map Settings.
+Bundled dtv pairs are discovered by `src/ui/spriteSheetRegistry.js`; verify the pair appears in its default list.
+Keep `DEFAULT_SSE_SHEETS` and `index.json` aligned with the bundled default pairs. Map Settings and SSE expose all available pairs; bundled dtv decorations start enabled and can be deselected.
 An explicit empty custom selection must behave exactly like disabled custom mode.
 Tag every cell and propLayout entry of ruins with `ruins`; preserve other tags.
 Ruin anchors use seeded, biome-matching clusters with minimum spacing.
 
 ## Sheet format (SSE contract)
-Typical sheet (match existing seasons/debris sheets):
-- **1024×1024** WebP, quality **85**
-- **16×16** cells, `tileSize` / `rowHeight` **64**, `borderWidth` **1**
-- Content rect per cell: **62×62** inset by the border
-- `blendMode`: usually `"black"` (black chrome-key empty cells)
-- Runtime map `TILE_SIZE` remains **32**; SSE metadata stays at source tile size 64
+For newly extracted sheets:
+- WebP quality **85**, lossless alpha, transparent empty pixels, `blendMode: "alpha"`.
+- **64 px** tile/row pitch and **zero border**. Canvas dimensions grow to whole grid cells; they need not be square or 1024 px tall.
+- Preserve each isolated sprite at **exactly its original source pixel width and height**. Reserve `ceil((width + 4) / 64)` × `ceil((height + 4) / 64)` cells for a two-pixel minimum inset. Copy the isolated RGBA pixels without resizing. Never round spans down, normalize every sprite into one tile, or shrink to a fixed canvas.
+- Keep rectangular/multi-tile footprints, including spans larger than 3×3. Grow rows (and columns if a source exceeds sheet width), respecting SSE image limits.
+- Runtime map `TILE_SIZE` remains **32**; source grid pitch remains **64**. Normal map rendering scale is separate from preserving atlas pixels.
+- Existing black-key sheets retain their recorded border/blend contracts; do not reinterpret them as alpha sheets.
 
 Sidecar JSON must include `schemaVersion`, `sheetPath`, `tileSize`, `borderWidth`, `blendMode`, sheet-level `tags`, `columns`, `rows`, and per-tile `tiles["col,row"]` with `tags`, `rect`, `col`, `row`.
 
@@ -67,16 +67,18 @@ Biome-dependent content rules:
 Default SSE tag list must include `ruins`, `universal`, `spring`, `summer`, `autumn`, `winter` so SSE can paint them.
 
 ## Footprints
-Support rectangular footprints (via `group_N`): **1×1, 2×2, 2×1, 1×2, 3×3, 2×3, 3×2**.
+Support any rectangular footprint via `group_N`, including larger native-size buildings and lakes. Every covered cell belongs to the same group.
 
 After packing, **visually inspect** the sheet and write accurate tags/footprints from occupied cells — do not guess occupancy.
 
 ## Art pipeline
-1. Generate photorealistic props matching the camera brief (per-prop preferred if full-sheet one-shot quality is poor).
-2. Place sources under `tmp/dt-props/` (or equivalent).
-3. Pack with the Sprite Sheet Editor flow (`skills/extend-sprite-sheet/SKILL.md`): new 6-column 64 px sheet, Extract all, resize each sprite to its real size (1 tile ~ 10 m; vehicles, trees and small props 1x1), Compact, export, then tag every tile with `[biome|universal, decorative, passable|impassable]` plus `group_N` on multi-tile sprites, and save as WebP q85.
-4. Inspect output WebP in SSE / image viewer; correct JSON tags/groups.
-5. Keep `package-lock.json`; Netlify build stays `npm ci --include=dev && npm run build && npm run test:smoke`.
+1. Keep original source images under `public/images/map/sprite_sheets/sources/`; use supplied images as-is. Generate new art only when requested, matching the camera brief.
+2. Use the [SSE extension flow](../extend-sprite-sheet/SKILL.md) at source-to-target ratio **1**, or the reproducible repository builder, which imports SSE's actual detector, packer and metadata exporter. Do not substitute bounding-box rectangle crops that include neighbouring sprites.
+3. For the five existing sources, run `npm run make:map-sprite-sheets -- --kind=city` or `--kind=nature` (omit the flag for all). Profiles record source hashes, extraction settings, ownership guides and biome tags. Inspect alpha before choosing detection settings: these noisy sources require `alphaCutoff: 128`, `gap: 0`, `minArea: 256`; a zero cutoff joins almost the entire image. Keep explicit guides for the two touching snow-city pairs. Do not apply these settings blindly to unrelated art.
+4. Pack native-size pixels into expanded footprints/canvas. Record `source.packing: { scale: 1, padding: 2 }`, original `bbox`, target `renderRect`, `tileSpan` and `placedAt`. Tag every cell and propLayout entry with biome, decorative, passability, category and matching `group_N`; preserve source sprite IDs. Cities use grass/soil, sand or snow, rather than universal vegetation. Do not invent seasonal variants absent from the supplied art.
+5. Encode WebP q85 with alpha quality 100. Inspect the resulting sheet, compare every imported width/height and alpha silhouette with the SSE extraction, and verify non-overlapping footprints and bounds. Run `npx vitest run tests/unit/mapSourceSheets.test.js tests/unit/defaultDtvPlacementCoverage.test.js` for all bundled sprites. When repacking an existing atlas, bump its `layoutVersion` and registry stale-metadata guard so saved SSE coordinates cannot override the new layout.
+6. Validate actual map generation across grass, soil, sand, snow and mixed. Large city structures should occupy central street lots; smaller buildings should favour outskirts. Test that every bundled sprite has a placement path instead of silently omitting oversized art.
+7. Keep `package-lock.json`; Netlify build stays `npm ci --include=dev && npm run build && npm run test:smoke`.
 
 ## Runtime integration
 - Integrated mode selects decorative tiles by `tile.biome` + `decorative`, with `universal` + `decorative` eligible on any land biome.
@@ -85,7 +87,7 @@ After packing, **visually inspect** the sheet and write accurate tags/footprints
 - Occupancy must honor `impassable` tags on selected integrated tiles (frozen lakes).
 
 ## Validation
-- Open SSE → select each `dtv2_*` sheet → confirm tags/groups visible.
+- Open SSE → select each changed `dtv<N>_*` sheet → confirm tags/groups visible.
 - Map Settings → enable Custom sprite sheets → ensure DT sheets checked → regenerate map across biomes / Mixed.
 - `npm run test:unit`
 - `npm run lint:fix:changed`
@@ -103,7 +105,7 @@ See [placement specification](../../specs/121-map-generator-placement-rules.md) 
 
 ## Destructible cities (PR #688 follow-up)
 
-`dtv3_city`, `dtv3_shore` and `dtv3_ground_detail` are registered as optional only when both WebP and JSON exist. Any other bundled `dtv<N>_<name>` WebP + JSON pair (for example `dtv3_winter`, the snow vegetation sheet) is discovered and registered as optional automatically. Snow only receives vegetation tagged `snow`. Never put them in the default selection or the defaults-only `index.json`. City groups and all footprint cells carry `universal`, `decorative`, `impassable`, `city` and the matching `group_N` where needed. Keep propLayout ids stable.
+`dtv<N>_<name>` WebP + JSON pairs are discovered automatically and enabled by default unless explicitly deselected. Keep `index.json` consistent with bundled defaults. Snow only receives vegetation tagged `snow`. City groups and all footprint cells carry their matching biome tags, `decorative`, `impassable`, `city` and `group_N`. Keep propLayout IDs stable. The city source variants are temperate (grass/soil), sand and snow; they are not four separate season sheets.
 
 City groups use seeded city centers with an organic street layout (curved main street joined to the big roads, 1–4 side streets, houses only facing streets; spec 132), with whole-footprint keep-clear validation and no water. The shared settings are `citySeeds` (2, 0–8), `cityClusterSize` (8, 3–20), `ruinSeeds` (3, 0–10) and `ruinClusterSize` (7, 3–20) and `stoneCount` (40, 0–400). Zero seeds disables that category. Maintain matching sidebar, storage/URL, save and host snapshot behavior.
 
