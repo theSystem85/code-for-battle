@@ -307,10 +307,81 @@ export function decorationDensity(x, y, seed = 0, scale = 16) {
 
 const CLUSTER_CATEGORIES = ['trees', 'rocks', 'farm']
 
+const isForestTree = group => group.tagSet.has('trees') &&
+  !['farm', 'city', 'ruins', 'shore', 'roadside', 'stones', 'ground_detail'].some(tag => group.tagSet.has(tag))
+
+/** Preparation-only forest field: overlapping elliptical lobes, ragged edges
+ * and coherent clearings. One bounded field is shared by all tree candidates. */
+export function buildForestClusters(mapGrid, { salt = 0, defaultBiome = 'grass' } = {}) {
+  salt = decorationSeed(salt)
+  const height = mapGrid.length, width = mapGrid[0]?.length || 0
+  const density = new Float32Array(width * height)
+  const biomes = new Uint8Array(width * height).fill(255)
+  const candidates = DECORATION_BIOMES.map(() => [])
+  for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+    if (!isLayoutLand(mapGrid[y][x])) continue
+    const biome = resolveBiome(mapGrid[y][x], defaultBiome)
+    const index = DECORATION_BIOMES.indexOf(biome)
+    if (index < 0) continue
+    biomes[y * width + x] = index
+    candidates[index].push({ x, y, biome, hash: decorationHash(x, y, salt + 1877) })
+  }
+  const centers = [], radius = 11
+  candidates.forEach(points => {
+    points.sort((a, b) => a.hash - b.hash || a.y - b.y || a.x - b.x)
+    const selected = []
+    const count = Math.min(12, Math.ceil(points.length / 1800))
+    for (const point of points) {
+      if (selected.length >= count) break
+      if (selected.every(center => Math.hypot(center.x - point.x, center.y - point.y) >= radius * 1.8)) selected.push(point)
+    }
+    centers.push(...selected)
+  })
+  for (const center of centers) {
+    const random = createSeededRandom(decorationHash(center.x, center.y, salt + 4921))
+    const angle = random() * Math.PI * 2
+    const lobes = [{ x: center.x, y: center.y, rx: radius, ry: radius * (0.65 + random() * 0.4), angle }]
+    for (let branch = 0; branch < 3; branch++) {
+      const direction = angle + (random() - 0.5) * 4
+      const reach = radius * (0.45 + random() * 0.65)
+      lobes.push({ x: center.x + Math.cos(direction) * reach, y: center.y + Math.sin(direction) * reach,
+        rx: radius * (0.5 + random() * 0.45), ry: radius * (0.4 + random() * 0.3), angle: direction })
+    }
+    for (const lobe of lobes) {
+      const bound = Math.ceil(Math.max(lobe.rx, lobe.ry) * 1.2)
+      const cos = Math.cos(lobe.angle), sin = Math.sin(lobe.angle)
+      for (let y = Math.max(0, Math.floor(lobe.y) - bound); y <= Math.min(height - 1, Math.ceil(lobe.y) + bound); y++) {
+        for (let x = Math.max(0, Math.floor(lobe.x) - bound); x <= Math.min(width - 1, Math.ceil(lobe.x) + bound); x++) {
+          const offset = y * width + x
+          if (biomes[offset] !== DECORATION_BIOMES.indexOf(center.biome)) continue
+          const dx = x - lobe.x, dy = y - lobe.y
+          const distance = Math.hypot((dx * cos + dy * sin) / lobe.rx, (dy * cos - dx * sin) / lobe.ry)
+          const edge = decorationDensity(x, y, salt + 743, 6)
+          const clearing = decorationDensity(x, y, salt + 1163, 8)
+          const shape = 1 - distance + (edge - 0.5) * 0.45
+          if (shape <= 0 || clearing < 0.13) continue
+          density[offset] = Math.max(density[offset], Math.min(0.62, shape * 1.2) * (0.35 + clearing * 0.65))
+        }
+      }
+    }
+    density[center.y * width + center.x] = Math.max(0.3, density[center.y * width + center.x])
+  }
+  return { centers, radius, width, height, density, biomes, salt }
+}
+
+function forestAllows(forest, x, y, biome) {
+  if (x < 0 || y < 0 || x >= forest.width || y >= forest.height) return false
+  const offset = y * forest.width + x
+  if (forest.biomes[offset] !== DECORATION_BIOMES.indexOf(biome)) return false
+  return forest.density[offset] > 0 || decorationHash(x, y, forest.salt + 16927) % 400 === 0
+}
+
 export function buildCategoryClusters(mapGrid, { salt = 0, defaultBiome = 'grass' } = {}) {
-  return Object.fromEntries(CLUSTER_CATEGORIES.map((category, index) => [category,
-    buildRuinClusters(mapGrid, { defaultBiome, salt: decorationSeed(salt) + index * 1013, radius: [11, 8, 6][index], minDistance: 1 })
-  ]))
+  return {
+    trees: buildForestClusters(mapGrid, { salt, defaultBiome }),
+    rocks: buildRuinClusters(mapGrid, { defaultBiome, salt: decorationSeed(salt) + 1013, radius: 8, minDistance: 1 }),
+    farm: buildRuinClusters(mapGrid, { defaultBiome, salt: decorationSeed(salt) + 2026, radius: 6, minDistance: 1 })
+  }
 }
 
 export function categoryClusterAllows(group, x, y, biome, clusters) {
@@ -319,6 +390,7 @@ export function categoryClusterAllows(group, x, y, biome, clusters) {
   const category = group.tagSet.has('farm') ? 'farm' : CLUSTER_CATEGORIES.find(tag => group.tagSet.has(tag))
   if (!category) return true
   const cluster = clusters[category]
+  if (category === 'trees') return forestAllows(cluster, x, y, biome)
   return cluster.centers.some(center => center.biome === biome && (center.x - x) ** 2 + (center.y - y) ** 2 <= cluster.radius ** 2)
 }
 
@@ -415,6 +487,10 @@ export function decorationSpacingAllows(placement, nearby) {
     const distance = decorationFootprintDistance(placement, other)
     // Houses along a street may form gapless rows.
     if (placement.group.tagSet.has('city') && other.group.tagSet.has('city')) return distance >= 1
+    // Natural woods may have touching crowns, with no overlapping footprints.
+    // Identical tree art still keeps a small variety buffer; orchards retain
+    // ordinary farm spacing.
+    if (isForestTree(placement.group) && isForestTree(other.group)) return distance >= (identity === decorationIdentity(other.group) ? 3 : 1)
     return distance >= Math.max(decorationSpacing(placement.group), decorationSpacing(other.group)) &&
       (identity !== decorationIdentity(other.group) || distance >= 6)
   })
@@ -931,7 +1007,7 @@ export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'g
       const categories = new Map()
       for (const group of pools[biome]?.[kind] || []) {
         // Shore, roadside, stones and city props have their own passes.
-        if (group.tagSet.has('shore') || group.tagSet.has('roadside') || group.tagSet.has('stones') || group.tagSet.has('city') || group.tagSet.has('ruins')) continue
+        if (isForestTree(group) || group.tagSet.has('shore') || group.tagSet.has('roadside') || group.tagSet.has('stones') || group.tagSet.has('city') || group.tagSet.has('ruins')) continue
         const category = group.tagSet.has('farm') ? 'farm' : CLUSTER_CATEGORIES.find(tag => group.tagSet.has(tag)) || 'other'
         if (!categories.has(category)) categories.set(category, [])
         categories.get(category).push(group)
@@ -1120,9 +1196,11 @@ export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'g
       break
     }
   }
-  placeStones({ mapGrid, pools, options, salt, defaultBiome, fits, cells, occupied, placements, width, height })
   // Ground detail has its own cells, no impassability and no spacing ownership.
   for (const kind of ['groundDetail', 'multi', 'single']) {
+    // Native-size boulders and lakes need their footprints before small
+    // stones scatter through those same clusters.
+    if (kind === 'single') placeStones({ mapGrid, pools, options, salt, defaultBiome, fits, cells, occupied, placements, width, height })
     const detail = kind === 'groundDetail'
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
@@ -1159,6 +1237,35 @@ export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'g
           }
         }
       }
+    }
+  }
+  // Trees get a separate, denser preparation pass after scarce props. Their
+  // natural field supplies dense cores, tapered edges and occasional singles.
+  const forest = clusters.trees
+  const treeBags = Object.fromEntries(DECORATION_BIOMES.map(biome => [biome,
+    createDecorationBag([...(pools[biome]?.multi || []), ...(pools[biome]?.single || [])].filter(isForestTree), salt + 29)
+  ]))
+  for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+    const offset = y * width + x
+    const density = forest.density[offset]
+    const hash = decorationHash(x, y, salt + 16927)
+    if (density ? hash / 0x100000000 >= density : hash % 400 !== 0) continue
+    const biome = resolveBiome(mapGrid[y][x], defaultBiome)
+    const bag = treeBags[biome]
+    if (!bag?.size) continue
+    for (let attempt = 0; attempt < bag.size; attempt++) {
+      const group = bag.next()
+      const placement = { group, anchorX: x, anchorY: y, biome }
+      if (!fits(placement)) continue
+      if (group.width * group.height > 1) placements.push(placement)
+      if (group.tagSet.has('landmark')) landmarks.push(placement)
+      if (group.tagSet.has('rare')) rarePlaced.add(decorationIdentity(group))
+      for (let dy = 0; dy < group.height; dy++) for (let dx = 0; dx < group.width; dx++) {
+        const cell = (y + dy) * width + x + dx
+        cells[cell] = { ...placement, offsetX: dx, offsetY: dy }
+        occupied[cell] = placement
+      }
+      break
     }
   }
   const cityStreets = cityPlan ? connectCityStreets(mapGrid, { cells, groundDetails, plan: cityPlan }) : []

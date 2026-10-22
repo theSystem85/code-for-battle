@@ -135,11 +135,11 @@ export function filterRetiredSheetPaths(sheetPaths) {
     !isRetiredSpriteSheetPath(path) && !NON_SELECTABLE_SPRITE_SHEET_PATHS.has(normalizeSheetPath(path)))
 }
 
-// Native-size city atlases have new grids. Saved editor coordinates from
+// Native-size source atlases have new grids. Saved editor coordinates from
 // earlier layouts cannot be applied to their repacked pixels.
 export function isSupersededSheetMetadata(metadata) {
   const path = normalizeSheetPath(metadata?.sheetPath)
-  return ['dtv3_city', 'dtv4_city_sand', 'dtv4_city_snow'].some(name => path === `${SHEET_DIR}${name}.webp`) && metadata.layoutVersion !== 3
+  return ['dtv3_city', 'dtv4_city_sand', 'dtv4_city_snow', 'dtv4_nature_sand', 'dtv4_nature_snow'].some(name => path === `${SHEET_DIR}${name}.webp`) && metadata.layoutVersion !== 3
 }
 
 /**
