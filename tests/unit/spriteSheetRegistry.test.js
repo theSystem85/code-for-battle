@@ -123,11 +123,11 @@ describe('opt-out sheet selection', () => {
   })
 })
 
-it('[U05434] drops old city-grid overrides while preserving edits for the replacement layout', async() => {
+it.each(['dtv3_city', 'dtv4_city_sand', 'dtv4_city_snow'])('[U05434] drops old %s grid overrides while preserving edits for the replacement layout', async(name) => {
   const { sanitizeAppliedSheetMetadata } = await import('../../src/ui/spriteSheetRegistry.js')
-  const path = 'images/map/sprite_sheets/dtv3_city.webp'
+  const path = `images/map/sprite_sheets/${name}.webp`
   const old = { sheetPath: path, columns: 6, rows: 8, tiles: { '0,0': { tags: ['city'] } } }
-  const current = { ...old, layoutVersion: 2, columns: 16 }
+  const current = { ...old, layoutVersion: 3, columns: 16 }
   const storage = memoryStorage({ [`rts-sse-metadata:${path}`]: JSON.stringify(old), 'rts-sse-applied-metadata': JSON.stringify(old) })
   purgeRetiredSheetStorage(storage)
   expect(storage.map.size).toBe(0)
