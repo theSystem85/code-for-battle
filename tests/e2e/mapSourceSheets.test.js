@@ -37,9 +37,11 @@ test('[E00220] new native-alpha city and nature atlases load by default and gene
       canvas.getContext('2d').drawImage(sheet.image, 0, 0)
       alpha.push(canvas.getContext('2d').getImageData(0, 0, 1, 1).data[3])
     }
-    return { registered: sheets.every(sheet => DEFAULT_SSE_SHEETS.includes(sheet.sheetPath)), biomes, alpha }
+    return { registered: sheets.every(sheet => DEFAULT_SSE_SHEETS.includes(sheet.sheetPath)),
+      nativeDimensions: sheets.every(({ metadata }) => metadata.source.packing.scale === 1 && metadata.extension.imports.every(item => item.bbox.width === item.renderRect.width && item.bbox.height === item.renderRect.height)), biomes, alpha }
   })
   expect(result.registered).toBe(true)
+  expect(result.nativeDimensions).toBe(true)
   expect(result.alpha).toEqual([0, 0, 0, 0, 0])
   for (const entry of result.biomes) {
     expect(entry.buildings).toBeGreaterThan(0)

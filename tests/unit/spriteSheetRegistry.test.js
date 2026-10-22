@@ -123,7 +123,7 @@ describe('opt-out sheet selection', () => {
   })
 })
 
-it.each(['dtv3_city', 'dtv4_city_sand', 'dtv4_city_snow'])('[U05434] drops old %s grid overrides while preserving edits for the replacement layout', async(name) => {
+it.each(['dtv3_city', 'dtv4_city_sand', 'dtv4_city_snow', 'dtv4_nature_sand', 'dtv4_nature_snow'])('[U05434] drops old %s grid overrides while preserving edits for the replacement layout', async(name) => {
   const { sanitizeAppliedSheetMetadata } = await import('../../src/ui/spriteSheetRegistry.js')
   const path = `images/map/sprite_sheets/${name}.webp`
   const old = { sheetPath: path, columns: 6, rows: 8, tiles: { '0,0': { tags: ['city'] } } }

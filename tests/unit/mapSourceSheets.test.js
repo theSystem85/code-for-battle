@@ -73,22 +73,20 @@ describe('bundled map source sheets', () => {
     expect(output.info.width).toBe(metadata.columns * metadata.tileSize)
     expect(output.info.height).toBe(metadata.rows * metadata.rowHeight)
     expect(output.data[3]).toBe(0)
-    if (profile.kind === 'city') {
-      expect(metadata.source.packing).toEqual({ scale: 1, padding: 2 })
-      let changedAlpha = 0
-      for (let index = 0; index < components.length; index++) {
-        const { bbox, pixels } = components[index]
-        const { renderRect: rect, placedAt } = metadata.extension.imports[index]
-        expect([rect.width, rect.height]).toEqual([bbox.width, bbox.height])
-        const left = placedAt.column * metadata.tileSize + rect.x
-        const top = placedAt.row * metadata.rowHeight + rect.y
-        for (let y = 0; y < bbox.height; y++) for (let x = 0; x < bbox.width; x++) {
-          if (output.data[((top + y) * output.info.width + left + x) * 4 + 3] !== pixels[(y * bbox.width + x) * 4 + 3]) changedAlpha++
-        }
+    expect(metadata.source.packing).toEqual({ scale: 1, padding: 2 })
+    let changedAlpha = 0
+    for (let index = 0; index < components.length; index++) {
+      const { bbox, pixels } = components[index]
+      const { renderRect: rect, placedAt } = metadata.extension.imports[index]
+      expect([rect.width, rect.height]).toEqual([bbox.width, bbox.height])
+      const left = placedAt.column * metadata.tileSize + rect.x
+      const top = placedAt.row * metadata.rowHeight + rect.y
+      for (let y = 0; y < bbox.height; y++) for (let x = 0; x < bbox.width; x++) {
+        if (output.data[((top + y) * output.info.width + left + x) * 4 + 3] !== pixels[(y * bbox.width + x) * 4 + 3]) changedAlpha++
       }
-      // WebP RGB is lossy, but the native-size sprite silhouette is exact.
-      expect(changedAlpha).toBe(0)
     }
+    // WebP RGB is lossy, but the native-size sprite silhouette is exact.
+    expect(changedAlpha).toBe(0)
     let transparent = 0, visible = 0
     for (let i = 3; i < output.data.length; i += 4) output.data[i] ? visible++ : transparent++
     expect(transparent).toBeGreaterThan(1000)
