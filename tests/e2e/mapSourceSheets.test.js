@@ -25,6 +25,7 @@ test('[E00220] new native-alpha city and nature atlases load by default and gene
       const cities = cells.filter(cell => cell.group.tagSet.has('city'))
       const nature = cells.filter(cell => cell.group.tagSet.has('trees') || cell.group.tagSet.has('water') || cell.group.tagSet.has('rocks'))
       biomes.push({ biome, buildings: getCityBuildings(grid).length,
+        zoomed: cities.every(cell => cell.group.zoomFactor === 2 && cell.group.width === 2 * cell.group.sourceWidth && cell.group.height === 2 * cell.group.sourceHeight),
         citySheets: [...new Set(cities.map(cell => cell.group.tilesByOffset['0,0'].sheetPath))],
         natureSheets: [...new Set(nature.map(cell => cell.group.tilesByOffset['0,0'].sheetPath))],
         allMatch: cells.every(cell => cell.group.tagSet.has(biome)),
@@ -45,6 +46,7 @@ test('[E00220] new native-alpha city and nature atlases load by default and gene
   expect(result.alpha).toEqual([0, 0, 0, 0, 0])
   for (const entry of result.biomes) {
     expect(entry.buildings).toBeGreaterThan(0)
+    expect(entry.zoomed).toBe(true)
     expect(entry.allMatch).toBe(true)
     expect(entry.alpha).toBe(true)
     const suffix = entry.biome === 'sand' || entry.biome === 'snow' ? `dtv4_city_${entry.biome}` : 'dtv3_city'
@@ -55,7 +57,50 @@ test('[E00220] new native-alpha city and nature atlases load by default and gene
   await page.waitForFunction(() => window.__SSE__.getState().targetSheetPath === 'images/map/sprite_sheets/dtv3_city.webp')
   const exported = await page.evaluate(async() => {
     const { json } = await window.__SSE__.exportSheet({ lossless: false, quality: 85 })
-    return { layoutVersion: json.layoutVersion, blendMode: json.blendMode, imported: json.extension.imports.length }
+    return { layoutVersion: json.layoutVersion, zoomFactor: json.zoomFactor, blendMode: json.blendMode, imported: json.extension.imports.length }
   })
-  expect(exported).toEqual({ layoutVersion: 3, blendMode: 'alpha', imported: 153 })
+  expect(exported).toEqual({ layoutVersion: 4, zoomFactor: 2, blendMode: 'alpha', imported: 153 })
+})
+
+test('[E00221] fractional sheet zoom renders exact-size artwork inside rounded footprints without seams', async({ page }) => {
+  await page.goto('/sse')
+  const result = await page.evaluate(async() => {
+    const { zoomDecorationGroup } = await import('/src/rendering/spriteSheetZoom.js')
+    const { MapRenderer } = await import('/src/rendering/mapRenderer.js')
+    const source = document.createElement('canvas')
+    source.width = 192
+    source.height = 128
+    source.getContext('2d').fillStyle = '#ff0000'
+    source.getContext('2d').fillRect(0, 0, 192, 128)
+    const group = { width: 3, height: 2, tagSet: new Set(['decorative']), tilesByOffset: Object.fromEntries(
+      Array.from({ length: 6 }, (_, i) => [`${i % 3},${Math.floor(i / 3)}`, { image: source, rect: { x: i % 3 * 64, y: Math.floor(i / 3) * 64, width: 64, height: 64 } }])) }
+    return [2, 1.25, 0.4].map(zoom => {
+      const prepared = zoomDecorationGroup(group, zoom)
+      const canvas = document.createElement('canvas')
+      canvas.width = prepared.width * 32
+      canvas.height = prepared.height * 32
+      const ctx = canvas.getContext('2d')
+      for (const [offset, tile] of Object.entries(prepared.tilesByOffset)) {
+        const [x, y] = offset.split(',').map(Number)
+        MapRenderer.prototype.drawIntegratedTileImage.call({}, ctx, tile, x * 32, y * 32)
+      }
+      const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data
+      const left = (prepared.width - 3 * zoom) * 16, top = (prepared.height - 2 * zoom) * 16
+      let minX = canvas.width, minY = canvas.height, maxX = -1, maxY = -1, holes = 0
+      for (let y = 0; y < canvas.height; y++) for (let x = 0; x < canvas.width; x++) {
+        const alpha = data[(y * canvas.width + x) * 4 + 3]
+        if (alpha) { minX = Math.min(minX, x); minY = Math.min(minY, y); maxX = Math.max(maxX, x); maxY = Math.max(maxY, y) }
+        if (x > Math.ceil(left) && x < Math.floor(left + 3 * zoom * 32) - 1 && y > Math.ceil(top) && y < Math.floor(top + 2 * zoom * 32) - 1 && alpha < 250) holes++
+      }
+      return { zoom, width: prepared.width, height: prepared.height, minX, minY, maxX, maxY, holes, left, top }
+    })
+  })
+  for (const entry of result) {
+    expect([entry.width, entry.height]).toEqual([Math.ceil(3 * entry.zoom), Math.ceil(2 * entry.zoom)])
+    expect(entry.holes).toBe(0)
+    expect(Math.abs(entry.minX - entry.left)).toBeLessThanOrEqual(1)
+    expect(Math.abs(entry.minY - entry.top)).toBeLessThanOrEqual(1)
+    expect(Math.abs(entry.maxX + 1 - entry.left - 3 * entry.zoom * 32)).toBeLessThanOrEqual(1)
+    expect(Math.abs(entry.maxY + 1 - entry.top - 2 * entry.zoom * 32)).toBeLessThanOrEqual(1)
+  }
 })

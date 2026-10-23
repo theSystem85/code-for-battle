@@ -20,6 +20,7 @@ import {
   getValidDecorationCell,
   SINGLE_DECORATION_INTERVAL
 } from './decorationLayout.js'
+import { normalizeSpriteSheetZoomFactor, zoomDecorationGroup } from './spriteSheetZoom.js'
 import { cutoutDecorationGroup } from './decorationCutout.js'
 
 const DEFAULT_COMBAT_DECAL_SHEET_PATH = 'images/map/sprite_sheets/debris_craters_tracks.webp'
@@ -525,6 +526,12 @@ export class TextureManager {
       const group = { width: 1, height: 1, tilesByOffset: { '0,0': tile }, tagSet: new Set(tile.tags) }
       preparedGroups.push(tile.tags.includes('ground_detail') ? group : cutoutDecorationGroup(group))
     }
+    const zoomBudget = { remaining: 65536 }
+    const zoomByPath = new Map(normalizedEntries.map(entry => [entry.sheetPath, normalizeSpriteSheetZoomFactor(entry.metadata.zoomFactor)]))
+    for (let index = 0; index < preparedGroups.length; index++) {
+      const group = preparedGroups[index]
+      preparedGroups[index] = zoomDecorationGroup(group, zoomByPath.get(group.tilesByOffset['0,0'].sheetPath), zoomBudget)
+    }
     this.hasShoreDecorations = preparedGroups.some(group => group.tagSet.has('shore'))
     this.integratedDecorationPools = buildDecorationPools(preparedGroups)
     this.hasGroundDetails = preparedGroups.some(group => group.tagSet.has('ground_detail'))
@@ -991,6 +998,7 @@ export class TextureManager {
     return {
       image: selected.image || getImageTextureWithBlendMode(this.integratedSpriteSheetImage, this.integratedBlendMode, this.integratedBlackKey, this.integratedSpriteSheetMetadata),
       rect: selected.rect,
+      destinationRect: selected.destinationRect,
       tags: selectedTags || selected.tags || [],
       rotation,
       sheetPath: selected.sheetPath || null
