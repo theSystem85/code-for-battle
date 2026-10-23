@@ -47,19 +47,18 @@ describe('strict snow decoration placement', () => {
     const warn = vi.fn()
     const dir = '/public/images/map/sprite_sheets/'
     const files = {}
-    for (const name of ['dtv3_ground_detail', 'dtv3_shore', 'dtv3_city', 'dtv3_winter', 'dtv2_snow']) {
+    for (const name of ['dtv3_ground_detail', 'dtv6_shore', 'dtv3_city', 'dtv6_decor_snow']) {
       files[`${dir}${name}.webp`] = 'image'
       files[`${dir}${name}.json`] = 'metadata'
     }
     files[`${dir}dtv4_halfdone.webp`] = 'image'
     expect(availableFutureSheets(files, warn)).toEqual([
-      'images/map/sprite_sheets/dtv2_snow.webp',
       'images/map/sprite_sheets/dtv3_ground_detail.webp',
-      'images/map/sprite_sheets/dtv3_shore.webp',
       'images/map/sprite_sheets/dtv3_city.webp',
-      'images/map/sprite_sheets/dtv3_winter.webp'
+      'images/map/sprite_sheets/dtv6_decor_snow.webp',
+      'images/map/sprite_sheets/dtv6_shore.webp'
     ])
-    expect(warn).toHaveBeenCalledTimes(4)
+    expect(warn).not.toHaveBeenCalled()
   })
 
   it('[U04088] never draws the green fallback ground details on snow tiles', () => {
@@ -78,22 +77,22 @@ describe('strict snow decoration placement', () => {
   })
 })
 
-describe('dtv3_winter sheet', () => {
+describe('dtv6_decor_snow sheet', () => {
   it('[U04089] is snow-only vegetation with the allowed tags and grouped multi-tile trees', async() => {
     const { readFileSync } = await import('node:fs')
-    const sheet = JSON.parse(readFileSync('public/images/map/sprite_sheets/dtv3_winter.json', 'utf8'))
-    expect(sheet.sheetPath).toBe('images/map/sprite_sheets/dtv3_winter.webp')
-    const allowed = /^(decorative|passable|impassable|snow|inner_cuts|group_\d+)$/
+    const sheet = JSON.parse(readFileSync('public/images/map/sprite_sheets/dtv6_decor_snow.json', 'utf8'))
+    expect(sheet.sheetPath).toBe('images/map/sprite_sheets/dtv6_decor_snow.webp')
+
     for (const tile of Object.values(sheet.tiles)) {
-      expect(tile.tags.every(tag => allowed.test(tag))).toBe(true)
+      expect(tile.tags).toContain('winter')
+      expect(tile.tags).not.toContain('universal')
       expect(tile.tags).toEqual(expect.arrayContaining(['decorative', 'snow']))
       expect(tile.tags.includes('passable') !== tile.tags.includes('impassable')).toBe(true)
     }
     for (const prop of sheet.propLayout) {
       const multi = prop.w * prop.h > 1
       expect(prop.tags.some(tag => tag.startsWith('group_'))).toBe(multi)
-      if (/tree|pine/.test(prop.id)) expect(prop.tags).toContain('impassable')
-      else expect(prop.tags).toContain('passable')
+      if (prop.tags.includes('trees')) expect(prop.tags).toContain('impassable')
       for (let y = prop.row; y < prop.row + prop.h; y++) for (let x = prop.col; x < prop.col + prop.w; x++) expect(sheet.tiles[`${x},${y}`].tags).toEqual(prop.tags)
     }
   })

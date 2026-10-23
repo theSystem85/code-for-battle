@@ -260,6 +260,25 @@ export function summarizeDecorationLayout(layout) {
   return summary
 }
 
+// Preparation only: orient a full native rectangle along a coastal normal.
+function coastAnchorCoordinate(coordinate, normal, span, crossing, offshore) {
+  if (offshore) return coordinate + normal - (normal < 0 ? span - 1 : 0)
+  if (!normal) return coordinate - Math.floor(span / 2)
+  const endsAtAnchor = crossing ? normal < 0 : normal > 0
+  return endsAtAnchor ? coordinate - span + 1 : coordinate
+}
+
+// The native crossing's western column rests on land; remaining columns
+// project over water. Inverse rotation keeps this contract for every coast.
+function shoreWaterAt(placement, x, y) {
+  const { group, anchorX, anchorY, rotation = 0 } = placement
+  if (group.tagSet.has('offshore')) return true
+  if (!group.tagSet.has('shore_trans')) return false
+  const dx = x - anchorX, dy = y - anchorY
+  const column = rotation === 90 ? dy : rotation === 180 ? group.width - 1 - dx : rotation === 270 ? group.width - 1 - dy : dx
+  return column > 0
+}
+
 /**
  * Return the placement for a cell if it is still valid on the (possibly
  * edited) map: every covered cell must still be decoratable land of the
@@ -273,7 +292,7 @@ export function getValidDecorationCell(layout, mapGrid, x, y, defaultBiome = 'gr
   for (let gy = 0; gy < (cell.footprintHeight || group.height); gy++) {
     for (let gx = 0; gx < (cell.footprintWidth || group.width); gx++) {
       const tile = mapGrid?.[anchorY + gy]?.[anchorX + gx]
-      const water = group.tagSet.has('offshore') || (group.tagSet.has('shore_trans') && (anchorX + gx !== cell.landX || anchorY + gy !== cell.landY))
+      const water = shoreWaterAt(cell, anchorX + gx, anchorY + gy)
       if (water) {
         if (tile?.type !== 'water' || tile.building || tile.ore || tile.seedCrystal) return null
         continue
@@ -423,13 +442,7 @@ export function buildDecorationConstraints(mapGrid, startPositions = []) {
       if (tile.ore || tile.seedCrystal) markRadius(x, y, 2)
       if (tile.startPosition || tile.basePosition) markRadius(x, y, 8)
       if (isLayoutLand(tile)) {
-        for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
-          const cx = x + dx, cy = y + dy
-          if (cx >= 0 && cy >= 0 && cx < width && cy < height) {
-            const index = cy * width + cx
-            landDistance[index] = Math.min(landDistance[index], Math.max(Math.abs(dx), Math.abs(dy)))
-          }
-        }
+        landDistance[y * width + x] = 0
         const blocked = (dx, dy) => isBarrier(mapGrid[y + dy]?.[x + dx])
         if (([1, 2].some(d => blocked(-d, 0)) && [1, 2].some(d => blocked(d, 0))) ||
           ([1, 2].some(d => blocked(0, -d)) && [1, 2].some(d => blocked(0, d)))) keepClear[y * width + x] = 1
@@ -448,6 +461,20 @@ export function buildDecorationConstraints(mapGrid, startPositions = []) {
       }
     }
   }
+  // Chebyshev distance transform, prepared once in O(map area). Native-size
+  // offshore props can reach farther than the old one-cell water strip.
+  for (const direction of [1, -1]) {
+    for (let y = direction === 1 ? 0 : height - 1; y >= 0 && y < height; y += direction) {
+      for (let x = direction === 1 ? 0 : width - 1; x >= 0 && x < width; x += direction) {
+        const index = y * width + x
+        const previousY = y - direction
+        if (previousY >= 0 && previousY < height) for (let dx = -1; dx <= 1; dx++) {
+          if (x + dx >= 0 && x + dx < width) landDistance[index] = Math.min(landDistance[index], landDistance[previousY * width + x + dx] + 1)
+        }
+        if (x - direction >= 0 && x - direction < width) landDistance[index] = Math.min(landDistance[index], landDistance[index - direction] + 1)
+      }
+    }
+  }
   return { width, height, keepClear, roadDistance, shoreDistance, landDistance }
 }
 
@@ -455,11 +482,11 @@ export function decorationEnvironmentAllows(group, x, y, constraints, footprint 
   const index = y * constraints.width + x
   if (constraints.keepClear[index]) return false
   // Roadside props sit directly next to a road (anchor on the first ring;
-  // other footprint cells may reach the second ring). Everything else keeps
+  // other footprint cells extend inland at their native size). Everything else keeps
   // a one-tile buffer from roads.
   if (group.tagSet.has('roadside')) {
     const distance = constraints.roadDistance[index]
-    if (footprint ? distance < 1 || distance > 2 : distance !== 1) return false
+    if (footprint ? distance < 1 : distance !== 1) return false
   } else if (constraints.roadDistance[index] <= 1) return false
   if (!footprint && group.tagSet.has('shore') && constraints.shoreDistance[index] !== 1) return false
   return true
@@ -1001,12 +1028,19 @@ export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'g
   // Index covered tiles once. Spacing probes visit at most a six-tile halo,
   // rather than scanning all earlier placements per candidate.
   const occupied = new Array(width * height).fill(null)
+  // Vary priority by map seed: reserving every large footprint first on every
+  // map would starve the smaller farm/rock catalog in those same clusters.
+  const largeFirst = decorationHash(width, height, salt + 9389) % 4 === 0
   const bags = {}
   for (const biome of DECORATION_BIOMES) {
     bags[biome] = {}
-    for (const kind of ['multi', 'single', 'groundDetail']) {
+    for (const kind of ['large', 'multi', 'single', 'groundDetail']) {
       const categories = new Map()
-      for (const group of pools[biome]?.[kind] || []) {
+      for (const group of pools[biome]?.[kind === 'large' ? 'multi' : kind] || []) {
+        if (kind === 'large' || kind === 'multi') {
+          const large = Math.max(group.width, group.height) >= 5
+          if (kind === 'large' ? !largeFirst || !large : largeFirst && large) continue
+        }
         // Shore, roadside, stones and city props have their own passes.
         if (isForestTree(group) || group.tagSet.has('shore') || group.tagSet.has('roadside') || group.tagSet.has('stones') || group.tagSet.has('city') || group.tagSet.has('ruins')) continue
         const category = group.tagSet.has('farm') ? 'farm' : CLUSTER_CATEGORIES.find(tag => group.tagSet.has(tag)) || 'other'
@@ -1030,9 +1064,9 @@ export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'g
         const cx = x + dx
         const cy = y + dy
         const tile = mapGrid[cy][cx]
-        const water = group.tagSet.has('offshore') || (group.tagSet.has('shore_trans') && (cx !== placement.landX || cy !== placement.landY))
+        const water = shoreWaterAt(placement, cx, cy)
         if (cityLattice?.[cy * width + cx]) return false
-        if ((water ? tile?.type !== 'water' || tile.building || tile.ore || tile.seedCrystal || constraints.landDistance[cy * width + cx] !== 1 : !isLayoutLand(tile) || resolveBiome(tile, defaultBiome) !== biome) || isRoad(tile) ||
+        if ((water ? tile?.type !== 'water' || tile.building || tile.ore || tile.seedCrystal || constraints.landDistance[cy * width + cx] > Math.max(group.width, group.height) : !isLayoutLand(tile) || resolveBiome(tile, defaultBiome) !== biome) || isRoad(tile) ||
           !decorationEnvironmentAllows(group, cx, cy, constraints, true) || (detail ? groundDetails[cy * width + cx] : occupied[cy * width + cx])) return false
         if (constraints.shoreDistance[cy * width + cx] === 1) touchesWater = true
       }
@@ -1159,17 +1193,17 @@ export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'g
       const group = bag.next()
       const directions = group.tagSet.has('offshore')
         ? [[1, 0, 0], [0, 1, 90], [-1, 0, 180], [0, -1, 270], [1, 1, 0], [-1, 1, 0], [1, -1, 0], [-1, -1, 0]]
-        : group.tagSet.has('shore_trans') ? [[1, 0, 0], [0, 1, 90], [-1, 0, 180], [0, -1, 270]] : [[0, 0, 0]]
+        : [[1, 0, 0], [0, 1, 90], [-1, 0, 180], [0, -1, 270]]
       for (const [nx, ny, angle] of directions) {
         const offshore = group.tagSet.has('offshore')
         const crossing = group.tagSet.has('shore_trans')
-        if ((offshore || crossing) && mapGrid[y + ny]?.[x + nx]?.type !== 'water') continue
-        if (crossing && (group.width !== 2 || group.height !== 1)) continue
+        if (mapGrid[y + ny]?.[x + nx]?.type !== 'water') continue
+        if (crossing && group.width < 2) continue
         const rotation = crossing ? angle : 0
         const fw = rotation % 180 ? group.height : group.width
         const fh = rotation % 180 ? group.width : group.height
-        const ax = offshore ? x + nx : x + Math.min(0, nx)
-        const ay = offshore ? y + ny : y + Math.min(0, ny)
+        const ax = coastAnchorCoordinate(x, nx, fw, crossing, offshore)
+        const ay = coastAnchorCoordinate(y, ny, fh, crossing, offshore)
         const placement = { group, anchorX: ax, anchorY: ay, biome, rotation, footprintWidth: fw, footprintHeight: fh, landX: x, landY: y }
         if (!fits(placement)) continue
         if (group.width * group.height > 1) placements.push(placement)
@@ -1213,9 +1247,9 @@ export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'g
     }
   }
   // Ground detail has its own cells, no impassability and no spacing ownership.
-  for (const kind of ['groundDetail', 'multi', 'single']) {
-    // Native-size boulders and lakes need their footprints before small
-    // stones scatter through those same clusters.
+  for (const kind of ['groundDetail', 'large', 'multi', 'single']) {
+    // Large native props reserve their room before smaller ordinary props;
+    // boulders and lakes precede small stones in those same clusters.
     if (kind === 'single') placeStones({ mapGrid, pools, options, salt, defaultBiome, fits, cells, occupied, placements, width, height })
     const detail = kind === 'groundDetail'
     for (let y = 0; y < height; y++) {
@@ -1224,7 +1258,7 @@ export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'g
         const categoryBags = bags[biome]?.[kind]
         if (!categoryBags?.length || !isLayoutLand(mapGrid[y][x])) continue
         const hash = decorationHash(x, y, salt + (detail ? 3209 : kind === 'single' ? 7919 : 0))
-        const interval = detail ? 40 : kind === 'multi' ? MULTI_TILE_ANCHOR_INTERVAL : SINGLE_DECORATION_INTERVAL
+        const interval = detail ? 40 : kind === 'single' ? SINGLE_DECORATION_INTERVAL : MULTI_TILE_ANCHOR_INTERVAL
         const density = decorationDensity(x, y, salt)
         if (hash / 0x100000000 >= density / interval && !(kind !== 'groundDetail' && (ruins.anchorKeys.has(`${x},${y}`) || cities.anchorKeys.has(`${x},${y}`) || clusterSeeds.has(`${x},${y}`)))) continue
         const start = (hash >>> 8) % categoryBags.length
@@ -1236,7 +1270,7 @@ export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'g
             const placement = { group, anchorX: x, anchorY: y, biome }
             if (!fits(placement, detail)) continue
             if (!detail) {
-              if (kind === 'multi') placements.push(placement)
+              if (kind !== 'single') placements.push(placement)
               if (group.tagSet.has('landmark')) landmarks.push(placement)
               if (group.tagSet.has('rare')) rarePlaced.add(decorationIdentity(group))
             }

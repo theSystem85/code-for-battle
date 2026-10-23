@@ -1,15 +1,8 @@
 {
   "sheets": [
     "images/map/sprite_sheets/debris_craters_tracks.webp",
-    "images/map/sprite_sheets/dtv2_grass.webp",
-    "images/map/sprite_sheets/dtv2_soil.webp",
-    "images/map/sprite_sheets/dtv2_sand.webp",
-    "images/map/sprite_sheets/dtv2_snow.webp",
-    "images/map/sprite_sheets/dtv2_universal.webp",
     "images/map/sprite_sheets/dtv3_ground_detail.webp",
-    "images/map/sprite_sheets/dtv3_shore.webp",
     "images/map/sprite_sheets/dtv3_city.webp",
-    "images/map/sprite_sheets/dtv3_winter.webp",
     "images/map/sprite_sheets/dtv4_city_sand.webp",
     "images/map/sprite_sheets/dtv4_city_snow.webp",
     "images/map/sprite_sheets/dtv4_nature_sand.webp",
@@ -19,6 +12,14 @@
     "images/map/sprite_sheets/dtv5_city_snow_low.webp",
     "images/map/sprite_sheets/dtv5_city_snow_medium.webp",
     "images/map/sprite_sheets/dtv5_city_temperate_low.webp",
-    "images/map/sprite_sheets/dtv5_city_temperate_medium.webp"
+    "images/map/sprite_sheets/dtv5_city_temperate_medium.webp",
+    "images/map/sprite_sheets/dtv6_decor_grass.webp",
+    "images/map/sprite_sheets/dtv6_decor_sand.webp",
+    "images/map/sprite_sheets/dtv6_decor_snow.webp",
+    "images/map/sprite_sheets/dtv6_decor_soil.webp",
+    "images/map/sprite_sheets/dtv6_decor_universal.webp",
+    "images/map/sprite_sheets/dtv6_nature_grass.webp",
+    "images/map/sprite_sheets/dtv6_nature_soil.webp",
+    "images/map/sprite_sheets/dtv6_shore.webp"
   ]
 }

@@ -1,0 +1,9 @@
+- [x] **Improvement: Transparent decoration catalog**
+  Replaced five dtv2 decoration sets plus old shore/winter sheets with eight alpha sources and atlases containing 236 individually tagged props; grass and soil have separate nature sets. Preserved native sprite pixels and expanded shoreline/roadside placement for larger footprints.
+  Spec: [Alpha decoration replacements](../../specs/alpha-decoration-replacements.md)
+
+Validation: `npm run test` passed all 330 files / 5,508 unit and integration tests after the placement fix; every default sprite appears on generated maps. The required `npm run test:unit` run exposed the farm crowding regression, fixed with seeded large-prop priority and verified by focused tests plus the full suite. SSE replay passed all 19 source profiles, preserving every imported dimension and alpha pixel. Chromium passed all 17 focused checks across cityDensity, desertCityOverhangs, integratedStartupSheets, legacySheetStorage, mapSourceSheets, spriteSheetEditorMode and topologyFingerprint (including rechecks against the final assets/base). All other Playwright files were skipped. Lint, stable test-ID checks and production build passed. Packed art was visually reviewed. GPU/75 FPS hardware acceptance remains pending on Patrick's qualifying GPU; no GPU/performance benchmarks were run.
+
+The active alpha city sheets and sand/snow nature remain. Retired seven superseded legacy atlases (14 image/JSON files), with saved selection/editor metadata cleanup. Sources and targets use q85 WebP and lossless alpha. Updated both asset skills with extraction profiles, semantic subject guides, separate grass/soil nature and placement-fairness checks.
+
+Possible next sources: wetland plants and fallen wood, abandoned rail/industrial yards, and irrigated desert farms. Each would use explicit biome/category tags and native-size placement coverage before shipping.

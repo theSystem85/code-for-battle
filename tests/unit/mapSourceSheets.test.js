@@ -12,7 +12,7 @@ import { buildDecorationPools } from '../../src/rendering/decorationLayout.js'
 const counts = [...Array(9).fill(20), 155, 118]
 
 describe('bundled map source sheets', () => {
-  it.each(SOURCE_PROFILES.map((profile, index) => ({ ...profile, count: counts[index] })))('[U05433] replays SSE extraction and validates $source ownership, metadata and recorded-scale alpha WebP', async(profile) => {
+  it.each(SOURCE_PROFILES.map((profile, index) => ({ ...profile, count: profile.expectedSprites || counts[index] })))('[U05433] replays SSE extraction and validates $source ownership, metadata and recorded-scale alpha WebP', async(profile) => {
     const directory = 'public/images/map/sprite_sheets'
     const source = await readFile(`${directory}/sources/${profile.source}.webp`)
     const { data, info } = await sharp(source).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
@@ -21,7 +21,7 @@ describe('bundled map source sheets', () => {
     expect(components).toHaveLength(profile.count)
     // A zero cutoff joins this noisy source into a giant component. The
     // recorded settings must actually separate useful individual props.
-    if (!profile.cityOverhangs) expect(Math.max(...detectSprites(image, { transparent: true, minArea: 256 }).map(c => c.area))).toBeGreaterThan(900000)
+    if (profile.kind === 'nature') expect(Math.max(...detectSprites(image, { transparent: true, minArea: 256 }).map(c => c.area))).toBeGreaterThan(900000)
     const seen = new Uint8Array(info.width * info.height)
     let duplicatePixels = 0, belowCutoff = 0
     for (const component of components) {
@@ -51,7 +51,7 @@ describe('bundled map source sheets', () => {
     const occupied = new Set()
     const groups = []
     for (const prop of metadata.propLayout) {
-      expect(prop.tags).toEqual(expect.arrayContaining([...profile.biomes, 'decorative', `group_${prop.groupId}`]))
+      expect(prop.tags).toEqual(expect.arrayContaining([...(profile.props?.[prop.groupId - 1]?.biomes || profile.biomes), 'decorative', `group_${prop.groupId}`]))
       if (profile.cityOverhangs) {
         expect(prop.footprint.width).toBeGreaterThanOrEqual(prop.tags.includes('skyscraper') ? 3 : 2)
         expect(prop.footprint.height).toBeGreaterThanOrEqual(prop.tags.includes('skyscraper') ? 3 : profile.densityLevel === 'low' && prop.density === 1 ? 1 : 2)
@@ -80,7 +80,7 @@ describe('bundled map source sheets', () => {
     expect(occupied.size).toBe(Object.keys(metadata.tiles).length)
     const pools = buildDecorationPools(groups)
     for (const biome of ['grass', 'soil', 'sand', 'snow']) {
-      expect(pools[biome].single.length + pools[biome].multi.length).toBe(profile.biomes.includes(biome) ? components.length : 0)
+      expect(pools[biome].single.length + pools[biome].multi.length).toBe(components.filter((_, index) => (profile.props?.[index]?.biomes || profile.biomes).some(tag => tag === biome || tag === 'universal')).length)
     }
     const webp = await readFile(`${directory}/${profile.name}.webp`)
     expect(detectWebPCompression(webp)).toEqual({ lossless: false })

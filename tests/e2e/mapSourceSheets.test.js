@@ -63,3 +63,23 @@ test('[E00220] new native-alpha city and nature atlases load by default and gene
   })
   expect(exported).toEqual({ layoutVersion: 6, blendMode: 'alpha', imported: 20 })
 })
+
+test('[E00227] replacement alpha decorations, expanded shore and separate nature sheets load in SSE with native imports and full tags', async({ page }) => {
+  await page.goto('/sse')
+  await page.waitForFunction(() => Boolean(window.__SSE__))
+  const names = ['dtv6_decor_grass', 'dtv6_decor_soil', 'dtv6_decor_sand', 'dtv6_decor_snow', 'dtv6_decor_universal', 'dtv6_shore', 'dtv6_nature_grass', 'dtv6_nature_soil']
+  for (const [index, name] of names.entries()) {
+    const path = `images/map/sprite_sheets/${name}.webp`
+    await page.locator('#sseSheetSelect').selectOption(path)
+    await page.waitForFunction(path => window.__SSE__.getState().targetSheetPath === path, path)
+    const result = await page.evaluate(async() => {
+      const { json } = await window.__SSE__.exportSheet({ lossless: false, quality: 85 })
+      return { count: json.extension.imports.length, blend: json.blendMode,
+        native: json.extension.imports.every(item => item.bbox.width === item.renderRect.width && item.bbox.height === item.renderRect.height && item.sizeRatio === 1),
+        complete: json.extension.imports.every(prop => prop.tags.includes('decorative') && prop.tags.some(tag => /^group_/.test(tag)) && prop.tags.some(tag => ['grass', 'soil', 'sand', 'snow', 'universal'].includes(tag)) && Array.from({ length: prop.tileSpan.rows }, (_, dy) => Array.from({ length: prop.tileSpan.columns }, (_, dx) => json.tiles[`${prop.placedAt.column + dx},${prop.placedAt.row + dy}`]?.tags.includes('decorative'))).flat().every(Boolean)) }
+    })
+    expect(result).toEqual({ count: index < 5 ? 24 : index === 5 ? 36 : 40, blend: 'alpha', native: true, complete: true })
+  }
+  const options = await page.locator('#sseSheetSelect option').evaluateAll(options => options.map(option => option.value))
+  expect(options.some(value => /dtv2_|dtv3_(shore|winter)/.test(value))).toBe(false)
+})

@@ -9,8 +9,8 @@ test('[E00053] persisted optional sheets apply before the startup map is generat
   })
   await page.addInitScript(() => {
     const names = [
-      'dtv2_grass', 'dtv2_soil', 'dtv2_sand', 'dtv2_snow', 'dtv2_universal',
-      'dtv3_city', 'dtv3_shore', 'dtv3_ground_detail',
+      'dtv6_decor_grass', 'dtv6_decor_soil', 'dtv6_decor_sand', 'dtv6_decor_snow', 'dtv6_decor_universal',
+      'dtv3_city', 'dtv6_shore', 'dtv3_ground_detail',
       'unknown_stale_sheet'
     ]
     localStorage.setItem('rts-integrated-spritesheet-mode', 'true')

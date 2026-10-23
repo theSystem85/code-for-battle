@@ -1,6 +1,5 @@
 // Offline-only compiler for shore/SOT masks and neutral connected cliff art.
 import sharp from 'sharp'
-import { tagShoreSheet } from './shoreTags.mjs'
 import { readFile, writeFile } from 'node:fs/promises'
 async function main() {
 const dir = new URL('../public/images/terrain/', import.meta.url)
@@ -113,10 +112,7 @@ for(let i=0;i<6;i++) {
 await sharp({create:{width:1024,height:2352,channels:4,background:'#00000000'}}).composite(layers).png().toFile(new URL('terrain-details.png',dir).pathname)
 await writeFile(new URL('terrain-details.json',dir),JSON.stringify({version:2,trianglesY:[0,32],coastsY:[64,96],banksY:[128,160],decorationsY:192,cliffsY:256,cliffCell:64,cliffVariants:2,cliffMasks:256,isolatedY:2304,isolatedCell:48},null,2)+'\n')
 
-// Keep the emitted shore metadata consistent with the editor/runtime contract.
-const shorePath = new URL('../public/images/map/sprite_sheets/dtv3_shore.json', import.meta.url)
-const shore = tagShoreSheet(JSON.parse(await readFile(shorePath, 'utf8')))
-await writeFile(shorePath, JSON.stringify(shore, null, 2) + '\n')
+
 }
 
 main().catch(error => { console.error(error); process.exitCode = 1 })

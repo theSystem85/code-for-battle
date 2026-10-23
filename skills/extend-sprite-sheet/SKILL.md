@@ -93,3 +93,7 @@ For overhead city artwork, isolate and pack at ratio **1**, then tag the full im
 ### Calibrated low/medium city imports
 
 For the six `cities_{temperate,sand,snow}_{low,medium}` sources, the user specifically requested smaller family-house scale: set the source-to-target ratio to **0.5 for low**, **0.75 for medium** before extracting. Other existing city sources remain ratio 1. Record ratios and original source bounds; preserve source files. Smallest houses may have **2×1** bases, with northern artwork passable/overhang. Tag every group cell with its architectural `density_1`…`density_10` score and biome/season/category, then paint physical base vs upper cells individually. See map-assets for row score guides, version 6 and settlement policy.
+
+### Native alpha decorative catalog
+
+For `alpha_{grass,soil,sand,snow,universal,shore,nature_grass,nature_soil}` sources use ratio **1** and grow the target canvas. The reviewed profiles in `scripts/map-prop-guides.mjs` provide exact counts and semantic tags; use `--kind=props` in the repository builder to replay SSE's detector/packer/exporter. Standard cutoff 128/min area 1000; shore cutoff 16 retains pier connectivity. Separate grass/soil nature assets are intentional. Validate every source alpha silhouette and target dimension, then confirm every group has a map placement path before retiring old assets. See [map-assets](../map-assets/SKILL.md#reviewed-alpha-decoration-replacements-2026-10-23).

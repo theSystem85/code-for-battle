@@ -7,7 +7,7 @@ test('[E00124] applied optional sheet tags regenerate topology with the same see
     const { gameState } = await import('/src/gameState.js')
     const { applyIntegratedSpriteSheetRuntime } = await import('/src/ui/mapEditorControls.js')
     const { getTextureManager } = await import('/src/rendering.js')
-    const sheetPath = 'images/map/sprite_sheets/dtv2_grass.webp'
+    const sheetPath = 'images/map/sprite_sheets/dtv6_decor_grass.webp'
     const response = await fetch(sheetPath.replace('.webp', '.json'))
     const metadata = await response.json()
     gameState.multiplayerSession = {}
