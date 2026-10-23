@@ -1,3 +1,4 @@
+import { getCityBuildingDensity, getCityMaximumDensity, getCityDensityLimit } from './cityDensity.js'
 import { normalizeDecorationSettings } from '../game/decorationSettings.js'
 
 // Decorative sprite placement for custom sprite-sheet mode.
@@ -1057,24 +1058,34 @@ export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'g
   // City pass: houses only directly beside a planned street, with one full
   // side facing it (rows without gaps are fine; no interior blocks).
   if (cityPlan) {
-    // Preparation only: keep varied bags per footprint size. Large structures
-    // get central lots first; the outer street ends favour single-tile houses.
+    // Preparation only: keep varied bags per architectural density. The
+    // fourth settlement may grow a skyline; every settlement tapers outward.
     const cityBags = Object.fromEntries(DECORATION_BIOMES.map(biome => {
       const groups = [...(pools[biome]?.multi || []), ...(pools[biome]?.single || [])].filter(group => group.tagSet.has('city'))
-      return [biome, [1, 2, 3].map(size => createDecorationBag(
-        groups.filter(group => (group.cityVisual ? (group.tagSet.has('skyscraper') ? 3 : group.width * group.height >= 9 ? 2 : 1) : Math.min(3, Math.max(group.width, group.height))) === size), salt + 5))]
+      return [biome, Array.from({ length: 10 }, (_, index) => createDecorationBag(
+        groups.filter(group => getCityBuildingDensity(group) === index + 1), salt + 5))]
     }))
-    function* cityCandidates(bags, preferredSize) {
-      const allowed = bags.slice(0, preferredSize).filter(bag => bag.size)
-      // A catalog with only one building size remains usable at every radius.
-      if (!allowed.length) allowed.push(...bags.filter(bag => bag.size).slice(0, 1))
-      for (const bag of allowed.reverse()) for (let attempt = 0; attempt < bag.size; attempt++) yield bag.next()
+    function* cityCandidates(bags, preferredDensity, variation) {
+      // Share central lots between architectural variants within the same
+      // tier; always taking score 10 first can starve every score-8/9 tower.
+      const minimum = preferredDensity >= 8 ? 8 : preferredDensity >= 4 ? Math.max(4, preferredDensity - 1) : preferredDensity
+      const band = bags.slice(minimum - 1, preferredDensity).filter(bag => bag.size)
+      const start = band.length ? variation % band.length : 0
+      for (let index = 0; index < band.length; index++) {
+        const bag = band[(start + index) % band.length]
+        for (let attempt = 0; attempt < bag.size; attempt++) yield bag.next()
+      }
+      for (let index = minimum - 2; index >= 0; index--) {
+        const bag = bags[index]
+        for (let attempt = 0; attempt < bag.size; attempt++) yield bag.next()
+      }
     }
     const coversReserved = (x, y, group) => {
       for (let dy = 0; dy < group.height; dy++) for (let dx = 0; dx < group.width; dx++) if (cityPlan.reserved.has((y + dy) * width + x + dx)) return true
       return false
     }
-    for (const city of cityPlan.cities) {
+    for (const [cityIndex, city] of cityPlan.cities.entries()) {
+      const cityMaxDensity = getCityMaximumDensity(cityIndex)
       const distance = offset => Math.hypot(offset % width - city.center.x, Math.floor(offset / width) - city.center.y)
       const lots = [...new Set(city.streets.flatMap(street => street.tiles))].sort((a, b) => distance(a) - distance(b) || a - b)
       for (const offset of lots) {
@@ -1082,15 +1093,17 @@ export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'g
         const sy = (offset - sx) / width
         const biome = resolveBiome(mapGrid[sy][sx], defaultBiome)
         const radius = distance(offset) / cities.radius
-        const preferredSize = radius < 0.45 ? 3 : radius < 0.8 ? 2 : 1
+        const catalogMaximum = cityBags[biome].findLastIndex(bag => bag.size) + 1
+        const preferredDensity = getCityDensityLimit(Math.min(cityMaxDensity, catalogMaximum), radius)
         for (let side = 0; side < 4; side++) {
-          for (const group of cityCandidates(cityBags[biome], preferredSize)) {
+          for (const group of cityCandidates(cityBags[biome], preferredDensity, decorationHash(sx, sy, salt + side + cityIndex))) {
             const anchors = cityHouseAnchors(sx, sy, group.width, group.height)
               .filter((_, index) => index % 2 === side % 2 && (side < 2 ? index < group.width * 2 : index >= group.width * 2))
             const hit = anchors.find(({ x, y, facing }) => !coversReserved(x, y, group) && facing.every(([fx, fy]) => fx >= 0 && fy >= 0 && fx < width && fy < height && cityLattice[fy * width + fx]) &&
                 fits({ group, anchorX: x, anchorY: y, biome: resolveBiome(mapGrid[y]?.[x], defaultBiome), cityHouse: true }))
             if (!hit) continue
-            const placement = { group, anchorX: hit.x, anchorY: hit.y, biome: resolveBiome(mapGrid[hit.y][hit.x], defaultBiome) }
+            const placement = { group, anchorX: hit.x, anchorY: hit.y, biome: resolveBiome(mapGrid[hit.y][hit.x], defaultBiome),
+              cityIndex, cityMaxDensity, cityDensity: getCityBuildingDensity(group), cityRadius: radius }
             if (group.width * group.height > 1) placements.push(placement)
             for (let dy = 0; dy < group.height; dy++) for (let dx = 0; dx < group.width; dx++) {
               const cell = (hit.y + dy) * width + hit.x + dx

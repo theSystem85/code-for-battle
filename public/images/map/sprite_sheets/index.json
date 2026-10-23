@@ -13,6 +13,12 @@
     "images/map/sprite_sheets/dtv4_city_sand.webp",
     "images/map/sprite_sheets/dtv4_city_snow.webp",
     "images/map/sprite_sheets/dtv4_nature_sand.webp",
-    "images/map/sprite_sheets/dtv4_nature_snow.webp"
+    "images/map/sprite_sheets/dtv4_nature_snow.webp",
+    "images/map/sprite_sheets/dtv5_city_sand_low.webp",
+    "images/map/sprite_sheets/dtv5_city_sand_medium.webp",
+    "images/map/sprite_sheets/dtv5_city_snow_low.webp",
+    "images/map/sprite_sheets/dtv5_city_snow_medium.webp",
+    "images/map/sprite_sheets/dtv5_city_temperate_low.webp",
+    "images/map/sprite_sheets/dtv5_city_temperate_medium.webp"
   ]
 }

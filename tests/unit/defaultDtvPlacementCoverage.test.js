@@ -19,8 +19,9 @@ describe('default dtv sheets placement coverage', () => {
     const expected = sheets.flatMap(sheet => Object.keys(sheet.metadata.tiles).map(key => `${name(sheet.sheetPath)} ${key}`))
     const tagsByKey = new Map(sheets.flatMap(sheet => Object.entries(sheet.metadata.tiles).map(([key, tile]) => [`${name(sheet.sheetPath)} ${key}`, tile.tags || []])))
     const seen = new Set()
-    const previous = { activeSpriteSheetBiomeTag: gameState.activeSpriteSheetBiomeTag, mapSeed: gameState.mapSeed }
-    const collect = async(biome, seed) => {
+    const previous = { activeSpriteSheetBiomeTag: gameState.activeSpriteSheetBiomeTag, mapSeed: gameState.mapSeed, citySeeds: gameState.citySeeds }
+    const collect = async(biome, seed, citySeeds = 2) => {
+      gameState.citySeeds = citySeeds
       gameState.activeSpriteSheetBiomeTag = biome
       gameState.mapSeed = String(seed)
       const grid = Array.from({ length: 120 }, () => Array.from({ length: 120 }, () => ({ type: 'land' })))
@@ -37,14 +38,22 @@ describe('default dtv sheets placement coverage', () => {
     try {
       for (const biome of ['grass', 'soil', 'sand', 'snow', 'mixed']) {
         await manager.setIntegratedSpriteSheetConfig({ enabled: true, biomeTag: biome, sheets })
-        for (let seed = 1; seed <= 12; seed++) await collect(biome, seed)
+        for (let seed = 1; seed <= 12; seed++) {
+          await collect(biome, seed)
+          await collect(biome, seed, 8)
+        }
       }
-      // Rare props (single-tile ruins, rare landmarks) get extra seeds in their own biome.
+      // Exercise default villages/towns and eight-city maps with skylines;
+      // neither setting should hide a catalog entry that the other can place.
+      // Rare props get extra seeds in their own biome.
       for (const biome of ['grass', 'soil', 'sand', 'snow']) {
         const pending = () => expected.some(key => !seen.has(key) && tagsByKey.get(key).some(tag => tag === biome || tag === 'universal'))
         if (!pending()) continue
         await manager.setIntegratedSpriteSheetConfig({ enabled: true, biomeTag: biome, sheets })
-        for (let seed = 13; seed <= 60 && pending(); seed++) await collect(biome, seed)
+        for (let seed = 13; seed <= 60 && pending(); seed++) {
+          await collect(biome, seed)
+          if (pending()) await collect(biome, seed, 8)
+        }
       }
     } finally {
       Object.assign(gameState, previous)

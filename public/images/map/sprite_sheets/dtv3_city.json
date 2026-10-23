@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "layoutVersion": 5,
+  "layoutVersion": 6,
   "tileSize": 64,
   "rowHeight": 64,
   "borderWidth": 0,
@@ -12,10 +12,17 @@
     "soil",
     "decorative",
     "city",
+    "density_4",
     "passable",
     "overhang",
     "impassable",
-    "skyscraper"
+    "density_5",
+    "density_6",
+    "density_7",
+    "skyscraper",
+    "density_8",
+    "density_9",
+    "density_10"
   ],
   "tiles": {
     "0,0": {
@@ -26,6 +33,7 @@
         "soil",
         "decorative",
         "city",
+        "density_4",
         "group_1",
         "passable",
         "overhang"
@@ -45,6 +53,7 @@
         "soil",
         "decorative",
         "city",
+        "density_4",
         "group_1",
         "passable",
         "overhang"
@@ -64,6 +73,7 @@
         "soil",
         "decorative",
         "city",
+        "density_4",
         "group_1",
         "passable",
         "overhang"
@@ -83,6 +93,7 @@
         "soil",
         "decorative",
         "city",
+        "density_4",
         "group_1",
         "passable",
         "overhang"
@@ -103,6 +114,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_4",
         "group_1"
       ],
       "rect": {
@@ -121,6 +133,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_4",
         "group_1"
       ],
       "rect": {
@@ -139,6 +152,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_4",
         "group_1"
       ],
       "rect": {
@@ -157,6 +171,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_4",
         "group_1"
       ],
       "rect": {
@@ -175,6 +190,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_4",
         "group_1"
       ],
       "rect": {
@@ -193,6 +209,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_4",
         "group_1"
       ],
       "rect": {
@@ -211,6 +228,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_4",
         "group_1"
       ],
       "rect": {
@@ -229,6 +247,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_4",
         "group_1"
       ],
       "rect": {
@@ -246,6 +265,7 @@
         "soil",
         "decorative",
         "city",
+        "density_5",
         "group_2",
         "passable",
         "overhang"
@@ -265,6 +285,7 @@
         "soil",
         "decorative",
         "city",
+        "density_5",
         "group_2",
         "passable",
         "overhang"
@@ -284,6 +305,7 @@
         "soil",
         "decorative",
         "city",
+        "density_5",
         "group_2",
         "passable",
         "overhang"
@@ -303,6 +325,7 @@
         "soil",
         "decorative",
         "city",
+        "density_5",
         "group_2",
         "passable",
         "overhang"
@@ -323,6 +346,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_2"
       ],
       "rect": {
@@ -341,6 +365,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_2"
       ],
       "rect": {
@@ -359,6 +384,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_2"
       ],
       "rect": {
@@ -377,6 +403,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_2"
       ],
       "rect": {
@@ -395,6 +422,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_2"
       ],
       "rect": {
@@ -413,6 +441,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_2"
       ],
       "rect": {
@@ -431,6 +460,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_2"
       ],
       "rect": {
@@ -449,6 +479,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_2"
       ],
       "rect": {
@@ -466,6 +497,7 @@
         "soil",
         "decorative",
         "city",
+        "density_6",
         "group_3",
         "passable",
         "overhang"
@@ -485,6 +517,7 @@
         "soil",
         "decorative",
         "city",
+        "density_6",
         "group_3",
         "passable",
         "overhang"
@@ -504,6 +537,7 @@
         "soil",
         "decorative",
         "city",
+        "density_6",
         "group_3",
         "passable",
         "overhang"
@@ -523,6 +557,7 @@
         "soil",
         "decorative",
         "city",
+        "density_6",
         "group_3",
         "passable",
         "overhang"
@@ -543,6 +578,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_3"
       ],
       "rect": {
@@ -561,6 +597,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_3"
       ],
       "rect": {
@@ -579,6 +616,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_3"
       ],
       "rect": {
@@ -597,6 +635,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_3"
       ],
       "rect": {
@@ -615,6 +654,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_3"
       ],
       "rect": {
@@ -633,6 +673,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_3"
       ],
       "rect": {
@@ -651,6 +692,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_3"
       ],
       "rect": {
@@ -669,6 +711,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_3"
       ],
       "rect": {
@@ -687,6 +730,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_3"
       ],
       "rect": {
@@ -705,6 +749,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_3"
       ],
       "rect": {
@@ -723,6 +768,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_3"
       ],
       "rect": {
@@ -741,6 +787,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_3"
       ],
       "rect": {
@@ -758,6 +805,7 @@
         "soil",
         "decorative",
         "city",
+        "density_5",
         "group_4",
         "passable",
         "overhang"
@@ -777,6 +825,7 @@
         "soil",
         "decorative",
         "city",
+        "density_5",
         "group_4",
         "passable",
         "overhang"
@@ -796,6 +845,7 @@
         "soil",
         "decorative",
         "city",
+        "density_5",
         "group_4",
         "passable",
         "overhang"
@@ -815,6 +865,7 @@
         "soil",
         "decorative",
         "city",
+        "density_5",
         "group_4",
         "passable",
         "overhang"
@@ -835,6 +886,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_4"
       ],
       "rect": {
@@ -853,6 +905,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_4"
       ],
       "rect": {
@@ -871,6 +924,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_4"
       ],
       "rect": {
@@ -889,6 +943,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_4"
       ],
       "rect": {
@@ -907,6 +962,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_4"
       ],
       "rect": {
@@ -925,6 +981,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_4"
       ],
       "rect": {
@@ -943,6 +1000,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_4"
       ],
       "rect": {
@@ -961,6 +1019,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_4"
       ],
       "rect": {
@@ -978,6 +1037,7 @@
         "soil",
         "decorative",
         "city",
+        "density_4",
         "group_5",
         "passable",
         "overhang"
@@ -997,6 +1057,7 @@
         "soil",
         "decorative",
         "city",
+        "density_4",
         "group_5",
         "passable",
         "overhang"
@@ -1016,6 +1077,7 @@
         "soil",
         "decorative",
         "city",
+        "density_4",
         "group_5",
         "passable",
         "overhang"
@@ -1035,6 +1097,7 @@
         "soil",
         "decorative",
         "city",
+        "density_4",
         "group_5",
         "passable",
         "overhang"
@@ -1055,6 +1118,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_4",
         "group_5"
       ],
       "rect": {
@@ -1073,6 +1137,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_4",
         "group_5"
       ],
       "rect": {
@@ -1091,6 +1156,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_4",
         "group_5"
       ],
       "rect": {
@@ -1109,6 +1175,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_4",
         "group_5"
       ],
       "rect": {
@@ -1127,6 +1194,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_4",
         "group_5"
       ],
       "rect": {
@@ -1145,6 +1213,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_4",
         "group_5"
       ],
       "rect": {
@@ -1163,6 +1232,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_4",
         "group_5"
       ],
       "rect": {
@@ -1181,6 +1251,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_4",
         "group_5"
       ],
       "rect": {
@@ -1198,6 +1269,7 @@
         "soil",
         "decorative",
         "city",
+        "density_5",
         "group_6",
         "passable",
         "overhang"
@@ -1217,6 +1289,7 @@
         "soil",
         "decorative",
         "city",
+        "density_5",
         "group_6",
         "passable",
         "overhang"
@@ -1236,6 +1309,7 @@
         "soil",
         "decorative",
         "city",
+        "density_5",
         "group_6",
         "passable",
         "overhang"
@@ -1255,6 +1329,7 @@
         "soil",
         "decorative",
         "city",
+        "density_5",
         "group_6",
         "passable",
         "overhang"
@@ -1275,6 +1350,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_6"
       ],
       "rect": {
@@ -1293,6 +1369,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_6"
       ],
       "rect": {
@@ -1311,6 +1388,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_6"
       ],
       "rect": {
@@ -1329,6 +1407,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_6"
       ],
       "rect": {
@@ -1347,6 +1426,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_6"
       ],
       "rect": {
@@ -1365,6 +1445,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_6"
       ],
       "rect": {
@@ -1383,6 +1464,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_6"
       ],
       "rect": {
@@ -1401,6 +1483,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_6"
       ],
       "rect": {
@@ -1419,6 +1502,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_6"
       ],
       "rect": {
@@ -1437,6 +1521,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_6"
       ],
       "rect": {
@@ -1455,6 +1540,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_6"
       ],
       "rect": {
@@ -1473,6 +1559,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_6"
       ],
       "rect": {
@@ -1490,6 +1577,7 @@
         "soil",
         "decorative",
         "city",
+        "density_7",
         "group_7",
         "passable",
         "overhang"
@@ -1509,6 +1597,7 @@
         "soil",
         "decorative",
         "city",
+        "density_7",
         "group_7",
         "passable",
         "overhang"
@@ -1528,6 +1617,7 @@
         "soil",
         "decorative",
         "city",
+        "density_7",
         "group_7",
         "passable",
         "overhang"
@@ -1547,6 +1637,7 @@
         "soil",
         "decorative",
         "city",
+        "density_7",
         "group_7",
         "passable",
         "overhang"
@@ -1567,6 +1658,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_7"
       ],
       "rect": {
@@ -1585,6 +1677,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_7"
       ],
       "rect": {
@@ -1603,6 +1696,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_7"
       ],
       "rect": {
@@ -1621,6 +1715,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_7"
       ],
       "rect": {
@@ -1639,6 +1734,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_7"
       ],
       "rect": {
@@ -1657,6 +1753,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_7"
       ],
       "rect": {
@@ -1675,6 +1772,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_7"
       ],
       "rect": {
@@ -1693,6 +1791,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_7"
       ],
       "rect": {
@@ -1710,6 +1809,7 @@
         "soil",
         "decorative",
         "city",
+        "density_6",
         "group_8",
         "passable",
         "overhang"
@@ -1729,6 +1829,7 @@
         "soil",
         "decorative",
         "city",
+        "density_6",
         "group_8",
         "passable",
         "overhang"
@@ -1748,6 +1849,7 @@
         "soil",
         "decorative",
         "city",
+        "density_6",
         "group_8",
         "passable",
         "overhang"
@@ -1767,6 +1869,7 @@
         "soil",
         "decorative",
         "city",
+        "density_6",
         "group_8",
         "passable",
         "overhang"
@@ -1787,6 +1890,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_8"
       ],
       "rect": {
@@ -1805,6 +1909,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_8"
       ],
       "rect": {
@@ -1823,6 +1928,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_8"
       ],
       "rect": {
@@ -1841,6 +1947,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_8"
       ],
       "rect": {
@@ -1859,6 +1966,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_8"
       ],
       "rect": {
@@ -1877,6 +1985,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_8"
       ],
       "rect": {
@@ -1895,6 +2004,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_8"
       ],
       "rect": {
@@ -1913,6 +2023,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_8"
       ],
       "rect": {
@@ -1931,6 +2042,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_8"
       ],
       "rect": {
@@ -1949,6 +2061,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_8"
       ],
       "rect": {
@@ -1967,6 +2080,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_8"
       ],
       "rect": {
@@ -1985,6 +2099,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_8"
       ],
       "rect": {
@@ -2002,6 +2117,7 @@
         "soil",
         "decorative",
         "city",
+        "density_7",
         "group_9",
         "passable",
         "overhang"
@@ -2021,6 +2137,7 @@
         "soil",
         "decorative",
         "city",
+        "density_7",
         "group_9",
         "passable",
         "overhang"
@@ -2040,6 +2157,7 @@
         "soil",
         "decorative",
         "city",
+        "density_7",
         "group_9",
         "passable",
         "overhang"
@@ -2059,6 +2177,7 @@
         "soil",
         "decorative",
         "city",
+        "density_7",
         "group_9",
         "passable",
         "overhang"
@@ -2079,6 +2198,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_9"
       ],
       "rect": {
@@ -2097,6 +2217,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_9"
       ],
       "rect": {
@@ -2115,6 +2236,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_9"
       ],
       "rect": {
@@ -2133,6 +2255,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_9"
       ],
       "rect": {
@@ -2151,6 +2274,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_9"
       ],
       "rect": {
@@ -2169,6 +2293,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_9"
       ],
       "rect": {
@@ -2187,6 +2312,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_9"
       ],
       "rect": {
@@ -2205,6 +2331,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_9"
       ],
       "rect": {
@@ -2223,6 +2350,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_9"
       ],
       "rect": {
@@ -2241,6 +2369,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_9"
       ],
       "rect": {
@@ -2259,6 +2388,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_9"
       ],
       "rect": {
@@ -2277,6 +2407,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_9"
       ],
       "rect": {
@@ -2294,6 +2425,7 @@
         "soil",
         "decorative",
         "city",
+        "density_7",
         "group_10",
         "passable",
         "overhang"
@@ -2313,6 +2445,7 @@
         "soil",
         "decorative",
         "city",
+        "density_7",
         "group_10",
         "passable",
         "overhang"
@@ -2332,6 +2465,7 @@
         "soil",
         "decorative",
         "city",
+        "density_7",
         "group_10",
         "passable",
         "overhang"
@@ -2351,6 +2485,7 @@
         "soil",
         "decorative",
         "city",
+        "density_7",
         "group_10",
         "passable",
         "overhang"
@@ -2371,6 +2506,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_10"
       ],
       "rect": {
@@ -2389,6 +2525,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_10"
       ],
       "rect": {
@@ -2407,6 +2544,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_10"
       ],
       "rect": {
@@ -2425,6 +2563,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_10"
       ],
       "rect": {
@@ -2443,6 +2582,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_10"
       ],
       "rect": {
@@ -2461,6 +2601,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_10"
       ],
       "rect": {
@@ -2479,6 +2620,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_10"
       ],
       "rect": {
@@ -2497,6 +2639,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_10"
       ],
       "rect": {
@@ -2515,6 +2658,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_10"
       ],
       "rect": {
@@ -2533,6 +2677,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_10"
       ],
       "rect": {
@@ -2551,6 +2696,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_10"
       ],
       "rect": {
@@ -2569,6 +2715,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_10"
       ],
       "rect": {
@@ -2586,6 +2733,7 @@
         "soil",
         "decorative",
         "city",
+        "density_6",
         "group_11",
         "passable",
         "overhang"
@@ -2605,6 +2753,7 @@
         "soil",
         "decorative",
         "city",
+        "density_6",
         "group_11",
         "passable",
         "overhang"
@@ -2624,6 +2773,7 @@
         "soil",
         "decorative",
         "city",
+        "density_6",
         "group_11",
         "passable",
         "overhang"
@@ -2643,6 +2793,7 @@
         "soil",
         "decorative",
         "city",
+        "density_6",
         "group_11",
         "passable",
         "overhang"
@@ -2662,6 +2813,7 @@
         "soil",
         "decorative",
         "city",
+        "density_6",
         "group_11",
         "passable",
         "overhang"
@@ -2682,6 +2834,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_11"
       ],
       "rect": {
@@ -2700,6 +2853,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_11"
       ],
       "rect": {
@@ -2718,6 +2872,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_11"
       ],
       "rect": {
@@ -2736,6 +2891,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_11"
       ],
       "rect": {
@@ -2754,6 +2910,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_11"
       ],
       "rect": {
@@ -2772,6 +2929,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_11"
       ],
       "rect": {
@@ -2790,6 +2948,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_11"
       ],
       "rect": {
@@ -2808,6 +2967,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_11"
       ],
       "rect": {
@@ -2826,6 +2986,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_11"
       ],
       "rect": {
@@ -2844,6 +3005,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_11"
       ],
       "rect": {
@@ -2862,6 +3024,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_11"
       ],
       "rect": {
@@ -2880,6 +3043,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_11"
       ],
       "rect": {
@@ -2898,6 +3062,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_11"
       ],
       "rect": {
@@ -2916,6 +3081,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_11"
       ],
       "rect": {
@@ -2934,6 +3100,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_11"
       ],
       "rect": {
@@ -2951,6 +3118,7 @@
         "soil",
         "decorative",
         "city",
+        "density_5",
         "group_12",
         "passable",
         "overhang"
@@ -2970,6 +3138,7 @@
         "soil",
         "decorative",
         "city",
+        "density_5",
         "group_12",
         "passable",
         "overhang"
@@ -2989,6 +3158,7 @@
         "soil",
         "decorative",
         "city",
+        "density_5",
         "group_12",
         "passable",
         "overhang"
@@ -3008,6 +3178,7 @@
         "soil",
         "decorative",
         "city",
+        "density_5",
         "group_12",
         "passable",
         "overhang"
@@ -3028,6 +3199,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_12"
       ],
       "rect": {
@@ -3046,6 +3218,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_12"
       ],
       "rect": {
@@ -3064,6 +3237,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_12"
       ],
       "rect": {
@@ -3082,6 +3256,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_12"
       ],
       "rect": {
@@ -3100,6 +3275,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_12"
       ],
       "rect": {
@@ -3118,6 +3294,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_12"
       ],
       "rect": {
@@ -3136,6 +3313,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_12"
       ],
       "rect": {
@@ -3154,6 +3332,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_12"
       ],
       "rect": {
@@ -3172,6 +3351,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_12"
       ],
       "rect": {
@@ -3190,6 +3370,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_12"
       ],
       "rect": {
@@ -3208,6 +3389,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_12"
       ],
       "rect": {
@@ -3226,6 +3408,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_12"
       ],
       "rect": {
@@ -3244,6 +3427,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_8",
         "group_13",
         "passable",
         "overhang"
@@ -3264,6 +3448,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_8",
         "group_13",
         "passable",
         "overhang"
@@ -3284,6 +3469,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_8",
         "group_13",
         "passable",
         "overhang"
@@ -3304,6 +3490,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_8",
         "group_13",
         "passable",
         "overhang"
@@ -3324,6 +3511,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_8",
         "group_13",
         "passable",
         "overhang"
@@ -3344,6 +3532,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_8",
         "group_13",
         "passable",
         "overhang"
@@ -3364,6 +3553,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_8",
         "group_13",
         "passable",
         "overhang"
@@ -3384,6 +3574,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_8",
         "group_13",
         "passable",
         "overhang"
@@ -3404,6 +3595,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_8",
         "group_13",
         "passable",
         "overhang"
@@ -3425,6 +3617,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_8",
         "group_13"
       ],
       "rect": {
@@ -3444,6 +3637,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_8",
         "group_13"
       ],
       "rect": {
@@ -3463,6 +3657,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_8",
         "group_13"
       ],
       "rect": {
@@ -3482,6 +3677,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_8",
         "group_13"
       ],
       "rect": {
@@ -3501,6 +3697,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_8",
         "group_13"
       ],
       "rect": {
@@ -3520,6 +3717,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_8",
         "group_13"
       ],
       "rect": {
@@ -3539,6 +3737,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_8",
         "group_13"
       ],
       "rect": {
@@ -3558,6 +3757,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_8",
         "group_13"
       ],
       "rect": {
@@ -3577,6 +3777,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_8",
         "group_13"
       ],
       "rect": {
@@ -3595,6 +3796,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_14",
         "passable",
         "overhang"
@@ -3615,6 +3817,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_14",
         "passable",
         "overhang"
@@ -3635,6 +3838,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_14",
         "passable",
         "overhang"
@@ -3655,6 +3859,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_14",
         "passable",
         "overhang"
@@ -3675,6 +3880,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_14",
         "passable",
         "overhang"
@@ -3695,6 +3901,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_14",
         "passable",
         "overhang"
@@ -3715,6 +3922,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_14",
         "passable",
         "overhang"
@@ -3735,6 +3943,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_14",
         "passable",
         "overhang"
@@ -3755,6 +3964,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_14",
         "passable",
         "overhang"
@@ -3775,6 +3985,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_14",
         "passable",
         "overhang"
@@ -3795,6 +4006,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_14",
         "passable",
         "overhang"
@@ -3815,6 +4027,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_14",
         "passable",
         "overhang"
@@ -3836,6 +4049,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_14"
       ],
       "rect": {
@@ -3855,6 +4069,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_14"
       ],
       "rect": {
@@ -3874,6 +4089,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_14"
       ],
       "rect": {
@@ -3893,6 +4109,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_14"
       ],
       "rect": {
@@ -3912,6 +4129,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_14"
       ],
       "rect": {
@@ -3931,6 +4149,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_14"
       ],
       "rect": {
@@ -3950,6 +4169,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_14"
       ],
       "rect": {
@@ -3969,6 +4189,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_14"
       ],
       "rect": {
@@ -3988,6 +4209,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_14"
       ],
       "rect": {
@@ -4007,6 +4229,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_14"
       ],
       "rect": {
@@ -4026,6 +4249,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_14"
       ],
       "rect": {
@@ -4045,6 +4269,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_14"
       ],
       "rect": {
@@ -4063,6 +4288,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_15",
         "passable",
         "overhang"
@@ -4083,6 +4309,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_15",
         "passable",
         "overhang"
@@ -4103,6 +4330,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_15",
         "passable",
         "overhang"
@@ -4123,6 +4351,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_15",
         "passable",
         "overhang"
@@ -4143,6 +4372,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_15",
         "passable",
         "overhang"
@@ -4163,6 +4393,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_15",
         "passable",
         "overhang"
@@ -4183,6 +4414,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_15",
         "passable",
         "overhang"
@@ -4203,6 +4435,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_15",
         "passable",
         "overhang"
@@ -4224,6 +4457,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_15"
       ],
       "rect": {
@@ -4243,6 +4477,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_15"
       ],
       "rect": {
@@ -4262,6 +4497,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_15"
       ],
       "rect": {
@@ -4281,6 +4517,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_15"
       ],
       "rect": {
@@ -4300,6 +4537,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_15"
       ],
       "rect": {
@@ -4319,6 +4557,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_15"
       ],
       "rect": {
@@ -4338,6 +4577,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_15"
       ],
       "rect": {
@@ -4357,6 +4597,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_15"
       ],
       "rect": {
@@ -4376,6 +4617,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_15"
       ],
       "rect": {
@@ -4395,6 +4637,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_15"
       ],
       "rect": {
@@ -4414,6 +4657,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_15"
       ],
       "rect": {
@@ -4433,6 +4677,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_15"
       ],
       "rect": {
@@ -4451,6 +4696,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_8",
         "group_16",
         "passable",
         "overhang"
@@ -4471,6 +4717,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_8",
         "group_16",
         "passable",
         "overhang"
@@ -4491,6 +4738,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_8",
         "group_16",
         "passable",
         "overhang"
@@ -4511,6 +4759,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_8",
         "group_16",
         "passable",
         "overhang"
@@ -4531,6 +4780,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_8",
         "group_16",
         "passable",
         "overhang"
@@ -4551,6 +4801,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_8",
         "group_16",
         "passable",
         "overhang"
@@ -4571,6 +4822,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_8",
         "group_16",
         "passable",
         "overhang"
@@ -4591,6 +4843,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_8",
         "group_16",
         "passable",
         "overhang"
@@ -4611,6 +4864,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_8",
         "group_16",
         "passable",
         "overhang"
@@ -4631,6 +4885,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_8",
         "group_16",
         "passable",
         "overhang"
@@ -4651,6 +4906,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_8",
         "group_16",
         "passable",
         "overhang"
@@ -4671,6 +4927,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_8",
         "group_16",
         "passable",
         "overhang"
@@ -4692,6 +4949,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_8",
         "group_16"
       ],
       "rect": {
@@ -4711,6 +4969,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_8",
         "group_16"
       ],
       "rect": {
@@ -4730,6 +4989,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_8",
         "group_16"
       ],
       "rect": {
@@ -4749,6 +5009,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_8",
         "group_16"
       ],
       "rect": {
@@ -4768,6 +5029,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_8",
         "group_16"
       ],
       "rect": {
@@ -4787,6 +5049,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_8",
         "group_16"
       ],
       "rect": {
@@ -4806,6 +5069,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_8",
         "group_16"
       ],
       "rect": {
@@ -4825,6 +5089,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_8",
         "group_16"
       ],
       "rect": {
@@ -4844,6 +5109,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_8",
         "group_16"
       ],
       "rect": {
@@ -4863,6 +5129,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_8",
         "group_16"
       ],
       "rect": {
@@ -4882,6 +5149,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_8",
         "group_16"
       ],
       "rect": {
@@ -4901,6 +5169,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_8",
         "group_16"
       ],
       "rect": {
@@ -4919,6 +5188,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_17",
         "passable",
         "overhang"
@@ -4939,6 +5209,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_17",
         "passable",
         "overhang"
@@ -4959,6 +5230,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_17",
         "passable",
         "overhang"
@@ -4979,6 +5251,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_17",
         "passable",
         "overhang"
@@ -4999,6 +5272,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_17",
         "passable",
         "overhang"
@@ -5019,6 +5293,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_17",
         "passable",
         "overhang"
@@ -5039,6 +5314,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_17",
         "passable",
         "overhang"
@@ -5059,6 +5335,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_17",
         "passable",
         "overhang"
@@ -5079,6 +5356,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_17",
         "passable",
         "overhang"
@@ -5099,6 +5377,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_17",
         "passable",
         "overhang"
@@ -5119,6 +5398,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_17",
         "passable",
         "overhang"
@@ -5139,6 +5419,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_17",
         "passable",
         "overhang"
@@ -5159,6 +5440,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_17",
         "passable",
         "overhang"
@@ -5179,6 +5461,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_17",
         "passable",
         "overhang"
@@ -5199,6 +5482,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_17",
         "passable",
         "overhang"
@@ -5219,6 +5503,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_17",
         "passable",
         "overhang"
@@ -5240,6 +5525,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_17"
       ],
       "rect": {
@@ -5259,6 +5545,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_17"
       ],
       "rect": {
@@ -5278,6 +5565,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_17"
       ],
       "rect": {
@@ -5297,6 +5585,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_17"
       ],
       "rect": {
@@ -5316,6 +5605,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_17"
       ],
       "rect": {
@@ -5335,6 +5625,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_17"
       ],
       "rect": {
@@ -5354,6 +5645,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_17"
       ],
       "rect": {
@@ -5373,6 +5665,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_17"
       ],
       "rect": {
@@ -5392,6 +5685,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_17"
       ],
       "rect": {
@@ -5411,6 +5705,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_17"
       ],
       "rect": {
@@ -5430,6 +5725,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_17"
       ],
       "rect": {
@@ -5449,6 +5745,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_17"
       ],
       "rect": {
@@ -5467,6 +5764,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_18",
         "passable",
         "overhang"
@@ -5487,6 +5785,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_18",
         "passable",
         "overhang"
@@ -5507,6 +5806,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_18",
         "passable",
         "overhang"
@@ -5527,6 +5827,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_18",
         "passable",
         "overhang"
@@ -5547,6 +5848,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_18",
         "passable",
         "overhang"
@@ -5567,6 +5869,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_18",
         "passable",
         "overhang"
@@ -5587,6 +5890,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_18",
         "passable",
         "overhang"
@@ -5607,6 +5911,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_18",
         "passable",
         "overhang"
@@ -5627,6 +5932,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_18",
         "passable",
         "overhang"
@@ -5647,6 +5953,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_18",
         "passable",
         "overhang"
@@ -5667,6 +5974,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_18",
         "passable",
         "overhang"
@@ -5687,6 +5995,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_18",
         "passable",
         "overhang"
@@ -5707,6 +6016,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_18",
         "passable",
         "overhang"
@@ -5727,6 +6037,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_18",
         "passable",
         "overhang"
@@ -5747,6 +6058,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_18",
         "passable",
         "overhang"
@@ -5767,6 +6079,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_18",
         "passable",
         "overhang"
@@ -5788,6 +6101,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_18"
       ],
       "rect": {
@@ -5807,6 +6121,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_18"
       ],
       "rect": {
@@ -5826,6 +6141,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_18"
       ],
       "rect": {
@@ -5845,6 +6161,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_18"
       ],
       "rect": {
@@ -5864,6 +6181,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_18"
       ],
       "rect": {
@@ -5883,6 +6201,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_18"
       ],
       "rect": {
@@ -5902,6 +6221,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_18"
       ],
       "rect": {
@@ -5921,6 +6241,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_18"
       ],
       "rect": {
@@ -5940,6 +6261,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_18"
       ],
       "rect": {
@@ -5959,6 +6281,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_18"
       ],
       "rect": {
@@ -5978,6 +6301,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_18"
       ],
       "rect": {
@@ -5997,6 +6321,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_18"
       ],
       "rect": {
@@ -6015,6 +6340,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_19",
         "passable",
         "overhang"
@@ -6035,6 +6361,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_19",
         "passable",
         "overhang"
@@ -6055,6 +6382,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_19",
         "passable",
         "overhang"
@@ -6075,6 +6403,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_19",
         "passable",
         "overhang"
@@ -6095,6 +6424,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_19",
         "passable",
         "overhang"
@@ -6115,6 +6445,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_19",
         "passable",
         "overhang"
@@ -6135,6 +6466,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_19",
         "passable",
         "overhang"
@@ -6155,6 +6487,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_19",
         "passable",
         "overhang"
@@ -6175,6 +6508,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_19",
         "passable",
         "overhang"
@@ -6195,6 +6529,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_19",
         "passable",
         "overhang"
@@ -6215,6 +6550,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_19",
         "passable",
         "overhang"
@@ -6235,6 +6571,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_19",
         "passable",
         "overhang"
@@ -6255,6 +6592,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_19",
         "passable",
         "overhang"
@@ -6275,6 +6613,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_19",
         "passable",
         "overhang"
@@ -6295,6 +6634,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_19",
         "passable",
         "overhang"
@@ -6315,6 +6655,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_19",
         "passable",
         "overhang"
@@ -6336,6 +6677,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_19"
       ],
       "rect": {
@@ -6355,6 +6697,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_19"
       ],
       "rect": {
@@ -6374,6 +6717,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_19"
       ],
       "rect": {
@@ -6393,6 +6737,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_19"
       ],
       "rect": {
@@ -6412,6 +6757,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_19"
       ],
       "rect": {
@@ -6431,6 +6777,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_19"
       ],
       "rect": {
@@ -6450,6 +6797,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_19"
       ],
       "rect": {
@@ -6469,6 +6817,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_19"
       ],
       "rect": {
@@ -6488,6 +6837,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_19"
       ],
       "rect": {
@@ -6507,6 +6857,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_19"
       ],
       "rect": {
@@ -6526,6 +6877,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_19"
       ],
       "rect": {
@@ -6545,6 +6897,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_19"
       ],
       "rect": {
@@ -6563,6 +6916,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_20",
         "passable",
         "overhang"
@@ -6583,6 +6937,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_20",
         "passable",
         "overhang"
@@ -6603,6 +6958,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_20",
         "passable",
         "overhang"
@@ -6623,6 +6979,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_20",
         "passable",
         "overhang"
@@ -6643,6 +7000,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_20",
         "passable",
         "overhang"
@@ -6663,6 +7021,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_20",
         "passable",
         "overhang"
@@ -6683,6 +7042,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_20",
         "passable",
         "overhang"
@@ -6703,6 +7063,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_20",
         "passable",
         "overhang"
@@ -6723,6 +7084,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_20",
         "passable",
         "overhang"
@@ -6743,6 +7105,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_20",
         "passable",
         "overhang"
@@ -6763,6 +7126,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_20",
         "passable",
         "overhang"
@@ -6783,6 +7147,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_20",
         "passable",
         "overhang"
@@ -6804,6 +7169,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_20"
       ],
       "rect": {
@@ -6823,6 +7189,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_20"
       ],
       "rect": {
@@ -6842,6 +7209,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_20"
       ],
       "rect": {
@@ -6861,6 +7229,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_20"
       ],
       "rect": {
@@ -6880,6 +7249,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_20"
       ],
       "rect": {
@@ -6899,6 +7269,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_20"
       ],
       "rect": {
@@ -6918,6 +7289,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_20"
       ],
       "rect": {
@@ -6937,6 +7309,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_20"
       ],
       "rect": {
@@ -6956,6 +7329,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_20"
       ],
       "rect": {
@@ -6975,6 +7349,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_20"
       ],
       "rect": {
@@ -6994,6 +7369,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_20"
       ],
       "rect": {
@@ -7013,6 +7389,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_20"
       ],
       "rect": {
@@ -7037,8 +7414,10 @@
         "decorative",
         "city",
         "impassable",
+        "density_4",
         "group_1"
       ],
+      "density": 4,
       "sourceRect": {
         "x": 36,
         "y": 71,
@@ -7065,8 +7444,10 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_2"
       ],
+      "density": 5,
       "sourceRect": {
         "x": 280,
         "y": 53,
@@ -7093,8 +7474,10 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_3"
       ],
+      "density": 6,
       "sourceRect": {
         "x": 521,
         "y": 29,
@@ -7121,8 +7504,10 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_4"
       ],
+      "density": 5,
       "sourceRect": {
         "x": 800,
         "y": 68,
@@ -7149,8 +7534,10 @@
         "decorative",
         "city",
         "impassable",
+        "density_4",
         "group_5"
       ],
+      "density": 4,
       "sourceRect": {
         "x": 19,
         "y": 305,
@@ -7177,8 +7564,10 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_6"
       ],
+      "density": 5,
       "sourceRect": {
         "x": 271,
         "y": 280,
@@ -7205,8 +7594,10 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_7"
       ],
+      "density": 7,
       "sourceRect": {
         "x": 524,
         "y": 298,
@@ -7233,8 +7624,10 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_8"
       ],
+      "density": 6,
       "sourceRect": {
         "x": 779,
         "y": 289,
@@ -7261,8 +7654,10 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_9"
       ],
+      "density": 7,
       "sourceRect": {
         "x": 14,
         "y": 515,
@@ -7289,8 +7684,10 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_10"
       ],
+      "density": 7,
       "sourceRect": {
         "x": 271,
         "y": 521,
@@ -7317,8 +7714,10 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_11"
       ],
+      "density": 6,
       "sourceRect": {
         "x": 512,
         "y": 527,
@@ -7345,8 +7744,10 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_12"
       ],
+      "density": 5,
       "sourceRect": {
         "x": 782,
         "y": 496,
@@ -7374,8 +7775,10 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_8",
         "group_13"
       ],
+      "density": 8,
       "sourceRect": {
         "x": 24,
         "y": 751,
@@ -7403,8 +7806,10 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_14"
       ],
+      "density": 9,
       "sourceRect": {
         "x": 272,
         "y": 760,
@@ -7432,8 +7837,10 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_15"
       ],
+      "density": 9,
       "sourceRect": {
         "x": 517,
         "y": 798,
@@ -7461,8 +7868,10 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_8",
         "group_16"
       ],
+      "density": 8,
       "sourceRect": {
         "x": 796,
         "y": 770,
@@ -7490,8 +7899,10 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_17"
       ],
+      "density": 10,
       "sourceRect": {
         "x": 23,
         "y": 1105,
@@ -7519,8 +7930,10 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_18"
       ],
+      "density": 10,
       "sourceRect": {
         "x": 275,
         "y": 1112,
@@ -7548,8 +7961,10 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_19"
       ],
+      "density": 10,
       "sourceRect": {
         "x": 528,
         "y": 1116,
@@ -7577,8 +7992,10 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_20"
       ],
+      "density": 9,
       "sourceRect": {
         "x": 793,
         "y": 1135,
@@ -7624,6 +8041,7 @@
         },
         "area": 24575,
         "anchor": "center",
+        "sizeRatio": 1,
         "tileSpan": {
           "columns": 4,
           "rows": 3
@@ -7638,6 +8056,7 @@
           "decorative",
           "city",
           "impassable",
+          "density_4",
           "group_1"
         ],
         "renderRect": {
@@ -7658,6 +8077,7 @@
         },
         "area": 28282,
         "anchor": "center",
+        "sizeRatio": 1,
         "tileSpan": {
           "columns": 4,
           "rows": 3
@@ -7672,6 +8092,7 @@
           "decorative",
           "city",
           "impassable",
+          "density_5",
           "group_2"
         ],
         "renderRect": {
@@ -7692,6 +8113,7 @@
         },
         "area": 43753,
         "anchor": "center",
+        "sizeRatio": 1,
         "tileSpan": {
           "columns": 4,
           "rows": 4
@@ -7706,6 +8128,7 @@
           "decorative",
           "city",
           "impassable",
+          "density_6",
           "group_3"
         ],
         "renderRect": {
@@ -7726,6 +8149,7 @@
         },
         "area": 27568,
         "anchor": "center",
+        "sizeRatio": 1,
         "tileSpan": {
           "columns": 4,
           "rows": 3
@@ -7740,6 +8164,7 @@
           "decorative",
           "city",
           "impassable",
+          "density_5",
           "group_4"
         ],
         "renderRect": {
@@ -7760,6 +8185,7 @@
         },
         "area": 33632,
         "anchor": "center",
+        "sizeRatio": 1,
         "tileSpan": {
           "columns": 4,
           "rows": 3
@@ -7774,6 +8200,7 @@
           "decorative",
           "city",
           "impassable",
+          "density_4",
           "group_5"
         ],
         "renderRect": {
@@ -7794,6 +8221,7 @@
         },
         "area": 39264,
         "anchor": "center",
+        "sizeRatio": 1,
         "tileSpan": {
           "columns": 4,
           "rows": 4
@@ -7808,6 +8236,7 @@
           "decorative",
           "city",
           "impassable",
+          "density_5",
           "group_6"
         ],
         "renderRect": {
@@ -7828,6 +8257,7 @@
         },
         "area": 34968,
         "anchor": "center",
+        "sizeRatio": 1,
         "tileSpan": {
           "columns": 4,
           "rows": 3
@@ -7842,6 +8272,7 @@
           "decorative",
           "city",
           "impassable",
+          "density_7",
           "group_7"
         ],
         "renderRect": {
@@ -7862,6 +8293,7 @@
         },
         "area": 40061,
         "anchor": "center",
+        "sizeRatio": 1,
         "tileSpan": {
           "columns": 4,
           "rows": 4
@@ -7876,6 +8308,7 @@
           "decorative",
           "city",
           "impassable",
+          "density_6",
           "group_8"
         ],
         "renderRect": {
@@ -7896,6 +8329,7 @@
         },
         "area": 45097,
         "anchor": "center",
+        "sizeRatio": 1,
         "tileSpan": {
           "columns": 4,
           "rows": 4
@@ -7910,6 +8344,7 @@
           "decorative",
           "city",
           "impassable",
+          "density_7",
           "group_9"
         ],
         "renderRect": {
@@ -7930,6 +8365,7 @@
         },
         "area": 44128,
         "anchor": "center",
+        "sizeRatio": 1,
         "tileSpan": {
           "columns": 4,
           "rows": 4
@@ -7944,6 +8380,7 @@
           "decorative",
           "city",
           "impassable",
+          "density_7",
           "group_10"
         ],
         "renderRect": {
@@ -7964,6 +8401,7 @@
         },
         "area": 40216,
         "anchor": "center",
+        "sizeRatio": 1,
         "tileSpan": {
           "columns": 5,
           "rows": 4
@@ -7978,6 +8416,7 @@
           "decorative",
           "city",
           "impassable",
+          "density_6",
           "group_11"
         ],
         "renderRect": {
@@ -7998,6 +8437,7 @@
         },
         "area": 33525,
         "anchor": "center",
+        "sizeRatio": 1,
         "tileSpan": {
           "columns": 4,
           "rows": 4
@@ -8012,6 +8452,7 @@
           "decorative",
           "city",
           "impassable",
+          "density_5",
           "group_12"
         ],
         "renderRect": {
@@ -8032,6 +8473,7 @@
         },
         "area": 38907,
         "anchor": "center",
+        "sizeRatio": 1,
         "tileSpan": {
           "columns": 3,
           "rows": 6
@@ -8047,6 +8489,7 @@
           "city",
           "skyscraper",
           "impassable",
+          "density_8",
           "group_13"
         ],
         "renderRect": {
@@ -8067,6 +8510,7 @@
         },
         "area": 50061,
         "anchor": "center",
+        "sizeRatio": 1,
         "tileSpan": {
           "columns": 4,
           "rows": 6
@@ -8082,6 +8526,7 @@
           "city",
           "skyscraper",
           "impassable",
+          "density_9",
           "group_14"
         ],
         "renderRect": {
@@ -8102,6 +8547,7 @@
         },
         "area": 59992,
         "anchor": "center",
+        "sizeRatio": 1,
         "tileSpan": {
           "columns": 4,
           "rows": 5
@@ -8117,6 +8563,7 @@
           "city",
           "skyscraper",
           "impassable",
+          "density_9",
           "group_15"
         ],
         "renderRect": {
@@ -8137,6 +8584,7 @@
         },
         "area": 53090,
         "anchor": "center",
+        "sizeRatio": 1,
         "tileSpan": {
           "columns": 4,
           "rows": 6
@@ -8152,6 +8600,7 @@
           "city",
           "skyscraper",
           "impassable",
+          "density_8",
           "group_16"
         ],
         "renderRect": {
@@ -8172,6 +8621,7 @@
         },
         "area": 58441,
         "anchor": "center",
+        "sizeRatio": 1,
         "tileSpan": {
           "columns": 4,
           "rows": 7
@@ -8187,6 +8637,7 @@
           "city",
           "skyscraper",
           "impassable",
+          "density_10",
           "group_17"
         ],
         "renderRect": {
@@ -8207,6 +8658,7 @@
         },
         "area": 53941,
         "anchor": "center",
+        "sizeRatio": 1,
         "tileSpan": {
           "columns": 4,
           "rows": 7
@@ -8222,6 +8674,7 @@
           "city",
           "skyscraper",
           "impassable",
+          "density_10",
           "group_18"
         ],
         "renderRect": {
@@ -8242,6 +8695,7 @@
         },
         "area": 69941,
         "anchor": "center",
+        "sizeRatio": 1,
         "tileSpan": {
           "columns": 4,
           "rows": 7
@@ -8257,6 +8711,7 @@
           "city",
           "skyscraper",
           "impassable",
+          "density_10",
           "group_19"
         ],
         "renderRect": {
@@ -8277,6 +8732,7 @@
         },
         "area": 62372,
         "anchor": "center",
+        "sizeRatio": 1,
         "tileSpan": {
           "columns": 4,
           "rows": 6
@@ -8292,6 +8748,7 @@
           "city",
           "skyscraper",
           "impassable",
+          "density_9",
           "group_20"
         ],
         "renderRect": {
@@ -8707,6 +9164,7 @@
         "soil",
         "decorative",
         "city",
+        "density_4",
         "group_1",
         "passable",
         "overhang"
@@ -8730,6 +9188,7 @@
         "soil",
         "decorative",
         "city",
+        "density_4",
         "group_1",
         "passable",
         "overhang"
@@ -8753,6 +9212,7 @@
         "soil",
         "decorative",
         "city",
+        "density_4",
         "group_1",
         "passable",
         "overhang"
@@ -8776,6 +9236,7 @@
         "soil",
         "decorative",
         "city",
+        "density_4",
         "group_1",
         "passable",
         "overhang"
@@ -8800,6 +9261,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_4",
         "group_1"
       ]
     },
@@ -8822,6 +9284,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_4",
         "group_1"
       ]
     },
@@ -8844,6 +9307,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_4",
         "group_1"
       ]
     },
@@ -8866,6 +9330,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_4",
         "group_1"
       ]
     },
@@ -8888,6 +9353,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_4",
         "group_1"
       ]
     },
@@ -8910,6 +9376,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_4",
         "group_1"
       ]
     },
@@ -8932,6 +9399,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_4",
         "group_1"
       ]
     },
@@ -8954,6 +9422,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_4",
         "group_1"
       ]
     },
@@ -8975,6 +9444,7 @@
         "soil",
         "decorative",
         "city",
+        "density_5",
         "group_2",
         "passable",
         "overhang"
@@ -8998,6 +9468,7 @@
         "soil",
         "decorative",
         "city",
+        "density_5",
         "group_2",
         "passable",
         "overhang"
@@ -9021,6 +9492,7 @@
         "soil",
         "decorative",
         "city",
+        "density_5",
         "group_2",
         "passable",
         "overhang"
@@ -9044,6 +9516,7 @@
         "soil",
         "decorative",
         "city",
+        "density_5",
         "group_2",
         "passable",
         "overhang"
@@ -9068,6 +9541,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_2"
       ]
     },
@@ -9090,6 +9564,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_2"
       ]
     },
@@ -9112,6 +9587,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_2"
       ]
     },
@@ -9134,6 +9610,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_2"
       ]
     },
@@ -9156,6 +9633,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_2"
       ]
     },
@@ -9178,6 +9656,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_2"
       ]
     },
@@ -9200,6 +9679,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_2"
       ]
     },
@@ -9222,6 +9702,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_2"
       ]
     },
@@ -9243,6 +9724,7 @@
         "soil",
         "decorative",
         "city",
+        "density_6",
         "group_3",
         "passable",
         "overhang"
@@ -9266,6 +9748,7 @@
         "soil",
         "decorative",
         "city",
+        "density_6",
         "group_3",
         "passable",
         "overhang"
@@ -9289,6 +9772,7 @@
         "soil",
         "decorative",
         "city",
+        "density_6",
         "group_3",
         "passable",
         "overhang"
@@ -9312,6 +9796,7 @@
         "soil",
         "decorative",
         "city",
+        "density_6",
         "group_3",
         "passable",
         "overhang"
@@ -9336,6 +9821,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_3"
       ]
     },
@@ -9358,6 +9844,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_3"
       ]
     },
@@ -9380,6 +9867,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_3"
       ]
     },
@@ -9402,6 +9890,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_3"
       ]
     },
@@ -9424,6 +9913,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_3"
       ]
     },
@@ -9446,6 +9936,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_3"
       ]
     },
@@ -9468,6 +9959,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_3"
       ]
     },
@@ -9490,6 +9982,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_3"
       ]
     },
@@ -9512,6 +10005,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_3"
       ]
     },
@@ -9534,6 +10028,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_3"
       ]
     },
@@ -9556,6 +10051,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_3"
       ]
     },
@@ -9578,6 +10074,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_3"
       ]
     },
@@ -9599,6 +10096,7 @@
         "soil",
         "decorative",
         "city",
+        "density_5",
         "group_4",
         "passable",
         "overhang"
@@ -9622,6 +10120,7 @@
         "soil",
         "decorative",
         "city",
+        "density_5",
         "group_4",
         "passable",
         "overhang"
@@ -9645,6 +10144,7 @@
         "soil",
         "decorative",
         "city",
+        "density_5",
         "group_4",
         "passable",
         "overhang"
@@ -9668,6 +10168,7 @@
         "soil",
         "decorative",
         "city",
+        "density_5",
         "group_4",
         "passable",
         "overhang"
@@ -9692,6 +10193,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_4"
       ]
     },
@@ -9714,6 +10216,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_4"
       ]
     },
@@ -9736,6 +10239,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_4"
       ]
     },
@@ -9758,6 +10262,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_4"
       ]
     },
@@ -9780,6 +10285,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_4"
       ]
     },
@@ -9802,6 +10308,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_4"
       ]
     },
@@ -9824,6 +10331,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_4"
       ]
     },
@@ -9846,6 +10354,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_4"
       ]
     },
@@ -9867,6 +10376,7 @@
         "soil",
         "decorative",
         "city",
+        "density_4",
         "group_5",
         "passable",
         "overhang"
@@ -9890,6 +10400,7 @@
         "soil",
         "decorative",
         "city",
+        "density_4",
         "group_5",
         "passable",
         "overhang"
@@ -9913,6 +10424,7 @@
         "soil",
         "decorative",
         "city",
+        "density_4",
         "group_5",
         "passable",
         "overhang"
@@ -9936,6 +10448,7 @@
         "soil",
         "decorative",
         "city",
+        "density_4",
         "group_5",
         "passable",
         "overhang"
@@ -9960,6 +10473,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_4",
         "group_5"
       ]
     },
@@ -9982,6 +10496,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_4",
         "group_5"
       ]
     },
@@ -10004,6 +10519,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_4",
         "group_5"
       ]
     },
@@ -10026,6 +10542,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_4",
         "group_5"
       ]
     },
@@ -10048,6 +10565,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_4",
         "group_5"
       ]
     },
@@ -10070,6 +10588,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_4",
         "group_5"
       ]
     },
@@ -10092,6 +10611,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_4",
         "group_5"
       ]
     },
@@ -10114,6 +10634,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_4",
         "group_5"
       ]
     },
@@ -10135,6 +10656,7 @@
         "soil",
         "decorative",
         "city",
+        "density_5",
         "group_6",
         "passable",
         "overhang"
@@ -10158,6 +10680,7 @@
         "soil",
         "decorative",
         "city",
+        "density_5",
         "group_6",
         "passable",
         "overhang"
@@ -10181,6 +10704,7 @@
         "soil",
         "decorative",
         "city",
+        "density_5",
         "group_6",
         "passable",
         "overhang"
@@ -10204,6 +10728,7 @@
         "soil",
         "decorative",
         "city",
+        "density_5",
         "group_6",
         "passable",
         "overhang"
@@ -10228,6 +10753,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_6"
       ]
     },
@@ -10250,6 +10776,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_6"
       ]
     },
@@ -10272,6 +10799,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_6"
       ]
     },
@@ -10294,6 +10822,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_6"
       ]
     },
@@ -10316,6 +10845,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_6"
       ]
     },
@@ -10338,6 +10868,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_6"
       ]
     },
@@ -10360,6 +10891,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_6"
       ]
     },
@@ -10382,6 +10914,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_6"
       ]
     },
@@ -10404,6 +10937,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_6"
       ]
     },
@@ -10426,6 +10960,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_6"
       ]
     },
@@ -10448,6 +10983,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_6"
       ]
     },
@@ -10470,6 +11006,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_6"
       ]
     },
@@ -10491,6 +11028,7 @@
         "soil",
         "decorative",
         "city",
+        "density_7",
         "group_7",
         "passable",
         "overhang"
@@ -10514,6 +11052,7 @@
         "soil",
         "decorative",
         "city",
+        "density_7",
         "group_7",
         "passable",
         "overhang"
@@ -10537,6 +11076,7 @@
         "soil",
         "decorative",
         "city",
+        "density_7",
         "group_7",
         "passable",
         "overhang"
@@ -10560,6 +11100,7 @@
         "soil",
         "decorative",
         "city",
+        "density_7",
         "group_7",
         "passable",
         "overhang"
@@ -10584,6 +11125,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_7"
       ]
     },
@@ -10606,6 +11148,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_7"
       ]
     },
@@ -10628,6 +11171,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_7"
       ]
     },
@@ -10650,6 +11194,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_7"
       ]
     },
@@ -10672,6 +11217,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_7"
       ]
     },
@@ -10694,6 +11240,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_7"
       ]
     },
@@ -10716,6 +11263,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_7"
       ]
     },
@@ -10738,6 +11286,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_7"
       ]
     },
@@ -10759,6 +11308,7 @@
         "soil",
         "decorative",
         "city",
+        "density_6",
         "group_8",
         "passable",
         "overhang"
@@ -10782,6 +11332,7 @@
         "soil",
         "decorative",
         "city",
+        "density_6",
         "group_8",
         "passable",
         "overhang"
@@ -10805,6 +11356,7 @@
         "soil",
         "decorative",
         "city",
+        "density_6",
         "group_8",
         "passable",
         "overhang"
@@ -10828,6 +11380,7 @@
         "soil",
         "decorative",
         "city",
+        "density_6",
         "group_8",
         "passable",
         "overhang"
@@ -10852,6 +11405,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_8"
       ]
     },
@@ -10874,6 +11428,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_8"
       ]
     },
@@ -10896,6 +11451,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_8"
       ]
     },
@@ -10918,6 +11474,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_8"
       ]
     },
@@ -10940,6 +11497,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_8"
       ]
     },
@@ -10962,6 +11520,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_8"
       ]
     },
@@ -10984,6 +11543,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_8"
       ]
     },
@@ -11006,6 +11566,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_8"
       ]
     },
@@ -11028,6 +11589,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_8"
       ]
     },
@@ -11050,6 +11612,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_8"
       ]
     },
@@ -11072,6 +11635,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_8"
       ]
     },
@@ -11094,6 +11658,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_8"
       ]
     },
@@ -11115,6 +11680,7 @@
         "soil",
         "decorative",
         "city",
+        "density_7",
         "group_9",
         "passable",
         "overhang"
@@ -11138,6 +11704,7 @@
         "soil",
         "decorative",
         "city",
+        "density_7",
         "group_9",
         "passable",
         "overhang"
@@ -11161,6 +11728,7 @@
         "soil",
         "decorative",
         "city",
+        "density_7",
         "group_9",
         "passable",
         "overhang"
@@ -11184,6 +11752,7 @@
         "soil",
         "decorative",
         "city",
+        "density_7",
         "group_9",
         "passable",
         "overhang"
@@ -11208,6 +11777,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_9"
       ]
     },
@@ -11230,6 +11800,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_9"
       ]
     },
@@ -11252,6 +11823,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_9"
       ]
     },
@@ -11274,6 +11846,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_9"
       ]
     },
@@ -11296,6 +11869,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_9"
       ]
     },
@@ -11318,6 +11892,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_9"
       ]
     },
@@ -11340,6 +11915,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_9"
       ]
     },
@@ -11362,6 +11938,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_9"
       ]
     },
@@ -11384,6 +11961,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_9"
       ]
     },
@@ -11406,6 +11984,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_9"
       ]
     },
@@ -11428,6 +12007,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_9"
       ]
     },
@@ -11450,6 +12030,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_9"
       ]
     },
@@ -11471,6 +12052,7 @@
         "soil",
         "decorative",
         "city",
+        "density_7",
         "group_10",
         "passable",
         "overhang"
@@ -11494,6 +12076,7 @@
         "soil",
         "decorative",
         "city",
+        "density_7",
         "group_10",
         "passable",
         "overhang"
@@ -11517,6 +12100,7 @@
         "soil",
         "decorative",
         "city",
+        "density_7",
         "group_10",
         "passable",
         "overhang"
@@ -11540,6 +12124,7 @@
         "soil",
         "decorative",
         "city",
+        "density_7",
         "group_10",
         "passable",
         "overhang"
@@ -11564,6 +12149,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_10"
       ]
     },
@@ -11586,6 +12172,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_10"
       ]
     },
@@ -11608,6 +12195,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_10"
       ]
     },
@@ -11630,6 +12218,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_10"
       ]
     },
@@ -11652,6 +12241,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_10"
       ]
     },
@@ -11674,6 +12264,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_10"
       ]
     },
@@ -11696,6 +12287,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_10"
       ]
     },
@@ -11718,6 +12310,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_10"
       ]
     },
@@ -11740,6 +12333,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_10"
       ]
     },
@@ -11762,6 +12356,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_10"
       ]
     },
@@ -11784,6 +12379,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_10"
       ]
     },
@@ -11806,6 +12402,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_10"
       ]
     },
@@ -11827,6 +12424,7 @@
         "soil",
         "decorative",
         "city",
+        "density_6",
         "group_11",
         "passable",
         "overhang"
@@ -11850,6 +12448,7 @@
         "soil",
         "decorative",
         "city",
+        "density_6",
         "group_11",
         "passable",
         "overhang"
@@ -11873,6 +12472,7 @@
         "soil",
         "decorative",
         "city",
+        "density_6",
         "group_11",
         "passable",
         "overhang"
@@ -11896,6 +12496,7 @@
         "soil",
         "decorative",
         "city",
+        "density_6",
         "group_11",
         "passable",
         "overhang"
@@ -11919,6 +12520,7 @@
         "soil",
         "decorative",
         "city",
+        "density_6",
         "group_11",
         "passable",
         "overhang"
@@ -11943,6 +12545,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_11"
       ]
     },
@@ -11965,6 +12568,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_11"
       ]
     },
@@ -11987,6 +12591,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_11"
       ]
     },
@@ -12009,6 +12614,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_11"
       ]
     },
@@ -12031,6 +12637,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_11"
       ]
     },
@@ -12053,6 +12660,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_11"
       ]
     },
@@ -12075,6 +12683,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_11"
       ]
     },
@@ -12097,6 +12706,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_11"
       ]
     },
@@ -12119,6 +12729,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_11"
       ]
     },
@@ -12141,6 +12752,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_11"
       ]
     },
@@ -12163,6 +12775,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_11"
       ]
     },
@@ -12185,6 +12798,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_11"
       ]
     },
@@ -12207,6 +12821,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_11"
       ]
     },
@@ -12229,6 +12844,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_11"
       ]
     },
@@ -12251,6 +12867,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_11"
       ]
     },
@@ -12272,6 +12889,7 @@
         "soil",
         "decorative",
         "city",
+        "density_5",
         "group_12",
         "passable",
         "overhang"
@@ -12295,6 +12913,7 @@
         "soil",
         "decorative",
         "city",
+        "density_5",
         "group_12",
         "passable",
         "overhang"
@@ -12318,6 +12937,7 @@
         "soil",
         "decorative",
         "city",
+        "density_5",
         "group_12",
         "passable",
         "overhang"
@@ -12341,6 +12961,7 @@
         "soil",
         "decorative",
         "city",
+        "density_5",
         "group_12",
         "passable",
         "overhang"
@@ -12365,6 +12986,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_12"
       ]
     },
@@ -12387,6 +13009,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_12"
       ]
     },
@@ -12409,6 +13032,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_12"
       ]
     },
@@ -12431,6 +13055,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_12"
       ]
     },
@@ -12453,6 +13078,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_12"
       ]
     },
@@ -12475,6 +13101,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_12"
       ]
     },
@@ -12497,6 +13124,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_12"
       ]
     },
@@ -12519,6 +13147,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_12"
       ]
     },
@@ -12541,6 +13170,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_12"
       ]
     },
@@ -12563,6 +13193,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_12"
       ]
     },
@@ -12585,6 +13216,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_12"
       ]
     },
@@ -12607,6 +13239,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_12"
       ]
     },
@@ -12629,6 +13262,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_8",
         "group_13",
         "passable",
         "overhang"
@@ -12653,6 +13287,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_8",
         "group_13",
         "passable",
         "overhang"
@@ -12677,6 +13312,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_8",
         "group_13",
         "passable",
         "overhang"
@@ -12701,6 +13337,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_8",
         "group_13",
         "passable",
         "overhang"
@@ -12725,6 +13362,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_8",
         "group_13",
         "passable",
         "overhang"
@@ -12749,6 +13387,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_8",
         "group_13",
         "passable",
         "overhang"
@@ -12773,6 +13412,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_8",
         "group_13",
         "passable",
         "overhang"
@@ -12797,6 +13437,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_8",
         "group_13",
         "passable",
         "overhang"
@@ -12821,6 +13462,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_8",
         "group_13",
         "passable",
         "overhang"
@@ -12846,6 +13488,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_8",
         "group_13"
       ]
     },
@@ -12869,6 +13512,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_8",
         "group_13"
       ]
     },
@@ -12892,6 +13536,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_8",
         "group_13"
       ]
     },
@@ -12915,6 +13560,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_8",
         "group_13"
       ]
     },
@@ -12938,6 +13584,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_8",
         "group_13"
       ]
     },
@@ -12961,6 +13608,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_8",
         "group_13"
       ]
     },
@@ -12984,6 +13632,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_8",
         "group_13"
       ]
     },
@@ -13007,6 +13656,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_8",
         "group_13"
       ]
     },
@@ -13030,6 +13680,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_8",
         "group_13"
       ]
     },
@@ -13052,6 +13703,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_14",
         "passable",
         "overhang"
@@ -13076,6 +13728,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_14",
         "passable",
         "overhang"
@@ -13100,6 +13753,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_14",
         "passable",
         "overhang"
@@ -13124,6 +13778,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_14",
         "passable",
         "overhang"
@@ -13148,6 +13803,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_14",
         "passable",
         "overhang"
@@ -13172,6 +13828,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_14",
         "passable",
         "overhang"
@@ -13196,6 +13853,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_14",
         "passable",
         "overhang"
@@ -13220,6 +13878,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_14",
         "passable",
         "overhang"
@@ -13244,6 +13903,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_14",
         "passable",
         "overhang"
@@ -13268,6 +13928,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_14",
         "passable",
         "overhang"
@@ -13292,6 +13953,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_14",
         "passable",
         "overhang"
@@ -13316,6 +13978,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_14",
         "passable",
         "overhang"
@@ -13341,6 +14004,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_14"
       ]
     },
@@ -13364,6 +14028,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_14"
       ]
     },
@@ -13387,6 +14052,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_14"
       ]
     },
@@ -13410,6 +14076,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_14"
       ]
     },
@@ -13433,6 +14100,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_14"
       ]
     },
@@ -13456,6 +14124,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_14"
       ]
     },
@@ -13479,6 +14148,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_14"
       ]
     },
@@ -13502,6 +14172,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_14"
       ]
     },
@@ -13525,6 +14196,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_14"
       ]
     },
@@ -13548,6 +14220,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_14"
       ]
     },
@@ -13571,6 +14244,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_14"
       ]
     },
@@ -13594,6 +14268,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_14"
       ]
     },
@@ -13616,6 +14291,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_15",
         "passable",
         "overhang"
@@ -13640,6 +14316,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_15",
         "passable",
         "overhang"
@@ -13664,6 +14341,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_15",
         "passable",
         "overhang"
@@ -13688,6 +14366,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_15",
         "passable",
         "overhang"
@@ -13712,6 +14391,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_15",
         "passable",
         "overhang"
@@ -13736,6 +14416,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_15",
         "passable",
         "overhang"
@@ -13760,6 +14441,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_15",
         "passable",
         "overhang"
@@ -13784,6 +14466,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_15",
         "passable",
         "overhang"
@@ -13809,6 +14492,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_15"
       ]
     },
@@ -13832,6 +14516,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_15"
       ]
     },
@@ -13855,6 +14540,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_15"
       ]
     },
@@ -13878,6 +14564,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_15"
       ]
     },
@@ -13901,6 +14588,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_15"
       ]
     },
@@ -13924,6 +14612,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_15"
       ]
     },
@@ -13947,6 +14636,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_15"
       ]
     },
@@ -13970,6 +14660,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_15"
       ]
     },
@@ -13993,6 +14684,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_15"
       ]
     },
@@ -14016,6 +14708,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_15"
       ]
     },
@@ -14039,6 +14732,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_15"
       ]
     },
@@ -14062,6 +14756,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_15"
       ]
     },
@@ -14084,6 +14779,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_8",
         "group_16",
         "passable",
         "overhang"
@@ -14108,6 +14804,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_8",
         "group_16",
         "passable",
         "overhang"
@@ -14132,6 +14829,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_8",
         "group_16",
         "passable",
         "overhang"
@@ -14156,6 +14854,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_8",
         "group_16",
         "passable",
         "overhang"
@@ -14180,6 +14879,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_8",
         "group_16",
         "passable",
         "overhang"
@@ -14204,6 +14904,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_8",
         "group_16",
         "passable",
         "overhang"
@@ -14228,6 +14929,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_8",
         "group_16",
         "passable",
         "overhang"
@@ -14252,6 +14954,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_8",
         "group_16",
         "passable",
         "overhang"
@@ -14276,6 +14979,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_8",
         "group_16",
         "passable",
         "overhang"
@@ -14300,6 +15004,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_8",
         "group_16",
         "passable",
         "overhang"
@@ -14324,6 +15029,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_8",
         "group_16",
         "passable",
         "overhang"
@@ -14348,6 +15054,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_8",
         "group_16",
         "passable",
         "overhang"
@@ -14373,6 +15080,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_8",
         "group_16"
       ]
     },
@@ -14396,6 +15104,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_8",
         "group_16"
       ]
     },
@@ -14419,6 +15128,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_8",
         "group_16"
       ]
     },
@@ -14442,6 +15152,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_8",
         "group_16"
       ]
     },
@@ -14465,6 +15176,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_8",
         "group_16"
       ]
     },
@@ -14488,6 +15200,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_8",
         "group_16"
       ]
     },
@@ -14511,6 +15224,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_8",
         "group_16"
       ]
     },
@@ -14534,6 +15248,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_8",
         "group_16"
       ]
     },
@@ -14557,6 +15272,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_8",
         "group_16"
       ]
     },
@@ -14580,6 +15296,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_8",
         "group_16"
       ]
     },
@@ -14603,6 +15320,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_8",
         "group_16"
       ]
     },
@@ -14626,6 +15344,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_8",
         "group_16"
       ]
     },
@@ -14648,6 +15367,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_17",
         "passable",
         "overhang"
@@ -14672,6 +15392,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_17",
         "passable",
         "overhang"
@@ -14696,6 +15417,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_17",
         "passable",
         "overhang"
@@ -14720,6 +15442,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_17",
         "passable",
         "overhang"
@@ -14744,6 +15467,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_17",
         "passable",
         "overhang"
@@ -14768,6 +15492,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_17",
         "passable",
         "overhang"
@@ -14792,6 +15517,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_17",
         "passable",
         "overhang"
@@ -14816,6 +15542,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_17",
         "passable",
         "overhang"
@@ -14840,6 +15567,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_17",
         "passable",
         "overhang"
@@ -14864,6 +15592,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_17",
         "passable",
         "overhang"
@@ -14888,6 +15617,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_17",
         "passable",
         "overhang"
@@ -14912,6 +15642,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_17",
         "passable",
         "overhang"
@@ -14936,6 +15667,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_17",
         "passable",
         "overhang"
@@ -14960,6 +15692,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_17",
         "passable",
         "overhang"
@@ -14984,6 +15717,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_17",
         "passable",
         "overhang"
@@ -15008,6 +15742,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_17",
         "passable",
         "overhang"
@@ -15033,6 +15768,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_17"
       ]
     },
@@ -15056,6 +15792,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_17"
       ]
     },
@@ -15079,6 +15816,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_17"
       ]
     },
@@ -15102,6 +15840,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_17"
       ]
     },
@@ -15125,6 +15864,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_17"
       ]
     },
@@ -15148,6 +15888,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_17"
       ]
     },
@@ -15171,6 +15912,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_17"
       ]
     },
@@ -15194,6 +15936,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_17"
       ]
     },
@@ -15217,6 +15960,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_17"
       ]
     },
@@ -15240,6 +15984,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_17"
       ]
     },
@@ -15263,6 +16008,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_17"
       ]
     },
@@ -15286,6 +16032,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_17"
       ]
     },
@@ -15308,6 +16055,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_18",
         "passable",
         "overhang"
@@ -15332,6 +16080,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_18",
         "passable",
         "overhang"
@@ -15356,6 +16105,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_18",
         "passable",
         "overhang"
@@ -15380,6 +16130,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_18",
         "passable",
         "overhang"
@@ -15404,6 +16155,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_18",
         "passable",
         "overhang"
@@ -15428,6 +16180,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_18",
         "passable",
         "overhang"
@@ -15452,6 +16205,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_18",
         "passable",
         "overhang"
@@ -15476,6 +16230,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_18",
         "passable",
         "overhang"
@@ -15500,6 +16255,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_18",
         "passable",
         "overhang"
@@ -15524,6 +16280,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_18",
         "passable",
         "overhang"
@@ -15548,6 +16305,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_18",
         "passable",
         "overhang"
@@ -15572,6 +16330,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_18",
         "passable",
         "overhang"
@@ -15596,6 +16355,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_18",
         "passable",
         "overhang"
@@ -15620,6 +16380,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_18",
         "passable",
         "overhang"
@@ -15644,6 +16405,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_18",
         "passable",
         "overhang"
@@ -15668,6 +16430,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_18",
         "passable",
         "overhang"
@@ -15693,6 +16456,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_18"
       ]
     },
@@ -15716,6 +16480,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_18"
       ]
     },
@@ -15739,6 +16504,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_18"
       ]
     },
@@ -15762,6 +16528,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_18"
       ]
     },
@@ -15785,6 +16552,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_18"
       ]
     },
@@ -15808,6 +16576,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_18"
       ]
     },
@@ -15831,6 +16600,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_18"
       ]
     },
@@ -15854,6 +16624,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_18"
       ]
     },
@@ -15877,6 +16648,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_18"
       ]
     },
@@ -15900,6 +16672,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_18"
       ]
     },
@@ -15923,6 +16696,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_18"
       ]
     },
@@ -15946,6 +16720,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_18"
       ]
     },
@@ -15968,6 +16743,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_19",
         "passable",
         "overhang"
@@ -15992,6 +16768,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_19",
         "passable",
         "overhang"
@@ -16016,6 +16793,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_19",
         "passable",
         "overhang"
@@ -16040,6 +16818,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_19",
         "passable",
         "overhang"
@@ -16064,6 +16843,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_19",
         "passable",
         "overhang"
@@ -16088,6 +16868,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_19",
         "passable",
         "overhang"
@@ -16112,6 +16893,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_19",
         "passable",
         "overhang"
@@ -16136,6 +16918,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_19",
         "passable",
         "overhang"
@@ -16160,6 +16943,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_19",
         "passable",
         "overhang"
@@ -16184,6 +16968,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_19",
         "passable",
         "overhang"
@@ -16208,6 +16993,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_19",
         "passable",
         "overhang"
@@ -16232,6 +17018,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_19",
         "passable",
         "overhang"
@@ -16256,6 +17043,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_19",
         "passable",
         "overhang"
@@ -16280,6 +17068,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_19",
         "passable",
         "overhang"
@@ -16304,6 +17093,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_19",
         "passable",
         "overhang"
@@ -16328,6 +17118,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_10",
         "group_19",
         "passable",
         "overhang"
@@ -16353,6 +17144,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_19"
       ]
     },
@@ -16376,6 +17168,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_19"
       ]
     },
@@ -16399,6 +17192,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_19"
       ]
     },
@@ -16422,6 +17216,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_19"
       ]
     },
@@ -16445,6 +17240,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_19"
       ]
     },
@@ -16468,6 +17264,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_19"
       ]
     },
@@ -16491,6 +17288,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_19"
       ]
     },
@@ -16514,6 +17312,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_19"
       ]
     },
@@ -16537,6 +17336,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_19"
       ]
     },
@@ -16560,6 +17360,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_19"
       ]
     },
@@ -16583,6 +17384,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_19"
       ]
     },
@@ -16606,6 +17408,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_19"
       ]
     },
@@ -16628,6 +17431,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_20",
         "passable",
         "overhang"
@@ -16652,6 +17456,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_20",
         "passable",
         "overhang"
@@ -16676,6 +17481,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_20",
         "passable",
         "overhang"
@@ -16700,6 +17506,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_20",
         "passable",
         "overhang"
@@ -16724,6 +17531,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_20",
         "passable",
         "overhang"
@@ -16748,6 +17556,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_20",
         "passable",
         "overhang"
@@ -16772,6 +17581,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_20",
         "passable",
         "overhang"
@@ -16796,6 +17606,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_20",
         "passable",
         "overhang"
@@ -16820,6 +17631,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_20",
         "passable",
         "overhang"
@@ -16844,6 +17656,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_20",
         "passable",
         "overhang"
@@ -16868,6 +17681,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_20",
         "passable",
         "overhang"
@@ -16892,6 +17706,7 @@
         "decorative",
         "city",
         "skyscraper",
+        "density_9",
         "group_20",
         "passable",
         "overhang"
@@ -16917,6 +17732,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_20"
       ]
     },
@@ -16940,6 +17756,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_20"
       ]
     },
@@ -16963,6 +17780,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_20"
       ]
     },
@@ -16986,6 +17804,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_20"
       ]
     },
@@ -17009,6 +17828,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_20"
       ]
     },
@@ -17032,6 +17852,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_20"
       ]
     },
@@ -17055,6 +17876,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_20"
       ]
     },
@@ -17078,6 +17900,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_20"
       ]
     },
@@ -17101,6 +17924,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_20"
       ]
     },
@@ -17124,6 +17948,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_20"
       ]
     },
@@ -17147,6 +17972,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_20"
       ]
     },
@@ -17170,6 +17996,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_20"
       ]
     },
@@ -17194,6 +18021,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_4",
         "group_1",
         "passable",
         "overhang"
@@ -17220,6 +18048,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_2",
         "passable",
         "overhang"
@@ -17246,6 +18075,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_3",
         "passable",
         "overhang"
@@ -17272,6 +18102,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_4",
         "passable",
         "overhang"
@@ -17298,6 +18129,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_4",
         "group_5",
         "passable",
         "overhang"
@@ -17324,6 +18156,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_6",
         "passable",
         "overhang"
@@ -17350,6 +18183,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_7",
         "passable",
         "overhang"
@@ -17376,6 +18210,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_8",
         "passable",
         "overhang"
@@ -17402,6 +18237,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_9",
         "passable",
         "overhang"
@@ -17428,6 +18264,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_7",
         "group_10",
         "passable",
         "overhang"
@@ -17454,6 +18291,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_6",
         "group_11",
         "passable",
         "overhang"
@@ -17480,6 +18318,7 @@
         "decorative",
         "city",
         "impassable",
+        "density_5",
         "group_12",
         "passable",
         "overhang"
@@ -17507,6 +18346,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_8",
         "group_13",
         "passable",
         "overhang"
@@ -17534,6 +18374,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_14",
         "passable",
         "overhang"
@@ -17561,6 +18402,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_15",
         "passable",
         "overhang"
@@ -17588,6 +18430,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_8",
         "group_16",
         "passable",
         "overhang"
@@ -17615,6 +18458,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_17",
         "passable",
         "overhang"
@@ -17642,6 +18486,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_18",
         "passable",
         "overhang"
@@ -17669,6 +18514,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_10",
         "group_19",
         "passable",
         "overhang"
@@ -17696,6 +18542,7 @@
         "city",
         "skyscraper",
         "impassable",
+        "density_9",
         "group_20",
         "passable",
         "overhang"

@@ -1,0 +1,10474 @@
+{
+  "schemaVersion": 1,
+  "layoutVersion": 6,
+  "tileSize": 64,
+  "rowHeight": 64,
+  "borderWidth": 0,
+  "columns": 16,
+  "rows": 14,
+  "blendMode": "alpha",
+  "tags": [
+    "sand",
+    "decorative",
+    "city",
+    "density_4",
+    "passable",
+    "overhang",
+    "impassable",
+    "density_5",
+    "density_6",
+    "density_7"
+  ],
+  "tiles": {
+    "0,0": {
+      "col": 0,
+      "row": 0,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_4",
+        "group_1",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "1,0": {
+      "col": 1,
+      "row": 0,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_4",
+        "group_1",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 64,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "2,0": {
+      "col": 2,
+      "row": 0,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_4",
+        "group_1",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 128,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "0,1": {
+      "col": 0,
+      "row": 1,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_1"
+      ],
+      "rect": {
+        "x": 0,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "1,1": {
+      "col": 1,
+      "row": 1,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_1"
+      ],
+      "rect": {
+        "x": 64,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "2,1": {
+      "col": 2,
+      "row": 1,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_1"
+      ],
+      "rect": {
+        "x": 128,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "0,2": {
+      "col": 0,
+      "row": 2,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_1"
+      ],
+      "rect": {
+        "x": 0,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "1,2": {
+      "col": 1,
+      "row": 2,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_1"
+      ],
+      "rect": {
+        "x": 64,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "2,2": {
+      "col": 2,
+      "row": 2,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_1"
+      ],
+      "rect": {
+        "x": 128,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "3,0": {
+      "col": 3,
+      "row": 0,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_4",
+        "group_2",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 192,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "4,0": {
+      "col": 4,
+      "row": 0,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_4",
+        "group_2",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 256,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "5,0": {
+      "col": 5,
+      "row": 0,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_4",
+        "group_2",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 320,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "3,1": {
+      "col": 3,
+      "row": 1,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_2"
+      ],
+      "rect": {
+        "x": 192,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "4,1": {
+      "col": 4,
+      "row": 1,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_2"
+      ],
+      "rect": {
+        "x": 256,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "5,1": {
+      "col": 5,
+      "row": 1,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_2"
+      ],
+      "rect": {
+        "x": 320,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "3,2": {
+      "col": 3,
+      "row": 2,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_2"
+      ],
+      "rect": {
+        "x": 192,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "4,2": {
+      "col": 4,
+      "row": 2,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_2"
+      ],
+      "rect": {
+        "x": 256,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "5,2": {
+      "col": 5,
+      "row": 2,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_2"
+      ],
+      "rect": {
+        "x": 320,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "6,0": {
+      "col": 6,
+      "row": 0,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_4",
+        "group_3",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 384,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "7,0": {
+      "col": 7,
+      "row": 0,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_4",
+        "group_3",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 448,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "8,0": {
+      "col": 8,
+      "row": 0,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_4",
+        "group_3",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 512,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "6,1": {
+      "col": 6,
+      "row": 1,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_3"
+      ],
+      "rect": {
+        "x": 384,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "7,1": {
+      "col": 7,
+      "row": 1,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_3"
+      ],
+      "rect": {
+        "x": 448,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "8,1": {
+      "col": 8,
+      "row": 1,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_3"
+      ],
+      "rect": {
+        "x": 512,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "6,2": {
+      "col": 6,
+      "row": 2,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_3"
+      ],
+      "rect": {
+        "x": 384,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "7,2": {
+      "col": 7,
+      "row": 2,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_3"
+      ],
+      "rect": {
+        "x": 448,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "8,2": {
+      "col": 8,
+      "row": 2,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_3"
+      ],
+      "rect": {
+        "x": 512,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "9,0": {
+      "col": 9,
+      "row": 0,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_4",
+        "group_4",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 576,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "10,0": {
+      "col": 10,
+      "row": 0,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_4",
+        "group_4",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 640,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "11,0": {
+      "col": 11,
+      "row": 0,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_4",
+        "group_4",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 704,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "9,1": {
+      "col": 9,
+      "row": 1,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_4"
+      ],
+      "rect": {
+        "x": 576,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "10,1": {
+      "col": 10,
+      "row": 1,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_4"
+      ],
+      "rect": {
+        "x": 640,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "11,1": {
+      "col": 11,
+      "row": 1,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_4"
+      ],
+      "rect": {
+        "x": 704,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "9,2": {
+      "col": 9,
+      "row": 2,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_4"
+      ],
+      "rect": {
+        "x": 576,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "10,2": {
+      "col": 10,
+      "row": 2,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_4"
+      ],
+      "rect": {
+        "x": 640,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "11,2": {
+      "col": 11,
+      "row": 2,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_4"
+      ],
+      "rect": {
+        "x": 704,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "12,0": {
+      "col": 12,
+      "row": 0,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_5",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 768,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "13,0": {
+      "col": 13,
+      "row": 0,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_5",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 832,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "14,0": {
+      "col": 14,
+      "row": 0,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_5",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 896,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "12,1": {
+      "col": 12,
+      "row": 1,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_5"
+      ],
+      "rect": {
+        "x": 768,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "13,1": {
+      "col": 13,
+      "row": 1,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_5"
+      ],
+      "rect": {
+        "x": 832,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "14,1": {
+      "col": 14,
+      "row": 1,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_5"
+      ],
+      "rect": {
+        "x": 896,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "12,2": {
+      "col": 12,
+      "row": 2,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_5"
+      ],
+      "rect": {
+        "x": 768,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "13,2": {
+      "col": 13,
+      "row": 2,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_5"
+      ],
+      "rect": {
+        "x": 832,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "14,2": {
+      "col": 14,
+      "row": 2,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_5"
+      ],
+      "rect": {
+        "x": 896,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "0,3": {
+      "col": 0,
+      "row": 3,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_6",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 0,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "1,3": {
+      "col": 1,
+      "row": 3,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_6",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 64,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "2,3": {
+      "col": 2,
+      "row": 3,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_6",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 128,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "0,4": {
+      "col": 0,
+      "row": 4,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_6"
+      ],
+      "rect": {
+        "x": 0,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "1,4": {
+      "col": 1,
+      "row": 4,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_6"
+      ],
+      "rect": {
+        "x": 64,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "2,4": {
+      "col": 2,
+      "row": 4,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_6"
+      ],
+      "rect": {
+        "x": 128,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "0,5": {
+      "col": 0,
+      "row": 5,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_6"
+      ],
+      "rect": {
+        "x": 0,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "1,5": {
+      "col": 1,
+      "row": 5,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_6"
+      ],
+      "rect": {
+        "x": 64,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "2,5": {
+      "col": 2,
+      "row": 5,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_6"
+      ],
+      "rect": {
+        "x": 128,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "3,3": {
+      "col": 3,
+      "row": 3,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_7",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 192,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "4,3": {
+      "col": 4,
+      "row": 3,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_7",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 256,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "5,3": {
+      "col": 5,
+      "row": 3,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_7",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 320,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "3,4": {
+      "col": 3,
+      "row": 4,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_7"
+      ],
+      "rect": {
+        "x": 192,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "4,4": {
+      "col": 4,
+      "row": 4,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_7"
+      ],
+      "rect": {
+        "x": 256,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "5,4": {
+      "col": 5,
+      "row": 4,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_7"
+      ],
+      "rect": {
+        "x": 320,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "3,5": {
+      "col": 3,
+      "row": 5,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_7"
+      ],
+      "rect": {
+        "x": 192,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "4,5": {
+      "col": 4,
+      "row": 5,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_7"
+      ],
+      "rect": {
+        "x": 256,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "5,5": {
+      "col": 5,
+      "row": 5,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_7"
+      ],
+      "rect": {
+        "x": 320,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "6,3": {
+      "col": 6,
+      "row": 3,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_8",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 384,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "7,3": {
+      "col": 7,
+      "row": 3,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_8",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 448,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "8,3": {
+      "col": 8,
+      "row": 3,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_8",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 512,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "6,4": {
+      "col": 6,
+      "row": 4,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_8"
+      ],
+      "rect": {
+        "x": 384,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "7,4": {
+      "col": 7,
+      "row": 4,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_8"
+      ],
+      "rect": {
+        "x": 448,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "8,4": {
+      "col": 8,
+      "row": 4,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_8"
+      ],
+      "rect": {
+        "x": 512,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "6,5": {
+      "col": 6,
+      "row": 5,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_8"
+      ],
+      "rect": {
+        "x": 384,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "7,5": {
+      "col": 7,
+      "row": 5,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_8"
+      ],
+      "rect": {
+        "x": 448,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "8,5": {
+      "col": 8,
+      "row": 5,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_8"
+      ],
+      "rect": {
+        "x": 512,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "9,3": {
+      "col": 9,
+      "row": 3,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_6",
+        "group_9",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 576,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "10,3": {
+      "col": 10,
+      "row": 3,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_6",
+        "group_9",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 640,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "11,3": {
+      "col": 11,
+      "row": 3,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_6",
+        "group_9",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 704,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "9,4": {
+      "col": 9,
+      "row": 4,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_9"
+      ],
+      "rect": {
+        "x": 576,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "10,4": {
+      "col": 10,
+      "row": 4,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_9"
+      ],
+      "rect": {
+        "x": 640,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "11,4": {
+      "col": 11,
+      "row": 4,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_9"
+      ],
+      "rect": {
+        "x": 704,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "9,5": {
+      "col": 9,
+      "row": 5,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_9"
+      ],
+      "rect": {
+        "x": 576,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "10,5": {
+      "col": 10,
+      "row": 5,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_9"
+      ],
+      "rect": {
+        "x": 640,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "11,5": {
+      "col": 11,
+      "row": 5,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_9"
+      ],
+      "rect": {
+        "x": 704,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "9,6": {
+      "col": 9,
+      "row": 6,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_9"
+      ],
+      "rect": {
+        "x": 576,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "10,6": {
+      "col": 10,
+      "row": 6,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_9"
+      ],
+      "rect": {
+        "x": 640,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "11,6": {
+      "col": 11,
+      "row": 6,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_9"
+      ],
+      "rect": {
+        "x": 704,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "12,3": {
+      "col": 12,
+      "row": 3,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_6",
+        "group_10",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 768,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "13,3": {
+      "col": 13,
+      "row": 3,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_6",
+        "group_10",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 832,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "14,3": {
+      "col": 14,
+      "row": 3,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_6",
+        "group_10",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 896,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "12,4": {
+      "col": 12,
+      "row": 4,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_10"
+      ],
+      "rect": {
+        "x": 768,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "13,4": {
+      "col": 13,
+      "row": 4,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_10"
+      ],
+      "rect": {
+        "x": 832,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "14,4": {
+      "col": 14,
+      "row": 4,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_10"
+      ],
+      "rect": {
+        "x": 896,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "12,5": {
+      "col": 12,
+      "row": 5,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_10"
+      ],
+      "rect": {
+        "x": 768,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "13,5": {
+      "col": 13,
+      "row": 5,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_10"
+      ],
+      "rect": {
+        "x": 832,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "14,5": {
+      "col": 14,
+      "row": 5,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_10"
+      ],
+      "rect": {
+        "x": 896,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "12,6": {
+      "col": 12,
+      "row": 6,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_10"
+      ],
+      "rect": {
+        "x": 768,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "13,6": {
+      "col": 13,
+      "row": 6,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_10"
+      ],
+      "rect": {
+        "x": 832,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "14,6": {
+      "col": 14,
+      "row": 6,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_10"
+      ],
+      "rect": {
+        "x": 896,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "0,6": {
+      "col": 0,
+      "row": 6,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_6",
+        "group_11",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 0,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "1,6": {
+      "col": 1,
+      "row": 6,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_6",
+        "group_11",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 64,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "2,6": {
+      "col": 2,
+      "row": 6,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_6",
+        "group_11",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 128,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "0,7": {
+      "col": 0,
+      "row": 7,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_11"
+      ],
+      "rect": {
+        "x": 0,
+        "y": 448,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "1,7": {
+      "col": 1,
+      "row": 7,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_11"
+      ],
+      "rect": {
+        "x": 64,
+        "y": 448,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "2,7": {
+      "col": 2,
+      "row": 7,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_11"
+      ],
+      "rect": {
+        "x": 128,
+        "y": 448,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "0,8": {
+      "col": 0,
+      "row": 8,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_11"
+      ],
+      "rect": {
+        "x": 0,
+        "y": 512,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "1,8": {
+      "col": 1,
+      "row": 8,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_11"
+      ],
+      "rect": {
+        "x": 64,
+        "y": 512,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "2,8": {
+      "col": 2,
+      "row": 8,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_11"
+      ],
+      "rect": {
+        "x": 128,
+        "y": 512,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "0,9": {
+      "col": 0,
+      "row": 9,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_11"
+      ],
+      "rect": {
+        "x": 0,
+        "y": 576,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "1,9": {
+      "col": 1,
+      "row": 9,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_11"
+      ],
+      "rect": {
+        "x": 64,
+        "y": 576,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "2,9": {
+      "col": 2,
+      "row": 9,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_11"
+      ],
+      "rect": {
+        "x": 128,
+        "y": 576,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "3,6": {
+      "col": 3,
+      "row": 6,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_6",
+        "group_12",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 192,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "4,6": {
+      "col": 4,
+      "row": 6,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_6",
+        "group_12",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 256,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "5,6": {
+      "col": 5,
+      "row": 6,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_6",
+        "group_12",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 320,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "3,7": {
+      "col": 3,
+      "row": 7,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_12"
+      ],
+      "rect": {
+        "x": 192,
+        "y": 448,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "4,7": {
+      "col": 4,
+      "row": 7,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_12"
+      ],
+      "rect": {
+        "x": 256,
+        "y": 448,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "5,7": {
+      "col": 5,
+      "row": 7,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_12"
+      ],
+      "rect": {
+        "x": 320,
+        "y": 448,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "3,8": {
+      "col": 3,
+      "row": 8,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_12"
+      ],
+      "rect": {
+        "x": 192,
+        "y": 512,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "4,8": {
+      "col": 4,
+      "row": 8,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_12"
+      ],
+      "rect": {
+        "x": 256,
+        "y": 512,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "5,8": {
+      "col": 5,
+      "row": 8,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_12"
+      ],
+      "rect": {
+        "x": 320,
+        "y": 512,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "3,9": {
+      "col": 3,
+      "row": 9,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_12"
+      ],
+      "rect": {
+        "x": 192,
+        "y": 576,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "4,9": {
+      "col": 4,
+      "row": 9,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_12"
+      ],
+      "rect": {
+        "x": 256,
+        "y": 576,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "5,9": {
+      "col": 5,
+      "row": 9,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_12"
+      ],
+      "rect": {
+        "x": 320,
+        "y": 576,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "6,6": {
+      "col": 6,
+      "row": 6,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_7",
+        "group_13",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 384,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "7,6": {
+      "col": 7,
+      "row": 6,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_7",
+        "group_13",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 448,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "8,6": {
+      "col": 8,
+      "row": 6,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_7",
+        "group_13",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 512,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "6,7": {
+      "col": 6,
+      "row": 7,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_13"
+      ],
+      "rect": {
+        "x": 384,
+        "y": 448,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "7,7": {
+      "col": 7,
+      "row": 7,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_13"
+      ],
+      "rect": {
+        "x": 448,
+        "y": 448,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "8,7": {
+      "col": 8,
+      "row": 7,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_13"
+      ],
+      "rect": {
+        "x": 512,
+        "y": 448,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "6,8": {
+      "col": 6,
+      "row": 8,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_13"
+      ],
+      "rect": {
+        "x": 384,
+        "y": 512,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "7,8": {
+      "col": 7,
+      "row": 8,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_13"
+      ],
+      "rect": {
+        "x": 448,
+        "y": 512,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "8,8": {
+      "col": 8,
+      "row": 8,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_13"
+      ],
+      "rect": {
+        "x": 512,
+        "y": 512,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "6,9": {
+      "col": 6,
+      "row": 9,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_13"
+      ],
+      "rect": {
+        "x": 384,
+        "y": 576,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "7,9": {
+      "col": 7,
+      "row": 9,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_13"
+      ],
+      "rect": {
+        "x": 448,
+        "y": 576,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "8,9": {
+      "col": 8,
+      "row": 9,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_13"
+      ],
+      "rect": {
+        "x": 512,
+        "y": 576,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "9,7": {
+      "col": 9,
+      "row": 7,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_7",
+        "group_14",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 576,
+        "y": 448,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "10,7": {
+      "col": 10,
+      "row": 7,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_7",
+        "group_14",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 640,
+        "y": 448,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "11,7": {
+      "col": 11,
+      "row": 7,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_7",
+        "group_14",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 704,
+        "y": 448,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "9,8": {
+      "col": 9,
+      "row": 8,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_14"
+      ],
+      "rect": {
+        "x": 576,
+        "y": 512,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "10,8": {
+      "col": 10,
+      "row": 8,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_14"
+      ],
+      "rect": {
+        "x": 640,
+        "y": 512,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "11,8": {
+      "col": 11,
+      "row": 8,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_14"
+      ],
+      "rect": {
+        "x": 704,
+        "y": 512,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "9,9": {
+      "col": 9,
+      "row": 9,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_14"
+      ],
+      "rect": {
+        "x": 576,
+        "y": 576,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "10,9": {
+      "col": 10,
+      "row": 9,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_14"
+      ],
+      "rect": {
+        "x": 640,
+        "y": 576,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "11,9": {
+      "col": 11,
+      "row": 9,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_14"
+      ],
+      "rect": {
+        "x": 704,
+        "y": 576,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "9,10": {
+      "col": 9,
+      "row": 10,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_14"
+      ],
+      "rect": {
+        "x": 576,
+        "y": 640,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "10,10": {
+      "col": 10,
+      "row": 10,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_14"
+      ],
+      "rect": {
+        "x": 640,
+        "y": 640,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "11,10": {
+      "col": 11,
+      "row": 10,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_14"
+      ],
+      "rect": {
+        "x": 704,
+        "y": 640,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "12,7": {
+      "col": 12,
+      "row": 7,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_7",
+        "group_15",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 768,
+        "y": 448,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "13,7": {
+      "col": 13,
+      "row": 7,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_7",
+        "group_15",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 832,
+        "y": 448,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "14,7": {
+      "col": 14,
+      "row": 7,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_7",
+        "group_15",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 896,
+        "y": 448,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "12,8": {
+      "col": 12,
+      "row": 8,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_15"
+      ],
+      "rect": {
+        "x": 768,
+        "y": 512,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "13,8": {
+      "col": 13,
+      "row": 8,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_15"
+      ],
+      "rect": {
+        "x": 832,
+        "y": 512,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "14,8": {
+      "col": 14,
+      "row": 8,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_15"
+      ],
+      "rect": {
+        "x": 896,
+        "y": 512,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "12,9": {
+      "col": 12,
+      "row": 9,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_15"
+      ],
+      "rect": {
+        "x": 768,
+        "y": 576,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "13,9": {
+      "col": 13,
+      "row": 9,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_15"
+      ],
+      "rect": {
+        "x": 832,
+        "y": 576,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "14,9": {
+      "col": 14,
+      "row": 9,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_15"
+      ],
+      "rect": {
+        "x": 896,
+        "y": 576,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "12,10": {
+      "col": 12,
+      "row": 10,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_15"
+      ],
+      "rect": {
+        "x": 768,
+        "y": 640,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "13,10": {
+      "col": 13,
+      "row": 10,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_15"
+      ],
+      "rect": {
+        "x": 832,
+        "y": 640,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "14,10": {
+      "col": 14,
+      "row": 10,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_15"
+      ],
+      "rect": {
+        "x": 896,
+        "y": 640,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "0,10": {
+      "col": 0,
+      "row": 10,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_7",
+        "group_16",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 0,
+        "y": 640,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "1,10": {
+      "col": 1,
+      "row": 10,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_7",
+        "group_16",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 64,
+        "y": 640,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "2,10": {
+      "col": 2,
+      "row": 10,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_7",
+        "group_16",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 128,
+        "y": 640,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "0,11": {
+      "col": 0,
+      "row": 11,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_16"
+      ],
+      "rect": {
+        "x": 0,
+        "y": 704,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "1,11": {
+      "col": 1,
+      "row": 11,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_16"
+      ],
+      "rect": {
+        "x": 64,
+        "y": 704,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "2,11": {
+      "col": 2,
+      "row": 11,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_16"
+      ],
+      "rect": {
+        "x": 128,
+        "y": 704,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "0,12": {
+      "col": 0,
+      "row": 12,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_16"
+      ],
+      "rect": {
+        "x": 0,
+        "y": 768,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "1,12": {
+      "col": 1,
+      "row": 12,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_16"
+      ],
+      "rect": {
+        "x": 64,
+        "y": 768,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "2,12": {
+      "col": 2,
+      "row": 12,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_16"
+      ],
+      "rect": {
+        "x": 128,
+        "y": 768,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "0,13": {
+      "col": 0,
+      "row": 13,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_16"
+      ],
+      "rect": {
+        "x": 0,
+        "y": 832,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "1,13": {
+      "col": 1,
+      "row": 13,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_16"
+      ],
+      "rect": {
+        "x": 64,
+        "y": 832,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "2,13": {
+      "col": 2,
+      "row": 13,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_16"
+      ],
+      "rect": {
+        "x": 128,
+        "y": 832,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "3,10": {
+      "col": 3,
+      "row": 10,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_17",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 192,
+        "y": 640,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "4,10": {
+      "col": 4,
+      "row": 10,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_17",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 256,
+        "y": 640,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "5,10": {
+      "col": 5,
+      "row": 10,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_17",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 320,
+        "y": 640,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "3,11": {
+      "col": 3,
+      "row": 11,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_17"
+      ],
+      "rect": {
+        "x": 192,
+        "y": 704,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "4,11": {
+      "col": 4,
+      "row": 11,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_17"
+      ],
+      "rect": {
+        "x": 256,
+        "y": 704,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "5,11": {
+      "col": 5,
+      "row": 11,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_17"
+      ],
+      "rect": {
+        "x": 320,
+        "y": 704,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "3,12": {
+      "col": 3,
+      "row": 12,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_17"
+      ],
+      "rect": {
+        "x": 192,
+        "y": 768,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "4,12": {
+      "col": 4,
+      "row": 12,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_17"
+      ],
+      "rect": {
+        "x": 256,
+        "y": 768,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "5,12": {
+      "col": 5,
+      "row": 12,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_17"
+      ],
+      "rect": {
+        "x": 320,
+        "y": 768,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "6,11": {
+      "col": 6,
+      "row": 11,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_18",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 384,
+        "y": 704,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "7,11": {
+      "col": 7,
+      "row": 11,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_18",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 448,
+        "y": 704,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "8,11": {
+      "col": 8,
+      "row": 11,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_18",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 512,
+        "y": 704,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "9,11": {
+      "col": 9,
+      "row": 11,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_18",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 576,
+        "y": 704,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "6,12": {
+      "col": 6,
+      "row": 12,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_18"
+      ],
+      "rect": {
+        "x": 384,
+        "y": 768,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "7,12": {
+      "col": 7,
+      "row": 12,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_18"
+      ],
+      "rect": {
+        "x": 448,
+        "y": 768,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "8,12": {
+      "col": 8,
+      "row": 12,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_18"
+      ],
+      "rect": {
+        "x": 512,
+        "y": 768,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "9,12": {
+      "col": 9,
+      "row": 12,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_18"
+      ],
+      "rect": {
+        "x": 576,
+        "y": 768,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "6,13": {
+      "col": 6,
+      "row": 13,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_18"
+      ],
+      "rect": {
+        "x": 384,
+        "y": 832,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "7,13": {
+      "col": 7,
+      "row": 13,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_18"
+      ],
+      "rect": {
+        "x": 448,
+        "y": 832,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "8,13": {
+      "col": 8,
+      "row": 13,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_18"
+      ],
+      "rect": {
+        "x": 512,
+        "y": 832,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "9,13": {
+      "col": 9,
+      "row": 13,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_18"
+      ],
+      "rect": {
+        "x": 576,
+        "y": 832,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "10,11": {
+      "col": 10,
+      "row": 11,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_19",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 640,
+        "y": 704,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "11,11": {
+      "col": 11,
+      "row": 11,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_19",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 704,
+        "y": 704,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "12,11": {
+      "col": 12,
+      "row": 11,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_19",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 768,
+        "y": 704,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "10,12": {
+      "col": 10,
+      "row": 12,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_19"
+      ],
+      "rect": {
+        "x": 640,
+        "y": 768,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "11,12": {
+      "col": 11,
+      "row": 12,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_19"
+      ],
+      "rect": {
+        "x": 704,
+        "y": 768,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "12,12": {
+      "col": 12,
+      "row": 12,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_19"
+      ],
+      "rect": {
+        "x": 768,
+        "y": 768,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "10,13": {
+      "col": 10,
+      "row": 13,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_19"
+      ],
+      "rect": {
+        "x": 640,
+        "y": 832,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "11,13": {
+      "col": 11,
+      "row": 13,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_19"
+      ],
+      "rect": {
+        "x": 704,
+        "y": 832,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "12,13": {
+      "col": 12,
+      "row": 13,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_19"
+      ],
+      "rect": {
+        "x": 768,
+        "y": 832,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "13,11": {
+      "col": 13,
+      "row": 11,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_20",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 832,
+        "y": 704,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "14,11": {
+      "col": 14,
+      "row": 11,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_20",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 896,
+        "y": 704,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "15,11": {
+      "col": 15,
+      "row": 11,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_20",
+        "passable",
+        "overhang"
+      ],
+      "rect": {
+        "x": 960,
+        "y": 704,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "13,12": {
+      "col": 13,
+      "row": 12,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_20"
+      ],
+      "rect": {
+        "x": 832,
+        "y": 768,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "14,12": {
+      "col": 14,
+      "row": 12,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_20"
+      ],
+      "rect": {
+        "x": 896,
+        "y": 768,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "15,12": {
+      "col": 15,
+      "row": 12,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_20"
+      ],
+      "rect": {
+        "x": 960,
+        "y": 768,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "13,13": {
+      "col": 13,
+      "row": 13,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_20"
+      ],
+      "rect": {
+        "x": 832,
+        "y": 832,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "14,13": {
+      "col": 14,
+      "row": 13,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_20"
+      ],
+      "rect": {
+        "x": 896,
+        "y": 832,
+        "width": 64,
+        "height": 64
+      }
+    },
+    "15,13": {
+      "col": 15,
+      "row": 13,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_20"
+      ],
+      "rect": {
+        "x": 960,
+        "y": 832,
+        "width": 64,
+        "height": 64
+      }
+    }
+  },
+  "propLayout": [
+    {
+      "id": "cities_sand_medium_city_001",
+      "col": 0,
+      "row": 0,
+      "w": 3,
+      "h": 3,
+      "groupId": 1,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_1"
+      ],
+      "density": 4,
+      "sourceRect": {
+        "x": 26,
+        "y": 78,
+        "width": 234,
+        "height": 195
+      },
+      "footprint": {
+        "x": 0,
+        "y": 1,
+        "width": 3,
+        "height": 2
+      }
+    },
+    {
+      "id": "cities_sand_medium_city_002",
+      "col": 3,
+      "row": 0,
+      "w": 3,
+      "h": 3,
+      "groupId": 2,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_2"
+      ],
+      "density": 4,
+      "sourceRect": {
+        "x": 283,
+        "y": 76,
+        "width": 227,
+        "height": 197
+      },
+      "footprint": {
+        "x": 0,
+        "y": 1,
+        "width": 3,
+        "height": 2
+      }
+    },
+    {
+      "id": "cities_sand_medium_city_003",
+      "col": 6,
+      "row": 0,
+      "w": 3,
+      "h": 3,
+      "groupId": 3,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_3"
+      ],
+      "density": 4,
+      "sourceRect": {
+        "x": 530,
+        "y": 86,
+        "width": 214,
+        "height": 187
+      },
+      "footprint": {
+        "x": 0,
+        "y": 1,
+        "width": 3,
+        "height": 2
+      }
+    },
+    {
+      "id": "cities_sand_medium_city_004",
+      "col": 9,
+      "row": 0,
+      "w": 3,
+      "h": 3,
+      "groupId": 4,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_4"
+      ],
+      "density": 4,
+      "sourceRect": {
+        "x": 783,
+        "y": 93,
+        "width": 219,
+        "height": 190
+      },
+      "footprint": {
+        "x": 0,
+        "y": 1,
+        "width": 3,
+        "height": 2
+      }
+    },
+    {
+      "id": "cities_sand_medium_city_005",
+      "col": 12,
+      "row": 0,
+      "w": 3,
+      "h": 3,
+      "groupId": 5,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_5"
+      ],
+      "density": 5,
+      "sourceRect": {
+        "x": 32,
+        "y": 320,
+        "width": 224,
+        "height": 231
+      },
+      "footprint": {
+        "x": 0,
+        "y": 1,
+        "width": 3,
+        "height": 2
+      }
+    },
+    {
+      "id": "cities_sand_medium_city_006",
+      "col": 0,
+      "row": 3,
+      "w": 3,
+      "h": 3,
+      "groupId": 6,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_6"
+      ],
+      "density": 5,
+      "sourceRect": {
+        "x": 278,
+        "y": 307,
+        "width": 228,
+        "height": 240
+      },
+      "footprint": {
+        "x": 0,
+        "y": 1,
+        "width": 3,
+        "height": 2
+      }
+    },
+    {
+      "id": "cities_sand_medium_city_007",
+      "col": 3,
+      "row": 3,
+      "w": 3,
+      "h": 3,
+      "groupId": 7,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_7"
+      ],
+      "density": 5,
+      "sourceRect": {
+        "x": 528,
+        "y": 329,
+        "width": 231,
+        "height": 218
+      },
+      "footprint": {
+        "x": 0,
+        "y": 1,
+        "width": 3,
+        "height": 2
+      }
+    },
+    {
+      "id": "cities_sand_medium_city_008",
+      "col": 6,
+      "row": 3,
+      "w": 3,
+      "h": 3,
+      "groupId": 8,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_8"
+      ],
+      "density": 5,
+      "sourceRect": {
+        "x": 784,
+        "y": 323,
+        "width": 216,
+        "height": 230
+      },
+      "footprint": {
+        "x": 0,
+        "y": 1,
+        "width": 3,
+        "height": 2
+      }
+    },
+    {
+      "id": "cities_sand_medium_city_009",
+      "col": 9,
+      "row": 3,
+      "w": 3,
+      "h": 4,
+      "groupId": 9,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_9"
+      ],
+      "density": 6,
+      "sourceRect": {
+        "x": 30,
+        "y": 588,
+        "width": 229,
+        "height": 254
+      },
+      "footprint": {
+        "x": 0,
+        "y": 1,
+        "width": 3,
+        "height": 3
+      }
+    },
+    {
+      "id": "cities_sand_medium_city_010",
+      "col": 12,
+      "row": 3,
+      "w": 3,
+      "h": 4,
+      "groupId": 10,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_10"
+      ],
+      "density": 6,
+      "sourceRect": {
+        "x": 278,
+        "y": 588,
+        "width": 237,
+        "height": 257
+      },
+      "footprint": {
+        "x": 0,
+        "y": 1,
+        "width": 3,
+        "height": 3
+      }
+    },
+    {
+      "id": "cities_sand_medium_city_011",
+      "col": 0,
+      "row": 6,
+      "w": 3,
+      "h": 4,
+      "groupId": 11,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_11"
+      ],
+      "density": 6,
+      "sourceRect": {
+        "x": 541,
+        "y": 586,
+        "width": 219,
+        "height": 260
+      },
+      "footprint": {
+        "x": 0,
+        "y": 1,
+        "width": 3,
+        "height": 3
+      }
+    },
+    {
+      "id": "cities_sand_medium_city_012",
+      "col": 3,
+      "row": 6,
+      "w": 3,
+      "h": 4,
+      "groupId": 12,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_12"
+      ],
+      "density": 6,
+      "sourceRect": {
+        "x": 779,
+        "y": 587,
+        "width": 227,
+        "height": 261
+      },
+      "footprint": {
+        "x": 0,
+        "y": 1,
+        "width": 3,
+        "height": 3
+      }
+    },
+    {
+      "id": "cities_sand_medium_city_013",
+      "col": 6,
+      "row": 6,
+      "w": 3,
+      "h": 4,
+      "groupId": 13,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_13"
+      ],
+      "density": 7,
+      "sourceRect": {
+        "x": 34,
+        "y": 871,
+        "width": 225,
+        "height": 298
+      },
+      "footprint": {
+        "x": 0,
+        "y": 1,
+        "width": 3,
+        "height": 3
+      }
+    },
+    {
+      "id": "cities_sand_medium_city_014",
+      "col": 9,
+      "row": 7,
+      "w": 3,
+      "h": 4,
+      "groupId": 14,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_14"
+      ],
+      "density": 7,
+      "sourceRect": {
+        "x": 284,
+        "y": 888,
+        "width": 220,
+        "height": 286
+      },
+      "footprint": {
+        "x": 0,
+        "y": 1,
+        "width": 3,
+        "height": 3
+      }
+    },
+    {
+      "id": "cities_sand_medium_city_015",
+      "col": 12,
+      "row": 7,
+      "w": 3,
+      "h": 4,
+      "groupId": 15,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_15"
+      ],
+      "density": 7,
+      "sourceRect": {
+        "x": 533,
+        "y": 884,
+        "width": 218,
+        "height": 290
+      },
+      "footprint": {
+        "x": 0,
+        "y": 1,
+        "width": 3,
+        "height": 3
+      }
+    },
+    {
+      "id": "cities_sand_medium_city_016",
+      "col": 0,
+      "row": 10,
+      "w": 3,
+      "h": 4,
+      "groupId": 16,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_16"
+      ],
+      "density": 7,
+      "sourceRect": {
+        "x": 789,
+        "y": 872,
+        "width": 219,
+        "height": 309
+      },
+      "footprint": {
+        "x": 0,
+        "y": 1,
+        "width": 3,
+        "height": 3
+      }
+    },
+    {
+      "id": "cities_sand_medium_city_017",
+      "col": 3,
+      "row": 10,
+      "w": 3,
+      "h": 3,
+      "groupId": 17,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_17"
+      ],
+      "density": 5,
+      "sourceRect": {
+        "x": 14,
+        "y": 1215,
+        "width": 229,
+        "height": 234
+      },
+      "footprint": {
+        "x": 0,
+        "y": 1,
+        "width": 3,
+        "height": 2
+      }
+    },
+    {
+      "id": "cities_sand_medium_city_018",
+      "col": 6,
+      "row": 11,
+      "w": 4,
+      "h": 3,
+      "groupId": 18,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_18"
+      ],
+      "density": 5,
+      "sourceRect": {
+        "x": 255,
+        "y": 1242,
+        "width": 263,
+        "height": 192
+      },
+      "footprint": {
+        "x": 0,
+        "y": 1,
+        "width": 4,
+        "height": 2
+      }
+    },
+    {
+      "id": "cities_sand_medium_city_019",
+      "col": 10,
+      "row": 11,
+      "w": 3,
+      "h": 3,
+      "groupId": 19,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_19"
+      ],
+      "density": 5,
+      "sourceRect": {
+        "x": 525,
+        "y": 1223,
+        "width": 239,
+        "height": 219
+      },
+      "footprint": {
+        "x": 0,
+        "y": 1,
+        "width": 3,
+        "height": 2
+      }
+    },
+    {
+      "id": "cities_sand_medium_city_020",
+      "col": 13,
+      "row": 11,
+      "w": 3,
+      "h": 3,
+      "groupId": 20,
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_20"
+      ],
+      "density": 5,
+      "sourceRect": {
+        "x": 777,
+        "y": 1242,
+        "width": 240,
+        "height": 210
+      },
+      "footprint": {
+        "x": 0,
+        "y": 1,
+        "width": 3,
+        "height": 2
+      }
+    }
+  ],
+  "source": {
+    "path": "images/map/sprite_sheets/sources/cities_sand_medium.webp",
+    "sha256": "2c0330919b73fa9ab7dffd2d624a6110f8808bf1b0349584af86f02f33de72de",
+    "width": 1024,
+    "height": 1536,
+    "detection": {
+      "transparent": true,
+      "alphaCutoff": 16,
+      "gap": 0,
+      "minArea": 1000
+    },
+    "guides": [],
+    "spriteCount": 20,
+    "packing": {
+      "scale": 0.75,
+      "padding": 2
+    }
+  },
+  "extension": {
+    "imports": [
+      {
+        "id": "cities_sand_medium_city_001",
+        "sourceId": "cities_sand_medium",
+        "bbox": {
+          "x": 26,
+          "y": 78,
+          "width": 234,
+          "height": 195
+        },
+        "area": 37177,
+        "anchor": "center",
+        "sizeRatio": 0.75,
+        "tileSpan": {
+          "columns": 3,
+          "rows": 3
+        },
+        "placedAt": {
+          "column": 0,
+          "row": 0
+        },
+        "tags": [
+          "sand",
+          "decorative",
+          "city",
+          "impassable",
+          "density_4",
+          "group_1"
+        ],
+        "renderRect": {
+          "x": 8,
+          "y": 23,
+          "width": 176,
+          "height": 146
+        }
+      },
+      {
+        "id": "cities_sand_medium_city_002",
+        "sourceId": "cities_sand_medium",
+        "bbox": {
+          "x": 283,
+          "y": 76,
+          "width": 227,
+          "height": 197
+        },
+        "area": 35660,
+        "anchor": "center",
+        "sizeRatio": 0.75,
+        "tileSpan": {
+          "columns": 3,
+          "rows": 3
+        },
+        "placedAt": {
+          "column": 3,
+          "row": 0
+        },
+        "tags": [
+          "sand",
+          "decorative",
+          "city",
+          "impassable",
+          "density_4",
+          "group_2"
+        ],
+        "renderRect": {
+          "x": 11,
+          "y": 22,
+          "width": 170,
+          "height": 148
+        }
+      },
+      {
+        "id": "cities_sand_medium_city_003",
+        "sourceId": "cities_sand_medium",
+        "bbox": {
+          "x": 530,
+          "y": 86,
+          "width": 214,
+          "height": 187
+        },
+        "area": 34226,
+        "anchor": "center",
+        "sizeRatio": 0.75,
+        "tileSpan": {
+          "columns": 3,
+          "rows": 3
+        },
+        "placedAt": {
+          "column": 6,
+          "row": 0
+        },
+        "tags": [
+          "sand",
+          "decorative",
+          "city",
+          "impassable",
+          "density_4",
+          "group_3"
+        ],
+        "renderRect": {
+          "x": 15,
+          "y": 26,
+          "width": 161,
+          "height": 140
+        }
+      },
+      {
+        "id": "cities_sand_medium_city_004",
+        "sourceId": "cities_sand_medium",
+        "bbox": {
+          "x": 783,
+          "y": 93,
+          "width": 219,
+          "height": 190
+        },
+        "area": 35957,
+        "anchor": "center",
+        "sizeRatio": 0.75,
+        "tileSpan": {
+          "columns": 3,
+          "rows": 3
+        },
+        "placedAt": {
+          "column": 9,
+          "row": 0
+        },
+        "tags": [
+          "sand",
+          "decorative",
+          "city",
+          "impassable",
+          "density_4",
+          "group_4"
+        ],
+        "renderRect": {
+          "x": 14,
+          "y": 24,
+          "width": 164,
+          "height": 143
+        }
+      },
+      {
+        "id": "cities_sand_medium_city_005",
+        "sourceId": "cities_sand_medium",
+        "bbox": {
+          "x": 32,
+          "y": 320,
+          "width": 224,
+          "height": 231
+        },
+        "area": 42805,
+        "anchor": "center",
+        "sizeRatio": 0.75,
+        "tileSpan": {
+          "columns": 3,
+          "rows": 3
+        },
+        "placedAt": {
+          "column": 12,
+          "row": 0
+        },
+        "tags": [
+          "sand",
+          "decorative",
+          "city",
+          "impassable",
+          "density_5",
+          "group_5"
+        ],
+        "renderRect": {
+          "x": 12,
+          "y": 9,
+          "width": 168,
+          "height": 173
+        }
+      },
+      {
+        "id": "cities_sand_medium_city_006",
+        "sourceId": "cities_sand_medium",
+        "bbox": {
+          "x": 278,
+          "y": 307,
+          "width": 228,
+          "height": 240
+        },
+        "area": 43401,
+        "anchor": "center",
+        "sizeRatio": 0.75,
+        "tileSpan": {
+          "columns": 3,
+          "rows": 3
+        },
+        "placedAt": {
+          "column": 0,
+          "row": 3
+        },
+        "tags": [
+          "sand",
+          "decorative",
+          "city",
+          "impassable",
+          "density_5",
+          "group_6"
+        ],
+        "renderRect": {
+          "x": 10,
+          "y": 6,
+          "width": 171,
+          "height": 180
+        }
+      },
+      {
+        "id": "cities_sand_medium_city_007",
+        "sourceId": "cities_sand_medium",
+        "bbox": {
+          "x": 528,
+          "y": 329,
+          "width": 231,
+          "height": 218
+        },
+        "area": 42352,
+        "anchor": "center",
+        "sizeRatio": 0.75,
+        "tileSpan": {
+          "columns": 3,
+          "rows": 3
+        },
+        "placedAt": {
+          "column": 3,
+          "row": 3
+        },
+        "tags": [
+          "sand",
+          "decorative",
+          "city",
+          "impassable",
+          "density_5",
+          "group_7"
+        ],
+        "renderRect": {
+          "x": 9,
+          "y": 14,
+          "width": 173,
+          "height": 164
+        }
+      },
+      {
+        "id": "cities_sand_medium_city_008",
+        "sourceId": "cities_sand_medium",
+        "bbox": {
+          "x": 784,
+          "y": 323,
+          "width": 216,
+          "height": 230
+        },
+        "area": 39500,
+        "anchor": "center",
+        "sizeRatio": 0.75,
+        "tileSpan": {
+          "columns": 3,
+          "rows": 3
+        },
+        "placedAt": {
+          "column": 6,
+          "row": 3
+        },
+        "tags": [
+          "sand",
+          "decorative",
+          "city",
+          "impassable",
+          "density_5",
+          "group_8"
+        ],
+        "renderRect": {
+          "x": 15,
+          "y": 9,
+          "width": 162,
+          "height": 173
+        }
+      },
+      {
+        "id": "cities_sand_medium_city_009",
+        "sourceId": "cities_sand_medium",
+        "bbox": {
+          "x": 30,
+          "y": 588,
+          "width": 229,
+          "height": 254
+        },
+        "area": 47722,
+        "anchor": "center",
+        "sizeRatio": 0.75,
+        "tileSpan": {
+          "columns": 3,
+          "rows": 4
+        },
+        "placedAt": {
+          "column": 9,
+          "row": 3
+        },
+        "tags": [
+          "sand",
+          "decorative",
+          "city",
+          "impassable",
+          "density_6",
+          "group_9"
+        ],
+        "renderRect": {
+          "x": 10,
+          "y": 32,
+          "width": 172,
+          "height": 191
+        }
+      },
+      {
+        "id": "cities_sand_medium_city_010",
+        "sourceId": "cities_sand_medium",
+        "bbox": {
+          "x": 278,
+          "y": 588,
+          "width": 237,
+          "height": 257
+        },
+        "area": 49026,
+        "anchor": "center",
+        "sizeRatio": 0.75,
+        "tileSpan": {
+          "columns": 3,
+          "rows": 4
+        },
+        "placedAt": {
+          "column": 12,
+          "row": 3
+        },
+        "tags": [
+          "sand",
+          "decorative",
+          "city",
+          "impassable",
+          "density_6",
+          "group_10"
+        ],
+        "renderRect": {
+          "x": 7,
+          "y": 31,
+          "width": 178,
+          "height": 193
+        }
+      },
+      {
+        "id": "cities_sand_medium_city_011",
+        "sourceId": "cities_sand_medium",
+        "bbox": {
+          "x": 541,
+          "y": 586,
+          "width": 219,
+          "height": 260
+        },
+        "area": 47595,
+        "anchor": "center",
+        "sizeRatio": 0.75,
+        "tileSpan": {
+          "columns": 3,
+          "rows": 4
+        },
+        "placedAt": {
+          "column": 0,
+          "row": 6
+        },
+        "tags": [
+          "sand",
+          "decorative",
+          "city",
+          "impassable",
+          "density_6",
+          "group_11"
+        ],
+        "renderRect": {
+          "x": 14,
+          "y": 30,
+          "width": 164,
+          "height": 195
+        }
+      },
+      {
+        "id": "cities_sand_medium_city_012",
+        "sourceId": "cities_sand_medium",
+        "bbox": {
+          "x": 779,
+          "y": 587,
+          "width": 227,
+          "height": 261
+        },
+        "area": 48158,
+        "anchor": "center",
+        "sizeRatio": 0.75,
+        "tileSpan": {
+          "columns": 3,
+          "rows": 4
+        },
+        "placedAt": {
+          "column": 3,
+          "row": 6
+        },
+        "tags": [
+          "sand",
+          "decorative",
+          "city",
+          "impassable",
+          "density_6",
+          "group_12"
+        ],
+        "renderRect": {
+          "x": 11,
+          "y": 30,
+          "width": 170,
+          "height": 196
+        }
+      },
+      {
+        "id": "cities_sand_medium_city_013",
+        "sourceId": "cities_sand_medium",
+        "bbox": {
+          "x": 34,
+          "y": 871,
+          "width": 225,
+          "height": 298
+        },
+        "area": 55828,
+        "anchor": "center",
+        "sizeRatio": 0.75,
+        "tileSpan": {
+          "columns": 3,
+          "rows": 4
+        },
+        "placedAt": {
+          "column": 6,
+          "row": 6
+        },
+        "tags": [
+          "sand",
+          "decorative",
+          "city",
+          "impassable",
+          "density_7",
+          "group_13"
+        ],
+        "renderRect": {
+          "x": 11,
+          "y": 16,
+          "width": 169,
+          "height": 224
+        }
+      },
+      {
+        "id": "cities_sand_medium_city_014",
+        "sourceId": "cities_sand_medium",
+        "bbox": {
+          "x": 284,
+          "y": 888,
+          "width": 220,
+          "height": 286
+        },
+        "area": 50161,
+        "anchor": "center",
+        "sizeRatio": 0.75,
+        "tileSpan": {
+          "columns": 3,
+          "rows": 4
+        },
+        "placedAt": {
+          "column": 9,
+          "row": 7
+        },
+        "tags": [
+          "sand",
+          "decorative",
+          "city",
+          "impassable",
+          "density_7",
+          "group_14"
+        ],
+        "renderRect": {
+          "x": 13,
+          "y": 20,
+          "width": 165,
+          "height": 215
+        }
+      },
+      {
+        "id": "cities_sand_medium_city_015",
+        "sourceId": "cities_sand_medium",
+        "bbox": {
+          "x": 533,
+          "y": 884,
+          "width": 218,
+          "height": 290
+        },
+        "area": 52227,
+        "anchor": "center",
+        "sizeRatio": 0.75,
+        "tileSpan": {
+          "columns": 3,
+          "rows": 4
+        },
+        "placedAt": {
+          "column": 12,
+          "row": 7
+        },
+        "tags": [
+          "sand",
+          "decorative",
+          "city",
+          "impassable",
+          "density_7",
+          "group_15"
+        ],
+        "renderRect": {
+          "x": 14,
+          "y": 19,
+          "width": 164,
+          "height": 218
+        }
+      },
+      {
+        "id": "cities_sand_medium_city_016",
+        "sourceId": "cities_sand_medium",
+        "bbox": {
+          "x": 789,
+          "y": 872,
+          "width": 219,
+          "height": 309
+        },
+        "area": 51574,
+        "anchor": "center",
+        "sizeRatio": 0.75,
+        "tileSpan": {
+          "columns": 3,
+          "rows": 4
+        },
+        "placedAt": {
+          "column": 0,
+          "row": 10
+        },
+        "tags": [
+          "sand",
+          "decorative",
+          "city",
+          "impassable",
+          "density_7",
+          "group_16"
+        ],
+        "renderRect": {
+          "x": 14,
+          "y": 12,
+          "width": 164,
+          "height": 232
+        }
+      },
+      {
+        "id": "cities_sand_medium_city_017",
+        "sourceId": "cities_sand_medium",
+        "bbox": {
+          "x": 14,
+          "y": 1215,
+          "width": 229,
+          "height": 234
+        },
+        "area": 44594,
+        "anchor": "center",
+        "sizeRatio": 0.75,
+        "tileSpan": {
+          "columns": 3,
+          "rows": 3
+        },
+        "placedAt": {
+          "column": 3,
+          "row": 10
+        },
+        "tags": [
+          "sand",
+          "decorative",
+          "city",
+          "impassable",
+          "density_5",
+          "group_17"
+        ],
+        "renderRect": {
+          "x": 10,
+          "y": 8,
+          "width": 172,
+          "height": 176
+        }
+      },
+      {
+        "id": "cities_sand_medium_city_018",
+        "sourceId": "cities_sand_medium",
+        "bbox": {
+          "x": 255,
+          "y": 1242,
+          "width": 263,
+          "height": 192
+        },
+        "area": 43666,
+        "anchor": "center",
+        "sizeRatio": 0.75,
+        "tileSpan": {
+          "columns": 4,
+          "rows": 3
+        },
+        "placedAt": {
+          "column": 6,
+          "row": 11
+        },
+        "tags": [
+          "sand",
+          "decorative",
+          "city",
+          "impassable",
+          "density_5",
+          "group_18"
+        ],
+        "renderRect": {
+          "x": 29,
+          "y": 24,
+          "width": 197,
+          "height": 144
+        }
+      },
+      {
+        "id": "cities_sand_medium_city_019",
+        "sourceId": "cities_sand_medium",
+        "bbox": {
+          "x": 525,
+          "y": 1223,
+          "width": 239,
+          "height": 219
+        },
+        "area": 40622,
+        "anchor": "center",
+        "sizeRatio": 0.75,
+        "tileSpan": {
+          "columns": 3,
+          "rows": 3
+        },
+        "placedAt": {
+          "column": 10,
+          "row": 11
+        },
+        "tags": [
+          "sand",
+          "decorative",
+          "city",
+          "impassable",
+          "density_5",
+          "group_19"
+        ],
+        "renderRect": {
+          "x": 6,
+          "y": 14,
+          "width": 179,
+          "height": 164
+        }
+      },
+      {
+        "id": "cities_sand_medium_city_020",
+        "sourceId": "cities_sand_medium",
+        "bbox": {
+          "x": 777,
+          "y": 1242,
+          "width": 240,
+          "height": 210
+        },
+        "area": 42554,
+        "anchor": "center",
+        "sizeRatio": 0.75,
+        "tileSpan": {
+          "columns": 3,
+          "rows": 3
+        },
+        "placedAt": {
+          "column": 13,
+          "row": 11
+        },
+        "tags": [
+          "sand",
+          "decorative",
+          "city",
+          "impassable",
+          "density_5",
+          "group_20"
+        ],
+        "renderRect": {
+          "x": 6,
+          "y": 17,
+          "width": 180,
+          "height": 158
+        }
+      }
+    ],
+    "occupiedTiles": [
+      "0,0",
+      "1,0",
+      "2,0",
+      "0,1",
+      "1,1",
+      "2,1",
+      "0,2",
+      "1,2",
+      "2,2",
+      "3,0",
+      "4,0",
+      "5,0",
+      "3,1",
+      "4,1",
+      "5,1",
+      "3,2",
+      "4,2",
+      "5,2",
+      "6,0",
+      "7,0",
+      "8,0",
+      "6,1",
+      "7,1",
+      "8,1",
+      "6,2",
+      "7,2",
+      "8,2",
+      "9,0",
+      "10,0",
+      "11,0",
+      "9,1",
+      "10,1",
+      "11,1",
+      "9,2",
+      "10,2",
+      "11,2",
+      "12,0",
+      "13,0",
+      "14,0",
+      "12,1",
+      "13,1",
+      "14,1",
+      "12,2",
+      "13,2",
+      "14,2",
+      "0,3",
+      "1,3",
+      "2,3",
+      "0,4",
+      "1,4",
+      "2,4",
+      "0,5",
+      "1,5",
+      "2,5",
+      "3,3",
+      "4,3",
+      "5,3",
+      "3,4",
+      "4,4",
+      "5,4",
+      "3,5",
+      "4,5",
+      "5,5",
+      "6,3",
+      "7,3",
+      "8,3",
+      "6,4",
+      "7,4",
+      "8,4",
+      "6,5",
+      "7,5",
+      "8,5",
+      "9,3",
+      "10,3",
+      "11,3",
+      "9,4",
+      "10,4",
+      "11,4",
+      "9,5",
+      "10,5",
+      "11,5",
+      "9,6",
+      "10,6",
+      "11,6",
+      "12,3",
+      "13,3",
+      "14,3",
+      "12,4",
+      "13,4",
+      "14,4",
+      "12,5",
+      "13,5",
+      "14,5",
+      "12,6",
+      "13,6",
+      "14,6",
+      "0,6",
+      "1,6",
+      "2,6",
+      "0,7",
+      "1,7",
+      "2,7",
+      "0,8",
+      "1,8",
+      "2,8",
+      "0,9",
+      "1,9",
+      "2,9",
+      "3,6",
+      "4,6",
+      "5,6",
+      "3,7",
+      "4,7",
+      "5,7",
+      "3,8",
+      "4,8",
+      "5,8",
+      "3,9",
+      "4,9",
+      "5,9",
+      "6,6",
+      "7,6",
+      "8,6",
+      "6,7",
+      "7,7",
+      "8,7",
+      "6,8",
+      "7,8",
+      "8,8",
+      "6,9",
+      "7,9",
+      "8,9",
+      "9,7",
+      "10,7",
+      "11,7",
+      "9,8",
+      "10,8",
+      "11,8",
+      "9,9",
+      "10,9",
+      "11,9",
+      "9,10",
+      "10,10",
+      "11,10",
+      "12,7",
+      "13,7",
+      "14,7",
+      "12,8",
+      "13,8",
+      "14,8",
+      "12,9",
+      "13,9",
+      "14,9",
+      "12,10",
+      "13,10",
+      "14,10",
+      "0,10",
+      "1,10",
+      "2,10",
+      "0,11",
+      "1,11",
+      "2,11",
+      "0,12",
+      "1,12",
+      "2,12",
+      "0,13",
+      "1,13",
+      "2,13",
+      "3,10",
+      "4,10",
+      "5,10",
+      "3,11",
+      "4,11",
+      "5,11",
+      "3,12",
+      "4,12",
+      "5,12",
+      "6,11",
+      "7,11",
+      "8,11",
+      "9,11",
+      "6,12",
+      "7,12",
+      "8,12",
+      "9,12",
+      "6,13",
+      "7,13",
+      "8,13",
+      "9,13",
+      "10,11",
+      "11,11",
+      "12,11",
+      "10,12",
+      "11,12",
+      "12,12",
+      "10,13",
+      "11,13",
+      "12,13",
+      "13,11",
+      "14,11",
+      "15,11",
+      "13,12",
+      "14,12",
+      "15,12",
+      "13,13",
+      "14,13",
+      "15,13"
+    ]
+  },
+  "name": "dtv5_city_sand_medium",
+  "sheetPath": "images/map/sprite_sheets/dtv5_city_sand_medium.webp",
+  "compression": {
+    "lossless": false,
+    "quality": 85
+  },
+  "grid": {
+    "tileSize": 64,
+    "rowHeight": 64,
+    "borderWidth": 0,
+    "cols": 16,
+    "rows": 14
+  },
+  "sprites": [
+    {
+      "tiles": {
+        "col": 0,
+        "row": 0,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_4",
+        "group_1",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 1,
+        "row": 0,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 64,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_4",
+        "group_1",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 2,
+        "row": 0,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 128,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_4",
+        "group_1",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 0,
+        "row": 1,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 0,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_1"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 1,
+        "row": 1,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 64,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_1"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 2,
+        "row": 1,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 128,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_1"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 0,
+        "row": 2,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 0,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_1"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 1,
+        "row": 2,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 64,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_1"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 2,
+        "row": 2,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 128,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_1"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 3,
+        "row": 0,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 192,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_4",
+        "group_2",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 4,
+        "row": 0,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 256,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_4",
+        "group_2",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 5,
+        "row": 0,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 320,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_4",
+        "group_2",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 3,
+        "row": 1,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 192,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_2"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 4,
+        "row": 1,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 256,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_2"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 5,
+        "row": 1,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 320,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_2"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 3,
+        "row": 2,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 192,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_2"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 4,
+        "row": 2,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 256,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_2"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 5,
+        "row": 2,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 320,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_2"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 6,
+        "row": 0,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 384,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_4",
+        "group_3",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 7,
+        "row": 0,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 448,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_4",
+        "group_3",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 8,
+        "row": 0,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 512,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_4",
+        "group_3",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 6,
+        "row": 1,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 384,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_3"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 7,
+        "row": 1,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 448,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_3"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 8,
+        "row": 1,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 512,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_3"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 6,
+        "row": 2,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 384,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_3"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 7,
+        "row": 2,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 448,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_3"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 8,
+        "row": 2,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 512,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_3"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 9,
+        "row": 0,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 576,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_4",
+        "group_4",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 10,
+        "row": 0,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 640,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_4",
+        "group_4",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 11,
+        "row": 0,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 704,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_4",
+        "group_4",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 9,
+        "row": 1,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 576,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_4"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 10,
+        "row": 1,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 640,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_4"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 11,
+        "row": 1,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 704,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_4"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 9,
+        "row": 2,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 576,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_4"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 10,
+        "row": 2,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 640,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_4"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 11,
+        "row": 2,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 704,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_4"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 12,
+        "row": 0,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 768,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_5",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 13,
+        "row": 0,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 832,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_5",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 14,
+        "row": 0,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 896,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_5",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 12,
+        "row": 1,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 768,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_5"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 13,
+        "row": 1,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 832,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_5"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 14,
+        "row": 1,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 896,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_5"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 12,
+        "row": 2,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 768,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_5"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 13,
+        "row": 2,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 832,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_5"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 14,
+        "row": 2,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 896,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_5"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 0,
+        "row": 3,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 0,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_6",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 1,
+        "row": 3,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 64,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_6",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 2,
+        "row": 3,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 128,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_6",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 0,
+        "row": 4,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 0,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_6"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 1,
+        "row": 4,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 64,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_6"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 2,
+        "row": 4,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 128,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_6"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 0,
+        "row": 5,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 0,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_6"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 1,
+        "row": 5,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 64,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_6"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 2,
+        "row": 5,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 128,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_6"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 3,
+        "row": 3,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 192,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_7",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 4,
+        "row": 3,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 256,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_7",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 5,
+        "row": 3,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 320,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_7",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 3,
+        "row": 4,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 192,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_7"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 4,
+        "row": 4,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 256,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_7"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 5,
+        "row": 4,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 320,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_7"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 3,
+        "row": 5,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 192,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_7"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 4,
+        "row": 5,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 256,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_7"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 5,
+        "row": 5,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 320,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_7"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 6,
+        "row": 3,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 384,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_8",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 7,
+        "row": 3,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 448,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_8",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 8,
+        "row": 3,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 512,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_8",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 6,
+        "row": 4,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 384,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_8"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 7,
+        "row": 4,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 448,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_8"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 8,
+        "row": 4,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 512,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_8"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 6,
+        "row": 5,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 384,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_8"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 7,
+        "row": 5,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 448,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_8"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 8,
+        "row": 5,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 512,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_8"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 9,
+        "row": 3,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 576,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_6",
+        "group_9",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 10,
+        "row": 3,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 640,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_6",
+        "group_9",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 11,
+        "row": 3,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 704,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_6",
+        "group_9",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 9,
+        "row": 4,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 576,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_9"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 10,
+        "row": 4,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 640,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_9"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 11,
+        "row": 4,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 704,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_9"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 9,
+        "row": 5,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 576,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_9"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 10,
+        "row": 5,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 640,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_9"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 11,
+        "row": 5,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 704,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_9"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 9,
+        "row": 6,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 576,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_9"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 10,
+        "row": 6,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 640,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_9"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 11,
+        "row": 6,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 704,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_9"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 12,
+        "row": 3,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 768,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_6",
+        "group_10",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 13,
+        "row": 3,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 832,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_6",
+        "group_10",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 14,
+        "row": 3,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 896,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_6",
+        "group_10",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 12,
+        "row": 4,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 768,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_10"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 13,
+        "row": 4,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 832,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_10"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 14,
+        "row": 4,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 896,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_10"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 12,
+        "row": 5,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 768,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_10"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 13,
+        "row": 5,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 832,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_10"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 14,
+        "row": 5,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 896,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_10"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 12,
+        "row": 6,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 768,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_10"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 13,
+        "row": 6,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 832,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_10"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 14,
+        "row": 6,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 896,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_10"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 0,
+        "row": 6,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 0,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_6",
+        "group_11",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 1,
+        "row": 6,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 64,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_6",
+        "group_11",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 2,
+        "row": 6,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 128,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_6",
+        "group_11",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 0,
+        "row": 7,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 0,
+        "y": 448,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_11"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 1,
+        "row": 7,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 64,
+        "y": 448,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_11"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 2,
+        "row": 7,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 128,
+        "y": 448,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_11"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 0,
+        "row": 8,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 0,
+        "y": 512,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_11"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 1,
+        "row": 8,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 64,
+        "y": 512,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_11"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 2,
+        "row": 8,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 128,
+        "y": 512,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_11"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 0,
+        "row": 9,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 0,
+        "y": 576,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_11"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 1,
+        "row": 9,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 64,
+        "y": 576,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_11"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 2,
+        "row": 9,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 128,
+        "y": 576,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_11"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 3,
+        "row": 6,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 192,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_6",
+        "group_12",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 4,
+        "row": 6,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 256,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_6",
+        "group_12",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 5,
+        "row": 6,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 320,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_6",
+        "group_12",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 3,
+        "row": 7,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 192,
+        "y": 448,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_12"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 4,
+        "row": 7,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 256,
+        "y": 448,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_12"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 5,
+        "row": 7,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 320,
+        "y": 448,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_12"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 3,
+        "row": 8,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 192,
+        "y": 512,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_12"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 4,
+        "row": 8,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 256,
+        "y": 512,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_12"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 5,
+        "row": 8,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 320,
+        "y": 512,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_12"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 3,
+        "row": 9,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 192,
+        "y": 576,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_12"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 4,
+        "row": 9,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 256,
+        "y": 576,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_12"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 5,
+        "row": 9,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 320,
+        "y": 576,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_12"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 6,
+        "row": 6,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 384,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_7",
+        "group_13",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 7,
+        "row": 6,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 448,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_7",
+        "group_13",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 8,
+        "row": 6,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 512,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_7",
+        "group_13",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 6,
+        "row": 7,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 384,
+        "y": 448,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_13"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 7,
+        "row": 7,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 448,
+        "y": 448,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_13"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 8,
+        "row": 7,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 512,
+        "y": 448,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_13"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 6,
+        "row": 8,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 384,
+        "y": 512,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_13"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 7,
+        "row": 8,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 448,
+        "y": 512,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_13"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 8,
+        "row": 8,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 512,
+        "y": 512,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_13"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 6,
+        "row": 9,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 384,
+        "y": 576,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_13"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 7,
+        "row": 9,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 448,
+        "y": 576,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_13"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 8,
+        "row": 9,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 512,
+        "y": 576,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_13"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 9,
+        "row": 7,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 576,
+        "y": 448,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_7",
+        "group_14",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 10,
+        "row": 7,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 640,
+        "y": 448,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_7",
+        "group_14",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 11,
+        "row": 7,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 704,
+        "y": 448,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_7",
+        "group_14",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 9,
+        "row": 8,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 576,
+        "y": 512,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_14"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 10,
+        "row": 8,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 640,
+        "y": 512,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_14"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 11,
+        "row": 8,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 704,
+        "y": 512,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_14"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 9,
+        "row": 9,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 576,
+        "y": 576,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_14"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 10,
+        "row": 9,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 640,
+        "y": 576,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_14"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 11,
+        "row": 9,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 704,
+        "y": 576,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_14"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 9,
+        "row": 10,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 576,
+        "y": 640,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_14"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 10,
+        "row": 10,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 640,
+        "y": 640,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_14"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 11,
+        "row": 10,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 704,
+        "y": 640,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_14"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 12,
+        "row": 7,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 768,
+        "y": 448,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_7",
+        "group_15",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 13,
+        "row": 7,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 832,
+        "y": 448,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_7",
+        "group_15",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 14,
+        "row": 7,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 896,
+        "y": 448,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_7",
+        "group_15",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 12,
+        "row": 8,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 768,
+        "y": 512,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_15"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 13,
+        "row": 8,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 832,
+        "y": 512,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_15"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 14,
+        "row": 8,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 896,
+        "y": 512,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_15"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 12,
+        "row": 9,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 768,
+        "y": 576,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_15"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 13,
+        "row": 9,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 832,
+        "y": 576,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_15"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 14,
+        "row": 9,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 896,
+        "y": 576,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_15"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 12,
+        "row": 10,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 768,
+        "y": 640,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_15"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 13,
+        "row": 10,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 832,
+        "y": 640,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_15"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 14,
+        "row": 10,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 896,
+        "y": 640,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_15"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 0,
+        "row": 10,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 0,
+        "y": 640,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_7",
+        "group_16",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 1,
+        "row": 10,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 64,
+        "y": 640,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_7",
+        "group_16",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 2,
+        "row": 10,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 128,
+        "y": 640,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_7",
+        "group_16",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 0,
+        "row": 11,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 0,
+        "y": 704,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_16"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 1,
+        "row": 11,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 64,
+        "y": 704,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_16"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 2,
+        "row": 11,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 128,
+        "y": 704,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_16"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 0,
+        "row": 12,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 0,
+        "y": 768,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_16"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 1,
+        "row": 12,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 64,
+        "y": 768,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_16"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 2,
+        "row": 12,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 128,
+        "y": 768,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_16"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 0,
+        "row": 13,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 0,
+        "y": 832,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_16"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 1,
+        "row": 13,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 64,
+        "y": 832,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_16"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 2,
+        "row": 13,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 128,
+        "y": 832,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_16"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 3,
+        "row": 10,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 192,
+        "y": 640,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_17",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 4,
+        "row": 10,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 256,
+        "y": 640,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_17",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 5,
+        "row": 10,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 320,
+        "y": 640,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_17",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 3,
+        "row": 11,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 192,
+        "y": 704,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_17"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 4,
+        "row": 11,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 256,
+        "y": 704,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_17"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 5,
+        "row": 11,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 320,
+        "y": 704,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_17"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 3,
+        "row": 12,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 192,
+        "y": 768,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_17"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 4,
+        "row": 12,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 256,
+        "y": 768,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_17"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 5,
+        "row": 12,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 320,
+        "y": 768,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_17"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 6,
+        "row": 11,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 384,
+        "y": 704,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_18",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 7,
+        "row": 11,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 448,
+        "y": 704,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_18",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 8,
+        "row": 11,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 512,
+        "y": 704,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_18",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 9,
+        "row": 11,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 576,
+        "y": 704,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_18",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 6,
+        "row": 12,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 384,
+        "y": 768,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_18"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 7,
+        "row": 12,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 448,
+        "y": 768,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_18"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 8,
+        "row": 12,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 512,
+        "y": 768,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_18"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 9,
+        "row": 12,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 576,
+        "y": 768,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_18"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 6,
+        "row": 13,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 384,
+        "y": 832,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_18"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 7,
+        "row": 13,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 448,
+        "y": 832,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_18"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 8,
+        "row": 13,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 512,
+        "y": 832,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_18"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 9,
+        "row": 13,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 576,
+        "y": 832,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_18"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 10,
+        "row": 11,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 640,
+        "y": 704,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_19",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 11,
+        "row": 11,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 704,
+        "y": 704,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_19",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 12,
+        "row": 11,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 768,
+        "y": 704,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_19",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 10,
+        "row": 12,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 640,
+        "y": 768,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_19"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 11,
+        "row": 12,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 704,
+        "y": 768,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_19"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 12,
+        "row": 12,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 768,
+        "y": 768,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_19"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 10,
+        "row": 13,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 640,
+        "y": 832,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_19"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 11,
+        "row": 13,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 704,
+        "y": 832,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_19"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 12,
+        "row": 13,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 768,
+        "y": 832,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_19"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 13,
+        "row": 11,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 832,
+        "y": 704,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_20",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 14,
+        "row": 11,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 896,
+        "y": 704,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_20",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 15,
+        "row": 11,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 960,
+        "y": 704,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_5",
+        "group_20",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 13,
+        "row": 12,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 832,
+        "y": 768,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_20"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 14,
+        "row": 12,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 896,
+        "y": 768,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_20"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 15,
+        "row": 12,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 960,
+        "y": 768,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_20"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 13,
+        "row": 13,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 832,
+        "y": 832,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_20"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 14,
+        "row": 13,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 896,
+        "y": 832,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_20"
+      ]
+    },
+    {
+      "tiles": {
+        "col": 15,
+        "row": 13,
+        "cols": 1,
+        "rows": 1
+      },
+      "px": {
+        "x": 960,
+        "y": 832,
+        "width": 64,
+        "height": 64
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_20"
+      ]
+    },
+    {
+      "id": "cities_sand_medium_city_001",
+      "anchor": "center",
+      "tiles": {
+        "col": 0,
+        "row": 0,
+        "cols": 3,
+        "rows": 3
+      },
+      "px": {
+        "x": 8,
+        "y": 23,
+        "width": 176,
+        "height": 146
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_1",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "id": "cities_sand_medium_city_002",
+      "anchor": "center",
+      "tiles": {
+        "col": 3,
+        "row": 0,
+        "cols": 3,
+        "rows": 3
+      },
+      "px": {
+        "x": 203,
+        "y": 22,
+        "width": 170,
+        "height": 148
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_2",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "id": "cities_sand_medium_city_003",
+      "anchor": "center",
+      "tiles": {
+        "col": 6,
+        "row": 0,
+        "cols": 3,
+        "rows": 3
+      },
+      "px": {
+        "x": 399,
+        "y": 26,
+        "width": 161,
+        "height": 140
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_3",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "id": "cities_sand_medium_city_004",
+      "anchor": "center",
+      "tiles": {
+        "col": 9,
+        "row": 0,
+        "cols": 3,
+        "rows": 3
+      },
+      "px": {
+        "x": 590,
+        "y": 24,
+        "width": 164,
+        "height": 143
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_4",
+        "group_4",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "id": "cities_sand_medium_city_005",
+      "anchor": "center",
+      "tiles": {
+        "col": 12,
+        "row": 0,
+        "cols": 3,
+        "rows": 3
+      },
+      "px": {
+        "x": 780,
+        "y": 9,
+        "width": 168,
+        "height": 173
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_5",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "id": "cities_sand_medium_city_006",
+      "anchor": "center",
+      "tiles": {
+        "col": 0,
+        "row": 3,
+        "cols": 3,
+        "rows": 3
+      },
+      "px": {
+        "x": 10,
+        "y": 198,
+        "width": 171,
+        "height": 180
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_6",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "id": "cities_sand_medium_city_007",
+      "anchor": "center",
+      "tiles": {
+        "col": 3,
+        "row": 3,
+        "cols": 3,
+        "rows": 3
+      },
+      "px": {
+        "x": 201,
+        "y": 206,
+        "width": 173,
+        "height": 164
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_7",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "id": "cities_sand_medium_city_008",
+      "anchor": "center",
+      "tiles": {
+        "col": 6,
+        "row": 3,
+        "cols": 3,
+        "rows": 3
+      },
+      "px": {
+        "x": 399,
+        "y": 201,
+        "width": 162,
+        "height": 173
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_8",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "id": "cities_sand_medium_city_009",
+      "anchor": "center",
+      "tiles": {
+        "col": 9,
+        "row": 3,
+        "cols": 3,
+        "rows": 4
+      },
+      "px": {
+        "x": 586,
+        "y": 224,
+        "width": 172,
+        "height": 191
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_9",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "id": "cities_sand_medium_city_010",
+      "anchor": "center",
+      "tiles": {
+        "col": 12,
+        "row": 3,
+        "cols": 3,
+        "rows": 4
+      },
+      "px": {
+        "x": 775,
+        "y": 223,
+        "width": 178,
+        "height": 193
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_10",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "id": "cities_sand_medium_city_011",
+      "anchor": "center",
+      "tiles": {
+        "col": 0,
+        "row": 6,
+        "cols": 3,
+        "rows": 4
+      },
+      "px": {
+        "x": 14,
+        "y": 414,
+        "width": 164,
+        "height": 195
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_11",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "id": "cities_sand_medium_city_012",
+      "anchor": "center",
+      "tiles": {
+        "col": 3,
+        "row": 6,
+        "cols": 3,
+        "rows": 4
+      },
+      "px": {
+        "x": 203,
+        "y": 414,
+        "width": 170,
+        "height": 196
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_6",
+        "group_12",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "id": "cities_sand_medium_city_013",
+      "anchor": "center",
+      "tiles": {
+        "col": 6,
+        "row": 6,
+        "cols": 3,
+        "rows": 4
+      },
+      "px": {
+        "x": 395,
+        "y": 400,
+        "width": 169,
+        "height": 224
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_13",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "id": "cities_sand_medium_city_014",
+      "anchor": "center",
+      "tiles": {
+        "col": 9,
+        "row": 7,
+        "cols": 3,
+        "rows": 4
+      },
+      "px": {
+        "x": 589,
+        "y": 468,
+        "width": 165,
+        "height": 215
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_14",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "id": "cities_sand_medium_city_015",
+      "anchor": "center",
+      "tiles": {
+        "col": 12,
+        "row": 7,
+        "cols": 3,
+        "rows": 4
+      },
+      "px": {
+        "x": 782,
+        "y": 467,
+        "width": 164,
+        "height": 218
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_15",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "id": "cities_sand_medium_city_016",
+      "anchor": "center",
+      "tiles": {
+        "col": 0,
+        "row": 10,
+        "cols": 3,
+        "rows": 4
+      },
+      "px": {
+        "x": 14,
+        "y": 652,
+        "width": 164,
+        "height": 232
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_7",
+        "group_16",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "id": "cities_sand_medium_city_017",
+      "anchor": "center",
+      "tiles": {
+        "col": 3,
+        "row": 10,
+        "cols": 3,
+        "rows": 3
+      },
+      "px": {
+        "x": 202,
+        "y": 648,
+        "width": 172,
+        "height": 176
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_17",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "id": "cities_sand_medium_city_018",
+      "anchor": "center",
+      "tiles": {
+        "col": 6,
+        "row": 11,
+        "cols": 4,
+        "rows": 3
+      },
+      "px": {
+        "x": 413,
+        "y": 728,
+        "width": 197,
+        "height": 144
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_18",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "id": "cities_sand_medium_city_019",
+      "anchor": "center",
+      "tiles": {
+        "col": 10,
+        "row": 11,
+        "cols": 3,
+        "rows": 3
+      },
+      "px": {
+        "x": 646,
+        "y": 718,
+        "width": 179,
+        "height": 164
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_19",
+        "passable",
+        "overhang"
+      ]
+    },
+    {
+      "id": "cities_sand_medium_city_020",
+      "anchor": "center",
+      "tiles": {
+        "col": 13,
+        "row": 11,
+        "cols": 3,
+        "rows": 3
+      },
+      "px": {
+        "x": 838,
+        "y": 721,
+        "width": 180,
+        "height": 158
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "impassable",
+        "density_5",
+        "group_20",
+        "passable",
+        "overhang"
+      ]
+    }
+  ]
+}
