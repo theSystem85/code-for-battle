@@ -144,8 +144,16 @@
   height: 128px;
   align-self: center;
   border: 1px solid rgba(255, 255, 255, 0.2);
-  background: #000;
   image-rendering: pixelated;
+}
+
+/* Display-only transparency backing; canvas pixels and exports stay untouched. */
+#sseTileCanvas,
+#sseSources canvas,
+#sseAnimationPreviewCanvas {
+  background-color: #000;
+  background-image: conic-gradient(#1c1c1c 25%, #000 0 50%, #1c1c1c 0 75%, #000 0);
+  background-size: 16px 16px;
 }
 
 .sprite-sheet-editor__preview-controls {
