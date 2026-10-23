@@ -1,5 +1,6 @@
 // rendering/unitRenderer.js
 import { TILE_SIZE, HARVESTER_CAPPACITY, HARVESTER_UNLOAD_TIME, RECOIL_DISTANCE, RECOIL_DURATION, MUZZLE_FLASH_DURATION, MUZZLE_FLASH_SIZE, TANK_FIRE_RANGE, ATTACK_TARGET_INDICATOR_SIZE, ATTACK_TARGET_BOUNCE_SPEED, UNIT_TYPE_COLORS, PARTY_COLORS, TANKER_SUPPLY_CAPACITY, UTILITY_SERVICE_INDICATOR_SIZE, UTILITY_SERVICE_INDICATOR_BOUNCE_SPEED, SERVICE_DISCOVERY_RANGE, SERVICE_SERVING_RANGE, MINE_DEPLOY_STOP_TIME, VIEW_FRUSTUM_MARGIN, CURSOR_METERS_PER_TILE, BATTLESHIP_FIRE_RANGE, SUBMARINE_TORPEDO_RANGE } from '../config.js'
+import { isCityOccludedAtTile } from './cityOcclusionIndex.js'
 import { gameState } from '../gameState.js'
 import { selectedUnits } from '../inputHandler.js'
 import { renderTankWithImages, areTankImagesLoaded } from './tankImageRenderer.js'
@@ -987,7 +988,7 @@ export class UnitRenderer {
     ctx.stroke()
   }
 
-  renderHealthBar(ctx, unit, scrollOffset) {
+  renderHealthBar(ctx, unit, scrollOffset, forceVisible = false) {
     if (this.isPendingDestructionFreeze(unit)) {
       return
     }
@@ -996,7 +997,7 @@ export class UnitRenderer {
     const isDamaged = unit.health < unit.maxHealth
     const isSelected = unit.selected
 
-    if (!isDamaged && !isSelected) {
+    if (!isDamaged && !isSelected && !forceVisible) {
       return
     }
 
@@ -2056,7 +2057,11 @@ export class UnitRenderer {
     const centerX = unit.x + TILE_SIZE / 2 - scrollOffset.x
     const centerY = unit.y + TILE_SIZE / 2 - scrollOffset.y
 
-    this.renderHealthBar(ctx, unit, scrollOffset)
+    const cityOccluded = isCityOccludedAtTile(gameState.mapGrid, Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE), Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE))
+    if (cityOccluded) {
+      if (unit.selected) this.renderSelection(ctx, unit, centerX, centerY)
+      this.renderHealthBar(ctx, unit, scrollOffset, true)
+    } else this.renderHealthBar(ctx, unit, scrollOffset)
     this.renderGasBar(ctx, unit, scrollOffset)
     this.renderAmmunitionBar(ctx, unit, scrollOffset)
     this.renderLevelStars(ctx, unit, scrollOffset)

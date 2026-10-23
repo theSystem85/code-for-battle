@@ -20,6 +20,8 @@ import {
   getValidDecorationCell,
   SINGLE_DECORATION_INTERVAL
 } from './decorationLayout.js'
+import { cityFootprintGroup, prepareCityVisual } from './cityOverhangs.js'
+import { getPreparedSpriteState } from './prepared/preparedSpritePipeline.js'
 import { cutoutDecorationGroup } from './decorationCutout.js'
 
 const DEFAULT_COMBAT_DECAL_SHEET_PATH = 'images/map/sprite_sheets/debris_craters_tracks.webp'
@@ -516,7 +518,7 @@ export class TextureManager {
       if (seenGroups.has(key)) continue
       seenGroups.add(key)
       const tagSet = TextureManager.collectGroupTagSet(group)
-      preparedGroups.push({ ...(tagSet.has('ground_detail') ? group : cutoutDecorationGroup(group)), tagSet })
+      preparedGroups.push(cityFootprintGroup({ ...(tagSet.has('ground_detail') ? group : cutoutDecorationGroup(group)), tagSet }))
     }
     // Optional prop and detail sheets may carry ungrouped 1x1 tiles.
     const singles = new Set([...(this.integratedTagBuckets.decorative || []), ...(this.integratedTagBuckets.ground_detail || [])])
@@ -525,6 +527,9 @@ export class TextureManager {
       const group = { width: 1, height: 1, tilesByOffset: { '0,0': tile }, tagSet: new Set(tile.tags) }
       preparedGroups.push(tile.tags.includes('ground_detail') ? group : cutoutDecorationGroup(group))
     }
+    this.cityVisualGroups = preparedGroups.filter(group => group.cityVisual)
+    this.cityVisualDensity = 0
+    this.prepareCityVisuals(getPreparedSpriteState().density || Math.min(3, Math.max(1, Math.ceil(globalThis.devicePixelRatio || 1))))
     this.hasShoreDecorations = preparedGroups.some(group => group.tagSet.has('shore'))
     this.integratedDecorationPools = buildDecorationPools(preparedGroups)
     this.hasGroundDetails = preparedGroups.some(group => group.tagSet.has('ground_detail'))
@@ -547,6 +552,18 @@ export class TextureManager {
     hash = ((hash >>> 16) ^ hash) * 0x45d9f3b
     hash = (hash >>> 16) ^ hash
     return Math.abs(hash)
+  }
+
+  // Explicit configuration/density lifecycle only; never invoked by rendering.
+  prepareCityVisuals(density) {
+    if (this.cityVisualDensity === density) return
+    const groups = this.cityVisualGroups || []
+    const bytes = groups.reduce((sum, group) => sum + Math.round(group.cityVisual.width * density) * Math.round(group.cityVisual.height * density) * 4, 0)
+    if (bytes > 64 * 1024 * 1024) throw new Error('City visuals exceed the 64 MiB preparation budget')
+    const prepared = groups.map(group => prepareCityVisual(group.cityVisual, density))
+    groups.forEach((group, index) => { group.cityVisual.sprite = prepared[index] })
+    this.cityVisualDensity = density
+    this.cityVisualBytes = bytes
   }
 
   getDefaultDecorationBiome() {
@@ -991,6 +1008,7 @@ export class TextureManager {
     return {
       image: selected.image || getImageTextureWithBlendMode(this.integratedSpriteSheetImage, this.integratedBlendMode, this.integratedBlackKey, this.integratedSpriteSheetMetadata),
       rect: selected.rect,
+      cityOverlayOnly: selected.cityOverlayOnly,
       tags: selectedTags || selected.tags || [],
       rotation,
       sheetPath: selected.sheetPath || null

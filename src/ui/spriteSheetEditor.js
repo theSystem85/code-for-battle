@@ -57,7 +57,7 @@ export const DEFAULT_SSE_TAGS = [
   'inner_cuts',
   'shore', 'onshore', 'offshore', 'shore_trans',
   'ground_detail',
-  'city',
+  'city', 'overhang', 'skyscraper',
   'concrete',
   'street',
   'top',

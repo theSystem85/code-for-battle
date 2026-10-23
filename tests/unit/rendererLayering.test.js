@@ -1,3 +1,4 @@
+import { renderCityOverhangs } from '../../src/rendering/cityOverhangs.js'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const createSimpleRendererClass = (methods = {}) => class {
@@ -5,6 +6,8 @@ const createSimpleRendererClass = (methods = {}) => class {
     Object.assign(this, methods)
   }
 }
+
+vi.mock('../../src/rendering/cityOverhangs.js', () => ({ renderCityOverhangs: vi.fn() }))
 
 vi.mock('../../src/rendering/textureManager.js', () => ({
   TextureManager: class {
@@ -225,6 +228,8 @@ describe('Renderer airborne layering', () => {
       measureText: vi.fn(() => ({ width: 10 }))
     }
 
+    renderer.textureManager.integratedSpriteSheetMode = true
+    renderCityOverhangs.mockImplementation(() => callOrder.push('city-visuals'))
     renderer.mapRenderer.render.mockImplementation(() => callOrder.push('map'))
     renderer.buildingRenderer.renderBases.mockImplementation((_ctx, entities) => {
       callOrder.push(`building-bases:${entities.length}`)
@@ -266,6 +271,8 @@ describe('Renderer airborne layering', () => {
     expect(callOrder).toContain('unit-overlays:ground-1,carrier-1')
     expect(callOrder).toContain('unit-overlays:air-1,deck-1')
 
+    expect(callOrder.indexOf('unit-bases:ground-1,carrier-1')).toBeLessThan(callOrder.indexOf('city-visuals'))
+    expect(callOrder.indexOf('city-visuals')).toBeLessThan(callOrder.indexOf('unit-overlays:ground-1,carrier-1'))
     expect(callOrder.indexOf('unit-bases:ground-1,carrier-1')).toBeLessThan(callOrder.indexOf('building-overlays:1'))
     expect(callOrder.indexOf('building-overlays:1')).toBeLessThan(callOrder.indexOf('unit-bases:air-1,deck-1'))
     expect(callOrder.indexOf('unit-overlays:ground-1,carrier-1')).toBeLessThan(callOrder.indexOf('unit-bases:air-1,deck-1'))

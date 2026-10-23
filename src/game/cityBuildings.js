@@ -1,3 +1,4 @@
+import { setCityOcclusionIndex, isCityOccludedAtTile } from '../rendering/cityOcclusionIndex.js'
 import { clearFlowFields } from './flowField.js'
 import { CITY_BUILDING_HEALTH, TILE_SIZE } from '../config.js'
 import { setBuildingDebrisDecals, setDecalSurfaceBlocker } from './tileDecals.js'
@@ -8,6 +9,11 @@ import { spawnDestructionExplosion } from './spriteSheetEffects.js'
 const registries = new WeakMap()
 const EMPTY = Object.freeze([])
 const layouts = new WeakMap()
+const visuals = new WeakMap()
+
+export function getCityVisuals(mapGrid) {
+  return visuals.get(mapGrid) || EMPTY
+}
 
 // Living city buildings are impassable structures, so impacts on them leave no decal.
 setDecalSurfaceBlocker('cityBuildings', (mapGrid, tileX, tileY) => {
@@ -19,9 +25,17 @@ export function getCityBuildings(mapGrid) {
   return registries.get(mapGrid) || EMPTY
 }
 
+// A prepared tile index keeps the unit HUD lookup independent of city count.
+export function isUnitUnderCityOverhang(mapGrid, unit) {
+  return isCityOccludedAtTile(mapGrid,
+    Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE),
+    Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE))
+}
+
 // Preparation only. Every covered layout cell shares one persistent object.
 export function prepareCityBuildings(mapGrid, layout) {
   const buildings = []
+  const cityVisuals = []
   const seen = new Set()
   for (const cell of layout.cells) {
     if (!cell?.group.tagSet.has('city')) continue
@@ -37,10 +51,29 @@ export function prepareCityBuildings(mapGrid, layout) {
         width: cell.group.width, height: cell.group.height,
         health: maxHealth, maxHealth
       }
+      tile.cityBuilding.width = cell.group.width
+      tile.cityBuilding.height = cell.group.height
       buildings.push(tile.cityBuilding)
+      if (cell.group.cityVisual) cityVisuals.push({ building: tile.cityBuilding, visual: cell.group.cityVisual })
     }
     cell.cityBuilding = tile.cityBuilding
   }
+  cityVisuals.sort((a, b) => a.building.y + a.building.height - b.building.y - b.building.height || a.building.x - b.building.x)
+  visuals.set(mapGrid, cityVisuals)
+  if (cityVisuals.length) {
+    const cells = new Array(layout.width * layout.height).fill(null)
+    for (const { building, visual } of cityVisuals) {
+      for (const [key, tile] of Object.entries(visual.tiles)) {
+        if (!tile.tags.includes('overhang')) continue
+        const [dx, dy] = key.split(',').map(Number)
+        const x = building.x + visual.tileOffsetX + dx, y = building.y + visual.tileOffsetY + dy
+        if (x < 0 || y < 0 || x >= layout.width || y >= layout.height) continue
+        const offset = y * layout.width + x
+        cells[offset] = { building, next: cells[offset] }
+      }
+    }
+    setCityOcclusionIndex(mapGrid, { width: layout.width, height: layout.height, cells })
+  } else setCityOcclusionIndex(mapGrid, null)
   layouts.set(mapGrid, layout)
   registries.set(mapGrid, buildings)
   applyCityStreets(mapGrid, layout)

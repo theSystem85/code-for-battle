@@ -85,3 +85,7 @@ Limits: 32 megapixels of retained sprite source rasters; 16 megapixels per image
 New-sheet defaults are 18×18 with a live pixel dimension label. Narrow layouts stack the scrollable sidebar above target/source panes.
 
 - `setNewSheetOptions({ columns?, rows?, tileSize?, name? })`: updates new-sheet inputs and the live dimensions, sharing the input controller. Returns/emits `{ width, height }` via `new-sheet-options-changed`. Grid validation occurs when creating the sheet.
+
+## Tall buildings
+
+For overhead city artwork, isolate and pack at ratio **1**, then tag the full image rectangle as a single group. Only its rectangular lower ground area is `impassable`; upper cells are `passable` + `overhang`, never both passable and impassable. Keep biome, `decorative`, `city` and group tags on every cell. Use individual-cell painting for upper/base differences because imported-sprite tag toggles affect all reserved cells. Follow [map-assets tall-building contract](../map-assets/SKILL.md#tall-city-art-and-ground-footprints) for footprint minima, prepared rendering, occlusion and validation. The generated desert source extracts exactly 20 sprites with alpha cutoff 16, gap 0, minimum area 1000. Export repository assets explicitly with `{ lossless: false, quality: 85 }`.

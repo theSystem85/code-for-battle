@@ -1,4 +1,5 @@
 import { withTimeout } from '../utils/assetLoading.js'
+import { renderCityOverhangs } from './cityOverhangs.js'
 import { renderCityHealthBars } from '../game/cityBuildings.js'
 import { setDecalSurfaceBlocker } from '../game/tileDecals.js'
 import { factoryExitVisibility } from '../game/factoryExit.js'
@@ -180,6 +181,7 @@ export class Renderer {
   }
 
   setPreparedSpriteRegistry(registry) {
+    if (registry?.density) this.textureManager.prepareCityVisuals?.(registry.density)
     this.buildingRenderer.setPreparedSpriteRegistry(registry)
     this.wreckRenderer.setPreparedSpriteRegistry?.(registry)
   }
@@ -657,6 +659,7 @@ export class Renderer {
     this.effectsRenderer.renderDepthCharges?.(gameCtx, gameState, scrollOffset)
     this.wreckRenderer.render(gameCtx, gameState.unitWrecks || [], scrollOffset, frameEntityIndex)
     this.unitRenderer.renderBases(gameCtx, visibleGroundedUnits, scrollOffset, true)
+    if (this.textureManager.integratedSpriteSheetMode) renderCityOverhangs(gameCtx, mapGrid, scrollOffset, logicalCanvasWidth, logicalCanvasHeight, gameState)
     gameCtx.restore()
     renderProfiler.endSpan(entityBasesSpan)
     entitiesMs += framePhases.end(FRAME_PHASE.entities)

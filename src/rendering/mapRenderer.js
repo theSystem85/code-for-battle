@@ -1732,7 +1732,7 @@ export class MapRenderer {
   }
 
   drawIntegratedTileImage(ctx, integratedTile, screenX, screenY) {
-    if (!integratedTile?.image || !integratedTile?.rect) return false
+    if (!integratedTile?.image || !integratedTile?.rect || integratedTile.cityOverlayOnly) return false
     const { image, rect } = integratedTile
     const rotation = integratedTile.rotation || 0
     if (rotation) {
