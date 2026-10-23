@@ -127,7 +127,7 @@ it.each(['dtv3_city', 'dtv4_city_sand', 'dtv4_city_snow', 'dtv4_nature_sand', 'd
   const { sanitizeAppliedSheetMetadata } = await import('../../src/ui/spriteSheetRegistry.js')
   const path = `images/map/sprite_sheets/${name}.webp`
   const old = { sheetPath: path, columns: 6, rows: 8, tiles: { '0,0': { tags: ['city'] } } }
-  const current = { ...old, layoutVersion: 3, columns: 16 }
+  const current = { ...old, layoutVersion: name.includes('nature') ? 3 : 4, columns: 16 }
   const storage = memoryStorage({ [`rts-sse-metadata:${path}`]: JSON.stringify(old), 'rts-sse-applied-metadata': JSON.stringify(old) })
   purgeRetiredSheetStorage(storage)
   expect(storage.map.size).toBe(0)

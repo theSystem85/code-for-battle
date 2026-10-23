@@ -103,7 +103,7 @@ export async function buildMapSpriteSheet(profile) {
   }
   const source = { path: sourcePath.replace(/^public\//, ''), sha256: createHash('sha256').update(bytes).digest('hex'),
     width: info.width, height: info.height, detection: DETECTION_OPTIONS, guides: profile.guides || [], spriteCount: components.length, packing: { scale: 1, padding: 2 } }
-  const metadata = exportMetadata({ schemaVersion: 1, layoutVersion: 3, tileSize, rowHeight: tileSize, borderWidth, columns, rows,
+  const metadata = exportMetadata({ schemaVersion: 1, layoutVersion: profile.kind === 'city' ? 4 : 3, zoomFactor: profile.kind === 'city' ? 2 : 1, tileSize, rowHeight: tileSize, borderWidth, columns, rows,
     blendMode: 'alpha', tags: [...new Set(Object.values(tiles).flatMap(tile => tile.tags).filter(tag => !/^group_/.test(tag)))], tiles, propLayout,
     source, extension: { imports, occupiedTiles: [...occupied] } }, profile.name, { lossless: false, quality: MAP_SHEET_QUALITY })
   metadata.sheetPath = `images/map/sprite_sheets/${profile.name}.webp`

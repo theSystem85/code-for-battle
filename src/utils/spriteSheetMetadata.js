@@ -1,3 +1,9 @@
+// Shared by metadata, topology and preparation; missing/invalid legacy values
+// retain the unscaled behavior.
+export function normalizeSpriteSheetZoomFactor(value) {
+  return Number.isFinite(value) && value > 0 ? value : 1
+}
+
 export function expandCompactSpriteSheetMetadata(metadata) {
   if (!metadata || typeof metadata !== 'object') return metadata
   if (metadata.tiles && typeof metadata.tiles === 'object') return metadata
