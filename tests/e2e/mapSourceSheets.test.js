@@ -57,5 +57,5 @@ test('[E00220] new native-alpha city and nature atlases load by default and gene
     const { json } = await window.__SSE__.exportSheet({ lossless: false, quality: 85 })
     return { layoutVersion: json.layoutVersion, blendMode: json.blendMode, imported: json.extension.imports.length }
   })
-  expect(exported).toEqual({ layoutVersion: 3, blendMode: 'alpha', imported: 153 })
+  expect(exported).toEqual({ layoutVersion: 5, blendMode: 'alpha', imported: 20 })
 })

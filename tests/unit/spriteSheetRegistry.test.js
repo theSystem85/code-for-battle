@@ -127,11 +127,12 @@ it.each(['dtv3_city', 'dtv4_city_sand', 'dtv4_city_snow', 'dtv4_nature_sand', 'd
   const { sanitizeAppliedSheetMetadata } = await import('../../src/ui/spriteSheetRegistry.js')
   const path = `images/map/sprite_sheets/${name}.webp`
   const old = { sheetPath: path, columns: 6, rows: 8, tiles: { '0,0': { tags: ['city'] } } }
-  const current = { ...old, layoutVersion: name === 'dtv4_city_sand' ? 5 : 3, columns: 16 }
+  const current = { ...old, layoutVersion: ['dtv3_city', 'dtv4_city_sand', 'dtv4_city_snow'].includes(name) ? 5 : 3, columns: 16 }
   const storage = memoryStorage({ [`rts-sse-metadata:${path}`]: JSON.stringify(old), 'rts-sse-applied-metadata': JSON.stringify(old) })
   purgeRetiredSheetStorage(storage)
   expect(storage.map.size).toBe(0)
   expect(sanitizeAppliedSheetMetadata(old)).toBeNull()
+  if (current.layoutVersion === 5) expect(sanitizeAppliedSheetMetadata({ ...old, layoutVersion: 3 })).toBeNull()
   expect(migrateSavedSpriteSheetState({ activeSpriteSheetMetadata: old }).activeSpriteSheetMetadata).toBeNull()
   storage.setStoredItem(`rts-sse-metadata:${path}`, JSON.stringify(current))
   purgeRetiredSheetStorage(storage)

@@ -9,18 +9,14 @@ import { exportMetadata } from '../src/ui/sseExport.js'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const directory = 'public/images/map/sprite_sheets'
+const TALL_CITY_PROFILE = {
+  kind: 'city', cityOverhangs: true, layoutVersion: 5, expectedSprites: 20,
+  detection: { transparent: true, alphaCutoff: 16, gap: 0, minArea: 1000 }
+}
 export const SOURCE_PROFILES = [
-  { source: 'cities', name: 'dtv3_city', biomes: ['grass', 'soil'], kind: 'city' },
-  { source: 'cities_sand_tall', name: 'dtv4_city_sand', biomes: ['sand'], kind: 'city', cityOverhangs: true, layoutVersion: 5,
-    detection: { transparent: true, alphaCutoff: 16, gap: 0, minArea: 1000 } },
-  { source: 'cities_snow', name: 'dtv4_city_snow', biomes: ['snow'], kind: 'city',
-    // These two snow-covered props physically touch their neighbours. Source
-    // guides split their ownership without erasing any pixels; each side is
-    // still isolated by the same SSE detector (not copied as a rectangle).
-    guides: [
-      { axis: 'x', at: 328, region: { x: 270, y: 0, width: 120, height: 70 } },
-      { axis: 'y', at: 913, region: { x: 495, y: 850, width: 135, height: 160 } }
-    ] },
+  { ...TALL_CITY_PROFILE, source: 'cities_temperate_tall', name: 'dtv3_city', biomes: ['grass', 'soil'] },
+  { ...TALL_CITY_PROFILE, source: 'cities_sand_tall', name: 'dtv4_city_sand', biomes: ['sand'] },
+  { ...TALL_CITY_PROFILE, source: 'cities_snow_tall', name: 'dtv4_city_snow', biomes: ['snow'], seasons: ['winter'] },
   { source: 'vegetation_rocks_lakes_sand', name: 'dtv4_nature_sand', biomes: ['sand'], kind: 'nature' },
   { source: 'vegetation_rocks_lakes_snow', name: 'dtv4_nature_snow', biomes: ['snow'], kind: 'nature' }
 ]
@@ -52,7 +48,7 @@ function splitAtGuide(component, guide) {
 export function extractMapSource(image, profile) {
   let components = detectSprites(image, profile.detection || DETECTION_OPTIONS)
   for (const guide of profile.guides || []) components = components.flatMap(component => splitAtGuide(component, guide))
-  const sourceRow = b => [250, 470, 710, 1050, Infinity].findIndex(limit => b.y < limit)
+  const sourceRow = b => [250, 450, 710, 1050, Infinity].findIndex(limit => b.y < limit)
   return components.sort((a, b) => profile.cityOverhangs
     ? sourceRow(a.bbox) - sourceRow(b.bbox) || a.bbox.x - b.bbox.x
     : a.bbox.y - b.bbox.y || a.bbox.x - b.bbox.x)
@@ -76,7 +72,7 @@ export async function buildMapSpriteSheet(profile) {
   const bytes = await readFile(resolve(root, sourcePath))
   const { data, info } = await sharp(bytes).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
   const components = extractMapSource({ width: info.width, height: info.height, data }, profile)
-  if (!components.length || components.some(c => c.bbox.width > info.width / 2 || c.bbox.height > info.height / 2)) {
+  if (!components.length || (profile.expectedSprites && components.length !== profile.expectedSprites) || components.some(c => c.bbox.width > info.width / 2 || c.bbox.height > info.height / 2)) {
     throw new Error(`Unreliable extraction: ${profile.source}`)
   }
   const occupied = new Set(), tiles = {}, imports = [], propLayout = [], overlays = []
@@ -85,7 +81,7 @@ export async function buildMapSpriteSheet(profile) {
   for (let index = 0; index < components.length; index++) {
     const component = components[index], b = component.bbox
     const categories = classifyMapSprite(component, profile)
-    const tags = [...profile.biomes, 'decorative', ...categories, `group_${index + 1}`]
+    const tags = [...profile.biomes, ...(profile.seasons || []), 'decorative', ...categories, `group_${index + 1}`]
     const spanX = Math.max(1, Math.ceil((b.width + 4) / tileSize)), spanY = Math.max(1, Math.ceil((b.height + 4) / tileSize))
     const region = findPackingRegion({ columns, rows, tileSize, borderWidth, occupied, width: spanX * tileSize, height: spanY * tileSize })
     rows = region.rows
@@ -95,7 +91,7 @@ export async function buildMapSpriteSheet(profile) {
     const top = region.y * tileSize + Math.floor((spanY * tileSize - height) / 2)
     const crop = Buffer.from(component.pixels)
     overlays.push({ input: crop, raw: { width, height, channels: 4 }, left, top })
-    const baseRows = profile.cityOverhangs ? Math.min(spanY, b.y >= 710 || b.height > 185 ? 3 : 2) : spanY
+    const baseRows = profile.cityOverhangs ? Math.min(spanY - 1, b.y >= 710 || b.height > 185 ? 3 : 2) : spanY
     const upperRows = spanY - baseRows
     const footprint = { x: 0, y: upperRows, width: spanX, height: baseRows }
     if (profile.cityOverhangs && (spanX < 2 || baseRows < 2 || (categories.includes('skyscraper') && (spanX < 3 || baseRows < 3)))) throw new Error('Building source is too small for its minimum ground footprint')
