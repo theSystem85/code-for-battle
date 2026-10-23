@@ -47,14 +47,14 @@ describe('strict snow decoration placement', () => {
     const warn = vi.fn()
     const dir = '/public/images/map/sprite_sheets/'
     const files = {}
-    for (const name of ['dtv3_ground_detail', 'dtv6_shore', 'dtv3_city', 'dtv6_decor_snow']) {
+    for (const name of ['dtv3_ground_detail', 'dtv6_shore', 'dtv5_city_temperate_medium', 'dtv6_decor_snow']) {
       files[`${dir}${name}.webp`] = 'image'
       files[`${dir}${name}.json`] = 'metadata'
     }
     files[`${dir}dtv4_halfdone.webp`] = 'image'
     expect(availableFutureSheets(files, warn)).toEqual([
       'images/map/sprite_sheets/dtv3_ground_detail.webp',
-      'images/map/sprite_sheets/dtv3_city.webp',
+      'images/map/sprite_sheets/dtv5_city_temperate_medium.webp',
       'images/map/sprite_sheets/dtv6_decor_snow.webp',
       'images/map/sprite_sheets/dtv6_shore.webp'
     ])

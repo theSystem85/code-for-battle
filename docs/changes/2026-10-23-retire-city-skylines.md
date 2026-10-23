@@ -1,0 +1,5 @@
+- [x] **Improvement: Retire the three skyline city atlases**
+  Removed dtv3_city, dtv4_city_sand and dtv4_city_snow image/JSON pairs, their default/index entries and source-builder profiles; stale editor/save references are dropped. Six dtv5 low/medium city sheets remain, and tall originals stay archived. Updated asset skills and moved active city/occlusion/destruction checks to surviving medium art.
+  Spec: none
+
+Validation: `npm run test:unit` passed 328 files / 5,422 tests; `npm run test` passed 330 files / 5,508 tests. All 16 Chromium checks passed across mapSourceSheets, cityDensity, desertCityOverhangs, destructibleCityBuildings, integratedStartupSheets and legacySheetStorage; other Playwright files were skipped. Source replay covers all 16 active profiles, and every default sprite still appears in generated maps. Browser fixtures use calibrated medium buildings, verify actual roof alpha compositing, and preserve HUD, click/drag selection and destruction checks. Lint, stable test-ID checks and production build passed. Hardware 75 FPS acceptance remains pending on Patrick's qualifying GPU; no graphics benchmarks were run.

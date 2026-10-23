@@ -11,7 +11,7 @@ const SHEET_DIR = 'images/map/sprite_sheets/'
 // registered automatically, so dropping its .webp + .json into the folder is
 // enough to offer it.
 const futureSheetFiles = import.meta.glob('/public/images/map/sprite_sheets/dtv*_*.{webp,json}', { eager: true, query: '?url', import: 'default' })
-const REQUIRED_FUTURE_SHEETS = Object.freeze(['dtv3_ground_detail', 'dtv3_city'])
+const REQUIRED_FUTURE_SHEETS = Object.freeze(['dtv3_ground_detail'])
 export function availableFutureSheets(files = {}, warn = console.warn) {
   files = files || {}
   const prefixOf = name => `/public/${SHEET_DIR}${name}`
@@ -42,7 +42,7 @@ export const OPTIONAL_SSE_SHEETS = Object.freeze([])
 // Sheets that used to ship and were removed. Stored settings, editor state and
 // saved games that still point at them must fall back to the defaults.
 export const RETIRED_SPRITE_SHEET_PATHS = Object.freeze(new Set([
-  ...['dtv2_grass', 'dtv2_soil', 'dtv2_sand', 'dtv2_snow', 'dtv2_universal', 'dtv3_shore', 'dtv3_winter'].map(name => `${SHEET_DIR}${name}.webp`),
+  ...['dtv3_city', 'dtv4_city_sand', 'dtv4_city_snow', 'dtv2_grass', 'dtv2_soil', 'dtv2_sand', 'dtv2_snow', 'dtv2_universal', 'dtv3_shore', 'dtv3_winter'].map(name => `${SHEET_DIR}${name}.webp`),
   `${SHEET_DIR}dt_grass_1024_q85.webp`,
   `${SHEET_DIR}dt_soil_1024_q85.webp`,
   `${SHEET_DIR}dt_sand_1024_q85.webp`,
@@ -140,7 +140,7 @@ export function filterRetiredSheetPaths(sheetPaths) {
 // earlier layouts cannot be applied to their repacked pixels.
 export function isSupersededSheetMetadata(metadata) {
   const path = normalizeSheetPath(metadata?.sheetPath)
-  if (['dtv3_city', 'dtv4_city_sand', 'dtv4_city_snow', ...['temperate', 'sand', 'snow'].flatMap(biome => ['low', 'medium'].map(level => `dtv5_city_${biome}_${level}`))].some(name => path === `${SHEET_DIR}${name}.webp`)) return metadata.layoutVersion !== 6
+  if (['temperate', 'sand', 'snow'].flatMap(biome => ['low', 'medium'].map(level => `dtv5_city_${biome}_${level}`)).some(name => path === `${SHEET_DIR}${name}.webp`)) return metadata.layoutVersion !== 6
   return ['dtv4_nature_sand', 'dtv4_nature_snow'].some(name => path === `${SHEET_DIR}${name}.webp`) && metadata.layoutVersion !== 3
 }
 

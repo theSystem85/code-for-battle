@@ -92,7 +92,7 @@ describe('mapEditorControls integrated sheet selection list', () => {
         return {
           ok: true,
           json: async() => ({
-            sheets: ['images/map/sprite_sheets/default.webp', 'images/map/sprite_sheets/dtv3_city.webp']
+            sheets: ['images/map/sprite_sheets/default.webp', 'images/map/sprite_sheets/dtv5_city_temperate_medium.webp']
           })
         }
       }
@@ -132,7 +132,7 @@ describe('mapEditorControls integrated sheet selection list', () => {
     setTopologyRegenerator(regenerate)
     gameState.mapTopologyFingerprint = null
     const { DEFAULT_SSE_SHEETS } = await import('../../src/ui/spriteSheetRegistry.js')
-    const city = 'images/map/sprite_sheets/dtv3_city.webp'
+    const city = 'images/map/sprite_sheets/dtv5_city_temperate_medium.webp'
     localStorage.setItem('rts-integrated-spritesheet-mode', 'true')
     localStorage.setItem('rts-integrated-spritesheet-disabled-sheets', JSON.stringify([
       ...DEFAULT_SSE_SHEETS.filter(path => path !== city), 'images/map/sprite_sheets/default.webp', 'images/map/sprite_sheets/missing.webp'
@@ -188,7 +188,7 @@ describe('mapEditorControls integrated sheet selection list', () => {
     const { gameState } = await import('../../src/gameState.js')
     const { initMapEditorControls } = await import('../../src/ui/mapEditorControls.js')
     const { DEFAULT_SSE_SHEETS } = await import('../../src/ui/spriteSheetRegistry.js')
-    const city = 'images/map/sprite_sheets/dtv3_city.webp'
+    const city = 'images/map/sprite_sheets/dtv5_city_temperate_medium.webp'
     localStorage.setItem('rts-integrated-spritesheet-mode', 'true')
     await initMapEditorControls()
     const checkbox = document.querySelector(`input[data-sheet-path="${city}"]`)

@@ -6,11 +6,11 @@ test('[E00021] optional city sheet produces whole destructible buildings and per
     const { TextureManager } = await import('/src/rendering/textureManager.js')
     const { gameState } = await import('/src/gameState.js')
     const { getCityBuildings, applyCityDamage } = await import('/src/game/cityBuildings.js')
-    const response = await fetch('/images/map/sprite_sheets/dtv3_city.json')
+    const response = await fetch('/images/map/sprite_sheets/dtv5_city_temperate_medium.json')
     const metadata = await response.json()
     const manager = new TextureManager()
     Object.assign(gameState, { mapSeed: 'city-e2e', citySeeds: 2, cityClusterSize: 8 })
-    await manager.setIntegratedSpriteSheetConfig({ enabled: true, sheets: [{ sheetPath: 'images/map/sprite_sheets/dtv3_city.webp', metadata }], biomeTag: 'grass' })
+    await manager.setIntegratedSpriteSheetConfig({ enabled: true, sheets: [{ sheetPath: 'images/map/sprite_sheets/dtv5_city_temperate_medium.webp', metadata }], biomeTag: 'grass' })
     const mapGrid = Array.from({ length: 96 }, () => Array.from({ length: 96 }, () => ({ type: 'land', biome: 'grass' })))
     manager.getDecorationLayout(mapGrid)
     const building = getCityBuildings(mapGrid)[0]

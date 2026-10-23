@@ -15,9 +15,6 @@ const TALL_CITY_PROFILE = {
   detection: { transparent: true, alphaCutoff: 16, gap: 0, minArea: 1000 }
 }
 export const SOURCE_PROFILES = [
-  { ...TALL_CITY_PROFILE, source: 'cities_temperate_tall', name: 'dtv3_city', biomes: ['grass', 'soil'] },
-  { ...TALL_CITY_PROFILE, source: 'cities_sand_tall', name: 'dtv4_city_sand', biomes: ['sand'] },
-  { ...TALL_CITY_PROFILE, source: 'cities_snow_tall', name: 'dtv4_city_snow', biomes: ['snow'], seasons: ['winter'] },
   ...['temperate', 'sand', 'snow'].flatMap(biome => ['low', 'medium'].map(level => ({
     ...TALL_CITY_PROFILE, source: `cities_${biome}_${level}`, name: `dtv5_city_${biome}_${level}`,
     biomes: biome === 'temperate' ? ['grass', 'soil'] : [biome],

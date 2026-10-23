@@ -1,10 +1,10 @@
 import { test, expect } from '@playwright/test'
 
 const DIR = 'images/map/sprite_sheets/'
-const DEFAULT_SHEETS = ['debris_craters_tracks', 'dtv3_ground_detail', 'dtv3_city', 'dtv4_city_sand', 'dtv4_city_snow', 'dtv4_nature_sand', 'dtv4_nature_snow',
+const DEFAULT_SHEETS = ['debris_craters_tracks', 'dtv3_ground_detail', 'dtv4_nature_sand', 'dtv4_nature_snow',
   ...['temperate', 'sand', 'snow'].flatMap(biome => ['low', 'medium'].map(level => `dtv5_city_${biome}_${level}`)),
   ...['grass', 'soil', 'sand', 'snow', 'universal'].map(biome => `dtv6_decor_${biome}`), 'dtv6_shore', 'dtv6_nature_grass', 'dtv6_nature_soil']
-const RETIRED = /dtv2_|dtv3_(shore|winter)|seasons_1024|rocks_64x64|crystals_q90|streets24|rockCliffs/
+const RETIRED = /dtv3_city|dtv4_city_(sand|snow)|dtv2_|dtv3_(shore|winter)|seasons_1024|rocks_64x64|crystals_q90|streets24|rockCliffs/
 
 for (const mode of ['true', 'false']) {
   test(`[E00057] old stored sheet selection (custom sheets ${mode}) still lists and renders every sheet`, async({ page }) => {
@@ -15,8 +15,9 @@ for (const mode of ['true', 'false']) {
       localStorage.setItem('rts-integrated-spritesheet-mode', mode)
       localStorage.setItem('rts-integrated-spritesheet-selected-sheets', JSON.stringify(
         ['streets24_q90_1024x1024', 'seasons_1024_q90_2', 'seasons_1024_q90_3', 'crystals_q90_1024x1024',
-          'rockCliffsMountains_64x64_1024x1024', 'rocks_64x64_1024x1024_q85', 'dtv2_grass', 'dtv3_shore', 'dtv3_winter', 'debris_craters_tracks'].map(name => `${dir}${name}.webp`)))
-      localStorage.setItem('rts-sse-last-sheet', `${dir}seasons_1024_q90_2.webp`)
+          'rockCliffsMountains_64x64_1024x1024', 'rocks_64x64_1024x1024_q85', 'dtv2_grass', 'dtv3_shore', 'dtv3_winter', 'dtv3_city', 'dtv4_city_sand', 'dtv4_city_snow', 'debris_craters_tracks'].map(name => `${dir}${name}.webp`)))
+      localStorage.setItem('rts-sse-last-sheet', `${dir}dtv3_city.webp`)
+      localStorage.setItem(`rts-sse-metadata:${dir}dtv4_city_sand.webp`, JSON.stringify({ sheetPath: `${dir}dtv4_city_sand.webp`, layoutVersion: 6 }))
       localStorage.setItem(`rts-sse-metadata:${dir}rocks_64x64_1024x1024_q85.webp`, '{"tiles":{}}')
     }, mode)
     // Simulate an index.json cached by an older deploy.

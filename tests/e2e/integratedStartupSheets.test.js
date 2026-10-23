@@ -10,7 +10,7 @@ test('[E00053] persisted optional sheets apply before the startup map is generat
   await page.addInitScript(() => {
     const names = [
       'dtv6_decor_grass', 'dtv6_decor_soil', 'dtv6_decor_sand', 'dtv6_decor_snow', 'dtv6_decor_universal',
-      'dtv3_city', 'dtv6_shore', 'dtv3_ground_detail',
+      'dtv5_city_temperate_medium', 'dtv6_shore', 'dtv3_ground_detail',
       'unknown_stale_sheet'
     ]
     localStorage.setItem('rts-integrated-spritesheet-mode', 'true')
@@ -31,7 +31,7 @@ test('[E00053] persisted optional sheets apply before the startup map is generat
     }
   })
   expect(result.enabled).toBe(true)
-  expect(result.sheets).toContain('images/map/sprite_sheets/dtv3_city.webp')
+  expect(result.sheets).toContain('images/map/sprite_sheets/dtv5_city_temperate_medium.webp')
   expect(result.cities).toBeGreaterThan(0)
   expect(missingSheets).toEqual([])
 })
