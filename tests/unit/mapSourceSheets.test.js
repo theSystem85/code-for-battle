@@ -9,7 +9,7 @@ import { detectWebPCompression } from '../../src/ui/sseExport.js'
 import { DEFAULT_SSE_SHEETS } from '../../src/ui/spriteSheetRegistry.js'
 import { buildDecorationPools } from '../../src/rendering/decorationLayout.js'
 
-const counts = [...Array(9).fill(20), 155, 118]
+const counts = [...Array(6).fill(20), 155, 118]
 
 describe('bundled map source sheets', () => {
   it.each(SOURCE_PROFILES.map((profile, index) => ({ ...profile, count: profile.expectedSprites || counts[index] })))('[U05433] replays SSE extraction and validates $source ownership, metadata and recorded-scale alpha WebP', async(profile) => {

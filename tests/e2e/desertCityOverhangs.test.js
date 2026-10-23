@@ -1,10 +1,10 @@
 import { test, expect } from '@playwright/test'
 
 for (const [biome, sheet, source] of [
-  ['sand', 'dtv4_city_sand', 'cities_sand_tall'],
-  ['grass', 'dtv3_city', 'cities_temperate_tall'],
-  ['soil', 'dtv3_city', 'cities_temperate_tall'],
-  ['snow', 'dtv4_city_snow', 'cities_snow_tall']
+  ['sand', 'dtv5_city_sand_medium', 'cities_sand_medium'],
+  ['grass', 'dtv5_city_temperate_medium', 'cities_temperate_medium'],
+  ['soil', 'dtv5_city_temperate_medium', 'cities_temperate_medium'],
+  ['snow', 'dtv5_city_snow_medium', 'cities_snow_medium']
 ]) {
   test(`[E00223] ${biome} cities use large ground footprints and preserve passable upper tiles through SSE export`, async({ page }) => {
     await page.goto('/sse')
@@ -25,9 +25,9 @@ for (const [biome, sheet, source] of [
         upperPassable: Object.values(metadata.tiles).filter(tile => tile.tags.includes('overhang')).every(tile => tile.tags.includes('passable') && !tile.tags.includes('impassable')),
         hasCities: layout.placements.some(placement => placement.group.cityVisual),
         prepared: groups.every(group => group.cityVisual.sprite?.density >= 1),
-        native: metadata.extension.imports.every(item => item.bbox.width === item.renderRect.width && item.bbox.height === item.renderRect.height) }
+        calibrated: metadata.extension.imports.every(item => Math.round(item.bbox.width * 0.75) === item.renderRect.width && Math.round(item.bbox.height * 0.75) === item.renderRect.height) }
     }, { biome, sheet })
-    expect(result).toMatchObject({ count: 20, factory: [3, 3], minFootprint: true, towerFootprint: true, towers: 8, upperPassable: true, hasCities: true, prepared: true, native: true })
+    expect(result).toMatchObject({ count: 20, factory: [3, 3], minFootprint: true, towerFootprint: true, towers: 0, upperPassable: true, hasCities: true, prepared: true, calibrated: true })
     await page.locator('#sseSheetSelect').selectOption(`images/map/sprite_sheets/${sheet}.webp`)
     await page.waitForFunction(path => window.__SSE__.getState().targetSheetPath === path, `images/map/sprite_sheets/${sheet}.webp`)
     const exported = await page.evaluate(async() => {
@@ -37,21 +37,21 @@ for (const [biome, sheet, source] of [
         validUpper: upper.every(tile => tile.tags.includes('passable') && !tile.tags.includes('impassable')) }
     })
     expect(exported).toMatchObject({ layoutVersion: 6, count: 20, validUpper: true })
-    expect(exported.upper).toBeGreaterThan(30)
+    expect(exported.upper).toBeGreaterThan(0)
     const extraction = await page.evaluate(async source => {
       const sse = window.__SSE__
       await sse.newSheet({ name: 'desert-extraction-check', tileSize: 64, cols: 16, rows: 1 })
-      await sse.setSizeRatio(1)
+      await sse.setSizeRatio(0.75)
       await sse.loadSourceImage(await (await fetch(`/images/map/sprite_sheets/sources/${source}.webp`)).blob())
       const sprites = await sse.extractAll({ alphaCutoff: 16, gap: 0, minArea: 1000 })
-      return { count: sprites.length, native: sse.getState().sprites.every(sprite => sprite.bbox.width === sprite.renderRect.width && sprite.bbox.height === sprite.renderRect.height), rows: sse.getState().rows }
+      return { count: sprites.length, calibrated: sse.getState().sprites.every(sprite => Math.abs(sprite.bbox.width * 0.75 - sprite.renderRect.width) <= 1 && Math.abs(sprite.bbox.height * 0.75 - sprite.renderRect.height) <= 1), rows: sse.getState().rows }
     }, source)
     expect(extraction.count).toBe(20)
-    expect(extraction.native).toBe(true)
+    expect(extraction.calibrated).toBe(true)
     expect(extraction.rows).toBeGreaterThan(1)
   })
 
-  test(`[E00224] a moving unit in ${biome} can pass behind a tower, keeps its HUD above the image and accepts click and drag selection`, async({ page }) => {
+  test(`[E00224] a moving unit in ${biome} can pass behind a building, keeps its HUD above the image and accepts click and drag selection`, async({ page }) => {
     await page.goto('/')
     await page.waitForFunction(() => Boolean(window.gameInstance?.renderer))
     const setup = await page.evaluate(async({ biome, sheet }) => {
@@ -67,8 +67,20 @@ for (const [biome, sheet, source] of [
       const metadata = await (await fetch(`/images/map/sprite_sheets/${sheet}.json`)).json()
       const manager = new TextureManager()
       await manager.setIntegratedSpriteSheetConfig({ enabled: true, sheets: [{ sheetPath: metadata.sheetPath, metadata }], biomeTag: biome })
-      const group = manager.integratedDecorationPools[biome].multi.find(group => group.tagSet.has('skyscraper') && group.cityVisual.rows >= 7)
-      if (!group) throw new Error('Expected a genuinely tall generated skyscraper')
+      const group = manager.integratedDecorationPools[biome].multi.find(candidate => {
+        // Medium buildings have shorter overhangs than the retired towers.
+        // Choose one whose actual roof covers the route's unit centers.
+        const visual = candidate.cityVisual, sprite = visual.sprite
+        const ctx = sprite.image.getContext('2d')
+        const y = Math.floor((-16 - visual.offsetY) * sprite.density)
+        if (y < 0 || y >= sprite.image.height) return false
+        for (let dx = 0; dx < candidate.width; dx++) {
+          const x = Math.floor((dx * 32 + 16 - visual.offsetX) * sprite.density)
+          if (x >= 0 && x < sprite.image.width && ctx.getImageData(x, y, 1, 1).data[3] > 240) return true
+        }
+        return false
+      })
+      if (!group) throw new Error('Expected a medium building with an upper overhang')
       const map = Array.from({ length: 24 }, () => Array.from({ length: 32 }, () => ({ type: 'land', biome })))
       const bx = 7, by = 12
       const placement = { group, anchorX: bx, anchorY: by, biome }
@@ -119,6 +131,8 @@ for (const [biome, sheet, source] of [
       const centerX = unit.x + 16, centerY = unit.y + 16
       const pixel = () => [...ctx.getImageData(centerX, centerY, 1, 1).data]
       const clear = () => { ctx.fillStyle = '#30343a'; ctx.fillRect(0, 0, 640, 480) }
+      renderCityOverhangs(ctx, map, { x: 0, y: 0 }, 640, 480, gameState)
+      const roofAlpha = pixel()[3] / 255
       clear()
       renderCityOverhangs(ctx, map, { x: 0, y: 0 }, 640, 480, gameState)
       const baseline = pixel()
@@ -147,7 +161,7 @@ for (const [biome, sheet, source] of [
       canvas.addEventListener('mousemove', event => { if (event.buttons === 1) { const p = coordinates(event); updateSelectionRectangle(handler, p.x, p.y, cursor) } })
       canvas.addEventListener('mouseup', event => { handleLeftMouseUp(handler, event, [unit], [], map, selected, selection, {}, cursor); redraw() })
       window.tallCityFixture = { unit, selected, redraw, clearSelection() { unit.selected = false; selected.length = 0; selection.lastClickedUnit = null; redraw() }, destroy() { const building = getCityBuildings(map)[0]; applyCityDamage(building, building.maxHealth, map, gameState); redraw(); return { pixel: pixel(), occluded: isUnitUnderCityOverhang(map, unit) } } }
-      return { centerX, centerY, baseline, covered, hudPixels, traversed, path: path.length,
+      return { centerX, centerY, baseline, covered, roofAlpha, hudPixels, traversed, path: path.length,
         overheadWalkable: occupancy[hiddenPoint.y][hiddenPoint.x] === 1,
         baseBlocked: occupancy[by][bx] === 1,
         roofIsNotAttackTarget: getAttackableCityAtWorld(map, centerX, centerY) === null,
@@ -160,7 +174,12 @@ for (const [biome, sheet, source] of [
     expect(setup.roofIsNotAttackTarget).toBe(true)
     expect(setup.occluded).toBe(true)
     expect(setup.hudPixels).toBeGreaterThan(30)
-    expect(Math.max(...setup.baseline.slice(0, 3).map((value, index) => Math.abs(value - setup.covered[index])))).toBeLessThan(8)
+    // Medium source art has slightly translucent roof pixels. Verify the
+    // actual alpha composite rather than assuming the retired tower's alpha.
+    expect(setup.roofAlpha).toBeGreaterThan(240 / 255)
+    const background = [48, 52, 58], unitColor = [255, 0, 255]
+    const expected = setup.baseline.slice(0, 3).map((value, i) => value + (unitColor[i] - background[i]) * (1 - setup.roofAlpha))
+    expect(Math.max(...expected.map((value, i) => Math.abs(value - setup.covered[i])))).toBeLessThan(3)
     await page.mouse.click(setup.centerX, setup.centerY)
     expect(await page.evaluate(() => window.tallCityFixture.selected.map(unit => unit.id))).toEqual(['behind-tower'])
     await page.evaluate(() => window.tallCityFixture.clearSelection())

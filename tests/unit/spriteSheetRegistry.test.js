@@ -36,8 +36,8 @@ describe('sprite sheet registry', () => {
     expect(OPTIONAL_SSE_SHEETS).toHaveLength(0)
     expect(DEFAULT_SSE_SHEETS).toContain('images/map/sprite_sheets/dtv6_decor_snow.webp')
     for (const biome of ['temperate', 'sand', 'snow']) for (const level of ['low', 'medium']) expect(DEFAULT_SSE_SHEETS).toContain(`images/map/sprite_sheets/dtv5_city_${biome}_${level}.webp`)
-    expect(DEFAULT_SSE_SHEETS.filter(path => /\/dtv\d+_/.test(path))).toHaveLength(20)
-    expect(DEFAULT_SSE_SHEETS).toEqual(expect.arrayContaining(['dtv4_city_sand', 'dtv4_city_snow', 'dtv4_nature_sand', 'dtv4_nature_snow'].map(name => `images/map/sprite_sheets/${name}.webp`)))
+    expect(DEFAULT_SSE_SHEETS.filter(path => /\/dtv\d+_/.test(path))).toHaveLength(17)
+    expect(DEFAULT_SSE_SHEETS).toEqual(expect.arrayContaining(['dtv5_city_sand_medium', 'dtv5_city_snow_medium', 'dtv4_nature_sand', 'dtv4_nature_snow'].map(name => `images/map/sprite_sheets/${name}.webp`)))
     expect(isRetiredSpriteSheetPath('images/map/sprite_sheets/seasons_1024_q90_2.webp')).toBe(true)
     expect(isRetiredSpriteSheetPath('images/map/sprite_sheets/streets24_q90_1024x1024.webp')).toBe(true)
     expect(isRetiredSpriteSheetPath('images/map/sprite_sheets/rockCliffsMountains_64x64_1024x1024.webp')).toBe(true)
@@ -108,13 +108,13 @@ describe('opt-out sheet selection', () => {
   it('[U04168] always offers every bundled sheet even with a stale index.json', async() => {
     const { resolveAvailableSheetPaths } = await import('../../src/ui/spriteSheetRegistry.js')
     const stale = ['seasons_1024_q90_2', 'seasons_1024_q90_3', 'crystals_q90_1024x1024', 'rocks_64x64_1024x1024_q85', 'debris_craters_tracks'].map(n => `${dir}${n}.webp`)
-    const available = resolveAvailableSheetPaths(stale, ['blob:uploaded', `/${dir}dtv3_city.webp`])
+    const available = resolveAvailableSheetPaths(stale, ['blob:uploaded', `/${dir}dtv5_city_temperate_medium.webp`])
     expect(available).toEqual([...DEFAULT_SSE_SHEETS, 'blob:uploaded'])
   })
 
   it('[U04169] derives the selection from opt-outs and ignores retired entries', async() => {
     const { parseDisabledSheetPaths, selectionFromDisabled, disabledFromSelection } = await import('../../src/ui/spriteSheetRegistry.js')
-    const city = `${dir}dtv3_city.webp`
+    const city = `${dir}dtv5_city_temperate_medium.webp`
     const disabled = parseDisabledSheetPaths(JSON.stringify([city, `${dir}seasons_1024_q90_2.webp`, 7]))
     expect(disabled).toEqual([city])
     expect(parseDisabledSheetPaths('not json')).toEqual([])
@@ -124,11 +124,11 @@ describe('opt-out sheet selection', () => {
   })
 })
 
-it.each(['dtv3_city', 'dtv4_city_sand', 'dtv4_city_snow', 'dtv4_nature_sand', 'dtv4_nature_snow'])('[U05434] drops old %s grid overrides while preserving edits for the replacement layout', async(name) => {
+it.each(['dtv5_city_temperate_medium', 'dtv5_city_sand_medium', 'dtv5_city_snow_medium', 'dtv4_nature_sand', 'dtv4_nature_snow'])('[U05434] drops old %s grid overrides while preserving edits for the replacement layout', async(name) => {
   const { sanitizeAppliedSheetMetadata } = await import('../../src/ui/spriteSheetRegistry.js')
   const path = `images/map/sprite_sheets/${name}.webp`
   const old = { sheetPath: path, columns: 6, rows: 8, tiles: { '0,0': { tags: ['city'] } } }
-  const current = { ...old, layoutVersion: ['dtv3_city', 'dtv4_city_sand', 'dtv4_city_snow'].includes(name) ? 6 : 3, columns: 16 }
+  const current = { ...old, layoutVersion: ['dtv5_city_temperate_medium', 'dtv5_city_sand_medium', 'dtv5_city_snow_medium'].includes(name) ? 6 : 3, columns: 16 }
   const storage = memoryStorage({ [`rts-sse-metadata:${path}`]: JSON.stringify(old), 'rts-sse-applied-metadata': JSON.stringify(old) })
   purgeRetiredSheetStorage(storage)
   expect(storage.map.size).toBe(0)
@@ -141,11 +141,12 @@ it.each(['dtv3_city', 'dtv4_city_sand', 'dtv4_city_snow', 'dtv4_nature_sand', 'd
   expect(sanitizeAppliedSheetMetadata(current)).toBe(current)
 })
 
-it.each(['dtv2_grass', 'dtv2_soil', 'dtv2_sand', 'dtv2_snow', 'dtv2_universal', 'dtv3_shore', 'dtv3_winter'])('[U05453] retires replaced black-background %s art and stored coordinates', name => {
+it.each(['dtv3_city', 'dtv4_city_sand', 'dtv4_city_snow', 'dtv2_grass', 'dtv2_soil', 'dtv2_sand', 'dtv2_snow', 'dtv2_universal', 'dtv3_shore', 'dtv3_winter'])('[U05453] retires removed %s art and stored coordinates', name => {
   const path = `images/map/sprite_sheets/${name}.webp`
   const storage = memoryStorage({ [`rts-sse-metadata:${path}`]: '{}', 'rts-sse-last-sheet': path, 'rts-sse-applied-metadata': JSON.stringify({ sheetPath: path }) })
   expect(isRetiredSpriteSheetPath(path)).toBe(true)
   expect(DEFAULT_SSE_SHEETS).not.toContain(path)
+  expect(migrateSavedSpriteSheetState({ activeSpriteSheetPath: path, activeSpriteSheetMetadata: { sheetPath: path, layoutVersion: 6 } }).activeSpriteSheetMetadata).toBeNull()
   purgeRetiredSheetStorage(storage)
   expect(storage.map.size).toBe(0)
   expect(migrateSavedSpriteSheetState({ activeSpriteSheetPath: path, activeSpriteSheetMetadata: { sheetPath: path } }).activeSpriteSheetMetadata).toBeNull()

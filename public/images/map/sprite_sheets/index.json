@@ -2,9 +2,6 @@
   "sheets": [
     "images/map/sprite_sheets/debris_craters_tracks.webp",
     "images/map/sprite_sheets/dtv3_ground_detail.webp",
-    "images/map/sprite_sheets/dtv3_city.webp",
-    "images/map/sprite_sheets/dtv4_city_sand.webp",
-    "images/map/sprite_sheets/dtv4_city_snow.webp",
     "images/map/sprite_sheets/dtv4_nature_sand.webp",
     "images/map/sprite_sheets/dtv4_nature_snow.webp",
     "images/map/sprite_sheets/dtv5_city_sand_low.webp",

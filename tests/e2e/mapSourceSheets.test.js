@@ -8,7 +8,7 @@ test('[E00220] new native-alpha city and nature atlases load by default and gene
     const { TextureManager } = await import('/src/rendering/textureManager.js')
     const { gameState } = await import('/src/gameState.js')
     const { getCityBuildings } = await import('/src/game/cityBuildings.js')
-    const names = ['dtv3_city', 'dtv4_city_sand', 'dtv4_city_snow', 'dtv4_nature_sand', 'dtv4_nature_snow', ...['temperate', 'sand', 'snow'].flatMap(biome => ['low', 'medium'].map(level => `dtv5_city_${biome}_${level}`))]
+    const names = ['dtv4_nature_sand', 'dtv4_nature_snow', ...['temperate', 'sand', 'snow'].flatMap(biome => ['low', 'medium'].map(level => `dtv5_city_${biome}_${level}`))]
     const sheets = await Promise.all(names.map(async name => {
       const sheetPath = `images/map/sprite_sheets/${name}.webp`
       const metadata = await (await fetch(`/${sheetPath.replace('.webp', '.json')}`)).json()
@@ -42,21 +42,20 @@ test('[E00220] new native-alpha city and nature atlases load by default and gene
   })
   expect(result.registered).toBe(true)
   expect(result.nativeDimensions).toBe(true)
-  expect(result.alpha).toEqual(Array(11).fill(0))
+  expect(result.alpha).toEqual(Array(8).fill(0))
   for (const entry of result.biomes) {
     expect(entry.buildings).toBeGreaterThan(0)
     expect(entry.allMatch).toBe(true)
     expect(entry.alpha).toBe(true)
-    const suffix = entry.biome === 'sand' || entry.biome === 'snow' ? `dtv4_city_${entry.biome}` : 'dtv3_city'
     const cluster = ['grass', 'soil'].includes(entry.biome) ? 'temperate' : entry.biome
-    const allowed = [suffix, `dtv5_city_${cluster}_low`, `dtv5_city_${cluster}_medium`].map(name => `images/map/sprite_sheets/${name}.webp`)
+    const allowed = [`dtv5_city_${cluster}_low`, `dtv5_city_${cluster}_medium`].map(name => `images/map/sprite_sheets/${name}.webp`)
     expect(entry.citySheets.length).toBeGreaterThan(0)
     expect(entry.citySheets.every(path => allowed.includes(path))).toBe(true)
     expect(entry.citySheets).toContain(`images/map/sprite_sheets/dtv5_city_${cluster}_low.webp`)
     if (entry.biome === 'sand' || entry.biome === 'snow') expect(entry.natureSheets).toEqual([`images/map/sprite_sheets/dtv4_nature_${entry.biome}.webp`])
   }
-  await page.locator('#sseSheetSelect').selectOption('images/map/sprite_sheets/dtv3_city.webp')
-  await page.waitForFunction(() => window.__SSE__.getState().targetSheetPath === 'images/map/sprite_sheets/dtv3_city.webp')
+  await page.locator('#sseSheetSelect').selectOption('images/map/sprite_sheets/dtv5_city_temperate_medium.webp')
+  await page.waitForFunction(() => window.__SSE__.getState().targetSheetPath === 'images/map/sprite_sheets/dtv5_city_temperate_medium.webp')
   const exported = await page.evaluate(async() => {
     const { json } = await window.__SSE__.exportSheet({ lossless: false, quality: 85 })
     return { layoutVersion: json.layoutVersion, blendMode: json.blendMode, imported: json.extension.imports.length }
@@ -81,5 +80,5 @@ test('[E00227] replacement alpha decorations, expanded shore and separate nature
     expect(result).toEqual({ count: index < 5 ? 24 : index === 5 ? 36 : 40, blend: 'alpha', native: true, complete: true })
   }
   const options = await page.locator('#sseSheetSelect option').evaluateAll(options => options.map(option => option.value))
-  expect(options.some(value => /dtv2_|dtv3_(shore|winter)/.test(value))).toBe(false)
+  expect(options.some(value => /dtv2_|dtv3_(city|shore|winter)|dtv4_city_(sand|snow)/.test(value))).toBe(false)
 })
