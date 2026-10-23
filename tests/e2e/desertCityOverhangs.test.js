@@ -36,7 +36,7 @@ for (const [biome, sheet, source] of [
       return { layoutVersion: json.layoutVersion, count: json.extension.imports.length, upper: upper.length,
         validUpper: upper.every(tile => tile.tags.includes('passable') && !tile.tags.includes('impassable')) }
     })
-    expect(exported).toMatchObject({ layoutVersion: 5, count: 20, validUpper: true })
+    expect(exported).toMatchObject({ layoutVersion: 6, count: 20, validUpper: true })
     expect(exported.upper).toBeGreaterThan(30)
     const extraction = await page.evaluate(async source => {
       const sse = window.__SSE__

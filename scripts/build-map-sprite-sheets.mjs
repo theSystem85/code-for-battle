@@ -10,13 +10,18 @@ import { exportMetadata } from '../src/ui/sseExport.js'
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const directory = 'public/images/map/sprite_sheets'
 const TALL_CITY_PROFILE = {
-  kind: 'city', cityOverhangs: true, layoutVersion: 5, expectedSprites: 20,
+  kind: 'city', cityOverhangs: true, layoutVersion: 6, expectedSprites: 20,
   detection: { transparent: true, alphaCutoff: 16, gap: 0, minArea: 1000 }
 }
 export const SOURCE_PROFILES = [
   { ...TALL_CITY_PROFILE, source: 'cities_temperate_tall', name: 'dtv3_city', biomes: ['grass', 'soil'] },
   { ...TALL_CITY_PROFILE, source: 'cities_sand_tall', name: 'dtv4_city_sand', biomes: ['sand'] },
   { ...TALL_CITY_PROFILE, source: 'cities_snow_tall', name: 'dtv4_city_snow', biomes: ['snow'], seasons: ['winter'] },
+  ...['temperate', 'sand', 'snow'].flatMap(biome => ['low', 'medium'].map(level => ({
+    ...TALL_CITY_PROFILE, source: `cities_${biome}_${level}`, name: `dtv5_city_${biome}_${level}`,
+    biomes: biome === 'temperate' ? ['grass', 'soil'] : [biome],
+    seasons: biome === 'snow' ? ['winter'] : [], densityLevel: level, sourceRows: 5, importScale: level === 'low' ? 0.5 : 0.75
+  }))),
   { source: 'vegetation_rocks_lakes_sand', name: 'dtv4_nature_sand', biomes: ['sand'], kind: 'nature' },
   { source: 'vegetation_rocks_lakes_snow', name: 'dtv4_nature_snow', biomes: ['snow'], kind: 'nature' }
 ]
@@ -48,14 +53,16 @@ function splitAtGuide(component, guide) {
 export function extractMapSource(image, profile) {
   let components = detectSprites(image, profile.detection || DETECTION_OPTIONS)
   for (const guide of profile.guides || []) components = components.flatMap(component => splitAtGuide(component, guide))
-  const sourceRow = b => [250, 450, 710, 1050, Infinity].findIndex(limit => b.y < limit)
+  const sourceRow = b => profile.sourceRows
+    ? Math.min(profile.sourceRows - 1, Math.floor((b.y + b.height / 2) / (image.height / profile.sourceRows)))
+    : [250, 450, 710, 1050, Infinity].findIndex(limit => b.y < limit)
   return components.sort((a, b) => profile.cityOverhangs
     ? sourceRow(a.bbox) - sourceRow(b.bbox) || a.bbox.x - b.bbox.x
     : a.bbox.y - b.bbox.y || a.bbox.x - b.bbox.x)
 }
 
 export function classifyMapSprite({ bbox: b }, profile) {
-  if (profile.cityOverhangs) return ['city', ...(b.y >= 710 ? ['skyscraper'] : []), 'impassable']
+  if (profile.cityOverhangs) return ['city', ...(!profile.densityLevel && b.y >= 710 ? ['skyscraper'] : []), 'impassable']
   if (profile.kind === 'nature') {
     if (b.y >= 638) return ['water', ...(profile.biomes.includes('snow') ? ['frozen_lake'] : ['lake']), 'impassable']
     if (b.y >= 390) return ['rocks', ...(b.width <= 55 && b.height <= 55 ? ['stones'] : []), 'impassable']
@@ -81,20 +88,29 @@ export async function buildMapSpriteSheet(profile) {
   for (let index = 0; index < components.length; index++) {
     const component = components[index], b = component.bbox
     const categories = classifyMapSprite(component, profile)
-    const tags = [...profile.biomes, ...(profile.seasons || []), 'decorative', ...categories, `group_${index + 1}`]
-    const spanX = Math.max(1, Math.ceil((b.width + 4) / tileSize)), spanY = Math.max(1, Math.ceil((b.height + 4) / tileSize))
+    const density = profile.cityOverhangs ? (profile.densityLevel === 'low' ? [1, 2, 3, 2, 3][Math.floor(index / 4)]
+      : profile.densityLevel === 'medium' ? [4, 5, 6, 7, 5][Math.floor(index / 4)]
+        : [4, 5, 6, 5, 4, 5, 7, 6, 7, 7, 6, 5, 8, 9, 9, 8, 10, 10, 10, 9][index]) : null
+    const tags = [...profile.biomes, ...(profile.seasons || []), 'decorative', ...categories, ...(density ? [`density_${density}`] : []), `group_${index + 1}`]
+    const scale = profile.importScale || 1
+    const width = Math.round(b.width * scale), height = Math.round(b.height * scale)
+    const spanX = Math.max(profile.cityOverhangs ? 2 : 1, Math.ceil((width + 4) / tileSize)), spanY = Math.max(profile.cityOverhangs ? 2 : 1, Math.ceil((height + 4) / tileSize))
     const region = findPackingRegion({ columns, rows, tileSize, borderWidth, occupied, width: spanX * tileSize, height: spanY * tileSize })
     rows = region.rows
-    // Grow the footprint to fit the source, never resize the isolated pixels.
-    const width = b.width, height = b.height
+    // Native imports stay exact; explicit tier calibration is performed once
+    // during asset creation and recorded in source.packing and each import.
     const left = region.x * tileSize + Math.floor((spanX * tileSize - width) / 2)
     const top = region.y * tileSize + Math.floor((spanY * tileSize - height) / 2)
-    const crop = Buffer.from(component.pixels)
+    const crop = scale === 1 ? Buffer.from(component.pixels)
+      : await sharp(Buffer.from(component.pixels), { raw: { width: b.width, height: b.height, channels: 4 } }).resize(width, height).raw().toBuffer()
     overlays.push({ input: crop, raw: { width, height, channels: 4 }, left, top })
-    const baseRows = profile.cityOverhangs ? Math.min(spanY - 1, b.y >= 710 || b.height > 185 ? 3 : 2) : spanY
+    const smallHouse = profile.densityLevel === 'low' && density === 1
+    const minimumRows = smallHouse ? 1 : 2
+    const preferredRows = smallHouse ? 1 : categories.includes('skyscraper') || (!profile.densityLevel && b.height > 185) || (profile.densityLevel === 'medium' && b.height > 210) ? 3 : 2
+    const baseRows = profile.cityOverhangs ? Math.min(spanY, Math.max(minimumRows, Math.min(spanY - 1, preferredRows))) : spanY
     const upperRows = spanY - baseRows
     const footprint = { x: 0, y: upperRows, width: spanX, height: baseRows }
-    if (profile.cityOverhangs && (spanX < 2 || baseRows < 2 || (categories.includes('skyscraper') && (spanX < 3 || baseRows < 3)))) throw new Error('Building source is too small for its minimum ground footprint')
+    if (profile.cityOverhangs && (spanX < 2 || baseRows < minimumRows || (categories.includes('skyscraper') && (spanX < 3 || baseRows < 3)))) throw new Error('Building source is too small for its minimum ground footprint')
     for (let dy = 0; dy < spanY; dy++) for (let dx = 0; dx < spanX; dx++) {
       const col = region.x + dx, row = region.y + dy
       occupied.add(`${col},${row}`)
@@ -102,13 +118,13 @@ export async function buildMapSpriteSheet(profile) {
       tiles[`${col},${row}`] = { col, row, tags: cellTags, rect: { x: col * tileSize, y: row * tileSize, width: tileSize, height: tileSize } }
     }
     const id = `${profile.source}_${categories[0]}_${String(index + 1).padStart(3, '0')}`
-    imports.push({ id, sourceId: profile.source, bbox: b, area: component.area, anchor: 'center',
+    imports.push({ id, sourceId: profile.source, bbox: b, area: component.area, anchor: 'center', sizeRatio: scale,
       tileSpan: { columns: spanX, rows: spanY }, placedAt: { column: region.x, row: region.y }, tags,
       renderRect: { x: left - region.x * tileSize, y: top - region.y * tileSize, width, height } })
-    propLayout.push({ id, col: region.x, row: region.y, w: spanX, h: spanY, groupId: index + 1, tags, sourceRect: b, ...(profile.cityOverhangs ? { footprint } : {}) })
+    propLayout.push({ id, col: region.x, row: region.y, w: spanX, h: spanY, groupId: index + 1, tags, ...(density ? { density } : {}), sourceRect: b, ...(profile.cityOverhangs ? { footprint } : {}) })
   }
   const source = { path: sourcePath.replace(/^public\//, ''), sha256: createHash('sha256').update(bytes).digest('hex'),
-    width: info.width, height: info.height, detection: profile.detection || DETECTION_OPTIONS, guides: profile.guides || [], spriteCount: components.length, packing: { scale: 1, padding: 2 } }
+    width: info.width, height: info.height, detection: profile.detection || DETECTION_OPTIONS, guides: profile.guides || [], spriteCount: components.length, packing: { scale: profile.importScale || 1, padding: 2 } }
   const metadata = exportMetadata({ schemaVersion: 1, layoutVersion: profile.layoutVersion || 3, tileSize, rowHeight: tileSize, borderWidth, columns, rows,
     blendMode: 'alpha', tags: [...new Set(Object.values(tiles).flatMap(tile => tile.tags).filter(tag => !/^group_/.test(tag)))], tiles, propLayout,
     source, extension: { imports, occupiedTiles: [...occupied] } }, profile.name, { lossless: false, quality: MAP_SHEET_QUALITY })

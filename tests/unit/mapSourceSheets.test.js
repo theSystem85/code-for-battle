@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises'
+import { Buffer } from 'node:buffer'
 import { createHash } from 'node:crypto'
 import sharp from 'sharp'
 import { describe, it, expect } from 'vitest'
@@ -8,10 +9,10 @@ import { detectWebPCompression } from '../../src/ui/sseExport.js'
 import { DEFAULT_SSE_SHEETS } from '../../src/ui/spriteSheetRegistry.js'
 import { buildDecorationPools } from '../../src/rendering/decorationLayout.js'
 
-const counts = [20, 20, 20, 155, 118]
+const counts = [...Array(9).fill(20), 155, 118]
 
 describe('bundled map source sheets', () => {
-  it.each(SOURCE_PROFILES.map((profile, index) => ({ ...profile, count: counts[index] })))('[U05433] replays SSE extraction and validates $source ownership, metadata and native-alpha WebP', async(profile) => {
+  it.each(SOURCE_PROFILES.map((profile, index) => ({ ...profile, count: counts[index] })))('[U05433] replays SSE extraction and validates $source ownership, metadata and recorded-scale alpha WebP', async(profile) => {
     const directory = 'public/images/map/sprite_sheets'
     const source = await readFile(`${directory}/sources/${profile.source}.webp`)
     const { data, info } = await sharp(source).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
@@ -53,8 +54,11 @@ describe('bundled map source sheets', () => {
       expect(prop.tags).toEqual(expect.arrayContaining([...profile.biomes, 'decorative', `group_${prop.groupId}`]))
       if (profile.cityOverhangs) {
         expect(prop.footprint.width).toBeGreaterThanOrEqual(prop.tags.includes('skyscraper') ? 3 : 2)
-        expect(prop.footprint.height).toBeGreaterThanOrEqual(prop.tags.includes('skyscraper') ? 3 : 2)
-        expect(prop.footprint.y).toBeGreaterThan(0)
+        expect(prop.footprint.height).toBeGreaterThanOrEqual(prop.tags.includes('skyscraper') ? 3 : profile.densityLevel === 'low' && prop.density === 1 ? 1 : 2)
+        expect(prop.footprint.y).toBeGreaterThanOrEqual(profile.densityLevel === 'low' ? 0 : 1)
+        expect(prop.tags).toContain(`density_${prop.density}`)
+        expect(prop.density).toBeGreaterThanOrEqual(1)
+        expect(prop.density).toBeLessThanOrEqual(10)
         if (profile.seasons) expect(prop.tags).toEqual(expect.arrayContaining(profile.seasons))
       }
       if (prop.tags.includes('stones')) expect(prop.tags).toContain('rocks')
@@ -84,16 +88,18 @@ describe('bundled map source sheets', () => {
     expect(output.info.width).toBe(metadata.columns * metadata.tileSize)
     expect(output.info.height).toBe(metadata.rows * metadata.rowHeight)
     expect(output.data[3]).toBe(0)
-    expect(metadata.source.packing).toEqual({ scale: 1, padding: 2 })
+    expect(metadata.source.packing).toEqual({ scale: profile.importScale || 1, padding: 2 })
     let changedAlpha = 0
     for (let index = 0; index < components.length; index++) {
       const { bbox, pixels } = components[index]
       const { renderRect: rect, placedAt } = metadata.extension.imports[index]
-      expect([rect.width, rect.height]).toEqual([bbox.width, bbox.height])
+      const scale = profile.importScale || 1
+      expect([rect.width, rect.height]).toEqual([Math.round(bbox.width * scale), Math.round(bbox.height * scale)])
+      const expectedPixels = scale === 1 ? pixels : await sharp(Buffer.from(pixels), { raw: { width: bbox.width, height: bbox.height, channels: 4 } }).resize(rect.width, rect.height).raw().toBuffer()
       const left = placedAt.column * metadata.tileSize + rect.x
       const top = placedAt.row * metadata.rowHeight + rect.y
-      for (let y = 0; y < bbox.height; y++) for (let x = 0; x < bbox.width; x++) {
-        if (output.data[((top + y) * output.info.width + left + x) * 4 + 3] !== pixels[(y * bbox.width + x) * 4 + 3]) changedAlpha++
+      for (let y = 0; y < rect.height; y++) for (let x = 0; x < rect.width; x++) {
+        if (output.data[((top + y) * output.info.width + left + x) * 4 + 3] !== expectedPixels[(y * rect.width + x) * 4 + 3]) changedAlpha++
       }
     }
     // WebP RGB is lossy, but the native-size sprite silhouette is exact.

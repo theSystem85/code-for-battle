@@ -58,6 +58,7 @@ export const DEFAULT_SSE_TAGS = [
   'shore', 'onshore', 'offshore', 'shore_trans',
   'ground_detail',
   'city', 'overhang', 'skyscraper',
+  ...Array.from({ length: 10 }, (_, index) => `density_${index + 1}`),
   'concrete',
   'street',
   'top',
