@@ -3,6 +3,7 @@ import { readFile, writeFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
+import { CURATED_PROFILES } from './map-prop-guides.mjs'
 import { detectSprites } from '../src/ui/sseDetect.js'
 import { findPackingRegion } from '../src/ui/ssePack.js'
 import { exportMetadata } from '../src/ui/sseExport.js'
@@ -23,7 +24,8 @@ export const SOURCE_PROFILES = [
     seasons: biome === 'snow' ? ['winter'] : [], densityLevel: level, sourceRows: 5, importScale: level === 'low' ? 0.5 : 0.75
   }))),
   { source: 'vegetation_rocks_lakes_sand', name: 'dtv4_nature_sand', biomes: ['sand'], kind: 'nature' },
-  { source: 'vegetation_rocks_lakes_snow', name: 'dtv4_nature_snow', biomes: ['snow'], kind: 'nature' }
+  { source: 'vegetation_rocks_lakes_snow', name: 'dtv4_nature_snow', biomes: ['snow'], kind: 'nature' },
+  ...CURATED_PROFILES
 ]
 export const DETECTION_OPTIONS = Object.freeze({ transparent: true, alphaCutoff: 128, gap: 0, minArea: 256 })
 export const MAP_SHEET_QUALITY = 85
@@ -53,6 +55,10 @@ function splitAtGuide(component, guide) {
 export function extractMapSource(image, profile) {
   let components = detectSprites(image, profile.detection || DETECTION_OPTIONS)
   for (const guide of profile.guides || []) components = components.flatMap(component => splitAtGuide(component, guide))
+  if (profile.sourceColumns) {
+    components.sort((a, b) => a.bbox.y + a.bbox.height / 2 - b.bbox.y - b.bbox.height / 2)
+    return components.flatMap((_, index) => index % profile.sourceColumns ? [] : components.slice(index, index + profile.sourceColumns).sort((a, b) => a.bbox.x - b.bbox.x))
+  }
   const sourceRow = b => profile.sourceRows
     ? Math.min(profile.sourceRows - 1, Math.floor((b.y + b.height / 2) / (image.height / profile.sourceRows)))
     : [250, 450, 710, 1050, Infinity].findIndex(limit => b.y < limit)
@@ -87,11 +93,12 @@ export async function buildMapSpriteSheet(profile) {
   let rows = 1
   for (let index = 0; index < components.length; index++) {
     const component = components[index], b = component.bbox
-    const categories = classifyMapSprite(component, profile)
+    const guide = profile.props?.[index]
+    const categories = guide?.tags || classifyMapSprite(component, profile)
     const density = profile.cityOverhangs ? (profile.densityLevel === 'low' ? [1, 2, 3, 2, 3][Math.floor(index / 4)]
       : profile.densityLevel === 'medium' ? [4, 5, 6, 7, 5][Math.floor(index / 4)]
         : [4, 5, 6, 5, 4, 5, 7, 6, 7, 7, 6, 5, 8, 9, 9, 8, 10, 10, 10, 9][index]) : null
-    const tags = [...profile.biomes, ...(profile.seasons || []), 'decorative', ...categories, ...(density ? [`density_${density}`] : []), `group_${index + 1}`]
+    const tags = [...(guide?.biomes || profile.biomes), ...(profile.seasons || []), 'decorative', ...categories, ...(density ? [`density_${density}`] : []), `group_${index + 1}`]
     const scale = profile.importScale || 1
     const width = Math.round(b.width * scale), height = Math.round(b.height * scale)
     const spanX = Math.max(profile.cityOverhangs ? 2 : 1, Math.ceil((width + 4) / tileSize)), spanY = Math.max(profile.cityOverhangs ? 2 : 1, Math.ceil((height + 4) / tileSize))
@@ -117,7 +124,7 @@ export async function buildMapSpriteSheet(profile) {
       const cellTags = profile.cityOverhangs && dy < upperRows ? [...tags.filter(tag => tag !== 'impassable'), 'passable', 'overhang'] : tags
       tiles[`${col},${row}`] = { col, row, tags: cellTags, rect: { x: col * tileSize, y: row * tileSize, width: tileSize, height: tileSize } }
     }
-    const id = `${profile.source}_${categories[0]}_${String(index + 1).padStart(3, '0')}`
+    const id = guide ? `${profile.biomes[0]}_${guide.name}` : `${profile.source}_${categories[0]}_${String(index + 1).padStart(3, '0')}`
     imports.push({ id, sourceId: profile.source, bbox: b, area: component.area, anchor: 'center', sizeRatio: scale,
       tileSpan: { columns: spanX, rows: spanY }, placedAt: { column: region.x, row: region.y }, tags,
       renderRect: { x: left - region.x * tileSize, y: top - region.y * tileSize, width, height } })
@@ -139,6 +146,6 @@ export async function buildMapSpriteSheet(profile) {
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const name = process.argv.find(arg => arg.startsWith('--name='))?.slice(7)
   const kind = process.argv.find(arg => arg.startsWith('--kind='))?.slice(7)
-  if (kind && !['city', 'nature'].includes(kind)) throw new Error('Expected --kind=city or --kind=nature')
+  if (kind && !['city', 'nature', 'props'].includes(kind)) throw new Error('Expected --kind=city, --kind=nature or --kind=props')
   for (const profile of SOURCE_PROFILES.filter(profile => (!kind || profile.kind === kind) && (!name || profile.name === name))) await buildMapSpriteSheet(profile)
 }

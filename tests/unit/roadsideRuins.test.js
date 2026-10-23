@@ -38,8 +38,8 @@ describe('roadside, ruins and rare props', () => {
     expect(walls.length).toBeGreaterThan(towers.length)
   })
 
-  it('[U03838] retags dtv2_universal into ruins plus roadside, with the water tower and fuel depot rare', () => {
-    const sheet = JSON.parse(readFileSync('public/images/map/sprite_sheets/dtv2_universal.json', 'utf8'))
+  it('[U03838] retags dtv6_decor_universal into ruins plus roadside, with the water tower and fuel depot rare', () => {
+    const sheet = JSON.parse(readFileSync('public/images/map/sprite_sheets/dtv6_decor_universal.json', 'utf8'))
     const byId = Object.fromEntries(sheet.propLayout.map(prop => [prop.id, prop.tags]))
     for (const tags of Object.values(byId)) expect(tags.includes('ruins') !== tags.includes('roadside')).toBe(true)
     expect(Object.values(byId).filter(tags => tags.includes('ruins')).length).toBeGreaterThanOrEqual(10)

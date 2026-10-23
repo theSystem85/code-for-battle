@@ -347,8 +347,8 @@ test.describe('Sprite Sheet Editor integration', () => {
       if (!textureManager || !mapGrid?.length || !gameState?.activeSpriteSheetPath || !gameState?.activeSpriteSheetMetadata) {
         return null
       }
-      const dtPath = 'images/map/sprite_sheets/dtv2_grass.webp'
-      const dtMetadata = await (await fetch('/images/map/sprite_sheets/dtv2_grass.json')).json()
+      const dtPath = 'images/map/sprite_sheets/dtv6_decor_grass.webp'
+      const dtMetadata = await (await fetch('/images/map/sprite_sheets/dtv6_decor_grass.json')).json()
       await textureManager.setIntegratedSpriteSheetConfig({
         enabled: true,
         biomeTag: 'grass',

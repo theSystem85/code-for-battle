@@ -3,7 +3,7 @@ import { isBulkAssetPath, isNetworkFirstMapDataPath } from '../../src/pwa/servic
 
 describe('service worker sprite sheet caching', () => {
   it('[U03985] serves sprite sheet index, metadata and images network-first', () => {
-    for (const path of ['/images/map/sprite_sheets/index.json', '/images/map/sprite_sheets/dtv2_soil.json', '/images/map/sprite_sheets/dtv3_ground_detail.webp']) {
+    for (const path of ['/images/map/sprite_sheets/index.json', '/images/map/sprite_sheets/dtv6_decor_soil.json', '/images/map/sprite_sheets/dtv3_ground_detail.webp']) {
       expect(isNetworkFirstMapDataPath(path)).toBe(true)
     }
     expect(isNetworkFirstMapDataPath('/images/map/units/tank.webp')).toBe(false)

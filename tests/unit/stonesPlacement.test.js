@@ -60,16 +60,15 @@ describe('stones', () => {
   })
 
   it('[U04307] ships biome stone sources on the remaining dtv sheets', () => {
-    const expected = {
-      dtv2_grass: ['4,4'],
-      dtv2_soil: ['4,5'],
-      dtv2_sand: ['0,3', '1,3', '0,4', '1,4', '0,5'],
-      dtv2_snow: ['3,2', '4,3', '5,3', '5,4', '1,5'],
-      dtv3_shore: ['1,1', '2,1', '3,1']
-    }
-    for (const [name, coordinates] of Object.entries(expected)) {
+    for (const name of ['dtv6_decor_grass', 'dtv6_decor_soil', 'dtv6_decor_sand', 'dtv6_decor_snow', 'dtv6_shore', 'dtv6_nature_grass', 'dtv6_nature_soil']) {
       const sheet = JSON.parse(readFileSync(`public/images/map/sprite_sheets/${name}.json`, 'utf8'))
-      for (const coordinate of coordinates) expect(sheet.tiles[coordinate].tags).toContain('stones')
+      const stones = sheet.propLayout.filter(prop => prop.tags.includes('stones'))
+      // Grass decorations have mossy boulders; loose grass stones live on nature.
+      expect(sheet.propLayout.some(prop => prop.tags.includes('rocks'))).toBe(true)
+      if (name !== 'dtv6_decor_grass') expect(stones.length).toBeGreaterThanOrEqual(1)
+      for (const prop of stones) for (let y = prop.row; y < prop.row + prop.h; y++) for (let x = prop.col; x < prop.col + prop.w; x++) {
+        expect(sheet.tiles[`${x},${y}`].tags).toEqual(expect.arrayContaining(['stones', 'rocks']))
+      }
     }
   })
 })

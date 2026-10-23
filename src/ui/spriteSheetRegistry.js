@@ -7,11 +7,11 @@ const SHEET_DIR = 'images/map/sprite_sheets/'
 // Vite resolves availability at build time; missing future sheets never enter
 // either picker. Both image and metadata must exist before registration.
 // Besides the required dtv3 sheets, any other bundled `dtv<N>_<name>` pair
-// (for example a future snow-tagged winter sheet such as `dtv3_winter`) is
+// (for example a biome nature sheet such as `dtv6_nature_soil`) is
 // registered automatically, so dropping its .webp + .json into the folder is
 // enough to offer it.
 const futureSheetFiles = import.meta.glob('/public/images/map/sprite_sheets/dtv*_*.{webp,json}', { eager: true, query: '?url', import: 'default' })
-const REQUIRED_FUTURE_SHEETS = Object.freeze(['dtv2_grass', 'dtv2_soil', 'dtv2_sand', 'dtv2_snow', 'dtv2_universal', 'dtv3_ground_detail', 'dtv3_shore', 'dtv3_city', 'dtv3_winter'])
+const REQUIRED_FUTURE_SHEETS = Object.freeze(['dtv3_ground_detail', 'dtv3_city'])
 export function availableFutureSheets(files = {}, warn = console.warn) {
   files = files || {}
   const prefixOf = name => `/public/${SHEET_DIR}${name}`
@@ -42,6 +42,7 @@ export const OPTIONAL_SSE_SHEETS = Object.freeze([])
 // Sheets that used to ship and were removed. Stored settings, editor state and
 // saved games that still point at them must fall back to the defaults.
 export const RETIRED_SPRITE_SHEET_PATHS = Object.freeze(new Set([
+  ...['dtv2_grass', 'dtv2_soil', 'dtv2_sand', 'dtv2_snow', 'dtv2_universal', 'dtv3_shore', 'dtv3_winter'].map(name => `${SHEET_DIR}${name}.webp`),
   `${SHEET_DIR}dt_grass_1024_q85.webp`,
   `${SHEET_DIR}dt_soil_1024_q85.webp`,
   `${SHEET_DIR}dt_sand_1024_q85.webp`,

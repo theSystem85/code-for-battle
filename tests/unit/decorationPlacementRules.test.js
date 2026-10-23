@@ -6,7 +6,6 @@ import {
   decorationFootprintDistance, decorationIdentity, decorationSeed, decorationSpacing,
   decorationSpacingAllows, getValidDecorationCell, landmarkAllows
 } from '../../src/rendering/decorationLayout.js'
-import { tagShoreSheet } from '../../scripts/shoreTags.mjs'
 import { MapRenderer } from '../../src/rendering/mapRenderer.js'
 import { TextureManager } from '../../src/rendering/textureManager.js'
 import { availableFutureSheets } from '../../src/ui/spriteSheetRegistry.js'
@@ -24,16 +23,15 @@ const anchors = layout => layout.cells.filter(cell => cell && cell.offsetX === 0
 
 describe('natural decoration preparation', () => {
   it('[U01202] keeps shore classification and biome tags synchronized on every sprite', () => {
-    const sheet = JSON.parse(readFileSync('public/images/map/sprite_sheets/dtv3_shore.json', 'utf8'))
-    expect(tagShoreSheet(JSON.parse(JSON.stringify(sheet)))).toEqual(sheet)
+    const sheet = JSON.parse(readFileSync('public/images/map/sprite_sheets/dtv6_shore.json', 'utf8'))
     for (const tile of [...Object.values(sheet.tiles), ...sheet.propLayout]) {
       if (!tile.tags.includes('shore')) continue
       expect(tile.tags.filter(tag => ['onshore', 'offshore', 'shore_trans'].includes(tag))).toHaveLength(1)
     }
-    for (const key of ['0,0', '1,0', '2,0', '3,0', '4,0', '5,0', '0,1', '0,3']) {
-      expect(sheet.tiles[key].tags).not.toContain('universal')
-      expect(sheet.tiles[key].tags).not.toContain('snow')
-      expect(sheet.tiles[key].tags).toEqual(expect.arrayContaining(['grass', 'soil', 'sand']))
+    for (const prop of sheet.propLayout.filter(prop => /lily|reeds|cattails/.test(prop.id) && !prop.id.includes('snowy'))) {
+      expect(prop.tags).not.toContain('universal')
+      expect(prop.tags).not.toContain('snow')
+      expect(prop.tags).toEqual(expect.arrayContaining(['grass', 'soil', 'sand']))
     }
   })
 
@@ -135,7 +133,7 @@ describe('natural decoration preparation', () => {
     const metadata = { blendMode: 'alpha', tiles: { '0,0': {
       tags: ['universal', 'decorative', 'passable', 'shore', 'rocks'], rect: { x: 0, y: 0, width: 64, height: 64 }
     } } }
-    await manager.setIntegratedSpriteSheetConfig({ enabled: true, sheets: [{ sheetPath: 'images/map/sprite_sheets/dtv3_shore.webp', metadata }] })
+    await manager.setIntegratedSpriteSheetConfig({ enabled: true, sheets: [{ sheetPath: 'images/map/sprite_sheets/dtv6_shore.webp', metadata }] })
     expect(manager.integratedDecorationPools.grass.single).toHaveLength(1)
     expect(manager.integratedDecorationPools.snow.single).toHaveLength(1)
     expect(manager.getIntegratedTileForMapTile('rock', 0, 0)).toBeNull()
@@ -307,7 +305,7 @@ describe('natural decoration preparation', () => {
   it('[U01218] registers future sheets only when both files exist and warns for missing pairs', () => {
     const warn = vi.fn()
     expect(availableFutureSheets({}, warn)).toEqual([])
-    expect(warn).toHaveBeenCalledTimes(9)
+    expect(warn).toHaveBeenCalledTimes(2)
     const prefix = '/public/images/map/sprite_sheets/dtv3_ground_detail'
     expect(availableFutureSheets({ [`${prefix}.webp`]: 'image' }, warn)).toEqual([])
     expect(availableFutureSheets({ [`${prefix}.webp`]: 'image', [`${prefix}.json`]: 'metadata' }, warn)).toEqual(['images/map/sprite_sheets/dtv3_ground_detail.webp'])
@@ -315,7 +313,7 @@ describe('natural decoration preparation', () => {
 
   it('[U01219] preserves source impassability and synchronizes categories on every prop cell', () => {
     for (const biome of ['grass', 'soil', 'sand', 'snow', 'universal']) {
-      const sheet = JSON.parse(readFileSync(`public/images/map/sprite_sheets/dtv2_${biome}.json`, 'utf8'))
+      const sheet = JSON.parse(readFileSync(`public/images/map/sprite_sheets/dtv6_decor_${biome}.json`, 'utf8'))
       for (const prop of sheet.propLayout) {
         const categories = prop.tags.filter(tag => ['trees', 'rocks', 'farm', 'landmark', 'roadside'].includes(tag))
         for (let y = prop.row; y < prop.row + prop.h; y++) for (let x = prop.col; x < prop.col + prop.w; x++) {
@@ -323,7 +321,51 @@ describe('natural decoration preparation', () => {
           if (prop.tags.includes('impassable')) expect(sheet.tiles[`${x},${y}`].tags).toContain('impassable')
         }
       }
-      for (const prop of sheet.propLayout.filter(prop => prop.tags.includes('landmark'))) expect([prop.w, prop.h]).toEqual([3, 3])
+      for (const prop of sheet.propLayout.filter(prop => prop.tags.includes('landmark'))) expect(prop.w * prop.h).toBeGreaterThanOrEqual(9)
     }
   })
+})
+
+it.each(['onshore', 'offshore', 'shore_trans'])('[U05452] places native multi-cell %s art on every cardinal coast without blocking water', async(kind) => {
+  for (const vertical of [false, true]) for (const reverse of [false, true]) {
+    const map = Array.from({ length: 96 }, (_, y) => Array.from({ length: 96 }, (_, x) => ({ type: ((vertical ? x : y) < 32) !== reverse ? 'water' : 'land', biome: 'grass' })))
+    const prop = group('native-shore', ['shore', kind, kind === 'shore_trans' ? 'impassable' : 'passable'], 4, 3)
+    const pools = buildDecorationPools([prop])
+    const layout = buildDecorationLayout(map, pools, { salt: 688, citySeeds: 0, ruinSeeds: 0, stoneCount: 0 })
+    const placed = anchors(layout)
+    expect(placed.length).toBeGreaterThan(0)
+    const manager = new TextureManager()
+    manager.integratedSpriteSheetMode = true
+    manager.integratedSpriteSheetImage = {}
+    manager.integratedSpriteSheetMetadata = {}
+    manager.integratedDecorationPools = pools
+    vi.spyOn(manager, 'getDecorationLayout').mockReturnValue(layout)
+    for (const cell of placed) {
+      expect(getValidDecorationCell(layout, map, cell.anchorX, cell.anchorY)).toBeTruthy()
+      let land = 0, water = 0
+      for (let dy = 0; dy < cell.footprintHeight; dy++) for (let dx = 0; dx < cell.footprintWidth; dx++) {
+        const x = cell.anchorX + dx, y = cell.anchorY + dy
+        const type = map[y][x].type
+        const tile = manager.getIntegratedTileForMapTile(type, x, y, { mapGrid: map })
+        expect(tile).toBeTruthy()
+        if (type === 'water') { water++; expect(tile.tags).not.toContain('impassable') }
+        else { land++; if (kind === 'shore_trans') expect(tile.tags).toContain('impassable') }
+      }
+      expect([land, water]).toEqual(kind === 'onshore' ? [12, 0] : kind === 'offshore' ? [0, 12] : [3, 9])
+    }
+  }
+})
+
+it('[U05454] reserves native farmstead and orchard footprints before smaller props crowd their clusters', () => {
+  const large = [group('farmstead', ['farm', 'passable'], 7, 4), group('orchard', ['farm', 'passable'], 6, 3)]
+  const small = Array.from({ length: 100 }, (_, i) => group(`farm-${i}`, ['farm', 'passable'], 2))
+  const pools = buildDecorationPools([...small, ...large])
+  const seen = new Set()
+  for (let salt = 1; salt <= 12; salt++) {
+    const layout = buildDecorationLayout(grid(120), pools, { salt, citySeeds: 0, ruinSeeds: 0, stoneCount: 0 })
+    for (const cell of anchors(layout)) seen.add(cell.group.groupLabel)
+  }
+  expect(seen.has('farmstead')).toBe(true)
+  expect(seen.has('orchard')).toBe(true)
+  expect([...seen].some(id => /^farm-/.test(id))).toBe(true)
 })

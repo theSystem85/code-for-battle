@@ -34,9 +34,9 @@ describe('sprite sheet registry', () => {
 
   it('[U04163] enables every dtv sheet by default and retires removed sheets', () => {
     expect(OPTIONAL_SSE_SHEETS).toHaveLength(0)
-    expect(DEFAULT_SSE_SHEETS).toContain('images/map/sprite_sheets/dtv3_winter.webp')
+    expect(DEFAULT_SSE_SHEETS).toContain('images/map/sprite_sheets/dtv6_decor_snow.webp')
     for (const biome of ['temperate', 'sand', 'snow']) for (const level of ['low', 'medium']) expect(DEFAULT_SSE_SHEETS).toContain(`images/map/sprite_sheets/dtv5_city_${biome}_${level}.webp`)
-    expect(DEFAULT_SSE_SHEETS.filter(path => /\/dtv\d+_/.test(path))).toHaveLength(19)
+    expect(DEFAULT_SSE_SHEETS.filter(path => /\/dtv\d+_/.test(path))).toHaveLength(20)
     expect(DEFAULT_SSE_SHEETS).toEqual(expect.arrayContaining(['dtv4_city_sand', 'dtv4_city_snow', 'dtv4_nature_sand', 'dtv4_nature_snow'].map(name => `images/map/sprite_sheets/${name}.webp`)))
     expect(isRetiredSpriteSheetPath('images/map/sprite_sheets/seasons_1024_q90_2.webp')).toBe(true)
     expect(isRetiredSpriteSheetPath('images/map/sprite_sheets/streets24_q90_1024x1024.webp')).toBe(true)
@@ -72,7 +72,7 @@ describe('sprite sheet registry', () => {
 })
 
 it('[U04166] preserves restored sheets in stored settings and saved games', () => {
-  const restored = DEFAULT_SSE_SHEETS.find(path => path.includes('dtv2_grass'))
+  const restored = DEFAULT_SSE_SHEETS.find(path => path.includes('dtv6_decor_grass'))
   const storage = memoryStorage({
     'rts-sse-last-sheet': restored,
     'rts-integrated-spritesheet-selected-sheets': JSON.stringify([restored])
@@ -83,7 +83,7 @@ it('[U04166] preserves restored sheets in stored settings and saved games', () =
 })
 
 it('[U04167] tags complete ruin footprints while preserving impassability and excluding huts', () => {
-  DEFAULT_SSE_SHEETS.filter(path => /\/dtv[23]_/.test(path)).forEach(path => {
+  DEFAULT_SSE_SHEETS.filter(path => /\/dtv\d+_/.test(path)).forEach(path => {
     const metadata = JSON.parse(readFileSync(`public/${path.replace('.webp', '.json')}`, 'utf8'))
     metadata.propLayout.forEach(prop => {
       const isRuin = prop.id.includes('ruin') || ['soil_collapsed_shed', 'universal_rubble_pile'].includes(prop.id)
@@ -139,4 +139,14 @@ it.each(['dtv3_city', 'dtv4_city_sand', 'dtv4_city_snow', 'dtv4_nature_sand', 'd
   purgeRetiredSheetStorage(storage)
   expect(storage.map.size).toBe(1)
   expect(sanitizeAppliedSheetMetadata(current)).toBe(current)
+})
+
+it.each(['dtv2_grass', 'dtv2_soil', 'dtv2_sand', 'dtv2_snow', 'dtv2_universal', 'dtv3_shore', 'dtv3_winter'])('[U05453] retires replaced black-background %s art and stored coordinates', name => {
+  const path = `images/map/sprite_sheets/${name}.webp`
+  const storage = memoryStorage({ [`rts-sse-metadata:${path}`]: '{}', 'rts-sse-last-sheet': path, 'rts-sse-applied-metadata': JSON.stringify({ sheetPath: path }) })
+  expect(isRetiredSpriteSheetPath(path)).toBe(true)
+  expect(DEFAULT_SSE_SHEETS).not.toContain(path)
+  purgeRetiredSheetStorage(storage)
+  expect(storage.map.size).toBe(0)
+  expect(migrateSavedSpriteSheetState({ activeSpriteSheetPath: path, activeSpriteSheetMetadata: { sheetPath: path } }).activeSpriteSheetMetadata).toBeNull()
 })
