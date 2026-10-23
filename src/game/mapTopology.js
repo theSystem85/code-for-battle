@@ -1,4 +1,3 @@
-import { normalizeSpriteSheetZoomFactor } from '../utils/spriteSheetMetadata.js'
 import { normalizeDecorationSettings } from './decorationSettings.js'
 
 // Configuration work only: never call from an entity or rendering loop.
@@ -7,7 +6,6 @@ export function computeMapTopologyFingerprint({ enabled = false, sheets = [], ..
   const tags = value => [...new Set(Array.isArray(value) ? value : [])].sort()
   const canonical = sheets.map(({ sheetPath, metadata = {} }) => ({
     sheetPath,
-    ...(normalizeSpriteSheetZoomFactor(metadata.zoomFactor) !== 1 ? { zoomFactor: normalizeSpriteSheetZoomFactor(metadata.zoomFactor) } : {}),
     tags: tags(metadata.tags),
     tiles: Object.keys(metadata.tiles || {}).sort().map(key => [key, tags(metadata.tiles[key]?.tags)])
   })).sort((a, b) => a.sheetPath < b.sheetPath ? -1 : a.sheetPath > b.sheetPath ? 1 : 0)

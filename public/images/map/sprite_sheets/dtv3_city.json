@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "layoutVersion": 4,
+  "layoutVersion": 3,
   "tileSize": 64,
   "rowHeight": 64,
   "borderWidth": 0,
@@ -27386,6 +27386,5 @@
         "group_153"
       ]
     }
-  ],
-  "zoomFactor": 2
+  ]
 }

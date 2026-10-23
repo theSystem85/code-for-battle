@@ -126,7 +126,3 @@ Use one seeded attempt per 14 coastal land anchors with ordinary spacing and six
 ## Planning additional decoration art
 
 See [map decoration asset plan](../../docs/map-decoration-asset-plan.md) for the remaining visual gaps, suggested source themes and placement prerequisites. Prefer genuinely transparent gutters and separated silhouettes in new sources; keep a labelled contact-sheet preview separate from the native-size atlas. Before choosing tags for new categories, verify the generator has a compatible placement rule and extend its coverage tests.
-
-## Per-sheet map zoom
-
-Use optional top-level `zoomFactor` (positive finite number, default 1) to change world size without resizing or repacking atlas pixels. The three city atlases use **2**, with city layout version **4**; nature atlases remain version 3. The builder preserves these defaults. Runtime grouped footprints use `ceil(sourceWidth * zoomFactor)` and `ceil(sourceHeight * zoomFactor)`; artwork keeps the exact fractional scale, centered in spare rounded space. SSE preserves zoom on import/export. Include zoom in topology/preparation fingerprints and discard superseded local city metadata. Native-size extraction pixel checks still compare atlas pixels at scale 1: world zoom is a separate property. Validate integer/fractional enlarge/shrink cases and all source sprites' placement paths after changing zoom. See [zoom specification](../../specs/sprite-sheet-map-zoom.md).

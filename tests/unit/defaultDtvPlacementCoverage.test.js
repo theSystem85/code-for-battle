@@ -29,7 +29,7 @@ describe('default dtv sheets placement coverage', () => {
       const layout = manager.getDecorationLayout(grid)
       for (const cell of [...layout.cells, ...(layout.groundDetails || [])]) {
         if (!cell?.group) continue
-        for (const tile of Object.values(cell.group.sourceTilesByOffset || cell.group.tilesByOffset || {})) {
+        for (const tile of Object.values(cell.group.tilesByOffset || {})) {
           if (tile?.sheetPath) seen.add(`${name(tile.sheetPath)} ${tile.col},${tile.row}`)
         }
       }

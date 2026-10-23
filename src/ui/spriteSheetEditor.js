@@ -11,7 +11,7 @@ import {
   normalizeSpriteSheetBlendMode,
   parseSpriteSheetMetadataFromFilename
 } from '../rendering/spriteSheetAnimation.js'
-import { normalizeSpriteSheetZoomFactor, expandCompactSpriteSheetMetadata } from '../utils/spriteSheetMetadata.js'
+import { expandCompactSpriteSheetMetadata } from '../utils/spriteSheetMetadata.js'
 import { getStoredItem, setStoredItem } from '../storage/indexedDbStorage.js'
 import { DEFAULT_SSE_SHEETS, OPTIONAL_SSE_SHEETS, filterRetiredSheetPaths, isRetiredSpriteSheetPath, resolveAvailableSheetPaths } from './spriteSheetRegistry.js'
 
@@ -189,7 +189,6 @@ function normalizeSheetDataForTags(raw, sheetPath, baseTags = DEFAULT_SSE_TAGS) 
     : [...baseTags]
   const data = {
     layoutVersion: expandedRaw?.layoutVersion,
-    zoomFactor: normalizeSpriteSheetZoomFactor(expandedRaw?.zoomFactor),
     extension: expandedRaw?.extension,
     compression: expandedRaw?.compression,
     schemaVersion: 1,
@@ -265,7 +264,6 @@ function toSerializableData(data, image) {
   return {
     schemaVersion: 1,
     layoutVersion: data.layoutVersion,
-    zoomFactor: data.zoomFactor ?? 1,
     extension: data.extension,
     compression: data.compression,
     sheetPath: data.sheetPath,
