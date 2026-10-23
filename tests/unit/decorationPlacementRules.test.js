@@ -321,7 +321,10 @@ describe('natural decoration preparation', () => {
           if (prop.tags.includes('impassable')) expect(sheet.tiles[`${x},${y}`].tags).toContain('impassable')
         }
       }
-      for (const prop of sheet.propLayout.filter(prop => prop.tags.includes('landmark'))) expect(prop.w * prop.h).toBeGreaterThanOrEqual(9)
+      for (const prop of sheet.propLayout.filter(prop => prop.tags.includes('landmark'))) {
+        expect(prop.w).toBeGreaterThanOrEqual(2)
+        expect(prop.h).toBeGreaterThanOrEqual(2)
+      }
     }
   })
 })

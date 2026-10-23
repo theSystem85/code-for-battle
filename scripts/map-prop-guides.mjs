@@ -1,3 +1,5 @@
+import { mapPropReferenceSize } from './map-prop-calibration.mjs'
+
 // Reviewed reading order, one name and placement contract per extracted silhouette.
 const props = (names, categories) => names.split('|').map((name, index) => ({ name, tags: categories[index].split(' ') }))
 const T = 'trees impassable', F = 'farm passable', R = 'rocks impassable', S = 'rocks stones passable', X = 'ruins impassable', D = 'roadside impassable', W = 'water impassable'
@@ -23,4 +25,4 @@ export const CURATED_PROFILES = [
   { source: 'alpha_shore', name: 'dtv6_shore', biomes: ['universal'], props: shore, sourceColumns: 6 },
   ...['grass', 'soil'].map(biome => ({ source: `alpha_nature_${biome}`, name: `dtv6_nature_${biome}`, biomes: [biome], seasons: [biome === 'grass' ? 'summer' : 'autumn'], props: nature, sourceColumns: 5,
     detection: { transparent: true, alphaCutoff: 128, gap: 0, minArea: 1000 } }))
-].map(profile => ({ kind: 'props', layoutVersion: 1, detection: { transparent: true, alphaCutoff: 16, gap: 0, minArea: 1000 }, ...profile, expectedSprites: profile.props.length }))
+].map(profile => ({ kind: 'props', layoutVersion: 2, detection: { transparent: true, alphaCutoff: 16, gap: 0, minArea: 1000 }, ...profile, expectedSprites: profile.props.length, props: profile.props.map((prop, index) => ({ ...prop, referenceSize: mapPropReferenceSize(profile, prop, index) })) }))

@@ -151,3 +151,15 @@ it.each(['dtv3_city', 'dtv4_city_sand', 'dtv4_city_snow', 'dtv2_grass', 'dtv2_so
   expect(storage.map.size).toBe(0)
   expect(migrateSavedSpriteSheetState({ activeSpriteSheetPath: path, activeSpriteSheetMetadata: { sheetPath: path } }).activeSpriteSheetMetadata).toBeNull()
 })
+
+it.each(['dtv6_shore', 'dtv6_nature_grass', 'dtv6_nature_soil', ...['grass', 'soil', 'sand', 'snow', 'universal'].map(biome => `dtv6_decor_${biome}`)])('[U05457] rejects oversized layout overrides for %s while preserving calibrated edits', async name => {
+  const { sanitizeAppliedSheetMetadata } = await import('../../src/ui/spriteSheetRegistry.js')
+  const path = `images/map/sprite_sheets/${name}.webp`
+  const old = { sheetPath: path, layoutVersion: 1, tiles: { '0,0': { tags: ['decorative', 'impassable'] } } }
+  const storage = memoryStorage({ [`rts-sse-metadata:${path}`]: JSON.stringify(old), 'rts-sse-applied-metadata': JSON.stringify(old) })
+  purgeRetiredSheetStorage(storage)
+  expect(storage.map.size).toBe(0)
+  expect(sanitizeAppliedSheetMetadata(old)).toBeNull()
+  const current = { ...old, layoutVersion: 2 }
+  expect(sanitizeAppliedSheetMetadata(current)).toBe(current)
+})

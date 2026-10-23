@@ -90,8 +90,7 @@ describe('dtv6_decor_snow sheet', () => {
       expect(tile.tags.includes('passable') !== tile.tags.includes('impassable')).toBe(true)
     }
     for (const prop of sheet.propLayout) {
-      const multi = prop.w * prop.h > 1
-      expect(prop.tags.some(tag => tag.startsWith('group_'))).toBe(multi)
+      expect(prop.tags.filter(tag => tag.startsWith('group_'))).toEqual([`group_${prop.groupId}`])
       if (prop.tags.includes('trees')) expect(prop.tags).toContain('impassable')
       for (let y = prop.row; y < prop.row + prop.h; y++) for (let x = prop.col; x < prop.col + prop.w; x++) expect(sheet.tiles[`${x},${y}`].tags).toEqual(prop.tags)
     }
