@@ -8,7 +8,7 @@ import { detectWebPCompression } from '../../src/ui/sseExport.js'
 import { DEFAULT_SSE_SHEETS } from '../../src/ui/spriteSheetRegistry.js'
 import { buildDecorationPools } from '../../src/rendering/decorationLayout.js'
 
-const counts = [153, 20, 154, 155, 118]
+const counts = [20, 20, 20, 155, 118]
 
 describe('bundled map source sheets', () => {
   it.each(SOURCE_PROFILES.map((profile, index) => ({ ...profile, count: counts[index] })))('[U05433] replays SSE extraction and validates $source ownership, metadata and native-alpha WebP', async(profile) => {
@@ -42,6 +42,7 @@ describe('bundled map source sheets', () => {
     expect(DEFAULT_SSE_SHEETS).toContain(metadata.sheetPath)
     expect(metadata.source.sha256).toBe(createHash('sha256').update(source).digest('hex'))
     expect(metadata.source.detection).toEqual(profile.detection || DETECTION_OPTIONS)
+    expect(metadata.layoutVersion).toBe(profile.layoutVersion || 3)
     expect(metadata.extension.imports.map(item => item.bbox)).toEqual(components.map(c => c.bbox))
     expect(metadata.propLayout).toHaveLength(components.length)
     expect(metadata.compression).toEqual({ lossless: false, quality: MAP_SHEET_QUALITY })
@@ -50,6 +51,12 @@ describe('bundled map source sheets', () => {
     const groups = []
     for (const prop of metadata.propLayout) {
       expect(prop.tags).toEqual(expect.arrayContaining([...profile.biomes, 'decorative', `group_${prop.groupId}`]))
+      if (profile.cityOverhangs) {
+        expect(prop.footprint.width).toBeGreaterThanOrEqual(prop.tags.includes('skyscraper') ? 3 : 2)
+        expect(prop.footprint.height).toBeGreaterThanOrEqual(prop.tags.includes('skyscraper') ? 3 : 2)
+        expect(prop.footprint.y).toBeGreaterThan(0)
+        if (profile.seasons) expect(prop.tags).toEqual(expect.arrayContaining(profile.seasons))
+      }
       if (prop.tags.includes('stones')) expect(prop.tags).toContain('rocks')
       expect(prop.tags.includes('passable') !== prop.tags.includes('impassable')).toBe(true)
       const tilesByOffset = {}
@@ -59,7 +66,7 @@ describe('bundled map source sheets', () => {
         occupied.add(key)
         const tileTags = metadata.tiles[key].tags
         if (prop.footprint && dy < prop.footprint.y) {
-          expect(tileTags).toEqual(expect.arrayContaining(['passable', 'overhang', 'city']))
+          expect(tileTags).toEqual(expect.arrayContaining([...profile.biomes, ...(profile.seasons || []), 'passable', 'overhang', 'city']))
           expect(tileTags).not.toContain('impassable')
         } else expect(tileTags).toEqual(prop.tags)
         tilesByOffset[`${dx},${dy}`] = metadata.tiles[key]
