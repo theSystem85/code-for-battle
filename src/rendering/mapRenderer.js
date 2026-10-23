@@ -1734,22 +1734,7 @@ export class MapRenderer {
   drawIntegratedTileImage(ctx, integratedTile, screenX, screenY) {
     if (!integratedTile?.image || !integratedTile?.rect) return false
     const { image, rect } = integratedTile
-    const destination = integratedTile.destinationRect
     const rotation = integratedTile.rotation || 0
-    if (destination) {
-      if (rotation) {
-        ctx.save()
-        ctx.translate(screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2)
-        ctx.rotate(rotation * Math.PI / 180)
-        ctx.drawImage(image, rect.x, rect.y, rect.width, rect.height,
-          destination.x - TILE_SIZE / 2, destination.y - TILE_SIZE / 2, destination.width, destination.height)
-        ctx.restore()
-      } else {
-        ctx.drawImage(image, rect.x, rect.y, rect.width, rect.height,
-          screenX + destination.x, screenY + destination.y, destination.width, destination.height)
-      }
-      return true
-    }
     if (rotation) {
       // Rotated source offsets were prepared with the footprint. Each cell
       // rotates about its center, equivalent to rotating the complete group.

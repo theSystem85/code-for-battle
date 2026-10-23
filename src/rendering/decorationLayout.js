@@ -454,12 +454,11 @@ export function decorationEnvironmentAllows(group, x, y, constraints, footprint 
   const index = y * constraints.width + x
   if (constraints.keepClear[index]) return false
   // Roadside props sit directly next to a road (anchor on the first ring;
-  // other footprint cells may reach the second ring; zoomed props can extend
-  // farther outward while their anchor remains on the first ring). Everything else keeps
+  // other footprint cells may reach the second ring). Everything else keeps
   // a one-tile buffer from roads.
   if (group.tagSet.has('roadside')) {
     const distance = constraints.roadDistance[index]
-    if (footprint ? distance < 1 || distance > 2 && !(group.zoomFactor > 1) : distance !== 1) return false
+    if (footprint ? distance < 1 || distance > 2 : distance !== 1) return false
   } else if (constraints.roadDistance[index] <= 1) return false
   if (!footprint && group.tagSet.has('shore') && constraints.shoreDistance[index] !== 1) return false
   return true
@@ -694,7 +693,7 @@ export function planOrganicCityStreets(mapGrid, cities, { salt = 0, constraints 
     ]
     // Side streets: more for bigger cities, spread along the main street on
     // alternating sides; some branch once (dead end or reconnecting).
-    const sideCount = Math.max(1, Math.min(4, Math.round(radius / (4 * (cities.lotScale || 1))) + Math.floor(random() * 3) - 1))
+    const sideCount = Math.max(1, Math.min(4, Math.round(radius / 4) + Math.floor(random() * 3) - 1))
     let side = random() < 0.5 ? 1 : -1
     const used = []
     for (let j = 0; j < sideCount; j++) {
@@ -990,10 +989,7 @@ export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'g
   const constraints = buildDecorationConstraints(mapGrid, startPositions)
   const clusters = buildCategoryClusters(mapGrid, { salt, defaultBiome })
   const ruins = buildRuinClusters(mapGrid, { salt, defaultBiome, count: options.ruinSeeds, radius: options.ruinClusterSize })
-  const cityZoom = Math.max(1, ...DECORATION_BIOMES.flatMap(biome => [...(pools[biome]?.multi || []), ...(pools[biome]?.single || [])]
-    .filter(group => group.tagSet.has('city')).map(group => group.zoomFactor || 1)))
-  const cities = buildRuinClusters(mapGrid, { salt: salt + 7919, defaultBiome, count: options.citySeeds, radius: Math.ceil(options.cityClusterSize * cityZoom), minDistance: 1 })
-  cities.lotScale = cityZoom
+  const cities = buildRuinClusters(mapGrid, { salt: salt + 7919, defaultBiome, count: options.citySeeds, radius: options.cityClusterSize, minDistance: 1 })
   const clusterSeeds = new Set(Object.values(clusters).flatMap(cluster => cluster.centers.map(center => `${center.x},${center.y}`)))
   const hasCityGroups = options.citySeeds > 0 && DECORATION_BIOMES.some(biome => ['multi', 'single'].some(kind => (pools[biome]?.[kind] || []).some(group => group.tagSet.has('city'))))
   // City streets are planned before any decoration so houses can line them.
@@ -1063,7 +1059,7 @@ export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'g
     const cityBags = Object.fromEntries(DECORATION_BIOMES.map(biome => {
       const groups = [...(pools[biome]?.multi || []), ...(pools[biome]?.single || [])].filter(group => group.tagSet.has('city'))
       return [biome, [1, 2, 3].map(size => createDecorationBag(
-        groups.filter(group => Math.min(3, Math.max(group.sourceWidth || group.width, group.sourceHeight || group.height)) === size), salt + 5))]
+        groups.filter(group => Math.min(3, Math.max(group.width, group.height)) === size), salt + 5))]
     }))
     function* cityCandidates(bags, preferredSize) {
       const allowed = bags.slice(0, preferredSize).filter(bag => bag.size)
