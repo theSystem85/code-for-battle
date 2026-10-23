@@ -884,7 +884,7 @@ export class GameWebGLRenderer {
     const integratedTerrainTile = this.textureManager.getIntegratedTileForMapTile?.(type, tileX, tileY, { mapGrid })
     const integratedTile = integratedResourceTile || integratedTerrainTile
     const canUseIntegratedResourceTile = Boolean(
-      integratedTile?.rect && integratedTile?.image === this.textureManager.primarySpriteSheetImage
+      !integratedTile?.cityOverlayOnly && integratedTile?.rect && integratedTile?.image === this.textureManager.primarySpriteSheetImage
     )
     const isCrystalResource = type === 'ore' || type === 'seedCrystal'
     if (isCrystalResource && integratedResourceTile?.rect && !canUseIntegratedResourceTile) {

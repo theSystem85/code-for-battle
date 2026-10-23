@@ -1020,6 +1020,9 @@ export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'g
     const fw = placement.footprintWidth || group.width
     const fh = placement.footprintHeight || group.height
     if (x < 0 || y < 0 || x + fw > width || y + fh > height) return false
+    const visual = group.cityVisual
+    if (visual && (x + visual.tileOffsetX < 0 || y + visual.tileOffsetY < 0 ||
+      x + visual.tileOffsetX + visual.columns > width || y + visual.tileOffsetY + visual.rows > height)) return false
     let touchesWater = false
     for (let dy = 0; dy < fh; dy++) {
       for (let dx = 0; dx < fw; dx++) {
@@ -1059,7 +1062,7 @@ export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'g
     const cityBags = Object.fromEntries(DECORATION_BIOMES.map(biome => {
       const groups = [...(pools[biome]?.multi || []), ...(pools[biome]?.single || [])].filter(group => group.tagSet.has('city'))
       return [biome, [1, 2, 3].map(size => createDecorationBag(
-        groups.filter(group => Math.min(3, Math.max(group.width, group.height)) === size), salt + 5))]
+        groups.filter(group => (group.cityVisual ? (group.tagSet.has('skyscraper') ? 3 : group.width * group.height >= 9 ? 2 : 1) : Math.min(3, Math.max(group.width, group.height))) === size), salt + 5))]
     }))
     function* cityCandidates(bags, preferredSize) {
       const allowed = bags.slice(0, preferredSize).filter(bag => bag.size)

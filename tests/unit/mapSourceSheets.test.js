@@ -8,7 +8,7 @@ import { detectWebPCompression } from '../../src/ui/sseExport.js'
 import { DEFAULT_SSE_SHEETS } from '../../src/ui/spriteSheetRegistry.js'
 import { buildDecorationPools } from '../../src/rendering/decorationLayout.js'
 
-const counts = [153, 157, 154, 155, 118]
+const counts = [153, 20, 154, 155, 118]
 
 describe('bundled map source sheets', () => {
   it.each(SOURCE_PROFILES.map((profile, index) => ({ ...profile, count: counts[index] })))('[U05433] replays SSE extraction and validates $source ownership, metadata and native-alpha WebP', async(profile) => {
@@ -20,7 +20,7 @@ describe('bundled map source sheets', () => {
     expect(components).toHaveLength(profile.count)
     // A zero cutoff joins this noisy source into a giant component. The
     // recorded settings must actually separate useful individual props.
-    expect(Math.max(...detectSprites(image, { transparent: true, minArea: 256 }).map(c => c.area))).toBeGreaterThan(900000)
+    if (!profile.cityOverhangs) expect(Math.max(...detectSprites(image, { transparent: true, minArea: 256 }).map(c => c.area))).toBeGreaterThan(900000)
     const seen = new Uint8Array(info.width * info.height)
     let duplicatePixels = 0, belowCutoff = 0
     for (const component of components) {
@@ -30,7 +30,7 @@ describe('bundled map source sheets', () => {
       for (let y = 0; y < b.height; y++) for (let x = 0; x < b.width; x++) {
         const alpha = component.pixels[(y * b.width + x) * 4 + 3]
         if (!alpha) continue
-        if (alpha <= DETECTION_OPTIONS.alphaCutoff) belowCutoff++
+        if (alpha <= (profile.detection || DETECTION_OPTIONS).alphaCutoff) belowCutoff++
         const offset = (b.y + y) * info.width + b.x + x
         if (seen[offset]) duplicatePixels++
         seen[offset] = 1
@@ -41,7 +41,7 @@ describe('bundled map source sheets', () => {
     const metadata = JSON.parse(await readFile(`${directory}/${profile.name}.json`, 'utf8'))
     expect(DEFAULT_SSE_SHEETS).toContain(metadata.sheetPath)
     expect(metadata.source.sha256).toBe(createHash('sha256').update(source).digest('hex'))
-    expect(metadata.source.detection).toEqual(DETECTION_OPTIONS)
+    expect(metadata.source.detection).toEqual(profile.detection || DETECTION_OPTIONS)
     expect(metadata.extension.imports.map(item => item.bbox)).toEqual(components.map(c => c.bbox))
     expect(metadata.propLayout).toHaveLength(components.length)
     expect(metadata.compression).toEqual({ lossless: false, quality: MAP_SHEET_QUALITY })
@@ -57,7 +57,11 @@ describe('bundled map source sheets', () => {
         const key = `${prop.col + dx},${prop.row + dy}`
         expect(occupied.has(key)).toBe(false)
         occupied.add(key)
-        expect(metadata.tiles[key].tags).toEqual(prop.tags)
+        const tileTags = metadata.tiles[key].tags
+        if (prop.footprint && dy < prop.footprint.y) {
+          expect(tileTags).toEqual(expect.arrayContaining(['passable', 'overhang', 'city']))
+          expect(tileTags).not.toContain('impassable')
+        } else expect(tileTags).toEqual(prop.tags)
         tilesByOffset[`${dx},${dy}`] = metadata.tiles[key]
       }
       groups.push({ width: prop.w, height: prop.h, tilesByOffset, tagSet: new Set(prop.tags) })
