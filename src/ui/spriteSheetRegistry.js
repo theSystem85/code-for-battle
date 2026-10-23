@@ -140,6 +140,7 @@ export function filterRetiredSheetPaths(sheetPaths) {
 // earlier layouts cannot be applied to their repacked pixels.
 export function isSupersededSheetMetadata(metadata) {
   const path = normalizeSheetPath(metadata?.sheetPath)
+  if (['dtv6_shore', 'dtv6_nature_grass', 'dtv6_nature_soil', ...['grass', 'soil', 'sand', 'snow', 'universal'].map(biome => `dtv6_decor_${biome}`)].some(name => path === `${SHEET_DIR}${name}.webp`)) return metadata.layoutVersion !== 2
   if (['temperate', 'sand', 'snow'].flatMap(biome => ['low', 'medium'].map(level => `dtv5_city_${biome}_${level}`)).some(name => path === `${SHEET_DIR}${name}.webp`)) return metadata.layoutVersion !== 6
   return ['dtv4_nature_sand', 'dtv4_nature_snow'].some(name => path === `${SHEET_DIR}${name}.webp`) && metadata.layoutVersion !== 3
 }

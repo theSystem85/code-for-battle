@@ -249,4 +249,21 @@ describe('mapEditorControls integrated sheet selection list', () => {
     expect(Array.isArray(latestConfig?.sheets)).toBe(true)
     expect(latestConfig.sheets.some((entry) => entry.sheetPath === 'blob:uploaded-sheet')).toBe(true)
   })
+
+  it('[U05455] restores calibrated sidecars instead of oversized saved, applied and local atlas overrides', async() => {
+    const { gameState } = await import('../../src/gameState.js')
+    const { applyIntegratedSpriteSheetRuntime } = await import('../../src/ui/mapEditorControls.js')
+    const sheetPath = 'images/map/sprite_sheets/dtv6_decor_grass.webp'
+    const old = { sheetPath, layoutVersion: 1, tiles: { '0,0': { col: 0, row: 0, rect: { x: 0, y: 0, width: 64, height: 64 }, tags: ['grass', 'decorative', 'passable'] } } }
+    const current = { ...old, layoutVersion: 2 }
+    localStorage.setItem(`rts-sse-metadata:${sheetPath}`, JSON.stringify({ ...old, sheetPath: undefined }))
+    Object.assign(gameState, { useIntegratedSpriteSheetMode: true, multiplayerSession: null, activeSpriteSheetSelections: [sheetPath], availableStaticSpriteSheets: [sheetPath], mapTopologyFingerprint: 'saved' })
+    fetch.mockResolvedValue({ ok: true, json: async() => current })
+    await applyIntegratedSpriteSheetRuntime(old, { preserveTopology: true, sheetsOverride: [{ sheetPath, metadata: old }] })
+    expect(mockSetIntegratedSpriteSheetConfig.mock.lastCall[0].sheets[0].metadata.layoutVersion).toBe(2)
+    expect(gameState.mapTopologyFingerprint).toBe('saved')
+    const edited = { ...current, displayName: 'Saved calibrated edits' }
+    await applyIntegratedSpriteSheetRuntime(null, { preserveTopology: true, sheetsOverride: [{ sheetPath, metadata: edited }] })
+    expect(mockSetIntegratedSpriteSheetConfig.mock.lastCall[0].sheets[0].metadata.displayName).toBe('Saved calibrated edits')
+  })
 })

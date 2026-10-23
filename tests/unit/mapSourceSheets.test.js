@@ -88,12 +88,15 @@ describe('bundled map source sheets', () => {
     expect(output.info.width).toBe(metadata.columns * metadata.tileSize)
     expect(output.info.height).toBe(metadata.rows * metadata.rowHeight)
     expect(output.data[3]).toBe(0)
-    expect(metadata.source.packing).toEqual({ scale: profile.importScale || 1, padding: 2 })
+    expect(metadata.source.packing).toEqual({ scale: profile.props ? 'per-sprite' : profile.importScale || 1, padding: 2 })
     let changedAlpha = 0
     for (let index = 0; index < components.length; index++) {
       const { bbox, pixels } = components[index]
       const { renderRect: rect, placedAt } = metadata.extension.imports[index]
-      const scale = profile.importScale || 1
+      const guide = profile.props?.[index]
+      const scale = guide?.referenceSize ? Math.min(1, guide.referenceSize.width / bbox.width, guide.referenceSize.height / bbox.height) : profile.importScale || 1
+      expect(metadata.extension.imports[index].sizeRatio ?? 1).toBe(scale)
+      if (guide) expect(metadata.extension.imports[index].referenceSize).toEqual(guide.referenceSize)
       expect([rect.width, rect.height]).toEqual([Math.round(bbox.width * scale), Math.round(bbox.height * scale)])
       const expectedPixels = scale === 1 ? pixels : await sharp(Buffer.from(pixels), { raw: { width: bbox.width, height: bbox.height, channels: 4 } }).resize(rect.width, rect.height).raw().toBuffer()
       const left = placedAt.column * metadata.tileSize + rect.x
@@ -102,11 +105,36 @@ describe('bundled map source sheets', () => {
         if (output.data[((top + y) * output.info.width + left + x) * 4 + 3] !== expectedPixels[(y * rect.width + x) * 4 + 3]) changedAlpha++
       }
     }
-    // WebP RGB is lossy, but the native-size sprite silhouette is exact.
+    // WebP RGB is lossy, but the recorded-scale sprite silhouette is exact.
     expect(changedAlpha).toBe(0)
     let transparent = 0, visible = 0
     for (let i = 3; i < output.data.length; i += 4) output.data[i] ? visible++ : transparent++
     expect(transparent).toBeGreaterThan(1000)
     expect(visible).toBeGreaterThan(10000)
   })
+})
+
+it('[U05456] keeps all dtv6 props within established tree, vehicle, building and coast scales', async() => {
+  const directory = 'public/images/map/sprite_sheets'
+  const cottage = JSON.parse(await readFile(`${directory}/dtv5_city_temperate_low.json`, 'utf8'))
+  const smallestCottage = Math.min(...cottage.extension.imports.map(item => item.renderRect.width))
+  const sheets = await Promise.all(SOURCE_PROFILES.filter(profile => profile.props).map(async profile => JSON.parse(await readFile(`${directory}/${profile.name}.json`, 'utf8'))))
+  expect(sheets).toHaveLength(8)
+  expect(sheets.flatMap(sheet => sheet.extension.imports)).toHaveLength(236)
+  for (const sheet of sheets) for (const sprite of sheet.extension.imports) {
+    expect(sprite.sizeRatio).toBeGreaterThan(0)
+    expect(sprite.sizeRatio).toBeLessThan(1)
+    expect(sprite.renderRect.width).toBeLessThan(192) // 3x3 vehicle factory
+    expect(sprite.renderRect.height).toBeLessThan(192)
+    expect(sprite.tileSpan.columns).toBe(Math.ceil((sprite.renderRect.width + 4) / 64))
+    expect(sprite.tileSpan.rows).toBe(Math.ceil((sprite.renderRect.height + 4) / 64))
+    if (/_(car_wreck|rusty_tractor|rowing_boat|skiff)$/.test(sprite.id)) expect(sprite.renderRect.width).toBeLessThanOrEqual(56)
+    if (/_(crates|barrels)$/.test(sprite.id)) expect(sprite.renderRect.width).toBeLessThanOrEqual(36)
+    if (sprite.id === 'sand_adobe_hut' || sprite.id === 'grass_wooden_shed') expect(sprite.renderRect.width).toBeLessThan(smallestCottage)
+    if (sprite.tags.includes('shore_trans')) expect(sprite.tileSpan.columns).toBeGreaterThanOrEqual(2)
+    if (sheet.sheetPath.includes('nature_') && sprite.tags.includes('trees')) {
+      expect(sprite.renderRect.width).toBeLessThanOrEqual(84)
+      expect(sprite.renderRect.height).toBeLessThanOrEqual(124)
+    }
+  }
 })

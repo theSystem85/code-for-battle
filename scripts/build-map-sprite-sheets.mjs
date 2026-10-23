@@ -4,6 +4,7 @@ import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
 import { CURATED_PROFILES } from './map-prop-guides.mjs'
+import { mapPropImportScale } from './map-prop-calibration.mjs'
 import { detectSprites } from '../src/ui/sseDetect.js'
 import { findPackingRegion } from '../src/ui/ssePack.js'
 import { exportMetadata } from '../src/ui/sseExport.js'
@@ -96,7 +97,7 @@ export async function buildMapSpriteSheet(profile) {
       : profile.densityLevel === 'medium' ? [4, 5, 6, 7, 5][Math.floor(index / 4)]
         : [4, 5, 6, 5, 4, 5, 7, 6, 7, 7, 6, 5, 8, 9, 9, 8, 10, 10, 10, 9][index]) : null
     const tags = [...(guide?.biomes || profile.biomes), ...(profile.seasons || []), 'decorative', ...categories, ...(density ? [`density_${density}`] : []), `group_${index + 1}`]
-    const scale = profile.importScale || 1
+    const scale = guide?.referenceSize ? mapPropImportScale(b, guide.referenceSize) : profile.importScale || 1
     const width = Math.round(b.width * scale), height = Math.round(b.height * scale)
     const spanX = Math.max(profile.cityOverhangs ? 2 : 1, Math.ceil((width + 4) / tileSize)), spanY = Math.max(profile.cityOverhangs ? 2 : 1, Math.ceil((height + 4) / tileSize))
     const region = findPackingRegion({ columns, rows, tileSize, borderWidth, occupied, width: spanX * tileSize, height: spanY * tileSize })
@@ -123,12 +124,13 @@ export async function buildMapSpriteSheet(profile) {
     }
     const id = guide ? `${profile.biomes[0]}_${guide.name}` : `${profile.source}_${categories[0]}_${String(index + 1).padStart(3, '0')}`
     imports.push({ id, sourceId: profile.source, bbox: b, area: component.area, anchor: 'center', sizeRatio: scale,
+      ...(guide?.referenceSize ? { referenceSize: guide.referenceSize } : {}),
       tileSpan: { columns: spanX, rows: spanY }, placedAt: { column: region.x, row: region.y }, tags,
       renderRect: { x: left - region.x * tileSize, y: top - region.y * tileSize, width, height } })
     propLayout.push({ id, col: region.x, row: region.y, w: spanX, h: spanY, groupId: index + 1, tags, ...(density ? { density } : {}), sourceRect: b, ...(profile.cityOverhangs ? { footprint } : {}) })
   }
   const source = { path: sourcePath.replace(/^public\//, ''), sha256: createHash('sha256').update(bytes).digest('hex'),
-    width: info.width, height: info.height, detection: profile.detection || DETECTION_OPTIONS, guides: profile.guides || [], spriteCount: components.length, packing: { scale: profile.importScale || 1, padding: 2 } }
+    width: info.width, height: info.height, detection: profile.detection || DETECTION_OPTIONS, guides: profile.guides || [], spriteCount: components.length, packing: { scale: profile.props ? 'per-sprite' : profile.importScale || 1, padding: 2 } }
   const metadata = exportMetadata({ schemaVersion: 1, layoutVersion: profile.layoutVersion || 3, tileSize, rowHeight: tileSize, borderWidth, columns, rows,
     blendMode: 'alpha', tags: [...new Set(Object.values(tiles).flatMap(tile => tile.tags).filter(tag => !/^group_/.test(tag)))], tiles, propLayout,
     source, extension: { imports, occupiedTiles: [...occupied] } }, profile.name, { lossless: false, quality: MAP_SHEET_QUALITY })

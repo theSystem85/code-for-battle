@@ -63,7 +63,14 @@ test('[E00220] new native-alpha city and nature atlases load by default and gene
   expect(exported).toEqual({ layoutVersion: 6, blendMode: 'alpha', imported: 20 })
 })
 
-test('[E00227] replacement alpha decorations, expanded shore and separate nature sheets load in SSE with native imports and full tags', async({ page }) => {
+test('[E00227] replacement alpha decorations, expanded shore and separate nature sheets load in SSE at calibrated map scale with full tags', async({ page }) => {
+  await page.addInitScript(() => {
+    const names = ['dtv6_decor_grass', 'dtv6_decor_soil', 'dtv6_decor_sand', 'dtv6_decor_snow', 'dtv6_decor_universal', 'dtv6_shore', 'dtv6_nature_grass', 'dtv6_nature_soil']
+    for (const name of names) {
+      const sheetPath = `images/map/sprite_sheets/${name}.webp`
+      localStorage.setItem(`rts-sse-metadata:${sheetPath}`, JSON.stringify({ sheetPath, schemaVersion: 1, layoutVersion: 1, tileSize: 64, rowHeight: 64, borderWidth: 0, columns: 16, rows: 35, blendMode: 'alpha', tiles: { '0,0': { col: 0, row: 0, tags: ['grass', 'decorative', 'passable'], rect: { x: 0, y: 0, width: 64, height: 64 } } }, extension: { imports: [] } }))
+    }
+  })
   await page.goto('/sse')
   await page.waitForFunction(() => Boolean(window.__SSE__))
   const names = ['dtv6_decor_grass', 'dtv6_decor_soil', 'dtv6_decor_sand', 'dtv6_decor_snow', 'dtv6_decor_universal', 'dtv6_shore', 'dtv6_nature_grass', 'dtv6_nature_soil']
@@ -74,11 +81,50 @@ test('[E00227] replacement alpha decorations, expanded shore and separate nature
     const result = await page.evaluate(async() => {
       const { json } = await window.__SSE__.exportSheet({ lossless: false, quality: 85 })
       return { count: json.extension.imports.length, blend: json.blendMode,
-        native: json.extension.imports.every(item => item.bbox.width === item.renderRect.width && item.bbox.height === item.renderRect.height && item.sizeRatio === 1),
+        calibrated: json.layoutVersion === 2 && json.extension.imports.every(item => item.sizeRatio > 0 && item.sizeRatio < 1 && Math.round(item.bbox.width * item.sizeRatio) === item.renderRect.width && Math.round(item.bbox.height * item.sizeRatio) === item.renderRect.height && item.renderRect.width <= item.referenceSize.width && item.renderRect.height <= item.referenceSize.height),
         complete: json.extension.imports.every(prop => prop.tags.includes('decorative') && prop.tags.some(tag => /^group_/.test(tag)) && prop.tags.some(tag => ['grass', 'soil', 'sand', 'snow', 'universal'].includes(tag)) && Array.from({ length: prop.tileSpan.rows }, (_, dy) => Array.from({ length: prop.tileSpan.columns }, (_, dx) => json.tiles[`${prop.placedAt.column + dx},${prop.placedAt.row + dy}`]?.tags.includes('decorative'))).flat().every(Boolean)) }
     })
-    expect(result).toEqual({ count: index < 5 ? 24 : index === 5 ? 36 : 40, blend: 'alpha', native: true, complete: true })
+    expect(result).toEqual({ count: index < 5 ? 24 : index === 5 ? 36 : 40, blend: 'alpha', calibrated: true, complete: true })
   }
   const options = await page.locator('#sseSheetSelect option').evaluateAll(options => options.map(option => option.value))
   expect(options.some(value => /dtv2_|dtv3_(city|shore|winter)|dtv4_city_(sand|snow)/.test(value))).toBe(false)
+})
+
+test('[E00228] calibrated dtv6 props generate biome-matching forests, shore and farm layouts below factory size', async({ page }) => {
+  await page.goto('/sse')
+  await page.waitForFunction(() => Boolean(window.__SSE__))
+  const result = await page.evaluate(async() => {
+    const { TextureManager } = await import('/src/rendering/textureManager.js')
+    const { gameState } = await import('/src/gameState.js')
+    const { buildingData } = await import('/src/data/buildingData.js')
+    const names = ['dtv6_decor_grass', 'dtv6_decor_soil', 'dtv6_decor_sand', 'dtv6_decor_snow', 'dtv6_decor_universal', 'dtv6_shore', 'dtv6_nature_grass', 'dtv6_nature_soil']
+    const sheets = await Promise.all(names.map(async name => {
+      const sheetPath = `images/map/sprite_sheets/${name}.webp`
+      return { sheetPath, metadata: await (await fetch(`/${sheetPath.replace('.webp', '.json')}`)).json() }
+    }))
+    Object.assign(gameState, { citySeeds: 0, ruinSeeds: 3, mapSeed: 'calibrated-dtv6' })
+    const manager = new TextureManager()
+    await manager.setIntegratedSpriteSheetConfig({ enabled: true, sheets, biomeTag: 'mixed' })
+    const biomes = []
+    for (const biome of ['grass', 'soil', 'sand', 'snow']) {
+      const grid = Array.from({ length: 96 }, (_, y) => Array.from({ length: 96 }, (_, x) => ({ type: x < 24 ? 'water' : y === 48 ? 'street' : 'land', biome })))
+      const cells = manager.getDecorationLayout(grid).cells.filter(Boolean)
+      biomes.push({ biome, placed: cells.filter(cell => cell.offsetX === 0 && cell.offsetY === 0).length,
+        trees: cells.filter(cell => cell.group.tagSet.has('trees')).length,
+        shore: cells.filter(cell => cell.group.tagSet.has('shore')).length,
+        bounded: cells.every(cell => cell.group.width <= 3 && cell.group.height <= 3),
+        matching: cells.every(cell => cell.group.tagSet.has(biome) || cell.group.tagSet.has('universal')) })
+    }
+    return { biomes, factoryWidth: buildingData.vehicleFactory.width * 32,
+      allBodiesSmaller: sheets.every(({ metadata }) => metadata.extension.imports.every(item => item.renderRect.width / 2 < buildingData.vehicleFactory.width * 32 && item.renderRect.height / 2 < buildingData.vehicleFactory.height * 32)) }
+  })
+  expect(result.factoryWidth).toBe(96)
+  expect(result.allBodiesSmaller).toBe(true)
+  for (const biome of result.biomes) {
+    expect(biome.placed).toBeGreaterThan(20)
+    expect(biome.trees).toBeGreaterThan(0)
+    expect(biome.shore).toBeGreaterThan(0)
+    expect(biome.bounded).toBe(true)
+    expect(biome.matching).toBe(true)
+  }
 })

@@ -457,7 +457,7 @@ async function loadMetadataForSheet(sheetPath, { allowLocalOverride = true } = {
   if (!sheetPath) return null
   if (allowLocalOverride) {
     const local = safeParseJson(getStoredItem(`${SSE_METADATA_PREFIX}${sheetPath}`), null)
-    if (local && typeof local === 'object') {
+    if (local && typeof local === 'object' && sanitizeAppliedSheetMetadata({ ...local, sheetPath })) {
       return normalizeMetadataForSheet(sheetPath, local)
     }
   }
@@ -540,6 +540,7 @@ export async function applyIntegratedSpriteSheetRuntime(metadata = null, { prese
   }
   const textureManager = getTextureManager()
   if (!textureManager?.setIntegratedSpriteSheetConfig) return
+  metadata = sanitizeAppliedSheetMetadata(metadata)
   cacheRuntimeIntegratedMetadata(metadata)
 
   if (!gameState.useIntegratedSpriteSheetMode) {
@@ -575,8 +576,8 @@ export async function applyIntegratedSpriteSheetRuntime(metadata = null, { prese
   const allowLocalOverride = !multiplayerActive
   const resolvedSheets = []
   for (const sheetPath of selectedSheetPaths) {
-    const runtimeAppliedMetadata = runtimeAppliedStaticMetadataBySheetPath.get(sheetPath)
-    const savedMetadata = sheetsOverride?.find(entry => entry.sheetPath === sheetPath)?.metadata
+    const runtimeAppliedMetadata = sanitizeAppliedSheetMetadata(runtimeAppliedStaticMetadataBySheetPath.get(sheetPath))
+    const savedMetadata = sanitizeAppliedSheetMetadata(sheetsOverride?.find(entry => entry.sheetPath === sheetPath)?.metadata)
     const resolvedMetadata = savedMetadata || (metadata?.sheetPath === sheetPath
       ? metadata
       : ((!multiplayerActive && runtimeAppliedMetadata) || await loadMetadataForSheet(sheetPath, { allowLocalOverride })))
