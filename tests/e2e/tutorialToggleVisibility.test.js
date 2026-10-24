@@ -81,7 +81,11 @@ for (const phone of [false, true]) {
           // Advance through the real Skip step controls, including final completion.
           const skipStep = page.locator('[data-tutorial-action="skip-step"]')
           const count = await page.evaluate(() => window.tutorialSystem.steps.length)
-          for (let index = 0; index < count; index += 1) await skipStep.click()
+          for (let index = 0; index < count && await skipStep.isVisible(); index += 1) {
+            const previous = await page.evaluate(() => window.tutorialSystem.stepIndex)
+            await skipStep.click()
+            await expect.poll(() => page.evaluate(() => window.tutorialSystem.stepIndex)).toBeGreaterThan(previous)
+          }
         }
         await expectDockHidden(page)
         await expect(page.locator('#tutorialOverlay')).toBeHidden()

@@ -83,6 +83,7 @@ export function createTutorialNarrator(deps) {
       audio.volume = Math.max(0, Math.min(1, deps.getVolume() * TUTORIAL_VOICE_GAIN))
     }
     audio.addEventListener?.('ended', () => {
+      if (state.stopped || state.fellBack || current !== state) return
       release(state)
       deps.onEnd?.()
     })

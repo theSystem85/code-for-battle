@@ -2192,3 +2192,61 @@ body.mobile-portrait .tutorial-card {
     box-sizing: border-box;
   }
 }
+
+/* Tutorial pointer moves at 30% of its former speed (0.15s / 0.3). */
+.tutorial-cursor {
+  position: fixed;
+  transition: left 0.5s ease-out, top 0.5s ease-out;
+}
+
+.tutorial-cursor[data-instruction]::after {
+  content: attr(data-instruction);
+  position: absolute;
+  top: 36px;
+  left: 0;
+  width: max-content;
+  max-width: 220px;
+  padding: 6px 10px;
+  border-radius: 5px;
+  background: #163c21;
+  color: #fff;
+  font-size: 14px;
+}
+
+.tutorial-cursor--drag {
+  border-style: dashed;
+}
+
+.tutorial-task-link {
+  padding: 5px 0;
+  border: 0;
+  background: none;
+  color: #9aef91;
+  text-decoration: underline;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+}
+
+.tutorial-todos {
+  margin: 8px 0;
+  padding-left: 24px;
+}
+
+.tutorial-funds-help {
+  padding: 8px;
+  background: #433612;
+  border-radius: 6px;
+}
+
+.tutorial-crew-marker {
+  position: fixed;
+  z-index: var(--z-hud-popover);
+  pointer-events: none;
+  transform: translate(-50%, -100%);
+  color: #6efc4b;
+  background: #163c21;
+  padding: 4px 8px;
+  border-radius: 5px;
+  font-size: 14px;
+}

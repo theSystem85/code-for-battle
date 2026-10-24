@@ -8,7 +8,7 @@ function closeDocsModal(modal) {
   modal.setAttribute('aria-hidden', 'true')
 }
 
-function openDocsModal(modal, iframe) {
+function openDocsModal(modal, iframe, section = '') {
   if (!modal) return
   if (iframe && iframe.dataset.loaded !== 'true') {
     iframe.addEventListener('load', () => {
@@ -23,6 +23,7 @@ function openDocsModal(modal, iframe) {
     iframe.src = DOCS_URL
     iframe.dataset.loaded = 'true'
   }
+  if (iframe && section) iframe.src = `${DOCS_URL}#${encodeURIComponent(section)}`
   modal.classList.remove('hidden')
   modal.setAttribute('aria-hidden', 'false')
 }
@@ -57,5 +58,5 @@ export function initUserDocs() {
     }
   })
 
-  window.openUserDocs = () => openDocsModal(modal, iframe)
+  window.openUserDocs = section => openDocsModal(modal, iframe, typeof section === 'string' ? section : '')
 }

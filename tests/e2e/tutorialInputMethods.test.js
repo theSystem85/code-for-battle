@@ -39,7 +39,7 @@ for (const phone of [false, true]) {
       await expect(guide).toBeVisible()
       await expect(guide.locator('[data-input-method="trackpad"]')).toHaveAttribute('aria-pressed', 'true')
       await next.click()
-      await expect(page.locator('.tutorial-title')).toHaveText('Welcome to the Command Briefing')
+      await expect(page.locator('.tutorial-title')).toHaveText('Resources & Power')
       await expect(guide).toBeHidden()
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
     } finally { await context.close() }

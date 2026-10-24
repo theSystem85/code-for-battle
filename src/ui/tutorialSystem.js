@@ -12,20 +12,14 @@ import { createTutorialUI, setTutorialTooltip } from './tutorialSystem/ui.js'
 import {
   countPlayerBuildings,
   countPlayerUnits,
-  dispatchCanvasClick,
-  dispatchCanvasDrag,
-  dispatchClick,
   findBuildLocation,
   findPlayerBuilding,
   getBoundingCenter,
-  getCanvasPointForTile,
   getIsTouchLayout,
   getHintForDevice,
-  getPlayerCrewSnapshot,
   getSpokenTextForStep,
   getTextForDevice,
   resolveTutorialInputMethod,
-  getUnitTile,
   sleep
 } from './tutorialSystem/helpers.js'
 import {
@@ -40,6 +34,7 @@ import { readFromStorage, writeToStorage } from './tutorialSystem/storage.js'
 import { isHeadlessAudioMuted } from '../utils/headlessAudioMute.js'
 import { createTutorialNarrator } from './tutorialSystem/narration.js'
 import { getEffectsVolume, routeNarrationElement, setMusicDuck } from '../sound.js'
+import { tutorialGuidance } from './tutorialSystem/guidance.js'
 import { configureAudioElement } from '../pwa/audioElementPolicy.js'
 
 class TutorialSystem {
@@ -148,7 +143,12 @@ class TutorialSystem {
     const settingsModal = document.getElementById('configSettingsModal')
     if (settingsModal) {
       this.settingsObserver = new window.MutationObserver(() => {
-        if (this.active && settingsModal.getAttribute('aria-hidden') === 'true') this.renderStep(this.steps[this.stepIndex])
+        if (!this.active) return
+        if (this.steps[this.stepIndex]?.id === 'settings-help' && settingsModal.getAttribute('aria-hidden') === 'false') {
+          this.stepState.settingsOpened = true
+          if (settingsModal.querySelector('[data-config-tab="keybindings"][aria-selected="true"]')) this.stepState.keybindingsOpened = true
+        }
+        if (settingsModal.getAttribute('aria-hidden') === 'true') this.renderStep(this.steps[this.stepIndex])
       })
       this.settingsObserver.observe(settingsModal, { attributes: true, attributeFilter: ['aria-hidden'] })
     }
@@ -162,7 +162,7 @@ class TutorialSystem {
 
     // Only start tutorial if enabled and not completed
     if (this.settings.showTutorial && !this.progress.completed) {
-      const begin = () => setTimeout(() => this.start({ resume: true }), 600)
+      const begin = () => setTimeout(() => { if (!this.active) this.start({ resume: true }) }, 600)
       // Never talk over the story intro narration: start once it closes.
       if (isStoryIntroOpen()) window.addEventListener(STORY_INTRO_CLOSED_EVENT, begin, { once: true })
       else begin()
@@ -316,6 +316,11 @@ class TutorialSystem {
       }
 
       const productionButton = target.closest('.production-button')
+      if (this.active && this.steps[this.stepIndex]?.id === 'settings-help') {
+        if (target.closest('#helpBtn')) this.stepState.settingsOpened = true
+        if (target.closest('[data-config-tab="keybindings"]')) this.stepState.keybindingsOpened = true
+        if (target.closest('#userDocsBtn, [data-tutorial-action="open-docs"]')) this.stepState.manualOpened = true
+      }
       if (productionButton) {
         const buildingType = productionButton.getAttribute('data-building-type')
         const unitType = productionButton.getAttribute('data-unit-type')
@@ -392,6 +397,8 @@ class TutorialSystem {
     this.active = false
     this.phase = 'demo'
     this.minimized = false
+    this.stepGeneration += 1
+    this.clearGuidance()
     this.clearHighlight()
     this.hideUI()
     this.stopSpeech()
@@ -423,8 +430,19 @@ class TutorialSystem {
     this.stop()
   }
 
-  skipStep() {
-    this.advanceStep()
+  async skipStep() {
+    if (!this.active || this.skipping) return
+    this.skipping = true
+    if (this.skipStepButton) this.skipStepButton.disabled = true
+    const generation = ++this.stepGeneration
+    this.stopSpeech()
+    try {
+      await this.fulfillSkippedStep(this.steps[this.stepIndex])
+      if (this.active && generation === this.stepGeneration) this.advanceStep()
+    } finally {
+      this.skipping = false
+      if (this.skipStepButton) this.skipStepButton.disabled = false
+    }
   }
 
   goToPreviousStep() {
@@ -438,7 +456,7 @@ class TutorialSystem {
   handleNext() {
     if (!this.active) return
     const step = this.steps[this.stepIndex]
-    if (step && step.completion && !step.completion(this)) {
+    if (this.speaking || this.phase === 'demo' || (step?.completion && !this.stepState.completed && !step.completion(this))) {
       return
     }
     this.advanceStep()
@@ -474,6 +492,8 @@ class TutorialSystem {
     }
 
     this.stepGeneration += 1
+    this.stopSpeech()
+    this.clearGuidance()
     if (this.animationFrame) { cancelAnimationFrame(this.animationFrame); this.animationFrame = null }
     this.phase = step.interactive ? 'practice' : 'demo'
     this.lastAction = null
@@ -488,13 +508,14 @@ class TutorialSystem {
       startFactories: countPlayerBuildings('vehicleFactory'),
       startHarvesters: countPlayerUnits('harvester'),
       startTanks: countPlayerUnits('tank'),
-      startRallyPoint: findPlayerBuilding('vehicleFactory')?.rallyPoint || null,
+      startRallyPoint: findPlayerBuilding('vehicleFactory')?.rallyPoint ? { ...findPlayerBuilding('vehicleFactory').rallyPoint } : null,
       moveTargets: new Map((gameState.units || []).map(unit => [unit.id, unit.moveTarget ? { ...unit.moveTarget } : null]))
     }
 
     this.renderStep(step)
     if (step.interactive) {
       this.speak(getSpokenTextForStep(step, this.getInputMethod()))
+      this.awaitCompletion(step)
       return
     }
     this.runDemo(step)
@@ -541,6 +562,7 @@ class TutorialSystem {
       this.voiceToggleButton.setAttribute('aria-pressed', this.settings.speechEnabled ? 'true' : 'false')
     }
 
+    this.renderStepExtras(step)
     this.updateContinueState(step)
     if (this.backButton) {
       this.backButton.disabled = this.stepIndex === 0
@@ -548,8 +570,16 @@ class TutorialSystem {
 
     this.clearHighlight()
     if (step.highlightSelector) {
-      const element = document.querySelector(step.highlightSelector)
+      const selector = step.id === 'crew-system' && countPlayerBuildings('hospital') > 0
+        ? '.production-button[data-unit-type="ambulance"]' : step.highlightSelector
+      const element = document.querySelector(selector)
       if (element) {
+        if (element.classList.contains('production-button') && !element.querySelector('.production-ready-glow')) {
+          const glow = document.createElement('span')
+          glow.className = 'production-ready-glow'
+          glow.setAttribute('aria-hidden', 'true')
+          element.append(glow)
+        }
         element.classList.add('tutorial-highlight')
         this.highlighted = element
       }
@@ -578,7 +608,7 @@ class TutorialSystem {
 
   updateContinueState(step) {
     if (!this.nextButton) return
-    if (this.phase === 'demo') {
+    if (this.phase === 'demo' || this.speaking) {
       this.nextButton.disabled = true
       return
     }
@@ -634,64 +664,43 @@ class TutorialSystem {
   }
 
   trackCrewRestoration() {
-    if (this.stepState.crewRestored) return true
-    if (!this.stepState.crewSnapshot) {
-      this.stepState.crewSnapshot = getPlayerCrewSnapshot()
-      return false
-    }
-    const current = getPlayerCrewSnapshot()
-    let restored = false
-    current.forEach((crew, unitId) => {
-      const previous = this.stepState.crewSnapshot.get(unitId)
-      if (!previous) return
-      Object.keys(crew).some(role => {
-        if (previous[role] === false && crew[role] === true) {
-          restored = true
-          return true
-        }
-        return false
-      })
-    })
-    this.stepState.crewSnapshot = current
-    if (restored) {
-      this.stepState.crewRestored = true
-      if (!this.stepState.crewRestoredAnnounced) {
-        this.stepState.crewRestoredAnnounced = true
-        this.speak('Great, you completed all sub tasks of the crew system tutorial!', 'crew-complete')
-      }
-    }
-    return this.stepState.crewRestored
+    const tank = (gameState.units || []).find(unit => unit.id === this.stepState.crewTankId)
+    const roles = ['driver', 'commander', 'gunner', 'loader']
+    return Boolean(this.stepState.crewPrepared && tank?.health > 0 && roles.every(role => tank.crew?.[role] === true))
   }
 
-  async runDemo(step) {
+  runDemo(step) {
     const generation = this.stepGeneration
-    this.stopSpeech()
-    if (step.demo) {
-      await step.demo(this)
-    }
-    if (!this.active || generation !== this.stepGeneration || this.steps[this.stepIndex] !== step) return
     this.phase = 'practice'
     this.renderStep(step)
     this.speak(getSpokenTextForStep(step, this.getInputMethod()))
+    // Guidance only moves the overlay. It runs alongside task/narration checks.
+    Promise.resolve(step.demo?.(this)).catch(error => {
+      if (generation === this.stepGeneration) console.warn('Tutorial guidance unavailable', error)
+    })
     this.awaitCompletion(step)
   }
 
   awaitCompletion(step) {
-    if (!step.completion) {
-      if (this.nextButton) {
-        this.nextButton.disabled = false
-      }
-      return
-    }
-
-    const check = () => {
-      if (!this.active) return
-      const done = this.stepState.completed || step.completion(this)
-      this.updateContinueState(step)
-      this.updateStepProgress(step)
-      if (done) {
-        this.markStepCompleted()
-        return
+    const generation = this.stepGeneration
+    let lastCheck = -Infinity
+    const check = (now = performance.now()) => {
+      if (!this.active || generation !== this.stepGeneration || this.steps[this.stepIndex] !== step) return
+      // One tutorial poll, at most ten times per second, independent of the
+      // entity render loop. Marker work is bounded to one unit and DOM node.
+      if (now - lastCheck >= 100) {
+        lastCheck = now
+        if (this.hasNewMoveOrder('tank')) this.stepState.tankMoved = true
+        if (step.id === 'crew-system') this.updateCrewMarker()
+        const done = this.stepState.completed || !step.completion || step.completion(this)
+        if (done) this.markStepCompleted()
+        this.updateContinueState(step)
+        this.updateStepProgress(step)
+        this.updateStepExtras(step)
+        if (done && !this.speaking && !step.interactive) {
+          this.advanceStep()
+          return
+        }
       }
       this.animationFrame = requestAnimationFrame(check)
     }
@@ -700,6 +709,7 @@ class TutorialSystem {
 
   moveCursorToPoint(point) {
     if (!this.cursor || !point) return
+    this.cursor.removeAttribute('data-instruction')
     this.cursor.style.left = `${point.x}px`
     this.cursor.style.top = `${point.y}px`
   }
@@ -708,28 +718,7 @@ class TutorialSystem {
     if (!element) return
     const point = getBoundingCenter(element)
     this.moveCursorToPoint(point)
-    await sleep(350)
-  }
-
-  async clickElement(element) {
-    if (!element) return
-    await this.moveCursorToElement(element)
-    this.cursor?.classList.add('tutorial-cursor--click')
-    dispatchClick(element)
-    await sleep(250)
-    this.cursor?.classList.remove('tutorial-cursor--click')
-  }
-
-  async clickCanvasTile(tile) {
-    if (!tile) return
-    const point = getCanvasPointForTile(tile.x, tile.y)
-    if (!point) return
-    this.moveCursorToPoint(point)
-    await sleep(250)
-    this.cursor?.classList.add('tutorial-cursor--click')
-    dispatchCanvasClick(point)
-    await sleep(250)
-    this.cursor?.classList.remove('tutorial-cursor--click')
+    await sleep(1167)
   }
 
   getNarrator() {
@@ -745,7 +734,7 @@ class TutorialSystem {
         setDuck: factor => setMusicDuck(factor),
         speakTts: text => this.speakWithTts(text),
         cancelTts: () => window.speechSynthesis?.cancel?.(),
-        onEnd: () => { this.speaking = false }
+        onEnd: () => { this.speaking = false; this.updateContinueState(this.steps[this.stepIndex]) }
       })
     }
     return this.narrator
@@ -764,7 +753,7 @@ class TutorialSystem {
   }
 
   speakWithTts(text) {
-    if (!text || typeof SpeechSynthesisUtterance === 'undefined') {
+    if (!text || typeof SpeechSynthesisUtterance === 'undefined' || !window.speechSynthesis?.speak) {
       this.speaking = false
       return
     }
@@ -781,13 +770,17 @@ class TutorialSystem {
     }
 
     this.speaking = true
-    utterance.onend = () => {
+    utterance.onend = utterance.onerror = () => {
+      if (this.ttsUtterance !== utterance) return
       this.speaking = false
+      this.updateContinueState(this.steps[this.stepIndex])
     }
+    this.ttsUtterance = utterance
     window.speechSynthesis?.speak?.(utterance)
   }
 
   stopSpeech() {
+    this.ttsUtterance = null
     this.narrator?.stop()
     if (this.speaking) {
       window.speechSynthesis?.cancel?.()
@@ -796,87 +789,34 @@ class TutorialSystem {
   }
 
   async demoBuildBuilding(type) {
-    const buildingTab = document.querySelector('.tab-button[data-tab="buildings"]')
-    if (buildingTab) {
-      await this.clickElement(buildingTab)
-    }
-    const button = document.querySelector(`.production-button[data-building-type="${type}"]`)
-    if (!button) return
-    await this.clickElement(button)
-
+    if (!this.skipping) return this.guideBuilding(type)
     const placement = findBuildLocation(type)
     if (!placement) return
-    const blueprint = { type, x: placement.x, y: placement.y }
-    const queued = productionQueue.buildingItems.find(item => item.type === type && !item.blueprint)
-    if (queued) {
-      queued.blueprint = blueprint
-    } else {
-      productionQueue.addItem(type, button, true, blueprint)
-    }
-    if (productionQueue.currentBuilding && productionQueue.currentBuilding.type === type) {
-      productionQueue.currentBuilding.blueprint = blueprint
-    }
-    const cost = buildingData[type]?.cost || 0
-    if (cost) {
-      gameState.money = Math.max(0, gameState.money - cost)
-    }
-    productionQueue.completeCurrentBuildingProduction()
-
-    await this.clickCanvasTile(placement)
+    const generation = this.stepGeneration
+    const { constructPlayerBuilding } = await import('../game/playerBuildingLifecycle.js')
+    if (!this.active || generation !== this.stepGeneration) return
+    constructPlayerBuilding(type, placement.x, placement.y, gameState, gameState.mapGrid, productionQueue.productionController)
+    gameState.money = Math.max(0, gameState.money - (buildingData[type]?.cost || 0))
   }
 
   async demoBuildUnit(type) {
-    const unitTab = document.querySelector('.tab-button[data-tab="units"]')
-    if (unitTab) {
-      await this.clickElement(unitTab)
+    if (!this.skipping) return this.guideUnitBuild(type)
+    const factory = findPlayerBuilding('vehicleFactory')
+    if (!factory) return
+    const generation = this.stepGeneration
+    const { spawnUnit } = await import('../units.js')
+    if (!this.active || generation !== this.stepGeneration) return
+    const unit = spawnUnit(factory, type, gameState.units, gameState.mapGrid, factory.rallyPoint, gameState.occupancyMap)
+    if (unit) {
+      gameState.units.push(unit)
+      gameState.money = Math.max(0, gameState.money - (unitCosts[type] || 0))
     }
-    const button = document.querySelector(`.production-button[data-unit-type="${type}"]`)
-    if (!button) return
-    await this.clickElement(button)
-
-    if (!productionQueue.currentUnit || productionQueue.currentUnit.type !== type) {
-      productionQueue.addItem(type, button, false)
-    }
-    const unitCost = unitCosts?.[type] || 0
-    if (unitCost) {
-      gameState.money = Math.max(0, gameState.money - unitCost)
-    }
-    productionQueue.completeCurrentUnitProduction()
-  }
-
-  async demoSelectUnit(unit) {
-    const tile = getUnitTile(unit)
-    if (!tile) return
-    await this.clickCanvasTile(tile)
-  }
-
-  async demoSelectGroup(units) {
-    if (!units || units.length === 0) return
-    const tiles = units.map(unit => getUnitTile(unit)).filter(Boolean)
-    if (tiles.length === 0) return
-    const minX = Math.min(...tiles.map(t => t.x))
-    const minY = Math.min(...tiles.map(t => t.y))
-    const maxX = Math.max(...tiles.map(t => t.x))
-    const maxY = Math.max(...tiles.map(t => t.y))
-    const start = getCanvasPointForTile(minX, minY)
-    const end = getCanvasPointForTile(maxX + 1, maxY + 1)
-    this.moveCursorToPoint(start)
-    await sleep(200)
-    dispatchCanvasDrag(start, end)
-    await sleep(200)
-  }
-
-  async demoDeselect() {
-    const tile = findBuildLocation('powerPlant') || { x: 1, y: 1 }
-    const point = getCanvasPointForTile(tile.x, tile.y)
-    if (!point) return
-    this.moveCursorToPoint(point)
-    await sleep(150)
-    dispatchCanvasClick(point, { button: 2 })
   }
 
 
 }
+
+Object.assign(TutorialSystem.prototype, tutorialGuidance)
 
 export function initTutorialSystem() {
   if (typeof document === 'undefined') return null

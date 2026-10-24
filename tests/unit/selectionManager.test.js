@@ -310,6 +310,19 @@ describe('selectionManager', () => {
     expect(playSound).toHaveBeenCalledWith('unitSelection')
   })
 
+  it('[U05466] retains units outside an additive drag and never duplicates units already selected', () => {
+    const inside = { id: 'inside', owner: 'player', x: 10, y: 10, health: 10, selected: false }
+    const outside = { id: 'outside', owner: 'player', x: 200, y: 200, health: 10, selected: true }
+    const enemy = { id: 'enemy', owner: 'enemy', x: 10, y: 10, health: 10, selected: false }
+    const selection = [outside]
+    manager.handleBoundingBoxSelection([inside, outside, enemy], [], selection, { x: 0, y: 0 }, { x: 50, y: 50 }, true)
+    expect(selection).toEqual([outside, inside])
+    expect(outside.selected).toBe(true)
+    expect(enemy.selected).toBe(false)
+    manager.handleBoundingBoxSelection([inside, outside], [], selection, { x: 0, y: 0 }, { x: 50, y: 50 }, true)
+    expect(selection).toEqual([outside, inside])
+  })
+
   it('[U03950] resets selection state on drag selection errors', () => {
     const selectedUnits = [{ id: 'u1', health: 10 }]
 

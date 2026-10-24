@@ -208,11 +208,12 @@ export function handleLeftMouseDown(handler, e, worldX, worldY, gameCanvas, sele
     (hasSelectedDamagedUnits && isOverRecoveryTankAt(handler, worldX, worldY)) ||
     (hasSelectedRecoveryTanks && isOverDamagedUnitAt(handler, worldX, worldY, selectedUnits))
 
+  handler.additiveSelection = Boolean(e.shiftKey || gameState.shiftKeyDown)
   handler.attackGroupHandler.potentialAttackGroupStart = { x: worldX, y: worldY }
-  handler.attackGroupHandler.hasSelectedCombatUnits = !handler.forceAttackClick && !handler.guardClick && !handler.isRecoveryTankInteraction && handler.attackGroupHandler.shouldStartAttackGroupMode(selectedUnits)
+  handler.attackGroupHandler.hasSelectedCombatUnits = !handler.additiveSelection && !handler.forceAttackClick && !handler.guardClick && !handler.isRecoveryTankInteraction && handler.attackGroupHandler.shouldStartAttackGroupMode(selectedUnits)
 
   handler.isSelecting = !handler.forceAttackClick && !handler.guardClick
-  handler.utilityQueueCandidate = !handler.forceAttackClick && !handler.guardClick && shouldStartUtilityQueueMode(selectedUnits)
+  handler.utilityQueueCandidate = !handler.additiveSelection && !handler.forceAttackClick && !handler.guardClick && shouldStartUtilityQueueMode(selectedUnits)
 
   if (selectedUnits.length === 1 && selectedUnits[0].isBuilding &&
       (selectedUnits[0].type === 'vehicleFactory' || selectedUnits[0].type === 'vehicleWorkshop' || selectedUnits[0].type === 'shipyard')) {
@@ -779,7 +780,7 @@ export function handleLeftMouseUp(handler, e, units, factories, mapGrid, selecte
 
   if (!forceAttackHandled && !guardHandled && !mineDeploymentHandled && !mineAreaHandled) {
     if (handler.wasDragging) {
-      selectionManager.handleBoundingBoxSelection(units, factories, selectedUnits, handler.selectionStart, handler.selectionEnd)
+      selectionManager.handleBoundingBoxSelection(units, factories, selectedUnits, handler.selectionStart, handler.selectionEnd, handler.additiveSelection || e.shiftKey)
       handler.updateAGFCapability(selectedUnits)
     } else {
       handleSingleClick(handler, worldX, worldY, e, units, factories, selectedUnits, selectionManager, unitCommands, mapGrid)

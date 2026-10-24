@@ -104,8 +104,7 @@ export function inputAwareStepText(step, method) {
     case 'move-units': return `Select a unit, then ${select} on empty ground to move it. ${touch ? 'Pan with two fingers.' : gamepad ? `Pan using ${row('Pan map')}.` : method === 'trackpad' ? 'Pan with two-finger scrolling or a secondary-click drag.' : 'Pan with a secondary-button drag.'}`
     case 'attack': return `Select a tank, then ${select} on an enemy to attack it. Destroy all enemy buildings to win.`
     case 'tank-rally': return `Queue a Tank, select the Vehicle Factory using ${select}, then use the same input on the map to set its rally point.`
-    case 'build-harvester': return `Queue a Harvester. It automatically finds ore; select it and ${select} on an ore patch to direct it there.`
-    case 'tank-control': return `Select a tank and order it to move. ${gamepad ? `Toggle ${row('Manual driving')} to enter remote stick mode; use the mapped movement axes and fire control shown in the controls guide.` : touch ? 'Use the on-screen joystick and fire controls to drive it manually.' : `Drive manually with ${row('Manual driving')} and fire with ${binding('keyboard', 'remote-fire', 'Space')}.`}`
+    case 'tank-control': return `Select a tank and order it to move. ${gamepad ? `Toggle ${row('Manual driving')} to enter remote stick mode; use the mapped movement axes and fire control shown in the controls guide.` : touch ? 'Use the on-screen joystick and fire controls to drive it manually.' : `Use the Arrow keys to remote control it and fire with ${binding('keyboard', 'remote-fire', 'Space')}.`}`
     default: return null
   }
 }

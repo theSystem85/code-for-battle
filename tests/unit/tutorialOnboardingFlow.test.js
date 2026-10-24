@@ -7,7 +7,7 @@ vi.mock('../../src/storage/indexedDbStorage.js', () => ({
   removeStoredItem: key => storage.delete(key)
 }))
 vi.mock('../../src/ui/settingsModal.js', () => ({ openSettingsModal: vi.fn() }))
-vi.mock('../../src/buildings.js', () => ({ buildingData: {}, canPlaceBuilding: () => true }))
+vi.mock('../../src/buildings.js', () => ({ buildingData: {}, canPlaceBuilding: (type, x, y) => x >= 0 && y >= 0 }))
 vi.mock('../../src/units.js', () => ({ unitCosts: {} }))
 vi.mock('../../src/productionQueue.js', () => ({ productionQueue: {} }))
 vi.mock('../../src/input/remoteControlState.js', () => ({ clearRemoteControlSource: vi.fn(), setRemoteControlAction: vi.fn() }))
@@ -24,6 +24,7 @@ let tutorial
 beforeEach(() => {
   vi.useFakeTimers()
   storage.clear()
+  storage.set('rts_tutorial_settings', JSON.stringify({ showTutorial: true, speechEnabled: false }))
   document.body.innerHTML = '<div id="configSettingsModal" aria-hidden="true"></div>'
   keybindingManager.resetAll()
   document.body.className = ''
@@ -124,4 +125,113 @@ describe('tutorial input onboarding flow', () => {
     expect(document.querySelector('[data-tutorial-tooltip][title]')).toBeNull()
   })
 
+})
+
+describe('player-driven tutorial progression', () => {
+  it('[U05467] waits for task fulfillment and narration in either order', async() => {
+    tutorial = initTutorialSystem()
+    let fulfilled = false
+    tutorial.steps = [
+      { id: 'test', title: 'Test', text: 'Briefing', completion: () => fulfilled },
+      { id: 'next', title: 'Next', interactive: true, completion: () => false }
+    ]
+    tutorial.active = true
+    tutorial.stepIndex = 0
+    tutorial.speak = () => { tutorial.speaking = true }
+    tutorial.runCurrentStep()
+    fulfilled = true
+    await vi.advanceTimersByTimeAsync(200)
+    expect(tutorial.stepIndex).toBe(0)
+    expect(tutorial.nextButton.disabled).toBe(true)
+    tutorial.handleNext()
+    expect(tutorial.stepIndex).toBe(0)
+    tutorial.speaking = false
+    await vi.advanceTimersByTimeAsync(200)
+    expect(tutorial.stepIndex).toBe(1)
+    tutorial.stepIndex = 0
+    fulfilled = false
+    tutorial.runCurrentStep()
+    tutorial.speaking = false
+    await vi.advanceTimersByTimeAsync(200)
+    expect(tutorial.stepIndex).toBe(0)
+    fulfilled = true
+    await vi.advanceTimersByTimeAsync(200)
+    expect(tutorial.stepIndex).toBe(1)
+  })
+
+  it('[U05468] continues when a completed movement condition is latched after the order finishes', () => {
+    tutorial = initTutorialSystem()
+    tutorial.steps = [
+      { id: 'move', title: 'Move', completion: () => false },
+      { id: 'next', title: 'Next', interactive: true, completion: () => false }
+    ]
+    tutorial.active = true
+    tutorial.phase = 'practice'
+    tutorial.stepState.completed = true
+    tutorial.updateContinueState(tutorial.steps[0])
+    expect(tutorial.nextButton.disabled).toBe(false)
+    tutorial.nextButton.click()
+    expect(tutorial.stepIndex).toBe(1)
+  })
+
+  it('[U05469] only guides the first building button and map placement until the player acts', async() => {
+    const { gameState } = await import('../../src/gameState.js')
+    const { productionQueue } = await import('../../src/productionQueue.js')
+    productionQueue.addItem = vi.fn()
+    productionQueue.completeCurrentBuildingProduction = vi.fn()
+    gameState.mapGrid = [[{}]]
+    gameState.buildingPlacementMode = false
+    gameState.currentBuildingType = null
+    document.body.insertAdjacentHTML('beforeend', '<button class="tab-button active" data-tab="buildings"></button><button class="production-button" data-building-type="powerPlant"></button><canvas id="gameCanvas"></canvas>')
+    document.getElementById('gameCanvas').getBoundingClientRect = () => ({ left: 0, top: 0, right: 800, bottom: 600 })
+    const button = document.querySelector('.production-button')
+    button.getBoundingClientRect = () => ({ left: 10, top: 20, width: 100, height: 60 })
+    const click = vi.fn(() => { gameState.buildingPlacementMode = true; gameState.currentBuildingType = 'powerPlant' })
+    button.addEventListener('click', click)
+    tutorial = initTutorialSystem()
+    tutorial.active = true
+    tutorial.stepIndex = tutorial.steps.findIndex(step => step.id === 'build-power')
+    tutorial.runCurrentStep()
+    await vi.advanceTimersByTimeAsync(1500)
+    expect(click).not.toHaveBeenCalled()
+    expect(productionQueue.addItem).not.toHaveBeenCalled()
+    expect(productionQueue.completeCurrentBuildingProduction).not.toHaveBeenCalled()
+    expect(tutorial.cursor.getAttribute('data-instruction')).toBe('Click here!')
+    expect(tutorial.cursor.style.left).toBe('60px')
+    button.click()
+    await vi.advanceTimersByTimeAsync(1500)
+    expect(click).toHaveBeenCalledTimes(1)
+    expect(tutorial.cursor.getAttribute('data-instruction')).toBe('Click here!')
+    expect(tutorial.cursor.style.left).not.toBe('60px')
+    expect(productionQueue.addItem).not.toHaveBeenCalled()
+    gameState.mapGrid = []
+  })
+
+  it('[U05470] requires all four crew roles on the marked tank, ignoring other tanks', async() => {
+    const { gameState } = await import('../../src/gameState.js')
+    tutorial = initTutorialSystem()
+    const crew = { driver: false, commander: false, gunner: false, loader: false }
+    const tank = { id: 'lesson-tank', health: 100, crew }
+    gameState.units = [tank, { id: 'other', crew: { driver: true } }]
+    tutorial.stepState = { crewPrepared: true, crewTankId: tank.id }
+    expect(tutorial.trackCrewRestoration()).toBe(false)
+    crew.driver = true
+    expect(tutorial.trackCrewRestoration()).toBe(false)
+    crew.commander = crew.gunner = crew.loader = true
+    expect(tutorial.trackCrewRestoration()).toBe(true)
+    gameState.units = []
+  })
+
+  it('[U05471] offers a tutorial money grant only on an explicit player click', async() => {
+    const { gameState } = await import('../../src/gameState.js')
+    tutorial = initTutorialSystem()
+    tutorial.active = true
+    gameState.money = 0
+    tutorial.updateStepExtras(tutorial.steps[0])
+    expect(tutorial.fundsHelp.hidden).toBe(false)
+    expect(tutorial.fundsHelp.textContent).toContain('Harvesters to deliver ore to a Refinery')
+    expect(gameState.money).toBe(0)
+    tutorial.fundsHelp.querySelector('button').click()
+    expect(gameState.money).toBe(20000)
+  })
 })

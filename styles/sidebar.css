@@ -1564,6 +1564,7 @@ body.mobile-landscape #mobileBuildMenuContainer .tab-content.active .production-
 
 .production-button .production-ready-glow,
 #productionTabs .production-ready-glow {
+  --ready-glow-color: #ffb300;
   --ready-glow-width: 20px;
   padding: 0;
   position: absolute;
@@ -1572,10 +1573,10 @@ body.mobile-landscape #mobileBuildMenuContainer .tab-content.active .production-
   pointer-events: none;
   opacity: 0;
   background:
-    linear-gradient(to bottom, #ffb300, transparent) top / 100% var(--ready-glow-width) no-repeat,
-    linear-gradient(to top, #ffb300, transparent) bottom / 100% var(--ready-glow-width) no-repeat,
-    linear-gradient(to right, #ffb300, transparent) left / var(--ready-glow-width) 100% no-repeat,
-    linear-gradient(to left, #ffb300, transparent) right / var(--ready-glow-width) 100% no-repeat;
+    linear-gradient(to bottom, var(--ready-glow-color), transparent) top / 100% var(--ready-glow-width) no-repeat,
+    linear-gradient(to top, var(--ready-glow-color), transparent) bottom / 100% var(--ready-glow-width) no-repeat,
+    linear-gradient(to right, var(--ready-glow-color), transparent) left / var(--ready-glow-width) 100% no-repeat,
+    linear-gradient(to left, var(--ready-glow-color), transparent) right / var(--ready-glow-width) 100% no-repeat;
 }
 
 #productionTabs .tab-button {
@@ -1588,9 +1589,19 @@ body.mobile-landscape #mobileBuildMenuContainer .tab-content.active .production-
 }
 
 .production-button.ready-for-placement > .production-ready-glow,
+.production-button.tutorial-highlight > .production-ready-glow,
 #productionTabs .has-ready-buildings > .production-ready-glow {
   opacity: 0.65;
   animation: production-ready-pulse 1.2s ease-in-out infinite;
+}
+
+.production-button.tutorial-highlight {
+  box-shadow: none;
+  animation: none;
+}
+
+.production-button.tutorial-highlight > .production-ready-glow {
+  --ready-glow-color: #6efc4b;
 }
 
 @keyframes production-ready-pulse {
