@@ -85,6 +85,7 @@ import {
   isValidDodgePosition
 } from '../../src/game/unifiedMovement.js'
 import { getNavalHullSegment } from '../../src/utils/navalUtils.js'
+import { handleStuckUnit } from '../../src/game/movementStuck.js'
 
 function createMovementLoopHandle() {
   return {
@@ -103,6 +104,92 @@ function createMovementLoopHandle() {
 }
 
 describe('unifiedMovement.js', () => {
+  it('[U05484] stops a carrier when a nearby final target is already between its center and bow', () => {
+    const mapGrid = Array.from({ length: 30 }, () =>
+      Array.from({ length: 30 }, () => ({ type: 'water' })))
+    const carrier = {
+      id: 'nearby-carrier', type: 'aircraftCarrier', isNaval: true,
+      owner: 'player1', health: 100, x: 10 * 32, y: 10 * 32,
+      tileX: 10, tileY: 10, direction: 0, speed: 0.24,
+      path: [{ x: 11, y: 10 }], moveTarget: { x: 11, y: 10 }
+    }
+    initializeUnitMovement(carrier)
+    expect(getNavalHullSegment(carrier).endX).toBeGreaterThan(11.5 * 32)
+
+    updateUnitPosition(carrier, mapGrid, null, 10000, [carrier], { buildings: [], unitWrecks: [] })
+
+    expect(carrier.path).toEqual([])
+    expect(carrier.moveTarget).toBeNull()
+    expect(carrier.movement.currentSpeed).toBe(0)
+  })
+
+  it.each(['aircraftCarrier', 'battleship', 'destroyer'])('[U05485] keeps %s on its route while turning slowly in unobstructed water', type => {
+    const mapGrid = Array.from({ length: 30 }, () =>
+      Array.from({ length: 30 }, () => ({ type: 'water' })))
+    const route = [{ x: 11, y: 10 }, { x: 20, y: 10 }]
+    const unit = {
+      id: 'turning-ship', type, isNaval: true, owner: 'player1', health: 100,
+      x: 10 * 32, y: 10 * 32, direction: Math.PI,
+      path: route, moveTarget: { x: 20, y: 10 }, lastPathCalcTime: 1
+    }
+    initializeUnitMovement(unit)
+    unit.movement.isMoving = true
+    unit.movement.targetRotation = 0
+    unit.movement.stuckDetection = {
+      lastPosition: { x: unit.x, y: unit.y }, lastMovementCheck: 0,
+      stuckTime: 0, rotationAttempts: 0, dodgeAttempts: 0,
+      lastDodgeTime: 0, lastStuckHandling: 0, checkInterval: 1
+    }
+
+    handleStuckUnit(unit, mapGrid, mapGrid.map(row => row.map(() => 1)), [unit], {
+      humanPlayer: 'player1', simulationTime: 10000
+    })
+
+    expect(unit.path).toBe(route)
+    expect(unit.isDodging).not.toBe(true)
+    expect(unit.movement.stuckDetection.stuckTime).toBe(0)
+  })
+
+  it.each(['terrain', 'collision', 'aligned stall'])('[U05486] still recovers a naval route blocked by %s', blocker => {
+    const mapGrid = Array.from({ length: 30 }, () =>
+      Array.from({ length: 30 }, () => ({ type: 'water' })))
+    const route = [{ x: 11, y: 10 }, { x: 20, y: 10 }]
+    const unit = {
+      id: 'blocked-ship', type: 'battleship', isNaval: true, owner: 'player1', health: 100,
+      x: 10 * 32, y: 10 * 32, direction: blocker === 'aligned stall' ? 0 : Math.PI,
+      path: route, moveTarget: { x: 20, y: 10 }, lastPathCalcTime: 1
+    }
+    initializeUnitMovement(unit)
+    unit.movement.isMoving = true
+    unit.movement.targetRotation = 0
+    if (blocker === 'terrain') mapGrid[10][11].type = 'land'
+    if (blocker === 'collision') unit.movement.lastStaticCollisionTime = 9900
+    unit.movement.stuckDetection = {
+      lastPosition: { x: unit.x, y: unit.y }, lastMovementCheck: 0,
+      stuckTime: 0, rotationAttempts: 0, dodgeAttempts: 0,
+      lastDodgeTime: 0, lastStuckHandling: 0, checkInterval: 1
+    }
+
+    handleStuckUnit(unit, mapGrid, null, [unit], { humanPlayer: 'player1', simulationTime: 10000 })
+
+    expect(unit.isDodging).toBe(true)
+    expect(unit.path.slice(1)).toEqual(route)
+  })
+
+  it.each([{ x: 9, y: 10 }, { x: 10, y: 11 }])('[U05487] does not stop a carrier for a target behind or beside its forward hull (%j)', target => {
+    const mapGrid = Array.from({ length: 30 }, () =>
+      Array.from({ length: 30 }, () => ({ type: 'water' })))
+    const carrier = {
+      id: 'offset-carrier', type: 'aircraftCarrier', isNaval: true,
+      owner: 'player1', health: 100, x: 10 * 32, y: 10 * 32,
+      tileX: 10, tileY: 10, direction: 0, speed: 0.24,
+      path: [target], moveTarget: target
+    }
+    updateUnitPosition(carrier, mapGrid, null, 10000, [carrier], { buildings: [], unitWrecks: [] })
+    expect(carrier.path).toEqual([target])
+    expect(carrier.moveTarget).toEqual(target)
+  })
+
   it('[U04517] settles a carrier permanently when its bow reaches the final target tile', () => {
     const mapGrid = Array.from({ length: 20 }, () =>
       Array.from({ length: 20 }, () => ({ type: 'water', building: null, seedCrystal: false })))
