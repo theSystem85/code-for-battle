@@ -37,6 +37,28 @@ describe('story intro and first gameplay music cues', () => {
     vi.unstubAllGlobals()
   })
 
+  it('[U05462] starts default music on a return visit after the first gesture', async() => {
+    const { setStoredItem } = await import('../../src/storage/indexedDbStorage.js')
+    setStoredItem(sound.FIRST_GAMEPLAY_MUSIC_STORAGE_KEY, 'true')
+    setStoredItem('cfb-story-intro-v1', 'completed')
+    const { maybeAutoPlayStoryIntro } = await import('../../src/story/storyIntroBoot.js')
+    expect(maybeAutoPlayStoryIntro()).toBe(false)
+    expect(sound.isMusicEnabled()).toBe(false)
+    window.dispatchEvent(new window.Event('pointerdown'))
+    await flush()
+    expect(sound.isMusicEnabled()).toBe(true)
+    expect(sound.bgMusicAudio.paused).toBe(false)
+  })
+
+  it('[U05463] keeps an explicit music-off choice on a return visit', async() => {
+    const { setStoredItem } = await import('../../src/storage/indexedDbStorage.js')
+    setStoredItem(sound.FIRST_GAMEPLAY_MUSIC_STORAGE_KEY, 'true')
+    setStoredItem(sound.MUSIC_USER_OFF_STORAGE_KEY, 'true')
+    expect(await sound.playDefaultGameplayMusic()).toBe(false)
+    expect(sound.isMusicEnabled()).toBe(false)
+    expect(sound.bgMusicAudio).toBe(null)
+  })
+
   it('[U04319] plays First Strike for the intro, then fades it out fully before Battle Track 02', async() => {
     expect(sound.STORY_INTRO_MUSIC_FILE).toBe('music_attack_motivational.mp3')
     expect(sound.FIRST_GAMEPLAY_MUSIC_FILE).toBe('music02.mp3')

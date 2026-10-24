@@ -12,10 +12,13 @@ test('[E00129] portrait PWA money and power bars fill the status bar above the h
   })
   await page.goto('/?seed=11')
   await page.waitForFunction(() => Boolean(window.gameState?.gameStarted))
+  await expect(page.locator('#loadingScreen')).toBeHidden({ timeout: 60000 })
   // Chromium reports no safe area, so simulate the iPhone's 34px home indicator inset.
   await page.addStyleTag({ content: 'body.is-touch{--safe-area-bottom:34px !important;}' })
   await expect(page.locator('body')).toHaveClass(/pwa-standalone/)
   await expect(page.locator('body')).toHaveClass(/mobile-portrait/)
+  await expect(page.locator('body')).toHaveClass(/sidebar-condensed/)
+  await expect(page.locator('#mobileBuildMenuContainer')).toHaveAttribute('data-orientation', 'portrait-condensed')
 
   const boxes = await page.evaluate(() => {
     const box = id => {

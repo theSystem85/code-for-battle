@@ -15,7 +15,31 @@ async function applyMapSettings(page) {
 test('[E00070] mixed biome controls regenerate the map on Apply', async({ page }) => {
   await page.goto('/?seed=41&size=64')
   await page.waitForFunction(() => window.gameInstance && window.gameState?.mapGrid?.length === 64)
+  expect(await page.evaluate(() => {
+    const { activeSpriteSheetBiomeTag, mapBiomeRegionCount, mapBiomeWeights, mapShoreNorth,
+      mapShoreWest, mapShoreEast, mapShoreSouth, mapCenterLake, mapWaterPercent,
+      mapRockPercent, citySeeds, cityClusterSize, ruinSeeds, ruinClusterSize } = window.gameState
+    return { activeSpriteSheetBiomeTag, mapBiomeRegionCount, mapBiomeWeights, mapShoreNorth,
+      mapShoreWest, mapShoreEast, mapShoreSouth, mapCenterLake, mapWaterPercent,
+      mapRockPercent, citySeeds, cityClusterSize, ruinSeeds, ruinClusterSize }
+  })).toEqual({
+    activeSpriteSheetBiomeTag: 'mixed', mapBiomeRegionCount: 4,
+    mapBiomeWeights: { grass: 25, soil: 25, sand: 25, snow: 25 },
+    mapShoreNorth: true, mapShoreWest: true, mapShoreEast: true, mapShoreSouth: true,
+    mapCenterLake: true, mapWaterPercent: 10, mapRockPercent: 10,
+    citySeeds: 4, cityClusterSize: 8, ruinSeeds: 3, ruinClusterSize: 7
+  })
+  expect(await page.evaluate(async() => {
+    const config = await import('/src/config.js')
+    return [config.COASTAL_SHALLOWS_ENABLED, config.COASTAL_SHALLOWS_LENGTH]
+  })).toEqual([true, 15])
   await page.locator('#mapSettingsToggle').click()
+
+  await expect(page.locator('#integratedSpriteSheetBiomeSelect')).toHaveValue('mixed')
+  await expect(page.locator('#mapBiomeRegionCount')).toHaveValue('4')
+  for (const biome of ['Grass', 'Soil', 'Sand', 'Snow']) {
+    await expect(page.locator(`#mapBiome${biome}Weight`)).toHaveValue('25')
+  }
 
   await page.locator('#integratedSpriteSheetBiomeSelect').selectOption('mixed')
   await applyMapSettings(page)

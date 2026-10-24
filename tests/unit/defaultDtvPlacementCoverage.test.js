@@ -20,7 +20,7 @@ describe('default dtv sheets placement coverage', () => {
     const tagsByKey = new Map(sheets.flatMap(sheet => Object.entries(sheet.metadata.tiles).map(([key, tile]) => [`${name(sheet.sheetPath)} ${key}`, tile.tags || []])))
     const seen = new Set()
     const previous = { activeSpriteSheetBiomeTag: gameState.activeSpriteSheetBiomeTag, mapSeed: gameState.mapSeed, citySeeds: gameState.citySeeds }
-    const collect = async(biome, seed, citySeeds = 2) => {
+    const collect = async(biome, seed, citySeeds = previous.citySeeds) => {
       gameState.citySeeds = citySeeds
       gameState.activeSpriteSheetBiomeTag = biome
       gameState.mapSeed = String(seed)

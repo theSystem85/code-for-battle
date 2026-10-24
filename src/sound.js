@@ -1090,6 +1090,15 @@ export async function playFirstGameplayMusic() {
   return started
 }
 
+// Called from the first gesture of each session, including return visits.
+export async function playDefaultGameplayMusic() {
+  if (suppressAudioForAutomation || isMusicUserDisabled() || musicEnabled) return false
+  const firstSession = !hasPlayedFirstGameplayMusic()
+  const file = firstSession ? FIRST_GAMEPLAY_MUSIC_FILE : pickBackgroundMusicFile(backgroundMusicFiles)
+  primeMusicElementInGesture(file)
+  return firstSession ? playFirstGameplayMusic() : playMusicCue(file)
+}
+
 
 // Pick a random track, avoiding an immediate repeat when more than one exists.
 // Music is local presentation only, so it uses Math.random and never advances

@@ -10,7 +10,7 @@ import {
   primeMusicElementInGesture,
   unlockAudioContext,
   isMusicFilePlaying,
-  hasPlayedFirstGameplayMusic,
+  playDefaultGameplayMusic,
   playFirstGameplayMusic,
   playMusicCue,
   rampMusicDuck,
@@ -90,8 +90,7 @@ export function startStoryIntro(options = {}) {
 }
 
 // Called once the loading screen is gone. The automatic first-launch intro
-// brings its own music; when no intro plays, the first gameplay session still
-// opens with Battle Track 02 (once per device).
+// brings its own music; other sessions start gameplay music on the first gesture.
 export function maybeAutoPlayStoryIntro() {
   if (!isMissionIntroOpen() && shouldAutoPlayStoryIntro()) {
     return startStoryIntro({ withMusic: true })
@@ -101,13 +100,12 @@ export function maybeAutoPlayStoryIntro() {
 }
 
 // Browsers block audio before the first user gesture, so without an intro the
-// Battle Track 02 cue waits for the first tap, click or key press.
+// default music waits for the first tap, click or key press.
 function armFirstGameplayMusic(win = window) {
-  if (hasPlayedFirstGameplayMusic()) return
   const events = ['pointerdown', 'keydown']
   const start = () => {
     events.forEach(type => win.removeEventListener(type, start, true))
-    playFirstGameplayMusic()
+    playDefaultGameplayMusic()
   }
   events.forEach(type => win.addEventListener(type, start, true))
 }

@@ -26,7 +26,7 @@ function prepared() {
 
 describe('city clusters and settings', () => {
   it('[U00857] normalizes defaults and clamps integer settings, preserving zero centers', () => {
-    expect(normalizeDecorationSettings()).toEqual({ citySeeds: 2, cityClusterSize: 8, ruinSeeds: 3, ruinClusterSize: 7, stoneCount: 40 })
+    expect(normalizeDecorationSettings()).toEqual({ citySeeds: 4, cityClusterSize: 8, ruinSeeds: 3, ruinClusterSize: 7, stoneCount: 40 })
     expect(normalizeDecorationSettings({ citySeeds: 0, cityClusterSize: 900, ruinSeeds: -5, ruinClusterSize: 1 })).toEqual({ citySeeds: 0, cityClusterSize: 20, ruinSeeds: 0, ruinClusterSize: 3, stoneCount: 40 })
     expect(normalizeDecorationSettings({ citySeeds: '7.9', ruinSeeds: NaN }).citySeeds).toBe(7)
   })

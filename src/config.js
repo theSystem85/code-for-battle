@@ -665,8 +665,8 @@ export function setWaterEffectSpeed(value) {
   return WATER_EFFECT_SPEED
 }
 
-export let COASTAL_SHALLOWS_ENABLED = false
-export let COASTAL_SHALLOWS_LENGTH = 20
+export let COASTAL_SHALLOWS_ENABLED = true
+export let COASTAL_SHALLOWS_LENGTH = 15
 export let WATER_WAVE_DIRECTION = 0
 export function setCoastalShallowsEnabled(value) {
   COASTAL_SHALLOWS_ENABLED = Boolean(value)

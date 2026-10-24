@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { computeMapTopologyFingerprint, topologyChangesAllowed } from '../../src/game/mapTopology.js'
+import { DECORATION_SETTINGS } from '../../src/game/decorationSettings.js'
 
 const sheet = (sheetPath, tags = ['decorative', 'impassable', 'grass']) => ({
   sheetPath, metadata: { tiles: { '0,0': { tags }, '1,0': { tags: ['grass'] } } }
@@ -21,7 +22,8 @@ describe('map topology fingerprint', () => {
     expect(fingerprint([sheet('a.webp', ['decorative', 'passable', 'grass'])])).not.toBe(original)
     expect(fingerprint([...sheets, sheet('b.webp')])).not.toBe(original)
     for (const key of ['citySeeds', 'cityClusterSize', 'ruinSeeds', 'ruinClusterSize']) {
-      expect(computeMapTopologyFingerprint({ enabled: true, sheets, [key]: 4 })).not.toBe(original)
+      const changedValue = DECORATION_SETTINGS[key].default + 1
+      expect(computeMapTopologyFingerprint({ enabled: true, sheets, [key]: changedValue })).not.toBe(original)
     }
   })
   it('[U02718] keeps explicit empty custom selection equivalent to disabled mode', () => {

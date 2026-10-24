@@ -246,7 +246,7 @@ function sanitizeBiomeWeight(value, fallback = 25) {
   return Number.isFinite(parsed) ? Math.max(0, Math.min(100, parsed)) : Math.max(0, Math.min(100, fallback))
 }
 
-function sanitizeBiomeRegionCount(value, fallback = 12) {
+function sanitizeBiomeRegionCount(value, fallback = 4) {
   const parsed = parseInt(value, 10)
   return Number.isFinite(parsed) ? Math.max(1, Math.min(64, parsed)) : Math.max(1, Math.min(64, fallback))
 }
@@ -590,7 +590,7 @@ function loadPersistedSettings() {
       const parsedWeights = storedWeights ? JSON.parse(storedWeights) : gameState.mapBiomeWeights
       gameState.mapBiomeWeights = Object.fromEntries(['grass', 'soil', 'sand', 'snow'].map(biome => [biome, sanitizeBiomeWeight(parsedWeights?.[biome], gameState.mapBiomeWeights?.[biome])]))
     } catch {
-      gameState.mapBiomeWeights = { grass: 30, soil: 30, sand: 20, snow: 20 }
+      gameState.mapBiomeWeights = { grass: 25, soil: 25, sand: 25, snow: 25 }
     }
     gameState.mapSnowOnPlateaus = parseStoredBoolean(storedSnowOnPlateaus, gameState.mapSnowOnPlateaus)
     if (biomeSelect) biomeSelect.value = gameState.activeSpriteSheetBiomeTag

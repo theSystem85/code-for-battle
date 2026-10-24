@@ -814,9 +814,9 @@
               <select id="integratedSpriteSheetBiomeSelect" class="sidebar-input">
                 <option value="soil">Soil</option>
                 <option value="sand">Sand</option>
-                <option value="grass" selected>Grass</option>
+                <option value="grass">Grass</option>
                 <option value="snow">Snow</option>
-                <option value="mixed">Mixed</option>
+                <option value="mixed" selected>Mixed</option>
               </select>
             </div>
             <div class="floating-label-input">
@@ -827,7 +827,7 @@
           <div id="mixedBiomeSettings" class="sidebar-field">
             <div class="sidebar-form-row">
               <div class="floating-label-input">
-                <input type="number" class="sidebar-input" id="mapBiomeRegionCount" min="1" max="64" value="12" placeholder=" ">
+                <input type="number" class="sidebar-input" id="mapBiomeRegionCount" min="1" max="64" value="4" placeholder=" ">
                 <label for="mapBiomeRegionCount">Biome Regions</label>
               </div>
               <div class="floating-label-input">
@@ -851,10 +851,10 @@
               </div>
             </div>
             <div class="sidebar-form-row">
-              <div class="floating-label-input"><input type="number" class="sidebar-input" id="mapBiomeGrassWeight" min="0" max="100" value="30" placeholder=" "><label for="mapBiomeGrassWeight">Grass Size</label></div>
-              <div class="floating-label-input"><input type="number" class="sidebar-input" id="mapBiomeSoilWeight" min="0" max="100" value="30" placeholder=" "><label for="mapBiomeSoilWeight">Soil Size</label></div>
-              <div class="floating-label-input"><input type="number" class="sidebar-input" id="mapBiomeSandWeight" min="0" max="100" value="20" placeholder=" "><label for="mapBiomeSandWeight">Sand Size</label></div>
-              <div class="floating-label-input"><input type="number" class="sidebar-input" id="mapBiomeSnowWeight" min="0" max="100" value="20" placeholder=" "><label for="mapBiomeSnowWeight">Snow Size</label></div>
+              <div class="floating-label-input"><input type="number" class="sidebar-input" id="mapBiomeGrassWeight" min="0" max="100" value="25" placeholder=" "><label for="mapBiomeGrassWeight">Grass Size</label></div>
+              <div class="floating-label-input"><input type="number" class="sidebar-input" id="mapBiomeSoilWeight" min="0" max="100" value="25" placeholder=" "><label for="mapBiomeSoilWeight">Soil Size</label></div>
+              <div class="floating-label-input"><input type="number" class="sidebar-input" id="mapBiomeSandWeight" min="0" max="100" value="25" placeholder=" "><label for="mapBiomeSandWeight">Sand Size</label></div>
+              <div class="floating-label-input"><input type="number" class="sidebar-input" id="mapBiomeSnowWeight" min="0" max="100" value="25" placeholder=" "><label for="mapBiomeSnowWeight">Snow Size</label></div>
             </div>
             <label class="sidebar-check-row">
               <input type="checkbox" id="mapSnowOnPlateausCheckbox" checked>
@@ -873,7 +873,7 @@
             </div>
           </div>
           <div class="sidebar-form-row">
-            <div class="floating-label-input"><input type="number" class="sidebar-input" id="citySeeds" min="0" max="8" value="2" placeholder=" "><label for="citySeeds">City Centers</label></div>
+            <div class="floating-label-input"><input type="number" class="sidebar-input" id="citySeeds" min="0" max="8" value="4" placeholder=" "><label for="citySeeds">City Centers</label></div>
             <div class="floating-label-input"><input type="number" class="sidebar-input" id="cityClusterSize" min="3" max="20" value="8" placeholder=" "><label for="cityClusterSize">City Radius</label></div>
           </div>
           <div class="sidebar-form-row">
@@ -910,7 +910,7 @@
               <label for="mapWaterPercent">Water %</label>
             </div>
             <div class="floating-label-input">
-              <input type="number" class="sidebar-input" id="mapRockPercent" min="0" max="50" value="5" placeholder=" ">
+              <input type="number" class="sidebar-input" id="mapRockPercent" min="0" max="50" value="10" placeholder=" ">
               <label for="mapRockPercent">Rocks %</label>
             </div>
           </div>
@@ -1422,15 +1422,15 @@
             <h3 class="config-modal__section-title">Water and terrain</h3>
             <p class="config-modal__hint">Coastal Shallows reveals sand through the water near the coast. Water is fully transparent at the coast and transitions to opaque offshore (1 tile is 10 m). Tone and saturation apply to Ocean Surface Water and Classic Water.</p>
             <label class="config-modal__field config-modal__field--toggle">
-              <input type="checkbox" id="settingsCoastalShallowsToggle">
+              <input type="checkbox" id="settingsCoastalShallowsToggle" checked>
               <span>Coastal Shallows (sandy seabed and coastal transparency)</span>
             </label>
             <label class="config-modal__field" for="settingsCoastalShallowsLengthRange">
               <span class="config-modal__range-label-row">
                 <span>Coastal shallows length</span>
-                <span id="settingsCoastalShallowsLengthValue" class="config-modal__range-value">20 m</span>
+                <span id="settingsCoastalShallowsLengthValue" class="config-modal__range-value">15 m</span>
               </span>
-              <input type="range" id="settingsCoastalShallowsLengthRange" min="10" max="100" step="5" value="20">
+              <input type="range" id="settingsCoastalShallowsLengthRange" min="10" max="100" step="5" value="15">
             </label>
             <label class="config-modal__field" for="settingsWaterDirectionRange">
               <span class="config-modal__range-label-row"><span>Wave direction (clockwise)</span><span id="settingsWaterDirectionValue" class="config-modal__range-value">0°</span></span>
