@@ -28,7 +28,7 @@ export function getTextForDevice(step, inputMethod) {
   if (adapted) return adapted
   if (!step?.text) return ''
   if (typeof step.text === 'string') return step.text
-  return getIsTouchLayout() ? step.text.mobile : step.text.desktop
+  return (getIsTouchLayout() ? step.text.mobile : step.text.desktop) || step.text.mobile || step.text.desktop || ''
 }
 
 export function getHintForDevice(step, inputMethod) {
@@ -164,7 +164,7 @@ export function countPlayerBuildings(type) {
 }
 
 export function countPlayerUnits(type) {
-  return (gameState.units || []).filter(unit => unit.type === type && isHumanOwner(unit.owner)).length
+  return (gameState.units || []).filter(unit => unit.type === (type === 'tank' ? 'tank_v1' : type) && isHumanOwner(unit.owner)).length
 }
 
 export function findPlayerBuilding(type) {
@@ -172,7 +172,7 @@ export function findPlayerBuilding(type) {
 }
 
 export function findPlayerUnit(type) {
-  return (gameState.units || []).find(unit => unit.type === type && isHumanOwner(unit.owner))
+  return (gameState.units || []).find(unit => unit.type === (type === 'tank' ? 'tank_v1' : type) && isHumanOwner(unit.owner))
 }
 
 export function findEnemyTarget() {

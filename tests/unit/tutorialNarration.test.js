@@ -42,14 +42,18 @@ describe('tutorial narration manifest', () => {
     }
   })
 
-  it('[U04500] covers every step for mouse, touch and trackpad in both layouts', () => {
+  it('[U04500] narrates every step with an exact recording or exact-text speech fallback', () => {
     for (const touchLayout of [false, true]) {
       document.body.classList.toggle('is-touch', touchLayout)
       for (const method of ['mouse-keyboard', 'touch', 'trackpad']) {
         for (const step of buildTutorialSteps()) {
           if (step.id === 'mobile-sidebar-gestures' && !touchLayout) continue
           const text = getSpokenTextForStep(step, method)
-          expect(findTutorialNarrationClip(step.id, text), `${step.id} ${method} ${touchLayout}`).not.toBeNull()
+          const clip = findTutorialNarrationClip(step.id, text)
+          const deps = makeDeps()
+          const narrator = createTutorialNarrator(deps)
+          expect(narrator.speak(step.id, text)).toBe(clip ? 'clip' : 'tts')
+          if (!clip) expect(deps.tts).toEqual([text])
         }
       }
     }
@@ -58,7 +62,7 @@ describe('tutorial narration manifest', () => {
 
   // Regression: a player who skipped the input-method step has no preference.
   // Steps 7+ used the legacy copy then and fell back to browser TTS.
-  it('[U04501] resolves a clip for every step when no input method was chosen', () => {
+  it('[U04501] resolves recorded narration or speech fallback when no input method was chosen', () => {
     for (const touchLayout of [false, true]) {
       document.body.classList.toggle('is-touch', touchLayout)
       const method = resolveTutorialInputMethod(null)
@@ -66,7 +70,10 @@ describe('tutorial narration manifest', () => {
       for (const step of buildTutorialSteps()) {
         if (step.id === 'mobile-sidebar-gestures' && !touchLayout) continue
         const text = getSpokenTextForStep(step, method)
-        expect(findTutorialNarrationClip(step.id, text), `${step.id} null ${touchLayout}`).not.toBeNull()
+        const clip = findTutorialNarrationClip(step.id, text)
+        const deps = makeDeps()
+        expect(createTutorialNarrator(deps).speak(step.id, text)).toBe(clip ? 'clip' : 'tts')
+        if (!clip) expect(deps.tts).toEqual([text])
       }
     }
     document.body.classList.remove('is-touch')
@@ -131,6 +138,20 @@ describe('tutorial narrator', () => {
     narrator.speak('welcome', clip.text)
     await flush()
     expect(deps.tts).toEqual([clip.text])
+  })
+
+  it('[U05473] ignores ended events from a stopped clip after a new narration starts', () => {
+    const onEnd = vi.fn()
+    const deps = makeDeps({ onEnd })
+    const narrator = createTutorialNarrator(deps)
+    narrator.speak('welcome', clip.text)
+    const old = deps.clips[0]
+    narrator.speak('welcome', clip.text)
+    old.dispatchEvent(new window.Event('ended'))
+    expect(onEnd).not.toHaveBeenCalled()
+    expect(narrator.isPlayingClip()).toBe(true)
+    deps.clips[1].dispatchEvent(new window.Event('ended'))
+    expect(onEnd).toHaveBeenCalledTimes(1)
   })
 
   it('[U04508] stops the clip on the next step without a late fallback', () => {

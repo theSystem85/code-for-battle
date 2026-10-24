@@ -767,6 +767,22 @@ describe('CheatSystem', () => {
     expect(units).toHaveLength(1)
   })
 
+  it('[U05472] silently removes tutorial crew from the target without changing selection or notifying', () => {
+    const system = new CheatSystem()
+    const selected = { owner: 'player1', crew: { driver: true } }
+    const target = { owner: 'player1', crew: { driver: true, commander: true, gunner: true, loader: true } }
+    const selection = [selected]
+    system.setSelectedUnitsRef(selection)
+    playSound.mockClear()
+    showNotification.mockClear()
+    for (const role of Object.keys(target.crew)) system.processCheatCode(role, { targetUnits: [target], silent: true })
+    expect(Object.values(target.crew)).toEqual([false, false, false, false])
+    expect(selected.crew.driver).toBe(true)
+    expect(system.selectedUnits).toBe(selection)
+    expect(playSound).not.toHaveBeenCalled()
+    expect(showNotification).not.toHaveBeenCalled()
+  })
+
   it('[U00856] toggles crew members and alerts on removal', () => {
     const system = new CheatSystem()
     const unit = { owner: 'player1', crew: { driver: true } }

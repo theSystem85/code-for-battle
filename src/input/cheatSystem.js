@@ -338,7 +338,7 @@ export class CheatSystem {
     }
   }
 
-  processCheatCode(code) {
+  processCheatCode(code, { targetUnits, silent = false } = {}) {
     const normalizedCode = code.toLowerCase().trim()
     if (normalizedCode && !gameState.replay?.isApplyingReplayCommand) {
       const replayCursor = {}
@@ -523,7 +523,7 @@ export class CheatSystem {
         } else if (normalizedCode === 'enemycontrol off') {
           this.disableEnemyControl()
         } else if (['driver', 'commander', 'loader', 'gunner'].includes(normalizedCode)) {
-          this.toggleCrewMember(normalizedCode)
+          this.toggleCrewMember(normalizedCode, { targetUnits, silent })
         } else if (normalizedCode === 'status') {
           this.showStatus()
         } else {
@@ -1609,22 +1609,22 @@ export class CheatSystem {
     }
   }
 
-  toggleCrewMember(role) {
-    if (!this.selectedUnits || this.selectedUnits.length === 0) {
+  toggleCrewMember(role, { targetUnits = this.selectedUnits, silent = false } = {}) {
+    if (!targetUnits || targetUnits.length === 0) {
       this.showError('No unit selected')
       return
     }
 
-    this.selectedUnits.forEach(unit => {
+    targetUnits.forEach(unit => {
       if (unit.crew && typeof unit.crew === 'object' && role in unit.crew) {
         unit.crew[role] = !unit.crew[role]
 
-        if (!unit.crew[role] && unit.owner === gameState.humanPlayer) {
+        if (!silent && !unit.crew[role] && unit.owner === gameState.humanPlayer) {
           playSound('our' + role.charAt(0).toUpperCase() + role.slice(1) + 'IsOut')
         }
 
         const state = unit.crew[role] ? 'restored' : 'removed'
-        showNotification(`${role} ${state}`, 2000)
+        if (!silent) showNotification(`${role} ${state}`, 2000)
       }
     })
   }

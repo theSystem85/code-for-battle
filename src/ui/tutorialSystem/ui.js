@@ -46,6 +46,7 @@ export function createTutorialUI(tutorial) {
 
     }
     tutorial.syncVisibility()
+    attachTutorialExtras(tutorial)
     attachInputGuide(tutorial)
     setupTutorialDragHandlers(tutorial)
     return
@@ -230,6 +231,7 @@ export function createTutorialUI(tutorial) {
   dockButton.addEventListener('click', () => tutorial.toggleMinimize())
 
   tutorial.syncVisibility()
+  attachTutorialExtras(tutorial)
   attachInputGuide(tutorial)
   setupTutorialDragHandlers(tutorial)
 }
@@ -291,7 +293,7 @@ export function setupTutorialDragHandlers(tutorial) {
   }
 
   tutorial.card.addEventListener('mousedown', (e) => {
-    if (e.target.closest('button') || e.target.closest('input') || e.target.closest('select')) return
+    if (e.target.closest('a') || e.target.closest('button') || e.target.closest('input') || e.target.closest('select')) return
     e.preventDefault()
     startDrag(e.clientX, e.clientY)
   })
@@ -303,7 +305,7 @@ export function setupTutorialDragHandlers(tutorial) {
   document.addEventListener('mouseup', endDrag)
 
   tutorial.card.addEventListener('touchstart', (e) => {
-    if (e.target.closest('button') || e.target.closest('input') || e.target.closest('select')) return
+    if (e.target.closest('a') || e.target.closest('button') || e.target.closest('input') || e.target.closest('select')) return
     e.preventDefault()
     const touch = e.touches[0]
     startDrag(touch.clientX, touch.clientY)
@@ -323,4 +325,56 @@ export function setTutorialTooltip(button, label) {
   button.removeAttribute('title')
   button.setAttribute('aria-label', label)
   button.setAttribute('data-tutorial-tooltip', label)
+}
+
+function attachTutorialExtras(tutorial) {
+  tutorial.card.querySelector('.tutorial-extras')?.remove()
+  const extras = document.createElement('div')
+  extras.className = 'tutorial-extras'
+  const todos = document.createElement('ol')
+  todos.className = 'tutorial-todos'
+  const tasks = [
+    ['Build a Hospital', () => tutorial.guideBuilding('hospital')],
+    ['Build an Ambulance', () => tutorial.guideUnitBuild('ambulance')],
+    ['Restore the marked tank crew', () => tutorial.guideRestoreCrew()]
+  ]
+  for (const [text, show] of tasks) {
+    const item = document.createElement('li')
+    const button = document.createElement('button')
+    button.type = 'button'
+    button.className = 'tutorial-task-link'
+    button.textContent = text
+    button.addEventListener('click', () => tutorial.replayGuidance(show))
+    item.append(button)
+    todos.append(item)
+  }
+  todos.hidden = true
+  const techTree = document.createElement('a')
+  techTree.href = '/docs/user-documentation.html#tech-tree'
+  techTree.className = 'tutorial-task-link'
+  techTree.textContent = 'Open the Tech Tree in the User Manual'
+  techTree.hidden = true
+  techTree.addEventListener('click', event => {
+    event.preventDefault()
+    window.openUserDocs?.('tech-tree')
+    tutorial.stepState.techTreeOpened = true
+  })
+  const funds = document.createElement('div')
+  funds.className = 'tutorial-funds-help'
+  funds.hidden = true
+  const explanation = document.createElement('p')
+  explanation.textContent = 'Low on money? Wait for your Harvesters to deliver ore to a Refinery before building more units or buildings, or take an extra $20,000 to continue the tutorial.'
+  const grant = document.createElement('button')
+  grant.type = 'button'
+  grant.className = 'tutorial-button'
+  grant.textContent = 'Get $20,000 for the tutorial'
+  grant.addEventListener('click', () => {
+    tutorial.grantTutorialFunds()
+  })
+  funds.append(explanation, grant)
+  extras.append(todos, techTree, funds)
+  tutorial.stepProgress.before(extras)
+  tutorial.stepTodos = todos
+  tutorial.techTreeLink = techTree
+  tutorial.fundsHelp = funds
 }

@@ -252,7 +252,7 @@ export class SelectionManager {
     updateLlmQueueTooltipForSelection()
   }
 
-  handleBoundingBoxSelection(units, factories, selectedUnits, selectionStart, selectionEnd) {
+  handleBoundingBoxSelection(units, factories, selectedUnits, selectionStart, selectionEnd, additive = false) {
     try {
       this.clearWreckSelection()
       const x1 = Math.min(selectionStart.x, selectionEnd.x)
@@ -260,8 +260,16 @@ export class SelectionManager {
       const x2 = Math.max(selectionStart.x, selectionEnd.x)
       const y2 = Math.max(selectionStart.y, selectionEnd.y)
 
-      // Clear current selection first
-      selectedUnits.length = 0
+      // Additive drags retain commandable units already selected, without duplicates.
+      if (!additive) selectedUnits.length = 0
+      else {
+        for (let index = selectedUnits.length - 1; index >= 0; index--) {
+          if (selectedUnits[index].isBuilding || !this.isSelectableUnit(selectedUnits[index]) || selectedUnits[index].health <= 0) {
+            selectedUnits[index].selected = false
+            selectedUnits.splice(index, 1)
+          }
+        }
+      }
 
       // Clear attack group targets when selection changes
       this.clearAttackGroupTargets()
@@ -281,9 +289,9 @@ export class SelectionManager {
 
           if (centerX >= x1 && centerX <= x2 && centerY >= y1 && centerY <= y2) {
             unit.selected = true
-            selectedUnits.push(unit)
+            if (!selectedUnits.includes(unit)) selectedUnits.push(unit)
             anySelected = true
-          } else {
+          } else if (!additive || !selectedUnits.includes(unit)) {
             unit.selected = false
           }
         }
