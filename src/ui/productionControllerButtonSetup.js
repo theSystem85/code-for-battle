@@ -8,6 +8,7 @@ import { buildingData } from '../buildings.js'
 import { applyProductionBrush } from './mapEditorControls.js'
 import { attachProductionTooltipHandlers } from './productionTooltip.js'
 import { isReplayModeActive } from '../replaySystem.js'
+import { initUnitDragPreview } from './unitDragPreview.js'
 
 const mobileLandscapeBuildingLabelMap = {
   vehicleFactory: 'Vehicle Fab',
@@ -121,6 +122,7 @@ export function setupAllProductionButtons(controller) {
 }
 
 export function setupUnitButtons(controller) {
+  initUnitDragPreview()
   const unitButtons = document.querySelectorAll('.production-button[data-unit-type]')
 
   unitButtons.forEach(button => {
