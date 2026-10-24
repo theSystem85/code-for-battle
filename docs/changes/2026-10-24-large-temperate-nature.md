@@ -1,0 +1,7 @@
+- [x] **Feature: More grass and soil woods, lakes and stones**
+  Added 48 calibrated nature assets in two separately tagged summer-grass and autumn-soil source/atlas pairs, including large woodland groups, 6×6 lakes, boulder formations and small stone patches. Enabled both sheets by default and reused existing prepared placement.
+  Spec: [Larger temperate nature assets](../../specs/large-temperate-nature-assets.md)
+
+Validation: `npm run test:unit` passed 328 files / 5,438 tests; `npm run test` passed 330 files / 5,524 tests. All seven Chromium checks passed across mapSourceSheets, legacySheetStorage and integratedStartupSheets, including SSE export, default registration and real biome layouts with woods/lakes/rocks; all other Playwright files were skipped. Source replay verifies all 18 profiles and every imported alpha pixel/dimension, and the complete default catalog—including all 48 new sprites—appears on generated-map samples. Lint, stable test-ID checks and production build passed. Existing dtv6/city/sand/snow assets are unchanged. No rendering/layout algorithm changes were required. Hardware 75 FPS acceptance remains pending on Patrick's qualifying GPU; no graphics benchmarks were run.
+
+Review: [per-sprite scale report](../asset-reports/2026-10-24-large-nature-scale-review.md) and [actual map-size comparison with oak/factory](../asset-reports/large-nature-map-scale-comparison.webp). Updated both asset skills with composite/detail scale rules and the explicit maxScale 2 exception for these two sources.

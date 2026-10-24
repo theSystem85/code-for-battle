@@ -62,6 +62,6 @@ export function mapPropReferenceSize(profile, prop, index) {
   return { width: widths[index], height }
 }
 
-export function mapPropImportScale(bbox, referenceSize) {
-  return Math.min(1, referenceSize.width / bbox.width, referenceSize.height / bbox.height)
+export function mapPropImportScale(bbox, referenceSize, maxScale = 1) {
+  return Math.min(maxScale, referenceSize.width / bbox.width, referenceSize.height / bbox.height)
 }

@@ -17,6 +17,8 @@
     "images/map/sprite_sheets/dtv6_decor_universal.webp",
     "images/map/sprite_sheets/dtv6_nature_grass.webp",
     "images/map/sprite_sheets/dtv6_nature_soil.webp",
-    "images/map/sprite_sheets/dtv6_shore.webp"
+    "images/map/sprite_sheets/dtv6_shore.webp",
+    "images/map/sprite_sheets/dtv7_nature_grass_large.webp",
+    "images/map/sprite_sheets/dtv7_nature_soil_large.webp"
   ]
 }

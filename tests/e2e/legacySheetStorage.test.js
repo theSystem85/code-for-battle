@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test'
 const DIR = 'images/map/sprite_sheets/'
 const DEFAULT_SHEETS = ['debris_craters_tracks', 'dtv3_ground_detail', 'dtv4_nature_sand', 'dtv4_nature_snow',
   ...['temperate', 'sand', 'snow'].flatMap(biome => ['low', 'medium'].map(level => `dtv5_city_${biome}_${level}`)),
-  ...['grass', 'soil', 'sand', 'snow', 'universal'].map(biome => `dtv6_decor_${biome}`), 'dtv6_shore', 'dtv6_nature_grass', 'dtv6_nature_soil']
+  ...['grass', 'soil', 'sand', 'snow', 'universal'].map(biome => `dtv6_decor_${biome}`), 'dtv6_shore', 'dtv6_nature_grass', 'dtv6_nature_soil', 'dtv7_nature_grass_large', 'dtv7_nature_soil_large']
 const RETIRED = /dtv3_city|dtv4_city_(sand|snow)|dtv2_|dtv3_(shore|winter)|seasons_1024|rocks_64x64|crystals_q90|streets24|rockCliffs/
 
 for (const mode of ['true', 'false']) {

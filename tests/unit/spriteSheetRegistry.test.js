@@ -36,7 +36,7 @@ describe('sprite sheet registry', () => {
     expect(OPTIONAL_SSE_SHEETS).toHaveLength(0)
     expect(DEFAULT_SSE_SHEETS).toContain('images/map/sprite_sheets/dtv6_decor_snow.webp')
     for (const biome of ['temperate', 'sand', 'snow']) for (const level of ['low', 'medium']) expect(DEFAULT_SSE_SHEETS).toContain(`images/map/sprite_sheets/dtv5_city_${biome}_${level}.webp`)
-    expect(DEFAULT_SSE_SHEETS.filter(path => /\/dtv\d+_/.test(path))).toHaveLength(17)
+    expect(DEFAULT_SSE_SHEETS.filter(path => /\/dtv\d+_/.test(path))).toHaveLength(19)
     expect(DEFAULT_SSE_SHEETS).toEqual(expect.arrayContaining(['dtv5_city_sand_medium', 'dtv5_city_snow_medium', 'dtv4_nature_sand', 'dtv4_nature_snow'].map(name => `images/map/sprite_sheets/${name}.webp`)))
     expect(isRetiredSpriteSheetPath('images/map/sprite_sheets/seasons_1024_q90_2.webp')).toBe(true)
     expect(isRetiredSpriteSheetPath('images/map/sprite_sheets/streets24_q90_1024x1024.webp')).toBe(true)
@@ -162,4 +162,13 @@ it.each(['dtv6_shore', 'dtv6_nature_grass', 'dtv6_nature_soil', ...['grass', 'so
   expect(sanitizeAppliedSheetMetadata(old)).toBeNull()
   const current = { ...old, layoutVersion: 2 }
   expect(sanitizeAppliedSheetMetadata(current)).toBe(current)
+})
+
+it.each(['grass', 'soil'])('[U05459] enables the new %s large-nature sheet and preserves its current metadata', async biome => {
+  const { sanitizeAppliedSheetMetadata } = await import('../../src/ui/spriteSheetRegistry.js')
+  const sheetPath = `images/map/sprite_sheets/dtv7_nature_${biome}_large.webp`
+  expect(DEFAULT_SSE_SHEETS).toContain(sheetPath)
+  const metadata = JSON.parse(readFileSync(`public/${sheetPath.replace('.webp', '.json')}`, 'utf8'))
+  expect(sanitizeAppliedSheetMetadata(metadata)).toBe(metadata)
+  expect(sanitizeAppliedSheetMetadata({ ...metadata, layoutVersion: 0 })).toBeNull()
 })
