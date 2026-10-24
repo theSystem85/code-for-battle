@@ -20,7 +20,6 @@ import { MinimapRenderer } from './minimapRenderer.js'
 import { HarvesterHUD } from '../ui/harvesterHUD.js'
 import { DangerZoneRenderer } from './dangerZoneRenderer.js'
 import { WreckRenderer } from './wreckRenderer.js'
-import { TrackMarksRenderer } from './trackMarksRenderer.js'
 import { renderMineIndicators, renderMineDeploymentPreview, renderSweepAreaPreview, renderFreeformSweepPreview } from './mineRenderer.js'
 import { GameWebGLRenderer } from './webglRenderer.js'
 import { GameWebGPURenderer } from './webgpuRenderer.js'
@@ -76,7 +75,6 @@ export class Renderer {
     this.harvesterHUD = new HarvesterHUD()
     this.dangerZoneRenderer = new DangerZoneRenderer()
     this.wreckRenderer = new WreckRenderer()
-    this.trackMarksRenderer = new TrackMarksRenderer()
     this.gpuRenderer = null
     this.webgpuRenderer = null
     this.gpuOverlay = {
@@ -627,8 +625,6 @@ export class Renderer {
     const entityBasesSpan = renderProfiler.startSpan(PROFILER_SPAN_IDS.ENTITY_BASES)
     gameCtx.save()
     gameCtx.globalAlpha *= entityImageAlpha
-    // Ground track marks sit on the terrain, beneath buildings, wrecks and units.
-    this.trackMarksRenderer.render(gameCtx, scrollOffset, gameState)
     const exitRegistry = this.buildingRenderer.preparedSpriteRegistry
     for (const unit of visibleExitingUnits) {
       const visibility = factoryExitVisibility(unit)
