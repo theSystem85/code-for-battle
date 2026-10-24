@@ -128,3 +128,53 @@ test('[E00228] calibrated dtv6 props generate biome-matching forests, shore and 
     expect(biome.matching).toBe(true)
   }
 })
+
+test('[E00229] large grass and soil nature sheets load by default, preserve reference scales and place woods, lakes and stones', async({ page }) => {
+  await page.goto('/sse')
+  await page.waitForFunction(() => Boolean(window.__SSE__))
+  for (const biome of ['grass', 'soil']) {
+    const path = `images/map/sprite_sheets/dtv7_nature_${biome}_large.webp`
+    await page.locator('#sseSheetSelect').selectOption(path)
+    await page.waitForFunction(path => window.__SSE__.getState().targetSheetPath === path, path)
+    const exported = await page.evaluate(async() => {
+      const { json } = await window.__SSE__.exportSheet({ lossless: false, quality: 85 })
+      return { count: json.extension.imports.length, layout: json.layoutVersion, alpha: json.blendMode,
+        calibrated: json.extension.imports.every(item => Math.round(item.bbox.width * item.sizeRatio) === item.renderRect.width && Math.round(item.bbox.height * item.sizeRatio) === item.renderRect.height) }
+    })
+    expect(exported).toEqual({ count: 24, layout: 1, alpha: 'alpha', calibrated: true })
+  }
+  const result = await page.evaluate(async() => {
+    const { DEFAULT_SSE_SHEETS } = await import('/src/ui/spriteSheetRegistry.js')
+    const { TextureManager } = await import('/src/rendering/textureManager.js')
+    const { gameState } = await import('/src/gameState.js')
+    const sheets = await Promise.all(['grass', 'soil'].map(async biome => {
+      const sheetPath = `images/map/sprite_sheets/dtv7_nature_${biome}_large.webp`
+      return { sheetPath, metadata: await (await fetch(`/${sheetPath.replace('.webp', '.json')}`)).json() }
+    }))
+    const manager = new TextureManager()
+    await manager.setIntegratedSpriteSheetConfig({ enabled: true, sheets, biomeTag: 'mixed' })
+    Object.assign(gameState, { mapSeed: 'larger-nature-art', citySeeds: 0, ruinSeeds: 0, stoneCount: 80 })
+    const result = []
+    for (const biome of ['grass', 'soil']) {
+      const map = Array.from({ length: 120 }, () => Array.from({ length: 120 }, () => ({ type: 'land', biome })))
+      const cells = manager.getDecorationLayout(map).cells.filter(cell => cell && cell.offsetX === 0 && cell.offsetY === 0)
+      result.push({ biome, trees: cells.filter(cell => cell.group.tagSet.has('trees')).length,
+        lakes: cells.filter(cell => cell.group.tagSet.has('water')).length,
+        rocks: cells.filter(cell => cell.group.tagSet.has('rocks')).length,
+        larger: cells.some(cell => cell.group.width >= 4 || cell.group.height >= 4),
+        matching: cells.every(cell => cell.group.tagSet.has(biome)),
+        blockedLakes: cells.filter(cell => cell.group.tagSet.has('water')).every(cell => cell.group.tagSet.has('impassable')) })
+    }
+    return { registered: sheets.every(sheet => DEFAULT_SSE_SHEETS.includes(sheet.sheetPath)), otherBiomesEmpty: manager.integratedDecorationPools.sand.multi.length === 0 && manager.integratedDecorationPools.snow.multi.length === 0, result }
+  })
+  expect(result.registered).toBe(true)
+  expect(result.otherBiomesEmpty).toBe(true)
+  for (const biome of result.result) {
+    expect(biome.trees).toBeGreaterThan(0)
+    expect(biome.lakes).toBeGreaterThan(0)
+    expect(biome.rocks).toBeGreaterThan(0)
+    expect(biome.larger).toBe(true)
+    expect(biome.matching).toBe(true)
+    expect(biome.blockedLakes).toBe(true)
+  }
+})

@@ -88,13 +88,13 @@ describe('bundled map source sheets', () => {
     expect(output.info.width).toBe(metadata.columns * metadata.tileSize)
     expect(output.info.height).toBe(metadata.rows * metadata.rowHeight)
     expect(output.data[3]).toBe(0)
-    expect(metadata.source.packing).toEqual({ scale: profile.props ? 'per-sprite' : profile.importScale || 1, padding: 2 })
+    expect(metadata.source.packing).toEqual({ scale: profile.props ? 'per-sprite' : profile.importScale || 1, padding: 2, ...(profile.maxImportScale ? { maxScale: profile.maxImportScale } : {}) })
     let changedAlpha = 0
     for (let index = 0; index < components.length; index++) {
       const { bbox, pixels } = components[index]
       const { renderRect: rect, placedAt } = metadata.extension.imports[index]
       const guide = profile.props?.[index]
-      const scale = guide?.referenceSize ? Math.min(1, guide.referenceSize.width / bbox.width, guide.referenceSize.height / bbox.height) : profile.importScale || 1
+      const scale = guide?.referenceSize ? Math.min(profile.maxImportScale || 1, guide.referenceSize.width / bbox.width, guide.referenceSize.height / bbox.height) : profile.importScale || 1
       expect(metadata.extension.imports[index].sizeRatio ?? 1).toBe(scale)
       if (guide) expect(metadata.extension.imports[index].referenceSize).toEqual(guide.referenceSize)
       expect([rect.width, rect.height]).toEqual([Math.round(bbox.width * scale), Math.round(bbox.height * scale)])
@@ -118,7 +118,7 @@ it('[U05456] keeps all dtv6 props within established tree, vehicle, building and
   const directory = 'public/images/map/sprite_sheets'
   const cottage = JSON.parse(await readFile(`${directory}/dtv5_city_temperate_low.json`, 'utf8'))
   const smallestCottage = Math.min(...cottage.extension.imports.map(item => item.renderRect.width))
-  const sheets = await Promise.all(SOURCE_PROFILES.filter(profile => profile.props).map(async profile => JSON.parse(await readFile(`${directory}/${profile.name}.json`, 'utf8'))))
+  const sheets = await Promise.all(SOURCE_PROFILES.filter(profile => profile.name.startsWith('dtv6_')).map(async profile => JSON.parse(await readFile(`${directory}/${profile.name}.json`, 'utf8'))))
   expect(sheets).toHaveLength(8)
   expect(sheets.flatMap(sheet => sheet.extension.imports)).toHaveLength(236)
   for (const sheet of sheets) for (const sprite of sheet.extension.imports) {
@@ -136,5 +136,36 @@ it('[U05456] keeps all dtv6 props within established tree, vehicle, building and
       expect(sprite.renderRect.width).toBeLessThanOrEqual(84)
       expect(sprite.renderRect.height).toBeLessThanOrEqual(124)
     }
+  }
+})
+
+it.each(['grass', 'soil'])('[U05458] ships larger %s nature assemblies with matching seasons, varied sizes and calibrated detail', async biome => {
+  const directory = 'public/images/map/sprite_sheets'
+  const sheet = JSON.parse(await readFile(`${directory}/dtv7_nature_${biome}_large.json`, 'utf8'))
+  const imports = sheet.extension.imports
+  expect(imports).toHaveLength(24)
+  for (const category of ['trees', 'water', 'rocks']) expect(imports.filter(item => item.tags.includes(category))).toHaveLength(8)
+  expect(imports.every(item => item.tags.includes(biome) && item.tags.includes(biome === 'grass' ? 'summer' : 'autumn') && !item.tags.includes('universal'))).toBe(true)
+  const byId = name => imports.find(item => item.id === `${biome}_${name}`)
+  const oak = JSON.parse(await readFile(`${directory}/dtv6_nature_${biome}.json`, 'utf8')).extension.imports.find(item => item.id === `${biome}_oak`)
+  const woodland = byId('dense_woodland')
+  expect(woodland.renderRect.width).toBeGreaterThan(oak.renderRect.width * 3)
+  expect(woodland.renderRect.width).toBeLessThanOrEqual(300)
+  expect(woodland.renderRect.height).toBeLessThanOrEqual(236)
+  expect([woodland.tileSpan.columns, woodland.tileSpan.rows]).toEqual([5, 4])
+  const lake = byId('broad_shallow_lake')
+  expect(lake.renderRect.width).toBeGreaterThanOrEqual(300)
+  expect(lake.renderRect.height).toBeGreaterThanOrEqual(300)
+  expect([lake.tileSpan.columns, lake.tileSpan.rows]).toEqual([6, 6])
+  expect(lake.tags).toEqual(expect.arrayContaining(['water', 'lake', 'impassable']))
+  const stones = byId('river_stone_patch')
+  expect([stones.tileSpan.columns, stones.tileSpan.rows]).toEqual([1, 1])
+  expect(stones.tags).toEqual(expect.arrayContaining(['rocks', 'stones', 'passable']))
+  expect(byId('low_rocky_ridge').renderRect.width).toBeGreaterThan(stones.renderRect.width * 2)
+  for (const item of imports) {
+    expect(item.sizeRatio).toBeGreaterThan(0)
+    expect(item.sizeRatio).toBeLessThanOrEqual(2)
+    expect(item.renderRect.width).toBeLessThanOrEqual(item.referenceSize.width)
+    expect(item.renderRect.height).toBeLessThanOrEqual(item.referenceSize.height)
   }
 })
