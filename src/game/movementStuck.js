@@ -83,6 +83,14 @@ function hasLocalBlockageSignal(unit, mapGrid, occupancyMap, now, recentStaticCo
 
   const lowSpeedWhileTryingToMove = Boolean(unit.movement?.isMoving) && (unit.movement?.currentSpeed || 0) < 0.02
   if (lowSpeedWhileTryingToMove) {
+    // Ships deliberately brake until their slow hull rotation aligns with the
+    // route. A nearby waypoint and zero speed are not evidence of an obstacle
+    // during that turn; random detours otherwise keep restarting the turn.
+    if (unit.isNaval && Math.abs(normalizeAngle(
+      (unit.movement.targetRotation || 0) - (unit.direction || 0)
+    )) >= Math.PI / 12) {
+      return false
+    }
     const collisionCooldownActive = unit.lastPathCalcTime && now - unit.lastPathCalcTime > 750
     return Boolean(collisionCooldownActive)
   }

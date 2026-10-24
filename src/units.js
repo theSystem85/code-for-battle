@@ -185,7 +185,7 @@ export function rebuildOccupancyMapWithTextures(units, mapGrid, textureManager) 
 }
 
 export const updateUnitOccupancy = logPerformance(function updateUnitOccupancy(unit, prevTileX, prevTileY, occupancyMap) {
-  if (!occupancyMap || unit.factoryExit) return
+  if (!occupancyMap || unit.factoryExit || unit.isNaval) return
 
   // Skip occupancy updates for air units that are:
   // 1. Not grounded (airborne), OR
@@ -222,7 +222,7 @@ export const updateUnitOccupancy = logPerformance(function updateUnitOccupancy(u
 }, false)
 
 export function removeUnitOccupancy(unit, occupancyMap, options = {}) {
-  if (!occupancyMap || unit.factoryExit) return
+  if (!occupancyMap || unit.factoryExit || unit.isNaval) return
   const { ignoreFlightState = false } = options
   if (!ignoreFlightState && unit.isAirUnit && unit.flightState !== 'grounded') {
     return
@@ -561,7 +561,7 @@ export const findPath = logPerformance(function findPath(start, end, mapGrid, oc
 
   let chosenPath = finalPath
 
-  if (directPath && (finalPath.length === 0 || directCost <= aStarCost)) {
+  if (directPath && (finalPath.length === 0 || directCost <= aStarCost + 1e-9)) {
     chosenPath = directPath
   }
 
@@ -786,7 +786,9 @@ function smoothPath(path, mapGrid, occupancyMap, options = {}) {
         const directSegment = getLineTiles(path[currentIndex], path[i])
         const directCost = calculatePathCost(directSegment, mapGrid)
         const originalCost = calculatePathCost(path.slice(currentIndex, i + 1), mapGrid)
-        if (directCost <= originalCost) {
+        // Equal diagonal/straight step costs can sum in a different order.
+        // Ignore rounding noise rather than retain a pointless turning point.
+        if (directCost <= originalCost + 1e-9) {
           nextIndex = i
           break
         }

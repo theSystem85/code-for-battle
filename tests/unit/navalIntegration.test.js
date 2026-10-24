@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { canPlaceBuilding, isTileValid } from '../../src/validation/buildingPlacement.js'
-import { buildOccupancyMap, findPath } from '../../src/units.js'
+import { buildOccupancyMap, findPath, updateUnitOccupancy, removeUnitOccupancy } from '../../src/units.js'
 import {
   getShipyardServiceWaterTiles,
   getShipyardWaterLocalTiles,
@@ -21,6 +21,35 @@ function createMap(width, height, type = 'land') {
 }
 
 describe('naval integration', () => {
+  it.each(['aircraftCarrier', 'battleship', 'hovercraft'])('[U05482] keeps %s movement and removal out of the land occupancy map', type => {
+    const mapGrid = createMap(30, 30, 'water')
+    const unit = {
+      id: 'occupancy-ship', type, isNaval: true, health: 100,
+      owner: 'player1', x: 10 * TILE_SIZE, y: 10 * TILE_SIZE
+    }
+    const occupancyMap = buildOccupancyMap([unit], mapGrid)
+    const original = occupancyMap.map(row => [...row])
+    unit.x += TILE_SIZE
+    updateUnitOccupancy(unit, 10, 10, occupancyMap)
+    removeUnitOccupancy(unit, occupancyMap)
+
+    expect(occupancyMap).toEqual(original)
+    const start = { x: 11, y: 10 }
+    const end = { x: 20, y: 10 }
+    expect(findPath(start, end, mapGrid, occupancyMap, undefined, {
+      movementType: type === 'hovercraft' ? 'amphibious' : 'water', unitOwner: unit.owner
+    })).toEqual([start, end])
+  })
+
+  it.each(['water', 'amphibious'])('[U05483] smooths equal-cost unobstructed diagonal %s paths without rounding-induced turns', movementType => {
+    const mapGrid = createMap(30, 30, 'water')
+    const start = { x: 11, y: 10 }
+    const end = { x: 16, y: 14 }
+    expect(findPath(start, end, mapGrid, buildOccupancyMap([], mapGrid), undefined, {
+      movementType, unitOwner: 'player1'
+    })).toEqual([start, end])
+  })
+
   it('[U03166] requires the lower three rows of the 5x5 Shipyard footprint to be water', () => {
     const mapGrid = createMap(20, 20)
     for (let y = 7; y <= 10; y++) {
