@@ -87,7 +87,22 @@ function getWaypointReachDistance(unit, targetX, targetY, centerDistance, isFina
   const bow = getNavalHullSegment(unit)
   const targetCenterX = targetX + TILE_SIZE / 2
   const targetCenterY = targetY + TILE_SIZE / 2
-  return Math.hypot(bow.endX - targetCenterX, bow.endY - targetCenterY)
+  // A close command can already lie behind the bow. Accept the forward
+  // centerline too, so the carrier does not pass the target and circle back
+  // forever trying to place its bow on a point underneath its own hull.
+  const forwardX = bow.endX - bow.centerX
+  const forwardY = bow.endY - bow.centerY
+  const lengthSquared = forwardX * forwardX + forwardY * forwardY
+  const projection = lengthSquared > 0
+    ? Math.max(0, Math.min(1, (
+      (targetCenterX - bow.centerX) * forwardX +
+      (targetCenterY - bow.centerY) * forwardY
+    ) / lengthSquared))
+    : 0
+  return Math.hypot(
+    bow.centerX + forwardX * projection - targetCenterX,
+    bow.centerY + forwardY * projection - targetCenterY
+  )
 }
 
 function settleCarrierAtBowTarget(unit, movement) {
