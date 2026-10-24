@@ -1038,7 +1038,8 @@ export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'g
       const categories = new Map()
       for (const group of pools[biome]?.[kind === 'large' ? 'multi' : kind] || []) {
         if (kind === 'large' || kind === 'multi') {
-          const large = Math.max(group.width, group.height) >= 5
+          const span = Math.max(group.width, group.height)
+          const large = span >= 5 || (group.tagSet.has('rocks') && span >= 3)
           if (kind === 'large' ? !largeFirst || !large : largeFirst && large) continue
         }
         // Shore, roadside, stones and city props have their own passes.
