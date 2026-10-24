@@ -7,6 +7,7 @@ vi.mock('../../src/storage/indexedDbStorage.js', () => ({
 
 import { TrackMarkStore, TRACK_KIND, TRACK_SURFACE, TRACK_CHUNK_PX, trackMarkSettings } from '../../src/game/trackMarks.js'
 import { TrackMarksRenderer } from '../../src/rendering/trackMarksRenderer.js'
+import { MapRenderer } from '../../src/rendering/mapRenderer.js'
 
 function fakeCtx() {
   const noop = () => {}
@@ -36,5 +37,48 @@ describe('TrackMarksRenderer memory', () => {
     expect(renderer.getStats().canvases).toBe(0)
     expect(renderer.getStats().canvasBytes).toBe(0)
     trackMarkSettings.fade = false
+  })
+})
+
+
+describe('Ground trace visibility layering', () => {
+  it.each([false, true])('[U05460] draws tracks after terrain and before shadow of war (GPU terrain: %s)', skipBaseLayer => {
+    const renderer = new MapRenderer({})
+    const order = []
+    const ctx = fakeCtx()
+    ctx.globalAlpha = 1
+    const scroll = { x: 0, y: 0 }
+    const state = { shadowOfWarEnabled: true, visibilityMap: [[{ discovered: true, visible: false }]] }
+    vi.spyOn(renderer, 'renderTiles').mockImplementation(() => order.push('terrain'))
+    vi.spyOn(renderer, 'renderSOTOverlays').mockImplementation(() => order.push('terrain'))
+    vi.spyOn(renderer.trackMarksRenderer, 'render').mockImplementation(() => order.push('tracks'))
+    vi.spyOn(renderer, 'renderGrid').mockImplementation(() => {})
+    vi.spyOn(renderer, 'renderOccupancyMap').mockImplementation(() => {})
+    ctx.fillRect = vi.fn(() => order.push('fog'))
+
+    renderer.render(ctx, [[{ type: 'land' }]], scroll, ctx.canvas, state, null, { skipBaseLayer })
+
+    expect(order).toEqual(['terrain', 'tracks', 'fog'])
+    expect(renderer.trackMarksRenderer.render).toHaveBeenCalledOnce()
+    const call = renderer.trackMarksRenderer.render.mock.calls[0]
+    expect(call[0]).toBe(ctx)
+    expect(call[1]).toBe(scroll)
+    expect(call[2]).toBe(state)
+  })
+
+  it.each([0, 1, 2])('[U05461] preserves trace opacity at entity opacity level %s', entityImageOpacityLevel => {
+    const renderer = new MapRenderer({})
+    const ctx = fakeCtx()
+    ctx.globalAlpha = 1
+    vi.spyOn(renderer, 'renderTiles').mockImplementation(() => {})
+    vi.spyOn(renderer, 'renderGrid').mockImplementation(() => {})
+    vi.spyOn(renderer, 'renderOccupancyMap').mockImplementation(() => {})
+    const tracks = vi.spyOn(renderer.trackMarksRenderer, 'render').mockImplementation(() => {
+      expect(ctx.globalAlpha).toBe([1, 0.5, 0][entityImageOpacityLevel])
+    })
+
+    renderer.render(ctx, [[{ type: 'land' }]], { x: 0, y: 0 }, ctx.canvas, { entityImageOpacityLevel })
+
+    expect(tracks).toHaveBeenCalledOnce()
   })
 })

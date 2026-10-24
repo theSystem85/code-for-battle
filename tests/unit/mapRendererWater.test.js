@@ -398,7 +398,7 @@ describe('MapRenderer water rendering', () => {
       [{ type: 'street' }, { type: 'water' }]
     ]
 
-    mapRenderer.render({ imageSmoothingEnabled: true }, mapGrid, { x: 0, y: 0 }, canvas, {}, null, {
+    mapRenderer.render({ imageSmoothingEnabled: true, globalAlpha: 1, save: vi.fn(), restore: vi.fn() }, mapGrid, { x: 0, y: 0 }, canvas, {}, null, {
       separateWaterLayer: true
     })
 
@@ -426,7 +426,7 @@ describe('MapRenderer water rendering', () => {
 
     try {
       mapRenderer.render(
-        { imageSmoothingEnabled: true },
+        { imageSmoothingEnabled: true, globalAlpha: 1, save: vi.fn(), restore: vi.fn() },
         mapGrid,
         { x: 0, y: 0 },
         canvas,

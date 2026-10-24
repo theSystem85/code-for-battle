@@ -21,6 +21,7 @@ import {
   TerrainRevisionState,
   TerrainWarmQueue
 } from './prepared/terrainCacheState.js'
+import { TrackMarksRenderer } from './trackMarksRenderer.js'
 import { CpuWaterPass } from './prepared/cpuWaterPass.js'
 import { consumePendingTerrainSync, getMapMutationRevisionStore } from './prepared/mapMutationNotifier.js'
 import { PROFILER_SPAN_IDS } from '../performance/profilerIds.js'
@@ -230,6 +231,7 @@ function getInverseSotInfo(mapGrid, x, y, tileType, top, right, bottom, left, an
 export class MapRenderer {
   constructor(textureManager) {
     this.textureManager = textureManager
+    this.trackMarksRenderer = new TrackMarksRenderer()
     this.mobileMemoryProfile = Boolean(
       (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0) ||
       (typeof document !== 'undefined' && document.body?.classList.contains('is-touch'))
@@ -2472,6 +2474,12 @@ export class MapRenderer {
         gpuRenderedResources: Boolean(options?.gpuRenderedResources)
       })
     }
+    // Tracks belong to the terrain: fog must obscure them before entities render.
+    ctx.save()
+    const opacityLevel = gameState?.entityImageOpacityLevel
+    ctx.globalAlpha *= opacityLevel === 1 ? 0.5 : (opacityLevel === 2 ? 0 : 1)
+    this.trackMarksRenderer.render(ctx, scrollOffset, gameState)
+    ctx.restore()
     this.applyVisibilityOverlay(ctx, mapGrid, startTileX, startTileY, endTileX, endTileY, scrollOffset, gameState)
     this.renderGrid(ctx, startTileX, startTileY, endTileX, endTileY, scrollOffset, gameState)
     this.renderOccupancyMap(ctx, occupancyMap, startTileX, startTileY, endTileX, endTileY, scrollOffset, gameState)
