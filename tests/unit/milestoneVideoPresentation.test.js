@@ -26,6 +26,7 @@ describe('milestone video presentation', () => {
   it('[U05474] centers condensed portrait video with CSS safe-area clearance', () => {
     const condensed = {
       mode: 'portrait-condensed',
+      span: 'viewport-width',
       width: PORTRAIT_COMPACT_VIDEO_SIZE.width,
       height: PORTRAIT_COMPACT_VIDEO_SIZE.height,
       topGap: PORTRAIT_CONDENSED_VIDEO_TOP_GAP_PX
@@ -50,10 +51,12 @@ describe('milestone video presentation', () => {
     expect(css).toMatch(/body\.mobile-portrait\.sidebar-condensed #video-overlay\.native-video\s*\{[^}]*top:\s*calc\(12px \+ max\(var\(--safe-area-top, 0px\), env\(safe-area-inset-top, 0px\)\)\)/)
     expect(css).toMatch(/body\.mobile-portrait\.sidebar-condensed #video-overlay\.native-video\s*\{[^}]*left:\s*0;/)
     expect(css).toMatch(/body\.mobile-portrait\.sidebar-condensed #video-overlay\.native-video\s*\{[^}]*right:\s*0;/)
-    expect(css).toMatch(/body\.mobile-portrait\.sidebar-condensed #video-overlay\.native-video\s*\{[^}]*width:\s*160px;/)
-    expect(css).toMatch(/body\.mobile-portrait\.sidebar-condensed #video-overlay\.native-video\s*\{[^}]*height:\s*120px;/)
-    expect(css).toMatch(/body\.mobile-portrait\.sidebar-condensed #video-overlay\.native-video\s*\{[^}]*margin-left:\s*auto;/)
-    expect(css).toMatch(/body\.mobile-portrait\.sidebar-condensed #video-overlay\.native-video\s*\{[^}]*margin-right:\s*auto;/)
+    expect(css).toMatch(/body\.mobile-portrait\.sidebar-condensed #video-overlay\.native-video\s*\{[^}]*width:\s*100%;/)
+    expect(css).toMatch(/body\.mobile-portrait\.sidebar-condensed #video-overlay\.native-video\s*\{[^}]*height:\s*auto;/)
+    expect(css).toMatch(/body\.mobile-portrait\.sidebar-condensed #video-overlay\.native-video\s*\{[^}]*aspect-ratio:\s*160\s*\/\s*120;/)
+    expect(css).toMatch(/body\.mobile-portrait\.sidebar-condensed #video-overlay\.native-video\s*\{[^}]*margin-left:\s*0;/)
+    expect(css).toMatch(/body\.mobile-portrait\.sidebar-condensed #video-overlay\.native-video\s*\{[^}]*margin-right:\s*0;/)
+    expect(css).toMatch(/body\.mobile-portrait #video-overlay\.native-video\.show\s*\{[^}]*pointer-events:\s*auto;/)
     expect(css).not.toMatch(/body\.pwa-standalone\.mobile-portrait\.sidebar-condensed #video-overlay/)
 
     document.body.className = 'mobile-landscape'
@@ -126,6 +129,46 @@ describe('milestone video presentation', () => {
     vi.advanceTimersByTime(1)
     expect(overlay.currentVideo).toBeNull()
     expect(video.pause).toHaveBeenCalledOnce()
+    overlay.destroy()
+  })
+
+  it('[U05488] closes a playing portrait milestone video when the clip is tapped', () => {
+    vi.useFakeTimers()
+    document.body.className = 'mobile-portrait sidebar-condensed'
+    const overlay = new VideoOverlay()
+    const video = overlay.overlayElement.querySelector('video')
+    vi.spyOn(video, 'pause').mockImplementation(() => {})
+    overlay.currentVideo = video
+    overlay.isPlaying = true
+    overlay.nativePresentation = true
+    overlay.presentationReady = true
+    overlay.overlayElement.classList.add('native-video', 'show')
+    overlay.overlayElement.style.pointerEvents = 'none'
+    overlay.revealPlayingVideo(video)
+    expect(overlay.overlayElement.style.pointerEvents).toBe('')
+
+    video.dispatchEvent(new window.PointerEvent('pointerup', { bubbles: true, button: 0, pointerType: 'touch' }))
+    expect(overlay.overlayElement.classList.contains('show')).toBe(false)
+    expect(overlay.currentVideo).toBe(video)
+    vi.advanceTimersByTime(400)
+    expect(overlay.currentVideo).toBeNull()
+    overlay.destroy()
+  })
+
+  it('[U05489] ignores taps on a playing milestone video outside portrait', () => {
+    vi.useFakeTimers()
+    document.body.className = 'mobile-landscape'
+    const overlay = new VideoOverlay()
+    const video = overlay.overlayElement.querySelector('video')
+    vi.spyOn(video, 'pause').mockImplementation(() => {})
+    overlay.currentVideo = video
+    overlay.isPlaying = true
+    overlay.nativePresentation = true
+    overlay.presentationReady = true
+    overlay.overlayElement.classList.add('native-video', 'show')
+    video.dispatchEvent(new window.PointerEvent('pointerup', { bubbles: true, button: 0, pointerType: 'mouse' }))
+    expect(overlay.overlayElement.classList.contains('show')).toBe(true)
+    expect(overlay.currentVideo).toBe(video)
     overlay.destroy()
   })
 })
