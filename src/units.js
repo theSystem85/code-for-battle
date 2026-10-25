@@ -1006,7 +1006,7 @@ export function spawnUnit(factory, type, units, mapGrid, rallyPointTarget = null
   // Apache helicopters spawned on helipads and F22 Raptors spawned on airstrips should not immediately move to rally points - they should stay landed
   if (!newUnit.factoryExit && rallyPointTarget && type !== 'harvester' && !isHelipadApache && !isAirstripF22 && !isPadF35) {
     const path = findPath(
-      { x: spawnPosition.x, y: spawnPosition.y },
+      { x: spawnPosition.x, y: spawnPosition.y, owner: newUnit.owner },
       { x: rallyPointTarget.x, y: rallyPointTarget.y },
       mapGrid,
       null, // Pass null for occupancyMap initially, pathfinding handles collisions

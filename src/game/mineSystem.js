@@ -11,6 +11,7 @@ import {
 import { broadcastBuildingDamage } from '../network/gameCommandSync.js'
 import { recordDamage } from '../ai-api/transitionCollector.js'
 import { getSimulationTime } from './time.js'
+import { clearPathCache } from './pathCache.js'
 
 const mineLookup = new Map()
 
@@ -77,6 +78,8 @@ export function updateMines(currentTime) {
   gameState.mines.forEach(mine => {
     if (!mine.active && currentTime >= mine.armedAt) {
       mine.active = true
+      // Paths cached before arming must not lead friendly units into this mine.
+      clearPathCache()
     }
   })
 }
