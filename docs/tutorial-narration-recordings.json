@@ -1,0 +1,184 @@
+[
+  {
+    "step": "welcome",
+    "filename": "welcome-guided-0.mp3",
+    "flow_id": "ZY17holN4S1vpMpbjLnZ",
+    "session_id": "EQKZXDCIQcLPS6gwZMkE",
+    "generation_id": "7jTn5dxz8bKPpSfE5dyx",
+    "prompt": "This guided tutorial will show you how to build, command units, and win. Follow the green cursor and perform each action yourself. The next step begins when your task and the narration are both finished. Skip step performs the task for you and starts the next briefing immediately.",
+    "duration": 17.12,
+    "voice": {
+      "voice_id": "08NAVeqzFfSo6Aw5128W",
+      "name": "Atlas Morgan - Narration & News"
+    },
+    "model": "eleven_v4"
+  },
+  {
+    "step": "build-power",
+    "filename": "build-power-guided-1.mp3",
+    "flow_id": "G7sSJ30jhW5knFlXUERH",
+    "session_id": "Cz79K13FxnKG8wxshK8O",
+    "generation_id": "mnrYFYymwURIwq0qUvhn",
+    "prompt": "Open the Buildings tab and build a Power Plant. Power is required for almost every structure. Click its button yourself, then click clear ground to place it. Use the build button, then choose a clear spot on the map. Wait for construction to finish.",
+    "duration": 15.6,
+    "voice": {
+      "voice_id": "08NAVeqzFfSo6Aw5128W",
+      "name": "Atlas Morgan - Narration & News"
+    },
+    "model": "eleven_v4"
+  },
+  {
+    "step": "build-refinery",
+    "filename": "build-refinery-guided-2.mp3",
+    "flow_id": "xq8ygSmYCTC71sGUcPUx",
+    "session_id": "9K0OMErXchxUgK2j9aLI",
+    "generation_id": "psZHWxjXe4o23aELKQPv",
+    "prompt": "Build an Ore Refinery next. Refineries process harvested ore into money. Try the alternative method: hold the build button, drag it onto the map, and release to place its blueprint directly. Drag the Ore Refinery button onto clear ground and release to place its blueprint.",
+    "duration": 17.2,
+    "voice": {
+      "voice_id": "08NAVeqzFfSo6Aw5128W",
+      "name": "Atlas Morgan - Narration & News"
+    },
+    "model": "eleven_v4"
+  },
+  {
+    "step": "build-vehicle-factory",
+    "filename": "build-vehicle-factory-guided-3.mp3",
+    "flow_id": "Ok6oSTyfSqi2vaX3EKr8",
+    "session_id": "zudiEZ0t8irpHurl3J2Y",
+    "generation_id": "jHzMQk8rJoDOkf9P8U7j",
+    "prompt": "Build the Vehicle Factory, your weapons factory. It produces tanks and all ground vehicles. Place it on clear ground and wait for construction. Use the build button, then choose a clear spot on the map. Wait for construction to finish.",
+    "duration": 14.48,
+    "voice": {
+      "voice_id": "08NAVeqzFfSo6Aw5128W",
+      "name": "Atlas Morgan - Narration & News"
+    },
+    "model": "eleven_v4"
+  },
+  {
+    "step": "build-harvester",
+    "filename": "build-harvester-guided-4.mp3",
+    "flow_id": "TnTmIzeFawq0AHRdQABG",
+    "session_id": "hPAh0j8IbCmiFV4x6yTk",
+    "generation_id": "Igu8w3XA5kXoWWuBCD7N",
+    "prompt": "Build a Harvester. Every build button has two zones: the upper half adds one to the build stack; the lower half removes one. Harvesters automatically collect ore and deliver it to a refinery for money. Use the upper half to queue a Harvester and wait for it to leave the factory.",
+    "duration": 17.76,
+    "voice": {
+      "voice_id": "08NAVeqzFfSo6Aw5128W",
+      "name": "Atlas Morgan - Narration & News"
+    },
+    "model": "eleven_v4"
+  },
+  {
+    "step": "select-group",
+    "filename": "select-group-guided-5.mp3",
+    "flow_id": "xAQt5jnuX0K79cXHcFsf",
+    "session_id": "3HCQ39oxxknmDtPUgsZr",
+    "generation_id": "MOCmA0XW6QGCeaO6e2K6",
+    "prompt": "Drag Primary click to draw a selection box around multiple units. Use Shift + Primary click to add units. Shift-drag keeps additive selection. Build another Harvester if needed, then select at least two units to continue.",
+    "duration": 15.04,
+    "voice": {
+      "voice_id": "08NAVeqzFfSo6Aw5128W",
+      "name": "Atlas Morgan - Narration & News"
+    },
+    "model": "eleven_v4"
+  },
+  {
+    "step": "tank-rally",
+    "filename": "tank-rally-guided-6.mp3",
+    "flow_id": "qkOBU3O5aBJy3yei4oh4",
+    "session_id": "JBbV65HgvKkyZPZs7Xfz",
+    "generation_id": "75aaBKAW9IKdeh9nIvDO",
+    "prompt": "Queue a Tank, select the Vehicle Factory using Primary click, then use the same input on the map to set its rally point. Build a Tank and set a rally point to continue.",
+    "duration": 10.16,
+    "voice": {
+      "voice_id": "08NAVeqzFfSo6Aw5128W",
+      "name": "Atlas Morgan - Narration & News"
+    },
+    "model": "eleven_v4"
+  },
+  {
+    "step": "tank-control",
+    "filename": "tank-control-guided-7.mp3",
+    "flow_id": "zzfTtxzVfSinPn7DDkgF",
+    "session_id": "vpT6IsnGY1y30UT6fjTc",
+    "generation_id": "esNhltkPNxPlAuWn4PVS",
+    "prompt": "Select a tank and order it to move. Use the Arrow keys to remote control it and fire with Space. Move a tank and use manual control to continue.",
+    "duration": 9.52,
+    "voice": {
+      "voice_id": "08NAVeqzFfSo6Aw5128W",
+      "name": "Atlas Morgan - Narration & News"
+    },
+    "model": "eleven_v4"
+  },
+  {
+    "step": "crew-system",
+    "filename": "crew-system-guided-8.mp3",
+    "flow_id": "MRyACvw5bZ33H2SlOWud",
+    "session_id": "xXt5rWrmu8F1k17XmD3m",
+    "generation_id": "dESsHN2EvRu7Zkc9mJZ8",
+    "prompt": "Tanks have four crew markers: Driver, Commander, Gunner, and Loader. The marked tank has lost its crew. Build a Hospital, then build an Ambulance from the Units tab. Select the Ambulance and send it to the marked tank to restore all four crew members. The task list shows what to do next; click any task to see its guidance again. Restore every crew marker on the marked tank to continue.",
+    "duration": 25.28,
+    "voice": {
+      "voice_id": "08NAVeqzFfSo6Aw5128W",
+      "name": "Atlas Morgan - Narration & News"
+    },
+    "model": "eleven_v4"
+  },
+  {
+    "step": "tech-tree",
+    "filename": "tech-tree-guided-9.mp3",
+    "flow_id": "6SzQva9PPyqIphkhW8pr",
+    "session_id": "NpOPLq0lL2npBJgG36Qc",
+    "generation_id": "cJXy2tX6BSbnbUPOPh7j",
+    "prompt": "Open the Tech Tree in the User Manual using the link below. It shows building requirements and the land, air, and naval units they unlock. Radar and a Vehicle Factory unlock the Shipyard. Build the Shipyard on the coast to produce your fleet. Supply Ships also need a support building. Open the Tech Tree link to continue.",
+    "duration": 19.2,
+    "voice": {
+      "voice_id": "08NAVeqzFfSo6Aw5128W",
+      "name": "Atlas Morgan - Narration & News"
+    },
+    "model": "eleven_v4"
+  },
+  {
+    "step": "settings-help",
+    "filename": "settings-help-guided-10.mp3",
+    "flow_id": "joz0byIefwFgHROJyat1",
+    "session_id": "tCHU7a024HdYo1nQ0s0w",
+    "generation_id": "HAx4MqyQqokUHxbBddI2",
+    "prompt": "The information button opens Settings. Its Keybindings tab shows keyboard mappings and lets you change them. The book button opens the User Manual. You can restart this tutorial from Settings at any time. Open Settings, view Keybindings, and open the User Manual to finish.",
+    "duration": 17.52,
+    "voice": {
+      "voice_id": "08NAVeqzFfSo6Aw5128W",
+      "name": "Atlas Morgan - Narration & News"
+    },
+    "model": "eleven_v4"
+  },
+  {
+    "step": "select-group",
+    "filename": "select-group-guided-11.mp3",
+    "flow_id": "IJsmxff1AV87dM7LNQE7",
+    "session_id": "hwHDsO3gEOjLlHEny1Ef",
+    "generation_id": "WjwTqbLN7J5K5KctaxBM",
+    "prompt": "Drag a one-finger selection box around at least two units, or tap units one by one to add them. Two fingers pan the map. Build another Harvester if needed, then select at least two units to continue.",
+    "duration": 13.2,
+    "voice": {
+      "voice_id": "08NAVeqzFfSo6Aw5128W",
+      "name": "Atlas Morgan - Narration & News"
+    },
+    "model": "eleven_v4"
+  },
+  {
+    "step": "tank-rally",
+    "filename": "tank-rally-guided-12.mp3",
+    "flow_id": "HZcVg62nFY5tq99yn9ky",
+    "session_id": "WeX7GYq3sNRCSPTiKGcw",
+    "generation_id": "8MP2peWxG7kHHQBT8kzC",
+    "prompt": "Queue a Tank, select the Vehicle Factory using tap, then use the same input on the map to set its rally point. Build a Tank and set a rally point to continue.",
+    "duration": 10,
+    "voice": {
+      "voice_id": "08NAVeqzFfSo6Aw5128W",
+      "name": "Atlas Morgan - Narration & News"
+    },
+    "model": "eleven_v4"
+  }
+]

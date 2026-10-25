@@ -30,10 +30,13 @@ test('[E00230] guides building without clicking and waits for the player and nar
   const button = page.locator('.production-button[data-building-type="powerPlant"]')
   const rect = await button.boundingBox()
   await page.mouse.click(rect.x + rect.width / 2, rect.y + rect.height / 4)
-  await expect.poll(() => page.evaluate(async() => {
+  await expect.poll(() => page.evaluate(async queuedBefore => {
     const { productionQueue } = await import('/src/productionQueue.js')
-    return productionQueue.buildingItems.length
-  })).toBeGreaterThan(before.queued)
+    // Construction can finish before this poll resolves on a busy browser.
+    // A ready blueprint is also evidence that the player's click queued it.
+    const ready = document.querySelector('.production-button[data-building-type="powerPlant"]')?.classList.contains('ready-for-placement')
+    return productionQueue.buildingItems.length > queuedBefore || ready || window.gameState.currentBuildingType === 'powerPlant'
+  }, before.queued)).toBe(true)
   await expect(page.locator('.tutorial-title')).toHaveText('Build a Power Plant')
   // Finish a real player construction while the simulated narration is busy.
   await page.evaluate(() => { window.tutorialSystem.speaking = true })
