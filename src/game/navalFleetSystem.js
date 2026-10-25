@@ -8,6 +8,7 @@ import {
 } from '../config.js'
 import { gameState } from '../gameState.js'
 import { findPathForOwner, removeUnitOccupancy } from '../units.js'
+import { addMovableOccupancy } from './occupancyTags.js'
 export { cancelTransportOperations } from './transportOperationCancellation.js'
 import { getBuildingIdentifier } from '../utils.js'
 import { gameRandom } from '../utils/gameRandom.js'
@@ -601,7 +602,9 @@ function updateTransportOperation(transport, units, mapGrid, occupancyMap, now) 
   cargo.path = []
   cargo.target = null
   clearGuardState(cargo)
-  if (occupancyMap?.[cargo.tileY]) occupancyMap[cargo.tileY][cargo.tileX] = (occupancyMap[cargo.tileY][cargo.tileX] || 0) + 1
+  if (occupancyMap?.[cargo.tileY]) {
+    occupancyMap[cargo.tileY][cargo.tileX] = addMovableOccupancy(occupancyMap[cargo.tileY][cargo.tileX], 1)
+  }
   operation.activeCargoId = null
   operation.nextIndex++
   transport.embarkedUnitTypes = transport.embarkedUnitIds

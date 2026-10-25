@@ -1,5 +1,6 @@
 import { TILE_SIZE } from '../config.js'
 import { getBuildingIdentifier } from '../utils.js'
+import { addMovableOccupancy } from './occupancyTags.js'
 
 // Preserve the crawl speed, but hand off at the first outside tile beside the door.
 const FACTORY_EXIT_MS_PER_TILE = 3800 / Math.hypot(2.3, 2.3)
@@ -157,7 +158,9 @@ function finishExit(unit, state, units, mapGrid, occupancyMap, findPath, onCompl
   delete unit.factoryExit
   unit.spawnedInFactory = false
   unit.holdInFactory = false
-  if (occupancyMap?.[unit.tileY]?.[unit.tileX] !== undefined) occupancyMap[unit.tileY][unit.tileX]++
+  if (occupancyMap?.[unit.tileY]?.[unit.tileX] !== undefined) {
+    occupancyMap[unit.tileY][unit.tileX] = addMovableOccupancy(occupancyMap[unit.tileY][unit.tileX], 1)
+  }
   // AI and harvesters may already have a pending order. Resume it from the exit.
   const target = state.rallyPoint || unit.moveTarget
   if (target && findPath) {

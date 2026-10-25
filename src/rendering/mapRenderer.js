@@ -12,6 +12,7 @@ import {
 } from '../config.js'
 import { getSotDrawOffset, OrganicTerrain, shorelineCornerMask } from './organicTerrain.js'
 import { getTileDecalSignature, isDecalBlockedTile } from '../game/tileDecals.js'
+import { hasFixedOccupancy, hasMovableOccupancy } from '../game/occupancyTags.js'
 import { getCanvasLogicalSize } from './renderingUtils.js'
 import { RENDER_REVISION_DOMAINS } from './prepared/renderRevisionStore.js'
 import {
@@ -2282,17 +2283,23 @@ export class MapRenderer {
       for (let x = startTileX; x < endTileX; x++) {
         if (y < 0 || y >= occupancyMap.length || x < 0 || x >= occupancyMap[0].length) continue
 
-        const tileOccupied = Boolean(occupancyMap[y][x])
+        const rawOccupancy = occupancyMap[y][x]
+        const fixedOccupied = hasFixedOccupancy(rawOccupancy)
+        const movableOccupied = hasMovableOccupancy(rawOccupancy)
         const tileKey = `${x},${y}`
         const mineBlocked = mineOverlay && mineOverlay.has(tileKey)
         const tile = gameState?.mapGrid?.[y]?.[x]
         const buildOnlyStreet = Boolean(tile?.buildOnlyOccupied) && tile?.type === 'street'
-        if (tileOccupied || mineBlocked || buildOnlyStreet) {
+        if (fixedOccupied || movableOccupied || mineBlocked || buildOnlyStreet) {
           const tileX = x * TILE_SIZE - scrollOffset.x
           const tileY = y * TILE_SIZE - scrollOffset.y
-          ctx.fillStyle = buildOnlyStreet && !tileOccupied && !mineBlocked
-            ? 'rgba(255, 255, 0, 0.35)'
-            : 'rgba(255, 0, 0, 0.3)'
+          if (movableOccupied && !fixedOccupied && !mineBlocked) {
+            ctx.fillStyle = 'rgba(255, 140, 0, 0.55)'
+          } else if (buildOnlyStreet && !fixedOccupied && !mineBlocked) {
+            ctx.fillStyle = 'rgba(255, 255, 0, 0.35)'
+          } else {
+            ctx.fillStyle = 'rgba(255, 0, 0, 0.3)'
+          }
           ctx.fillRect(tileX, tileY, TILE_SIZE, TILE_SIZE)
         }
       }

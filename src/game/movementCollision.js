@@ -28,6 +28,7 @@ import {
 } from './movementConstants.js'
 import { isAirborneUnit, isGroundUnit, ownersAreEnemies } from './movementHelpers.js'
 import { hasBlockingBuilding } from '../utils/buildingPassability.js'
+import { fixedOccupancyCount, movableOccupancyCount, totalOccupancyCount } from './occupancyTags.js'
 import { getNavalHullDimensions, getNavalHullSegment } from '../utils/navalUtils.js'
 
 const STATIC_COLLISION_FORCE_DECAY = 0.72
@@ -228,7 +229,7 @@ function isPositionBlockedForCollision(unit, targetX, targetY, mapGrid, occupanc
   }
 
   if (!unit.isNaval && occupancyMap && occupancyMap[tileY]) {
-    let occupancy = occupancyMap[tileY][tileX] || 0
+    let occupancy = totalOccupancyCount(occupancyMap[tileY][tileX] || 0)
     const currentTileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
     const currentTileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
 
@@ -1225,10 +1226,15 @@ export function calculateCollisionAvoidance(unit, units, mapGrid, occupancyMap) 
       if (!blocked && occupancyMap && !unit.isNaval) {
         const row = occupancyMap[tileY]
         if (row) {
-          const occ = row[tileX] || 0
+          const raw = row[tileX] || 0
+          const fixed = fixedOccupancyCount(raw)
+          const movable = movableOccupancyCount(raw)
           const myTileX = (unitCenterX / TILE_SIZE) | 0
           const myTileY = (unitCenterY / TILE_SIZE) | 0
-          blocked = (tileX === myTileX && tileY === myTileY) ? occ > 1 : occ > 0
+          const onSelf = tileX === myTileX && tileY === myTileY
+          // Units and wrecks are pushed by contact forces. Lookahead only
+          // steers away from fixed blockers, plus extra units stacked on self.
+          blocked = fixed > 0 || (onSelf && movable > 1)
         }
       }
 

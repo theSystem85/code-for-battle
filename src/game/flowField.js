@@ -3,6 +3,7 @@
 
 import { TILE_SIZE, DIRECTIONS } from '../config.js'
 import { hasBlockingBuilding } from '../utils/buildingPassability.js'
+import { hasFixedOccupancy } from './occupancyTags.js'
 
 // Flow field configuration
 const FLOW_FIELD_TTL = 5000 // Time-to-live for cached flow fields (ms)
@@ -281,8 +282,8 @@ export class FlowFieldManager {
 
         // Check occupancy (but don't block, just increase cost slightly)
         let moveCost = Math.hypot(dir.x, dir.y)
-        if (occupancyMap && occupancyMap[ny] && occupancyMap[ny][nx] > 0) {
-          moveCost += 0.5 // Slight penalty for occupied tiles
+        if (hasFixedOccupancy(occupancyMap?.[ny]?.[nx])) {
+          moveCost += 0.5 // Slight penalty for fixed blockers only
         }
 
         const newDist = current.dist + moveCost

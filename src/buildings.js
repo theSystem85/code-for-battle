@@ -16,6 +16,7 @@ import { getUniqueId } from './utils.js'
 import { getMapRenderer } from './rendering.js'
 import { getBuildingImage } from './buildingImageMap.js'
 import { isAirstripBlockedLocalTile } from './utils/buildingPassability.js'
+import { addFixedOccupancy } from './game/occupancyTags.js'
 import { ensureAirstripOperations } from './utils/airstripUtils.js'
 import {
   beginMapMutationTransaction,
@@ -285,7 +286,7 @@ export function placeBuilding(building, mapGrid, occupancyMap = gameState.occupa
         if (isBuildOnlyTile) {
           mapGrid[y][x].buildOnlyOccupied = (mapGrid[y][x].buildOnlyOccupied || 0) + 1
         } else if (occupancyMap && occupancyMap[y] && occupancyMap[y][x] !== undefined) {
-          occupancyMap[y][x] = (occupancyMap[y][x] || 0) + 1
+          occupancyMap[y][x] = addFixedOccupancy(occupancyMap[y][x], 1)
         }
 
         // Remove any ore from tiles where buildings are placed
@@ -413,7 +414,7 @@ export function clearBuildingFromMapGrid(building, mapGrid, occupancyMap = gameS
               delete mapGrid[y][x].buildOnlyOccupied
             }
           } else if (occupancyMap && occupancyMap[y] && occupancyMap[y][x] !== undefined) {
-            occupancyMap[y][x] = Math.max(0, (occupancyMap[y][x] || 0) - 1)
+            occupancyMap[y][x] = addFixedOccupancy(occupancyMap[y][x], -1)
           }
         }
       }

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { beginFactoryExit, updateFactoryExits, factoryExitEase, canInteractWithUnit, factoryExitVisibility, FACTORY_EXIT_DURATION, FACTORY_EXIT_STAGGER, FACTORY_EXIT_BLOCKED_WAIT } from '../../src/game/factoryExit.js'
 import { TILE_SIZE } from '../../src/config.js'
+import { fixedOccupancyCount, movableOccupancyCount } from '../../src/game/occupancyTags.js'
 
 function fixture() {
   const factory = { id: 'garage', type: 'vehicleFactory', x: 5, y: 5, health: 100 }
@@ -41,7 +42,8 @@ describe('vehicle factory exit', () => {
     expect(f.unit.x).toBe(state.endX)
     expect(f.unit.y).toBe(state.endY)
     expect(f.unit.moveTarget).toEqual({ x: 12, y: 12 })
-    expect(f.occupancy[8][5]).toBe(1)
+    expect(movableOccupancyCount(f.occupancy[8][5])).toBe(1)
+    expect(fixedOccupancyCount(f.occupancy[8][5])).toBe(0)
     expect(canInteractWithUnit(f.unit)).toBe(true)
   })
 

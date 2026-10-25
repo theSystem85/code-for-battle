@@ -9,6 +9,7 @@ import { getUnitCost } from '../utils.js'
 import { UNIT_COLLISION_MIN_DISTANCE } from './unifiedMovement.js'
 import { gameRandom } from '../utils/gameRandom.js'
 import { getSimulationTime } from './time.js'
+import { addMovableOccupancy } from './occupancyTags.js'
 
 function adjustWreckOccupancy(wreck, occupancyMap, tileX, tileY) {
   if (!occupancyMap || occupancyMap.length === 0) {
@@ -28,7 +29,7 @@ function adjustWreckOccupancy(wreck, occupancyMap, tileX, tileY) {
     prevX >= 0 &&
     prevX < occupancyMap[prevY].length
   ) {
-    occupancyMap[prevY][prevX] = Math.max(0, (occupancyMap[prevY][prevX] || 0) - 1)
+    occupancyMap[prevY][prevX] = addMovableOccupancy(occupancyMap[prevY][prevX], -1)
   }
 
   if (
@@ -39,7 +40,7 @@ function adjustWreckOccupancy(wreck, occupancyMap, tileX, tileY) {
     tileX >= 0 &&
     tileX < occupancyMap[tileY].length
   ) {
-    occupancyMap[tileY][tileX] = (occupancyMap[tileY][tileX] || 0) + 1
+    occupancyMap[tileY][tileX] = addMovableOccupancy(occupancyMap[tileY][tileX], 1)
     wreck.occupancyTileX = tileX
     wreck.occupancyTileY = tileY
   } else {

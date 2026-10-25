@@ -1,6 +1,7 @@
 // utils.js
 import { TILE_SIZE, XP_MULTIPLIER, UNIT_COSTS, HARVESTER_XP_FULL_UNLOADS_PER_STAR } from './config.js'
 import { deterministicRNG, gameRandom } from './utils/gameRandom.js'
+import { addMovableOccupancy } from './game/occupancyTags.js'
 
 export function tileToPixel(tileX, tileY) {
   return { x: tileX * TILE_SIZE, y: tileY * TILE_SIZE }
@@ -351,7 +352,10 @@ export function debugSpawnEnemyUnit(unitType = 'tank') {
       const centerTileY = Math.floor((enemyUnit.y + TILE_SIZE) / TILE_SIZE)
       if (centerTileY >= 0 && centerTileY < window.gameState.occupancyMap.length &&
           centerTileX >= 0 && centerTileX < window.gameState.occupancyMap[0].length) {
-        window.gameState.occupancyMap[centerTileY][centerTileX] = (window.gameState.occupancyMap[centerTileY][centerTileX] || 0) + 1
+        window.gameState.occupancyMap[centerTileY][centerTileX] = addMovableOccupancy(
+          window.gameState.occupancyMap[centerTileY][centerTileX],
+          1
+        )
       }
     }
 
