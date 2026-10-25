@@ -156,8 +156,8 @@ describe('natural decoration preparation', () => {
 
   it('[U01209] grows separate seeded forest, rock and farm patches on matching biomes', () => {
     const map = grid()
-    const clusters = buildCategoryClusters(map, { salt: 688 })
-    expect(buildCategoryClusters(map, { salt: 688 })).toEqual(clusters)
+    const clusters = buildCategoryClusters(map, { salt: 688, woodClusterCount: 4, woodClusterRadius: 11 })
+    expect(buildCategoryClusters(map, { salt: 688, woodClusterCount: 4, woodClusterRadius: 11 })).toEqual(clusters)
     expect(buildCategoryClusters(map, { salt: 689 }).trees.centers).not.toEqual(clusters.trees.centers)
     expect(clusters.trees.centers).not.toEqual(clusters.rocks.centers)
     for (const category of ['trees', 'rocks', 'farm']) {

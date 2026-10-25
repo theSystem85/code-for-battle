@@ -577,17 +577,15 @@ export class TextureManager {
   getDecorationLayout(mapGrid) {
     if (!Array.isArray(mapGrid) || !mapGrid.length) return null
     const width = mapGrid[0]?.length || 0
+    const decorationSettings = normalizeDecorationSettings(gameState)
+    const decorationKey = JSON.stringify(decorationSettings)
     const cache = this.decorationLayoutCache
     if (
       cache &&
       cache.mapGrid === mapGrid &&
       cache.firstTile === mapGrid[0][0] &&
       cache.seed === gameState.mapSeed &&
-      cache.citySeeds === gameState.citySeeds &&
-      cache.cityClusterSize === gameState.cityClusterSize &&
-      cache.ruinSeeds === gameState.ruinSeeds &&
-      cache.ruinClusterSize === gameState.ruinClusterSize &&
-      cache.stoneCount === gameState.stoneCount &&
+      cache.decorationKey === decorationKey &&
       cache.width === width &&
       cache.height === mapGrid.length &&
       cache.version === this.integratedConfigVersion
@@ -597,7 +595,7 @@ export class TextureManager {
     const layout = buildDecorationLayout(mapGrid, this.integratedDecorationPools, {
       defaultBiome: this.getDefaultDecorationBiome(),
       ruinSeed: gameState.mapSeed,
-      ...normalizeDecorationSettings(gameState),
+      ...decorationSettings,
       salt: this.naturalDecorationRules ? decorationSeed(gameState.mapSeed) : 0,
       placementRules: Boolean(this.naturalDecorationRules),
       startPositions: Object.values(PLAYER_POSITIONS).slice(0, gameState.playerCount || 2).map(point => ({ x: Math.floor(width * point.x), y: Math.floor(mapGrid.length * point.y) }))
@@ -607,11 +605,7 @@ export class TextureManager {
       mapGrid,
       firstTile: mapGrid[0][0],
       seed: gameState.mapSeed,
-      citySeeds: gameState.citySeeds,
-      cityClusterSize: gameState.cityClusterSize,
-      ruinSeeds: gameState.ruinSeeds,
-      ruinClusterSize: gameState.ruinClusterSize,
-      stoneCount: gameState.stoneCount,
+      decorationKey,
       width,
       height: mapGrid.length,
       version: this.integratedConfigVersion,

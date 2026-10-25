@@ -4,6 +4,7 @@ import { clearFlowFields } from './flowField.js'
 import { computeMapTopologyFingerprint, topologyChangesAllowed } from './mapTopology.js'
 import { setTopologyRegenerator } from '../ui/mapEditorControls.js'
 import { DECORATION_SETTINGS, normalizeDecorationSettings } from './decorationSettings.js'
+import { bindDecorationCountInputs } from '../ui/decorationCountSync.js'
 // Core game orchestration extracted from main.js
 import { setupInputHandlers, setRenderScheduler, selectedUnits } from '../inputHandler.js'
 import { unitCosts, initializeOccupancyMap, rebuildOccupancyMapWithTextures } from '../units.js'
@@ -1304,6 +1305,7 @@ class Game {
     // Sidebar map settings only regenerate the map when Apply is clicked.
     // The button stays disabled until a watched value differs from the last
     // applied snapshot. SSE sheet toggles keep their own regeneration path.
+    bindDecorationCountInputs(document)
     const mapSettingInputs = [
       seedInput, mapWidthInput, mapHeightInput, oreFieldInput, oreTotalValueInput, startMoneyInput,
       waterPercentInput, rockPercentInput, shoreNorthCheckbox, shoreWestCheckbox, shoreEastCheckbox,

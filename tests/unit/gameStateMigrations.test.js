@@ -1,9 +1,11 @@
 import { afterEach, describe, expect, it } from 'vitest'
+import { DECORATION_SETTINGS, normalizeDecorationSettings } from '../../src/game/decorationSettings.js'
 import { getMissingMigrationVersions, migrateLiveState, migrations } from '../../src/gameStateMigrations.js'
 
 describe('live game-state migrations', () => {
   const migrateStacks = migrations[2]
   const migrateReadyPlacement = migrations[3]
+  const migrateDecorations = migrations[4]
   afterEach(() => {
     delete migrations[2]
     delete migrations[3]
@@ -55,6 +57,20 @@ describe('live game-state migrations', () => {
     expect(() => migrateLiveState({ gameState: {} }, 2, 1)).toThrow('backwards')
     migrations[2] = () => null
     expect(() => migrateLiveState({ schemaVersion: 1, gameState: {} }, 1, 2)).toThrow('invalid state object')
+  })
+
+  it('[U05503] fills missing decoration counts on a legacy save without mutating it', () => {
+    const gameState = Object.freeze({ money: 4, stoneCount: 40 })
+    const original = Object.freeze({ schemaVersion: 3, gameState })
+    const result = migrateDecorations(original)
+    expect(result).not.toBe(original)
+    expect(result.gameState).not.toBe(gameState)
+    expect(result.gameState.money).toBe(4)
+    expect(result.gameState.stoneCount).toBe(40)
+    expect(result.gameState.lakeCount).toBe(DECORATION_SETTINGS.lakeCount.default)
+    expect(result.gameState.singleTreeCount).toBe(DECORATION_SETTINGS.singleTreeCount.default)
+    expect(result.gameState.decorativeTileCount).toBe(normalizeDecorationSettings(result.gameState).decorativeTileCount)
+    expect(gameState).toEqual({ money: 4, stoneCount: 40 })
   })
 
   it('[U05363] normalizes legacy version-one saves without changing their nested state', () => {

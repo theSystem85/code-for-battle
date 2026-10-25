@@ -32,9 +32,11 @@ describe('natural forest preparation', () => {
   it.each([1, 2, 3, 688])('[U05440] places denser forests and a few genuinely isolated trees for seed %s', seed => {
     const map = grid()
     const pools = buildDecorationPools(trees())
-    const layout = buildDecorationLayout(map, pools, { salt: seed })
+    const clusterCount = Math.min(12, Math.ceil((96 * 96) / 1800))
+    const budget = { woodClusterCount: clusterCount, woodClusterRadius: 11, singleTreeCount: 5000, woodsCount: 0, lakeCount: 0, otherVegetationCount: 0, groundDetailCount: 0, stoneCount: 0, citySeeds: 0, ruinSeeds: 0 }
+    const layout = buildDecorationLayout(map, pools, { salt: seed, ...budget })
     const placed = anchors(layout)
-    const forest = buildForestClusters(map, { salt: seed })
+    const forest = buildForestClusters(map, { salt: seed, count: clusterCount, radius: 11 })
     const clustered = placed.filter(tree => forest.density[tree.anchorY * 96 + tree.anchorX] > 0)
     // The previous circular/noise scatter placed 27–116 trees on these same
     // fixtures. Require substantially denser woods for every representative seed.
@@ -44,7 +46,7 @@ describe('natural forest preparation', () => {
       placed.every(other => other === tree || decorationFootprintDistance(tree, other) >= 4))
     expect(isolated.length).toBeGreaterThan(0)
     expect(isolated.length).toBeLessThan(placed.length / 10)
-    expect(buildDecorationLayout(map, pools, { salt: seed }).cells).toEqual(layout.cells)
+    expect(buildDecorationLayout(map, pools, { salt: seed, ...budget }).cells).toEqual(layout.cells)
     placed.forEach((tree, index) => expect(decorationSpacingAllows(tree, placed.slice(index + 1))).toBe(true))
   })
 
@@ -59,7 +61,9 @@ describe('natural forest preparation', () => {
     map[75][75].basePosition = true
     const starts = [{ x: 12, y: 70 }]
     const constraints = buildDecorationConstraints(map, starts)
-    const layout = buildDecorationLayout(map, buildDecorationPools([...trees(), ...trees(2, 3)]), { salt: 688, startPositions: starts })
+    const layout = buildDecorationLayout(map, buildDecorationPools([...trees(), ...trees(2, 3)]), {
+      salt: 688, startPositions: starts, singleTreeCount: 2000, woodsCount: 200, woodClusterCount: 8, woodClusterRadius: 11, lakeCount: 0, otherVegetationCount: 0, groundDetailCount: 0, stoneCount: 0
+    })
     const placed = anchors(layout)
     expect(placed.some(tree => tree.group.height === 3)).toBe(true)
     expect(placed.length).toBeGreaterThan(50)

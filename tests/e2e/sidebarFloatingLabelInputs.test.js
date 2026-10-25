@@ -13,22 +13,32 @@ test.describe('Sidebar floating label inputs', () => {
     await expect(page.locator('.multiplayer-join-label')).toHaveCount(0)
 
     const floatingWrappers = page.locator('#sidebar .floating-label-input')
-    await expect(floatingWrappers).toHaveCount(8)
+    await expect(floatingWrappers).toHaveCount(35)
+    await expect(page.locator('#lakeCount + label')).toHaveText('Lakes')
+    await expect(page.locator('#decorativeTileCount')).toHaveValue('34')
+    await expect(page.locator('#singleTreeCount + label')).toHaveText('Single trees')
+    await expect(page.locator('#woodsCount + label')).toHaveText('Woods')
+    await expect(page.locator('#otherVegetationCount + label')).toHaveText('Other vegetation')
+    await expect(page.locator('#groundDetailCount + label')).toHaveText('Ground detail')
+    await expect(page.locator('#cityDensityFactor')).toHaveValue('100')
+    await page.locator('#stoneCount').fill('5')
+    await expect(page.locator('#decorativeTileCount')).toHaveValue('38')
+    await page.locator('#decorativeTileCount').fill('76')
+    const partSum = await page.locator('#stoneCount, #singleTreeCount, #woodsCount, #otherVegetationCount, #groundDetailCount').evaluateAll(inputs => inputs.reduce((sum, input) => sum + Number(input.value), 0))
+    await expect(page.locator('#decorativeTileCount')).toHaveValue(String(partSum))
 
     await expect(page.locator('#saveLabelInput + label')).toHaveText('Save label')
     await expect(page.locator('#inviteLinkInput + label')).toHaveText('Invite code or link')
-    await expect(page.locator('#speedMultiplier + label')).toHaveText('Game Speed')
+    await expect(page.locator('label[for="speedMultiplier"]')).toContainText('Speed')
     await expect(page.locator('#mapSeed + label')).toHaveText('Seed')
     await expect(page.locator('#playerCount + label')).toHaveText('Players')
     await expect(page.locator('#playerAliasInput + label')).toHaveText('Your alias')
-    await expect(page.locator('#mapWidthTiles + label')).toHaveText('Width')
-    await expect(page.locator('#mapHeightTiles + label')).toHaveText('Height')
+    await expect(page.locator('#mapWidthTiles + label')).toContainText('Width')
+    await expect(page.locator('#mapHeightTiles + label')).toContainText('Height')
 
     const layoutSnapshot = await page.evaluate(() => {
-      const mapSeedRect = document.querySelector('#mapSeed')?.getBoundingClientRect()
-      const playerCountRect = document.querySelector('#playerCount')?.getBoundingClientRect()
-      const mapWidthRect = document.querySelector('#mapWidthTiles')?.getBoundingClientRect()
-      const mapHeightRect = document.querySelector('#mapHeightTiles')?.getBoundingClientRect()
+      const top = selector => document.querySelector(selector)?.getBoundingClientRect().top ?? -1
+      const sameRow = (left, right) => Math.abs(top(left) - top(right)) < 1
       const aliasWrapper = document.querySelector('#playerAliasInput')?.closest('.floating-label-input')
       const joinInputRow = document.querySelector('.multiplayer-join-input-row')
       const joinSection = document.querySelector('.multiplayer-join-section')
@@ -37,13 +47,23 @@ test.describe('Sidebar floating label inputs', () => {
       const joinRowIndex = sectionChildren.indexOf(joinInputRow)
 
       return {
-        seedAndPlayersSameRow: Math.abs((mapSeedRect?.top ?? 0) - (playerCountRect?.top ?? 0)) < 1,
-        widthAndHeightSameRow: Math.abs((mapWidthRect?.top ?? 0) - (mapHeightRect?.top ?? 0)) < 1,
+        seedAndOreSameRow: sameRow('#mapSeed', '#mapOreFieldCount'),
+        lakesAndTilesSameRow: sameRow('#lakeCount', '#decorativeTileCount'),
+        stonesAndVegetationSameRow: sameRow('#stoneCount', '#otherVegetationCount'),
+        treesAndWoodsSameRow: sameRow('#singleTreeCount', '#woodsCount'),
+        clustersAndRadiusSameRow: sameRow('#woodClusterCount', '#woodClusterRadius'),
+        detailAndCitySameRow: sameRow('#groundDetailCount', '#cityDensityFactor'),
+        widthAndHeightSameRow: sameRow('#mapWidthTiles', '#mapHeightTiles'),
         aliasAboveJoinRow: aliasIndex >= 0 && joinRowIndex >= 0 && aliasIndex < joinRowIndex
       }
     })
 
-    expect(layoutSnapshot.seedAndPlayersSameRow).toBe(true)
+    expect(layoutSnapshot.seedAndOreSameRow).toBe(true)
+    expect(layoutSnapshot.lakesAndTilesSameRow).toBe(true)
+    expect(layoutSnapshot.stonesAndVegetationSameRow).toBe(true)
+    expect(layoutSnapshot.treesAndWoodsSameRow).toBe(true)
+    expect(layoutSnapshot.clustersAndRadiusSameRow).toBe(true)
+    expect(layoutSnapshot.detailAndCitySameRow).toBe(true)
     expect(layoutSnapshot.widthAndHeightSameRow).toBe(true)
     expect(layoutSnapshot.aliasAboveJoinRow).toBe(true)
 

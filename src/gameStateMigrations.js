@@ -1,3 +1,4 @@
+import { normalizeDecorationSettings } from './game/decorationSettings.js'
 import { GAME_STATE_SCHEMA_VERSION } from './gameStateSchema.js'
 
 // Add one pure function under the version it produces whenever the serialized
@@ -31,6 +32,14 @@ migrations[3] = state => ({
   productionQueueState: state.productionQueueState
     ? { ...state.productionQueueState, stackedPlacementActive: false }
     : state.productionQueueState
+})
+
+migrations[4] = state => ({
+  ...state,
+  gameState: {
+    ...state.gameState,
+    ...normalizeDecorationSettings(state.gameState)
+  }
 })
 
 function assertSchemaVersion(version, label) {
