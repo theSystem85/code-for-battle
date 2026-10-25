@@ -17,6 +17,7 @@ import {
   WATER_MINE_TRIGGER_RADIUS
 } from '../../src/config.js'
 import { gameState } from '../../src/gameState.js'
+import { movableOccupancyCount } from '../../src/game/occupancyTags.js'
 import {
   cancelTransportOperations,
   commandCarrierStrike,
@@ -410,7 +411,7 @@ describe('six-ship naval fleet systems', () => {
     expect(tank.tileX).toBe(9)
     expect(tank.moveTarget).toEqual({ x: 4, y: 8 })
     expect(tank.guardMode).toBe(false)
-    expect(occupancyMap[tank.tileY][tank.tileX]).toBe(1)
+    expect(movableOccupancyCount(occupancyMap[tank.tileY][tank.tileX])).toBe(1)
     expect(requestTransportUnload({ ...ferry, embarkedUnitIds: ['tank'] }, 12, 8, map)).toBe(false)
 
     const overlappingCoastFerry = {
@@ -476,7 +477,7 @@ describe('six-ship naval fleet systems', () => {
     expect(tank.transportTransfer).toBeNull()
     expect(tank.pendingTransportId).toBeNull()
     expect(tank.transportBoardingLocked).toBe(false)
-    expect(occupancyMap[restoreTile.y][restoreTile.x]).toBe(1)
+    expect(movableOccupancyCount(occupancyMap[restoreTile.y][restoreTile.x])).toBe(1)
     expect(requestTransportLoad(ferry, tank, map, occupancyMap, units)).toBe(true)
   })
 

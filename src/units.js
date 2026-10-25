@@ -24,6 +24,27 @@ import { isFriendlyWaterMineBlocking } from './game/waterMineSystem.js'
 import { getSpatialQuadtree } from './game/spatialQuadtree.js'
 import { recordUnitCreated } from './ai-api/transitionCollector.js'
 import { hasBlockingBuilding } from './utils/buildingPassability.js'
+import {
+  addMovableOccupancy,
+  addFixedOccupancy,
+  hasFixedOccupancy,
+  hasMovableOccupancy,
+  fixedOccupancyCount,
+  movableOccupancyCount,
+  totalOccupancyCount,
+  MOVABLE_OCCUPANCY_SHIFT
+} from './game/occupancyTags.js'
+
+export {
+  addMovableOccupancy,
+  addFixedOccupancy,
+  hasFixedOccupancy,
+  hasMovableOccupancy,
+  fixedOccupancyCount,
+  movableOccupancyCount,
+  totalOccupancyCount,
+  MOVABLE_OCCUPANCY_SHIFT
+}
 import { getShipyardLaunchTile, getNavalPathOptions, isNavalUnitType, isWaterPassableTile } from './utils/navalUtils.js'
 import {
   ensureAirstripOperations,
@@ -128,7 +149,7 @@ export function buildOccupancyMap(units, mapGrid, textureManager = null) {
       tileX >= 0 &&
       tileX < width
     ) {
-      occupancy[tileY][tileX] += 1
+      occupancy[tileY][tileX] = addMovableOccupancy(occupancy[tileY][tileX], 1)
     }
   })
 
@@ -142,7 +163,7 @@ export function buildOccupancyMap(units, mapGrid, textureManager = null) {
         tileX >= 0 &&
         tileX < width
       ) {
-        occupancy[tileY][tileX] = (occupancy[tileY][tileX] || 0) + 1
+        occupancy[tileY][tileX] = addMovableOccupancy(occupancy[tileY][tileX], 1)
       }
     })
   }
@@ -180,10 +201,7 @@ export const updateUnitOccupancy = logPerformance(function updateUnitOccupancy(u
     prevTileX >= 0 &&
     prevTileX < occupancyMap[0].length
   ) {
-    occupancyMap[prevTileY][prevTileX] = Math.max(
-      0,
-      (occupancyMap[prevTileY][prevTileX] || 0) - 1
-    )
+    occupancyMap[prevTileY][prevTileX] = addMovableOccupancy(occupancyMap[prevTileY][prevTileX], -1)
   }
 
   // Add occupancy to current position (center-based to match unit visual center)
@@ -196,8 +214,10 @@ export const updateUnitOccupancy = logPerformance(function updateUnitOccupancy(u
     currentTileX >= 0 &&
     currentTileX < occupancyMap[0].length
   ) {
-    occupancyMap[currentTileY][currentTileX] =
-      (occupancyMap[currentTileY][currentTileX] || 0) + 1
+    occupancyMap[currentTileY][currentTileX] = addMovableOccupancy(
+      occupancyMap[currentTileY][currentTileX],
+      1
+    )
   }
 }, false)
 
@@ -215,7 +235,7 @@ export function removeUnitOccupancy(unit, occupancyMap, options = {}) {
     tileX >= 0 &&
     tileX < occupancyMap[0].length
   ) {
-    occupancyMap[tileY][tileX] = Math.max(0, (occupancyMap[tileY][tileX] || 0) - 1)
+    occupancyMap[tileY][tileX] = addMovableOccupancy(occupancyMap[tileY][tileX], -1)
   }
 }
 
@@ -596,10 +616,15 @@ function isTilePassableForMode(mapGrid, x, y, options = {}) {
 }
 
 function isTileBlockedForUnit(occupancyMap, x, y, options = {}) {
-  // The shared occupancy map encodes water terrain as blocked for land units.
-  // Naval paths already validate water terrain separately and use runtime
-  // collision/spatial checks for other ships, so they must ignore that layer.
-  if (options.movementType !== 'water' && options.movementType !== 'amphibious' && occupancyMap && occupancyMap[y] && occupancyMap[y][x]) {
+  // Fixed occupancy (buildings, water, rock, impassable tags) blocks land paths.
+  // Movable occupancy (units, wrecks) does not: the unit keeps the short path
+  // and contact physics pushes those occupants aside.
+  // Naval and amphibious paths ignore this layer because it also marks water.
+  if (
+    options.movementType !== 'water' &&
+    options.movementType !== 'amphibious' &&
+    hasFixedOccupancy(occupancyMap?.[y]?.[x])
+  ) {
     return true
   }
 
@@ -848,7 +873,7 @@ export function spawnUnit(factory, type, units, mapGrid, rallyPointTarget = null
     const centerTileY = Math.floor((newUnit.y + TILE_SIZE / 2) / TILE_SIZE)
     if (centerTileY >= 0 && centerTileY < occupancyMap.length &&
         centerTileX >= 0 && centerTileX < occupancyMap[0].length) {
-      occupancyMap[centerTileY][centerTileX] = (occupancyMap[centerTileY][centerTileX] || 0) + 1
+      occupancyMap[centerTileY][centerTileX] = addMovableOccupancy(occupancyMap[centerTileY][centerTileX], 1)
     }
     if (newUnit.type === 'apache') {
       newUnit.groundedOccupancyApplied = true

@@ -103,7 +103,10 @@ import {
   moveBlockingUnits,
   resolveUnitCollisions,
   deselectUnits,
-  unitCosts
+  unitCosts,
+  addMovableOccupancy,
+  movableOccupancyCount,
+  fixedOccupancyCount
 } from '../../src/units.js'
 import { gameState } from '../../src/gameState.js'
 
@@ -255,7 +258,8 @@ describe('units.js', () => {
       updateUnitOccupancy(unit, 3, 3, occupancyMap)
 
       expect(occupancyMap[3][3]).toBe(0) // Removed from old
-      expect(occupancyMap[5][5]).toBe(1) // Added to new
+      expect(movableOccupancyCount(occupancyMap[5][5])).toBe(1)
+      expect(fixedOccupancyCount(occupancyMap[5][5])).toBe(0)
     })
 
     it('[U04892] should do nothing if occupancyMap is null', () => {
@@ -277,12 +281,12 @@ describe('units.js', () => {
     it('[U04894] should update for grounded air units', () => {
       const unit = { x: 5 * TILE_SIZE, y: 5 * TILE_SIZE, isAirUnit: true, flightState: 'grounded' }
       const occupancyMap = buildOccupancyMap([], mapGrid)
-      occupancyMap[3][3] = 1
+      occupancyMap[3][3] = addMovableOccupancy(0, 1)
 
       updateUnitOccupancy(unit, 3, 3, occupancyMap)
 
       expect(occupancyMap[3][3]).toBe(0)
-      expect(occupancyMap[5][5]).toBe(1)
+      expect(movableOccupancyCount(occupancyMap[5][5])).toBe(1)
     })
 
     it('[U04895] should handle out-of-bounds previous position', () => {
@@ -297,7 +301,7 @@ describe('units.js', () => {
     it('[U04896] should remove unit from occupancy map', () => {
       const unit = { x: 5 * TILE_SIZE, y: 5 * TILE_SIZE }
       const occupancyMap = buildOccupancyMap([], mapGrid)
-      occupancyMap[5][5] = 1
+      occupancyMap[5][5] = addMovableOccupancy(0, 1)
 
       removeUnitOccupancy(unit, occupancyMap)
 
@@ -333,7 +337,7 @@ describe('units.js', () => {
     it('[U04900] should remove with ignoreFlightState option', () => {
       const unit = { x: 5 * TILE_SIZE, y: 5 * TILE_SIZE, isAirUnit: true, flightState: 'airborne' }
       const occupancyMap = buildOccupancyMap([], mapGrid)
-      occupancyMap[5][5] = 1
+      occupancyMap[5][5] = addMovableOccupancy(0, 1)
 
       removeUnitOccupancy(unit, occupancyMap, { ignoreFlightState: true })
 

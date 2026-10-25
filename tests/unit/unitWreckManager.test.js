@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import '../setup.js'
+import { movableOccupancyCount } from '../../src/game/occupancyTags.js'
 
 // Mock dependencies
 vi.mock('../../src/config.js', async() => {
@@ -135,7 +136,7 @@ describe('unitWreckManager.js', () => {
       // Check that occupancy map was updated at the wreck's tile
       const tileX = Math.floor((100 + 16) / 32) // center-based calculation
       const tileY = Math.floor((100 + 16) / 32)
-      expect(gameState.occupancyMap[tileY][tileX]).toBe(1)
+      expect(movableOccupancyCount(gameState.occupancyMap[tileY][tileX])).toBe(1)
     })
 
     it('[U04814] should use default direction of 0 if not provided', () => {
@@ -254,7 +255,7 @@ describe('unitWreckManager.js', () => {
 
       const tileX = Math.floor((100 + 16) / 32)
       const tileY = Math.floor((100 + 16) / 32)
-      expect(gameState.occupancyMap[tileY][tileX]).toBe(1)
+      expect(movableOccupancyCount(gameState.occupancyMap[tileY][tileX])).toBe(1)
 
       removeWreckById(gameState, 'unit-1-wreck')
 

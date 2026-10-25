@@ -37,6 +37,7 @@ import {
   buildOccupancyMap,
   initializeOccupancyMap
 } from '../../src/units.js'
+import { movableOccupancyCount } from '../../src/game/occupancyTags.js'
 import {
   updateGlobalPathfinding,
   createFormationOffsets,
@@ -491,7 +492,8 @@ describe('Pathfinding Core', () => {
 
         const occupancyMap = buildOccupancyMap([unit], mapGrid)
 
-        expect(occupancyMap[3][3]).toBe(1)
+        expect(movableOccupancyCount(occupancyMap[3][3])).toBe(1)
+        expect(occupancyMap[3][3] > 1).toBe(true)
       })
 
       it('[U03242] should increment for multiple units on same tile', () => {
@@ -501,7 +503,7 @@ describe('Pathfinding Core', () => {
 
         const occupancyMap = buildOccupancyMap([unit1, unit2], mapGrid)
 
-        expect(occupancyMap[5][5]).toBe(2)
+        expect(movableOccupancyCount(occupancyMap[5][5])).toBe(2)
       })
 
       it('[U03243] should skip air units not grounded', () => {
@@ -524,7 +526,7 @@ describe('Pathfinding Core', () => {
 
         const occupancyMap = buildOccupancyMap([groundedAirUnit], mapGrid)
 
-        expect(occupancyMap[6][6]).toBe(1)
+        expect(movableOccupancyCount(occupancyMap[6][6])).toBe(1)
       })
 
       it('[U03245] should handle empty units array', () => {

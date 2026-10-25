@@ -4,6 +4,7 @@ import { gameState } from '../gameState.js'
 import { findWreckAtTile } from '../game/unitWreckManager.js'
 import { isHelipadAvailableForUnit } from '../utils/helipadUtils.js'
 import { hasBlockingBuilding } from '../utils/buildingPassability.js'
+import { hasFixedOccupancy } from '../game/occupancyTags.js'
 import { GAME_DEFAULT_CURSOR } from './cursorStyles.js'
 import { getUnitSelectionCenter } from './selectionManager.js'
 import { getBuildingIdentifier } from '../utils.js'
@@ -355,9 +356,7 @@ export class CursorManager {
     const hasSeedCrystal = tile.seedCrystal
     const occupancyMap = gameState.occupancyMap
     const occupied = movementType !== 'water' &&
-      occupancyMap &&
-      occupancyMap[tileY] &&
-      occupancyMap[tileY][tileX]
+      hasFixedOccupancy(occupancyMap?.[tileY]?.[tileX])
 
     const terrainBlocked = movementType === 'water'
       ? tileType !== 'water'

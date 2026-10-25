@@ -4,6 +4,7 @@ import { CITY_BUILDING_HEALTH, TILE_SIZE } from '../config.js'
 import { setBuildingDebrisDecals, setDecalSurfaceBlocker } from './tileDecals.js'
 import { notifySurfaceTileMutation, notifyTopologyMutation } from '../rendering/prepared/mapMutationNotifier.js'
 import { clearPathCache } from './pathCache.js'
+import { addFixedOccupancy } from './occupancyTags.js'
 import { spawnDestructionExplosion } from './spriteSheetEffects.js'
 
 const registries = new WeakMap()
@@ -174,7 +175,7 @@ function finishCityDestruction(building, mapGrid, state, effects, playSound = nu
       if (!tile) continue
       // Decorations own tagged occupancy, not tile.building or unit occupancy.
       if (state.occupancyMap?.[y] && !tile.building && tile.type === 'land' && !tile.seedCrystal) {
-        state.occupancyMap[y][x] = Math.max(0, state.occupancyMap[y][x] - 1)
+        state.occupancyMap[y][x] = addFixedOccupancy(state.occupancyMap[y][x], -1)
       }
       notifySurfaceTileMutation(mapGrid, x, y)
     }

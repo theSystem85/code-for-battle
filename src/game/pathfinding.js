@@ -171,7 +171,7 @@ function _updateGlobalPathfinding(units, mapGrid, occupancyMap, gameState) {
 
       // Determine if the unit entered the close-range zone with a stale
       // long-distance path (computed without the occupancy map). If so,
-      // force a recalculation so the new path accounts for dynamic obstacles.
+      // force a recalculation so the new path accounts for fixed blockers.
       // Use strict equality (=== false) so units without the flag (legacy/test
       // paths) are not affected.
       const hasStaleNonOccupancyPath = unit.path && unit.path.length > 0 &&
@@ -218,7 +218,8 @@ function _updateGlobalPathfinding(units, mapGrid, occupancyMap, gameState) {
         }
       }
 
-      // Use occupancy map for close range movement to avoid collisions
+      // Close range still consults occupancy so fixed blockers stay on the path.
+      // Movable occupants are not blockers; contact physics pushes them aside.
       const useOccupancyMap = distance <= PATHFINDING_THRESHOLD
       const startNode = { x: unit.tileX, y: unit.tileY, owner: unit.owner }
       const cacheOptions = {

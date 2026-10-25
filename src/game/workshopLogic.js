@@ -7,6 +7,7 @@ import { logPerformance } from '../performanceUtils.js'
 import { getWreckById, removeWreckById } from './unitWreckManager.js'
 import { getBaseStructures, isWithinBaseRange } from '../utils/baseUtils.js'
 import { getServiceRadiusPixels } from '../utils/serviceRadius.js'
+import { addMovableOccupancy } from './occupancyTags.js'
 
 function initWorkshop(workshop) {
   if (!workshop.repairSlots) {
@@ -351,7 +352,7 @@ function processWorkshopRestoration(workshop, units, mapGrid, delta) {
           centerX >= 0 &&
           centerX < occupancyMap[0].length
         ) {
-          occupancyMap[centerY][centerX] = (occupancyMap[centerY][centerX] || 0) + 1
+          occupancyMap[centerY][centerX] = addMovableOccupancy(occupancyMap[centerY][centerX], 1)
         }
       }
 
@@ -412,10 +413,10 @@ function processWorkshopRestoration(workshop, units, mapGrid, delta) {
               prevX >= 0 &&
               prevX < occupancyMap[prevY].length
             ) {
-              occupancyMap[prevY][prevX] = Math.max(0, (occupancyMap[prevY][prevX] || 0) - 1)
+              occupancyMap[prevY][prevX] = addMovableOccupancy(occupancyMap[prevY][prevX], -1)
             }
           }
-          occupancyMap[centerY][centerX] = (occupancyMap[centerY][centerX] || 0) + 1
+          occupancyMap[centerY][centerX] = addMovableOccupancy(occupancyMap[centerY][centerX], 1)
           wreck.occupancyTileX = centerX
           wreck.occupancyTileY = centerY
         }

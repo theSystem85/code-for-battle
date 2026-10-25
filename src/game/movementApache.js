@@ -1,5 +1,6 @@
 import { TILE_SIZE, TILE_LENGTH_METERS } from '../config.js'
 import { removeUnitOccupancy } from '../units.js'
+import { addMovableOccupancy } from './occupancyTags.js'
 import { playPositionalSound, audioContext, getMasterVolume } from '../sound.js'
 import { calculatePositionalAudio, consumeUnitGas } from './movementHelpers.js'
 import { BASE_FRAME_SECONDS, MOVEMENT_CONFIG } from './movementConstants.js'
@@ -76,7 +77,7 @@ function addUnitOccupancyDirect(unit, occupancyMap) {
     tileY < occupancyMap.length &&
     tileX < occupancyMap[0].length
   ) {
-    occupancyMap[tileY][tileX] = (occupancyMap[tileY][tileX] || 0) + 1
+    occupancyMap[tileY][tileX] = addMovableOccupancy(occupancyMap[tileY][tileX], 1)
   }
 }
 

@@ -4,6 +4,7 @@
 import { TILE_SIZE } from '../config.js'
 import { getSpatialQuadtree } from './spatialQuadtree.js'
 import { getFlowFieldManager } from './flowField.js'
+import { hasFixedOccupancy } from './occupancyTags.js'
 
 // Steering configuration - exported for config.js integration
 export const STEERING_CONFIG = {
@@ -322,7 +323,7 @@ export function calculateObstacleAvoidance(unit, mapGrid, occupancyMap) {
     }
 
     // Check occupancy
-    if (!blocked && occupancyMap && occupancyMap[tileY] && occupancyMap[tileY][tileX] > 0) {
+    if (!blocked && hasFixedOccupancy(occupancyMap?.[tileY]?.[tileX])) {
       // Check if it's just our own tile
       const currentTileX = Math.floor(unitCx / TILE_SIZE)
       const currentTileY = Math.floor(unitCy / TILE_SIZE)

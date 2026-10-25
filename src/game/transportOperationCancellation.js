@@ -1,4 +1,5 @@
 import { TILE_SIZE } from '../config.js'
+import { addMovableOccupancy } from './occupancyTags.js'
 
 const TRANSPORT_TYPES = new Set(['hovercraft', 'vehicleFerry'])
 
@@ -26,7 +27,7 @@ function addUnitOccupancyAtCenter(unit, occupancyMap) {
   unit.tileX = tileX
   unit.tileY = tileY
   if (occupancyMap?.[tileY]?.[tileX] === undefined) return
-  occupancyMap[tileY][tileX] = (occupancyMap[tileY][tileX] || 0) + 1
+  occupancyMap[tileY][tileX] = addMovableOccupancy(occupancyMap[tileY][tileX], 1)
 }
 
 function cancelSingleTransportOperation(transport, units, occupancyMap, selectedIds) {

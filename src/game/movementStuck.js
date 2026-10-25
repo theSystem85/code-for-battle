@@ -11,6 +11,7 @@ import { MOVEMENT_CONFIG } from './movementConstants.js'
 import { normalizeAngle } from './movementHelpers.js'
 import { gameRandom } from '../utils/gameRandom.js'
 import { hasBlockingBuilding } from '../utils/buildingPassability.js'
+import { hasFixedOccupancy } from './occupancyTags.js'
 import { getSimulationTime } from './time.js'
 
 const F22_STATE_MACHINE_STATES = new Set([
@@ -72,7 +73,7 @@ function hasLocalBlockageSignal(unit, mapGrid, occupancyMap, now, recentStaticCo
     return true
   }
 
-  if (!unit.isNaval && occupancyMap?.[nextTile.y]?.[nextTile.x] > 0) {
+  if (!unit.isNaval && hasFixedOccupancy(occupancyMap?.[nextTile.y]?.[nextTile.x])) {
     const currentTileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
     const currentTileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
     if (nextTile.x !== currentTileX || nextTile.y !== currentTileY) {
