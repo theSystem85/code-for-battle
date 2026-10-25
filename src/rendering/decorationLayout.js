@@ -330,11 +330,44 @@ const CLUSTER_CATEGORIES = ['trees', 'rocks', 'farm']
 const isForestTree = group => group.tagSet.has('trees') &&
   !['farm', 'city', 'ruins', 'shore', 'roadside', 'stones', 'ground_detail'].some(tag => group.tagSet.has(tag))
 
+const OTHER_VEGETATION_TAGS = new Set(['shrubs', 'shrub', 'bushes', 'bush', 'vegetation', 'plants', 'flowers', 'reeds'])
+
+/** One tree sprite, including 1×1 and 2×2 crowns. Larger tree groups are woods. */
+export function isWoodSprite(group) {
+  return isForestTree(group) && Math.max(group.width || 0, group.height || 0) >= 3
+}
+
+export function isSingleTreeSprite(group) {
+  return isForestTree(group) && !isWoodSprite(group)
+}
+
+export function isLakeSprite(group) {
+  const tags = group?.tagSet
+  return tags instanceof Set && tags.has('lake') && !tags.has('shore')
+}
+
+export function isOtherVegetationSprite(group) {
+  const tags = group?.tagSet
+  if (!(tags instanceof Set) || isForestTree(group)) return false
+  if (['lake', 'shore', 'ground_detail', 'stones', 'city', 'ruins', 'farm', 'roadside', 'rocks'].some(tag => tags.has(tag))) return false
+  for (const tag of tags) if (OTHER_VEGETATION_TAGS.has(tag)) return true
+  return false
+}
+
+function shoreProximityWeight(distance) {
+  if (distance <= 2) return 8
+  if (distance <= 5) return 5
+  if (distance <= 10) return 3
+  if (distance <= 16) return 2
+  return 1
+}
+
 /** Preparation-only forest field: overlapping elliptical lobes, ragged edges
  * and coherent clearings. One bounded field is shared by all tree candidates. */
-export function buildForestClusters(mapGrid, { salt = 0, defaultBiome = 'grass' } = {}) {
+export function buildForestClusters(mapGrid, { salt = 0, defaultBiome = 'grass', count: requestedCount, radius: requestedRadius, waterDistance = null } = {}) {
   salt = decorationSeed(salt)
   const height = mapGrid.length, width = mapGrid[0]?.length || 0
+  const radius = Number.isFinite(requestedRadius) ? Math.max(1, Math.floor(requestedRadius)) : 11
   const density = new Float32Array(width * height)
   const biomes = new Uint8Array(width * height).fill(255)
   const candidates = DECORATION_BIOMES.map(() => [])
@@ -346,11 +379,12 @@ export function buildForestClusters(mapGrid, { salt = 0, defaultBiome = 'grass' 
     biomes[y * width + x] = index
     candidates[index].push({ x, y, biome, hash: decorationHash(x, y, salt + 1877) })
   }
-  const centers = [], radius = 11
+  const centers = []
+  const waterBand = point => (waterDistance ? Math.min(8, (waterDistance[point.y * width + point.x] / 3) | 0) : 0)
   candidates.forEach(points => {
-    points.sort((a, b) => a.hash - b.hash || a.y - b.y || a.x - b.x)
+    points.sort((a, b) => waterBand(a) - waterBand(b) || a.hash - b.hash || a.y - b.y || a.x - b.x)
     const selected = []
-    const count = Math.min(12, Math.ceil(points.length / 1800))
+    const count = requestedCount == null ? Math.min(12, Math.ceil(points.length / 1800)) : Math.max(0, Math.floor(requestedCount))
     for (const point of points) {
       if (selected.length >= count) break
       if (selected.every(center => Math.hypot(center.x - point.x, center.y - point.y) >= radius * 1.8)) selected.push(point)
@@ -396,9 +430,9 @@ function forestAllows(forest, x, y, biome) {
   return forest.density[offset] > 0 || decorationHash(x, y, forest.salt + 16927) % 400 === 0
 }
 
-export function buildCategoryClusters(mapGrid, { salt = 0, defaultBiome = 'grass' } = {}) {
+export function buildCategoryClusters(mapGrid, { salt = 0, defaultBiome = 'grass', woodClusterCount, woodClusterRadius, waterDistance } = {}) {
   return {
-    trees: buildForestClusters(mapGrid, { salt, defaultBiome }),
+    trees: buildForestClusters(mapGrid, { salt, defaultBiome, count: woodClusterCount, radius: woodClusterRadius, waterDistance }),
     rocks: buildRuinClusters(mapGrid, { defaultBiome, salt: decorationSeed(salt) + 1013, radius: 8, minDistance: 1 }),
     farm: buildRuinClusters(mapGrid, { defaultBiome, salt: decorationSeed(salt) + 2026, radius: 6, minDistance: 1 })
   }
@@ -933,6 +967,131 @@ function createSeededRandom(seed) {
   }
 }
 
+/** Chebyshev distance to terrain water and already placed lake sprites. Preparation only. */
+function buildDecorationWaterDistance(mapGrid, cells) {
+  const height = mapGrid.length
+  const width = mapGrid[0]?.length || 0
+  const distance = new Uint16Array(width * height)
+  distance.fill(65535)
+  const queue = []
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const offset = y * width + x
+      if (mapGrid[y][x]?.type !== 'water' && !cells?.[offset]?.group?.tagSet?.has('lake')) continue
+      distance[offset] = 0
+      queue.push(offset)
+    }
+  }
+  for (let head = 0; head < queue.length; head++) {
+    const index = queue[head]
+    const x = index % width
+    const y = (index - x) / width
+    const next = distance[index] + 1
+    for (let dy = -1; dy <= 1; dy++) {
+      const ny = y + dy
+      if (ny < 0 || ny >= height) continue
+      for (let dx = -1; dx <= 1; dx++) {
+        if (!dx && !dy) continue
+        const nx = x + dx
+        if (nx < 0 || nx >= width) continue
+        const neighbor = ny * width + nx
+        if (distance[neighbor] <= next) continue
+        distance[neighbor] = next
+        queue.push(neighbor)
+      }
+    }
+  }
+  return distance
+}
+
+/** Place up to `target` sprites, highest weight first. Preparation only.
+ * Each catalog variant is offered once, smallest first, before any variant
+ * repeats. A pure first-fit walk spends the whole budget on the small sprites
+ * that fit on the best shore cells and never reaches a large lake or wood. */
+function placeBudgetedDecorations({
+  mapGrid, pools, predicate, kinds = ['multi', 'single'], target, salt, defaultBiome, fits, cells, occupied, placements,
+  groundDetails, landmarks, rarePlaced, width, height, weightAt, detail = false, onceEach = false, largestFirst = false
+}) {
+  const count = Math.max(0, target | 0)
+  if (!count || !pools) return 0
+  const groupsByBiome = {}
+  let any = false
+  for (const biome of DECORATION_BIOMES) {
+    const groups = kinds.flatMap(kind => pools[biome]?.[kind] || []).filter(predicate)
+    groupsByBiome[biome] = groups
+      .map((group, index) => ({ group, hash: decorationHash(index, groups.length, salt) }))
+      .sort((a, b) => {
+        const area = (a.group.width * a.group.height) - (b.group.width * b.group.height)
+        return (largestFirst ? -area : area) || a.hash - b.hash
+      })
+      .map(entry => entry.group)
+    if (groups.length) any = true
+  }
+  if (!any) return 0
+  const ranked = []
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      if (!isLayoutLand(mapGrid[y][x])) continue
+      const weight = weightAt(x, y)
+      if (!(weight > 0)) continue
+      ranked.push({ x, y, weight, hash: decorationHash(x, y, salt) })
+    }
+  }
+  if (!ranked.length) return 0
+  ranked.sort((a, b) => b.weight - a.weight || a.hash - b.hash || a.y - b.y || a.x - b.x)
+  const sitesByBiome = Object.fromEntries(DECORATION_BIOMES.map(biome => [biome, []]))
+  for (const site of ranked) sitesByBiome[resolveBiome(mapGrid[site.y][site.x], defaultBiome)].push(site)
+  const stamp = (group, site, biome) => {
+    const placement = { group, anchorX: site.x, anchorY: site.y, biome }
+    if (!detail) {
+      if (group.width * group.height > 1) placements.push(placement)
+      if (group.tagSet.has('landmark')) landmarks.push(placement)
+      if (group.tagSet.has('rare')) rarePlaced.add(decorationIdentity(group))
+    }
+    for (let dy = 0; dy < group.height; dy++) {
+      for (let dx = 0; dx < group.width; dx++) {
+        const offset = (site.y + dy) * width + site.x + dx
+        const cell = { ...placement, offsetX: dx, offsetY: dy }
+        if (detail) groundDetails[offset] = cell
+        else {
+          cells[offset] = cell
+          occupied[offset] = placement
+        }
+      }
+    }
+  }
+  const entries = []
+  for (const biome of DECORATION_BIOMES) {
+    for (const group of groupsByBiome[biome]) entries.push({ biome, group, cursor: 0, alive: true })
+  }
+  const take = entry => {
+    const sites = sitesByBiome[entry.biome]
+    while (entry.cursor < sites.length) {
+      const site = sites[entry.cursor++]
+      if (!detail && occupied[site.y * width + site.x]) continue
+      if (!fits({ group: entry.group, anchorX: site.x, anchorY: site.y, biome: entry.biome }, detail)) continue
+      stamp(entry.group, site, entry.biome)
+      return true
+    }
+    entry.alive = false
+    return false
+  }
+  let placed = 0
+  for (const entry of entries) {
+    if (placed >= count) return placed
+    if (take(entry)) placed++
+  }
+  if (onceEach) return placed
+  let cursor = 0
+  let spins = 0
+  while (placed < count && spins < entries.length) {
+    const entry = entries[cursor++ % entries.length]
+    if (!entry.alive || !take(entry)) spins++
+    else { placed++; spins = 0 }
+  }
+  return placed
+}
+
 function placeStones({ mapGrid, pools, options, salt, defaultBiome, fits, cells, occupied, placements, width, height }) {
   const target = options.stoneCount
   if (!target) return 0
@@ -968,6 +1127,32 @@ function placeStones({ mapGrid, pools, options, salt, defaultBiome, fits, cells,
   }
   const centers = Array.from({ length: Math.max(1, Math.ceil(target / 5)) }, pickSite)
   let placed = 0
+  // One of each stone, largest first, before the clustered fill. A wide
+  // boulder never wins the random bag once pebbles occupy its only sites.
+  const catalog = []
+  for (const biome of DECORATION_BIOMES) {
+    for (const group of [...(pools[biome]?.multi || []), ...(pools[biome]?.single || [])].filter(group => group.tagSet.has('stones'))) {
+      catalog.push({ biome, group, hash: decorationHash(catalog.length + 1, group.width * group.height, salt) })
+    }
+  }
+  catalog.sort((a, b) => (b.group.width * b.group.height) - (a.group.width * a.group.height) || a.hash - b.hash)
+  const orderedSites = sites.slice().sort((a, b) => stoneSiteWeight(mapGrid, b.x, b.y) - stoneSiteWeight(mapGrid, a.x, a.y) || decorationHash(a.x, a.y, salt + 17) - decorationHash(b.x, b.y, salt + 17) || a.y - b.y || a.x - b.x)
+  for (const entry of catalog) {
+    if (placed >= target) break
+    for (const site of orderedSites) {
+      if (resolveBiome(mapGrid[site.y][site.x], defaultBiome) !== entry.biome) continue
+      if (!fits({ group: entry.group, anchorX: site.x, anchorY: site.y, biome: entry.biome })) continue
+      if (entry.group.width * entry.group.height > 1) placements.push({ group: entry.group, anchorX: site.x, anchorY: site.y, biome: entry.biome })
+      for (let dy = 0; dy < entry.group.height; dy++) for (let dx = 0; dx < entry.group.width; dx++) {
+        const offset = (site.y + dy) * width + site.x + dx
+        const placement = { group: entry.group, anchorX: site.x, anchorY: site.y, biome: entry.biome, offsetX: dx, offsetY: dy }
+        cells[offset] = placement
+        occupied[offset] = placement
+      }
+      placed++
+      break
+    }
+  }
   for (let attempt = 0; attempt < target * 25 && placed < target; attempt++) {
     let x
     let y
@@ -1043,7 +1228,7 @@ export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'g
           if (kind === 'large' ? !largeFirst || !large : largeFirst && large) continue
         }
         // Shore, roadside, stones and city props have their own passes.
-        if (isForestTree(group) || group.tagSet.has('shore') || group.tagSet.has('roadside') || group.tagSet.has('stones') || group.tagSet.has('city') || group.tagSet.has('ruins')) continue
+        if (isForestTree(group) || isLakeSprite(group) || isOtherVegetationSprite(group) || group.tagSet.has('shore') || group.tagSet.has('roadside') || group.tagSet.has('stones') || group.tagSet.has('city') || group.tagSet.has('ruins')) continue
         const category = group.tagSet.has('farm') ? 'farm' : CLUSTER_CATEGORIES.find(tag => group.tagSet.has(tag)) || 'other'
         if (!categories.has(category)) categories.set(category, [])
         categories.get(category).push(group)
@@ -1129,7 +1314,8 @@ export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'g
         const biome = resolveBiome(mapGrid[sy][sx], defaultBiome)
         const radius = distance(offset) / cities.radius
         const catalogMaximum = cityBags[biome].findLastIndex(bag => bag.size) + 1
-        const preferredDensity = getCityDensityLimit(Math.min(cityMaxDensity, catalogMaximum), radius)
+        const unscaledDensity = getCityDensityLimit(Math.min(cityMaxDensity, catalogMaximum), radius)
+        const preferredDensity = Math.max(1, Math.min(10, Math.round(unscaledDensity * options.cityDensityFactor / 100)))
         for (let side = 0; side < 4; side++) {
           for (const group of cityCandidates(cityBags[biome], preferredDensity, decorationHash(sx, sy, salt + side + cityIndex))) {
             const anchors = cityHouseAnchors(sx, sy, group.width, group.height)
@@ -1247,12 +1433,35 @@ export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'g
       break
     }
   }
+  // One of each rock and farm variant, largest first, while the cluster disks
+  // are still empty. The later interval pass only repeats whichever sprite
+  // fits the current cell, so a 2×2 boulder can miss every seed.
+  const budgetBase = { mapGrid, pools, salt, defaultBiome, fits, cells, occupied, placements, groundDetails, landmarks, rarePlaced, width, height }
+  placeStones({ mapGrid, pools, options, salt, defaultBiome, fits, cells, occupied, placements, width, height })
+  const clusterWeight = probe => (x, y) => categoryClusterAllows(probe, x, y, resolveBiome(mapGrid[y][x], defaultBiome), clusters) ? 1 : 0
+  placeBudgetedDecorations({
+    ...budgetBase, predicate: group => group.tagSet.has('rocks') && !group.tagSet.has('stones') && !group.tagSet.has('shore'),
+    target: 100000, salt: salt + 53, onceEach: true, largestFirst: true, weightAt: clusterWeight({ tagSet: new Set(['rocks']) })
+  })
+  placeBudgetedDecorations({
+    ...budgetBase, predicate: group => group.tagSet.has('farm'),
+    target: 100000, salt: salt + 59, onceEach: true, largestFirst: true, weightAt: clusterWeight({ tagSet: new Set(['farm']) })
+  })
+  // Lakes take their own budget before other land props, so the count is not
+  // whatever fraction of the multi-tile pass happens to pick a lake.
+  placeBudgetedDecorations({
+    ...budgetBase, predicate: isLakeSprite, target: options.lakeCount, salt: salt + 41,
+    weightAt: () => 1
+  })
   // Ground detail has its own cells, no impassability and no spacing ownership.
-  for (const kind of ['groundDetail', 'large', 'multi', 'single']) {
+  placeBudgetedDecorations({
+    ...budgetBase, predicate: () => true, kinds: ['groundDetail'], target: options.groundDetailCount,
+    salt: salt + 3209, detail: true, weightAt: () => 1
+  })
+  for (const kind of ['large', 'multi', 'single']) {
     // Large native props reserve their room before smaller ordinary props;
-    // boulders and lakes precede small stones in those same clusters.
-    if (kind === 'single') placeStones({ mapGrid, pools, options, salt, defaultBiome, fits, cells, occupied, placements, width, height })
-    const detail = kind === 'groundDetail'
+    // boulders precede small stones in those same clusters.
+    const detail = false
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
         const biome = resolveBiome(mapGrid[y][x], defaultBiome)
@@ -1290,35 +1499,42 @@ export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'g
       }
     }
   }
-  // Trees get a separate, denser preparation pass after scarce props. Their
-  // natural field supplies dense cores, tapered edges and occasional singles.
-  const forest = clusters.trees
-  const treeBags = Object.fromEntries(DECORATION_BIOMES.map(biome => [biome,
-    createDecorationBag([...(pools[biome]?.multi || []), ...(pools[biome]?.single || [])].filter(isForestTree), salt + 29)
-  ]))
-  for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
-    const offset = y * width + x
-    const density = forest.density[offset]
-    const hash = decorationHash(x, y, salt + 16927)
-    if (density ? hash / 0x100000000 >= density : hash % 400 !== 0) continue
+  // Rebuild the forest after lakes exist so woods and single trees prefer
+  // terrain water and decorative lakes. The legacy density gate still decides
+  // which cells are eligible; the budget keeps the strongest water-side sites.
+  const waterDistance = buildDecorationWaterDistance(mapGrid, cells)
+  const forest = buildForestClusters(mapGrid, {
+    salt, defaultBiome, count: options.woodClusterCount, radius: options.woodClusterRadius, waterDistance
+  })
+  clusters.trees = forest
+  const treeWeight = (x, y) => {
     const biome = resolveBiome(mapGrid[y][x], defaultBiome)
-    const bag = treeBags[biome]
-    if (!bag?.size) continue
-    for (let attempt = 0; attempt < bag.size; attempt++) {
-      const group = bag.next()
-      const placement = { group, anchorX: x, anchorY: y, biome }
-      if (!fits(placement)) continue
-      if (group.width * group.height > 1) placements.push(placement)
-      if (group.tagSet.has('landmark')) landmarks.push(placement)
-      if (group.tagSet.has('rare')) rarePlaced.add(decorationIdentity(group))
-      for (let dy = 0; dy < group.height; dy++) for (let dx = 0; dx < group.width; dx++) {
-        const cell = (y + dy) * width + x + dx
-        cells[cell] = { ...placement, offsetX: dx, offsetY: dy }
-        occupied[cell] = placement
-      }
-      break
-    }
+    if (!forestAllows(forest, x, y, biome)) return 0
+    const density = forest.density[y * width + x]
+    return shoreProximityWeight(waterDistance[y * width + x]) * (density > 0 ? 2 + density * 4 : 0.2)
   }
+  placeBudgetedDecorations({
+    ...budgetBase, predicate: isWoodSprite, target: options.woodsCount, salt: salt + 29, weightAt: treeWeight
+  })
+  // A few single trees stay outside the density field. They are placed before
+  // the woods fill in, otherwise the dense pass crowds every isolated site.
+  const outsideWeight = (x, y) => {
+    if (forest.density[y * width + x] > 0) return 0
+    return treeWeight(x, y)
+  }
+  const outsideBudget = Math.min(options.singleTreeCount, Math.floor(options.singleTreeCount * 0.08))
+  const outsideTrees = outsideBudget
+    ? placeBudgetedDecorations({
+      ...budgetBase, predicate: isSingleTreeSprite, target: outsideBudget, salt: salt + 33, weightAt: outsideWeight
+    })
+    : 0
+  placeBudgetedDecorations({
+    ...budgetBase, predicate: isSingleTreeSprite, target: options.singleTreeCount - outsideTrees, salt: salt + 31, weightAt: treeWeight
+  })
+  placeBudgetedDecorations({
+    ...budgetBase, predicate: isOtherVegetationSprite, target: options.otherVegetationCount, salt: salt + 37,
+    weightAt: (x, y) => shoreProximityWeight(waterDistance[y * width + x]) * (0.35 + decorationDensity(x, y, salt + 17))
+  })
   const cityStreets = cityPlan ? connectCityStreets(mapGrid, { cells, groundDetails, plan: cityPlan }) : []
   return { width, height, cells, placements, groundDetails, cityStreets }
 }
