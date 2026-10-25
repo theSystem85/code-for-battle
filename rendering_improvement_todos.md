@@ -1,5 +1,7 @@
 # Rendering improvement delegation checklist
 
+Current sprite-loading regression follow-up: [ranked open tasks S00–S10](#sprite-streaming-follow-up-2026-10-25) and [analysis](specs/138-sprite-streaming-performance-analysis.md). Historical wave status below is not performance certification.
+
 Status: **Wave 2 lanes merged; I20 integration in progress (2026-09-19)**. Date: 2026-09-19. Read [rendering_analysis.md](rendering_analysis.md), [performance_improvement.md](performance_improvement.md), and [spec 069](specs/069-rendering-preparation-contracts.md) before taking a task. Use a model no higher than GPT-5.6 Sol, as requested by the user.
 
 Model roles are intentional: Astra leads this analysis/documentation task; the implementation tasks below are assigned to Luna agents.
@@ -285,3 +287,147 @@ Building-layer boundary: A10 exclusively prepares/owns the generated art, manife
 - [ ] No visual quality/cadence degradation; procedural water remains animated.
 - [ ] No 20% allowance or lower-FPS default can pass the strict target.
 - [ ] Combined production pipeline passes the qualifying reference scene at 75 FPS; otherwise keep the project performance work open with the exact next bottleneck.
+
+## Sprite streaming follow-up (2026-10-25)
+
+New open work based on [the source analysis and memory inventory](specs/138-sprite-streaming-performance-analysis.md). This supersedes historical “implemented” claims only where the current audit identifies remaining work; it does not reopen unrelated terrain/water tasks. **Analysis complete; implementation and physical performance acceptance pending.** Priorities are expected impact, not measured browser rankings. The user now authorizes temporary coarse sprite tiers while fast scrolling, followed by refinement. Preserve final visual fidelity, canvas DPR, animation cadence, deterministic placement and simulation behavior; see the analysis for this narrow exception to the earlier fixed-quality policy.
+
+### Ranked issues
+
+Sorted by expected combined frame-time and memory impact; the memory column makes differences explicit. S00 is the execution prerequisite despite its lower direct performance impact.
+
+| Rank / task | Issue | Expected scroll/CPU impact | Memory impact | Dependency / owner lane |
+|---|---|---|---|---|
+| 1 / S01 | Synchronous map-sheet black keying, group cutouts and repeated metadata signatures | Very high during preparation/config changes; conditional during scrolling | High transient pixel arrays and retained canvases | S00; asset build lane |
+| 2 / S02 | 768 tank rotations generated on main thread after loading | High; up-to-8-ms slices plus indivisible job overshoot | High: ~22.77 MiB retained at DPR 3, plus temporaries | S00; rotation lane |
+| 3 / S03 | First-visible/evicted terrain pages bake on main thread; upgrades need local invalidation | High for cold/large-map traversal | High page/staging residency | S00; terrain lane |
+| 4 / S04 | Fragmented budgets, retained sources/atlases, no tier replacement/eviction | High under native memory pressure/GC/upload churn | Very high; old/new tiers and generations overlap | S00; resource lane |
+| 5 / S05 | Idle queue drains all deferred art without scroll/deadline/byte backpressure | High competing background preparation | Medium–high queued/in-flight/resident growth | S00; scheduler lane |
+| 6 / S06 | Integrated sheets lack build tiers and demand-driven coarse-to-full publication | High potential on cold traversal; needs S01/S03–S05 to avoid churn | High benefit if selective; worsens if all tiers retained | S01, S03–S05, S07; integration owner |
+| 7 / S07 | Only explosions use workers; custom sheet processing falls back synchronously | High for dynamic/custom art; limited effect on already warm pages | Medium–high transfer/copy peaks | S00; worker lane |
+| 8 / S08 | Decoration layout can rebuild in a render lookup and mutates city state | High on an invalidation miss, low when already warmed | Medium map/catalog allocations | S00; layout lane |
+| 9 / S09 | Stable sheet URLs, serial loads and offline fill compete with streaming | Medium startup/network effect; CPU blocking not demonstrated | Medium disk/cache + potential download amplification | S00 and asset manifest contract; PWA lane |
+| 10 / S00 | Missing trace attribution for sheet prep, rotations, tiers and native memory | Enabler; avoids optimizing the wrong cause | Enabler; distinguishes heap from pixel/GPU storage | First; integration/profiling owner |
+| 11 / S10 | Full worker rendering or WASM adopted without a causal bottleneck | Conditional, potentially high; high migration cost | Can improve or duplicate snapshots/textures/WASM memory | Measured S01–S09 results; experiment lane |
+
+### S00 — freeze contracts, attribution and ownership
+
+- [ ] Add bounded, opt-in stage counters/spans for sheet load/decode/key/cutout/catalog, rotation generation, queue waits, bitmap creation/publication, chunk rebuild/upload and bytes by tier/generation. Reuse existing profiler IDs/contracts; no per-entity trace-object allocations.
+- [ ] Record cold and warm causal traces using the spec protocol. No hardware GPU means leave captures pending, not a software benchmark substitute. Prioritize fixes using captured self times and byte peaks once available.
+- [ ] Freeze worker request/result, stable sprite ID/logical geometry, per-tier source rectangles, reservation/release tokens, visibility-demand snapshots, generation cancellation, publication/revision and diagnostic schemas in new dedicated modules. Allocate their exact filenames before dispatch. Establish worker capability/fallback contract and document progressive-tier sampling exception.
+- [ ] Freeze shared integration ownership: only this owner edits `textureManager.js`, `spriteSheetAnimation.js`, `preparedSpritePipeline.js`, `preparedSpriteRegistry.js`, `prepared/renderingPipeline.js`, startup/load/settings wiring, package scripts, Vite config, shared docs and manifest registrations during independent development. Do not dispatch another lane to these files simultaneously.
+
+**Done:** downstream lanes can implement and test against frozen fixtures/interfaces; exact path ownership recorded; hardware trace status explicit. This is the execution barrier, not a requirement to invent baseline timings before starting safe component work.
+
+### S01 — bake bundled sheet masks, cutouts and resolution tiers
+
+- [ ] Add an auto-discovered `.webp` + `.json` sheet build pipeline, separate from the hand-maintained unit inventory; include group/inner-cut/threshold/feather/coverage behavior exactly. Share pure pixel rules with runtime where possible. Process alpha key/cutout before tier downsampling so silhouettes remain stable.
+- [ ] Generate padded atlas pages at chosen coarse/intermediate/final backing sizes (initial candidates 0.5×, 1×, 2×, 3×; select useful tiers by footprint and byte inventory). Use WebP q85, deterministic hashes, per-tier rects/anchors/decoded byte metadata and algorithm versions. Do not produce fake extra detail by upscaling beyond masters without recording it.
+- [ ] Precompute immutable per-sheet metadata signatures and catalogs; remove O(T×M) signature recomputation from tile-reference construction through the integration API. Preserve source/editor metadata and saved identifiers.
+- [ ] Verify reproducibility, coverage/group seams, alpha interiors, `inner_cuts`, mixed biomes and generated outputs. Add a stale/missing-art check for the normal build; return package/Vite/Netlify wiring to the integration owner.
+
+**Exclusive component paths:** new `scripts/build-map-sprite-tiers.mjs`, `scripts/lib/mapSpriteBuild/`, generated `public/images/prepared-map-sprites/`, new build fixture tests. Existing `blackKeyPixels.js` and `decorationCutout.js` remain integration-owned until explicitly transferred; consume or propose extracted helpers without editing shared paths concurrently.
+
+**Done:** every bundled usable sheet has validated derivatives; normal build integration fails stale derivatives; no bundled runtime full-sheet readback/key/cutout after publication. Avoid fetching every generated tier.
+
+### S02 — remove background tank rotation contention
+
+- [ ] Move existing angle/part preparation into the worker contract, or build packed rotation atlases before deployment; compare transfer/storage/upload/residency costs before choosing. Keep the current visual result and angle count; do not add angle buckets to continuously rotated units.
+- [ ] Request only needed variants, enforce a byte reservation before staging, and publish complete part sets atomically. Retain correct live-rotation behavior until ready. Budget temporary supersampling separately.
+- [ ] On reset, cancellation, partial failure or superseded density, explicitly release every staged canvas/bitmap. Current early returns from `buildTankRotationCache()` leave unpublished frame cleanup to GC.
+
+**Exclusive component paths:** `src/rendering/tankRotationCache.js`, new rotation worker module, `tests/unit/tankRotationCache.test.js` and uniquely named worker tests. `tankImageRenderer.js`/startup glue edits belong to integration owner.
+
+**Done:** no rotation preparation slices contend with gameplay on main thread; bounded native bytes across repeat density changes; visual/facing/recoil tests pass. Hardware validation remains separate.
+
+### S03 — bounded terrain-page preparation and tier revisions
+
+- [ ] Diagnose first-route versus warm cache misses; retain revision-based validity and bounded cache behavior already implemented. Introduce immutable page-preparation jobs and local asset-to-page dependency indexes.
+- [ ] Evaluate worker composition of static decorated pages at actual backing DPR. Separate procedural water and live entity/effect layers; transfer complete results, budget upload/publication and avoid rebuilding pages synchronously on render misses.
+- [ ] Add per-sheet/tier revisions with deduplicated local rebuilds, directional lookahead and safe frame-boundary swaps. Preserve old complete pages while preparing replacements; handle neighboring-page halos and edits. Prevent each sprite completion from triggering global invalidation.
+
+**Exclusive component paths:** `src/rendering/mapRenderer.js`, new static-page worker/adapters and focused map-cache tests. `src/rendering.js`, shared mutation/startup modules remain integration-owned.
+
+**Done:** cold traversal, eviction, reversals and detail promotion do not cause unbounded page work or stale coarse pages; no seams, lost decals or frozen water. Native byte and upload budgets verified.
+
+### S04 — one bounded image resource lifecycle
+
+- [ ] Implement reference-counted resources shared by source/atlas/tier handles with byte reservation for resident, staging, transfer and old/new generations. Deduplicate source atlas accounting; distinguish GPU estimates from measured values.
+- [ ] Define visible pins, byte-based eviction, tier replacement and teardown. Release decoded sources after consumers finish; choose shared atlas views versus 240 cropped Apache bitmaps using measured draw/upload and memory costs.
+- [ ] Specify registry replace/remove semantics and hooks to stop deferred jobs before disposal. Fix underlying-operation timeouts: close late bitmaps and prohibit stale publication. Handle failure retry instead of permanently caching a fulfilled failed job.
+- [ ] Integrate explosion cache reservation rollback, count-limit recovery and teardown. Test aborted/superseded loads, density changes, worker crashes, invalid dimensions, partial registration and repeated maps. Final-entry byte sums alone must not represent the total memory budget.
+
+**Exclusive component paths:** new `src/rendering/prepared/spriteResourceStore.js` and focused resource-lifecycle tests. Return patches for existing registries, source promise retention, `assetLoading.js` and explosion state to integration owner; do not independently mutate those shared implementations.
+
+**Done:** peak native allocations fit explicit limits including overlaps; discarded resources are closed deterministically; no stale lookup points at an evicted/closed image.
+
+### S05 — demand-driven scheduler with backpressure
+
+- [ ] Extend `src/utils/idleAssetQueue.js` behind the frozen contract: visible coarse > lookahead > visible refinement > optional work, with bounded aging to prevent starvation, generation cancellation, deduplication and controlled retries.
+- [ ] Admit work using both concurrency and byte reservations. Honor idle deadline/timeout and explicit foreground slack; async completion work must also be bounded. Implement timer fallback without assuming a 16 ms delay provides idle time.
+- [ ] Coalesce camera demand snapshots outside per-entity loops. Pause optional upgrades/rotations during rapid camera movement, then resume after a settled dwell interval with hysteresis. Bound obsolete requests and avoid building new Maps/Sets every frame.
+- [ ] Replace enqueue-all behavior at integration with actual demand/resident policy; preserve pre-readiness requests for critical assets.
+
+**Exclusive component paths:** `src/utils/idleAssetQueue.js`, new scheduler module and scheduler unit tests. Camera/startup/prepared registry wiring is integration-owned.
+
+**Done:** fast reversals cancel stale queued work, urgent visible requests progress, long dwell reaches full detail, bounded queues/bytes and worker completions cannot flood main-thread callbacks.
+
+### S06 — integrate progressive sprite detail
+
+- [ ] Consume S01 build manifest, S04 store, S05 demand scheduler and S07 worker APIs in `TextureManager` and prepared sprite paths. Stage all sheet metadata before rendering; stream visual resources without changing pools, placement or city simulation based on arrival order.
+- [ ] Publish coarse handles rapidly, promote visible settled regions to requested final density under budgets, and keep previously sharp resident art sharp. Preserve effective logical size and per-tier source rectangles for groups/animation frames. Separate final density from current tier in cache keys/audits.
+- [ ] Integrate S03 dependency invalidation; prevent coarse baked pages from surviving indefinitely. Coordinate display/DPR, map/load/editor/custom assets, missing files and context recovery through controlled generation swaps.
+- [ ] Wire build/stale checks and conditional fallbacks. Update resize policy/tests to recognize user-authorized progressive sampling honestly. Keep final-quality acceptance distinct from scrolling coarse-tier latency.
+
+**Exclusive paths:** all S00-reserved integration files, plus producer adapters only after component owners have landed. This phase is serialized; do not edit active lane files.
+
+**Done:** cold fast scroll shows available coarse sprites, stationary view converges to full selected detail without blocking input, no flash/missing groups or simulation changes, tests prove stale jobs cannot replace current art. Full unit/integration/E2E/build/lint checks and Q30/Q31 hardware gates recorded separately.
+
+### S07 — persistent bounded sprite preparation workers
+
+- [ ] Implement worker-side fetch/blob decode (`createImageBitmap`) and OffscreenCanvas preparation for custom/dynamic sheets, using metadata-aware edge-connected keying and group cutouts rather than the explosion-only simple key algorithm. Transfer ownership of bitmap results; avoid cloning RGBA buffers or simulation state.
+- [ ] Reuse a small bounded pool with cancellation, backpressure, capability handshake, crash/timeout recovery and stale-result cleanup. Do not spawn a worker per tile. Account for image/linear buffers and multiple in-flight jobs before allocating.
+- [ ] Provide prebuilt bundled derivatives or explicit custom-asset preparation state when worker capabilities/CSP fail. No silent full-sheet synchronous conversion during gameplay. Main-thread handle publication remains bounded; worker rendering does not remove GPU upload cost.
+
+**Exclusive component paths:** new `src/rendering/spritePreparationPool.js`, `src/rendering/spritePreparation.worker.js`, worker protocol tests/fixtures. Existing explosion modules and shared pixel-helper edits require ownership transfer after S01/S00, or integration-owner wiring.
+
+**Done:** supported path has no main-thread full-sheet pixel loops/readbacks; unsupported/error paths are behavior-tested and explicit. Transfers, worker lifetime and generation teardown stay within budgets.
+
+### S08 — preparation-only layout and catalog rebuilding
+
+- [ ] Make `getDecorationLayout()` lookups consume prepared immutable layout state; move cache-miss construction to startup/edit/config lifecycle. Preserve existing prewarming in `publishPreparedRuntimeMap()` and test all invalidation producers.
+- [ ] Compute deterministic placement from stable metadata independent of visual tier; publish once. Keep `prepareCityBuildings()`/collision effects authoritative on main simulation side, outside rendering and visual worker results.
+- [ ] Cache immutable tag/group selectors and signatures per revision; avoid per-tile filtering allocations proportional to the expanded sheet catalog where traces show a cost. Do not change candidate order/hash selection.
+
+**Exclusive component paths:** `src/rendering/decorationLayout.js`, new preparation adapter and layout fixture tests. Integration owner applies `TextureManager`, `src/rendering.js` and city-state wiring after S08 lands.
+
+**Done:** first render after edit/load/config cannot synchronously construct a map-wide layout; existing seeded decoration/city/collision tests preserve results.
+
+### S09 — versioned tiers, load overlap and offline policy
+
+- [ ] Inspect NetworkFirst sheet routes and offline downloader activity alongside streaming traces. Use immutable content/version identity for derivative manifests/images; avoid mixed metadata/art revisions. Retain correct updates/offline fallback for original mutable editor assets.
+- [ ] Use bounded overlapping sheet loads instead of serial network latency where useful, constrained by S04/S05 budgets. Avoid loading source plus derivative or every DPR/tier unnecessarily.
+- [ ] Define offline tier policy explicitly (minimum usable representation and selected final tier, storage quotas, upgrades/cleanup); yield offline fills to visible requests. Prepared imagery is currently excluded from bulk download, so verify offline rendering rather than assuming new derivative routes are covered.
+
+**Exclusive component paths:** `src/pwa/offlineAssetPlan.js`, `src/pwa/sw.js`, offline downloader/manifest plugin and focused PWA tests. Build/Vite/TextureManager wiring belongs to integration owner. Register exact downloader paths at S00 before dispatch.
+
+**Done:** warm online/offline/redeploy cases use consistent art, offline requests do not starve visible streaming, storage remains bounded and no automatic all-tier download amplification.
+
+### S10 — conditional WASM / worker-rendering experiments
+
+- [ ] Only after causal traces, compare worker JS/native decoding against WASM/SIMD for residual flood-fill/alpha/packing kernels. Include module cold start, transfer/copy time, linear-memory peak and fallback support; promote only a demonstrated net win with pixel parity.
+- [ ] If composition/submit remains dominant after S03/S06, prototype retained OffscreenCanvas rendering with immutable presentation snapshots. Account for worker/main synchronization, multiple GPU contexts, alpha/order, continuous rotation, resizing, context recovery and procedural water; exclude simulation from visual workers.
+- [ ] Record explicit go/no-go evidence. WASM on the main thread is not asynchronous. Audit isolation headers/third-party embedding before any SharedArrayBuffer/threading dependency; basic transferable workers must work without it.
+
+**Exclusive paths:** new isolated experiment files/tests only. No production backend/shared dependency changes until serialized integration assigns ownership.
+
+**Done:** accepted experiment has measured end-to-end benefit and no unbounded duplicate memory; rejected experiments remain documented without imposing new dependencies.
+
+### Safe parallel execution
+
+1. S00 freezes interfaces and exact test/path ownership. A single integration owner controls shared files and docs. This request prepares delegation tasks; it does not dispatch implementation agents.
+2. Run S01 asset build, S02 rotations, S03 terrain pages, S04 resources, S05 scheduling, S07 workers, S08 layouts and S09 PWA as independent component lanes against frozen fixtures. Each gets a separate branch/worktree and uniquely named tests. Pure pixel helper extraction must land before both build/worker consumers; do not let them edit the same helpers concurrently.
+3. Land components sequentially, then S06 integrates all adapters and owns cross-component failure handling. Reassign released paths explicitly. Schedule S10 only if combined measurements warrant it.
+4. Serialize all physical browser/performance captures; read-only analysis of their artifacts may run in parallel. Run existing Q30/Q31 plus this spec's coarse-to-full, cancellation and memory cases. Leave hardware acceptance unchecked until qualifying evidence exists.
+
+For each task report source evidence, changed paths, unit/integration/E2E/lint/build results as applicable, byte residency/peak estimates versus measurements, exact remaining blockers and model identity when available. Existing repository branch, test and deployment rules still apply.
