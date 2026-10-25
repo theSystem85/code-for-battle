@@ -1,17 +1,23 @@
 /**
  * Building placement validation functions
  *
- * Pure functions for validating building placement that can be imported
- * without triggering the full import chain of buildings.js.
+ * Shared validation that can be imported without the full buildings.js chain.
+ * Active-map placement also checks the movable occupancy layer.
  *
  * These functions are re-exported from buildings.js for backwards compatibility.
  */
 
 import { MAX_BUILDING_GAP_TILES, TILE_SIZE } from '../config.js'
 import { buildingData } from '../data/buildingData.js'
+import { gameState } from '../gameState.js'
+import { hasMovableOccupancy } from '../game/occupancyTags.js'
 import { getShipyardWaterLocalTiles, isWaterTile } from '../utils/navalUtils.js'
 
 const NON_EXPANDING_BUILD_AREA_TYPES = new Set(['street', 'concreteWall'])
+
+function hasMovablePlacementBlocker(mapGrid, x, y) {
+  return gameState.mapGrid === mapGrid && hasMovableOccupancy(gameState.occupancyMap?.[y]?.[x])
+}
 
 function canBuildingTypeExtendBuildArea(type) {
   return !NON_EXPANDING_BUILD_AREA_TYPES.has(type)
@@ -167,6 +173,7 @@ export function canPlaceBuilding(type, tileX, tileY, mapGrid, units, buildings, 
           mapGrid[y][x].seedCrystal ||
           mapGrid[y][x].building ||
           mapGrid[y][x].buildOnlyOccupied ||
+          hasMovablePlacementBlocker(mapGrid, x, y) ||
           (!isFactoryOrRefinery && mapGrid[y][x].noBuild)) {
         return false
       }
@@ -276,6 +283,7 @@ export function isTileValid(tileX, tileY, mapGrid, _units, _buildings, _factorie
       mapGrid[tileY][tileX].seedCrystal ||
       mapGrid[tileY][tileX].building ||
       mapGrid[tileY][tileX].buildOnlyOccupied ||
+      hasMovablePlacementBlocker(mapGrid, tileX, tileY) ||
       (!isFactoryOrRefinery && mapGrid[tileY][tileX].noBuild)) {
     return false
   }

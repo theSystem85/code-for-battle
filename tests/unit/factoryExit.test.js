@@ -7,7 +7,7 @@ function fixture() {
   const factory = { id: 'garage', type: 'vehicleFactory', x: 5, y: 5, health: 100 }
   const map = Array.from({ length: 20 }, () => Array.from({ length: 20 }, () => ({ type: 'land' })))
   const occupancy = map.map(row => row.map(() => 0))
-  const unit = { id: 'tank', health: 100 }
+  const unit = { id: 'tank', owner: 'player1', health: 100 }
   beginFactoryExit(unit, factory, { x: 12, y: 12 })
   const units = [unit]
   const path = vi.fn(() => [{ x: 5, y: 8 }, { x: 12, y: 12 }])
@@ -54,7 +54,7 @@ describe('vehicle factory exit', () => {
     expect(f.unit.factoryExit).toBeUndefined()
     expect({ x: f.unit.tileX, y: f.unit.tileY }).toEqual({ x: 5, y: 8 })
     expect(f.map[f.unit.tileY][f.unit.tileX].building).toBeUndefined()
-    expect(f.path).toHaveBeenCalledWith({ x: 5, y: 8 }, { x: 12, y: 12 }, f.map, f.occupancy)
+    expect(f.path).toHaveBeenCalledWith({ x: 5, y: 8, owner: 'player1' }, { x: 12, y: 12 }, f.map, f.occupancy)
     expect(f.unit.direction).toBe(Math.PI * 3 / 4)
   })
 
