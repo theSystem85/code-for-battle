@@ -1,0 +1,45 @@
+{
+  "version": "0.64.0",
+  "features": [
+    "Place ready buildings automatically or through the glowing Buildings tab, and click the active Units tab to smoothly find your newest units.",
+    "Added 737 biome-matched city, vegetation, rock and lake sprites with transparent WebP artwork.",
+    "SSE detects transparent sources and extracts sprites by alpha contours with adjustable isolation controls.",
+    "Villages and towns now use smaller biome-matched homes, with density tapering outward and skylines limited to every fourth settlement.",
+    "Desert cities have 20 larger buildings and skyscrapers; units move behind upper floors while their HUDs and selection remain visible.",
+    "Grass, soil and snow cities now have larger buildings and skyscrapers with passable upper floors that keep hidden units selectable.",
+    "More summer and autumn woodland groups, large lakes and stone formations for grass and soil maps.",
+    "Map settings can set lake, tree, vegetation, stone and ground-detail counts.",
+    "See a unit's map sprite under the cursor while dragging it from production.",
+    "Maps grow denser, irregular forests with clearings, softer edges and occasional isolated trees while keeping roads, bases and resources clear."
+  ],
+  "improvements": [
+    "Loading screens now glide over the map background, adapting direction and zoom to your screen.",
+    "Cities favor large buildings near their centers and smaller houses toward their edges.",
+    "Transparent biome decorations, twice as many shore variations, and separate grass and autumn nature sets.",
+    "Removed the three older skyline sheets; cities retain biome-specific village and town buildings.",
+    "SSE shows transparent image areas on a dark checkerboard in source, target, and animation views.",
+    "Start with balanced mixed biomes, 15 m coastal shallows, more cities and rocks, and music on return visits.",
+    "Portrait milestone videos fill the screen width and close when tapped.",
+    "Slower tutorial hints, crew recovery tasks, optional extra funds, and Settings and naval Tech Tree guidance.",
+    "Guided tutorial narration now uses the existing Atlas Morgan recordings, including touch controls.",
+    "City atlases preserve every building's original source resolution with expanded sheets and full-size map footprints.",
+    "Sand and snow vegetation, stones, boulders and lakes retain their original source dimensions with larger native-alpha WebP atlases and map footprints.",
+    "Pause individual build stacks to continue other production, resume saved progress, and use clearer label-only info cards and direction arrows."
+  ],
+  "bugfixes": [
+    "Coastal streets no longer create sandy water gradients.",
+    "Old city sprite coordinates are refreshed when loading the replacement atlas.",
+    "Ruin props keep dedicated placement sites as the decoration catalog grows.",
+    "Fixed SSE tag layout and preserved transparency in new WebP sprite sheets.",
+    "Rescaled all new biome, shore and nature props to match existing trees, vehicles and buildings.",
+    "Large sand boulders retain placement space on maps with denser rock terrain.",
+    "Ground traces now render beneath the shadow of war.",
+    "Mines explode when enemy or friendly vehicles cross them, and friendly routes avoid armed mine fields.",
+    "Units take the short path through other units and wrecks and push them aside. Buildings still block the way.",
+    "Ships follow straighter routes without false dodges, and carriers stop reliably at nearby targets.",
+    "Mine layers and mine sweepers drive over their own mines without setting them off.",
+    "Tutorial guidance leaves actions to you, waits for narration, and fixes Continue and additive Shift-drag selection.",
+    "Portrait milestone videos sit centered below the iPhone safe area.",
+    "Wrecks and other movable occupants block new buildings and show invalid placement tiles."
+  ]
+}
