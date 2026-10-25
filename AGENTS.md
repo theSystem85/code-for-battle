@@ -1,5 +1,5 @@
 RULES for agentic codeing
-1) running a development server is allowed when required for verification/debugging (especially Playwright E2E), and should be used when a task depends on a live app runtime. You HAVE to run all unit tests using "npm run test:unit" before concluding your code changes and fix all issues in a meaningful way (means fix the root issues in the code and not just adjust the test to pass).
+1) running a development server is allowed when required for verification/debugging (especially Playwright E2E), and should be used when a task depends on a live app runtime. You HAVE to run all unit tests using "npm run test:unit" before concluding your code changes and fix all issues in a meaningful way (means fix the root issues in the code and not just adjust the test to pass). This test requirement does not apply to a docs-only change (rule 21).
 2) after completing any code implementation, always run `npm run lint:fix:changed` to auto-fix linting issues. If any errors remain that cannot be auto-fixed, manually resolve them before finishing the task.
 3) with every prompt, record the feature, improvement, or bug in a new markdown file under `docs/changes/`. Name it `YYYY-MM-DD-<short-slug>.md` or `<pr-or-issue>-<slug>.md`. Do not append that note to the shared files `TODO/Bugs.md`, `TODO/Features.md`, or `TODO/Improvements.md`. Those three files are edited by almost every branch; on this invite-code branch `TODO/Features.md` had to be merged with main's offline-mode notes (#720) and `TODO/Bugs.md` conflicted on an earlier rebase of the same branch against main. Classify the note the same way those files used to: a bug is something broken or contrary to intended/spec'd behavior, an improvement is polish of something that already exists (performance, UX, refactors, balance), and a feature is a new capability. Use `- [ ]` while the work is open and `- [x]` when it is finished, a short **bold title**, one description line, and `Spec: [Title](../specs/....md)` or `Spec: none`. Spec content for a new feature goes in its own new file under `specs/`. Do not append that feature's requirements to an existing shared spec. A dedicated cleanup PR periodically consolidates `docs/changes/` back into `TODO/Bugs.md`, `TODO/Features.md`, and `TODO/Improvements.md`.
 4) put the content of any prompt into the prompt-history folder and for each prompt create a new file inside that folder that has the UTC timestamp as its name followed by an underscore and up to 3 word summary (with dashes as separators) of the prompt so a user can quickly identify what the prompt was about when reading the filename. The file is and .md file with UTC timestamp added on top and the name of the LLM that processed it (copilot, chatGPT, codex, ...).
@@ -19,7 +19,8 @@ RULES for agentic codeing
 17) All new image and other binary asset files added to the repository MUST use WebP format with 85% compression. Do not add new PNG, JPG, or other binary formats.
 18) PREPARED RENDERING REQUIREMENT: Prepare static terrain, final-size map/entity imagery, masks, shaders and necessary texture uploads before gameplay where possible, using explicit readiness and bounded byte budgets. Do not perform ordinary source-image resizing or lazily build resized sprite variants during gameplay; plane/helicopter takeoff and landing size animations are the only authorized animation exceptions. Preserve continuous rotation, clipping, procedural-water animation and existing visuals. Account for effective canvas DPR when auditing resizing. Handle explicit display/graphics changes through a controlled preparation-and-swap lifecycle. If another dynamic visual cannot satisfy this policy without deterioration, document the conflict instead of silently exempting it or degrading the image. Follow rendering_improvement_todos.md for staged ownership and implementation.
 19) Codebase prompt-history entries are always written in English, regardless of the language of the user's message. When the user wrote the request in German or any other language, translate it into English in the new file under `prompt-history/`. Do not rewrite older prompt-history files.
-20) Before every commit, run `npm run lint` and fix every reported issue. Never weaken, disable, or skip lint rules to make CI pass, and never omit the lint step from CI.
+20) Before every commit, run `npm run lint` and fix every reported issue. Never weaken, disable, or skip lint rules to make CI pass, and never omit the lint step from CI. This includes a docs-only commit (rule 21): lint is not a test.
+21) DOCS-ONLY CHANGES: When a change **only** adds or edits documentation Markdown (`.md`) files, and none of those files is code or a configuration file, do **not** run any tests at all. Commit and push that change **straight onto the `dev` branch** with **no pull request** and no feature branch. Do not push it to `main`. Follow a different branch, pull request, or test demand only when the user explicitly asks for it. The full definition and the exclusions are under "Docs-only changes".
 
 ## Standing execution preferences
 
@@ -35,12 +36,12 @@ Never merge `main` (or `dev`) into a feature branch, and never create merge comm
 
 ### Modes
 
-The repository has two long-lived branches: `main` (production, https://code-for-battle.netlify.app) and `dev` (branch deploy, https://dev--code-for-battle.netlify.app). Default to `dev`: create a feature branch from current `origin/dev`, open a PR against `dev`, run the required checks, and rebase-merge it once conflict-free. Always return the PR link and the verified dev deployment URL (`https://dev--code-for-battle.netlify.app`); dev PRs do not get separate Netlify deploy previews. Persist this default until Patrick explicitly changes it. Do not stop after local changes.
+The repository has two long-lived branches: `main` (production, https://code-for-battle.netlify.app) and `dev` (branch deploy, https://dev--code-for-battle.netlify.app). Default to `dev`: create a feature branch from current `origin/dev`, open a PR against `dev`, run the required checks, and rebase-merge it once conflict-free. A docs-only change is the exception (rule 21): push it straight to `dev` with no pull request and do not run tests. Always return the PR link and the verified dev deployment URL (`https://dev--code-for-battle.netlify.app`); dev PRs do not get separate Netlify deploy previews. Persist this default until Patrick explicitly changes it. Do not stop after local changes.
 
 Patrick switches between the two modes in chat ("work on dev now", "back to main"). Agents keep using the current mode until he says otherwise. Codex is only prompted through Grok Bot, so Grok Bot must tell Codex which mode is active and which base branch to use.
 
 - **Main mode (only when explicitly requested):** branch from `main`, open a PR into `main` (draft until it is ready), wait for the Netlify deploy preview and CI to pass, and merge **only when Patrick asks**. Never merge into `main` on your own.
-- **Dev mode (default):** branch from `dev` and open a PR into `dev`, also for Codex tasks (Codex Cloud `--branch dev`, PR base `dev`). As soon as the PR has no conflicts with `dev` (rebase it onto `origin/dev` if needed), merge it with a rebase merge right away. No review wait. Patrick authorised this auto-merge for PRs into `dev` only. One agent per feature branch; never push directly to `dev`.
+- **Dev mode (default):** branch from `dev` and open a PR into `dev`, also for Codex tasks (Codex Cloud `--branch dev`, PR base `dev`). As soon as the PR has no conflicts with `dev` (rebase it onto `origin/dev` if needed), merge it with a rebase merge right away. No review wait. Patrick authorised this auto-merge for PRs into `dev` only. One agent per feature branch; never push directly to `dev`, except a docs-only change (rule 21), which is pushed straight to `dev` with no pull request.
 
 ### Checks before every push
 
@@ -50,7 +51,22 @@ There is no CI on `dev` and deploys are not gated, so the agent that pushes is t
 2. `npm run test` (unit and integration tests)
 3. `npm run test:e2e` (Playwright, Chromium). If the full suite cannot run in your environment, run the e2e tests that cover the changed area and say exactly what was skipped in the PR description.
 
+A docs-only change skips the test commands in this list. Run `npm run lint` only, then push straight to `dev` (rule 21).
+
 GitHub Actions (`.github/workflows/ci.yml`) only runs for PRs into `main` and pushes to `main`. Do not add CI jobs for `dev`.
+
+### Docs-only changes
+
+A change is docs-only when **every** file it adds or edits is a documentation Markdown file (`.md`) and **none** of those files is code or a configuration file. Documentation Markdown includes `AGENTS.md` (agent rules are documentation, not configuration), README files, `docs/`, `specs/`, `prompt-history/`, `TODO/`, skill notes, and other prose `.md` files. Source code, tests, styles, scripts, JSON, YAML, TOML, and any other code or configuration file are outside this exception, whatever the extension. A `.md` file is also outside this exception when the repository treats that file itself as code or configuration (for example a file the build executes, or generated configuration stored as Markdown). Ordinary prose stays inside the exception. If the change also touches anything outside it, the change is not docs-only: run the normal checks and use the normal pull-request workflow. Change notes and prompt history that accompany a code or configuration edit do not make that edit docs-only.
+
+For a docs-only change:
+
+- Do not run any tests. Skip `npm run test:unit`, `npm run test`, `npm run test:e2e`, Playwright, and every other test command. Rule 1, rule 10, and test items 2 and 3 under "Checks before every push" do not apply.
+- Rules 3, 4, 15, 19, and 20 still apply. Run `npm run lint` before the commit and fix every reported issue. Lint is not a test. Still add the `docs/changes/` note and the English `prompt-history/` entry.
+- Commit and push **straight onto `dev`**. Do not create a feature branch and do not open a pull request. Do not push to `main`. The Dev mode line "never push directly to `dev`" does not apply.
+- Push a fast-forward to `origin/dev`. If `origin/dev` moved, rebase onto it and push again. Do not merge, and do not force-push `dev` (the release reset is the only authorized force-push of `dev`).
+- Use `Live-Update: safe` on that commit. A docs-only change does not alter runtime JavaScript.
+- If the user explicitly demands tests, a pull request, a feature branch, another base branch, or a push to `main`, follow that demand instead of this exception.
 
 ### Netlify
 
