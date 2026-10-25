@@ -20,6 +20,7 @@ import { initializeHowitzerGun } from './game/howitzerGunController.js'
 import { gameState } from './gameState.js'
 import { getHelipadLandingCenter, getHelipadLandingTile, getHelipadLandingTopLeft } from './utils/helipadUtils.js'
 import { isFriendlyMineBlocking } from './game/mineSystem.js'
+import { pathOptionsIgnoringOwnMines } from './game/ownMineSafety.js'
 import { isFriendlyWaterMineBlocking } from './game/waterMineSystem.js'
 import { getSpatialQuadtree } from './game/spatialQuadtree.js'
 import { recordUnitCreated } from './ai-api/transitionCollector.js'
@@ -366,7 +367,7 @@ export const findPath = logPerformance(function findPath(start, end, mapGrid, oc
     }
     return []
   }
-  const contextOptions = options || {}
+  const contextOptions = pathOptionsIgnoringOwnMines(start, options || {})
   const unitOwner = contextOptions.unitOwner ?? start.owner ?? start.ownerId ?? start.playerId ?? start.unitOwner ?? null
   const ignoreFriendlyMines = Boolean(contextOptions.ignoreFriendlyMines)
   const strictDestination = Boolean(contextOptions.strictDestination)
@@ -1006,7 +1007,7 @@ export function spawnUnit(factory, type, units, mapGrid, rallyPointTarget = null
   // Apache helicopters spawned on helipads and F22 Raptors spawned on airstrips should not immediately move to rally points - they should stay landed
   if (!newUnit.factoryExit && rallyPointTarget && type !== 'harvester' && !isHelipadApache && !isAirstripF22 && !isPadF35) {
     const path = findPath(
-      { x: spawnPosition.x, y: spawnPosition.y, owner: newUnit.owner },
+      { x: spawnPosition.x, y: spawnPosition.y, owner: newUnit.owner, type: newUnit.type },
       { x: rallyPointTarget.x, y: rallyPointTarget.y },
       mapGrid,
       null, // Pass null for occupancyMap initially, pathfinding handles collisions

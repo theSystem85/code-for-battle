@@ -198,7 +198,7 @@ export const updateUnitMovement = logPerformance(function updateUnitMovement(uni
           unit.lastKnownTargetPos = { x: targetTileX, y: targetTileY }
           // Use proper pathfinding with occupancy map for attack movement
           const path = getCachedPath(
-            { x: unit.tileX, y: unit.tileY, owner: unit.owner },
+            { x: unit.tileX, y: unit.tileY, owner: unit.owner, type: unit.type },
             { x: targetTileX, y: targetTileY },
             mapGrid,
             occupancyMap,
@@ -303,7 +303,7 @@ export function updateUnitPathfinding(units, mapGrid, gameState) {
     // For regular movement commands, use occupancy map for close range, ignore for long distance
     const isAttackMode = (unit.target && unit.target.health !== undefined) || (unit.attackQueue && unit.attackQueue.length > 0)
     const useOccupancyMap = isAttackMode || distance <= PATHFINDING_THRESHOLD
-    const startNode = { x: unit.tileX, y: unit.tileY, owner: unit.owner }
+    const startNode = { x: unit.tileX, y: unit.tileY, owner: unit.owner, type: unit.type }
     const pathOptions = unit.isNaval ? { unitOwner: unit.owner, movementType: unit.type === 'hovercraft' ? 'amphibious' : 'water' } : { unitOwner: unit.owner }
     const newPath = useOccupancyMap
       ? findPath(startNode, adjustedTarget, mapGrid, occupancyMap, undefined, pathOptions)
@@ -349,7 +349,7 @@ export function updateSpawnExit(units, factories, mapGrid, occupancyMap) {
         const exitTile = findAdjacentTile(factory, mapGrid)
         if (exitTile) {
           const exitPath = findPath(
-            { x: unit.tileX, y: unit.tileY, owner: unit.owner },
+            { x: unit.tileX, y: unit.tileY, owner: unit.owner, type: unit.type },
             exitTile,
             mapGrid,
             occupancyMap,
