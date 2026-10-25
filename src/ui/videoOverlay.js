@@ -1,4 +1,10 @@
-import { configureMilestoneVideo, milestoneVideoPlacement, MILESTONE_PRESENTATION_FADE_MS } from './milestoneVideoPresentation.js'
+import {
+  configureMilestoneVideo,
+  milestoneVideoPlacement,
+  MILESTONE_PRESENTATION_FADE_MS,
+  PORTRAIT_COMPACT_VIDEO_SIZE,
+  PORTRAIT_CONDENSED_VIDEO_TOP_GAP_PX
+} from './milestoneVideoPresentation.js'
 // ui/videoOverlay.js
 import { MILESTONE_VIDEO_CROPS } from './milestoneVideoCrop.js'
 import { getEffectsVolume } from '../sound.js'
@@ -250,6 +256,18 @@ export class VideoOverlay {
         transform: none;
       }
       .video-overlay.native-video { box-shadow: none; }
+      /* Portrait condensed: top of the screen, horizontally centered, below the
+         iOS protected region. Inline geometry is cleared so this rule tracks
+         --safe-area-top / env(safe-area-inset-top) for PWA and browser. */
+      body.mobile-portrait.sidebar-condensed #video-overlay.native-video {
+        top: calc(${PORTRAIT_CONDENSED_VIDEO_TOP_GAP_PX}px + max(var(--safe-area-top, 0px), env(safe-area-inset-top, 0px)));
+        left: 0;
+        right: 0;
+        width: ${PORTRAIT_COMPACT_VIDEO_SIZE.width}px;
+        height: ${PORTRAIT_COMPACT_VIDEO_SIZE.height}px;
+        margin-left: auto;
+        margin-right: auto;
+      }
     `
     document.head.appendChild(style)
   }
@@ -519,6 +537,15 @@ export class VideoOverlay {
     this.nativePresentation = Boolean(placement)
     this.overlayElement.classList.toggle('native-video', this.nativePresentation)
     if (!placement) return
+    if (placement.mode === 'portrait-condensed') {
+      // CSS owns top/left so a late safe-area update moves the clip without
+      // another placement pass. Inline pixel styles would freeze the old top.
+      for (const key of ['left', 'top', 'right', 'width', 'height']) {
+        this.overlayElement.style[key] = ''
+      }
+      return
+    }
+    this.overlayElement.style.right = ''
     for (const key of ['left', 'top', 'width', 'height']) {
       this.overlayElement.style[key] = `${placement[key]}px`
     }
