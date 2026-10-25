@@ -32,6 +32,7 @@
     "test:coverage": "vitest run --coverage",
     "test:ui": "vitest --ui",
     "test:e2e": "playwright test",
+    "test:e2e:narration": "playwright test --config=playwright.narration.config.js",
     "test:e2e:regressions": "playwright test tests/e2e/buildingLineOfSightRegression.test.js tests/e2e/rocketTankAirAndMoveRegression.test.js tests/e2e/apacheHelipadOccupancyRegression.test.js tests/e2e/enemyHospitalCrewRegression.test.js --project=chromium",
     "test:e2e:netlify": "PLAYWRIGHT_NETLIFY_DEV=1 playwright test",
     "test:e2e:multiplayer": "node scripts/runPlaywrightMultiplayer.js",

@@ -13,7 +13,7 @@ for (const phone of [false, true]) {
         }
       })
       await page.goto('/?seed=41&size=64&players=2&oreFields=8')
-      await page.waitForFunction(() => window.gameState?.gameStarted && window.gameInstance?.gameLoop)
+      await page.waitForFunction(() => window.gameState?.gameStarted && window.gameInstance?.gameLoop && window.tutorialSystem?.active)
       const guide = page.getByRole('region', { name: 'Choose your input method', exact: true })
       await expect(guide).toBeVisible()
       await expect(page.locator('.tutorial-title')).toHaveText('Choose your controls')
@@ -35,7 +35,7 @@ for (const phone of [false, true]) {
       await page.locator('#configModalCloseBtn').click()
       await guide.getByRole('button', { name: 'Refresh mappings', exact: true }).click()
       await page.reload()
-      await page.waitForFunction(() => window.gameState?.gameStarted && window.gameInstance?.gameLoop)
+      await page.waitForFunction(() => window.gameState?.gameStarted && window.gameInstance?.gameLoop && window.tutorialSystem?.active)
       await expect(guide).toBeVisible()
       await expect(guide.locator('[data-input-method="trackpad"]')).toHaveAttribute('aria-pressed', 'true')
       await next.click()

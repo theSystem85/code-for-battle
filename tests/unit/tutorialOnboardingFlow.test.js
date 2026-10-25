@@ -16,6 +16,8 @@ vi.mock('../../src/ui/tutorialSystem/helpers.js', async importOriginal => ({
   ...await importOriginal(), countPlayerBuildings: () => 0, countPlayerUnits: () => 0,
   findPlayerBuilding: () => null, getPlayerCrewSnapshot: () => new Map()
 }))
+import { createTutorialNarrator } from '../../src/ui/tutorialSystem/narration.js'
+import { TUTORIAL_NARRATION_CLIPS } from '../../src/ui/tutorialSystem/narrationManifest.js'
 import { initTutorialSystem } from '../../src/ui/tutorialSystem.js'
 import { keybindingManager } from '../../src/input/keybindings.js'
 import { openSettingsModal } from '../../src/ui/settingsModal.js'
@@ -233,5 +235,50 @@ describe('player-driven tutorial progression', () => {
     expect(gameState.money).toBe(0)
     tutorial.fundsHelp.querySelector('button').click()
     expect(gameState.money).toBe(20000)
+  })
+})
+
+
+describe('recorded tutorial progression', () => {
+  it('[U05492] waits for recorded audio after early actions, advances on ended, and interrupts on manual skip', async() => {
+    tutorial = initTutorialSystem()
+    tutorial.settings.speechEnabled = true
+    const clips = []
+    const tts = vi.fn()
+    tutorial.narrator = createTutorialNarrator({
+      createAudio: src => {
+        const audio = new window.EventTarget()
+        Object.assign(audio, { src, play: vi.fn(() => Promise.resolve()), pause: vi.fn() })
+        clips.push(audio)
+        return audio
+      },
+      getVolume: () => 1, setDuck: vi.fn(), cancelTts: vi.fn(), speakTts: tts,
+      onEnd: () => { tutorial.speaking = false }
+    })
+    const recordings = ['welcome', 'build-power', 'build-refinery'].map(id => TUTORIAL_NARRATION_CLIPS.find(c => c.step === id && c.file.includes('-guided-')))
+    let fulfilled = false
+    tutorial.steps = recordings.map(clip => ({ id: clip.step, title: clip.step, text: clip.text, completion: () => fulfilled }))
+    tutorial.active = true
+    tutorial.stepIndex = 0
+    tutorial.runCurrentStep()
+    expect(clips[0].src).toBe('/sound/tutorial/welcome-guided-0.mp3')
+    expect(clips[0].play).toHaveBeenCalledOnce()
+    fulfilled = true
+    await vi.advanceTimersByTimeAsync(200)
+    expect(tutorial.stepIndex).toBe(0)
+    expect(clips[0].pause).not.toHaveBeenCalled()
+    clips[0].dispatchEvent(new window.Event('ended'))
+    await vi.advanceTimersByTimeAsync(200)
+    expect(tutorial.stepIndex).toBe(1)
+    expect(clips[1].src).toBe('/sound/tutorial/build-power-guided-1.mp3')
+    tutorial.fulfillSkippedStep = vi.fn().mockResolvedValue()
+    await tutorial.skipStep()
+    expect(clips[1].pause).toHaveBeenCalledOnce()
+    expect(tutorial.stepIndex).toBe(2)
+    expect(clips[2].src).toBe('/sound/tutorial/build-refinery-guided-2.mp3')
+    expect(clips[2].play).toHaveBeenCalledOnce()
+    clips[1].dispatchEvent(new window.Event('ended'))
+    expect(tutorial.speaking).toBe(true)
+    expect(tts).not.toHaveBeenCalled()
   })
 })

@@ -3,6 +3,7 @@ import fs from 'fs'
 import path from 'path'
 import { TUTORIAL_NARRATION_CLIPS } from '../../src/ui/tutorialSystem/narrationManifest.js'
 import { TUTORIAL_MUSIC_DUCK, createTutorialNarrator, findTutorialNarrationClip, normalizeNarrationText } from '../../src/ui/tutorialSystem/narration.js'
+import { keybindingManager } from '../../src/input/keybindings.js'
 import { buildTutorialSteps } from '../../src/ui/tutorialSystem/steps.js'
 import { getSpokenTextForStep, resolveTutorialInputMethod } from '../../src/ui/tutorialSystem/helpers.js'
 
@@ -39,10 +40,18 @@ describe('tutorial narration manifest', () => {
     for (const clip of TUTORIAL_NARRATION_CLIPS) {
       expect(fs.existsSync(path.join('public', clip.file))).toBe(true)
       expect(clip.durationMs).toBeGreaterThan(1000)
+      if (clip.file.includes('-guided-')) {
+        const sources = JSON.parse(fs.readFileSync('docs/tutorial-narration-recordings.json', 'utf8'))
+        const source = sources.find(source => clip.file.endsWith(`/${source.filename}`))
+        expect(source).toBeDefined()
+        expect(clip.text).toBe(source.prompt)
+        expect(clip.durationMs).toBe(Math.round(source.duration * 1000))
+        expect(fs.readFileSync(path.join('public', clip.file)).length).toBeGreaterThan(100000)
+      }
     }
   })
 
-  it('[U04500] narrates every step with an exact recording or exact-text speech fallback', () => {
+  it('[U04500] narrates every default mouse, trackpad and touch step with an exact local recording', () => {
     for (const touchLayout of [false, true]) {
       document.body.classList.toggle('is-touch', touchLayout)
       for (const method of ['mouse-keyboard', 'touch', 'trackpad']) {
@@ -52,17 +61,49 @@ describe('tutorial narration manifest', () => {
           const clip = findTutorialNarrationClip(step.id, text)
           const deps = makeDeps()
           const narrator = createTutorialNarrator(deps)
-          expect(narrator.speak(step.id, text)).toBe(clip ? 'clip' : 'tts')
-          if (!clip) expect(deps.tts).toEqual([text])
+          expect(clip, `${method}: ${step.id}: ${text}`).not.toBeNull()
+          expect(narrator.speak(step.id, text)).toBe('clip')
+          expect(deps.clips[0].src).toBe(clip.file)
+          expect(deps.clips[0].paused).toBe(false)
+          expect(deps.tts).toEqual([])
         }
       }
     }
     document.body.classList.remove('is-touch')
   })
 
+
+  it('[U05490] selects the exact guided file for each replaced script and input variant', () => {
+    const names = ['welcome', 'build-power', 'build-refinery', 'build-vehicle-factory', 'build-harvester', 'select-group', 'tank-rally', 'tank-control', 'crew-system', 'tech-tree', 'settings-help']
+    for (const method of ['mouse-keyboard', 'trackpad', 'touch']) {
+      for (const [index, id] of names.entries()) {
+        const step = buildTutorialSteps().find(step => step.id === id)
+        const text = getSpokenTextForStep(step, method)
+        const clip = findTutorialNarrationClip(id, text)
+        const variant = method === 'touch' && index === 5 ? 11 : method === 'touch' && index === 6 ? 12 : index
+        const filename = method === 'touch' && id === 'tank-control' ? 'tank-control-2.mp3' : `${id}-guided-${variant}.mp3`
+        expect(clip?.file, `${method}: ${id}`).toBe(`/sound/tutorial/${filename}`)
+      }
+    }
+  })
+
+  it('[U05491] falls back for custom keybindings instead of playing a stale default script', () => {
+    const step = buildTutorialSteps().find(step => step.id === 'tank-control')
+    const original = getSpokenTextForStep(step, 'mouse-keyboard')
+    const binding = vi.spyOn(keybindingManager, 'getBindingsByDevice').mockReturnValue([{ id: 'remote-fire', input: 'KeyF' }])
+    try {
+      const text = getSpokenTextForStep(step, 'mouse-keyboard')
+      expect(text).not.toBe(original)
+      expect(findTutorialNarrationClip(step.id, text)).toBeNull()
+      const deps = makeDeps()
+      expect(createTutorialNarrator(deps).speak(step.id, text)).toBe('tts')
+      expect(deps.tts).toEqual([text])
+    } finally { binding.mockRestore() }
+  })
+
   // Regression: a player who skipped the input-method step has no preference.
   // Steps 7+ used the legacy copy then and fell back to browser TTS.
-  it('[U04501] resolves recorded narration or speech fallback when no input method was chosen', () => {
+  it('[U04501] resolves recorded narration when no input method was chosen', () => {
     for (const touchLayout of [false, true]) {
       document.body.classList.toggle('is-touch', touchLayout)
       const method = resolveTutorialInputMethod(null)
@@ -72,8 +113,9 @@ describe('tutorial narration manifest', () => {
         const text = getSpokenTextForStep(step, method)
         const clip = findTutorialNarrationClip(step.id, text)
         const deps = makeDeps()
-        expect(createTutorialNarrator(deps).speak(step.id, text)).toBe(clip ? 'clip' : 'tts')
-        if (!clip) expect(deps.tts).toEqual([text])
+        expect(clip, `${method}: ${step.id}`).not.toBeNull()
+        expect(createTutorialNarrator(deps).speak(step.id, text)).toBe('clip')
+        expect(deps.tts).toEqual([])
       }
     }
     document.body.classList.remove('is-touch')

@@ -19,6 +19,8 @@ const storageState = headlessE2eMuteAudio ? './tests/e2e/headlessMutedStorageSta
  */
 export default defineConfig({
   testDir: './tests/e2e',
+  // Native narration playback needs its own app-audio-enabled server.
+  testIgnore: '**/tutorialRecordedNarration.test.js',
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code */
