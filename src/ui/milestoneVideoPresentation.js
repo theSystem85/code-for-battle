@@ -1,6 +1,9 @@
 export const MILESTONE_PRESENTATION_FADE_MS = 400
 
-/** Compact clip used when the portrait sidebar is not showing the minimap. */
+/**
+ * Aspect of the floating portrait clip. Condensed portrait stretches this
+ * ratio across the viewport width. Collapsed portrait still uses the pixel size.
+ */
 export const PORTRAIT_COMPACT_VIDEO_SIZE = Object.freeze({ width: 160, height: 120 })
 
 /**
@@ -15,6 +18,7 @@ export function milestoneVideoPlacement(body, minimapRect) {
   if (classes.contains('mobile-portrait') && classes.contains('sidebar-condensed')) {
     return {
       mode: 'portrait-condensed',
+      span: 'viewport-width',
       width: PORTRAIT_COMPACT_VIDEO_SIZE.width,
       height: PORTRAIT_COMPACT_VIDEO_SIZE.height,
       topGap: PORTRAIT_CONDENSED_VIDEO_TOP_GAP_PX

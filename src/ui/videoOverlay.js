@@ -79,9 +79,11 @@ export class VideoOverlay {
     this.nativePresentation = false
     this.presentationReady = false
     this.fadeOutTimer = 0
+    this.boundPortraitVideoTap = (event) => this.dismissPortraitVideoOnTap(event)
     this.createOverlayElement()
     this.updatePresentation = () => this.updateVideoPlacement()
     window.addEventListener('resize', this.updatePresentation)
+    window.addEventListener('pointerup', this.boundPortraitVideoTap, true)
     this.layoutObserver = new window.MutationObserver(this.updatePresentation)
     this.layoutObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] })
     const minimap = document.getElementById('minimap')
@@ -256,17 +258,23 @@ export class VideoOverlay {
         transform: none;
       }
       .video-overlay.native-video { box-shadow: none; }
-      /* Portrait condensed: top of the screen, horizontally centered, below the
-         iOS protected region. Inline geometry is cleared so this rule tracks
-         --safe-area-top / env(safe-area-inset-top) for PWA and browser. */
+      /* Portrait condensed: full viewport width at the compact clip's aspect,
+         top-centered below the iOS protected region. Inline geometry is cleared
+         so this rule tracks --safe-area-top / env(safe-area-inset-top). */
       body.mobile-portrait.sidebar-condensed #video-overlay.native-video {
         top: calc(${PORTRAIT_CONDENSED_VIDEO_TOP_GAP_PX}px + max(var(--safe-area-top, 0px), env(safe-area-inset-top, 0px)));
         left: 0;
         right: 0;
-        width: ${PORTRAIT_COMPACT_VIDEO_SIZE.width}px;
-        height: ${PORTRAIT_COMPACT_VIDEO_SIZE.height}px;
-        margin-left: auto;
-        margin-right: auto;
+        width: 100%;
+        height: auto;
+        aspect-ratio: ${PORTRAIT_COMPACT_VIDEO_SIZE.width} / ${PORTRAIT_COMPACT_VIDEO_SIZE.height};
+        margin-left: 0;
+        margin-right: 0;
+      }
+      body.mobile-portrait #video-overlay.native-video.show {
+        pointer-events: auto;
+        cursor: pointer;
+        touch-action: manipulation;
       }
     `
     document.head.appendChild(style)
@@ -528,7 +536,21 @@ export class VideoOverlay {
     if (this.currentVideo !== video || !this.isPlaying || this.fadeOutTimer) return
     this.presentationReady = true
     this.playbackStartedAt = performance.now()
+    // Drop the inline none left by the previous clip so the portrait tap rule can apply.
+    this.overlayElement.style.pointerEvents = ''
     this.overlayElement.classList.add('show')
+  }
+
+  dismissPortraitVideoOnTap(event) {
+    if (!this.isPlaying || !this.presentationReady || !this.nativePresentation || this.fadeOutTimer) return
+    if (!document.body?.classList.contains('mobile-portrait')) return
+    if (!this.overlayElement?.classList.contains('show')) return
+    const target = event?.target
+    if (!target || !this.overlayElement.contains(target)) return
+    if (event.button != null && event.button !== 0) return
+    event.preventDefault()
+    event.stopPropagation()
+    this.stopCurrentVideo()
   }
 
   updateVideoPlacement() {
@@ -680,6 +702,7 @@ export class VideoOverlay {
     this.stopNarrationAudio()
     this.clearQueue()
     this.stopCurrentVideo(true)
+    window.removeEventListener('pointerup', this.boundPortraitVideoTap, true)
     window.removeEventListener('resize', this.updatePresentation)
     this.layoutObserver.disconnect()
     this.minimapObserver?.disconnect()
