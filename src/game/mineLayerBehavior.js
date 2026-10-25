@@ -48,7 +48,7 @@ export function updateMineLayerBehavior(units, now) {
             unit.deployStartTime = null
             unit.deploymentCompleted = true // Mark deployment as completed
 
-            // Move away from the mined tile to avoid triggering the mine
+            // Leave the planted tile and continue the route. The layer does not trigger its own mine.
             moveAwayFromMinedTile(unit, tileCenterX, tileCenterY)
 
             // Check if we need to auto-refill

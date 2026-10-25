@@ -111,7 +111,7 @@ function nudgeIdleBlockers(units, owner, x, y, mapGrid, occupancyMap, findPath) 
     if (!isIdleFriendly(other, owner) || !findPath) { blocked = true; continue }
     const spot = findNearestFreeTile(mapGrid, occupancyMap, x, y, 3)
     if (!spot) { blocked = true; continue }
-    const path = findPath({ x, y, owner: other.owner }, spot, mapGrid, occupancyMap)
+    const path = findPath({ x, y, owner: other.owner, type: other.type }, spot, mapGrid, occupancyMap)
     if (!(path?.length > 1)) { blocked = true; continue }
     claimed.add(tileKey(spot.x, spot.y))
     other.path = path.slice(1)
@@ -132,7 +132,7 @@ function resolveRallyTarget(unit, target, units, mapGrid, occupancyMap, findPath
         (other.moveTarget && other.moveTarget.x === target.x && other.moveTarget.y === target.y)) { taken = true; break }
     }
   }
-  if (!taken) return { target, path: findPath({ x: unit.tileX, y: unit.tileY, owner: unit.owner }, target, mapGrid, occupancyMap) }
+  if (!taken) return { target, path: findPath({ x: unit.tileX, y: unit.tileY, owner: unit.owner, type: unit.type }, target, mapGrid, occupancyMap) }
   const reserved = new Set()
   for (const other of units) {
     if (other === unit || other.health <= 0 || other.isAirUnit || other.factoryExit) continue
@@ -142,12 +142,12 @@ function resolveRallyTarget(unit, target, units, mapGrid, occupancyMap, findPath
   let result = null
   findNearestFreeTile(mapGrid, occupancyMap, target.x, target.y, FACTORY_EXIT_SEARCH_RADIUS, (x, y) => {
     if (reserved.has(tileKey(x, y))) return false
-    const path = findPath({ x: unit.tileX, y: unit.tileY, owner: unit.owner }, { x, y }, mapGrid, occupancyMap)
+    const path = findPath({ x: unit.tileX, y: unit.tileY, owner: unit.owner, type: unit.type }, { x, y }, mapGrid, occupancyMap)
     if (!(path?.length > 1)) return false
     result = { target: { x, y }, path }
     return true
   })
-  return result || { target, path: findPath({ x: unit.tileX, y: unit.tileY, owner: unit.owner }, target, mapGrid, occupancyMap) }
+  return result || { target, path: findPath({ x: unit.tileX, y: unit.tileY, owner: unit.owner, type: unit.type }, target, mapGrid, occupancyMap) }
 }
 
 function finishExit(unit, state, units, mapGrid, occupancyMap, findPath, onComplete) {

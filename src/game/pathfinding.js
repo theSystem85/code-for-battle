@@ -1,6 +1,7 @@
 // Path Finding Module - Handles unit pathfinding and formation management
 import { PATH_CALC_INTERVAL, PATHFINDING_THRESHOLD, TILE_SIZE, MOVE_TARGET_REACHED_THRESHOLD, PATH_CACHE_TTL, MAX_PATHS_PER_CYCLE } from '../config.js'
 import { findPath } from '../units.js'
+import { pathOptionsIgnoringOwnMines } from './ownMineSafety.js'
 import { logPerformance } from '../performanceUtils.js'
 import { getSimulationTime } from './time.js'
 
@@ -13,7 +14,7 @@ import { pathCache } from './pathCache.js'
  * calculate a new one and store it.
  */
 function getCachedPath(start, end, mapGrid, occupancyMap, options = null) {
-  const contextOptions = options || {}
+  const contextOptions = pathOptionsIgnoringOwnMines(start, options || {})
   const derivedOwner = contextOptions.unitOwner ?? start.owner ?? start.ownerId ?? start.playerId ?? null
   const ownerKey = derivedOwner || 'any'
   const ignoreKey = contextOptions.ignoreFriendlyMines ? 'ignoreFriendly' : 'respectFriendly'
@@ -80,7 +81,7 @@ function _updateGlobalPathfinding(units, mapGrid, occupancyMap, gameState) {
 
   unitsNeedingImmediatePath.forEach(unit => {
     const targetPos = unit.moveTarget
-    const startNode = { x: unit.tileX, y: unit.tileY, owner: unit.owner }
+    const startNode = { x: unit.tileX, y: unit.tileY, owner: unit.owner, type: unit.type }
     const cacheOptions = {
       unitOwner: unit.owner,
       movementType: unit.type === 'hovercraft' ? 'amphibious' : unit.isNaval ? 'water' : undefined
@@ -221,7 +222,7 @@ function _updateGlobalPathfinding(units, mapGrid, occupancyMap, gameState) {
       // Close range still consults occupancy so fixed blockers stay on the path.
       // Movable occupants are not blockers; contact physics pushes them aside.
       const useOccupancyMap = distance <= PATHFINDING_THRESHOLD
-      const startNode = { x: unit.tileX, y: unit.tileY, owner: unit.owner }
+      const startNode = { x: unit.tileX, y: unit.tileY, owner: unit.owner, type: unit.type }
       const cacheOptions = {
         unitOwner: unit.owner,
         movementType: unit.type === 'hovercraft' ? 'amphibious' : unit.isNaval ? 'water' : undefined

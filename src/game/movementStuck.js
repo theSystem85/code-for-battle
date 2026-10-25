@@ -456,7 +456,7 @@ function tryDodgeMovement(unit, mapGrid, occupancyMap, units, now) {
     const dodgePos = dodgePositions[Math.floor(gameRandom() * dodgePositions.length)]
 
     const dodgePath = findPath(
-      { x: currentTileX, y: currentTileY, owner: unit.owner },
+      { x: currentTileX, y: currentTileY, owner: unit.owner, type: unit.type },
       dodgePos,
       mapGrid,
       occupancyMap,

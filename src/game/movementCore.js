@@ -5,6 +5,7 @@ import {
   TILE_LENGTH_METERS
 } from '../config.js'
 import { getMineAtTile, detonateMine } from './mineSystem.js'
+import { unitCrossesOwnMineSafely } from './ownMineSafety.js'
 import { detonateTankerTruck } from './tankerTruckUtils.js'
 import { updateUnitOccupancy } from '../units.js'
 import { playPositionalSound, playSound, audioContext, getMasterVolume } from '../sound.js'
@@ -197,6 +198,9 @@ export function checkMineDetonation(unit, tileX, tileY, units, buildings) {
   if (!mine || !mine.active || !isUnitCenterInsideMineCircle(unit, tileX, tileY)) {
     return
   }
+  // A layer or sweeper drives over mines its own faction placed.
+  // Sweeping still detonates enemy and unowned mines.
+  if (unitCrossesOwnMineSafely(unit, mine)) return
   if (unit.type === 'mineSweeper' && unit.sweeping) {
     detonateMine(mine, units, buildings)
     return
