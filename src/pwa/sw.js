@@ -7,7 +7,13 @@ import { CacheableResponsePlugin } from 'workbox-cacheable-response'
 import { ExpirationPlugin } from 'workbox-expiration'
 import { RangeRequestsPlugin } from 'workbox-range-requests'
 import { getNavigationShellPath, resolveDocumentNavigation } from './navigationFallback.js'
-import { NAVIGATION_NETWORK_TIMEOUT_MS, OFFLINE_ASSETS_CACHE } from './offlineAssetPlan.js'
+import {
+  NAVIGATION_NETWORK_TIMEOUT_MS,
+  OFFLINE_ASSETS_CACHE,
+  SPRITE_DERIVATIVE_CACHE,
+  SPRITE_DERIVATIVE_CACHE_MAX_ENTRIES,
+  isImmutableSpriteDerivativeUrl
+} from './offlineAssetPlan.js'
 import {
   isAudioAssetPath,
   isBulkAssetPath,
@@ -88,7 +94,8 @@ self.addEventListener('activate', (event) => {
     const names = await caches.keys()
     await Promise.all(names
       .filter(name => name.startsWith('code-for-battle-cache-')
-        || (name.startsWith('cfb-offline-assets-') && name !== OFFLINE_ASSETS_CACHE))
+        || (name.startsWith('cfb-offline-assets-') && name !== OFFLINE_ASSETS_CACHE)
+        || (name.startsWith('cfb-sprite-derivatives-') && name !== SPRITE_DERIVATIVE_CACHE))
       .map(name => caches.delete(name)))
     await self.clients.claim()
     await broadcast({ type: 'OFFLINE_PRECACHE', percent: 100, ready: true, boot: true })
@@ -103,6 +110,21 @@ self.addEventListener('message', (event) => {
     self.skipWaiting()
   }
 })
+
+registerRoute(
+  ({ url, request }) => request.method === 'GET'
+    && url.origin === self.location.origin
+    && request.mode !== 'navigate'
+    && !isOfflineAssetFillRequest(request)
+    && isImmutableSpriteDerivativeUrl(url),
+  new CacheFirst({
+    cacheName: SPRITE_DERIVATIVE_CACHE,
+    plugins: [
+      new CacheableResponsePlugin({ statuses: [200] }),
+      new ExpirationPlugin({ maxEntries: SPRITE_DERIVATIVE_CACHE_MAX_ENTRIES, purgeOnQuotaError: true })
+    ]
+  })
+)
 
 registerRoute(
   ({ url, request }) => shouldBypassServiceWorkerCache(url, request.method) || isNetlifyDrawerRequest(url),

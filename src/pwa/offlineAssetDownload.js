@@ -71,16 +71,29 @@ function permanentStatus(status) {
   return status >= 400 && status < 500 && status !== 408 && status !== 429
 }
 
+export async function yieldOfflineFillToVisibleRequests(scheduler = globalThis.scheduler) {
+  if (typeof scheduler?.postTask === 'function') {
+    await scheduler.postTask(() => {}, { priority: 'background' })
+    return
+  }
+  await new Promise(resolve => {
+    setTimeout(resolve, 0)
+  })
+}
+
 async function fetchAssetWithRetry(asset, {
   cache,
   fetchImpl,
   shouldContinue,
   maxAttempts,
   baseDelayMs,
-  sleep
+  sleep,
+  waitForDownloadSlot
 }) {
   let lastError = 'failed'
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    if (!shouldContinue()) return { paused: true }
+    await waitForDownloadSlot(asset)
     if (!shouldContinue()) return { paused: true }
     try {
       const response = await fetchImpl(asset.url, asset)
@@ -165,7 +178,8 @@ export async function downloadOfflineAssets({
   sleep = (ms) => new Promise(resolve => {
     setTimeout(resolve, ms)
   }),
-  onProgress = async() => {}
+  onProgress = async() => {},
+  waitForDownloadSlot = () => yieldOfflineFillToVisibleRequests()
 } = {}) {
   if (!cache || typeof cache.put !== 'function') {
     throw new Error('Cache Storage is unavailable')
@@ -228,7 +242,8 @@ export async function downloadOfflineAssets({
         shouldContinue,
         maxAttempts,
         baseDelayMs,
-        sleep
+        sleep,
+        waitForDownloadSlot
       })
       if (result.paused) {
         paused = true
