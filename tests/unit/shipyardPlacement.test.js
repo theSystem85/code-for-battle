@@ -13,7 +13,7 @@ const grid = (width = 20, height = 20, type = 'water') => Array.from(
 const factory = { id: 'player1', x: 1, y: 5, width: 3, height: 3 }
 
 describe('Shipyard placement', () => {
-  it('[U06500] accepts an all-water footprint touching coastal land in every direction and at a corner', () => {
+  it('[U06510] accepts an all-water footprint touching coastal land in every direction and at a corner', () => {
     const coastTiles = [[4, 7], [10, 7], [7, 4], [7, 10], [4, 4]]
     for (const [landX, landY] of coastTiles) {
       const mapGrid = grid()
@@ -22,7 +22,7 @@ describe('Shipyard placement', () => {
     }
   })
 
-  it('[U06501] rejects land in the footprint, open sea, and occupied water', () => {
+  it('[U06511] rejects land in the footprint, open sea, and occupied water', () => {
     const mapGrid = grid()
     mapGrid[7][4].type = 'land'
     expect(canPlaceBuilding('shipyard', 5, 5, mapGrid, [], [], [factory], 'player1')).toBe(true)
@@ -39,7 +39,7 @@ describe('Shipyard placement', () => {
     expect(isTileValid(6, 6, mapGrid, [], [], [factory], 'shipyard', { x: 5, y: 5 })).toBe(false)
   })
 
-  it('[U06502] marks open water green, and land or occupied water red, without changing other overlays', () => {
+  it('[U06512] marks open water green, and land or occupied water red, without changing other overlays', () => {
     expect(shouldShowPlacementTileAsValid('shipyard', true, false)).toBe(true)
     expect(shouldShowPlacementTileAsValid('shipyard', false, true)).toBe(false)
     expect(shouldShowPlacementTileAsValid('powerPlant', true, false)).toBe(false)

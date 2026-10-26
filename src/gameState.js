@@ -354,3 +354,17 @@ export const gameState = {
     historyLength: 60           // Ticks of history to maintain
   }
 }
+
+/**
+ * Chain building is a one-shot input mode, not a preference. Clear every piece
+ * of its transient state together so a later production action cannot revive
+ * a previously cancelled or completed chain.
+ */
+export function clearChainBuildState() {
+  gameState.chainBuildPrimed = false
+  gameState.chainBuildMode = false
+  gameState.chainStartX = 0
+  gameState.chainStartY = 0
+  gameState.chainBuildingType = null
+  gameState.chainBuildingButton = null
+}

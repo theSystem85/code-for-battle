@@ -233,6 +233,31 @@ describe('KeyboardHandler', () => {
     expect(gameState.chainBuildingButton).toBeNull()
   })
 
+  it('[U06523] drops a stale Shift state on focus loss so chain building cannot re-arm itself', () => {
+    const mapGrid = createTestMapGrid(4, 4)
+    handler.setupKeyboardEvents([], [], mapGrid, [])
+
+    document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Shift', shiftKey: true, bubbles: true }))
+    expect(gameState.shiftKeyDown).toBe(true)
+    gameState.chainBuildPrimed = true
+    gameState.chainBuildMode = true
+    gameState.chainBuildingType = 'concreteWall'
+
+    // Shift keyup is lost because the window lost focus.
+    window.dispatchEvent(new window.Event('blur'))
+    expect(gameState.shiftKeyDown).toBe(false)
+    expect(gameState.chainBuildPrimed).toBe(false)
+    expect(gameState.chainBuildMode).toBe(false)
+    expect(gameState.chainBuildingType).toBeNull()
+
+    // A later key event without Shift also resynchronizes the stale flag.
+    gameState.shiftKeyDown = true
+    gameState.chainBuildPrimed = true
+    document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'a', shiftKey: false, bubbles: true }))
+    expect(gameState.shiftKeyDown).toBe(false)
+    expect(gameState.chainBuildPrimed).toBe(false)
+  })
+
   it('[U02284] toggles alert mode for eligible units and plays feedback', () => {
     const unit = { type: 'tank-v2', alertMode: false }
 

@@ -177,9 +177,17 @@ describe('Production Queue System', () => {
   })
 
   it('[U05425] automatically enters placement on completion and advances through ready types', () => {
+    gameState.chainBuildMode = true
+    gameState.chainBuildPrimed = true
+    gameState.chainBuildingType = 'powerPlant'
+    gameState.chainBuildingButton = mockButton
     productionQueue.currentBuilding = { type: 'powerPlant', button: mockButton }
     productionQueue.buildingItems = [productionQueue.currentBuilding]
     productionQueue.completeCurrentBuildingProduction()
+    expect(gameState.chainBuildMode).toBe(false)
+    expect(gameState.chainBuildPrimed).toBe(false)
+    expect(gameState.chainBuildingType).toBeNull()
+    expect(gameState.chainBuildingButton).toBeNull()
     expect(gameState.buildingPlacementMode).toBe(true)
     expect(gameState.currentBuildingType).toBe('powerPlant')
     const second = { type: 'oreRefinery', button: mockButton }
@@ -189,6 +197,23 @@ describe('Production Queue System', () => {
     gameState.currentBuildingType = null
     expect(productionQueue.advanceReadyBuildingPlacement()).toBe(true)
     expect(gameState.currentBuildingType).toBe('oreRefinery')
+  })
+
+  it('[U06520] does not re-arm chain building after an aborted build or the next queued build', () => {
+    gameState.chainBuildMode = true
+    gameState.chainBuildPrimed = true
+    gameState.chainBuildingType = 'powerPlant'
+    gameState.chainBuildingButton = mockButton
+    productionQueue.currentBuilding = { type: 'powerPlant', button: mockButton }
+    productionQueue.buildingItems = [productionQueue.currentBuilding]
+
+    productionQueue.cancelBuildingProduction()
+    productionQueue.addItem('powerPlant', mockButton, true)
+
+    expect(gameState.chainBuildMode).toBe(false)
+    expect(gameState.chainBuildPrimed).toBe(false)
+    expect(gameState.chainBuildingType).toBeNull()
+    expect(gameState.chainBuildingButton).toBeNull()
   })
 
   it('[U05426] honors independent settings while an explicit stacked placement overrides auto-advance', () => {

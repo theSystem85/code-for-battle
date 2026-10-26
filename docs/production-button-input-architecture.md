@@ -84,8 +84,8 @@ sequenceDiagram
     User->>Button: contextmenu
     Button->>Queue: pause current item, cancel paused item, or remove latest stacked item
   else Shift plus wheel
-    User->>Button: wheel
-    Button->>Queue: wheel up adds; wheel down removes
+    User->>Button: Shift + wheel
+    Button->>Queue: dominant-axis negative delta adds; positive delta removes
   else Long hold
     User->>Button: primary pointer held
     Button->>Button: open production tooltip
@@ -93,6 +93,8 @@ sequenceDiagram
 ```
 
 Desktop mouse pointers intentionally bypass the touch gesture state machine. This preserves native clicks and native HTML drag/drop for both buildings and units.
+
+Production buttons only consume wheel events when that specific event carries the Shift modifier. Ordinary wheel events are left untouched so the sidebar or page can scroll. Shift-wheel uses whichever of `deltaX` or `deltaY` has the greater magnitude, because browsers may translate Shift-trackpad gestures onto the horizontal axis.
 
 ## Mobile layouts and native scrollers
 
@@ -228,3 +230,5 @@ Consequences:
 The correction resolves the interaction element from the touched button's actual DOM ancestry instead of orientation classes. It also declares `pan-x` for the portrait-condensed production scroller/buttons and `pan-y` for the landscape scroller/buttons. This preserves native scrolling along the bar while keeping the perpendicular direction available for drag-to-map. Regression coverage includes the portrait-condensed horizontal production bar as well as landscape.
 
 Real-device follow-up showed that portrait was corrected while landscape could still receive its vertical `scrollTop` update or `scroll` event after `pointerup`. Landscape candidate taps therefore retain the custom activation path but wait 50 ms before dispatch. Any late scroll event or scroll-position change vetoes the build. Every stationary release retains its own pending activation, so rapid tapping remains lossless rather than relying on compatibility-click delivery.
+
+Chain building is a one-shot gesture, never a remembered preference. It is primed only when the building drag's own `dragstart`/`drop` event carries `shiftKey`; the global `gameState.shiftKeyDown` flag is reset on window blur or tab hide (and resynced from later key events) so a lost Shift keyup cannot arm chain building for subsequent builds. ESC, aborted or completed production, placement, chain placement, and save loading all clear chain state via `clearChainBuildState()`.

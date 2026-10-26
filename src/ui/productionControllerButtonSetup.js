@@ -10,6 +10,31 @@ import { attachProductionTooltipHandlers } from './productionTooltip.js'
 import { isReplayModeActive } from '../replaySystem.js'
 import { initUnitDragPreview } from './unitDragPreview.js'
 
+export function handleProductionStackWheel(event, { increase, decrease }) {
+  // Use the modifier carried by this event. The global Shift state can be
+  // stale after focus changes and must never turn an ordinary scroll into a
+  // production command.
+  if (!event.shiftKey) return false
+
+  const deltaX = Number(event.deltaX) || 0
+  const deltaY = Number(event.deltaY) || 0
+  let delta = Math.abs(deltaX) > Math.abs(deltaY) ? deltaX : deltaY
+
+  if (delta === 0 && Number.isFinite(event.wheelDelta) && event.wheelDelta !== 0) {
+    delta = -event.wheelDelta
+  }
+  if (delta === 0 && Number.isFinite(event.detail) && event.detail !== 0) {
+    delta = event.detail
+  }
+  if (delta === 0) return false
+
+  event.preventDefault()
+  event.stopPropagation()
+  if (delta < 0) increase()
+  else decrease()
+  return true
+}
+
 const mobileLandscapeBuildingLabelMap = {
   vehicleFactory: 'Vehicle Fab',
   radarStation: 'Radar',
@@ -320,61 +345,15 @@ export function setupUnitButtons(controller) {
 
     // Shift + mouse wheel to adjust queued amount
     button.addEventListener('wheel', (e) => {
-      // Check both gameState.shiftKeyDown and the event's shiftKey property as fallbacks
-      const isShiftPressed = gameState.shiftKeyDown || e.shiftKey
-
-      if (!isShiftPressed) return
-      e.preventDefault()
-      e.stopPropagation()
-
-      // Determine scroll direction - use deltaX as primary (some systems report scroll in deltaX)
-      // then fall back to deltaY, wheelDelta, and detail
-      let scrollUp = false
-      let scrollDown = false
-
-      // Method 1: deltaX (some trackpads/systems report horizontal scroll for wheel)
-      if (e.deltaX < 0) {
-        scrollUp = true
-      } else if (e.deltaX > 0) {
-        scrollDown = true
-      }
-
-      // Method 2: deltaY (most standard) - only if deltaX didn't determine direction
-      if (!scrollUp && !scrollDown) {
-        if (e.deltaY < 0 || Object.is(e.deltaY, -0)) {
-          scrollUp = true
-        } else if (e.deltaY > 0) {
-          scrollDown = true
-        }
-      }
-
-      // Method 3: wheelDelta (older browsers/systems) - only if neither deltaX nor deltaY worked
-      if (!scrollUp && !scrollDown && e.wheelDelta !== undefined) {
-        if (e.wheelDelta > 0) {
-          scrollUp = true
-        } else if (e.wheelDelta < 0) {
-          scrollDown = true
-        }
-      }
-
-      // Method 4: detail (Firefox legacy) - final fallback
-      if (!scrollUp && !scrollDown && e.detail !== undefined) {
-        if (e.detail < 0) {
-          scrollUp = true
-        } else if (e.detail > 0) {
-          scrollDown = true
-        }
-      }
-
-      if (scrollUp) {
-        // Scroll up - queue one more unit if possible
-        if (!gameState.gamePaused && !button.classList.contains('disabled')) {
-          const unitType = button.getAttribute('data-unit-type')
-          productionQueue.addItem(unitType, button, false)
-        }
-      } else if (scrollDown) {
-        controller.removeQueuedUnit(button)
-      }
+      handleProductionStackWheel(e, {
+        increase: () => {
+          if (!gameState.gamePaused && !button.classList.contains('disabled')) {
+            const unitType = button.getAttribute('data-unit-type')
+            productionQueue.addItem(unitType, button, false)
+          }
+        },
+        decrease: () => controller.removeQueuedUnit(button)
+      })
     }, { passive: false })
 
     // Drag and drop rally point placement
@@ -471,7 +450,10 @@ export function setupBuildingButtons(controller) {
       }
       gameState.draggedBuildingType = buildingType
       gameState.draggedBuildingButton = button
-      gameState.chainBuildPrimed = gameState.shiftKeyDown
+      // Prime chain building only from the modifier carried by this drag
+      // gesture. A stale global Shift flag (missed keyup after focus loss)
+      // must never arm chain building on its own.
+      gameState.chainBuildPrimed = Boolean(e.shiftKey)
 
       // Method 1: Try using a transparent 1x1 pixel div
       const dragImage = document.createElement('div')
@@ -687,84 +669,39 @@ export function setupBuildingButtons(controller) {
 
     // Shift + mouse wheel to adjust queued amount for buildings
     button.addEventListener('wheel', (e) => {
-      // Check both gameState.shiftKeyDown and the event's shiftKey property as fallbacks
-      const isShiftPressed = gameState.shiftKeyDown || e.shiftKey
+      handleProductionStackWheel(e, {
+        increase: () => {
+          if (!gameState.gamePaused && !button.classList.contains('disabled')) {
+            productionQueue.addItem(buildingType, button, true)
+          }
+        },
+        decrease: () => {
+          // Allow canceling ALL blue bubbles, including currently producing ones
+          for (let i = productionQueue.buildingItems.length - 1; i >= 0; i--) {
+            const queued = productionQueue.buildingItems[i]
+            if (queued.button === button) {
+              // If we're canceling the currently producing building, cancel it properly
+              if (i === 0 && productionQueue.currentBuilding && productionQueue.currentBuilding.button === button) {
+                productionQueue.cancelBuildingProduction()
+                break
+              } else {
+                // Remove queued building (no money refund for queued items)
+                productionQueue.tryResumeProduction()
+                failCompletionReceipt(productionQueue.buildingItems[i]?.completionReceiptId)
+                productionQueue.buildingItems.splice(i, 1)
+                productionQueue.removeBlueprint(queued)
 
-      if (!isShiftPressed) return
-      e.preventDefault()
-      e.stopPropagation()
+                const remainingCount = productionQueue.buildingItems.filter(
+                  item => item.button === button
+                ).length + (productionQueue.currentBuilding && productionQueue.currentBuilding.button === button ? 1 : 0)
 
-      // Determine scroll direction - use deltaX as primary (some systems report scroll in deltaX)
-      // then fall back to deltaY, wheelDelta, and detail
-      let scrollUp = false
-      let scrollDown = false
-
-      // Method 1: deltaX (some trackpads/systems report horizontal scroll for wheel)
-      if (e.deltaX < 0) {
-        scrollUp = true
-      } else if (e.deltaX > 0) {
-        scrollDown = true
-      }
-
-      // Method 2: deltaY (most standard) - only if deltaX didn't determine direction
-      if (!scrollUp && !scrollDown) {
-        if (e.deltaY < 0 || Object.is(e.deltaY, -0)) {
-          scrollUp = true
-        } else if (e.deltaY > 0) {
-          scrollDown = true
-        }
-      }
-
-      // Method 3: wheelDelta (older browsers/systems) - only if neither deltaX nor deltaY worked
-      if (!scrollUp && !scrollDown && e.wheelDelta !== undefined) {
-        if (e.wheelDelta > 0) {
-          scrollUp = true
-        } else if (e.wheelDelta < 0) {
-          scrollDown = true
-        }
-      }
-
-      // Method 4: detail (Firefox legacy) - final fallback
-      if (!scrollUp && !scrollDown && e.detail !== undefined) {
-        if (e.detail < 0) {
-          scrollUp = true
-        } else if (e.detail > 0) {
-          scrollDown = true
-        }
-      }
-
-      if (scrollUp) {
-        // Scroll up - queue one more building if possible
-        if (!gameState.gamePaused && !button.classList.contains('disabled')) {
-          productionQueue.addItem(buildingType, button, true)
-        }
-      } else if (scrollDown) {
-        // Scroll down - remove last queued building of this type
-        // Allow canceling ALL blue bubbles, including currently producing ones
-        for (let i = productionQueue.buildingItems.length - 1; i >= 0; i--) {
-          const queued = productionQueue.buildingItems[i]
-          if (queued.button === button) {
-            // If we're canceling the currently producing building, cancel it properly
-            if (i === 0 && productionQueue.currentBuilding && productionQueue.currentBuilding.button === button) {
-              productionQueue.cancelBuildingProduction()
-              break
-            } else {
-              // Remove queued building (no money refund for queued items)
-              productionQueue.tryResumeProduction()
-              failCompletionReceipt(productionQueue.buildingItems[i]?.completionReceiptId)
-              productionQueue.buildingItems.splice(i, 1)
-              productionQueue.removeBlueprint(queued)
-
-              const remainingCount = productionQueue.buildingItems.filter(
-                item => item.button === button
-              ).length + (productionQueue.currentBuilding && productionQueue.currentBuilding.button === button ? 1 : 0)
-
-              productionQueue.updateBatchCounter(button, remainingCount)
-              break
+                productionQueue.updateBatchCounter(button, remainingCount)
+                break
+              }
             }
           }
         }
-      }
+      })
     }, { passive: false })
   })
 }
