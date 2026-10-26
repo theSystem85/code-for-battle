@@ -15,6 +15,7 @@ import {
   requestWaterMineAction,
   tryHandleFleetCommand
 } from '../game/navalFleetSystem.js'
+import { unitsBasedAtSelectedAirstrips } from '../game/airWingOrders.js'
 import { canUnitTargetEntity } from '../game/unitCombat/combatHelpers.js'
 
 const DEFENSIVE_BUILDING_TYPES = new Set(['turretGunV1', 'turretGunV2', 'turretGunV3', 'rocketTurret', 'teslaCoil', 'artilleryTurret'])
@@ -144,17 +145,32 @@ export function handleForceAttackCommand(handler, worldX, worldY, units, selecte
     }
 
     if (forceAttackTarget) {
-      if (first.isBuilding) {
+      const carriers = commandableUnits.filter(unit => !unit.isBuilding && unit.type === 'aircraftCarrier')
+      const airstripWing = unitsBasedAtSelectedAirstrips(selectedUnits, units)
+      const directAttackers = commandableUnits.filter(unit => !unit.isBuilding && unit.type !== 'aircraftCarrier')
+      const wingAttackers = airstripWing.filter(unit => !directAttackers.includes(unit))
+      const hasAirstripOrder = airstripWing.length > 0
+      if (first.isBuilding && !hasAirstripOrder && carriers.length === 0) {
         commandableUnits.forEach(b => {
           queueDefenseBuildingTarget(b, forceAttackTarget)
         })
         return true
-      } else {
-        commandableUnits.forEach(unit => {
+      }
+      commandableUnits.forEach(building => {
+        if (building.isBuilding && DEFENSIVE_BUILDING_TYPES.has(building.type)) {
+          queueDefenseBuildingTarget(building, forceAttackTarget)
+        }
+      })
+      carriers.forEach(carrier => commandCarrierStrike(carrier, forceAttackTarget, units, false))
+      const attackers = [...directAttackers, ...wingAttackers]
+      if (attackers.length) {
+        attackers.forEach(unit => {
           unit.forcedAttack = true
         })
-        unitCommands.handleAttackCommand(commandableUnits, forceAttackTarget, mapGrid, true)
-        recordHumanUnitCommand(commandableUnits.map(unit => unit.id), {
+        unitCommands.handleAttackCommand(attackers, forceAttackTarget, mapGrid, true)
+      }
+      if (attackers.length || carriers.length || hasAirstripOrder) {
+        recordHumanUnitCommand([...attackers, ...carriers].map(unit => unit.id), {
           command: 'attack',
           targetRef: createReplayEntityReference(forceAttackTarget),
           forceAttack: true
@@ -218,6 +234,10 @@ export function handleGuardTargetCommand(selectedUnits, guardTarget, selectionMa
     selectionManager.isCommandableUnit(u) &&
     u.isBuilding !== true
   )
+  unitsBasedAtSelectedAirstrips(selectedUnits, gameState.units || []).forEach(unit => {
+    if (unit.id === guardTarget?.id || commandableUnits.includes(unit)) return
+    commandableUnits.push(unit)
+  })
   if (commandableUnits.length === 0) {
     return false
   }
@@ -240,13 +260,36 @@ export function activateGroupGuard(commandableUnits, guardTargets) {
   return applyGuardTargets(commandableUnits, guardTargets)
 }
 
+function orderAirstripWingAttack(handler, wing, target, mapGrid, unitCommands, append) {
+  if (!wing.length || !target || !unitCommands?.handleAttackCommand) return false
+  if (append) {
+    wing.forEach(unit => {
+      if (!unit.commandQueue) unit.commandQueue = []
+      unit.commandQueue.push({ type: 'attack', target })
+    })
+  } else {
+    unitCommands.handleAttackCommand(wing, target, mapGrid, false)
+  }
+  recordHumanUnitCommand(wing.map(unit => unit.id), {
+    command: 'attack',
+    targetRef: createReplayEntityReference(target),
+    ...(append ? { queueAppend: true } : {})
+  })
+  return true
+}
+
 export function handleStandardCommands(handler, worldX, worldY, selectedUnits, unitCommands, mapGrid, altPressed = false) {
   const selectionManager = handler.selectionManager
   const commandableUnits = selectedUnits.filter(u => selectionManager.isCommandableUnit(u) && !u.isBuilding)
-  if (commandableUnits.length === 0 || commandableUnits[0].type === 'factory') {
+  const airstripWing = unitsBasedAtSelectedAirstrips(selectedUnits, handler.gameUnits || gameState.units || [])
+  if (isReplayInteractionLocked() || isLocalPartyAutomationLocked()) {
     return
   }
-  if (isReplayInteractionLocked() || isLocalPartyAutomationLocked()) {
+  if (commandableUnits.length === 0 || commandableUnits[0].type === 'factory') {
+    if (airstripWing.length === 0 || commandableUnits[0]?.type === 'factory') return
+    const wingTarget = findEnemyTarget(worldX, worldY, handler.gameFactories || [], handler.gameUnits || [])
+    if (!wingTarget) return
+    orderAirstripWingAttack(handler, airstripWing, wingTarget, mapGrid, unitCommands, altPressed)
     return
   }
 
@@ -430,6 +473,9 @@ export function handleStandardCommands(handler, worldX, worldY, selectedUnits, u
         carriers.forEach(unit => commandCarrierStrike(unit, target, handler.gameUnits || [], true))
         const queuedAttackers = commandableUnits.filter(unit =>
           unit.type !== 'aircraftCarrier' && canUnitTargetEntity(unit, target))
+        airstripWing.forEach(unit => {
+          if (!queuedAttackers.includes(unit)) queuedAttackers.push(unit)
+        })
         queuedAttackers.forEach(unit => {
           if (!unit.commandQueue) unit.commandQueue = []
           unit.commandQueue.push({ type: 'attack', target })
@@ -445,6 +491,9 @@ export function handleStandardCommands(handler, worldX, worldY, selectedUnits, u
         carriers.forEach(unit => commandCarrierStrike(unit, target, handler.gameUnits || [], false))
         const normalAttackers = commandableUnits.filter(unit =>
           unit.type !== 'aircraftCarrier' && canUnitTargetEntity(unit, target))
+        airstripWing.forEach(unit => {
+          if (!normalAttackers.includes(unit)) normalAttackers.push(unit)
+        })
         if (normalAttackers.length) unitCommands.handleAttackCommand(normalAttackers, target, mapGrid, false)
         recordHumanUnitCommand(commandableUnits.map(unit => unit.id), {
           command: 'attack',

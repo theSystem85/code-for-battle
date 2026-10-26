@@ -8,7 +8,7 @@ vi.mock('../../src/main.js', () => ({
   getCurrentGame: vi.fn()
 }))
 
-import { handleFallbackCommand } from '../../src/input/mouseCommands.js'
+import { handleFallbackCommand, handleForceAttackCommand, handleGuardTargetCommand, handleStandardCommands } from '../../src/input/mouseCommands.js'
 import { gameState } from '../../src/gameState.js'
 import { TILE_SIZE } from '../../src/config.js'
 
@@ -133,5 +133,77 @@ describe('mouseCommands fallback defense-building targeting', () => {
 
     expect(unitCommands.handleMovementCommand).toHaveBeenCalledWith([selectedSupply], worldX, worldY, mapGrid)
     expect(unitCommands.handleAttackCommand).not.toHaveBeenCalled()
+  })
+
+  it('[U06533] orders every aircraft based at a selected airstrip to attack, force-attack, or guard', () => {
+    const airstrip = {
+      id: 'strip-1',
+      type: 'airstrip',
+      isBuilding: true,
+      owner: 'player1',
+      health: 100,
+      x: 0,
+      y: 0,
+      width: 4,
+      height: 3
+    }
+    const wing = {
+      id: 'f35-wing',
+      type: 'f35',
+      owner: 'player1',
+      health: 100,
+      homeAirstripId: 'strip-1',
+      x: 0,
+      y: 0
+    }
+    const friendly = {
+      id: 'friendly',
+      type: 'tank',
+      owner: 'player1',
+      health: 100,
+      x: 4 * TILE_SIZE,
+      y: 4 * TILE_SIZE
+    }
+    const enemy = {
+      id: 'enemy',
+      type: 'tank',
+      owner: 'player2',
+      health: 100,
+      x: 12 * TILE_SIZE,
+      y: 6 * TILE_SIZE
+    }
+    gameState.units = [wing, friendly, enemy]
+    gameState.buildings = [airstrip]
+    const handler = {
+      selectionManager: {
+        isCommandableUnit: () => true,
+        isHumanPlayerBuilding: () => false,
+        isHumanPlayerUnit: unit => unit.owner === 'player1',
+        clearWreckSelection: () => {}
+      },
+      gameUnits: [wing, enemy],
+      gameFactories: []
+    }
+    const unitCommands = { handleAttackCommand: vi.fn() }
+    const clickX = enemy.x + TILE_SIZE / 2
+    const clickY = enemy.y + TILE_SIZE / 2
+
+    handleStandardCommands(handler, clickX, clickY, [airstrip], unitCommands, [], false)
+    expect(unitCommands.handleAttackCommand).toHaveBeenCalledWith([wing], enemy, [], false)
+
+    unitCommands.handleAttackCommand.mockClear()
+    wing.commandQueue = []
+    handleStandardCommands(handler, clickX, clickY, [airstrip], unitCommands, [], true)
+    expect(unitCommands.handleAttackCommand).not.toHaveBeenCalled()
+    expect(wing.commandQueue).toEqual([{ type: 'attack', target: enemy }])
+
+    handleForceAttackCommand(handler, clickX, clickY, [wing, enemy], [airstrip], unitCommands, [], handler.selectionManager)
+    expect(wing.forcedAttack).toBe(true)
+    expect(unitCommands.handleAttackCommand).toHaveBeenCalledWith([wing], enemy, [], true)
+
+    const guarded = handleGuardTargetCommand([airstrip], friendly, handler.selectionManager)
+    expect(guarded).toBe(true)
+    expect(wing.guardMode).toBe(true)
+    expect(wing.guardTarget).toBe(friendly)
   })
 })

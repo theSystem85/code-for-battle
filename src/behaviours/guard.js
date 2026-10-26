@@ -2,6 +2,7 @@ import { TILE_SIZE } from '../config.js'
 import { findPath } from '../units.js'
 import { getEffectiveFireRange } from '../game/unitCombat/combatHelpers.js'
 
+const AIR_GUARD_TYPES = new Set(['apache', 'f22Raptor', 'f35'])
 const DEFAULT_GUARD_DISTANCE = 1.5 * TILE_SIZE
 const PATH_INTERVAL = 2000
 const SUPPLY_SHIP_PATH_INTERVAL = 250
@@ -33,6 +34,7 @@ export function updateGuardBehavior(unit, mapGrid, occupancyMap, now) {
 
   if (unit.guardTarget && unit.guardTarget.health > 0) {
     unit.guardMode = true
+    if (AIR_GUARD_TYPES.has(unit.type)) return
     const unitCenterX = unit.x + TILE_SIZE / 2
     const unitCenterY = unit.y + TILE_SIZE / 2
     const targetCenterX = unit.guardTarget.x + TILE_SIZE / 2

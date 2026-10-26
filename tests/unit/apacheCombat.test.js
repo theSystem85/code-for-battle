@@ -100,6 +100,36 @@ describe('apacheCombat auto helipad return flow', () => {
     expect(apache.flightPlan?.mode).toBe('helipad')
   })
 
+  it('[U06529] sends an ammo-empty apache back to its home airstrip and leaves carrier aircraft to the carrier', () => {
+    const strip = { id: 'strip-1', type: 'airstrip', x: 2, y: 2, width: 6, height: 4, health: 100, owner: 'player1' }
+    hoisted.gameState.buildings.push(strip)
+    const enemy = { id: 'enemy-1', type: 'tank', x: 200, y: 200, tileX: 6, tileY: 6, health: 100 }
+    const apache = createApache({
+      target: enemy,
+      rocketAmmo: 0,
+      homeAirstripId: 'strip-1',
+      owner: 'player1'
+    })
+
+    updateApacheCombat(apache, [apache, enemy], [], [[{}]], 1000)
+
+    expect(apache.flightPlan?.mode).toBe('airstrip')
+    expect(apache.helipadLandingRequested).toBe(true)
+    expect(apache.helipadTargetId).toBe('strip-1')
+    expect(apache.homeAirstripId).toBe('strip-1')
+    expect(isHelipadAvailableForUnit).not.toHaveBeenCalled()
+
+    const carrierApache = createApache({
+      id: 'carrier-apache',
+      target: enemy,
+      rocketAmmo: 0,
+      homeCarrierId: 'carrier-1'
+    })
+    updateApacheCombat(carrierApache, [carrierApache, enemy], [], [[{}]], 1200)
+    expect(carrierApache.helipadLandingRequested).toBe(false)
+    expect(carrierApache.flightPlan).toBeNull()
+  })
+
   it('[U00192] ignores stale remote-control state so ammo-empty apache still auto-returns', () => {
     hoisted.gameState.buildings.push({ id: 'pad-1', type: 'helipad', x: 4, y: 4, health: 100, owner: 'player1' })
     const enemy = { id: 'enemy-1', type: 'tank', x: 200, y: 200, tileX: 6, tileY: 6, health: 100 }

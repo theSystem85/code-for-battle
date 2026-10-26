@@ -7,6 +7,8 @@ import { getHelipadLandingCenter, getHelipadLandingTile, isHelipadAvailableForUn
 import { getAirstripParkingSpots, getAirstripRunwayPoints, reserveAirstripParkingSlot, releaseAirstripParkingSlotReservation } from '../../utils/airstripUtils.js'
 import { units } from '../../main.js'
 import { rejectJetMissionIfImpossible } from '../../game/jetFuel.js'
+import { beginAirstripLanding, beginHelipadRebase } from '../../game/airWingOrders.js'
+import { clearCarrierMissionOrders } from '../../game/navalFleetSystem.js'
 
 export function assignApacheFlight(unit, destTile, destCenter, options = {}) {
   if (!unit || (unit.type !== 'apache' && unit.type !== 'f22Raptor' && unit.type !== 'f35') || !destCenter) {
@@ -16,6 +18,7 @@ export function assignApacheFlight(unit, destTile, destCenter, options = {}) {
   if (rejectJetMissionIfImpossible(unit, destCenter, options.mode)) {
     return false
   }
+  clearCarrierMissionOrders(unit)
 
   if (unit.type === 'f22Raptor') {
     const stopRadius = Math.max(6, options.stopRadius || TILE_SIZE * 0.5)
@@ -36,8 +39,10 @@ export function assignApacheFlight(unit, destTile, destCenter, options = {}) {
     unit.autoHoldAltitude = true
 
     if (options.mode === 'airstrip' && options.airstrip) {
+      beginAirstripLanding(unit, options.airstrip)
       unit.commandIntent = 'landAtStructure'
       unit.airstripId = getBuildingIdentifier(options.airstrip)
+      unit.homeAirstripId = unit.airstripId
       unit.runwayPoints = getAirstripRunwayPoints(options.airstrip)
       unit.f22State = 'approach_runway'
       unit.f22PendingTakeoff = false
@@ -87,8 +92,10 @@ export function assignApacheFlight(unit, destTile, destCenter, options = {}) {
     unit.commandIntent = 'move'
 
     if (options.mode === 'airstrip' && options.airstrip) {
+      beginAirstripLanding(unit, options.airstrip)
       unit.commandIntent = 'landAtStructure'
       const airstripId = getBuildingIdentifier(options.airstrip)
+      unit.homeAirstripId = airstripId
       let slotIndex = reserveAirstripParkingSlot(options.airstrip, unit.id, Number.isInteger(options.airstripParkingSlotIndex) ? options.airstripParkingSlotIndex : unit.airstripParkingSlotIndex)
       if (!Number.isInteger(slotIndex) || slotIndex < 0) {
         slotIndex = null
@@ -107,6 +114,7 @@ export function assignApacheFlight(unit, destTile, destCenter, options = {}) {
       unit.airstripId = airstripId
       unit.airstripParkingSlotIndex = slotIndex
     } else if (options.mode === 'helipad') {
+      beginHelipadRebase(unit)
       unit.commandIntent = 'landAtStructure'
       if (unit.airstripId && Array.isArray(gameState.buildings)) {
         const previousAirstrip = gameState.buildings.find(b => getBuildingIdentifier(b) === unit.airstripId)
@@ -152,6 +160,19 @@ export function assignApacheFlight(unit, destTile, destCenter, options = {}) {
     return true
   }
 
+  if (options.mode === 'airstrip' && options.airstrip) {
+    const landing = beginAirstripLanding(unit, options.airstrip, {
+      slotIndex: options.airstripParkingSlotIndex,
+      stopRadius: options.stopRadius
+    })
+    unit.autoHoldAltitude = true
+    unit.remoteControlActive = false
+    unit.hovering = false
+    if (!landing) return false
+    if (unit.flightState === 'grounded' && !unit.carrierOperation) unit.manualFlightState = 'takeoff'
+    return true
+  }
+
   const stopRadius = Math.max(6, options.stopRadius || TILE_SIZE * 0.5)
   unit.path = []
   unit.originalPath = null
@@ -165,6 +186,7 @@ export function assignApacheFlight(unit, destTile, destCenter, options = {}) {
     destinationTile: destTile ? { ...destTile } : null
   }
   unit.autoHoldAltitude = true
+  if (options.mode === 'helipad') beginHelipadRebase(unit)
   if (unit.landedHelipadId) {
     const helipad = Array.isArray(gameState.buildings)
       ? gameState.buildings.find(b => getBuildingIdentifier(b) === unit.landedHelipadId)

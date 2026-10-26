@@ -712,12 +712,23 @@ function buildSaveObject(label) {
       serialized.maxCarrierFuel = u.maxCarrierFuel
       serialized.carrierAmmo = u.carrierAmmo
       serialized.maxCarrierAmmo = u.maxCarrierAmmo
+      serialized.carrierStrikeTargetIds = [...(u.carrierStrikeTargetIds || [])]
     }
 
     if (u.type === 'f22Raptor' || u.type === 'f35' || u.type === 'apache') {
       serialized.carrierId = u.carrierId || null
       serialized.carrierDeckSlotIndex = Number.isInteger(u.carrierDeckSlotIndex) ? u.carrierDeckSlotIndex : null
       serialized.carrierOperation = u.carrierOperation ? { ...u.carrierOperation } : null
+      serialized.homeCarrierId = u.homeCarrierId || null
+      serialized.homeAirstripId = u.homeAirstripId || null
+      serialized.carrierStrikeActive = Boolean(u.carrierStrikeActive)
+      serialized.carrierStrikeNeedsFullService = Boolean(u.carrierStrikeNeedsFullService)
+      serialized.pendingCarrierStrikeTargetId = u.pendingCarrierStrikeTargetId || null
+      serialized.carrierResumeAttack = Boolean(u.carrierResumeAttack)
+      serialized.carrierResumeAttackTargetId = u.carrierResumeAttackTargetId || null
+      serialized.carrierResumeNeedsService = Boolean(u.carrierResumeNeedsService)
+      serialized.carrierRecallRequested = Boolean(u.carrierRecallRequested)
+      serialized.airGuardInterceptId = u.airGuardInterceptId || null
     }
 
     if (u.type === 'navalMineLayer') {

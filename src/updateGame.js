@@ -23,6 +23,7 @@ import { cleanupDestroyedSelectedUnits, getUnitCommandsHandler } from './inputHa
 import { updateBuildingsUnderRepair, updateBuildingsAwaitingRepair, buildingData, cacheBuildingSmokeScales } from './buildings.js'
 import { handleSelfRepair } from './utils.js'
 import { updateGuardBehavior } from './behaviours/guard.js'
+import { updateAirGuard } from './game/airWingOrders.js'
 import { units as mainUnits } from './main.js'
 
 // Import spatial partitioning for optimized collision detection
@@ -545,6 +546,7 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
       // Unit system updates
       units.forEach(unit => {
         updateGuardBehavior(unit, mapGrid, occupancyMap, now)
+        updateAirGuard(unit, units, now)
       })
       updateNavalFleet(units, bullets, mapGrid, gameState, now, delta)
       framePhases.begin(FRAME_PHASE.movement)

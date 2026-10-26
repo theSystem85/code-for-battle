@@ -148,6 +148,7 @@ function findNearestLandingPadForF35(unit, units) {
     }
 
     if (building.type === 'helipad') {
+      if (unit.homeAirstripId) return
       const center = getHelipadLandingCenter(building)
       const tile = getHelipadLandingTile(building)
       if (!center || !tile || !isHelipadAvailableForUnit(building, units, unit.id)) {
@@ -165,6 +166,7 @@ function findNearestLandingPadForF35(unit, units) {
     }
 
     if (building.type === 'airstrip') {
+      if (unit.homeAirstripId && getBuildingIdentifier(building) !== unit.homeAirstripId) return
       const slotIndex = reserveAirstripParkingSlot(building, unit.id, unit.airstripParkingSlotIndex)
       if (slotIndex < 0) return
       const slot = getAirstripParkingSpots(building)[slotIndex]
@@ -196,6 +198,41 @@ function getHelipadById(helipadId) {
     }
     return getBuildingIdentifier(building) === helipadId
   }) || null
+}
+
+function findHomeAirstrip(unit) {
+  if (!unit?.homeAirstripId || !Array.isArray(gameState.buildings)) return null
+  return gameState.buildings.find(building => building && building.type === 'airstrip' && building.health > 0 && getBuildingIdentifier(building) === unit.homeAirstripId) || null
+}
+
+function initiateApacheAirstripReturn(unit, airstrip) {
+  const slotIndex = reserveAirstripParkingSlot(airstrip, unit.id, unit.airstripParkingSlotIndex)
+  if (!Number.isInteger(slotIndex) || slotIndex < 0) return false
+  const slot = getAirstripParkingSpots(airstrip)[slotIndex]
+  if (!slot) return false
+  const airstripId = getBuildingIdentifier(airstrip)
+  unit.path = []
+  unit.originalPath = null
+  unit.moveTarget = { x: slot.x, y: slot.y }
+  unit.flightPlan = {
+    x: slot.worldX,
+    y: slot.worldY,
+    stopRadius: Math.max(6, TILE_SIZE * 0.2),
+    mode: 'airstrip',
+    followTargetId: null,
+    destinationTile: { x: slot.x, y: slot.y }
+  }
+  unit.autoHoldAltitude = true
+  unit.commandIntent = 'returnToBase'
+  unit.helipadLandingRequested = true
+  unit.helipadTargetId = airstripId
+  unit.airstripId = airstripId
+  unit.homeAirstripId = airstripId
+  unit.airstripParkingSlotIndex = slotIndex
+  unit.manualFlightHoverRequested = false
+  unit.autoHelipadReturnActive = true
+  if (unit.flightState === 'grounded') unit.manualFlightState = 'takeoff'
+  return true
 }
 
 function initiateApacheHelipadReturn(unit, helipadInfo) {
@@ -313,12 +350,14 @@ export function updateApacheCombat(unit, units, bullets, mapGrid, now, _occupanc
 
   if (!unit.target || unit.target.health <= 0) {
     const shouldReturnToHelipad = unit.autoReturnToHelipadOnTargetLoss === true
-    if (shouldReturnToHelipad) {
-      const alreadyLanding = Boolean(unit.helipadLandingRequested || (unit.flightPlan && unit.flightPlan.mode === 'helipad') || unit.landedHelipadId)
+    if (shouldReturnToHelipad && !unit.homeCarrierId && !unit.guardMode) {
+      const alreadyLanding = Boolean(unit.helipadLandingRequested || unit.flightPlan?.mode === 'helipad' || unit.flightPlan?.mode === 'airstrip' || unit.landedHelipadId)
       if (!alreadyLanding) {
-        const helipadInfo = findNearestHelipadForApache(unit, units)
-        if (helipadInfo) {
-          initiateApacheHelipadReturn(unit, helipadInfo)
+        const homeStrip = findHomeAirstrip(unit)
+        if (homeStrip) initiateApacheAirstripReturn(unit, homeStrip)
+        else {
+          const helipadInfo = findNearestHelipadForApache(unit, units)
+          if (helipadInfo) initiateApacheHelipadReturn(unit, helipadInfo)
         }
       }
     }
@@ -346,6 +385,7 @@ export function updateApacheCombat(unit, units, bullets, mapGrid, now, _occupanc
   if (ammoEmpty) {
     unit.canFire = false
     unit.volleyState = null
+    if (unit.homeCarrierId || unit.guardMode) return
 
     if (unit.target && unit.target.id) {
       unit.autoHelipadReturnAttackTargetId = unit.target.id
@@ -353,7 +393,7 @@ export function updateApacheCombat(unit, units, bullets, mapGrid, now, _occupanc
       unit.autoReturnToHelipadOnTargetLoss = true
     }
 
-    let alreadyLanding = Boolean(unit.helipadLandingRequested || (unit.flightPlan && unit.flightPlan.mode === 'helipad') || unit.landedHelipadId)
+    let alreadyLanding = Boolean(unit.helipadLandingRequested || unit.flightPlan?.mode === 'helipad' || unit.flightPlan?.mode === 'airstrip' || unit.landedHelipadId)
 
     if (alreadyLanding && unit.helipadTargetId && unit.landedHelipadId !== unit.helipadTargetId) {
       const assignedHelipad = getHelipadById(unit.helipadTargetId)
@@ -373,8 +413,11 @@ export function updateApacheCombat(unit, units, bullets, mapGrid, now, _occupanc
       const retryAt = unit.autoHelipadRetryAt || 0
       const shouldAttempt = !wasAmmoEmpty || now >= retryAt
       if (shouldAttempt) {
-        const helipadInfo = findNearestHelipadForApache(unit, units)
-        const assigned = helipadInfo ? initiateApacheHelipadReturn(unit, helipadInfo) : false
+        const homeStrip = findHomeAirstrip(unit)
+        const helipadInfo = homeStrip ? null : findNearestHelipadForApache(unit, units)
+        const assigned = homeStrip
+          ? initiateApacheAirstripReturn(unit, homeStrip)
+          : Boolean(helipadInfo && initiateApacheHelipadReturn(unit, helipadInfo))
         if (!assigned) {
           unit.autoHelipadReturnActive = false
           unit.autoHelipadRetryAt = now + 1200
@@ -588,7 +631,7 @@ export function updateF35Combat(unit, units, bullets, mapGrid, now, _occupancyMa
   if (!unit.target || unit.target.health <= 0 || ammoRemaining <= 0 || shouldReturnForFuel) {
     unit.volleyState = null
     const alreadyLanding = Boolean(unit.helipadLandingRequested || unit.flightPlan?.mode === 'helipad' || unit.flightPlan?.mode === 'airstrip')
-    if (!unit.homeCarrierId && !alreadyLanding && (ammoRemaining <= 0 || shouldReturnForFuel || unit.autoReturnToHelipadOnTargetLoss)) {
+    if (!unit.homeCarrierId && !unit.guardMode && !alreadyLanding && (ammoRemaining <= 0 || shouldReturnForFuel || unit.autoReturnToHelipadOnTargetLoss)) {
       const padInfo = findNearestLandingPadForF35(unit, units)
       if (padInfo) {
         initiateF35PadReturn(unit, padInfo)
