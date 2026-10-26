@@ -12,10 +12,12 @@ describe('TextureManager integrated multi-sheet selection', () => {
       metadata: { tileSize: 64, borderWidth: 0, tiles: { '0,0': { tags, rect: { x: 0, y: 0, width: 64, height: 64 } } } }
     }] })
     await configure(['grass', 'decorative', 'impassable'])
+    manager.prepareDecorationLayout(grid)
     const blocked = buildOccupancyMap([], grid, manager).flat().filter(Boolean).length
     const signature = manager.integratedRenderSignature
     const layout = manager.getDecorationLayout(grid)
     await configure(['grass', 'decorative', 'passable'])
+    manager.prepareDecorationLayout(grid)
     expect(manager.getDecorationLayout(grid)).not.toBe(layout)
     expect(manager.integratedRenderSignature).not.toBe(signature)
     expect(blocked).toBeGreaterThan(0)
@@ -574,6 +576,7 @@ describe('TextureManager integrated multi-sheet selection', () => {
       biome: x < size / 2 ? 'grass' : 'snow'
     })))
 
+    manager.prepareDecorationLayout(mapGrid)
     const layout = manager.getDecorationLayout(mapGrid)
     expect(layout.placements.length).toBeGreaterThan(0)
     const frozen = layout.placements.filter(p => p.group.tagSet.has('impassable'))

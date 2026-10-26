@@ -390,10 +390,12 @@ The integration-owner-only paths are exactly: `src/rendering/textureManager.js`,
 
 ### S06 — integrate progressive sprite detail
 
-- [ ] Consume S01 build manifest, S04 store, S05 demand scheduler and S07 worker APIs in `TextureManager` and prepared sprite paths. Stage all sheet metadata before rendering; stream visual resources without changing pools, placement or city simulation based on arrival order.
-- [ ] Publish coarse handles rapidly, promote visible settled regions to requested final density under budgets, and keep previously sharp resident art sharp. Preserve effective logical size and per-tier source rectangles for groups/animation frames. Separate final density from current tier in cache keys/audits.
-- [ ] Integrate S03 dependency invalidation; prevent coarse baked pages from surviving indefinitely. Coordinate display/DPR, map/load/editor/custom assets, missing files and context recovery through controlled generation swaps.
-- [ ] Wire build/stale checks and conditional fallbacks. Update resize policy/tests to recognize user-authorized progressive sampling honestly. Keep final-quality acceptance distinct from scrolling coarse-tier latency.
+- [x] Consume S01 build manifest, S04 store, S05 demand scheduler and S07 worker APIs in `TextureManager` and prepared sprite paths. Stage all sheet metadata before rendering; stream visual resources without changing pools, placement or city simulation based on arrival order.
+- [x] Publish coarse handles rapidly, promote visible settled regions to requested final density under budgets, and keep previously sharp resident art sharp. Preserve effective logical size and per-tier source rectangles for groups/animation frames. Separate final density from current tier in cache keys/audits.
+- [x] Integrate S03 dependency invalidation; prevent coarse baked pages from surviving indefinitely. Coordinate display/DPR, map/load/editor/custom assets, missing files and context recovery through controlled generation swaps.
+- [x] Wire build/stale checks and conditional fallbacks. Update resize policy/tests to recognize user-authorized progressive sampling honestly. Keep final-quality acceptance distinct from scrolling coarse-tier latency.
+
+S06 software integration is covered by focused generation, tier-promotion, layout-lifecycle and offline-policy tests. Q30/Q31 and the 75 FPS cold-scroll/final-convergence acceptance remain pending capture on qualifying hardware; no result is inferred from headless tests.
 
 **Exclusive paths:** all S00-reserved integration files, plus producer adapters only after component owners have landed. This phase is serialized; do not edit active lane files.
 

@@ -13,7 +13,6 @@ import { expandCompactSpriteSheetMetadata, hasTaggedSpriteSheetTiles } from '../
 import { estimateDecodedImageBytes, loadPreparedImage } from './prepared/imagePreparation.js'
 import { PreparationGeneration } from './prepared/preparedMap.js'
 import {
-  buildDecorationLayout,
   buildDecorationPools,
   decorationHash,
   decorationSeed,
@@ -23,6 +22,7 @@ import {
 import { cityFootprintGroup, prepareCityVisual } from './cityOverhangs.js'
 import { getPreparedSpriteState } from './prepared/preparedSpritePipeline.js'
 import { cutoutDecorationGroup } from './decorationCutout.js'
+import { DecorationLayoutPreparation } from './decorationLayoutPreparation.js'
 
 const DEFAULT_COMBAT_DECAL_SHEET_PATH = 'images/map/sprite_sheets/debris_craters_tracks.webp'
 const DEFAULT_COMBAT_DECAL_METADATA_PATH = 'images/map/sprite_sheets/debris_craters_tracks.json'
@@ -84,6 +84,8 @@ export class TextureManager {
     this.hasGroundDetails = false
     this.naturalDecorationRules = false
     this.decorationLayoutCache = null
+    this.decorationLayoutPreparation = new DecorationLayoutPreparation()
+    this.decorationMapRevision = 0
     this.defaultCombatDecalGroupedTagCatalog = {}
     this.streetSelectionPoolCache = new Map()
     this.streetTileSelectionCache = new Map()
@@ -576,42 +578,37 @@ export class TextureManager {
    */
   getDecorationLayout(mapGrid) {
     if (!Array.isArray(mapGrid) || !mapGrid.length) return null
+    const decorationSettings = normalizeDecorationSettings(gameState)
+    const decorationKey = JSON.stringify(decorationSettings)
+    return this.decorationLayoutPreparation.read({
+      mapGrid,
+      mapRevision: this.decorationMapRevision,
+      catalogRevision: this.integratedConfigVersion,
+      configRevision: `${gameState.mapSeed}:${decorationKey}`
+    })
+  }
+
+  prepareDecorationLayout(mapGrid) {
+    if (!Array.isArray(mapGrid) || !mapGrid.length) return null
     const width = mapGrid[0]?.length || 0
     const decorationSettings = normalizeDecorationSettings(gameState)
     const decorationKey = JSON.stringify(decorationSettings)
-    const cache = this.decorationLayoutCache
-    if (
-      cache &&
-      cache.mapGrid === mapGrid &&
-      cache.firstTile === mapGrid[0][0] &&
-      cache.seed === gameState.mapSeed &&
-      cache.decorationKey === decorationKey &&
-      cache.width === width &&
-      cache.height === mapGrid.length &&
-      cache.version === this.integratedConfigVersion
-    ) {
-      return cache.layout
-    }
-    const layout = buildDecorationLayout(mapGrid, this.integratedDecorationPools, {
-      defaultBiome: this.getDefaultDecorationBiome(),
-      ruinSeed: gameState.mapSeed,
-      ...decorationSettings,
-      salt: this.naturalDecorationRules ? decorationSeed(gameState.mapSeed) : 0,
-      placementRules: Boolean(this.naturalDecorationRules),
-      startPositions: Object.values(PLAYER_POSITIONS).slice(0, gameState.playerCount || 2).map(point => ({ x: Math.floor(width * point.x), y: Math.floor(mapGrid.length * point.y) }))
-    })
-    prepareCityBuildings(mapGrid, layout)
-    this.decorationLayoutCache = {
+    return this.decorationLayoutPreparation.prepare({
       mapGrid,
-      firstTile: mapGrid[0][0],
-      seed: gameState.mapSeed,
-      decorationKey,
-      width,
-      height: mapGrid.length,
-      version: this.integratedConfigVersion,
-      layout
-    }
-    return layout
+      pools: this.integratedDecorationPools,
+      mapRevision: this.decorationMapRevision,
+      catalogRevision: this.integratedConfigVersion,
+      configRevision: `${gameState.mapSeed}:${decorationKey}`,
+      options: {
+        defaultBiome: this.getDefaultDecorationBiome(),
+        ruinSeed: gameState.mapSeed,
+        ...decorationSettings,
+        salt: this.naturalDecorationRules ? decorationSeed(gameState.mapSeed) : 0,
+        placementRules: Boolean(this.naturalDecorationRules),
+        startPositions: Object.values(PLAYER_POSITIONS).slice(0, gameState.playerCount || 2).map(point => ({ x: Math.floor(width * point.x), y: Math.floor(mapGrid.length * point.y) }))
+      },
+      applySimulationEffects: prepareCityBuildings
+    }).layout
   }
 
   getGroundDetailForMapTile(mapGrid, x, y) {
@@ -626,6 +623,8 @@ export class TextureManager {
 
   invalidateDecorationLayout() {
     this.decorationLayoutCache = null
+    this.decorationMapRevision++
+    this.decorationLayoutPreparation.invalidate()
   }
 
   selectIntegratedTileByTags(requiredTags, x, y, excludedTags = []) {
