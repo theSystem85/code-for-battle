@@ -14,6 +14,7 @@ import { GAME_STATE_SCHEMA_VERSION } from '../gameStateSchema.js'
 import { UPDATE_RELOAD_GUARD } from './startupUpdate.js'
 import { createLiveSwapScheduler, setActiveLiveSwapScheduler } from './liveSwapScheduler.js'
 import { getLiveModule } from './liveModuleRegistry.js'
+import { createReleaseDigest, getReleaseDelta, releaseEntries } from '../ui/releaseDigest.js'
 
 export const BUILD_INFO_URL = '/build-info.json'
 export const LIVE_UPDATE_INTERVAL_MS = 20000
@@ -194,7 +195,7 @@ export function createUpdateNoticeUi(doc = document) {
     line.appendChild(label)
   }
 
-  function render(text, buttons, { kind, autoHideMs = 0 }) {
+  function render(text, buttons, { kind, digest, autoHideMs = 0 }) {
     const el = ensureBubble()
     clearTimeout(hideTimer)
     el.dataset.kind = kind
@@ -202,42 +203,66 @@ export function createUpdateNoticeUi(doc = document) {
     const label = doc.createElement('span')
     label.className = 'live-update-bubble__text'
     label.textContent = text
+    el.appendChild(label)
+    if (digest) {
+      const changes = doc.createElement('div')
+      changes.className = 'live-update-bubble__changes'
+      changes.tabIndex = 0
+      changes.appendChild(createReleaseDigest(digest).root)
+      el.appendChild(changes)
+    }
     if (buttons.length) {
       const actions = doc.createElement('div')
       actions.className = 'live-update-bubble__actions'
       buttons.forEach(button => actions.appendChild(button))
       el.appendChild(actions)
     }
-    el.appendChild(label)
     el.hidden = false
-    if (autoHideMs) hideTimer = setTimeout(() => { el.hidden = true }, autoHideMs)
+    if (autoHideMs) {
+      let remaining = autoHideMs
+      let started = Date.now()
+      const stop = () => {
+        remaining -= Date.now() - started
+        clearTimeout(hideTimer)
+      }
+      const resume = () => {
+        clearTimeout(hideTimer)
+        started = Date.now()
+        hideTimer = setTimeout(() => { el.hidden = true }, Math.max(0, remaining))
+      }
+      el.addEventListener('mouseenter', stop, { once: true })
+      el.addEventListener('focusin', stop, { once: true })
+      el.addEventListener('mouseleave', resume, { once: true })
+      el.addEventListener('focusout', resume, { once: true })
+      resume()
+    }
   }
 
   return {
-    showSafe(info, swapped, modules = 0) {
-      render(getLiveModule('update-notice').safeUpdateText(info, swapped, modules), [], { kind: 'safe', autoHideMs: 6000 })
+    showSafe(info, swapped, modules = 0, digest) {
+      render(getLiveModule('update-notice').safeUpdateText(info, swapped, modules), [], { kind: 'safe', digest, autoHideMs: 12000 })
       sidebarStatus(`Live update ${info.commit} applied, no reload needed`)
     },
-    showDeferred(info, change) {
+    showDeferred(info, change, digest) {
       const reload = change === 'breaking' ? 'It needs a reload.' : 'It loads live, no reload needed.'
       render(`Update v${info.version} (${info.commit}) is available. ${reload} Other players are connected, so it waits until the network match is over.`, [
         makeButton(doc, 'OK', () => { ensureBubble().hidden = true }, 'live-update-bubble__button')
-      ], { kind: change })
+      ], { kind: change, digest })
       sidebarStatus(`Update ${info.commit} waits for the network match to end (${change === 'breaking' ? 'needs a reload' : 'no reload'})`)
     },
-    showBreaking(info, { multiplayer, onReload }) {
+    showBreaking(info, { multiplayer, onReload, digest }) {
       if (multiplayer) {
-        this.showDeferred(info, 'breaking')
+        this.showDeferred(info, 'breaking', digest)
         return
       }
       render(`Update v${info.version} (${info.commit}) is ready. It needs a reload: your game is saved and comes right back.`, [
         makeButton(doc, 'Reload now', onReload, 'live-update-bubble__button live-update-bubble__button--primary'),
         makeButton(doc, 'Later', () => { ensureBubble().hidden = true }, 'live-update-bubble__button')
-      ], { kind: 'breaking' })
+      ], { kind: 'breaking', digest })
       sidebarStatus(`Update ${info.commit} ready, needs a reload `, makeButton(doc, 'Load', onReload, 'live-update-status__button'))
     },
-    showApplied(applied) {
-      render(`Updated to v${applied.version} (${applied.commit}). Your game was restored.`, [], { kind: 'safe', autoHideMs: 6000 })
+    showApplied(applied, digest) {
+      render(`Updated to v${applied.version} (${applied.commit}). Your game was restored.`, [], { kind: 'safe', digest, autoHideMs: 12000 })
     }
   }
 }
@@ -251,7 +276,7 @@ export function createLiveUpdater({
   prepareReload = async() => {},
   reload = () => win.location.reload(),
   activateServiceWorker = () => activateWaitingServiceWorker(win),
-  running = { version: APP_VERSION, commit: versionInfo?.commit || 'unknown' },
+  running = { version: APP_VERSION, commit: versionInfo?.commit || 'unknown', releases: releaseEntries },
   runningSchema = GAME_STATE_SCHEMA_VERSION,
   swapScheduler = createLiveSwapScheduler()
 } = {}) {
@@ -260,6 +285,14 @@ export function createLiveUpdater({
   let announcedBreaking = null
   let pendingBreaking = null
   let deferredNotice = null
+
+  function digestFor(info, previous = baseline || running) {
+    return getReleaseDelta(previous?.releases, info?.releases, {
+      fromVersion: previous?.version,
+      toVersion: info?.version,
+      fallback: true
+    })
+  }
 
   async function fetchInfo() {
     const response = await fetchImpl(`${BUILD_INFO_URL}?t=${Date.now()}`, { cache: 'no-store' })
@@ -279,7 +312,12 @@ export function createLiveUpdater({
     await activateServiceWorker()
     try {
       win.sessionStorage?.setItem(LIVE_UPDATE_ATTEMPT_KEY, info.commit)
-      win.sessionStorage?.setItem(LIVE_UPDATE_APPLIED_KEY, JSON.stringify({ version: info.version, commit: info.commit }))
+      win.sessionStorage?.setItem(LIVE_UPDATE_APPLIED_KEY, JSON.stringify({
+        version: info.version,
+        commit: info.commit,
+        previousVersion: baseline?.version || running.version,
+        previousReleases: baseline?.releases || running.releases || []
+      }))
       // The new worker is already active; the startup check must not reload again.
       win.sessionStorage?.setItem(UPDATE_RELOAD_GUARD, '1')
     } catch { /* optional */ }
@@ -293,7 +331,8 @@ export function createLiveUpdater({
     announcedBreaking = info.commit
     ui.showBreaking(info, {
       multiplayer: isMultiplayerActive(getGameState()),
-      onReload: () => { void applyBreakingUpdate(info) }
+      onReload: () => { void applyBreakingUpdate(info) },
+      digest: digestFor(info)
     })
     return 'breaking'
   }
@@ -322,7 +361,7 @@ export function createLiveUpdater({
         // The baseline stays, so the next poll after the match applies it.
         if (deferredNotice !== info.commit) {
           deferredNotice = info.commit
-          ui.showDeferred(info, change)
+          ui.showDeferred(info, change, digestFor(info))
         }
         return 'deferred'
       }
@@ -337,8 +376,9 @@ export function createLiveUpdater({
         }
         const swapped = await swapStylesheets(doc, planStylesheetSwaps(baseline, info))
         updateVersionLabels(doc, info)
+        const digest = digestFor(info)
         baseline = info
-        ui.showSafe(info, swapped, changedModules.length)
+        ui.showSafe(info, swapped, changedModules.length, digest)
         return change
       }
       // Breaking, or a safe deploy on top of a pending breaking one (the
@@ -352,7 +392,7 @@ export function createLiveUpdater({
   return { check, applyBreakingUpdate, swapScheduler, getBaseline: () => baseline, getPending: () => pendingBreaking }
 }
 
-export function announceAppliedUpdate({ win = window, ui = null, running = { commit: versionInfo?.commit } } = {}) {
+export function announceAppliedUpdate({ win = window, ui = null, running = { version: APP_VERSION, commit: versionInfo?.commit, releases: releaseEntries } } = {}) {
   let applied = null
   try {
     applied = JSON.parse(win.sessionStorage?.getItem(LIVE_UPDATE_APPLIED_KEY) || 'null')
@@ -360,7 +400,12 @@ export function announceAppliedUpdate({ win = window, ui = null, running = { com
     if (applied?.commit === running.commit) win.sessionStorage?.removeItem(LIVE_UPDATE_ATTEMPT_KEY)
   } catch { /* optional */ }
   if (applied?.commit && applied.commit === running.commit) {
-    ui?.showApplied(applied)
+    const digest = getReleaseDelta(applied.previousReleases, running.releases, {
+      fromVersion: applied.previousVersion,
+      toVersion: running.version,
+      fallback: true
+    })
+    ui?.showApplied(applied, digest)
     return true
   }
   return false

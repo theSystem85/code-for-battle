@@ -10,9 +10,10 @@
 import { Buffer } from 'node:buffer'
 import { execSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { readFileSync } from 'node:fs'
+import { readFileSync, readdirSync } from 'node:fs'
 import { resolve } from 'node:path'
 import process from 'node:process'
+import { buildUnreleasedRelease, mergeReleaseEntries } from '../src/ui/releaseData.js'
 
 export const BUILD_INFO_FILE = 'build-info.json'
 // Format of build-info.json itself.
@@ -112,6 +113,26 @@ function readCommitInfo(root) {
   }
 }
 
+export function readReleaseEntries(root, version) {
+  const featureRoot = resolve(root, 'features')
+  const released = readdirSync(featureRoot, { withFileTypes: true })
+    .filter(item => item.isFile() && item.name.endsWith('.json'))
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map(item => JSON.parse(readFileSync(resolve(featureRoot, item.name), 'utf8')))
+  const unreleased = {}
+  for (const category of ['features', 'improvements', 'bugfixes']) {
+    const directory = resolve(featureRoot, 'unreleased', category)
+    let files = []
+    try { files = readdirSync(directory, { withFileTypes: true }) } catch { /* Category may be empty in a release commit. */ }
+    for (const item of files.sort((a, b) => a.name.localeCompare(b.name))) {
+      if (!item.isFile() || !item.name.endsWith('.json')) continue
+      const key = `features/unreleased/${category}/${item.name}`
+      unreleased[key] = JSON.parse(readFileSync(resolve(directory, item.name), 'utf8'))
+    }
+  }
+  return mergeReleaseEntries(released, buildUnreleasedRelease(unreleased, version))
+}
+
 export function isLiveUpdateBuild(env = process.env) {
   if (env.CFB_LIVE_UPDATE === '1') return true
   if (env.CFB_LIVE_UPDATE === '0') return false
@@ -152,6 +173,7 @@ export function liveUpdateBuildInfoPlugin({ root, version, enabled, stateSchemaV
         liveUpdate: Boolean(enabled),
         stateSchemaVersion,
         update: readUpdateDecision(readHeadCommitBody(root)),
+        releases: readReleaseEntries(root, version),
         jsSignature: computeJsSignature(bundle, { version, root }),
         coreJsSignature: computeJsSignature(bundle, { version, root, excludeModules: Object.values(LIVE_MODULES) }),
         modules: collectLiveModules(bundle, root),

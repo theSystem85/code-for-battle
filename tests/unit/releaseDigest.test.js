@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   completeBoot, createReleaseDigest, getBootReleaseDigest, getHighlightIndex,
   getLoadingHighlights, getManualReleaseDigest, getReleaseDigest,
-  DURATION_HISTORY_KEY, LAST_DURATION_KEY, LAST_VERSION_KEY, buildUnreleasedRelease, mergeReleaseEntries
+  DURATION_HISTORY_KEY, LAST_DURATION_KEY, LAST_VERSION_KEY, buildUnreleasedRelease, getReleaseDelta, mergeReleaseEntries
 } from '../../src/ui/releaseDigest.js'
 import { APP_VERSION } from '../../src/version.js'
 
@@ -72,6 +72,21 @@ describe('release digest', () => {
 })
 
 describe('unreleased release-note entries', () => {
+  it('[U06525] computes entry deltas for same-version builds, newer releases, and empty-delta fallback', () => {
+    const previous = [{ version: '1.0.0', features: ['Existing'], improvements: [], bugfixes: [] }]
+    const sameVersion = [{ version: '1.0.0', features: ['Existing'], improvements: ['New polish'], bugfixes: [] }]
+    expect(getReleaseDelta(previous, sameVersion, { fromVersion: '1.0.0', toVersion: '1.0.0' }).improvements).toEqual(['New polish'])
+
+    const newer = [...sameVersion, { version: '1.1.0', features: ['New mode'], improvements: [], bugfixes: ['Fixed save'] }]
+    const newerDigest = getReleaseDelta(previous, newer, { fromVersion: '1.0.0', toVersion: '1.1.0' })
+    expect(newerDigest.features).toEqual(['New mode'])
+    expect(newerDigest.bugfixes).toEqual(['Fixed save'])
+
+    const fallback = getReleaseDelta(sameVersion, sameVersion, { fromVersion: '1.0.0', toVersion: '1.0.0' })
+    expect(fallback.features).toEqual(['Existing'])
+    expect(fallback.improvements).toEqual(['New polish'])
+  })
+
   it('[U05185] collects one file per change into the build version by category', () => {
     const release = buildUnreleasedRelease({
       '../../features/unreleased/improvements/b.json': { description: 'Second' },

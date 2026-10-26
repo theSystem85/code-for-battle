@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { collectStylesheets, computeJsSignature, isLiveUpdateBuild, normalizeModuleCode, readUpdateDecision } from '../../scripts/liveUpdateBuildInfo.mjs'
+import { collectStylesheets, computeJsSignature, isLiveUpdateBuild, liveUpdateBuildInfoPlugin, normalizeModuleCode, readUpdateDecision } from '../../scripts/liveUpdateBuildInfo.mjs'
 
 function bundleWith({ code, digest = '', version = '0.62.2', cssName = 'sidebar-BBBBBBBB.css' }) {
   return {
@@ -21,6 +21,17 @@ function bundleWith({ code, digest = '', version = '0.62.2', cssName = 'sidebar-
 }
 
 describe('live update build info', () => {
+  it('[U06524] emits the merged release entries in build-info without including them in JS signatures', () => {
+    const bundle = bundleWith({ code: 'run()' })
+    const emitted = []
+    const plugin = liveUpdateBuildInfoPlugin({ root: process.cwd(), version: '0.64.1', enabled: false, stateSchemaVersion: 1 })
+    plugin.generateBundle.call({ emitFile: file => emitted.push(file) }, {}, bundle)
+    const manifest = JSON.parse(emitted.find(file => file.fileName === 'build-info.json').source)
+    expect(manifest.releases.length).toBeGreaterThan(0)
+    expect(manifest.releases.find(entry => entry.version === '0.64.1')).toBeTruthy()
+    expect(manifest.jsSignature).toBe(computeJsSignature(bundle, { version: '0.64.1', root: process.cwd() }))
+  })
+
   it('[U05218] keeps the JS signature for stylesheet, release-note and version-only changes', () => {
     const a = computeJsSignature(bundleWith({ code: 'run()' }), { version: '0.62.2' })
     const b = computeJsSignature(bundleWith({ code: 'run()', version: '0.63.0', digest: '"../../features/unreleased/features/y.json": __vite_glob_1_0,', cssName: 'sidebar-CCCCCCCC.css' }), { version: '0.63.0' })
