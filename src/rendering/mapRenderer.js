@@ -307,6 +307,12 @@ export class MapRenderer {
     this.maxDecorativeWarmQueue = 12
     this.decorativeWarmScheduled = false
     this.decorativeIdleHeadroomMs = 2
+    this.decorativeCameraMoving = false
+    this.decorativeAssetGeneration = 0
+    // Still-camera fallback budget when the browser reports no idle headroom
+    // (or no requestIdleCallback). Bounded so a frame is never held long.
+    this.decorativeStillBudgetMs = 3
+    this.decorativeIdleTimeoutMs = 120
     this.decorativeFadeMs = 180
     this.warmDiscoveryState = {
       startChunkX: -1,
@@ -641,6 +647,11 @@ export class MapRenderer {
 
   notifySpriteTierPublication(publication) {
     if (!publication?.spriteId) return 0
+    // Decorative pages are prepared outside the base pass, so they are not
+    // tracked as page dependencies. Any tier publication (for example the
+    // coarse -> final upgrade) re-keys them; the published page stays drawn
+    // until its idle-prepared replacement is complete.
+    this.decorativeAssetGeneration++
     const pageKeys = this.pageDependencies.publishAssetTier(
       publication.spriteId,
       publication.tier,
@@ -1153,7 +1164,7 @@ export class MapRenderer {
   getDecorativeKey(chunk) {
     return `${this.terrainRevisions.mapGeneration}|${chunk.revisionSnapshot.layout}|` +
       `${chunk.revisionSnapshot.surface}|${chunk.revisionSnapshot.asset}|` +
-      `${this.textureManager.integratedRenderSignature}`
+      `${this.textureManager.integratedRenderSignature}|${this.decorativeAssetGeneration}`
   }
 
   queueDecorativeChunk(chunk, mapGrid, useTexture) {
@@ -1174,21 +1185,30 @@ export class MapRenderer {
     this.decorativeWarmScheduled = true
     const callback = deadline => {
       this.decorativeWarmScheduled = false
-      // A timer is not evidence of spare main-thread capacity. On browsers
-      // without requestIdleCallback decorations remain absent rather than risk
-      // delaying a scroll frame.
-      if (deadline?.timeRemaining && deadline.timeRemaining() > this.decorativeIdleHeadroomMs) {
-        this.processDecorativeWarmQueue(deadline)
+      const hasIdleCapacity = deadline?.timeRemaining && deadline.timeRemaining() > this.decorativeIdleHeadroomMs
+      // Idle deadlines may legitimately be short forever (a busy render loop),
+      // and Safari does not provide requestIdleCallback. Once the camera is
+      // still, advance within a small fixed budget (at least one tile) so
+      // decoration publication always makes bounded progress. A timer never
+      // prepares decoration work while camera frames are moving.
+      if (hasIdleCapacity || !this.decorativeCameraMoving) {
+        this.processDecorativeWarmQueue(deadline, hasIdleCapacity ? 0 : this.decorativeStillBudgetMs)
       }
       if (this.decorativeWarmQueue.size) {
         window.setTimeout(() => this.scheduleDecorativeWarmProcessing(), 16)
       }
     }
-    if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(callback)
-    else window.setTimeout(() => callback(null), 16)
+    // The timeout keeps a saturated main thread from starving idle callbacks
+    // forever; a timed-out deadline reports no headroom and only takes the
+    // still-camera budget path.
+    if (typeof window.requestIdleCallback === 'function') {
+      window.requestIdleCallback(callback, { timeout: this.decorativeIdleTimeoutMs })
+    } else {
+      window.setTimeout(() => callback(null), 16)
+    }
   }
 
-  processDecorativeWarmQueue(deadline) {
+  processDecorativeWarmQueue(deadline, fallbackBudgetMs = 0) {
     const entry = this.decorativeWarmQueue.values().next().value
     if (!entry) return false
     const { chunk, mapGrid, useTexture, key } = entry
@@ -1210,7 +1230,13 @@ export class MapRenderer {
     }
     const columns = chunk.endX - chunk.startX
     const tileCount = columns * (chunk.endY - chunk.startY)
-    while (entry.nextTile < tileCount && deadline.timeRemaining() > this.decorativeIdleHeadroomMs) {
+    const startTile = entry.nextTile
+    const clock = (typeof performance !== 'undefined' && performance.now) ? () => performance.now() : () => Date.now()
+    const fallbackEnd = fallbackBudgetMs > 0 ? clock() + fallbackBudgetMs : 0
+    while (entry.nextTile < tileCount && (
+      deadline?.timeRemaining?.() > this.decorativeIdleHeadroomMs ||
+      (fallbackBudgetMs > 0 && (entry.nextTile === startTile || clock() < fallbackEnd))
+    )) {
       const x = chunk.startX + entry.nextTile % columns
       const y = chunk.startY + Math.floor(entry.nextTile / columns)
       this.drawDecorativeLayer(
@@ -1637,6 +1663,7 @@ export class MapRenderer {
     scrollDelta.x = this.hasLastScrollOffset ? scrollOffset.x - this.lastScrollOffset.x : 0
     scrollDelta.y = this.hasLastScrollOffset ? scrollOffset.y - this.lastScrollOffset.y : 0
     const isScrolling = Math.abs(scrollDelta.x) > 0.5 || Math.abs(scrollDelta.y) > 0.5
+    this.decorativeCameraMoving = isScrolling
     const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()
     const fadeDecorations = gameState?.decorativeFadeEnabled !== false
     if (isScrolling && this.mobileMemoryProfile) {

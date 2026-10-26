@@ -223,7 +223,7 @@ export class TextureManager {
     return this.preparedMapSpriteCatalogPromise
   }
 
-  async loadPreparedMapSpriteSheet(sheetPath) {
+  async loadPreparedMapSpriteSheet(sheetPath, tierName = 'final') {
     const name = sheetPath.split('/').pop()?.replace(/\.[^.]+$/, '')
     if (!name || !sheetPath.startsWith('images/map/sprite_sheets/')) return null
     const catalog = await this.loadPreparedMapSpriteCatalog()
@@ -234,9 +234,15 @@ export class TextureManager {
       manifest = await fetchAssetJson(`${PREPARED_MAP_SPRITE_ROOT}${catalogEntry.manifest}`)
       this.preparedMapSpriteManifests.set(name, manifest)
     }
-    const page = manifest.pages?.find(candidate => candidate.tierName === 'final') || manifest.pages?.at(-1)
+    const finalPage = manifest.pages?.find(candidate => candidate.tierName === 'final') || manifest.pages?.at(-1)
+    const pageUrl = candidate => candidate.url || `${PREPARED_MAP_SPRITE_ROOT.slice(1)}${candidate.name}`
+    // A reconfiguration never downgrades a sheet whose final page is already
+    // decoded; coarse-first only applies to sheets not yet resident.
+    const finalResident = finalPage && this.integratedSpriteSheetImagesByPath[pageUrl(finalPage)]
+    const page = (finalResident ? finalPage : null) ||
+      manifest.pages?.find(candidate => candidate.tierName === tierName) || finalPage
     if (!page) return null
-    const image = await this.loadIntegratedSpriteSheetImage(page.url || `${PREPARED_MAP_SPRITE_ROOT.slice(1)}${page.name}`)
+    const image = await this.loadIntegratedSpriteSheetImage(pageUrl(page))
     if (!image) return null
     return { catalogEntry, manifest, page, image }
   }
@@ -603,6 +609,7 @@ export class TextureManager {
     const preparation = new PreparationGeneration(++this.texturePreparationGeneration)
     this.integratedPreparationGeneration = preparation
     const enabled = Boolean(config?.enabled) && !(Array.isArray(config.sheets) && config.sheets.length === 0)
+    const preparedTier = config.preparedTier === 'final' ? 'final' : 'coarse'
     const requestedBiomeTag = ['soil', 'sand', 'grass', 'snow', 'mixed'].includes(config?.biomeTag)
       ? config.biomeTag
       : this.integratedBiomeTag
@@ -657,7 +664,7 @@ export class TextureManager {
     // Bounded overlap hides per-sheet network latency; a selected derivative
     // never also requests its source sheet. Results keep declaration order.
     const loaded = await loadSpriteSheetsWithOverlap(candidates, async({ sheetPath }) => {
-      const prepared = await this.loadPreparedMapSpriteSheet(sheetPath)
+      const prepared = await this.loadPreparedMapSpriteSheet(sheetPath, preparedTier)
       const image = prepared?.image || await this.loadIntegratedSpriteSheetImage(sheetPath)
       return { prepared, image }
     })
@@ -673,7 +680,8 @@ export class TextureManager {
         image,
         blendMode: prepared ? 'alpha' : normalizeSpriteSheetBlendMode(metadata?.blendMode),
         blackKey: prepared ? null : metadata?.blackKey || null,
-        preparedManifest: prepared?.manifest || null
+        preparedManifest: prepared?.manifest || null,
+        preparedTier: prepared?.page?.tier ?? null
       })
       if (prepared) this.publishPreparedMapSpriteSheet(sheetPath, prepared)
     }
@@ -741,6 +749,7 @@ export class TextureManager {
     this.integratedDecorationPools = buildDecorationPools(preparedGroups)
     this.hasGroundDetails = preparedGroups.some(group => group.tagSet.has('ground_detail'))
     this.naturalDecorationRules = normalizedEntries.some(entry => /\/dtv\d+_/.test(entry.sheetPath))
+    const previousLayoutMap = this.decorationLayoutPreparation.published?.mapGrid || null
     this.decorationLayoutCache = null
     this.integratedBiomeTag = ['soil', 'sand', 'grass', 'snow', 'mixed'].includes(config?.biomeTag) ? config.biomeTag : 'grass'
     this.integratedBlendMode = normalizeSpriteSheetBlendMode(normalizedEntries[0].metadata?.blendMode)
@@ -753,6 +762,19 @@ export class TextureManager {
     this.integratedRenderSignature = `${signatureSheets}|${this.integratedBiomeTag}|${computeMapTopologyFingerprint({ enabled: true, sheets: normalizedEntries, ...gameState })}`
     this.clearStreetSelectionPoolCache()
     this.integratedConfigVersion++
+    if (preparedTier === 'final' && previousLayoutMap) this.prepareDecorationLayout(previousLayoutMap)
+
+    // Publish the existing coarse derivatives first, then let the same
+    // configuration lifecycle replace them atomically with final pages. The
+    // renderer keeps already-published chunk canvases visible during this
+    // asset-only revision, so placement never blinks or changes size.
+    if (preparedTier === 'coarse' && normalizedEntries.some(entry => entry.preparedTier === 0)) {
+      const generation = preparation.generation
+      Promise.resolve().then(() => {
+        if (this.integratedPreparationGeneration?.generation !== generation) return null
+        return this.setIntegratedSpriteSheetConfig({ ...config, preparedTier: 'final' })
+      }).catch(error => window.logger?.warn?.('Final map-sprite tier upgrade failed:', error))
+    }
   }
 
   static coordHash(x, y) {

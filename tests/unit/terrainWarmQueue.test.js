@@ -74,6 +74,7 @@ describe('TerrainWarmQueue', () => {
 describe('MapRenderer bounded terrain residency', () => {
   it('[U06490] keeps a published decorative page visible while scrolling', () => {
     const renderer = new MapRenderer(makeTextureManager())
+    renderer.useOrganicTerrain = vi.fn(() => true)
     const context = { drawImage: vi.fn(), save: vi.fn(), restore: vi.fn(), globalAlpha: 1 }
     const chunk = {
       decorativeKey: 'published',
@@ -89,6 +90,7 @@ describe('MapRenderer bounded terrain residency', () => {
 
   it('[U06494] advances visible decoration work only inside reported idle capacity', () => {
     const renderer = new MapRenderer(makeTextureManager())
+    renderer.useOrganicTerrain = vi.fn(() => true)
     const chunk = {
       key: '0,0', startX: 0, startY: 0, endX: 2, endY: 1,
       offsetX: 0, offsetY: 0, padding: 0,
@@ -115,6 +117,96 @@ describe('MapRenderer bounded terrain residency', () => {
     expect(chunk.decorativeKey).toBe('current')
     expect(chunk.decorativeCanvas).toBe(canvas)
     createElement.mockRestore()
+  })
+
+  it('[U06495] publishes decorations through the timer fallback while the camera is still', () => {
+    vi.useFakeTimers()
+    const renderer = new MapRenderer(makeTextureManager())
+    renderer.useOrganicTerrain = vi.fn(() => true)
+    const chunk = {
+      key: '0,0', startX: 0, startY: 0, endX: 1, endY: 1,
+      offsetX: 0, offsetY: 0, padding: 0,
+      revisionSnapshot: { layout: 0, surface: 0, asset: 0 }
+    }
+    renderer.chunkCache.set(chunk.key, chunk)
+    renderer.getDecorativeKey = vi.fn(() => 'current')
+    renderer.reserveDecorativeRaster = vi.fn(() => ({ release: vi.fn() }))
+    renderer.drawDecorativeLayer = vi.fn()
+    const originalIdleCallback = window.requestIdleCallback
+    window.requestIdleCallback = undefined
+
+    renderer.queueDecorativeChunk(chunk, makeMap(1), true)
+    vi.advanceTimersByTime(16)
+
+    expect(chunk.decorativeKey).toBe('current')
+    expect(chunk.decorativeCanvas).toBeTruthy()
+    expect(renderer.drawDecorativeLayer).toHaveBeenCalledOnce()
+    window.requestIdleCallback = originalIdleCallback
+    vi.useRealTimers()
+  })
+
+  it('[U06496] guarantees bounded progress on short idle deadlines only after the camera stops', () => {
+    vi.useFakeTimers()
+    const callbacks = []
+    const originalIdleCallback = window.requestIdleCallback
+    window.requestIdleCallback = vi.fn(callback => callbacks.push(callback))
+    const renderer = new MapRenderer(makeTextureManager())
+    renderer.useOrganicTerrain = vi.fn(() => true)
+    const chunk = {
+      key: '0,0', startX: 0, startY: 0, endX: 1, endY: 1,
+      offsetX: 0, offsetY: 0, padding: 0,
+      revisionSnapshot: { layout: 0, surface: 0, asset: 0 }
+    }
+    renderer.chunkCache.set(chunk.key, chunk)
+    renderer.getDecorativeKey = vi.fn(() => 'current')
+    renderer.reserveDecorativeRaster = vi.fn(() => ({ release: vi.fn() }))
+    renderer.drawDecorativeLayer = vi.fn()
+    renderer.decorativeCameraMoving = true
+    renderer.queueDecorativeChunk(chunk, makeMap(1), true)
+
+    callbacks.shift()({ timeRemaining: () => 0 })
+    expect(renderer.drawDecorativeLayer).not.toHaveBeenCalled()
+    vi.advanceTimersByTime(16)
+    renderer.decorativeCameraMoving = false
+    callbacks.shift()({ timeRemaining: () => 0 })
+
+    expect(chunk.decorativeKey).toBe('current')
+    expect(renderer.drawDecorativeLayer).toHaveBeenCalledOnce()
+    window.requestIdleCallback = originalIdleCallback
+    vi.useRealTimers()
+  })
+
+  it('[U06497] finishes a small still-camera chunk within the fallback budget when idle time is short', () => {
+    const renderer = new MapRenderer(makeTextureManager())
+    const chunk = {
+      key: '0,0', startX: 0, startY: 0, endX: 2, endY: 2,
+      offsetX: 0, offsetY: 0, padding: 0,
+      revisionSnapshot: { layout: 0, surface: 0, asset: 0 }
+    }
+    renderer.chunkCache.set(chunk.key, chunk)
+    renderer.getDecorativeKey = vi.fn(() => 'current')
+    renderer.reserveDecorativeRaster = vi.fn(() => ({ release: vi.fn() }))
+    renderer.drawDecorativeLayer = vi.fn()
+    renderer.decorativeWarmQueue.set(chunk.key, { chunk, mapGrid: makeMap(2), useTexture: true, key: 'current' })
+
+    expect(renderer.processDecorativeWarmQueue({ timeRemaining: () => 0, didTimeout: true }, 50)).toBe(true)
+    expect(renderer.drawDecorativeLayer).toHaveBeenCalledTimes(4)
+    expect(chunk.decorativeKey).toBe('current')
+  })
+
+  it('[U06498] re-keys decorative pages on a sprite tier publication without dropping the published page', () => {
+    const renderer = new MapRenderer(makeTextureManager())
+    const chunk = {
+      key: '0,0', startX: 0, startY: 0, endX: 1, endY: 1,
+      revisionSnapshot: { layout: 0, surface: 0, asset: 0 },
+      decorativeCanvas: {}
+    }
+    const before = renderer.getDecorativeKey(chunk)
+    chunk.decorativeKey = before
+    renderer.notifySpriteTierPublication({ spriteId: 'images/map/sprite_sheets/dtv6_decor_a.webp', tier: 2, revision: 7 })
+
+    expect(renderer.getDecorativeKey(chunk)).not.toBe(before)
+    expect(chunk.decorativeCanvas).toBeTruthy()
   })
 
   it('[U06491] never mixes deferred decoration pixels into the synchronous base pass', () => {
