@@ -131,14 +131,17 @@ export function isShipyardWaterLocalTile(localX, localY, width = 5, height = 5) 
 
 export function getShipyardLaunchTile(shipyard, mapGrid) {
   const candidates = []
-  const y = shipyard.y + shipyard.height
-  for (let x = shipyard.x; x < shipyard.x + shipyard.width; x++) {
-    candidates.push({ x, y })
+  for (let x = shipyard.x - 1; x <= shipyard.x + shipyard.width; x++) {
+    candidates.push({ x, y: shipyard.y - 1 }, { x, y: shipyard.y + shipyard.height })
+  }
+  for (let y = shipyard.y; y < shipyard.y + shipyard.height; y++) {
+    candidates.push({ x: shipyard.x - 1, y }, { x: shipyard.x + shipyard.width, y })
   }
   const centerX = shipyard.x + Math.floor(shipyard.width / 2)
+  const centerY = shipyard.y + Math.floor(shipyard.height / 2)
   return candidates
     .filter(tile => isWaterPassableTile(mapGrid, tile.x, tile.y))
-    .sort((a, b) => Math.abs(a.x - centerX) - Math.abs(b.x - centerX))[0] || null
+    .sort((a, b) => Math.hypot(a.x - centerX, a.y - centerY) - Math.hypot(b.x - centerX, b.y - centerY))[0] || null
 }
 
 export function getNavalPathOptions(unitOrOwner = null) {

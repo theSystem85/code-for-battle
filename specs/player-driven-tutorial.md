@@ -18,6 +18,8 @@ valid map placement. The refinery illustrates drag and drop without dispatching
 input. Production lessons wait for actual buildings/units, and tank/rally and
 manual driving lessons require both tasks. Cursor transitions use 0.5 seconds
 (previously 0.15), and 350ms guidance pauses use 1167ms: 30% of the prior speed.
+The advanced Tech Tree lesson explains that the Shipyard's entire footprint must
+be water, touch coastal land, and remain within its special four-tile build range.
 
 The crew lesson includes linked hospital, ambulance and full-crew tasks above
 its progress bar. The target tank has a visible marker. Restoring a different

@@ -50,11 +50,9 @@ describe('naval integration', () => {
     })).toEqual([start, end])
   })
 
-  it('[U03166] requires the lower three rows of the 5x5 Shipyard footprint to be water', () => {
-    const mapGrid = createMap(20, 20)
-    for (let y = 7; y <= 10; y++) {
-      for (let x = 5; x <= 9; x++) mapGrid[y][x].type = 'water'
-    }
+  it('[U03166] requires the complete 5x5 Shipyard footprint to be water beside land', () => {
+    const mapGrid = createMap(20, 20, 'water')
+    for (let y = 5; y <= 9; y++) mapGrid[y][4].type = 'land'
     const factories = [{ id: 'player', x: 1, y: 5, width: 3, height: 3 }]
 
     expect(getShipyardWaterLocalTiles(5, 5)).toHaveLength(15)

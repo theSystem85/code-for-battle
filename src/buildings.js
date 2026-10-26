@@ -32,7 +32,12 @@ import { buildingData } from './data/buildingData.js'
 
 // Re-export validation functions from the validation module to maintain backwards compatibility
 // The actual implementations are in src/validation/buildingPlacement.js
-export { isNearExistingBuilding, isTileValid } from './validation/buildingPlacement.js'
+export {
+  isNearExistingBuilding,
+  isTileValid,
+  isShipyardPlacementTileValid,
+  shouldShowPlacementTileAsValid
+} from './validation/buildingPlacement.js'
 import { canPlaceBuilding as canPlaceBuildingBase } from './validation/buildingPlacement.js'
 
 // Wrapper for canPlaceBuilding that passes gameState.mapEditMode for backwards compatibility

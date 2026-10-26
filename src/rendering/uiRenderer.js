@@ -1,6 +1,6 @@
 // rendering/uiRenderer.js
 import { TILE_SIZE, MAX_BUILDING_GAP_TILES } from '../config.js'
-import { buildingData, isTileValid, canPlaceBuilding } from '../buildings.js'
+import { buildingData, isTileValid, canPlaceBuilding, shouldShowPlacementTileAsValid } from '../buildings.js'
 import { gameState } from '../gameState.js'
 import { showNotification } from '../ui/notifications.js'
 import { getCurrentGame } from '../main.js'
@@ -254,7 +254,12 @@ export class UIRenderer {
             )
 
             // Determine final color
-            ctx.fillStyle = isValid && isPlacementAllowed ? 'rgba(0, 255, 0, 0.5)' : 'rgba(255, 0, 0, 0.5)'
+            const tileIsGreen = shouldShowPlacementTileAsValid(
+              gameState.currentBuildingType,
+              isValid,
+              isPlacementAllowed
+            )
+            ctx.fillStyle = tileIsGreen ? 'rgba(0, 255, 0, 0.5)' : 'rgba(255, 0, 0, 0.5)'
             ctx.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE)
 
             // Draw tile outline
