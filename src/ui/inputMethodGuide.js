@@ -78,6 +78,7 @@ export function getInputGuideData(method) {
     ['Group select', `Drag ${primary} / ${additive}`, 'Drag a box around units; add individual units with the additive selection binding.'],
     ['Deselect / cancel', `${escape} / Secondary click`, 'Press the cancel key or secondary-click without dragging.'],
     ['Pan map', method === 'trackpad' ? 'Two-finger scroll ↔ ↕' : 'Secondary-click + drag', method === 'trackpad' ? 'Scroll with two fingers over the map. Shift + wheel scrolls horizontally. Hold a secondary click and drag if scrolling gestures are intercepted. In Runtime Config → Controls, invert touch/trackpad panning if desired.' : 'Hold the secondary button and drag. You can also scroll over the map.'],
+    ['Adjust build stack', 'Shift + scroll over build button', 'Hold Shift while scrolling over a production button to add or remove queued items. Scrolling without Shift moves the sidebar normally.'],
     ['Manual driving', driving, `With a unit selected, hold the configured driving keys; fire with ${fire}. Without a selected unit, these direction keys move the camera.`],
     ['Control settings', settingsKey, 'Open Settings to inspect or customize bindings.']
   ]

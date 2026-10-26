@@ -2,7 +2,7 @@ import { cancelStackedPlacement } from '../ui/productionPlacementBridge.js'
 import { getSimulationTime } from '../game/time.js'
 import { noteDefenceDirectOrder } from '../policies/defenceCommandApi.js'
 // keyboardHandler.js
-import { gameState } from '../gameState.js'
+import { clearChainBuildState, gameState } from '../gameState.js'
 import { TILE_SIZE } from '../config.js'
 import { findPathForOwner } from '../units.js'
 import { playSound, playPositionalSound } from '../sound.js'
@@ -76,9 +76,25 @@ export class KeyboardHandler {
     this.factories = factories
 
     // Track Shift and Alt/Option key states globally
+    // A missed Shift keyup (window blur, OS shortcut, tab switch) used to leave
+    // gameState.shiftKeyDown stuck on, which silently primed chain building for
+    // every following build. Resync from each event and reset on focus loss.
+    const releaseStaleShift = () => {
+      gameState.shiftKeyDown = false
+      if (gameState.chainBuildMode || gameState.chainBuildPrimed) {
+        clearChainBuildState()
+      }
+    }
+    window.addEventListener('blur', releaseStaleShift)
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) releaseStaleShift()
+    })
+
     document.addEventListener('keydown', e => {
       if (e.key === 'Shift') {
         gameState.shiftKeyDown = true
+      } else if (gameState.shiftKeyDown && e.shiftKey === false) {
+        releaseStaleShift()
       }
       if (e.key === 'Alt') {
         gameState.altKeyDown = true
@@ -375,8 +391,7 @@ export class KeyboardHandler {
         gameState.shiftKeyDown = false
         // Exit chain build mode when shift released
         if (gameState.chainBuildMode) {
-          gameState.chainBuildMode = false
-          gameState.chainBuildPrimed = false
+          clearChainBuildState()
         }
       }
       if (e.key === 'Alt') {
@@ -486,10 +501,7 @@ export class KeyboardHandler {
     }
 
     if (gameState.chainBuildMode || gameState.chainBuildPrimed || gameState.chainBuildingType || gameState.chainBuildingButton) {
-      gameState.chainBuildMode = false
-      gameState.chainBuildPrimed = false
-      gameState.chainBuildingType = null
-      gameState.chainBuildingButton = null
+      clearChainBuildState()
       modeWasCanceled = true
     }
 

@@ -3,7 +3,7 @@ import { completeProductionItem } from '../policies/completionReceipts.js'
 // eventHandlers.js
 // Handle game control and building placement event handlers
 
-import { gameState } from '../gameState.js'
+import { clearChainBuildState, gameState } from '../gameState.js'
 import { productionQueue } from '../productionQueue.js'
 import { setupMusicControls } from './musicControls.js'
 import { initMasterVolumeControl } from './volumeControl.js'
@@ -210,7 +210,8 @@ export class EventHandlers {
           type: gameState.draggedBuildingType,
           button: gameState.draggedBuildingButton,
           clientX: e.clientX,
-          clientY: e.clientY
+          clientY: e.clientY,
+          shiftKey: Boolean(e.shiftKey)
         })
       } else if (gameState.draggedUnitType) {
         e.preventDefault()
@@ -597,6 +598,7 @@ export class EventHandlers {
     }
 
     const { kind, type, button, clientX, clientY } = detail
+    const shiftHeld = typeof detail.shiftKey === 'boolean' ? detail.shiftKey : gameState.shiftKeyDown
     const gameCanvas = this.canvasManager.getGameCanvas()
     if (!gameCanvas) {
       return
@@ -626,7 +628,7 @@ export class EventHandlers {
         productionQueue.addItem(type, button, true, blueprint)
         showNotification(`Blueprint placed for ${buildingData[type].displayName}`)
 
-        if (gameState.chainBuildPrimed && gameState.shiftKeyDown) {
+        if (gameState.chainBuildPrimed && shiftHeld) {
           gameState.chainBuildMode = true
           gameState.chainStartX = tileX
           gameState.chainStartY = tileY
@@ -705,6 +707,7 @@ export class EventHandlers {
           // Exit placement mode
           gameState.buildingPlacementMode = false
           gameState.currentBuildingType = null
+          clearChainBuildState()
 
           // Remove ready-for-placement class from the button
           document.querySelectorAll('.ready-for-placement').forEach(button => {
@@ -871,6 +874,8 @@ export class EventHandlers {
       gameState.chainStartX = last.x
       gameState.chainStartY = last.y
     }
+
+    clearChainBuildState()
   }
 
   handleChainBuildingOverlay(e) {

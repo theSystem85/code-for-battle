@@ -1,0 +1,3 @@
+- [x] **Keep production scrolling and chain building user-controlled**
+  Require Shift on each production-button wheel event, and fully clear one-shot chain-build state after cancellation, aborted production, completion, placement, and save loading. Root cause of the self re-arming chain build: a missed Shift keyup (focus loss, OS shortcut) left `gameState.shiftKeyDown` stuck on, so every later building drag primed chain building. Chain priming now reads the drag/drop event's own `shiftKey`, and the global Shift flag is reset on window blur/tab hide and resynced from the next key event.
+  Spec: none

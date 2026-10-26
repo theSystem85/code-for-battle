@@ -6,7 +6,7 @@ import { spawnUnit, findPath } from './units.js'
 import { findClosestOre } from './logic.js'
 import { buildingCosts, factories, units } from './main.js'
 import { showNotification } from './ui/notifications.js'
-import { gameState } from './gameState.js'
+import { clearChainBuildState, gameState } from './gameState.js'
 import { buildingData, canPlaceBuilding, isNearExistingBuilding } from './buildings.js'
 import { unitCosts } from './units.js'
 import { playSound } from './sound.js'
@@ -77,6 +77,7 @@ export const productionQueue = {
   },
 
   removeBlueprint: function(item) {
+    clearChainBuildState()
     if (item && item.blueprint) {
       gameState.blueprints = gameState.blueprints.filter(bp => bp !== item.blueprint)
     }
@@ -994,6 +995,8 @@ export const productionQueue = {
   completeCurrentBuildingProduction: function() {
     if (!this.currentBuilding) return
 
+    clearChainBuildState()
+
     // Remove item from queue immediately when completed
     this.buildingItems.shift()
 
@@ -1170,6 +1173,8 @@ export const productionQueue = {
   cancelBuildingProduction: function(options = {}) {
     if (!this.currentBuilding) return
 
+    clearChainBuildState()
+
     const isRemoteClientSession = !isHost() && gameState.multiplayerSession?.isRemote
 
     failCompletionReceipt(this.currentBuilding.completionReceiptId)
@@ -1224,6 +1229,7 @@ export const productionQueue = {
 
   // Method to cancel a building placement
   cancelBuildingPlacement: function() {
+    clearChainBuildState()
     // Find the completed building that matches the current placement mode
     const buildingType = gameState.currentBuildingType
     if (!buildingType) return
@@ -1307,6 +1313,7 @@ export const productionQueue = {
 
   // Method to exit building placement mode without canceling the building
   exitBuildingPlacementMode: function() {
+    clearChainBuildState()
     if (!gameState.buildingPlacementMode) return
 
     // Clear building placement mode
@@ -1383,6 +1390,8 @@ export const productionQueue = {
     )
 
     if (completedBuildingIndex === -1) return
+
+    clearChainBuildState()
 
     const _completedBuilding = this.completedBuildings[completedBuildingIndex]
 

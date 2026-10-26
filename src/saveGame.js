@@ -3,7 +3,7 @@ import { findCityBuildingById } from './game/cityBuildings.js'
 import { normalizeDecorationSettings } from './game/decorationSettings.js'
 import { exportAutomationSession, restoreAutomationSession, resetPolicyStore } from './policies/policyStore.js'
 // saveGame.js
-import { gameState } from './gameState.js'
+import { clearChainBuildState, gameState } from './gameState.js'
 import { GAME_STATE_SCHEMA_VERSION } from './gameStateSchema.js'
 import { migrateLiveState } from './gameStateMigrations.js'
 import { migrateSavedSpriteSheetState } from './ui/spriteSheetRegistry.js'
@@ -920,11 +920,6 @@ function buildSaveObject(label) {
       selectedWreckId: gameState.selectedWreckId || null,
       buildingPlacementMode: Boolean(gameState.buildingPlacementMode),
       currentBuildingType: gameState.currentBuildingType || null,
-      chainBuildPrimed: Boolean(gameState.chainBuildPrimed),
-      chainBuildMode: Boolean(gameState.chainBuildMode),
-      chainStartX: Number.isFinite(gameState.chainStartX) ? gameState.chainStartX : 0,
-      chainStartY: Number.isFinite(gameState.chainStartY) ? gameState.chainStartY : 0,
-      chainBuildingType: gameState.chainBuildingType || null,
       blueprints: Array.isArray(gameState.blueprints)
         ? gameState.blueprints.map(bp => ({
           type: bp.type,
@@ -1195,13 +1190,9 @@ function loadGameFromSaveObject(saveObj, key) {
       ? loaded.gameState.currentBuildingType
       : null
 
-    gameState.chainBuildPrimed = Boolean(loaded.gameState?.chainBuildPrimed)
-    gameState.chainBuildMode = Boolean(loaded.gameState?.chainBuildMode)
-    gameState.chainStartX = Number.isFinite(loaded.gameState?.chainStartX) ? loaded.gameState.chainStartX : 0
-    gameState.chainStartY = Number.isFinite(loaded.gameState?.chainStartY) ? loaded.gameState.chainStartY : 0
-    gameState.chainBuildingType = typeof loaded.gameState?.chainBuildingType === 'string'
-      ? loaded.gameState.chainBuildingType
-      : null
+    // Chain building is transient user intent. Never restore a held/cancelled
+    // gesture from a save into the next build action.
+    clearChainBuildState()
     gameState.entityImageOpacityLevel = Number.isFinite(loaded.gameState?.entityImageOpacityLevel)
       ? Math.max(0, Math.min(2, loaded.gameState.entityImageOpacityLevel))
       : 0
@@ -1210,7 +1201,6 @@ function loadGameFromSaveObject(saveObj, key) {
     gameState.draggedBuildingButton = null
     gameState.draggedUnitType = null
     gameState.draggedUnitButton = null
-    gameState.chainBuildingButton = null
 
     const sanitizeRect = rect => {
       if (!rect || typeof rect !== 'object') return null

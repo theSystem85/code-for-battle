@@ -9,6 +9,7 @@ import { decodeSaveObject } from '../../src/saveFormat.js'
 
 // Mock dependencies before importing
 vi.mock('../../src/gameState.js', () => ({
+  clearChainBuildState: vi.fn(),
   gameState: {
     money: 10000,
     gameTime: 0,
