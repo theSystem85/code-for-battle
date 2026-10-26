@@ -22,6 +22,7 @@ export const gameState = {
   totalMoneyEarned: 0,
   scrollOffset: { x: 0, y: 0 },
   dragVelocity: { x: 0, y: 0 },
+  decorativeFadeEnabled: true,
   smoothScroll: {
     active: false,
     targetX: 0,

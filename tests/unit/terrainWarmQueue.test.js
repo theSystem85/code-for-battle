@@ -72,6 +72,34 @@ describe('TerrainWarmQueue', () => {
 })
 
 describe('MapRenderer bounded terrain residency', () => {
+  it('[U06490] keeps decorative work suppressed throughout camera motion and its settle window', () => {
+    const renderer = new MapRenderer(makeTextureManager())
+    renderer.hasLastScrollOffset = true
+    renderer.lastScrollOffset.x = 10
+    renderer.lastScrollOffset.y = 10
+
+    expect(renderer.noteDecorativeScrollPressure({ x: 20, y: 10 }, 100)).toBe(true)
+    expect(renderer.isDecorativeWorkDeferred(279)).toBe(true)
+    renderer.lastScrollOffset.x = 20
+    expect(renderer.noteDecorativeScrollPressure({ x: 20, y: 10 }, 280)).toBe(false)
+  })
+
+  it('[U06491] never mixes deferred decoration pixels into the synchronous base pass', () => {
+    const renderer = new MapRenderer(makeTextureManager())
+    renderer.sotMask = [[null]]
+    renderer.organicTerrain.ready = true
+    renderer.organicTerrain.drawGrass = vi.fn()
+    renderer.organicTerrain.drawDecoration = vi.fn()
+    renderer.drawTileDecalOverlay = vi.fn()
+    renderer.drawOrganicLandTransitions = vi.fn()
+    const context = { fillRect: vi.fn() }
+
+    renderer.drawBaseLayer(context, [[{ type: 'land' }]], 0, 0, 1, 1, 0, 0, true, null)
+
+    expect(renderer.organicTerrain.drawGrass).toHaveBeenCalled()
+    expect(renderer.organicTerrain.drawDecoration).not.toHaveBeenCalled()
+  })
+
   it('[U04444] refreshes neighbor discovery only for boundary, direction, or revision changes', () => {
     const renderer = new MapRenderer(makeTextureManager())
     const mapGrid = makeMap()

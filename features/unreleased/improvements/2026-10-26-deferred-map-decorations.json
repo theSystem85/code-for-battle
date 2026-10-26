@@ -1,0 +1,1 @@
+{ "description": "Map decorations now wait for idle main-thread capacity during scrolling and can fade in after the camera settles." }
