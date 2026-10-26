@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import {
+  PLACEMENT_OVERLAY_GREEN,
+  PLACEMENT_OVERLAY_ORANGE,
+  PLACEMENT_OVERLAY_RED,
   canPlaceBuilding,
   isTileValid,
+  placementTileOverlayFill,
   shouldShowPlacementTileAsValid
 } from '../../src/validation/buildingPlacement.js'
 import { TILE_SIZE } from '../../src/config.js'
@@ -39,10 +43,16 @@ describe('Shipyard placement', () => {
     expect(isTileValid(6, 6, mapGrid, [], [], [factory], 'shipyard', { x: 5, y: 5 })).toBe(false)
   })
 
-  it('[U06512] marks open water green, and land or occupied water red, without changing other overlays', () => {
-    expect(shouldShowPlacementTileAsValid('shipyard', true, false)).toBe(true)
+  it('[U06512] marks open water green inside range, orange outside range, and blocked tiles red', () => {
+    expect(shouldShowPlacementTileAsValid('shipyard', true, true)).toBe(true)
+    expect(shouldShowPlacementTileAsValid('shipyard', true, false)).toBe(false)
     expect(shouldShowPlacementTileAsValid('shipyard', false, true)).toBe(false)
+    expect(shouldShowPlacementTileAsValid('powerPlant', true, true)).toBe(true)
     expect(shouldShowPlacementTileAsValid('powerPlant', true, false)).toBe(false)
+    expect(placementTileOverlayFill(true, true)).toBe(PLACEMENT_OVERLAY_GREEN)
+    expect(placementTileOverlayFill(true, false)).toBe(PLACEMENT_OVERLAY_ORANGE)
+    expect(placementTileOverlayFill(false, true)).toBe(PLACEMENT_OVERLAY_RED)
+    expect(placementTileOverlayFill(false, false)).toBe(PLACEMENT_OVERLAY_RED)
 
     const mapGrid = grid()
     mapGrid[5][5].type = 'land'

@@ -36,6 +36,9 @@ export {
   isNearExistingBuilding,
   isTileValid,
   isShipyardPlacementTileValid,
+  isBuildingFootprintInBuildRange,
+  isDecorativeBuildBlocker,
+  placementTileOverlayFill,
   shouldShowPlacementTileAsValid
 } from './validation/buildingPlacement.js'
 import { canPlaceBuilding as canPlaceBuildingBase } from './validation/buildingPlacement.js'
