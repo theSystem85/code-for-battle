@@ -1,0 +1,9 @@
+UTC: 2026-10-26T13:23:47Z
+
+Model: Grok 4.7 in the Cursor cloud agent. Reasoning level, input tokens, visible output tokens, reasoning tokens, and exact task duration are not exposed to this session and are omitted.
+
+User request: On the System85/code-for-battle `dev` branch, fix the Vehicle Factory door shadow. The door is fully transparent (cut out). Where the door used to be, bake a gradient shadow into the alpha channel of the Vehicle Factory sprite itself. The shadow must not be a separate image or overlay. The sprite already uses RGBA (dirt tracks in front of the factory). Paint a black gradient into the alpha in the door region so a vehicle driving out at the bottom slowly emerges from the shadow. Edit the in-game sprite. The door gradient should be soft and natural: more opaque at the top of the doorway, more transparent toward the bottom where vehicles exit. Do not add a runtime overlay, CSS shadow, or second drawable. Keep dirt tracks and other alpha features intact. Follow AGENTS.md. Update docs/changes, features/unreleased, and prompt-history. Open a PR targeting `dev`. Run lint. Run focused tests only if asset pipelines have them. Do not run full e2e.
+
+Follow-up: Do not open a pull request. Leave finished commits on the agent branch only. Patrick wants the work applied as direct commits on `dev` after a clean rebase (the orchestrator handles the land). Still finish the Vehicle Factory door alpha gradient in the sprite asset itself, not an overlay. When done, report the branch name, commit SHA(s), and changed asset file short names. No PR.
+
+Outcome: Baked the doorway shadow into the alpha of `vehicle_factory.webp` and rebuilt the prepared factory sprites. No pull request was opened. Lint passed. Full unit and e2e suites were not run. Token counts were not available.

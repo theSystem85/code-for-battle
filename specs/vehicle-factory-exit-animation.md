@@ -8,7 +8,7 @@ The preferred destination is (factory.x, factory.y + 3), the first outside tile 
 
 Exiting vehicles cannot be selected or commanded, acquire/fire at targets, receive direct or splash damage, collide, or contribute pathfinding occupancy. Selection, control groups, mouse target picking, command handlers, policies, combat, defence targeting, spatial indexing, and utility automation honor this state. Save files and authoritative snapshots carry it; state hashing includes exit progress.
 
-The shared 2D entity overlay, used with 2D, WebGL and WebGPU terrain backends, renders exiting vehicles before buildings. The door uses the original artwork with no added dark interior or sheared shadow overlay. Small analytic dust/exhaust puffs and a warm early headlight accent require no random numbers or particle allocations. Garage doors are not animated.
+The shared 2D entity overlay, used with 2D, WebGL and WebGPU terrain backends, renders exiting vehicles before buildings. The doorway shade is the alpha gradient baked into `vehicle_factory.webp` (darker under the lintel, clear at the sill). No separate interior or shadow overlay is drawn. Small analytic dust/exhaust puffs and a warm early headlight accent require no random numbers or particle allocations. Garage doors are not animated.
 
 ## Preparation and cost
 
