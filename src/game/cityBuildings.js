@@ -5,11 +5,11 @@ import { setBuildingDebrisDecals, setDecalSurfaceBlocker } from './tileDecals.js
 import { notifySurfaceTileMutation, notifyTopologyMutation } from '../rendering/prepared/mapMutationNotifier.js'
 import { clearPathCache } from './pathCache.js'
 import { addFixedOccupancy } from './occupancyTags.js'
+import { getRegisteredDecorationLayout, registerDecorationLayout } from './decorationLayoutRegistry.js'
 import { spawnDestructionExplosion } from './spriteSheetEffects.js'
 
 const registries = new WeakMap()
 const EMPTY = Object.freeze([])
-const layouts = new WeakMap()
 const visuals = new WeakMap()
 
 export function getCityVisuals(mapGrid) {
@@ -75,7 +75,7 @@ export function prepareCityBuildings(mapGrid, layout) {
     }
     setCityOcclusionIndex(mapGrid, { width: layout.width, height: layout.height, cells })
   } else setCityOcclusionIndex(mapGrid, null)
-  layouts.set(mapGrid, layout)
+  registerDecorationLayout(mapGrid, layout)
   registries.set(mapGrid, buildings)
   applyCityStreets(mapGrid, layout)
   return buildings
@@ -129,7 +129,7 @@ export function applyCityStreets(mapGrid, layout) {
 }
 
 export function getCityAtWorld(mapGrid, x, y) {
-  const layout = layouts.get(mapGrid)
+  const layout = getRegisteredDecorationLayout(mapGrid)
   if (!layout) return null
   const tileX = Math.floor(x / TILE_SIZE)
   const tileY = Math.floor(y / TILE_SIZE)

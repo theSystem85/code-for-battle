@@ -1,4 +1,5 @@
 import { buildingData, createBuilding, canPlaceBuilding, placeBuilding, updatePowerSupply } from '../buildings.js'
+import { isDecorativeBuildBlocker } from '../validation/buildingPlacement.js'
 import { spawnEnemyUnit } from './enemySpawner.js'
 import {
   resetAttackDirections,
@@ -251,7 +252,7 @@ function ensureAIEconomyRecovery(aiPlayerId, aiFactory, aiBuildings, aiHarvester
   sellBuildingsForEmergencyFunds(aiPlayerId, aiFactory, aiBuildings, requiredBudget, now)
 }
 
-function findSimpleBuildingPosition(buildingType, mapGrid, buildings, factories, aiPlayerId) {
+export function findSimpleBuildingPosition(buildingType, mapGrid, buildings, factories, aiPlayerId) {
   // Validate inputs
   if (!buildingType) {
     window.logger.warn('findSimpleBuildingPosition called with undefined buildingType')
@@ -329,7 +330,8 @@ function findSimpleBuildingPosition(buildingType, mapGrid, buildings, factories,
           if (by >= y && by < y + buildingHeight && bx >= x && bx < x + buildingWidth) {
             if (by >= 0 && by < mapGrid.length && bx >= 0 && bx < mapGrid[0].length) {
               const tile = mapGrid[by][bx]
-              if (tile.type === 'water' || tile.type === 'rock' || tile.building || tile.seedCrystal) {
+              if (tile.type === 'water' || tile.type === 'rock' || tile.building || tile.seedCrystal ||
+                  isDecorativeBuildBlocker(mapGrid, bx, by)) {
                 valid = false
               }
             } else {
