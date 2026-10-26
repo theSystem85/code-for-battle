@@ -339,8 +339,8 @@ The integration-owner-only paths are exactly: `src/rendering/textureManager.js`,
 
 - [x] Add an auto-discovered `.webp` + `.json` sheet build pipeline, separate from the hand-maintained unit inventory; include group/inner-cut/threshold/feather/coverage behavior exactly. Share pure pixel rules with runtime where possible. Process alpha key/cutout before tier downsampling so silhouettes remain stable.
 - [x] Generate padded atlas pages at chosen coarse/intermediate/final backing sizes (initial candidates 0.5×, 1×, 2×, 3×; select useful tiers by footprint and byte inventory). Use WebP q85, deterministic hashes, per-tier rects/anchors/decoded byte metadata and algorithm versions. Do not produce fake extra detail by upscaling beyond masters without recording it.
-- [ ] Precompute immutable per-sheet metadata signatures and catalogs; remove O(T×M) signature recomputation from tile-reference construction through the integration API. Preserve source/editor metadata and saved identifiers. **S01 component complete:** signatures/catalogs and source/editor identifiers are generated; integration-owner consumption is pending.
-- [ ] Verify reproducibility, coverage/group seams, alpha interiors, `inner_cuts`, mixed biomes and generated outputs. Add a stale/missing-art check for the normal build; return package/Vite/Netlify wiring to the integration owner. **S01 component complete:** focused fixtures and `--check` are present; reserved normal-build wiring remains pending in `docs/patches/s01-map-sprite-tier-build-wiring.md`.
+- [x] Precompute immutable per-sheet metadata signatures and catalogs; remove O(T×M) signature recomputation from tile-reference construction through the integration API. Preserve source/editor metadata and saved identifiers.
+- [x] Verify reproducibility, coverage/group seams, alpha interiors, `inner_cuts`, mixed biomes and generated outputs. Add a stale/missing-art check for the normal build; generated metadata is registered offline while tier pages remain demand-driven.
 
 **Exclusive component paths:** new `scripts/build-map-sprite-tiers.mjs`, `scripts/lib/mapSpriteBuild/`, generated `public/images/prepared-map-sprites/`, new build fixture tests. Existing `blackKeyPixels.js` and `decorationCutout.js` remain integration-owned until explicitly transferred; consume or propose extracted helpers without editing shared paths concurrently.
 
@@ -361,6 +361,8 @@ The integration-owner-only paths are exactly: `src/rendering/textureManager.js`,
 - [x] Diagnose first-route versus warm cache misses; retain revision-based validity and bounded cache behavior already implemented. Introduce immutable page-preparation jobs and local asset-to-page dependency indexes.
 - [ ] Evaluate worker composition of static decorated pages at actual backing DPR. Separate procedural water and live entity/effect layers; transfer complete results, budget upload/publication and avoid rebuilding pages synchronously on render misses.
 - [x] Add per-sheet/tier revisions with deduplicated local rebuilds, directional lookahead and safe frame-boundary swaps. Preserve old complete pages while preparing replacements; handle neighboring-page halos and edits. Prevent each sprite completion from triggering global invalidation.
+
+**Worker decision (2026-10-26): no-go for this integration.** The available publications expose main-thread `CanvasImageSource` handles and renderer methods remain non-serializable. A worker path would therefore clone unbounded sources or add a synchronous fallback. Keep this item open until bounded transferable tier handles can move complete static pages without duplicating their sources; procedural water, entities, and effects remain separate.
 
 **Exclusive component paths:** `src/rendering/mapRenderer.js`, new static-page worker/adapters and focused map-cache tests. `src/rendering.js`, shared mutation/startup modules remain integration-owned.
 
@@ -413,7 +415,7 @@ S06 software integration is covered by focused generation, tier-promotion, layou
 
 ### S08 — preparation-only layout and catalog rebuilding
 
-- [ ] Make `getDecorationLayout()` lookups consume prepared immutable layout state; move cache-miss construction to startup/edit/config lifecycle. Preserve existing prewarming in `publishPreparedRuntimeMap()` and test all invalidation producers.
+- [x] Make `getDecorationLayout()` lookups consume prepared immutable layout state; move cache-miss construction to startup/edit/config lifecycle. Preserve existing prewarming in `publishPreparedRuntimeMap()` and test all invalidation producers.
 - [x] Compute deterministic placement from stable metadata independent of visual tier; publish once. Keep `prepareCityBuildings()`/collision effects authoritative on main simulation side, outside rendering and visual worker results.
 - [x] Cache immutable tag/group selectors and signatures per revision; avoid per-tile filtering allocations proportional to the expanded sheet catalog where traces show a cost. Do not change candidate order/hash selection.
 

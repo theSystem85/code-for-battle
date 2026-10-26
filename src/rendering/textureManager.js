@@ -23,6 +23,9 @@ import { cityFootprintGroup, prepareCityVisual } from './cityOverhangs.js'
 import { getPreparedSpriteState } from './prepared/preparedSpritePipeline.js'
 import { cutoutDecorationGroup } from './decorationCutout.js'
 import { DecorationLayoutPreparation } from './decorationLayoutPreparation.js'
+import { createSpritePublication, createSpriteReservationToken } from './spriteStreamingLifecycle.js'
+
+const PREPARED_MAP_SPRITE_ROOT = '/images/prepared-map-sprites/'
 
 const DEFAULT_COMBAT_DECAL_SHEET_PATH = 'images/map/sprite_sheets/debris_craters_tracks.webp'
 const DEFAULT_COMBAT_DECAL_METADATA_PATH = 'images/map/sprite_sheets/debris_craters_tracks.json'
@@ -66,6 +69,11 @@ export class TextureManager {
     this.integratedSpriteSheetMetadata = null
     this.integratedSpriteSheetImagesByPath = {}
     this.integratedSpriteSheetLoadsByPath = {}
+    this.preparedMapSpriteCatalog = null
+    this.preparedMapSpriteCatalogPromise = null
+    this.preparedMapSpriteManifests = new Map()
+    this.spritePublicationRevision = 0
+    this.onSpriteTierPublication = null
     this.integratedSpriteSheets = []
     this.integratedTagBuckets = {}
     this.integratedLandBuckets = {}
@@ -187,6 +195,85 @@ export class TextureManager {
       })
     this.integratedSpriteSheetLoadsByPath[sheetPath] = loading
     return loading
+  }
+
+  async loadPreparedMapSpriteCatalog() {
+    if (this.preparedMapSpriteCatalog) return this.preparedMapSpriteCatalog
+    if (!this.preparedMapSpriteCatalogPromise) {
+      this.preparedMapSpriteCatalogPromise = fetchAssetJson(`${PREPARED_MAP_SPRITE_ROOT}catalog.json`)
+        .then(catalog => {
+          this.preparedMapSpriteCatalog = catalog
+          return catalog
+        })
+        .catch(() => null)
+        .finally(() => { this.preparedMapSpriteCatalogPromise = null })
+    }
+    return this.preparedMapSpriteCatalogPromise
+  }
+
+  async loadPreparedMapSpriteSheet(sheetPath) {
+    const name = sheetPath.split('/').pop()?.replace(/\.[^.]+$/, '')
+    if (!name || !sheetPath.startsWith('images/map/sprite_sheets/')) return null
+    const catalog = await this.loadPreparedMapSpriteCatalog()
+    const catalogEntry = catalog?.sheets?.find(sheet => sheet.name === name)
+    if (!catalogEntry) return null
+    let manifest = this.preparedMapSpriteManifests.get(name)
+    if (!manifest) {
+      manifest = await fetchAssetJson(`${PREPARED_MAP_SPRITE_ROOT}${catalogEntry.manifest}`)
+      this.preparedMapSpriteManifests.set(name, manifest)
+    }
+    const page = manifest.pages?.find(candidate => candidate.tierName === 'final') || manifest.pages?.at(-1)
+    if (!page) return null
+    const image = await this.loadIntegratedSpriteSheetImage(`${PREPARED_MAP_SPRITE_ROOT.slice(1)}${page.name}`)
+    if (!image) return null
+    return { catalogEntry, manifest, page, image }
+  }
+
+  buildPreparedMapSpriteMetadata(metadata, prepared) {
+    const tiles = {}
+    for (const sprite of prepared.manifest.sprites || []) {
+      const source = sprite.sources?.find(candidate => candidate.tier === prepared.page.tier)
+      if (!source) continue
+      const columns = Math.max(1, Math.round(sprite.logicalWidth / (metadata.tileSize || 64)))
+      const rows = Math.max(1, Math.round(sprite.logicalHeight / (metadata.tileSize || 64)))
+      const tileWidth = source.width / columns
+      const tileHeight = source.height / rows
+      const coordinates = (sprite.tileKeys || []).map(value => value.split(',').map(Number))
+      const groupColumn = Math.min(...coordinates.map(([column]) => column))
+      const groupRow = Math.min(...coordinates.map(([, row]) => row))
+      for (const key of sprite.tileKeys || []) {
+        const original = metadata.tiles?.[key]
+        if (!original) continue
+        const [column, row] = key.split(',').map(Number)
+        tiles[key] = {
+          ...original,
+          spriteId: prepared.manifest.source.image,
+          spriteRecordId: sprite.spriteId,
+          logicalWidth: sprite.logicalWidth,
+          logicalHeight: sprite.logicalHeight,
+          anchorX: sprite.anchorX,
+          anchorY: sprite.anchorY,
+          metadataSignature: prepared.manifest.identity.metadataSignature,
+          signature: prepared.manifest.signature,
+          rect: { x: source.x + (column - groupColumn) * tileWidth, y: source.y + (row - groupRow) * tileHeight, width: tileWidth, height: tileHeight },
+          tierRect: source
+        }
+      }
+    }
+    return { ...metadata, blendMode: 'alpha', tiles }
+  }
+
+  publishPreparedMapSpriteSheet(sheetPath, prepared) {
+    const generation = this.integratedConfigVersion + 1
+    const publication = createSpritePublication({
+      spriteId: sheetPath,
+      tier: prepared.page.tier,
+      revision: ++this.spritePublicationRevision,
+      generations: { asset: generation, map: this.decorationMapRevision, density: 0 },
+      resourceToken: createSpriteReservationToken({ tokenId: `${prepared.manifest.signature}:${prepared.page.tier}`, owner: sheetPath, byteClass: 'resident', bytes: prepared.page.decodedBytes, generation })
+    })
+    this.onSpriteTierPublication?.(publication)
+    return publication
   }
 
   buildIntegratedTagBuckets(sheetEntries) {
@@ -466,16 +553,20 @@ export class TextureManager {
       const metadata = expandCompactSpriteSheetMetadata(entry?.metadata)
       if (!sheetPath || !metadata) continue
       if (!this.hasTaggedIntegratedTiles(metadata)) continue
-      const image = await this.loadIntegratedSpriteSheetImage(sheetPath)
+      const prepared = await this.loadPreparedMapSpriteSheet(sheetPath)
+      const image = prepared?.image || await this.loadIntegratedSpriteSheetImage(sheetPath)
       preparation.assertCurrent(this.texturePreparationGeneration)
       if (!image) continue
+      const preparedMetadata = prepared ? this.buildPreparedMapSpriteMetadata(metadata, prepared) : metadata
       normalizedEntries.push({
         sheetPath,
-        metadata,
+        metadata: preparedMetadata,
         image,
-        blendMode: normalizeSpriteSheetBlendMode(metadata?.blendMode),
-        blackKey: metadata?.blackKey || null
+        blendMode: prepared ? 'alpha' : normalizeSpriteSheetBlendMode(metadata?.blendMode),
+        blackKey: prepared ? null : metadata?.blackKey || null,
+        preparedManifest: prepared?.manifest || null
       })
+      if (prepared) this.publishPreparedMapSpriteSheet(sheetPath, prepared)
     }
 
     if (!normalizedEntries.length) {
@@ -520,14 +611,15 @@ export class TextureManager {
       if (seenGroups.has(key)) continue
       seenGroups.add(key)
       const tagSet = TextureManager.collectGroupTagSet(group)
-      preparedGroups.push(cityFootprintGroup({ ...(tagSet.has('ground_detail') ? group : cutoutDecorationGroup(group)), tagSet }))
+      const alphaReady = Boolean(first.metadataSignature)
+      preparedGroups.push(cityFootprintGroup({ ...(tagSet.has('ground_detail') || alphaReady ? group : cutoutDecorationGroup(group)), tagSet }))
     }
     // Optional prop and detail sheets may carry ungrouped 1x1 tiles.
     const singles = new Set([...(this.integratedTagBuckets.decorative || []), ...(this.integratedTagBuckets.ground_detail || [])])
     for (const tile of singles) {
       if (TextureManager.getGroupTagId(tile.tags)) continue
       const group = { width: 1, height: 1, tilesByOffset: { '0,0': tile }, tagSet: new Set(tile.tags) }
-      preparedGroups.push(tile.tags.includes('ground_detail') ? group : cutoutDecorationGroup(group))
+      preparedGroups.push(tile.tags.includes('ground_detail') || tile.metadataSignature ? group : cutoutDecorationGroup(group))
     }
     this.cityVisualGroups = preparedGroups.filter(group => group.cityVisual)
     this.cityVisualDensity = 0
@@ -541,7 +633,9 @@ export class TextureManager {
     this.integratedBlendMode = normalizeSpriteSheetBlendMode(normalizedEntries[0].metadata?.blendMode)
     this.integratedBlackKey = normalizedEntries[0].blackKey
     const signatureSheets = normalizedEntries
-      .map(entry => `${entry.sheetPath}|${entry.metadata?.tileSize}|${entry.metadata?.borderWidth}|${Object.keys(entry.metadata?.tiles || {}).length}|${entry.blendMode}|${entry.blackKey?.cutoffBrightness ?? 'default'}|${entry.blackKey?.softenBrightness ?? 'default'}`)
+      .map(entry => entry.preparedManifest
+        ? `${entry.sheetPath}|${entry.preparedManifest.identity.metadataSignature}|${entry.preparedManifest.signature}`
+        : `${entry.sheetPath}|${entry.metadata?.tileSize}|${entry.metadata?.borderWidth}|${Object.keys(entry.metadata?.tiles || {}).length}|${entry.blendMode}|${entry.blackKey?.cutoffBrightness ?? 'default'}|${entry.blackKey?.softenBrightness ?? 'default'}`)
       .join(';')
     this.integratedRenderSignature = `${signatureSheets}|${this.integratedBiomeTag}|${computeMapTopologyFingerprint({ enabled: true, sheets: normalizedEntries, ...gameState })}`
     this.clearStreetSelectionPoolCache()
