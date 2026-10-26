@@ -43,6 +43,34 @@ describe('TextureManager integrated multi-sheet selection', () => {
     expect(Object.isFrozen(publish.mock.calls[0][0])).toBe(true)
   })
 
+  it('[U06214] overlaps integrated sheet loads with bounded concurrency while preserving sheet order', async() => {
+    const manager = new TextureManager()
+    vi.spyOn(manager, 'loadPreparedMapSpriteCatalog').mockResolvedValue(null)
+    const started = []
+    const resolvers = new Map()
+    let active = 0
+    let maxActive = 0
+    vi.spyOn(manager, 'loadIntegratedSpriteSheetImage').mockImplementation(path => {
+      started.push(path)
+      active++
+      maxActive = Math.max(maxActive, active)
+      return new Promise(resolve => resolvers.set(path, () => { active--; resolve({ id: path }) }))
+    })
+    const sheet = name => ({
+      sheetPath: `images/map/sprite_sheets/${name}.webp`,
+      metadata: { tileSize: 64, tiles: { '0,0': { tags: ['grass', 'passable'], rect: { x: 0, y: 0, width: 64, height: 64 } } } }
+    })
+    const configuring = manager.setIntegratedSpriteSheetConfig({ enabled: true, biomeTag: 'grass', sheets: [sheet('a'), sheet('b'), sheet('c')] })
+    await vi.waitFor(() => expect(started).toHaveLength(2))
+    resolvers.get('images/map/sprite_sheets/b.webp')()
+    await vi.waitFor(() => expect(started).toHaveLength(3))
+    resolvers.get('images/map/sprite_sheets/c.webp')()
+    resolvers.get('images/map/sprite_sheets/a.webp')()
+    await configuring
+    expect(maxActive).toBe(2)
+    expect(manager.integratedSpriteSheets.map(entry => entry.sheetPath)).toEqual(['a', 'b', 'c'].map(name => `images/map/sprite_sheets/${name}.webp`))
+  })
+
   it('[U04447] invalidates layout and changes blocked occupancy after an optional sheet tag edit', async() => {
     const manager = new TextureManager()
     vi.spyOn(manager, 'loadIntegratedSpriteSheetImage').mockResolvedValue({ width: 64, height: 64 })
