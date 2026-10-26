@@ -4,6 +4,8 @@ import { fetchAssetJson, withTimeout } from '../../utils/assetLoading.js'
 import { PreparedSpriteRegistry } from './preparedSpriteRegistry.js'
 import { bootMark } from '../../ui/bootTiming.js'
 import { reportBootSprites, yieldBootPaint } from '../../ui/bootProgress.js'
+import { createSpriteStreamingScheduler } from '../../utils/spriteStreamingScheduler.js'
+import { SpriteResourceStore } from './spriteResourceStore.js'
 
 export const PREPARED_SPRITE_MANIFEST_URL = '/images/prepared/sprite-manifest.json'
 export const AIRCRAFT_RESIZE_AUDIT_TAGS = Object.freeze({
@@ -36,6 +38,151 @@ export function getPreparedSpriteCacheKey(assetVersion, density, id) {
   assertDensity(density)
   if (!id || typeof id !== 'string') throw new TypeError('sprite id is required')
   return `${assetVersion}@${densityToken(density)}:${id}`
+}
+
+/** A cache identity must not confuse requested output density with the tier
+ * currently satisfying it. Lower tiers are sampled into the same logical
+ * geometry while a settled view waits for its final representation. */
+export function getProgressiveSpriteCacheKey(assetVersion, finalDensity, currentTier, id) {
+  if (!Number.isInteger(currentTier) || currentTier < 0) throw new RangeError('Invalid current sprite tier')
+  return `${getPreparedSpriteCacheKey(assetVersion, finalDensity, id)}@tier:${currentTier}`
+}
+
+const STREAMING_BUDGETS = Object.freeze({
+  reserved: 32 * 1024 * 1024,
+  staging: 64 * 1024 * 1024,
+  transfer: 64 * 1024 * 1024,
+  resident: 192 * 1024 * 1024,
+  'gpu-estimate': 192 * 1024 * 1024
+})
+
+/**
+ * Integration adapter for generated sheets and worker-prepared custom sheets.
+ * `stage` publishes metadata synchronously, then queues only visual resources.
+ * Consequently selection, placement, and simulation never depend on arrival
+ * order. Publications are generation checked by SpriteResourceStore.
+ */
+export function createProgressiveSpriteStreamer({
+  loadTier,
+  workerPool = null,
+  onPublish = null,
+  hasForegroundSlack = () => true,
+  schedule,
+  budgets = STREAMING_BUDGETS
+} = {}) {
+  if (typeof loadTier !== 'function') throw new TypeError('A progressive sprite tier loader is required')
+  const store = new SpriteResourceStore({ budgets })
+  let manifests = new Map()
+  let generations = Object.freeze({ asset: 0, map: 0, density: 0 })
+  let finalDensity = 1
+  let revision = 0
+  let demandRevision = 0
+
+  const queue = createIdleAssetQueue(async requestId => {
+    const separator = requestId.lastIndexOf('@')
+    const spriteId = requestId.slice(0, separator)
+    const tier = Number(requestId.slice(separator + 1))
+    const manifest = manifests.get(spriteId)
+    if (!manifest) return null
+    const source = manifest.sources.find(candidate => candidate.tier === tier)
+    if (!source) return null
+    const jobGenerations = generations
+    const value = manifest.workerPayload && workerPool
+      ? await workerPool.prepare({ ...manifest.workerPayload, source }, {
+        estimatedBytes: source.decodedBytes,
+        jobGenerations
+      })
+      : await loadTier(manifest, source, jobGenerations)
+    const resourceId = `${requestId}:${manifest.signature}:${revision + 1}`
+    const acquired = store.registerResource({
+      resourceId,
+      value,
+      allocations: [{ byteClass: 'resident', bytes: source.decodedBytes }],
+      generation: jobGenerations.asset,
+      tier
+    })
+    acquired.release()
+    const previous = store.lookup(spriteId)
+    // Never regress art which has already reached a sharper tier.
+    if (previous?.tier >= tier) {
+      store.disposeResource(resourceId, 'lower-tier-discarded')
+      return previous
+    }
+    const publication = Object.freeze({
+      resourceId,
+      revision: ++revision,
+      tier,
+      finalDensity,
+      currentDensity: source.backingDensity,
+      generations: jobGenerations,
+      logicalWidth: manifest.logicalWidth,
+      logicalHeight: manifest.logicalHeight,
+      sourceRect: Object.freeze({ x: source.x, y: source.y, width: source.width, height: source.height }),
+      cacheKey: getProgressiveSpriteCacheKey(manifest.signature, finalDensity, tier, spriteId)
+    })
+    if (!store.publish(spriteId, publication)) {
+      store.disposeResource(resourceId, 'stale-publication')
+      return null
+    }
+    onPublish?.(Object.freeze({ spriteId, ...publication }))
+    return store.lookup(spriteId)
+  }, {
+    concurrency: 2,
+    maxReservedBytes: budgets.staging,
+    hasForegroundSlack,
+    schedule
+  })
+  const scheduler = createSpriteStreamingScheduler(queue)
+
+  function stage(nextManifests, options = {}) {
+    const nextGenerations = Object.freeze({ ...options.generations })
+    store.setCurrentGenerations(nextGenerations)
+    workerPool?.cancelGeneration(nextGenerations, 'sprite-stream-generation-swap')
+    generations = nextGenerations
+    finalDensity = options.finalDensity
+    // All immutable metadata is visible before the first decode can settle.
+    manifests = new Map(nextManifests.map(manifest => [manifest.spriteId, Object.freeze({ ...manifest })]))
+    const coarse = []
+    for (const manifest of manifests.values()) {
+      const source = manifest.sources[0]
+      if (source) coarse.push({ id: `${manifest.spriteId}@${source.tier}`, bytes: source.decodedBytes })
+    }
+    scheduler.update({
+      revision: ++demandRevision,
+      capturedAt: 0,
+      moving: true,
+      generations,
+      visibleCoarse: coarse
+    })
+    return Object.freeze([...manifests.values()])
+  }
+
+  function updateDemand({ visibleSpriteIds = [], lookaheadSpriteIds = [], moving = false, capturedAt = performance.now() } = {}) {
+    const requests = (ids, final) => ids.flatMap(spriteId => {
+      const manifest = manifests.get(spriteId)
+      if (!manifest) return []
+      const source = final ? manifest.sources.at(-1) : manifest.sources[0]
+      return source ? [{ id: `${spriteId}@${source.tier}`, bytes: source.decodedBytes }] : []
+    })
+    return scheduler.update({
+      revision: ++demandRevision,
+      capturedAt,
+      moving,
+      generations,
+      visibleCoarse: requests(visibleSpriteIds, false),
+      lookahead: requests(lookaheadSpriteIds, false),
+      visibleRefinement: requests(visibleSpriteIds, true)
+    })
+  }
+
+  return Object.freeze({
+    stage,
+    updateDemand,
+    lookup: spriteId => store.lookup(spriteId),
+    get metadata() { return Object.freeze([...manifests.values()]) },
+    get state() { return Object.freeze({ generations, finalDensity, scheduler: scheduler.getState(), resources: store.snapshot() }) },
+    dispose() { workerPool?.dispose(); store.dispose() }
+  })
 }
 
 function throwIfAborted(signal) {

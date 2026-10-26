@@ -82,7 +82,7 @@ export function publishPreparedRuntimeMap(mapGrid) {
   mapRenderer?.attachMutationStore?.(mapGrid)
   bindRenderingDensityPreparation()
   if (!mapGrid?.length) return Promise.resolve(null)
-  if (gameRenderer.textureManager.integratedSpriteSheetMode) gameRenderer.textureManager.getDecorationLayout(mapGrid)
+  if (gameRenderer.textureManager.integratedSpriteSheetMode) gameRenderer.textureManager.prepareDecorationLayout(mapGrid)
   if (mapRenderer && !mapRenderer.sotMask) mapRenderer.computeSOTMask(mapGrid)
   return prepareRuntimeMap({ grid: mapGrid, sotMask: mapRenderer?.sotMask }).then(prepared => {
     gameRenderer.prepareWaterResources(mapGrid)

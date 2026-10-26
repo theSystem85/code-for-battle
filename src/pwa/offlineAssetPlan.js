@@ -61,15 +61,19 @@ export function createImmutableSpriteDerivativeUrl(path, contentIdentity) {
   const identity = String(contentIdentity || '')
   if (!/^[a-z0-9][a-z0-9._-]{7,127}$/i.test(identity)) throw new TypeError('Invalid sprite derivative content identity')
   const url = urlFrom(path)
-  if (!url || !url.pathname.startsWith('/images/prepared/')) throw new TypeError('Invalid sprite derivative path')
+  if (!url || !isPreparedSpritePath(url.pathname)) throw new TypeError('Invalid sprite derivative path')
   url.searchParams.set(SPRITE_DERIVATIVE_REVISION_PARAM, identity)
   return `${url.pathname}${url.search}${url.hash}`
 }
 
 export function isImmutableSpriteDerivativeUrl(value) {
   const url = urlFrom(value)
-  if (!url || !url.pathname.startsWith('/images/prepared/')) return false
+  if (!url || !isPreparedSpritePath(url.pathname)) return false
   return /^[a-z0-9][a-z0-9._-]{7,127}$/i.test(url.searchParams.get(SPRITE_DERIVATIVE_REVISION_PARAM) || '')
+}
+
+function isPreparedSpritePath(pathname) {
+  return pathname.startsWith('/images/prepared/') || pathname.startsWith('/images/prepared-map-sprites/')
 }
 
 // The caller supplies one entry per representation. Only the minimum usable

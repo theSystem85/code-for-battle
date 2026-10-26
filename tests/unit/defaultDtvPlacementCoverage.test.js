@@ -44,8 +44,8 @@ describe('default dtv sheets placement coverage', () => {
       gameState.mapSeed = String(seed)
       const grid = Array.from({ length: 120 }, () => Array.from({ length: 120 }, () => ({ type: 'land' })))
       generateMap(seed, grid, 120, 120)
-      manager.decorationLayoutCache = null
-      const layout = manager.getDecorationLayout(grid)
+      manager.invalidateDecorationLayout()
+      const layout = manager.prepareDecorationLayout(grid)
       for (const cell of [...layout.cells, ...(layout.groundDetails || [])]) {
         if (!cell?.group) continue
         for (const tile of Object.values(cell.group.visualTilesByOffset || cell.group.tilesByOffset || {})) {
