@@ -1,5 +1,7 @@
 # S04 sprite resource integration patch
 
+> **Status (2026-10-26): applied in `e5936e4`** — items 2–5 landed (registry replace/remove/dispose with idempotent re-register, `runAssetJob` wrapping, explosion reservation rollback/teardown, generation-checked publication). Apache keeps shared atlas views. **Still open:** item 1 is only partly applied — the prepared registry and explosion preparation each own a `SpriteResourceStore`; TextureManager and worker adapters do not yet share one per-lifecycle store. The atlas-vs-cropped decision still needs qualifying-hardware measurements.
+
 The S04 component is intentionally not wired into the integration-owned files. The S06 owner should make the following focused changes after the other streaming lanes land:
 
 1. Create one `SpriteResourceStore` per prepared-rendering lifecycle and pass it to the prepared registry, texture manager, explosion preparation, and worker/scheduler adapters.
