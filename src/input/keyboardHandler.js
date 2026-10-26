@@ -52,6 +52,7 @@ export class KeyboardHandler {
     this.playerFactory = null
     this.cheatSystem = new CheatSystem()
     this.unitCommands = null
+    this.selectionManager = null
     this.requestRenderFrame = null
   }
 
@@ -61,6 +62,10 @@ export class KeyboardHandler {
 
   setUnitCommands(unitCommands) {
     this.unitCommands = unitCommands
+  }
+
+  setSelectionManager(selectionManager) {
+    this.selectionManager = selectionManager
   }
 
   setRenderScheduler(callback) {
@@ -924,6 +929,7 @@ export class KeyboardHandler {
   }
 
   handleControlGroupSelection(groupNum, units, selectedUnits, mapGrid) {
+    this.selectionManager?.resetDoubleClickTracking()
 
     // Check if we have units in this control group
     if (this.controlGroups[groupNum] && Array.isArray(this.controlGroups[groupNum]) && this.controlGroups[groupNum].length > 0) {

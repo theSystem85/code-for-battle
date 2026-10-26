@@ -25,7 +25,21 @@ export class SelectionManager {
   constructor() {
     this.lastClickTime = 0
     this.lastClickedUnit = null
+    this.lastClickPosition = null
+    this.processedSelectionEvents = new WeakSet()
     this.doubleClickThreshold = 300 // milliseconds
+    this.doubleClickDistance = 8 // CSS pixels
+  }
+
+  resetDoubleClickTracking() {
+    this.lastClickTime = 0
+    this.lastClickedUnit = null
+    this.lastClickPosition = null
+  }
+
+  getClickPosition(event) {
+    if (!Number.isFinite(event?.clientX) || !Number.isFinite(event?.clientY)) return null
+    return { x: event.clientX, y: event.clientY }
   }
 
   clearWreckSelection() {
@@ -76,11 +90,24 @@ export class SelectionManager {
   }
 
   handleUnitSelection(clickedUnit, e, units, factories, selectedUnits) {
+    // A single DOM event must never be interpreted as both clicks of a double-click.
+    if (e && typeof e === 'object') {
+      if (this.processedSelectionEvents.has(e)) return
+      this.processedSelectionEvents.add(e)
+    }
     hideLlmQueueTooltip()
     this.clearWreckSelection()
     const currentTime = performance.now()
-    const isDoubleClick = this.lastClickedUnit === clickedUnit &&
-                          (currentTime - this.lastClickTime) < this.doubleClickThreshold
+    const clickPosition = this.getClickPosition(e)
+    const withinDistance = !clickPosition || !this.lastClickPosition ||
+      Math.hypot(clickPosition.x - this.lastClickPosition.x, clickPosition.y - this.lastClickPosition.y) <= this.doubleClickDistance
+    const sameUnitSequence = this.lastClickedUnit === clickedUnit && withinDistance
+    // Native mouse events expose the browser's click count. Timing is only a
+    // fallback for synthetic/touch events, whose detail is absent or zero.
+    const hasBrowserClickCount = Number.isFinite(e?.detail) && e.detail > 0
+    const isDoubleClick = sameUnitSequence && (hasBrowserClickCount
+      ? e.detail === 2
+      : (currentTime - this.lastClickTime) < this.doubleClickThreshold)
 
     if (e.shiftKey && !isDoubleClick) {
       // Shift+single click: Add/remove unit to/from current selection
@@ -161,12 +188,18 @@ export class SelectionManager {
       }
     }
 
-    // Update double-click tracking
-    this.lastClickTime = currentTime
-    this.lastClickedUnit = clickedUnit
+    // Consuming the sequence makes an immediate third click a new single click.
+    if (isDoubleClick) {
+      this.resetDoubleClickTracking()
+    } else {
+      this.lastClickTime = currentTime
+      this.lastClickedUnit = clickedUnit
+      this.lastClickPosition = clickPosition
+    }
   }
 
   handleFactorySelection(selectedFactory, e, units, selectedUnits) {
+    this.resetDoubleClickTracking()
     hideLlmQueueTooltip()
     this.clearWreckSelection()
     if (e.shiftKey) {
@@ -207,6 +240,7 @@ export class SelectionManager {
   }
 
   handleBuildingSelection(selectedBuilding, e, units, selectedUnits) {
+    this.resetDoubleClickTracking()
     hideLlmQueueTooltip()
     this.clearWreckSelection()
     if (e.shiftKey) {
@@ -253,6 +287,7 @@ export class SelectionManager {
 
   handleBoundingBoxSelection(units, factories, selectedUnits, selectionStart, selectionEnd, additive = false) {
     try {
+      this.resetDoubleClickTracking()
       this.clearWreckSelection()
       const x1 = Math.min(selectionStart.x, selectionEnd.x)
       const y1 = Math.min(selectionStart.y, selectionEnd.y)

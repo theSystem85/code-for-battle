@@ -1229,6 +1229,7 @@ function handleUnitSelection(handler, worldX, worldY, e, units, factories, selec
       selectionManager.isCommandableUnit(unit) && unit.isBuilding !== true
     )
     if (commandableUnits.length > 0) {
+      selectionManager.resetDoubleClickTracking()
       if (e.shiftKey) {
         initiateRetreat(commandableUnits, worldX, worldY, mapGrid)
         recordHumanUnitCommand(commandableUnits.map(unit => unit.id), {
@@ -1275,12 +1276,14 @@ function handleUnitSelection(handler, worldX, worldY, e, units, factories, selec
       unitCommands,
       selectionManager
     )) {
+      selectionManager.resetDoubleClickTracking()
       return
     }
 
     selectionManager.handleUnitSelection(clickedUnit, e, units, factories, selectedUnits)
     handler.updateAGFCapability(selectedUnits)
   } else {
+    selectionManager.resetDoubleClickTracking()
     handleFallbackCommand(handler, worldX, worldY, selectedUnits, unitCommands, mapGrid, e, units, factories)
   }
 }

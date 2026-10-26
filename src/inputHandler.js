@@ -49,6 +49,7 @@ const keyboardHandler = new KeyboardHandler()
 const selectionManager = new SelectionManager()
 const unitCommands = new UnitCommandsHandler()
 keyboardHandler.setUnitCommands(unitCommands)
+keyboardHandler.setSelectionManager?.(selectionManager)
 
 export function setRenderScheduler(callback) {
   mouseHandler.setRenderScheduler(callback)

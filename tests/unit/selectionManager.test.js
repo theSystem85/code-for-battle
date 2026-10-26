@@ -116,6 +116,7 @@ describe('selectionManager', () => {
   let getElementByIdSpy
 
   beforeEach(() => {
+    vi.clearAllMocks()
     manager = new SelectionManager()
     gameState.humanPlayer = 'player1'
     gameState.scrollOffset = { x: 0, y: 0 }
@@ -208,7 +209,7 @@ describe('selectionManager', () => {
     manager.lastClickTime = 1000
     vi.spyOn(performance, 'now').mockReturnValue(1100)
 
-    manager.handleUnitSelection(clickedUnit, { shiftKey: false }, units, [factory], selectedUnits)
+    manager.handleUnitSelection(clickedUnit, { shiftKey: false, detail: 2, clientX: 20, clientY: 20 }, units, [factory], selectedUnits)
 
     expect(selectedUnits).toEqual([clickedUnit, visibleUnit])
     expect(offscreenUnit.selected).toBe(false)
@@ -231,12 +232,83 @@ describe('selectionManager', () => {
     manager.lastClickTime = 2000
     vi.spyOn(performance, 'now').mockReturnValue(2100)
 
-    manager.handleUnitSelection(clickedUnit, { shiftKey: true }, units, [], selectedUnits)
+    manager.handleUnitSelection(clickedUnit, { shiftKey: true, detail: 2, clientX: 20, clientY: 20 }, units, [], selectedUnits)
 
     expect(selectedUnits).toEqual([clickedUnit, newUnit])
     expect(newUnit.selected).toBe(true)
     expect(showNotification).toHaveBeenCalledWith('Added 2 tank(s) to selection')
     expect(playSound).toHaveBeenCalledWith('unitSelection')
+  })
+
+  it('[U06505] uses the browser click count instead of treating rapid single clicks as a double-click', () => {
+    const clickedUnit = { id: 'u1', type: 'tank', owner: 'player', x: 10, y: 10, health: 10, selected: false }
+    const sameType = { id: 'u2', type: 'tank', owner: 'player', x: 40, y: 20, health: 10, selected: false }
+    const selectedUnits = []
+    vi.spyOn(performance, 'now').mockReturnValueOnce(1000).mockReturnValueOnce(1100)
+
+    manager.handleUnitSelection(clickedUnit, { detail: 1, clientX: 20, clientY: 20 }, [clickedUnit, sameType], [], selectedUnits)
+    manager.handleUnitSelection(clickedUnit, { detail: 1, clientX: 20, clientY: 20 }, [clickedUnit, sameType], [], selectedUnits)
+
+    expect(selectedUnits).toEqual([clickedUnit])
+    expect(sameType.selected).toBe(false)
+    expect(showNotification).not.toHaveBeenCalled()
+  })
+
+  it('[U06506] ignores a duplicate dispatch of the same physical click event', () => {
+    const clickedUnit = { id: 'u1', type: 'tank', owner: 'player', x: 10, y: 10, health: 10, selected: false }
+    const sameType = { id: 'u2', type: 'tank', owner: 'player', x: 40, y: 20, health: 10, selected: false }
+    const selectedUnits = []
+    const event = { detail: 0, clientX: 20, clientY: 20 }
+
+    manager.handleUnitSelection(clickedUnit, event, [clickedUnit, sameType], [], selectedUnits)
+    manager.handleUnitSelection(clickedUnit, event, [clickedUnit, sameType], [], selectedUnits)
+
+    expect(selectedUnits).toEqual([clickedUnit])
+    expect(sameType.selected).toBe(false)
+    expect(playSound).toHaveBeenCalledTimes(1)
+  })
+
+  it('[U06507] does not combine slow fallback clicks or fallback clicks far apart on screen', () => {
+    const clickedUnit = { id: 'u1', type: 'tank', owner: 'player', x: 10, y: 10, health: 10, selected: false }
+    const sameType = { id: 'u2', type: 'tank', owner: 'player', x: 40, y: 20, health: 10, selected: false }
+    const selectedUnits = []
+    vi.spyOn(performance, 'now').mockReturnValueOnce(1000).mockReturnValueOnce(1400).mockReturnValueOnce(1500)
+
+    manager.handleUnitSelection(clickedUnit, { detail: 0, clientX: 20, clientY: 20 }, [clickedUnit, sameType], [], selectedUnits)
+    manager.handleUnitSelection(clickedUnit, { detail: 0, clientX: 20, clientY: 20 }, [clickedUnit, sameType], [], selectedUnits)
+    manager.handleUnitSelection(clickedUnit, { detail: 0, clientX: 80, clientY: 80 }, [clickedUnit, sameType], [], selectedUnits)
+
+    expect(selectedUnits).toEqual([clickedUnit])
+    expect(sameType.selected).toBe(false)
+  })
+
+  it('[U06508] treats a third click after a consumed double-click as a single click', () => {
+    const clickedUnit = { id: 'u1', type: 'tank', owner: 'player', x: 10, y: 10, health: 10, selected: false }
+    const sameType = { id: 'u2', type: 'tank', owner: 'player', x: 40, y: 20, health: 10, selected: false }
+    const selectedUnits = []
+
+    manager.handleUnitSelection(clickedUnit, { detail: 1, clientX: 20, clientY: 20 }, [clickedUnit, sameType], [], selectedUnits)
+    manager.handleUnitSelection(clickedUnit, { detail: 2, clientX: 20, clientY: 20 }, [clickedUnit, sameType], [], selectedUnits)
+    manager.handleUnitSelection(clickedUnit, { detail: 3, clientX: 20, clientY: 20 }, [clickedUnit, sameType], [], selectedUnits)
+
+    expect(selectedUnits).toEqual([clickedUnit])
+    expect(sameType.selected).toBe(false)
+    expect(showNotification).toHaveBeenCalledTimes(1)
+  })
+
+  it('[U06509] resets fallback double-tap detection when another unit is clicked', () => {
+    const firstUnit = { id: 'u1', type: 'tank', owner: 'player', x: 10, y: 10, health: 10, selected: false }
+    const secondUnit = { id: 'u2', type: 'tank', owner: 'player', x: 40, y: 20, health: 10, selected: false }
+    const selectedUnits = []
+    vi.spyOn(performance, 'now').mockReturnValueOnce(1000).mockReturnValueOnce(1100).mockReturnValueOnce(1200)
+
+    manager.handleUnitSelection(firstUnit, { detail: 0, clientX: 20, clientY: 20 }, [firstUnit, secondUnit], [], selectedUnits)
+    manager.handleUnitSelection(secondUnit, { detail: 0, clientX: 50, clientY: 20 }, [firstUnit, secondUnit], [], selectedUnits)
+    manager.handleUnitSelection(firstUnit, { detail: 0, clientX: 20, clientY: 20 }, [firstUnit, secondUnit], [], selectedUnits)
+
+    expect(selectedUnits).toEqual([firstUnit])
+    expect(secondUnit.selected).toBe(false)
+    expect(showNotification).not.toHaveBeenCalled()
   })
 
   it('[U03945] handles factory selection by clearing units and other factories', () => {
