@@ -1184,7 +1184,7 @@ export class TextureManager {
       const requestedBiome = ['soil', 'sand', 'grass', 'snow'].includes(options?.biomeTag)
         ? options.biomeTag
         : (['soil', 'sand', 'grass', 'snow'].includes(tileBiome) ? tileBiome : this.getDefaultDecorationBiome())
-      if (mapGrid) {
+      if (mapGrid && options.includeDecorations !== false) {
         // Decorations come from the precomputed layout (multi-tile first, then 1x1).
         const cell = getValidDecorationCell(this.getDecorationLayout(mapGrid), mapGrid, x, y, this.getDefaultDecorationBiome())
         if (cell && (!options?.biomeTag || cell.biome === requestedBiome)) {
@@ -1192,7 +1192,7 @@ export class TextureManager {
           if (type === 'water') selectedTags = cell.group.waterTags
           selected = cell.group.tilesByOffset[`${cell.offsetX},${cell.offsetY}`] || null
         }
-      } else if (type === 'land') {
+      } else if (!mapGrid && type === 'land') {
         // Without a map only 1x1 sprites can be chosen.
         const hash = decorationHash(x, y, 7919)
         const singles = this.integratedDecorationPools?.[requestedBiome]?.single

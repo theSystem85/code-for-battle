@@ -141,6 +141,26 @@ describe('TextureManager integrated multi-sheet selection', () => {
     expect(loadImage).toHaveBeenCalledWith('enabled.webp')
   })
 
+  it('[U06492] excludes layout and fallback decorations from base-terrain selection', async() => {
+    const manager = new TextureManager()
+    vi.spyOn(manager, 'loadIntegratedSpriteSheetImage').mockResolvedValue({ id: 'decorations' })
+    await manager.setIntegratedSpriteSheetConfig({
+      enabled: true,
+      biomeTag: 'grass',
+      sheets: [{
+        sheetPath: 'decorations.webp',
+        metadata: {
+          blendMode: 'alpha',
+          tiles: { '0,0': { tags: ['grass', 'decorative', 'passable'], rect: { x: 0, y: 0, width: 64, height: 64 } } }
+        }
+      }]
+    })
+    const mapGrid = [[{ type: 'land', biome: 'grass' }]]
+    manager.prepareDecorationLayout(mapGrid)
+
+    expect(manager.getIntegratedTileForMapTile('land', 0, 0, { mapGrid, includeDecorations: false })).toBeNull()
+  })
+
   it('[U04449] combines tagged tiles from multiple selected sprite sheets', async() => {
     const manager = new TextureManager()
     const imageByPath = {

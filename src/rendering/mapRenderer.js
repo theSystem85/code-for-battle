@@ -255,7 +255,7 @@ export class MapRenderer {
     })
     this.terrainRevisions = new TerrainRevisionState({ chunkSize: this.chunkSize })
     this.terrainByteBudget = createTerrainByteBudget({
-      residentBytes: maximumChunkBytes * this.maxCachedChunks,
+      residentBytes: maximumChunkBytes * this.maxCachedChunks * 2,
       stagingBytes: maximumChunkBytes
     })
     this.chunkWarmScheduled = false
@@ -299,6 +299,14 @@ export class MapRenderer {
     this.scrollDelta = { x: 0, y: 0 }
     this.lastScrollOffset = { x: 0, y: 0 }
     this.hasLastScrollOffset = false
+    // Decorative art is deliberately kept out of the synchronous terrain page.
+    // Visible pages are prepared one at a time only after camera motion settles.
+    this.decorativeWarmQueue = new Map()
+    this.maxDecorativeWarmQueue = 12
+    this.decorativeWarmScheduled = false
+    this.decorativeSuppressedUntil = 0
+    this.decorativeSettleMs = 180
+    this.decorativeFadeMs = 180
     this.warmDiscoveryState = {
       startChunkX: -1,
       startChunkY: -1,
@@ -793,6 +801,12 @@ export class MapRenderer {
         chunkY,
         canvas,
         ctx,
+        decorativeCanvas: null,
+        decorativeCtx: null,
+        decorativeKey: null,
+        decorativeReadyAt: 0,
+        decorativeResidentBytes: 0,
+        decorativeResidentToken: null,
         startX,
         startY,
         endX,
@@ -892,6 +906,14 @@ export class MapRenderer {
       chunk.canvas.width = 1
       chunk.canvas.height = 1
     }
+    if (chunk.decorativeCanvas) {
+      chunk.decorativeCanvas.width = 1
+      chunk.decorativeCanvas.height = 1
+    }
+    chunk.decorativeResidentToken?.release()
+    chunk.decorativeResidentToken = null
+    chunk.decorativeResidentBytes = 0
+    this.decorativeWarmQueue.delete(chunk.key)
   }
 
   reserveChunkRaster(chunk, bytes) {
@@ -912,6 +934,27 @@ export class MapRenderer {
     }
     chunk.residentToken = residentToken
     chunk.residentBytes = bytes
+    return stagingToken
+  }
+
+  reserveDecorativeRaster(chunk, bytes) {
+    const stagingToken = this.terrainByteBudget.reserve('terrainStaging', bytes)
+    chunk.decorativeResidentToken?.release()
+    chunk.decorativeResidentToken = null
+    chunk.decorativeResidentBytes = 0
+    let residentToken = null
+    while (!residentToken) {
+      try {
+        residentToken = this.terrainByteBudget.reserve('terrainResident', bytes)
+      } catch (error) {
+        if (!this.evictOneOldestChunk(this.activeChunkKeys, chunk.key)) {
+          stagingToken.release()
+          throw error
+        }
+      }
+    }
+    chunk.decorativeResidentToken = residentToken
+    chunk.decorativeResidentBytes = bytes
     return stagingToken
   }
 
@@ -1103,6 +1146,98 @@ export class MapRenderer {
     } else if (typeof window !== 'undefined' && typeof window.setTimeout === 'function') {
       window.setTimeout(() => callback(null), 0)
     }
+  }
+
+  getDecorativeKey(chunk) {
+    return `${this.terrainRevisions.mapGeneration}|${chunk.revisionSnapshot.layout}|` +
+      `${chunk.revisionSnapshot.surface}|${chunk.revisionSnapshot.asset}|` +
+      `${this.textureManager.integratedRenderSignature}`
+  }
+
+  noteDecorativeScrollPressure(scrollOffset, now) {
+    const moving = this.hasLastScrollOffset && (
+      scrollOffset.x !== this.lastScrollOffset.x || scrollOffset.y !== this.lastScrollOffset.y
+    )
+    if (moving) this.decorativeSuppressedUntil = now + this.decorativeSettleMs
+    return now < this.decorativeSuppressedUntil
+  }
+
+  isDecorativeWorkDeferred(now = (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now())) {
+    return now < this.decorativeSuppressedUntil
+  }
+
+  queueDecorativeChunk(chunk, mapGrid, useTexture) {
+    if (!this.canUseOffscreen || !this.useOrganicTerrain(useTexture)) return
+    const key = this.getDecorativeKey(chunk)
+    if (chunk.decorativeKey === key || this.decorativeWarmQueue.has(chunk.key)) return
+    this.decorativeWarmQueue.set(chunk.key, { chunk, mapGrid, useTexture, key })
+    while (this.decorativeWarmQueue.size > this.maxDecorativeWarmQueue) {
+      this.decorativeWarmQueue.delete(this.decorativeWarmQueue.keys().next().value)
+    }
+    this.scheduleDecorativeWarmProcessing()
+  }
+
+  scheduleDecorativeWarmProcessing() {
+    if (this.decorativeWarmScheduled || !this.decorativeWarmQueue.size || typeof window === 'undefined') return
+    this.decorativeWarmScheduled = true
+    const callback = deadline => {
+      this.decorativeWarmScheduled = false
+      const now = typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now()
+      if (now >= this.decorativeSuppressedUntil && (!deadline?.timeRemaining || deadline.timeRemaining() >= 6)) {
+        this.processDecorativeWarmQueue(now)
+      }
+      if (this.decorativeWarmQueue.size) {
+        const delay = Math.max(16, this.decorativeSuppressedUntil - now)
+        window.setTimeout(() => this.scheduleDecorativeWarmProcessing(), delay)
+      }
+    }
+    if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(callback)
+    else window.setTimeout(() => callback(null), 16)
+  }
+
+  processDecorativeWarmQueue(now = (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now())) {
+    const entry = this.decorativeWarmQueue.values().next().value
+    if (!entry) return false
+    this.decorativeWarmQueue.delete(entry.chunk.key)
+    const { chunk, mapGrid, useTexture, key } = entry
+    if (!this.chunkCache.has(chunk.key) || key !== this.getDecorativeKey(chunk)) return false
+    const width = (chunk.endX - chunk.startX) * TILE_SIZE + chunk.padding * 2 + 1
+    const height = (chunk.endY - chunk.startY) * TILE_SIZE + chunk.padding * 2 + 1
+    const stagingToken = this.reserveDecorativeRaster(chunk, getTerrainRasterBytes(width, height))
+    try {
+      if (!chunk.decorativeCanvas) chunk.decorativeCanvas = document.createElement('canvas')
+      if (chunk.decorativeCanvas.width !== width || chunk.decorativeCanvas.height !== height) {
+        chunk.decorativeCanvas.width = width
+        chunk.decorativeCanvas.height = height
+        chunk.decorativeCtx = chunk.decorativeCanvas.getContext('2d')
+      } else {
+        chunk.decorativeCtx.clearRect(0, 0, width, height)
+      }
+      chunk.decorativeCtx.imageSmoothingEnabled = false
+      this.drawDecorativeLayer(
+        chunk.decorativeCtx, mapGrid, chunk.startX, chunk.startY, chunk.endX, chunk.endY,
+        chunk.offsetX, chunk.offsetY, useTexture
+      )
+    } finally {
+      stagingToken.release()
+    }
+    chunk.decorativeKey = key
+    chunk.decorativeReadyAt = now
+    return true
+  }
+
+  drawPreparedDecorations(ctx, chunk, mapGrid, useTexture, drawX, drawY, now, underPressure, fadeEnabled) {
+    this.queueDecorativeChunk(chunk, mapGrid, useTexture)
+    if (underPressure || chunk.decorativeKey !== this.getDecorativeKey(chunk) || !chunk.decorativeCanvas) return false
+    const alpha = fadeEnabled
+      ? Math.min(1, Math.max(0, (now - chunk.decorativeReadyAt) / this.decorativeFadeMs))
+      : 1
+    if (alpha <= 0) return false
+    ctx.save()
+    ctx.globalAlpha *= alpha
+    ctx.drawImage(chunk.decorativeCanvas, drawX, drawY)
+    ctx.restore()
+    return true
   }
 
   processChunkWarmQueue(deadline = null, generation = this.chunkWarmGeneration) {
@@ -1451,7 +1586,7 @@ export class MapRenderer {
     }
   }
 
-  renderTiles(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, _gameState, options = {}) {
+  renderTiles(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, gameState, options = {}) {
     const { skipWaterBase = false, skipWaterSot = false, prewarmStaticTerrain = false } = options
     // Disable image smoothing to prevent antialiasing gaps between tiles
     ctx.imageSmoothingEnabled = false
@@ -1486,6 +1621,10 @@ export class MapRenderer {
         currentWaterFrame,
         { skipWaterBase, skipWaterSot }
       )
+      const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()
+      if (!this.noteDecorativeScrollPressure(scrollOffset, now)) {
+        this.drawDecorativeLayer(ctx, mapGrid, startTileX, startTileY, endTileX, endTileY, scrollOffset.x, scrollOffset.y, useTexture)
+      }
       ctx.imageSmoothingEnabled = true
       return
     }
@@ -1496,8 +1635,10 @@ export class MapRenderer {
     scrollDelta.x = this.hasLastScrollOffset ? scrollOffset.x - this.lastScrollOffset.x : 0
     scrollDelta.y = this.hasLastScrollOffset ? scrollOffset.y - this.lastScrollOffset.y : 0
     const isScrolling = Math.abs(scrollDelta.x) > 0.5 || Math.abs(scrollDelta.y) > 0.5
+    const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()
+    const decorativePressure = this.noteDecorativeScrollPressure(scrollOffset, now)
+    const fadeDecorations = gameState?.decorativeFadeEnabled !== false
     if (isScrolling && this.mobileMemoryProfile) {
-      const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()
       this.deferChunkWarmUntil = now + 90
     }
 
@@ -1573,6 +1714,7 @@ export class MapRenderer {
           const drawY = chunkStartY * TILE_SIZE - scrollOffset.y - chunk.padding
           this.frameChunkStats.chunksDrawn++
           ctx.drawImage(chunk.canvas, drawX, drawY)
+          this.drawPreparedDecorations(ctx, chunk, mapGrid, useTexture, drawX, drawY, now, decorativePressure, fadeDecorations)
           continue
         }
         const updateOptions = this.chunkUpdateOptions
@@ -1587,6 +1729,7 @@ export class MapRenderer {
         const drawY = chunkStartY * TILE_SIZE - scrollOffset.y - chunk.padding
         this.frameChunkStats.chunksDrawn++
         ctx.drawImage(chunk.canvas, drawX, drawY)
+        this.drawPreparedDecorations(ctx, chunk, mapGrid, useTexture, drawX, drawY, now, decorativePressure, fadeDecorations)
       }
     }
 
@@ -1697,6 +1840,8 @@ export class MapRenderer {
     const sotApplied = new Set()
     const scrollOffset = { x: offsetX, y: offsetY }
     const previousGroupingMap = this.groupingMapGrid
+    const previousDrawingDecorations = this.drawingDecorations
+    this.drawingDecorations = false
     this.groupingMapGrid = mapGrid
 
     for (let y = startTileY; y < endTileY; y++) {
@@ -1764,11 +1909,6 @@ export class MapRenderer {
         const tile = mapGrid[y][x]
         const screenX = x * TILE_SIZE - offsetX
         const screenY = y * TILE_SIZE - offsetY
-        if (this.useOrganicTerrain(useTexture)) {
-          if (!this.drawIntegratedLandOverlay(ctx, mapGrid, tile, x, y, screenX, screenY)) {
-            this.organicTerrain.drawDecoration(ctx, mapGrid, x, y, screenX, screenY, TILE_SIZE, this.sotMask[y]?.[x])
-          }
-        }
         this.drawTileDecalOverlay(ctx, tile, x, y, screenX, screenY, mapGrid)
 
         if (tile.seedCrystal) {
@@ -1778,7 +1918,25 @@ export class MapRenderer {
         }
       }
     }
+    this.drawingDecorations = previousDrawingDecorations
     this.groupingMapGrid = previousGroupingMap
+  }
+
+  drawDecorativeLayer(ctx, mapGrid, startTileX, startTileY, endTileX, endTileY, offsetX, offsetY, useTexture) {
+    if (!this.useOrganicTerrain(useTexture)) return
+    const previousDrawingDecorations = this.drawingDecorations
+    this.drawingDecorations = true
+    for (let y = startTileY; y < endTileY; y++) {
+      for (let x = startTileX; x < endTileX; x++) {
+        const tile = mapGrid[y][x]
+        const screenX = x * TILE_SIZE - offsetX
+        const screenY = y * TILE_SIZE - offsetY
+        if (!this.drawIntegratedLandOverlay(ctx, mapGrid, tile, x, y, screenX, screenY)) {
+          this.organicTerrain.drawDecoration(ctx, mapGrid, x, y, screenX, screenY, TILE_SIZE, this.sotMask[y]?.[x])
+        }
+      }
+    }
+    this.drawingDecorations = previousDrawingDecorations
   }
 
   drawOrganicLandTransition(ctx, mapGrid, tileX, tileY, screenX, screenY) {
@@ -1918,7 +2076,7 @@ export class MapRenderer {
     if (type === 'street') {
       if (this.textureManager.integratedSpriteSheetMode) {
         const biomeUnderlayTile = mapGrid
-          ? this.textureManager.getIntegratedTileForMapTile('land', tileX, tileY, { mapGrid, biomeTag: mapGrid[tileY]?.[tileX]?.biome })
+          ? this.textureManager.getIntegratedTileForMapTile('land', tileX, tileY, { mapGrid, biomeTag: mapGrid[tileY]?.[tileX]?.biome, includeDecorations: false })
           : this.textureManager.getIntegratedTileForMapTile('land', tileX, tileY)
         if (!this.drawIntegratedTileImage(ctx, biomeUnderlayTile, screenX, screenY)) {
           this.drawFallbackTileBase(ctx, tileX, tileY, 'land', screenX, screenY, useTexture, currentWaterFrame)
@@ -1942,16 +2100,16 @@ export class MapRenderer {
     if (this.textureManager.integratedSpriteSheetMode) {
       const tileBiome = mapGrid?.[tileY]?.[tileX]?.biome
       const integratedTile = mapGrid
-        ? this.textureManager.getIntegratedTileForMapTile(type, tileX, tileY, { mapGrid, biomeTag: tileBiome })
+        ? this.textureManager.getIntegratedTileForMapTile(type, tileX, tileY, { mapGrid, biomeTag: tileBiome, includeDecorations: this.drawingDecorations !== false })
         : this.textureManager.getIntegratedTileForMapTile(type, tileX, tileY)
       if (integratedTile?.image && integratedTile?.rect) {
         if (type === 'land' && mapGrid && this.textureManager.hasGroundDetails && integratedTile.tags?.includes('decorative')) {
           this.drawFallbackTileBase(ctx, tileX, tileY, type, screenX, screenY, useTexture, currentWaterFrame)
-          this.drawGroundDetail(ctx, mapGrid, tileX, tileY, screenX, screenY)
+          if (this.drawingDecorations) this.drawGroundDetail(ctx, mapGrid, tileX, tileY, screenX, screenY)
         }
         if (type === 'rock' && this.textureManager.integratedSpriteSheetMode) {
           const landTile = mapGrid
-            ? this.textureManager.getIntegratedTileForMapTile('land', tileX, tileY, { mapGrid, biomeTag: tileBiome })
+            ? this.textureManager.getIntegratedTileForMapTile('land', tileX, tileY, { mapGrid, biomeTag: tileBiome, includeDecorations: false })
             : this.textureManager.getIntegratedTileForMapTile('land', tileX, tileY)
           if (!this.drawIntegratedTileImage(ctx, landTile, screenX, screenY)) {
             this.drawFallbackTileBase(ctx, tileX, tileY, 'land', screenX, screenY, useTexture, currentWaterFrame)
@@ -1959,7 +2117,7 @@ export class MapRenderer {
         }
         this.drawIntegratedTileImage(ctx, integratedTile, screenX, screenY)
         if (type === 'land' && mapGrid && integratedTile.tags?.includes('passable') && !integratedTile.tags.includes('decorative')) {
-          this.drawGroundDetail(ctx, mapGrid, tileX, tileY, screenX, screenY)
+          if (this.drawingDecorations) this.drawGroundDetail(ctx, mapGrid, tileX, tileY, screenX, screenY)
         }
         const blend = mapGrid?.[tileY]?.[tileX]?.biomeBlend
         if (type === 'land' && blend?.biome && blend.alpha > 0) {
@@ -1980,7 +2138,7 @@ export class MapRenderer {
     }
 
     this.drawFallbackTileBase(ctx, tileX, tileY, type, screenX, screenY, useTexture, currentWaterFrame)
-    if (type === 'land' && mapGrid) this.drawGroundDetail(ctx, mapGrid, tileX, tileY, screenX, screenY)
+    if (type === 'land' && mapGrid && this.drawingDecorations) this.drawGroundDetail(ctx, mapGrid, tileX, tileY, screenX, screenY)
   }
 
   drawProceduralWater(ctx, screenX, screenY, size, tileX, tileY) {

@@ -32,6 +32,7 @@ import {
 
 const RADAR_OFFLINE_ANIMATION_SETTINGS_KEY = 'rts_radar_offline_animation'
 const DYNAMIC_WATER_LAND_BLEND_KEY = 'rts_dynamic_water_land_blend'
+const DECORATIVE_FADE_KEY = 'rts_decorative_fade'
 const WATER_SETTINGS_CONFIG_IDS = {
   ocean: 'useOceanWaterRendering',
   zoom: 'waterEffectZoom',
@@ -354,6 +355,7 @@ export function initSettingsModal() {
   const frameLimiterToggle = document.getElementById('settingsFrameLimiterToggle')
   const radarOfflineAnimationToggle = document.getElementById('settingsRadarOfflineAnimationToggle')
   const dynamicWaterLandBlendToggle = document.getElementById('settingsDynamicWaterLandBlendToggle')
+  const decorativeFadeToggle = document.getElementById('settingsDecorativeFadeToggle')
   const oceanWaterToggle = document.getElementById('settingsOceanWaterToggle')
   const waterHeightRange = document.getElementById('settingsWaterHeightRange')
   const waterToneRange = document.getElementById('settingsWaterToneRange')
@@ -373,6 +375,12 @@ export function initSettingsModal() {
     if (storedDynamicWaterBlend !== null) gameState.dynamicWaterLandBlendEnabled = storedDynamicWaterBlend !== 'false'
   } catch (error) {
     window.logger.warn('Failed to load dynamic water shoreline setting:', error)
+  }
+  try {
+    const storedDecorativeFade = getStoredItem(DECORATIVE_FADE_KEY)
+    if (storedDecorativeFade !== null) gameState.decorativeFadeEnabled = storedDecorativeFade !== 'false'
+  } catch (error) {
+    window.logger.warn('Failed to load decorative fade setting:', error)
   }
 
   const mapHoldInput = modal.querySelector('#settingsMapActionLongPressMs')
@@ -443,6 +451,14 @@ export function initSettingsModal() {
     dynamicWaterLandBlendToggle.addEventListener('change', (event) => {
       gameState.dynamicWaterLandBlendEnabled = event.target.checked
       try { setStoredItem(DYNAMIC_WATER_LAND_BLEND_KEY, event.target.checked ? 'true' : 'false') } catch (error) { window.logger.warn('Failed to save dynamic water shoreline setting:', error) }
+    })
+  }
+
+  if (decorativeFadeToggle) {
+    decorativeFadeToggle.checked = gameState.decorativeFadeEnabled !== false
+    decorativeFadeToggle.addEventListener('change', event => {
+      gameState.decorativeFadeEnabled = event.target.checked
+      try { setStoredItem(DECORATIVE_FADE_KEY, event.target.checked ? 'true' : 'false') } catch (error) { window.logger.warn('Failed to save decorative fade setting:', error) }
     })
   }
 
