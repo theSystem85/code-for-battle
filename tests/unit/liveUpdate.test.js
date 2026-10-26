@@ -18,7 +18,8 @@ const base = {
   version: '0.62.2',
   commit: 'aaaaaaa',
   jsSignature: 'js-1',
-  css: { 'html:0': '/assets/main-AAAAAAAA.css', 'html:1': '/assets/sidebar-BBBBBBBB.css' }
+  css: { 'html:0': '/assets/main-AAAAAAAA.css', 'html:1': '/assets/sidebar-BBBBBBBB.css' },
+  releases: [{ version: '0.62.2', features: ['Existing feature'], improvements: [], bugfixes: [] }]
 }
 
 function memoryStorage() {
@@ -82,7 +83,7 @@ describe('dev live update', () => {
   it('[U05213] applies a safe update live, without a reload, and tells the player', async() => {
     document.head.innerHTML = '<link rel="stylesheet" href="/assets/sidebar-BBBBBBBB.css">'
     document.body.innerHTML = '<span id="appVersion">0.62.2 (aaaaaaa)</span>'
-    const next = { ...base, version: '0.62.3', commit: 'bbbbbbb', css: { ...base.css, 'html:1': '/assets/sidebar-CCCCCCCC.css' } }
+    const next = { ...base, version: '0.62.3', commit: 'bbbbbbb', css: { ...base.css, 'html:1': '/assets/sidebar-CCCCCCCC.css' }, releases: [...base.releases, { version: '0.62.3', features: [], improvements: ['Faster update'], bugfixes: [] }] }
     const reload = vi.fn()
     const prepareReload = vi.fn()
     const ui = fakeUi()
@@ -94,7 +95,7 @@ describe('dev live update', () => {
     expect(await result).toBe('safe')
     expect(reload).not.toHaveBeenCalled()
     expect(prepareReload).not.toHaveBeenCalled()
-    expect(ui.showSafe).toHaveBeenCalledWith(next, 1, 0)
+    expect(ui.showSafe).toHaveBeenCalledWith(next, 1, 0, expect.objectContaining({ improvements: ['Faster update'] }))
     expect(document.getElementById('appVersion').textContent).toBe('0.62.3 (bbbbbbb)')
     expect(updater.getBaseline().commit).toBe('bbbbbbb')
   })
@@ -172,22 +173,30 @@ describe('dev live update', () => {
     document.body.innerHTML = '<div id="sidebarFooterVersion"><div class="sidebar-version__row"><span id="appVersion">x</span></div></div>'
     const noticeUi = createUpdateNoticeUi(document)
     const onReload = vi.fn()
-    noticeUi.showBreaking({ version: '0.63.0', commit: 'bbbbbbb' }, { multiplayer: false, onReload })
+    const digest = { fromVersion: '0.62.3', toVersion: '0.63.0', features: ['Feature A'], improvements: ['Improvement B'], bugfixes: ['Bugfix C'] }
+    noticeUi.showBreaking({ version: '0.63.0', commit: 'bbbbbbb' }, { multiplayer: false, onReload, digest })
     const bubble = document.getElementById('liveUpdateBubble')
     expect(bubble.dataset.kind).toBe('breaking')
     expect(bubble.textContent).toContain('needs a reload')
+    expect([...bubble.querySelectorAll('h4')].map(element => element.textContent)).toEqual(['New features', 'Improvements', 'Bugfixes'])
+    expect([...bubble.querySelectorAll('li')].map(element => element.textContent)).toEqual(['Feature A', 'Improvement B', 'Bugfix C'])
     expect(document.getElementById('liveUpdateStatus').textContent).toContain('needs a reload')
     bubble.querySelector('.live-update-bubble__button--primary').click()
     expect(onReload).toHaveBeenCalledTimes(1)
-    noticeUi.showSafe({ version: '0.63.0', commit: 'ccccccc' }, 1)
+    noticeUi.showSafe({ version: '0.63.0', commit: 'ccccccc' }, 1, 0, digest)
     expect(bubble.dataset.kind).toBe('safe')
     expect(bubble.textContent).toContain('No reload needed')
+    noticeUi.showDeferred({ version: '0.63.0', commit: 'ddddddd' }, 'breaking', digest)
+    expect(bubble.querySelectorAll('.live-update-bubble__changes li')).toHaveLength(3)
+    noticeUi.showApplied({ version: '0.63.0', commit: 'eeeeeee' }, digest)
+    expect(bubble.querySelectorAll('.live-update-bubble__changes li')).toHaveLength(3)
 
     const storage = memoryStorage()
-    storage.setItem(LIVE_UPDATE_APPLIED_KEY, JSON.stringify({ version: '0.62.3', commit: 'bbbbbbb' }))
+    storage.setItem(LIVE_UPDATE_APPLIED_KEY, JSON.stringify({ version: '0.62.3', commit: 'bbbbbbb', previousVersion: '0.62.2', previousReleases: base.releases }))
     const ui = fakeUi()
-    expect(announceAppliedUpdate({ win: { sessionStorage: storage }, ui, running: { commit: 'bbbbbbb' } })).toBe(true)
-    expect(ui.showApplied).toHaveBeenCalledWith({ version: '0.62.3', commit: 'bbbbbbb' })
+    const running = { version: '0.62.3', commit: 'bbbbbbb', releases: [...base.releases, { version: '0.62.3', features: ['Restored feature'], improvements: [], bugfixes: [] }] }
+    expect(announceAppliedUpdate({ win: { sessionStorage: storage }, ui, running })).toBe(true)
+    expect(ui.showApplied).toHaveBeenCalledWith(expect.objectContaining({ version: '0.62.3', commit: 'bbbbbbb' }), expect.objectContaining({ features: ['Restored feature'] }))
     expect(storage.getItem(LIVE_UPDATE_APPLIED_KEY)).toBe(null)
     expect(BUILD_INFO_PATH).toBe('/build-info.json')
     expect(shouldBypassServiceWorkerCache('https://x.test/build-info.json?t=1')).toBe(true)

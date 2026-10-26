@@ -1,34 +1,19 @@
 import { APP_VERSION } from '../version.js'
+import {
+  buildUnreleasedRelease, compareVersions, getReleaseDigest as buildReleaseDigest,
+  mergeReleaseEntries
+} from './releaseData.js'
 
-const RELEASE_CATEGORIES = ['features', 'improvements', 'bugfixes']
+export { buildUnreleasedRelease, compareVersions, getReleaseDelta, mergeReleaseEntries, RELEASE_CATEGORIES } from './releaseData.js'
+
 const releasedFiles = Object.values(import.meta.glob('../../features/*.json', { eager: true, import: 'default' }))
 const unreleasedFiles = import.meta.glob('../../features/unreleased/*/*.json', { eager: true, import: 'default' })
 
 // Unreleased entries (one file per change under features/unreleased/<category>/)
 // belong to the build's computed APP_VERSION until `npm run release` folds them
 // into features/<version>.json.
-export function buildUnreleasedRelease(files, version = APP_VERSION) {
-  const release = { version, features: [], improvements: [], bugfixes: [] }
-  for (const path of Object.keys(files).sort()) {
-    const category = path.split('/').at(-2)
-    const description = files[path]?.description
-    if (RELEASE_CATEGORIES.includes(category) && typeof description === 'string' && description.trim()) {
-      release[category].push(description.trim())
-    }
-  }
-  return RELEASE_CATEGORIES.some(category => release[category].length) ? release : null
-}
-
-export function mergeReleaseEntries(released, unreleased) {
-  if (!unreleased) return released
-  const existing = released.find(entry => compareVersions(entry.version, unreleased.version) === 0)
-  if (!existing) return [...released, unreleased]
-  return released.map(entry => entry === existing
-    ? Object.fromEntries([['version', entry.version], ...RELEASE_CATEGORIES.map(category => [category, [...(entry[category] || []), ...unreleased[category]]])])
-    : entry)
-}
-
-const releases = mergeReleaseEntries(releasedFiles, buildUnreleasedRelease(unreleasedFiles))
+const releases = mergeReleaseEntries(releasedFiles, buildUnreleasedRelease(unreleasedFiles, APP_VERSION))
+export const releaseEntries = releases
 export const LAST_VERSION_KEY = 'cfb-last-loaded-version'
 export const LAST_DURATION_KEY = 'cfb-last-boot-duration-ms'
 export const DURATION_HISTORY_KEY = 'cfb-boot-duration-history-ms'
@@ -42,26 +27,8 @@ export function writeBootStorage(key, value) {
   try { localStorage.setItem(key, String(value)) } catch { /* Private browsing can deny storage. */ }
 }
 
-export function compareVersions(a, b) {
-  const left = a.split('.').map(Number)
-  const right = b.split('.').map(Number)
-  for (let i = 0; i < 3; i++) {
-    const diff = (left[i] || 0) - (right[i] || 0)
-    if (diff) return diff
-  }
-  return 0
-}
-
 export function getReleaseDigest(fromVersion, toVersion = APP_VERSION, entries = releases) {
-  const digest = { fromVersion, toVersion, features: [], improvements: [], bugfixes: [] }
-  entries.filter(entry => (!fromVersion || compareVersions(entry.version, fromVersion) > 0) && compareVersions(entry.version, toVersion) <= 0)
-    .sort((a, b) => compareVersions(a.version, b.version))
-    .forEach(entry => {
-      for (const category of ['features', 'improvements', 'bugfixes']) {
-        for (const description of entry[category] || []) digest[category].push(description)
-      }
-    })
-  return digest
+  return buildReleaseDigest(fromVersion, toVersion, entries)
 }
 
 export function getBootReleaseDigest() {

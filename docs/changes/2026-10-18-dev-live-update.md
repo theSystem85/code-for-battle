@@ -4,6 +4,7 @@ First step of B-008 (hot code push, single-player). Patrick plays on the dev dep
 
 ## Update manifest (`dist/build-info.json`, `scripts/liveUpdateBuildInfo.mjs`)
 - `manifestVersion` (format of the file, 1), `version`, `commit`, `message`, `builtAt`, `liveUpdate`.
+- `releases`: released and current-build unreleased entries merged by the same pure helpers as the loading screen. Release entries remain excluded from JavaScript signatures, so a note-only deploy is still safe.
 - `stateSchemaVersion`: `GAME_STATE_SCHEMA_VERSION` from `src/gameStateSchema.js` (1). Groundwork for live state migration: a running game whose schema differs from a new deploy treats it as breaking.
 - `update`: `{ kind, reason }` from the deploying commit's trailer `Live-Update: safe` / `Live-Update: breaking (<reason>)`, otherwise `auto`. This is how the coding agent records its decision.
 - `jsSignature`: SHA-256 over the rendered code of every JS module, with hashed file names replaced by `<hash>`, the version string replaced, and the release-note JSON (`features/**`), `src/version.json` and the release-digest glob entries left out. A CSS-only PR with its release-note entry keeps the signature; any real JS change alters it.
@@ -12,9 +13,9 @@ First step of B-008 (hot code push, single-player). Patrick plays on the dev dep
 ## Client (`src/pwa/liveUpdate.js`, `src/pwa/liveUpdate.css`)
 - Loaded from `src/startup.js` only when `__LIVE_UPDATE__` is true (dev branch deploy, `CFB_LIVE_UPDATE=1`) or under `npm run dev`. Production builds contain no live-update chunk.
 - Polls `/build-info.json?t=…` (`cache: 'no-store'`) every 20 s and on `visibilitychange`.
-- Every update is announced: a bubble at the top and a line under the version in the left sidebar, saying whether it needs a reload.
+- Every update is announced: a bubble at the top and a line under the version in the left sidebar, saying whether it needs a reload. The bubble uses the shared release-digest component to list new features, improvements and bugfixes. It compares entry snapshots as well as versions, so same-version dev deploys show only their newly added notes; the scrollable list pauses auto-dismiss while it is being read.
 - Safe (same signature, same schema, trailer not `breaking`): changed stylesheet `<link>`s are replaced in place (the old one is removed after the new one loaded), version labels updated, no reload.
-- Breaking: "Reload now" / "Later" in the bubble and "Load" in the sidebar. Nothing happens without consent. On consent: `prepareForLiveUpdateReload()` saves `lastGame`, sets the auto-resume flag and flushes IndexedDB; then the waiting service worker is activated, the startup reload guard is set, and the page reloads. Boot restores the game via `maybeResumeLastPausedGame`, and the bubble says "Updated to v… Your game was restored."
+- Breaking: "Reload now" / "Later" in the bubble and "Load" in the sidebar. Nothing happens without consent. On consent: `prepareForLiveUpdateReload()` saves `lastGame`, sets the auto-resume flag and flushes IndexedDB; then the waiting service worker is activated, the startup reload guard and previous release-entry snapshot are stored, and the page reloads. Boot restores the game via `maybeResumeLastPausedGame`, and the bubble says "Updated to v… Your game was restored" with the same release delta.
 - A deploy already newer than the running build at the first poll is offered as a breaking update. A failed reload for the same commit is never repeated.
 - Single-player scope means no other human connected over the network. Local games against AI ("You (Host)") are in scope. While another human is connected (`isRemote`, WebRTC session `connected`, or a remote human in another party), updates are announced but held until the first poll after the match.
 - The service worker bypasses `/build-info.json`, and the offline asset plan excludes it.
