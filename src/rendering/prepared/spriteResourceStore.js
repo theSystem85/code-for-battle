@@ -145,6 +145,10 @@ export class SpriteResourceStore {
     return this.views.get(viewId)
   }
 
+  removeView(viewId) {
+    return this.views.delete(viewId)
+  }
+
   lookupView(viewId) {
     const view = this.views.get(viewId)
     const resource = view && this.resources.get(view.resourceId)

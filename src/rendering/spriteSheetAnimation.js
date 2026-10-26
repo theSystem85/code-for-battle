@@ -2,7 +2,11 @@ import { TILE_SIZE } from '../config.js'
 import { getCanvasLogicalSize } from './renderingUtils.js'
 import { applyBlackKey, applyEdgeConnectedBlackKey, buildBlackKeySeedMask } from './blackKeyPixels.js'
 import { prepareExplosionInWorker } from './explosionPreparation.js'
-import { SpriteResourceStore } from './prepared/spriteResourceStore.js'
+import {
+  getSpriteResourceLifecycleGenerations,
+  getSpriteResourceLifecycleStore,
+  onSpriteResourceLifecycleTeardown
+} from './prepared/spriteResourceLifecycle.js'
 
 const FILENAME_PATTERN = /^(\d+)x(\d+)_([0-9]+)x([0-9]+)_.+\.[a-z0-9]+$/i
 const BLACK_ALPHA_CUTOFF_BRIGHTNESS = 24
@@ -16,11 +20,8 @@ const MAX_SHEET_BYTES = 16 * 1024 * 1024
 const MAX_CACHE_BYTES = 64 * 1024 * 1024
 const MAX_SHEETS = 32
 let reservedBytes = 0
-let explosionStore = new SpriteResourceStore({ budgets: {
-  staging: MAX_CACHE_BYTES, transfer: MAX_CACHE_BYTES, resident: MAX_CACHE_BYTES
-} })
-const explosionGenerations = Object.freeze({ asset: 0, map: 0, density: 0 })
-explosionStore.setCurrentGenerations(explosionGenerations)
+// Explosion sheets charge the shared prepared-rendering lifecycle store; the
+// local reservedBytes cap keeps their own 64 MiB slice inside that store.
 let explosionRevision = 0
 
 function normalizeBlackKeyConfig(config = null) {
@@ -208,8 +209,7 @@ function ensureSheet(assetPath) {
     // Remove every lookup before closing the underlying bitmap/image.
     textureCache.delete(oldestKey)
     for (const [alias, candidate] of sheetAliases) if (candidate === oldest) sheetAliases.delete(alias)
-    explosionStore.remove(oldest.resourceId)
-    explosionStore.disposeResource(oldest.resourceId, 'explosion-count-limit')
+    releaseSheetResource(oldest, 'explosion-count-limit')
     reservedBytes -= oldest.residentBytes || 0
     oldest.image.src = ''
   }
@@ -241,6 +241,7 @@ async function prepareSheet(entry) {
     throw new Error('Explosion sheet exceeds the prepared texture byte budget')
   }
   const resourceId = `explosion-sheet-${++explosionRevision}`
+  const explosionStore = getSpriteResourceLifecycleStore()
   let staging
   let transfer
   const releaseTemps = reason => {
@@ -251,7 +252,7 @@ async function prepareSheet(entry) {
     staging = explosionStore.reserve({ owner: resourceId, byteClass: 'staging', bytes })
     transfer = explosionStore.reserve({ owner: resourceId, byteClass: 'transfer', bytes })
     entry.black = await prepareExplosionInWorker(entry.image, {
-      store: explosionStore, key: resourceId, generations: explosionGenerations
+      store: explosionStore, key: resourceId, generations: getSpriteResourceLifecycleGenerations(explosionStore)
     })
   } catch (error) {
     // Older Safari/CSP/worker failures use the same pixels during preparation,
@@ -280,9 +281,15 @@ async function prepareSheet(entry) {
     removeFailedSheet(entry)
     throw error
   }
-  owner.release()
+  // Keep the registration reference for as long as the sheet is cached: the
+  // render path reads entry.black directly, so lifecycle-store resident
+  // pressure must never evict it even if a generation swap rejects the publication.
+  entry.owner = owner
   explosionStore.registerView(resourceId, resourceId, { image: entry.black })
-  explosionStore.publish(resourceId, { resourceId, revision: explosionRevision, generations: explosionGenerations })
+  explosionStore.publish(resourceId, {
+    resourceId, revision: explosionRevision, generations: getSpriteResourceLifecycleGenerations(explosionStore)
+  })
+  entry.store = explosionStore
   entry.resourceId = resourceId
   entry.residentBytes = bytes * 2
   reservedBytes += bytes * 2
@@ -297,20 +304,28 @@ function removeFailedSheet(entry) {
   entry.image.src = ''
 }
 
+function releaseSheetResource(entry, reason) {
+  const store = entry?.store
+  entry?.owner?.release()
+  if (!entry?.resourceId || !store || store.disposed) return
+  store.remove(entry.resourceId)
+  store.removeView(entry.resourceId)
+  store.disposeResource(entry.resourceId, reason)
+}
+
+/** Releases only the explosion sheets' own resources; the shared lifecycle
+ * store stays open for the other participants. */
 export function disposeSpriteSheetTextures() {
   for (const entry of textureCache.values()) {
-    if (entry.resourceId) explosionStore.remove(entry.resourceId)
+    releaseSheetResource(entry, 'explosion-sheets-disposed')
     entry.image.src = ''
   }
-  explosionStore.dispose()
   textureCache.clear()
   sheetAliases.clear()
   reservedBytes = 0
-  explosionStore = new SpriteResourceStore({ budgets: {
-    staging: MAX_CACHE_BYTES, transfer: MAX_CACHE_BYTES, resident: MAX_CACHE_BYTES
-  } })
-  explosionStore.setCurrentGenerations(explosionGenerations)
 }
+
+onSpriteResourceLifecycleTeardown(() => disposeSpriteSheetTextures())
 
 export function prewarmSpriteSheetTexture(assetPath) {
   if (!assetPath) return Promise.resolve(null)

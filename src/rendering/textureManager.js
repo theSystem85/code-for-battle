@@ -25,6 +25,12 @@ import { cutoutDecorationGroup } from './decorationCutout.js'
 import { DecorationLayoutPreparation } from './decorationLayoutPreparation.js'
 import { createSpritePublication, createSpriteReservationToken } from './spriteStreamingLifecycle.js'
 import { loadSpriteSheetsWithOverlap } from '../pwa/offlineAssetPlan.js'
+import {
+  getSpriteResourceLifecycleGenerations,
+  getSpriteResourceLifecycleStore,
+  onSpriteResourceLifecycleTeardown
+} from './prepared/spriteResourceLifecycle.js'
+import { cacheActiveMapSpriteRepresentations } from './prepared/mapSpriteOfflineCache.js'
 
 const PREPARED_MAP_SPRITE_ROOT = '/images/prepared-map-sprites/'
 
@@ -75,6 +81,11 @@ export class TextureManager {
     this.preparedMapSpriteManifests = new Map()
     this.spritePublicationRevision = 0
     this.onSpriteTierPublication = null
+    // sheetPath -> { store, resourceId, owner } in the shared lifecycle store.
+    this.preparedMapSpriteResources = new Map()
+    this.preparedMapSpriteTeardown = null
+    this.offlineMapSpriteSelectionKey = ''
+    this.offlineMapSpriteCaching = null
     this.integratedSpriteSheets = []
     this.integratedTagBuckets = {}
     this.integratedLandBuckets = {}
@@ -273,8 +284,93 @@ export class TextureManager {
       generations: { asset: generation, map: this.decorationMapRevision, density: 0 },
       resourceToken: createSpriteReservationToken({ tokenId: `${prepared.manifest.signature}:${prepared.page.tier}`, owner: sheetPath, byteClass: 'resident', bytes: prepared.page.decodedBytes, generation })
     })
+    this.chargePreparedMapSpritePage(sheetPath, prepared, publication.revision)
     this.onSpriteTierPublication?.(publication)
     return publication
+  }
+
+  /** Charges the selected page's decoded bytes to the shared lifecycle store
+   * and publishes it there, so map sprites share totals with unit sprites,
+   * explosions and streamed tiers. Accounting failure never blocks rendering. */
+  chargePreparedMapSpritePage(sheetPath, prepared, revision) {
+    const bytes = Number(prepared?.page?.decodedBytes)
+    if (!Number.isSafeInteger(bytes) || bytes <= 0) return null
+    const store = getSpriteResourceLifecycleStore()
+    if (!this.preparedMapSpriteTeardown) {
+      this.preparedMapSpriteTeardown = onSpriteResourceLifecycleTeardown(() => {
+        for (const record of this.preparedMapSpriteResources.values()) record.owner?.release()
+        this.preparedMapSpriteResources.clear()
+      })
+    }
+    const resourceId = `map-sprite:${prepared.manifest.signature}:${prepared.page.tier}`
+    const current = this.preparedMapSpriteResources.get(sheetPath)
+    if (current?.store === store && current.resourceId === resourceId) return current
+    this.releasePreparedMapSpriteResource(sheetPath)
+    try {
+      // The decoded image is owned by the integrated-sheet image cache; the
+      // store only accounts it. Holding the owner reference prevents eviction
+      // while the page is the active representation.
+      const owner = store.resources.has(resourceId)
+        ? store.acquire(resourceId)
+        : store.registerResource({
+          resourceId,
+          value: { sheetPath },
+          allocations: [{ byteClass: 'resident', bytes }],
+          tier: prepared.page.tier,
+          kind: 'map-sprite-page'
+        })
+      if (!owner) return null
+      store.publish(`map-sprite:${sheetPath}`, {
+        resourceId,
+        revision,
+        tier: prepared.page.tier,
+        generations: getSpriteResourceLifecycleGenerations(store)
+      })
+      const record = { store, resourceId, owner }
+      this.preparedMapSpriteResources.set(sheetPath, record)
+      return record
+    } catch (error) {
+      window.logger?.warn?.('Prepared map-sprite page exceeds the shared sprite budget:', error)
+      return null
+    }
+  }
+
+  releasePreparedMapSpriteResource(sheetPath) {
+    const record = this.preparedMapSpriteResources.get(sheetPath)
+    if (!record) return
+    this.preparedMapSpriteResources.delete(sheetPath)
+    record.owner?.release()
+    if (record.store.disposed) return
+    record.store.remove(`map-sprite:${sheetPath}`)
+    record.store.disposeResource(record.resourceId, 'map-sprite-page-replaced')
+  }
+
+  releaseInactivePreparedMapSpriteResources(activeSheetPaths = []) {
+    const active = new Set(activeSheetPaths)
+    for (const sheetPath of [...this.preparedMapSpriteResources.keys()]) {
+      if (!active.has(sheetPath)) this.releasePreparedMapSpriteResource(sheetPath)
+    }
+  }
+
+  /** S09: after the active density and the final tier are known, retain only
+   * the minimum coarse tier plus the selected final page per active sheet in
+   * the derivative cache and drop stale derivatives. Runs in the background. */
+  scheduleOfflineMapSpriteCaching(manifests, density) {
+    if (!manifests.length || typeof globalThis.caches?.open !== 'function') return null
+    const key = `${density}|${manifests.map(manifest => manifest.signature).sort().join(',')}`
+    if (key === this.offlineMapSpriteSelectionKey) return this.offlineMapSpriteCaching
+    this.offlineMapSpriteSelectionKey = key
+    this.offlineMapSpriteCaching = cacheActiveMapSpriteRepresentations(manifests, { density })
+      .catch(error => {
+        if (this.offlineMapSpriteSelectionKey === key) this.offlineMapSpriteSelectionKey = ''
+        window.logger?.warn?.('Offline map-sprite caching failed:', error)
+        return null
+      })
+    return this.offlineMapSpriteCaching
+  }
+
+  getActivePreparedSpriteDensity() {
+    return getPreparedSpriteState().density || Math.min(3, Math.max(1, Math.ceil(globalThis.devicePixelRatio || 1)))
   }
 
   buildIntegratedTagBuckets(sheetEntries) {
@@ -527,6 +623,7 @@ export class TextureManager {
       this.naturalDecorationRules = false
       this.decorationLayoutCache = null
       this.integratedRenderSignature = `off|${this.integratedBiomeTag}`
+      this.releaseInactivePreparedMapSpriteResources([])
       this.clearStreetSelectionPoolCache()
       this.integratedConfigVersion++
       return
@@ -598,6 +695,7 @@ export class TextureManager {
       this.naturalDecorationRules = false
       this.decorationLayoutCache = null
       this.integratedRenderSignature = 'off'
+      this.releaseInactivePreparedMapSpriteResources([])
       this.clearStreetSelectionPoolCache()
       this.integratedConfigVersion++
       return
@@ -635,7 +733,10 @@ export class TextureManager {
     }
     this.cityVisualGroups = preparedGroups.filter(group => group.cityVisual)
     this.cityVisualDensity = 0
-    this.prepareCityVisuals(getPreparedSpriteState().density || Math.min(3, Math.max(1, Math.ceil(globalThis.devicePixelRatio || 1))))
+    const activeDensity = this.getActivePreparedSpriteDensity()
+    this.prepareCityVisuals(activeDensity)
+    this.releaseInactivePreparedMapSpriteResources(normalizedEntries.filter(entry => entry.preparedManifest).map(entry => entry.sheetPath))
+    this.scheduleOfflineMapSpriteCaching(normalizedEntries.map(entry => entry.preparedManifest).filter(Boolean), activeDensity)
     this.hasShoreDecorations = preparedGroups.some(group => group.tagSet.has('shore'))
     this.integratedDecorationPools = buildDecorationPools(preparedGroups)
     this.hasGroundDetails = preparedGroups.some(group => group.tagSet.has('ground_detail'))
