@@ -10,8 +10,10 @@ import {
   PREPARED_SPRITE_MANIFEST_URL,
   getPreparedSpriteState,
   prepareSpriteRegistry,
-  publishPreparedSpriteRegistry
+  publishPreparedSpriteRegistry,
+  restoreActiveRegistryGenerations
 } from './preparedSpritePipeline.js'
+import { disposeSpriteResourceLifecycle } from './spriteResourceLifecycle.js'
 import { getMapMutationRevisionStore } from './mapMutationNotifier.js'
 import { startTankRotationCache } from '../tankImageRenderer.js'
 import { resetTankRotationCache } from '../tankRotationCache.js'
@@ -51,6 +53,13 @@ export function bindRenderingDensityPreparation() {
     }, { once: true })
   }
   watchResolution()
+  if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+    // A page entering the back/forward cache keeps its lifecycle; a real unload
+    // releases every sprite resource through the shared store.
+    window.addEventListener('pagehide', event => {
+      if (!event?.persisted) disposePreparedRenderingLifecycle()
+    })
+  }
   document.addEventListener('canvas-density-changed', event => {
     const density = resolveSpriteDensityFromEvent(event.detail)
     if (!Number.isFinite(density) || density <= 0) return
@@ -120,6 +129,7 @@ async function prepareAndPublishSprites({ density, signal, onProgress }) {
   })
   if (generation !== spriteAssetGeneration) {
     prepared.registry.dispose()
+    restoreActiveRegistryGenerations()
     return getPreparedSpriteState()
   }
   prepareFactoryExitSprites(prepared.registry, prepared.manifest.assetVersion)
@@ -172,6 +182,16 @@ export function attachRendererToMutationStore(mapRenderer, mapGrid) {
   return store
 }
 
+/** Ends the prepared-rendering lifecycle: every participant releases its
+ * publications and resources, then the shared sprite resource store closes.
+ * The next preparation starts a fresh lifecycle store. */
+export function disposePreparedRenderingLifecycle() {
+  spriteAssetGeneration++
+  inflightSprites = null
+  lastPreparedDensity = 0
+  disposeSpriteResourceLifecycle()
+}
+
 export function resetRenderingPipelineForTests() {
   terrainPipeline?.dispose()
   terrainPipeline = null
@@ -181,5 +201,6 @@ export function resetRenderingPipelineForTests() {
   lastPreparedMapKey = ''
   densityListenerBound = false
   inflightSprites = null
+  disposeSpriteResourceLifecycle()
   resetTankRotationCache()
 }

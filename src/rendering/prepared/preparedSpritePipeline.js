@@ -6,6 +6,7 @@ import { bootMark } from '../../ui/bootTiming.js'
 import { reportBootSprites, yieldBootPaint } from '../../ui/bootProgress.js'
 import { createSpriteStreamingScheduler } from '../../utils/spriteStreamingScheduler.js'
 import { SpriteResourceStore } from './spriteResourceStore.js'
+import { getSpriteResourceLifecycleStore, onSpriteResourceLifecycleTeardown } from './spriteResourceLifecycle.js'
 
 export const PREPARED_SPRITE_MANIFEST_URL = '/images/prepared/sprite-manifest.json'
 export const AIRCRAFT_RESIZE_AUDIT_TAGS = Object.freeze({
@@ -25,6 +26,9 @@ let activeLookup = null
 let activeBuildingLayers = null
 let aircraftResizeAuditSink = null
 let preparedDemandRevision = 0
+// Matches the streaming scheduler's settled dwell (240 ms).
+const PREPARED_DEMAND_SETTLE_REFRESH_MS = 240
+let lastPreparedDemand = null
 const pendingVisibleDemand = []
 const pendingVisibleDemandIds = new Set()
 
@@ -71,10 +75,14 @@ export function createProgressiveSpriteStreamer({
   onPublish = null,
   hasForegroundSlack = () => true,
   schedule,
-  budgets = STREAMING_BUDGETS
+  budgets = STREAMING_BUDGETS,
+  resourceStore = null
 } = {}) {
   if (typeof loadTier !== 'function') throw new TypeError('A progressive sprite tier loader is required')
-  const store = new SpriteResourceStore({ budgets })
+  // Integration passes the prepared-rendering lifecycle store; standalone use
+  // (tests, tools) owns a private store.
+  const ownsStore = !resourceStore
+  const store = resourceStore || new SpriteResourceStore({ budgets })
   let manifests = new Map()
   let generations = Object.freeze({ asset: 0, map: 0, density: 0 })
   let finalDensity = 1
@@ -184,7 +192,18 @@ export function createProgressiveSpriteStreamer({
     lookup: spriteId => store.lookup(spriteId),
     get metadata() { return Object.freeze([...manifests.values()]) },
     get state() { return Object.freeze({ generations, finalDensity, scheduler: scheduler.getState(), resources: store.snapshot() }) },
-    dispose() { workerPool?.dispose(); store.dispose() }
+    dispose() {
+      workerPool?.dispose()
+      if (ownsStore) {
+        store.dispose()
+        return
+      }
+      for (const spriteId of manifests.keys()) {
+        const publication = store.lookup(spriteId)
+        store.remove(spriteId)
+        if (publication) store.disposeResource(publication.resourceId, 'streamer-disposed')
+      }
+    }
   })
 }
 
@@ -340,7 +359,8 @@ export async function prepareSpriteRegistry({
   signal,
   onProgress,
   deferUnits = false,
-  initialUnitTypes = []
+  initialUnitTypes = [],
+  resourceStore = getSpriteResourceLifecycleStore()
 } = {}) {
   assertDensity(density)
   if (typeof fetchImpl !== 'function') throw new TypeError('fetchImpl is required')
@@ -358,7 +378,7 @@ export async function prepareSpriteRegistry({
     throw new Error(`Prepared sprite byte budget exceeded: ${requiredBytes} > ${byteBudget}`)
   }
 
-  const registry = new PreparedSpriteRegistry({ assetGeneration, density, byteBudget })
+  const registry = new PreparedSpriteRegistry({ assetGeneration, density, byteBudget, mapGeneration, resourceStore })
   const sourcePromises = new Map()
   const stagedDisposables = []
   const entryCount = manifest.entries.length
@@ -541,6 +561,7 @@ export async function prepareSpriteRegistry({
     }
   } catch (error) {
     registry.dispose()
+    restoreActiveRegistryGenerations()
     for (const image of stagedDisposables) {
       if (typeof image.close === 'function') {
         try { image.close() } catch { /* already closed by registry disposal */ }
@@ -585,8 +606,20 @@ export function publishPreparedSpriteRegistry(prepared) {
   return activeRegistry
 }
 
+/** A registry which never got published (superseded or failed) must not leave
+ * the shared lifecycle store pinned to its generations; the still-active
+ * registry would otherwise have every deferred publication rejected. */
+export function restoreActiveRegistryGenerations() {
+  if (activeRegistry && !activeRegistry.disposed && !activeRegistry.store.disposed) {
+    activeRegistry.store.setCurrentGenerations(activeRegistry.generations)
+  }
+}
+
+onSpriteResourceLifecycleTeardown(() => disposePreparedSpriteRegistry())
+
 export function disposePreparedSpriteRegistry() {
   backgroundPriorities = null
+  lastPreparedDemand = null
   pendingVisibleDemand.length = 0
   pendingVisibleDemandIds.clear()
   activePrepared = null
@@ -607,20 +640,71 @@ export function preloadRemainingPreparedSprites(priorityTypes = []) {
 /** Builds exactly one demand snapshot after visibility culling, never from an
  * individual entity renderer. Arrays owned by the active preparation are
  * reused by the scheduler on every camera revision. */
-export function updatePreparedSpriteDemand({ visibleSpriteIds = pendingVisibleDemand, lookaheadSpriteIds = [], moving = false, capturedAt } = {}) {
-  const updated = activePrepared?.updateDemand?.({
-    revision: ++preparedDemandRevision,
-    capturedAt,
-    moving,
-    visible: visibleSpriteIds,
-    ahead: lookaheadSpriteIds,
-    refinement: visibleSpriteIds
-  }) || false
+function demandCameraKey(camera) {
+  if (!camera) return ''
+  const value = name => (Number.isFinite(camera[name]) ? Math.round(camera[name]) : 0)
+  return `${value('x')},${value('y')},${value('width')},${value('height')}`
+}
+
+function demandIdsKey(ids) {
+  return ids?.length ? ids.join('|') : ''
+}
+
+/**
+ * Submits one coalesced camera-demand snapshot per camera revision. The render
+ * loop calls this once per frame, outside entity loops; the demand revision
+ * only advances when the camera rectangle, the motion state or the visible /
+ * lookahead demand changed, plus one settle refresh after motion stops so the
+ * scheduler's dwell-gated refinement demand is issued. Unchanged frames return
+ * false without touching the scheduler.
+ */
+export function updatePreparedSpriteDemand({
+  visibleSpriteIds = pendingVisibleDemand,
+  lookaheadSpriteIds = [],
+  moving = false,
+  capturedAt,
+  camera = null
+} = {}) {
+  const now = Number.isFinite(capturedAt) ? capturedAt : 0
+  const snapshot = {
+    prepared: activePrepared,
+    camera: demandCameraKey(camera),
+    moving: Boolean(moving),
+    visible: demandIdsKey(visibleSpriteIds),
+    ahead: demandIdsKey(lookaheadSpriteIds)
+  }
+  const previous = lastPreparedDemand
+  const inputsChanged = !previous || previous.prepared !== snapshot.prepared || previous.camera !== snapshot.camera ||
+    previous.moving !== snapshot.moving || previous.visible !== snapshot.visible || previous.ahead !== snapshot.ahead
+  const settleRefreshDue = !inputsChanged && previous.settleRefreshAt !== null && now >= previous.settleRefreshAt
+  let updated = false
+  if (activePrepared && (inputsChanged || settleRefreshDue)) {
+    updated = activePrepared.updateDemand?.({
+      revision: ++preparedDemandRevision,
+      capturedAt,
+      moving: snapshot.moving,
+      visible: visibleSpriteIds,
+      ahead: lookaheadSpriteIds,
+      refinement: visibleSpriteIds
+    }) || false
+    // After motion stops (or a jump while settled) refinement is dwell-gated;
+    // re-submit the unchanged snapshot once the dwell elapsed.
+    snapshot.settleRefreshAt = inputsChanged && !snapshot.moving && snapshot.visible
+      ? now + PREPARED_DEMAND_SETTLE_REFRESH_MS
+      : null
+    lastPreparedDemand = snapshot
+  } else if (!activePrepared) {
+    lastPreparedDemand = null
+  }
   if (visibleSpriteIds === pendingVisibleDemand) {
     pendingVisibleDemand.length = 0
     pendingVisibleDemandIds.clear()
   }
   return updated
+}
+
+export function getPreparedDemandRevision() {
+  return preparedDemandRevision
 }
 
 export function getPreparedSprite(id) {

@@ -1,0 +1,5 @@
+# 2026-10-26T05:03:00Z — Finish sprite leftovers
+
+Processed by Grok Bot.
+
+Finish the three residual cloud leftover gaps on `dev` after `8343fcf`: (1) S04 — one `SpriteResourceStore` per prepared-rendering lifecycle shared by TextureManager, the prepared registry, explosion preparation and the worker/scheduler adapters, disposed on teardown; (2) S09 — call `selectOfflineSpriteRepresentations()` via `cacheSelectedOfflineSpriteRepresentations()` after the active density and final tier are known, cache the returned entries and clean stale entries with that list without adding derivative tiers to the bulk offline manifest; (3) S05 — advance the prepared demand revision only when camera/demand inputs change while keeping coalescing outside entity loops. Add focused unit tests, docs/changes, an unreleased feature entry and this prompt history; remove consumed patch notes; keep the rendering checklist accurate; run lint and focused unit tests only (no full e2e, no S10, no Q30/Q31 claims); commit directly to `dev`.

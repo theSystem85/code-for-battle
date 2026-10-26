@@ -723,7 +723,8 @@ export class Renderer {
     }
     updatePreparedSpriteDemand({
       moving: Boolean(gameState.isRightDragging || gameState.keyboardCameraX || gameState.keyboardCameraY || gameState.dragVelocity?.x || gameState.dragVelocity?.y),
-      capturedAt: typeof performance !== 'undefined' ? performance.now() : 0
+      capturedAt: typeof performance !== 'undefined' ? performance.now() : 0,
+      camera: { x: scrollOffset?.x, y: scrollOffset?.y, width: gameCanvas?.width, height: gameCanvas?.height }
     })
   }
 

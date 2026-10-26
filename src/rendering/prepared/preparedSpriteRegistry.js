@@ -1,5 +1,7 @@
 import { SpriteResourceStore } from './spriteResourceStore.js'
 
+let registryInstances = 0
+
 function sourceOf(sprite) {
   return sprite?.image || sprite?.source || sprite
 }
@@ -17,6 +19,9 @@ export class PreparedSpriteRegistry {
     this.disposed = false
     this.store = resourceStore || new SpriteResourceStore({ budgets: { resident: byteBudget } })
     this.ownsStore = !resourceStore
+    // A shared lifecycle store may briefly hold an outgoing and an incoming
+    // registry for the same keys; namespace this registry's views/publications.
+    this.storeNamespace = this.ownsStore ? '' : `registry-${++registryInstances}:`
     this.generations = Object.freeze({ asset: assetGeneration, map: mapGeneration, density: Math.round(density * 1000) })
     this.store.setCurrentGenerations(this.generations)
     this.sourceResources = new WeakMap()
@@ -44,7 +49,7 @@ export class PreparedSpriteRegistry {
         ? width * height * 4
         : decodedBytes
       if (this.decodedBytes + sourceBytes > this.byteBudget) throw new Error('Prepared sprite byte budget exceeded')
-      resourceId = `prepared-source-${this.assetGeneration}-${this.nextResourceId++}`
+      resourceId = `${this.storeNamespace}prepared-source-${this.assetGeneration}-${this.nextResourceId++}`
       const handle = this.store.registerResource({
         resourceId,
         // The registry disposer owns the decoded source. Keeping the store
@@ -60,8 +65,9 @@ export class PreparedSpriteRegistry {
       ownsResource = true
     }
     if (resourceId) {
-      this.store.registerView(key, resourceId, { sprite })
-      if (!this.store.publish(key, { resourceId, revision: ++this.revision, tier: 0, generations: this.generations })) {
+      const storeKey = this.storeNamespace + key
+      this.store.registerView(storeKey, resourceId, { sprite })
+      if (!this.store.publish(storeKey, { resourceId, revision: ++this.revision, tier: 0, generations: this.generations })) {
         if (ownsResource) this.store.disposeResource(resourceId, 'registration-failed')
         throw new Error(`Prepared sprite publication failed: ${key}`)
       }
@@ -85,8 +91,9 @@ export class PreparedSpriteRegistry {
     this.#assertActive()
     const entry = this.entries.get(key)
     if (!entry) return false
-    this.store.cancelJob(key, 'registry-entry-removed')
-    this.store.remove(key)
+    this.store.cancelJob(this.storeNamespace + key, 'registry-entry-removed')
+    this.store.remove(this.storeNamespace + key)
+    this.store.removeView?.(this.storeNamespace + key)
     this.entries.delete(key)
     if (entry.sourceRecord && --entry.sourceRecord.references === 0) {
       this.store.disposeResource(entry.resourceId, 'registry-entry-removed')

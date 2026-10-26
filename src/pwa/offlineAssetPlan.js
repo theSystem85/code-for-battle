@@ -154,6 +154,8 @@ export async function cacheSelectedOfflineSpriteRepresentations(entries, {
   if (!cache?.put || !cache?.keys || !cache?.delete) throw new TypeError('A writable derivative cache is required')
   const plan = selectOfflineSpriteRepresentations(entries, { selectedTier, selectedDensity, quotaBytes })
   await loadSpriteSheetsWithOverlap(plan.assets, async entry => {
+    // Immutable URLs never change content; an entry already cached is reused.
+    if (typeof cache.match === 'function' && await cache.match(entry.url)) return entry.url
     await waitForDownloadSlot(entry)
     const response = await load(entry)
     await cache.put(entry.url, response)
