@@ -2,6 +2,21 @@
 
 Date: 2026-10-25. Baseline: `56dc550c` (0.63.0). Scope: analysis and implementation backlog; runtime changes are not implemented by this document. Tasks and ownership are in [the rendering improvement checklist](../rendering_improvement_todos.md#sprite-streaming-follow-up-2026-10-25).
 
+## S00 frozen contracts (2026-10-25)
+
+The implementation boundary is now fixed in four dedicated modules:
+
+- `src/rendering/spriteStreamingProtocol.js`: protocol version 1, immutable worker request/result envelopes, operation/result enums, a capability handshake, and explicit fallback modes. A missing Worker, OffscreenCanvas, transferable ImageBitmap, CSP permission, or a worker failure must select a declared fallback. It must never silently run an unbounded full-sheet pixel conversion during gameplay.
+- `src/rendering/spriteStreamingGeometry.js`: stable sprite identity and logical dimensions are independent of resolution tiers. Each tier carries its own source rectangle, padding, gutter, and actual backing density.
+- `src/rendering/spriteStreamingLifecycle.js`: immutable reservation/release tokens, coalesced visibility-demand snapshots, generation cancellation, and main-thread publication/revision records. Worker results cannot publish simulation state.
+- `src/rendering/spriteStreamingDiagnostics.js`: schema version 1 uses fixed typed arrays for 11 stages, five byte classes, three tiers, and eight rolling generation slots by default. Counters are opt-in and recording allocates no event objects; snapshots may allocate because they are diagnostic reads rather than hot-path events.
+
+Profiler IDs 90–98 are reserved for sheet load/decode/key/cutout/catalog, rotation generation, queue wait and bitmap creation/publication. Chunk rebuild and upload reuse existing IDs 15 and 31; the frozen stage-to-ID array prevents divergent registrations. Byte classes are `reserved`, `staging`, `transfer`, `resident`, and `gpu-estimate`; estimates must not be reported as measured native/GPU residency.
+
+Temporary coarse/intermediate sampling is the one progressive-tier exception to native-size steady drawing: a prepared lower-tier source rectangle may be sampled into the sprite's unchanged logical rectangle while fast scrolling or awaiting refinement. It does not permit source resizing during play, reduced canvas DPR, changed anchors/collision/simulation geometry, lower animation cadence, or treating a coarse capture as final-quality acceptance. Stationary views must converge to the requested final tier.
+
+**Hardware evidence status:** cold and warm causal GPU captures remain pending. This agent environment has no verified hardware GPU, so no software-only before/after benchmark was run and no timings are claimed. Capture on qualifying hardware must still report the protocol below after S01–S09 integration makes the stages observable.
+
 ## Findings and confidence
 
 The reported regression is plausible, but lazy network loading alone is not established as its cause. Fetching and `image.decode()` are asynchronous browser operations; synchronous JS image processing, canvas raster work, first-use uploads, terrain cache misses and background work competing with gameplay are distinct costs. No hardware-GPU browser trace was captured here. Rankings below express expected impact from source inspection, not measured milliseconds or attribution of the reported regression.
