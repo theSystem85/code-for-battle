@@ -24,6 +24,27 @@ describe('TextureManager integrated multi-sheet selection', () => {
     expect(buildOccupancyMap([], grid, manager).flat().filter(Boolean)).toHaveLength(0)
   })
 
+  it('[U06207] republishes the decoration layout after a sheet reconfiguration retires it', async() => {
+    const manager = new TextureManager()
+    vi.spyOn(manager, 'loadIntegratedSpriteSheetImage').mockResolvedValue({ width: 64, height: 64 })
+    const grid = Array.from({ length: 40 }, () => Array.from({ length: 40 }, () => ({ type: 'land', biome: 'grass' })))
+    const configure = () => manager.setIntegratedSpriteSheetConfig({ enabled: true, sheets: [{
+      sheetPath: 'images/map/sprite_sheets/optional.webp',
+      metadata: { tileSize: 64, borderWidth: 0, tiles: { '0,0': { tags: ['grass', 'decorative'], rect: { x: 0, y: 0, width: 64, height: 64 } } } }
+    }] })
+    expect(manager.ensureDecorationLayout(grid)).toBeNull()
+    await configure()
+    const published = manager.ensureDecorationLayout(grid)
+    expect(published).toBeTruthy()
+    expect(manager.ensureDecorationLayout(grid)).toBe(published)
+    // Restoring a save re-applies the same sheets after the map was published.
+    await configure()
+    expect(manager.getDecorationLayout(grid)).toBeNull()
+    const republished = manager.ensureDecorationLayout(grid)
+    expect(republished).not.toBe(published)
+    expect(manager.getDecorationLayout(grid)).toBe(republished)
+  })
+
   it('[U04448] selects land without recursion and only from enabled SSE sheets', async() => {
     const manager = new TextureManager()
     const enabledImage = { id: 'enabled-land-sheet' }

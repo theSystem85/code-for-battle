@@ -43,7 +43,7 @@ test('[E00226] all biome catalogs form villages, towns and medium centers withou
     const biomes = []
     for (const biome of ['grass', 'soil', 'sand', 'snow']) {
       const map = Array.from({ length: 160 }, () => Array.from({ length: 160 }, () => ({ type: 'land', biome })))
-      const layout = manager.getDecorationLayout(map)
+      const layout = manager.prepareDecorationLayout(map)
       const buildings = layout.placements.filter(p => p.cityIndex !== undefined)
       const cities = Array.from({ length: 8 }, (_, index) => buildings.filter(p => p.cityIndex === index))
       const groups = manager.integratedDecorationPools[biome].multi

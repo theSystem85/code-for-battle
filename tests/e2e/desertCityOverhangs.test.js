@@ -17,7 +17,7 @@ for (const [biome, sheet, source] of [
       await manager.setIntegratedSpriteSheetConfig({ enabled: true, sheets: [{ sheetPath: metadata.sheetPath, metadata }], biomeTag: biome })
       const groups = manager.integratedDecorationPools[biome].multi
       const map = Array.from({ length: 96 }, () => Array.from({ length: 96 }, () => ({ type: 'land', biome })))
-      const layout = manager.getDecorationLayout(map)
+      const layout = manager.prepareDecorationLayout(map)
       return { count: groups.length, factory: [buildingData.vehicleFactory.width, buildingData.vehicleFactory.height],
         minFootprint: groups.every(group => group.width >= 2 && group.height >= 2),
         towerFootprint: groups.filter(group => group.tagSet.has('skyscraper')).every(group => group.width >= 3 && group.height >= 3),
