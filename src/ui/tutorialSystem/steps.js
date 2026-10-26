@@ -25,7 +25,7 @@ export function buildTutorialSteps() {
     },
     {
       id: 'welcome', title: 'Welcome to the Command Briefing',
-      text: 'This guided tutorial will show you how to build, command units, and win. Follow the green cursor and perform each action yourself. The next step begins when your task and the narration are both finished.',
+      text: 'This guided tutorial will show you how to build, command units, and win. An Advanced Tutorial near the end covers chain-planning several buildings at once. Follow the green cursor and perform each action yourself. The next step begins when your task and the narration are both finished.',
       hint: 'Skip step performs the task for you and starts the next briefing immediately.',
       completion: () => true
     },
@@ -126,6 +126,15 @@ export function buildTutorialSteps() {
       hint: 'Open the Tech Tree link to continue.',
       demo: ctx => ctx.guideElement(ctx.techTreeLink),
       completion: ctx => Boolean(ctx.stepState.techTreeOpened)
+    },
+    {
+      id: 'advanced-chain-planning', title: 'Advanced Tutorial: Chain Planning',
+      text: {
+        desktop: 'Queue several copies of a building, then hold Shift while dragging a ready building from the build bar onto valid ground. Keep Shift held after the first blueprint and drag across the map to preview a straight chain; release to add its valid positions to the plan.',
+        mobile: 'Queue several copies of a building and select a ready one for placement. Press and hold on a valid map tile to inspect the placement overlay. Without lifting your finger, drag at least one tile to enter chain-planning and paint the route; release to add its valid positions. Releasing without dragging places one building when valid, while releasing over an invalid tile cancels placement.'
+      },
+      hint: 'Chain planning is deliberate: mouse uses Shift + drag; touch uses hold, then drag. A stationary touch hold never starts a chain.',
+      completion: () => true
     },
     {
       id: 'settings-help', title: 'Settings, Manual & Keyboard Mappings',

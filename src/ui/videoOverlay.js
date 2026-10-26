@@ -7,7 +7,7 @@ import {
 } from './milestoneVideoPresentation.js'
 // ui/videoOverlay.js
 import { MILESTONE_VIDEO_CROPS } from './milestoneVideoCrop.js'
-import { getEffectsVolume } from '../sound.js'
+import { getMasterVolume } from '../sound.js'
 import { isHeadlessAudioMuted } from '../utils/headlessAudioMute.js'
 import { showNotification } from './notifications.js'
 import { configureAudioElement } from '../pwa/audioElementPolicy.js'
@@ -713,12 +713,11 @@ export class VideoOverlay {
   }
 
   /**
-   * Master volume is the game's only mixer. Zero master volume, and headless
-   * test mute, silence both the companion MP3 and the embedded track.
-   * SFX and voice stay fully open because those channels are not separate sliders.
+   * The overall game volume controls both the companion MP3 and the embedded
+   * track. The music-effects balance is intentionally independent.
    */
   rememberMilestoneMute() {
-    const master = getEffectsVolume()
+    const master = getMasterVolume()
     this.milestoneMasterVolume = master
     this.milestoneAudioMuted = master <= 0 || isHeadlessAudioMuted()
   }
@@ -830,7 +829,7 @@ export class VideoOverlay {
     const audio = await this.loadCompanionAudio(audioFile)
     if (!audio) return
     this.narrationAudio = audio
-    audio.volume = MILESTONE_NARRATION_GAIN * getEffectsVolume()
+    audio.volume = MILESTONE_NARRATION_GAIN * getMasterVolume()
     audio.play().catch(() => {
       if (this.narrationAudio === audio) this.narrationAudio = null
     })
@@ -936,7 +935,7 @@ export class VideoOverlay {
    */
   updateAudioVolume() {
     if (this.narrationAudio) {
-      this.narrationAudio.volume = MILESTONE_NARRATION_GAIN * getEffectsVolume()
+      this.narrationAudio.volume = MILESTONE_NARRATION_GAIN * getMasterVolume()
     }
     this.rememberMilestoneMute()
     if (!this.isPlaying) return

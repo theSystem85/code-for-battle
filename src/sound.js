@@ -699,6 +699,16 @@ function applyMusicVolumes() {
   if (bgMusicAudio) setMusicLevel(bgMusicAudio, fadingAudio === bgMusicAudio ? fadeProgress : 1)
 }
 
+// Cached music elements are shared by every playlist, director and story cue
+// entry point. Keep playback ownership exclusive even when asynchronous loads
+// complete out of order; sound effects use Web Audio and are intentionally not
+// part of this guard.
+function pauseOtherMusicElements(activeElement) {
+  soundElementCache.forEach(element => {
+    if (element !== activeElement && !element.paused) element.pause()
+  })
+}
+
 // Sequential transition: the outgoing track fades out completely and stops;
 // only then does the incoming track start, at full volume with no fade-in.
 function finishMusicFade() {
@@ -723,6 +733,7 @@ function finishMusicFade() {
   currentBackgroundMusicFile = file
   applyMusicVolumes()
   resumeMusicContext()
+  pauseOtherMusicElements(element)
   element.play().catch(error => window.logger.warn('Situational music unavailable:', error))
   if (state === 'normal' && !manualTrack) preloadNextBackgroundMusic()
   notifyMusicTrack()
@@ -1211,6 +1222,7 @@ async function handleBackgroundMusicEnded(event) {
   notifyMusicTrack()
 
   try {
+    pauseOtherMusicElements(element)
     await element.play()
     window.logger(`Background music playing next track: ${currentBackgroundMusicFile}`)
   } catch (e) {
@@ -1232,13 +1244,19 @@ export async function initBackgroundMusic() {
   if (!backgroundMusicFiles || backgroundMusicFiles.length === 0) return
 
   backgroundMusicLoading = true
+  const request = musicRequest
   window.logger('Loading background music on demand...')
 
   const file = pickBackgroundMusicFile(backgroundMusicFiles, currentBackgroundMusicFile)
 
   try {
     // Use the cached element directly (no cloning for background music)
-    bgMusicAudio = await loadBackgroundMusicElement(file)
+    const element = await loadBackgroundMusicElement(file)
+    // A cue, skip or stop may claim music playback while this lazy load is in
+    // flight. Never let the stale initialization replace that newer owner.
+    if (request !== musicRequest) return
+    pauseOtherMusicElements(element)
+    bgMusicAudio = element
     currentBackgroundMusicFile = file
     setMusicLevel(bgMusicAudio, 1) // Ensure volume is correct
     preloadNextBackgroundMusic()
@@ -1265,6 +1283,7 @@ export async function toggleBackgroundMusic() {
       resumeMusicContext()
       try {
         if (!musicPaused) {
+          pauseOtherMusicElements(bgMusicAudio)
           await bgMusicAudio.play()
         }
         window.logger('Background music resumed from cache')
@@ -1358,6 +1377,7 @@ export function resumeAllSounds() {
   if (suppressAudioForAutomation) return
 
   if (musicEnabled && bgMusicAudio && bgMusicAudio.paused) {
+    pauseOtherMusicElements(bgMusicAudio)
     bgMusicAudio.play().catch(e => {
       window.logger.warn('Error resuming background music:', e)
     })
