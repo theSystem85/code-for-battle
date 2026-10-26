@@ -369,9 +369,9 @@ The integration-owner-only paths are exactly: `src/rendering/textureManager.js`,
 ### S04 — one bounded image resource lifecycle
 
 - [x] Implement reference-counted resources shared by source/atlas/tier handles with byte reservation for resident, staging, transfer and old/new generations. Deduplicate source atlas accounting; distinguish GPU estimates from measured values.
-- [ ] Define visible pins, byte-based eviction, tier replacement and teardown. Release decoded sources after consumers finish; choose shared atlas views versus 240 cropped Apache bitmaps using measured draw/upload and memory costs.
-- [ ] Specify registry replace/remove semantics and hooks to stop deferred jobs before disposal. Fix underlying-operation timeouts: close late bitmaps and prohibit stale publication. Handle failure retry instead of permanently caching a fulfilled failed job.
-- [ ] Integrate explosion cache reservation rollback, count-limit recovery and teardown. Test aborted/superseded loads, density changes, worker crashes, invalid dimensions, partial registration and repeated maps. Final-entry byte sums alone must not represent the total memory budget.
+- [x] Define visible pins, byte-based eviction, tier replacement and teardown. Release decoded sources after consumers finish; choose shared atlas views versus 240 cropped Apache bitmaps using measured draw/upload and memory costs.
+- [x] Specify registry replace/remove semantics and hooks to stop deferred jobs before disposal. Fix underlying-operation timeouts: close late bitmaps and prohibit stale publication. Handle failure retry instead of permanently caching a fulfilled failed job.
+- [x] Integrate explosion cache reservation rollback, count-limit recovery and teardown. Test aborted/superseded loads, density changes, worker crashes, invalid dimensions, partial registration and repeated maps. Final-entry byte sums alone must not represent the total memory budget.
 
 **Exclusive component paths:** new `src/rendering/prepared/spriteResourceStore.js` and focused resource-lifecycle tests. Return patches for existing registries, source promise retention, `assetLoading.js` and explosion state to integration owner; do not independently mutate those shared implementations.
 

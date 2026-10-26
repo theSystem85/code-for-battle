@@ -1,6 +1,6 @@
 import { createIdleAssetQueue } from '../../utils/idleAssetQueue.js'
 import { loadPreparedImage } from './imagePreparation.js'
-import { fetchAssetJson, withTimeout } from '../../utils/assetLoading.js'
+import { fetchAssetJson, runAssetJob } from '../../utils/assetLoading.js'
 import { PreparedSpriteRegistry } from './preparedSpriteRegistry.js'
 import { bootMark } from '../../ui/bootTiming.js'
 import { reportBootSprites, yieldBootPaint } from '../../ui/bootProgress.js'
@@ -368,6 +368,9 @@ export async function prepareSpriteRegistry({
     if (!promise) {
       promise = loadImage(url, imageFactory, signal)
       sourcePromises.set(url, promise)
+      promise.catch(() => {
+        if (sourcePromises.get(url) === promise) sourcePromises.delete(url)
+      })
     }
     return promise
   }
@@ -375,6 +378,9 @@ export async function prepareSpriteRegistry({
   try {
     const prepareEntry = async(entry) => {
       throwIfAborted(signal)
+      const registryKey = getPreparedSpriteCacheKey(manifest.assetVersion, density, entry.id)
+      // A deferred/critical request can race for the same entry; a live entry is final.
+      if (registry.entries.has(registryKey)) return
       const selection = chooseVariant(entry, density)
       const targetWidth = Math.max(1, Math.round(entry.logicalWidth * density))
       const targetHeight = Math.max(1, Math.round(entry.logicalHeight * density))
@@ -399,19 +405,22 @@ export async function prepareSpriteRegistry({
         (source.naturalWidth || source.width) !== targetWidth ||
         (source.naturalHeight || source.height) !== targetHeight
       ) {
-        image = await withTimeout(createSizedBitmap(
-          source,
-          selection.variant?.sourceRect,
-          targetWidth,
-          targetHeight,
-          createBitmap,
-          canvasFactory
-        ))
+        image = await runAssetJob(registry.store, `prepared-bitmap:${sourceUrl}:${targetWidth}x${targetHeight}`, {
+          generations: registry.generations,
+          operation: () => createSizedBitmap(
+            source,
+            selection.variant?.sourceRect,
+            targetWidth,
+            targetHeight,
+            createBitmap,
+            canvasFactory
+          )
+        })
         if (typeof image.close === 'function') {
           stagedDisposables.push(image)
         }
       }
-      if (registry.disposed) {
+      if (registry.disposed || registry.entries.has(registryKey)) {
         if (image !== source) image.close?.()
         return
       }
@@ -429,7 +438,7 @@ export async function prepareSpriteRegistry({
         await yieldBootPaint()
       }
       registry.register(
-        getPreparedSpriteCacheKey(manifest.assetVersion, density, entry.id),
+        registryKey,
         sprite,
         { decodedBytes: targetWidth * targetHeight * 4, dispose: disposePreparedImage }
       )
