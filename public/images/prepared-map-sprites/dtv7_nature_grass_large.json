@@ -16,7 +16,7 @@
       1
     ]
   },
-  "signature": "e68d29e23bba7fa45fa73d1354b74748ecc6e874e617e01749fc5357ee8a5f85",
+  "signature": "736ec8363cc43353dc92af84ed6d2c7a6269ab8329ff898cb627b5128c59f4d6",
   "source": {
     "image": "images/map/sprite_sheets/dtv7_nature_grass_large.webp",
     "metadata": "images/map/sprite_sheets/dtv7_nature_grass_large.json",
@@ -1838,7 +1838,9 @@
       "compressedBytes": 146092,
       "tier": 0,
       "tierName": "coarse",
-      "backingDensity": 0.5
+      "backingDensity": 0.5,
+      "contentIdentity": "5c1af4f8020a690cb52790f0844510c0d21d86470b5faf70850ff29a6ff8df38",
+      "url": "/images/prepared-map-sprites/dtv7_nature_grass_large.coarse.webp?cfb-content=5c1af4f8020a690cb52790f0844510c0d21d86470b5faf70850ff29a6ff8df38"
     },
     {
       "name": "dtv7_nature_grass_large.final.webp",
@@ -1849,7 +1851,9 @@
       "compressedBytes": 417910,
       "tier": 2,
       "tierName": "final",
-      "backingDensity": 1
+      "backingDensity": 1,
+      "contentIdentity": "001abb741416c4df6e59bce4c3b69c6dbb3a5bb77d66af05ea188ef9f3d1f301",
+      "url": "/images/prepared-map-sprites/dtv7_nature_grass_large.final.webp?cfb-content=001abb741416c4df6e59bce4c3b69c6dbb3a5bb77d66af05ea188ef9f3d1f301"
     }
   ],
   "sprites": [
@@ -1893,7 +1897,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv7_nature_grass_large.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv7_nature_grass_large.coarse.webp?cfb-content=5c1af4f8020a690cb52790f0844510c0d21d86470b5faf70850ff29a6ff8df38",
           "x": 2,
           "y": 2,
           "width": 96,
@@ -1905,7 +1909,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv7_nature_grass_large.final.webp",
+          "page": "/images/prepared-map-sprites/dtv7_nature_grass_large.final.webp?cfb-content=001abb741416c4df6e59bce4c3b69c6dbb3a5bb77d66af05ea188ef9f3d1f301",
           "x": 2,
           "y": 2,
           "width": 192,
@@ -1956,7 +1960,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv7_nature_grass_large.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv7_nature_grass_large.coarse.webp?cfb-content=5c1af4f8020a690cb52790f0844510c0d21d86470b5faf70850ff29a6ff8df38",
           "x": 102,
           "y": 2,
           "width": 96,
@@ -1968,7 +1972,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv7_nature_grass_large.final.webp",
+          "page": "/images/prepared-map-sprites/dtv7_nature_grass_large.final.webp?cfb-content=001abb741416c4df6e59bce4c3b69c6dbb3a5bb77d66af05ea188ef9f3d1f301",
           "x": 198,
           "y": 2,
           "width": 192,
@@ -2022,7 +2026,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv7_nature_grass_large.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv7_nature_grass_large.coarse.webp?cfb-content=5c1af4f8020a690cb52790f0844510c0d21d86470b5faf70850ff29a6ff8df38",
           "x": 202,
           "y": 2,
           "width": 128,
@@ -2034,7 +2038,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv7_nature_grass_large.final.webp",
+          "page": "/images/prepared-map-sprites/dtv7_nature_grass_large.final.webp?cfb-content=001abb741416c4df6e59bce4c3b69c6dbb3a5bb77d66af05ea188ef9f3d1f301",
           "x": 394,
           "y": 2,
           "width": 256,
@@ -2088,7 +2092,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv7_nature_grass_large.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv7_nature_grass_large.coarse.webp?cfb-content=5c1af4f8020a690cb52790f0844510c0d21d86470b5faf70850ff29a6ff8df38",
           "x": 334,
           "y": 2,
           "width": 128,
@@ -2100,7 +2104,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv7_nature_grass_large.final.webp",
+          "page": "/images/prepared-map-sprites/dtv7_nature_grass_large.final.webp?cfb-content=001abb741416c4df6e59bce4c3b69c6dbb3a5bb77d66af05ea188ef9f3d1f301",
           "x": 654,
           "y": 2,
           "width": 256,
@@ -2151,7 +2155,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv7_nature_grass_large.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv7_nature_grass_large.coarse.webp?cfb-content=5c1af4f8020a690cb52790f0844510c0d21d86470b5faf70850ff29a6ff8df38",
           "x": 466,
           "y": 2,
           "width": 96,
@@ -2163,7 +2167,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv7_nature_grass_large.final.webp",
+          "page": "/images/prepared-map-sprites/dtv7_nature_grass_large.final.webp?cfb-content=001abb741416c4df6e59bce4c3b69c6dbb3a5bb77d66af05ea188ef9f3d1f301",
           "x": 914,
           "y": 2,
           "width": 192,
@@ -2214,7 +2218,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv7_nature_grass_large.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv7_nature_grass_large.coarse.webp?cfb-content=5c1af4f8020a690cb52790f0844510c0d21d86470b5faf70850ff29a6ff8df38",
           "x": 566,
           "y": 2,
           "width": 96,
@@ -2226,7 +2230,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv7_nature_grass_large.final.webp",
+          "page": "/images/prepared-map-sprites/dtv7_nature_grass_large.final.webp?cfb-content=001abb741416c4df6e59bce4c3b69c6dbb3a5bb77d66af05ea188ef9f3d1f301",
           "x": 1110,
           "y": 2,
           "width": 192,
@@ -2284,7 +2288,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv7_nature_grass_large.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv7_nature_grass_large.coarse.webp?cfb-content=5c1af4f8020a690cb52790f0844510c0d21d86470b5faf70850ff29a6ff8df38",
           "x": 666,
           "y": 2,
           "width": 128,
@@ -2296,7 +2300,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv7_nature_grass_large.final.webp",
+          "page": "/images/prepared-map-sprites/dtv7_nature_grass_large.final.webp?cfb-content=001abb741416c4df6e59bce4c3b69c6dbb3a5bb77d66af05ea188ef9f3d1f301",
           "x": 1306,
           "y": 2,
           "width": 256,
@@ -2358,7 +2362,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv7_nature_grass_large.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv7_nature_grass_large.coarse.webp?cfb-content=5c1af4f8020a690cb52790f0844510c0d21d86470b5faf70850ff29a6ff8df38",
           "x": 798,
           "y": 2,
           "width": 160,
@@ -2370,7 +2374,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv7_nature_grass_large.final.webp",
+          "page": "/images/prepared-map-sprites/dtv7_nature_grass_large.final.webp?cfb-content=001abb741416c4df6e59bce4c3b69c6dbb3a5bb77d66af05ea188ef9f3d1f301",
           "x": 1566,
           "y": 2,
           "width": 320,
@@ -2422,7 +2426,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv7_nature_grass_large.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv7_nature_grass_large.coarse.webp?cfb-content=5c1af4f8020a690cb52790f0844510c0d21d86470b5faf70850ff29a6ff8df38",
           "x": 962,
           "y": 2,
           "width": 96,
@@ -2434,7 +2438,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv7_nature_grass_large.final.webp",
+          "page": "/images/prepared-map-sprites/dtv7_nature_grass_large.final.webp?cfb-content=001abb741416c4df6e59bce4c3b69c6dbb3a5bb77d66af05ea188ef9f3d1f301",
           "x": 2,
           "y": 262,
           "width": 192,
@@ -2486,7 +2490,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv7_nature_grass_large.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv7_nature_grass_large.coarse.webp?cfb-content=5c1af4f8020a690cb52790f0844510c0d21d86470b5faf70850ff29a6ff8df38",
           "x": 1062,
           "y": 2,
           "width": 96,
@@ -2498,7 +2502,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv7_nature_grass_large.final.webp",
+          "page": "/images/prepared-map-sprites/dtv7_nature_grass_large.final.webp?cfb-content=001abb741416c4df6e59bce4c3b69c6dbb3a5bb77d66af05ea188ef9f3d1f301",
           "x": 198,
           "y": 262,
           "width": 192,
@@ -2553,7 +2557,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv7_nature_grass_large.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv7_nature_grass_large.coarse.webp?cfb-content=5c1af4f8020a690cb52790f0844510c0d21d86470b5faf70850ff29a6ff8df38",
           "x": 1162,
           "y": 2,
           "width": 128,
@@ -2565,7 +2569,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv7_nature_grass_large.final.webp",
+          "page": "/images/prepared-map-sprites/dtv7_nature_grass_large.final.webp?cfb-content=001abb741416c4df6e59bce4c3b69c6dbb3a5bb77d66af05ea188ef9f3d1f301",
           "x": 394,
           "y": 262,
           "width": 256,
@@ -2624,7 +2628,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv7_nature_grass_large.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv7_nature_grass_large.coarse.webp?cfb-content=5c1af4f8020a690cb52790f0844510c0d21d86470b5faf70850ff29a6ff8df38",
           "x": 1294,
           "y": 2,
           "width": 128,
@@ -2636,7 +2640,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv7_nature_grass_large.final.webp",
+          "page": "/images/prepared-map-sprites/dtv7_nature_grass_large.final.webp?cfb-content=001abb741416c4df6e59bce4c3b69c6dbb3a5bb77d66af05ea188ef9f3d1f301",
           "x": 654,
           "y": 262,
           "width": 256,
@@ -2695,7 +2699,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv7_nature_grass_large.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv7_nature_grass_large.coarse.webp?cfb-content=5c1af4f8020a690cb52790f0844510c0d21d86470b5faf70850ff29a6ff8df38",
           "x": 1426,
           "y": 2,
           "width": 128,
@@ -2707,7 +2711,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv7_nature_grass_large.final.webp",
+          "page": "/images/prepared-map-sprites/dtv7_nature_grass_large.final.webp?cfb-content=001abb741416c4df6e59bce4c3b69c6dbb3a5bb77d66af05ea188ef9f3d1f301",
           "x": 914,
           "y": 262,
           "width": 256,
@@ -2770,7 +2774,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv7_nature_grass_large.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv7_nature_grass_large.coarse.webp?cfb-content=5c1af4f8020a690cb52790f0844510c0d21d86470b5faf70850ff29a6ff8df38",
           "x": 1558,
           "y": 2,
           "width": 160,
@@ -2782,7 +2786,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv7_nature_grass_large.final.webp",
+          "page": "/images/prepared-map-sprites/dtv7_nature_grass_large.final.webp?cfb-content=001abb741416c4df6e59bce4c3b69c6dbb3a5bb77d66af05ea188ef9f3d1f301",
           "x": 1174,
           "y": 262,
           "width": 320,
@@ -2845,7 +2849,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv7_nature_grass_large.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv7_nature_grass_large.coarse.webp?cfb-content=5c1af4f8020a690cb52790f0844510c0d21d86470b5faf70850ff29a6ff8df38",
           "x": 1722,
           "y": 2,
           "width": 160,
@@ -2857,7 +2861,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv7_nature_grass_large.final.webp",
+          "page": "/images/prepared-map-sprites/dtv7_nature_grass_large.final.webp?cfb-content=001abb741416c4df6e59bce4c3b69c6dbb3a5bb77d66af05ea188ef9f3d1f301",
           "x": 1498,
           "y": 262,
           "width": 320,
@@ -2936,7 +2940,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv7_nature_grass_large.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv7_nature_grass_large.coarse.webp?cfb-content=5c1af4f8020a690cb52790f0844510c0d21d86470b5faf70850ff29a6ff8df38",
           "x": 2,
           "y": 134,
           "width": 192,
@@ -2948,7 +2952,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv7_nature_grass_large.final.webp",
+          "page": "/images/prepared-map-sprites/dtv7_nature_grass_large.final.webp?cfb-content=001abb741416c4df6e59bce4c3b69c6dbb3a5bb77d66af05ea188ef9f3d1f301",
           "x": 2,
           "y": 522,
           "width": 384,
@@ -2994,7 +2998,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv7_nature_grass_large.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv7_nature_grass_large.coarse.webp?cfb-content=5c1af4f8020a690cb52790f0844510c0d21d86470b5faf70850ff29a6ff8df38",
           "x": 198,
           "y": 134,
           "width": 64,
@@ -3006,7 +3010,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv7_nature_grass_large.final.webp",
+          "page": "/images/prepared-map-sprites/dtv7_nature_grass_large.final.webp?cfb-content=001abb741416c4df6e59bce4c3b69c6dbb3a5bb77d66af05ea188ef9f3d1f301",
           "x": 390,
           "y": 522,
           "width": 128,
@@ -3052,7 +3056,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv7_nature_grass_large.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv7_nature_grass_large.coarse.webp?cfb-content=5c1af4f8020a690cb52790f0844510c0d21d86470b5faf70850ff29a6ff8df38",
           "x": 266,
           "y": 134,
           "width": 64,
@@ -3064,7 +3068,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv7_nature_grass_large.final.webp",
+          "page": "/images/prepared-map-sprites/dtv7_nature_grass_large.final.webp?cfb-content=001abb741416c4df6e59bce4c3b69c6dbb3a5bb77d66af05ea188ef9f3d1f301",
           "x": 522,
           "y": 522,
           "width": 128,
@@ -3110,7 +3114,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv7_nature_grass_large.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv7_nature_grass_large.coarse.webp?cfb-content=5c1af4f8020a690cb52790f0844510c0d21d86470b5faf70850ff29a6ff8df38",
           "x": 334,
           "y": 134,
           "width": 64,
@@ -3122,7 +3126,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv7_nature_grass_large.final.webp",
+          "page": "/images/prepared-map-sprites/dtv7_nature_grass_large.final.webp?cfb-content=001abb741416c4df6e59bce4c3b69c6dbb3a5bb77d66af05ea188ef9f3d1f301",
           "x": 654,
           "y": 522,
           "width": 128,
@@ -3168,7 +3172,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv7_nature_grass_large.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv7_nature_grass_large.coarse.webp?cfb-content=5c1af4f8020a690cb52790f0844510c0d21d86470b5faf70850ff29a6ff8df38",
           "x": 402,
           "y": 134,
           "width": 64,
@@ -3180,7 +3184,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv7_nature_grass_large.final.webp",
+          "page": "/images/prepared-map-sprites/dtv7_nature_grass_large.final.webp?cfb-content=001abb741416c4df6e59bce4c3b69c6dbb3a5bb77d66af05ea188ef9f3d1f301",
           "x": 786,
           "y": 522,
           "width": 128,
@@ -3224,7 +3228,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv7_nature_grass_large.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv7_nature_grass_large.coarse.webp?cfb-content=5c1af4f8020a690cb52790f0844510c0d21d86470b5faf70850ff29a6ff8df38",
           "x": 470,
           "y": 134,
           "width": 32,
@@ -3236,7 +3240,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv7_nature_grass_large.final.webp",
+          "page": "/images/prepared-map-sprites/dtv7_nature_grass_large.final.webp?cfb-content=001abb741416c4df6e59bce4c3b69c6dbb3a5bb77d66af05ea188ef9f3d1f301",
           "x": 918,
           "y": 522,
           "width": 64,
@@ -3282,7 +3286,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv7_nature_grass_large.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv7_nature_grass_large.coarse.webp?cfb-content=5c1af4f8020a690cb52790f0844510c0d21d86470b5faf70850ff29a6ff8df38",
           "x": 506,
           "y": 134,
           "width": 64,
@@ -3294,7 +3298,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv7_nature_grass_large.final.webp",
+          "page": "/images/prepared-map-sprites/dtv7_nature_grass_large.final.webp?cfb-content=001abb741416c4df6e59bce4c3b69c6dbb3a5bb77d66af05ea188ef9f3d1f301",
           "x": 986,
           "y": 522,
           "width": 128,
@@ -3342,7 +3346,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv7_nature_grass_large.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv7_nature_grass_large.coarse.webp?cfb-content=5c1af4f8020a690cb52790f0844510c0d21d86470b5faf70850ff29a6ff8df38",
           "x": 574,
           "y": 134,
           "width": 96,
@@ -3354,7 +3358,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv7_nature_grass_large.final.webp",
+          "page": "/images/prepared-map-sprites/dtv7_nature_grass_large.final.webp?cfb-content=001abb741416c4df6e59bce4c3b69c6dbb3a5bb77d66af05ea188ef9f3d1f301",
           "x": 1118,
           "y": 522,
           "width": 192,
@@ -3403,7 +3407,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv7_nature_grass_large.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv7_nature_grass_large.coarse.webp?cfb-content=5c1af4f8020a690cb52790f0844510c0d21d86470b5faf70850ff29a6ff8df38",
           "x": 674,
           "y": 134,
           "width": 96,
@@ -3415,7 +3419,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv7_nature_grass_large.final.webp",
+          "page": "/images/prepared-map-sprites/dtv7_nature_grass_large.final.webp?cfb-content=001abb741416c4df6e59bce4c3b69c6dbb3a5bb77d66af05ea188ef9f3d1f301",
           "x": 1314,
           "y": 522,
           "width": 192,

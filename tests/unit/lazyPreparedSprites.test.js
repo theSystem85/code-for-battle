@@ -50,7 +50,9 @@ describe('deferred prepared sprite loading', () => {
     await vi.waitFor(() => expect(getPreparedSprite('unit:harvester:base')).not.toBeNull())
     expect(requested.filter(url => url === '/harvester@2x.webp')).toHaveLength(1)
     expect(requested).not.toContain('/ambulance@2x.webp')
+    globalThis.__cfbFrameHeadroomMs = 3
     await prepared.preloadRemaining(['ambulance'])
+    delete globalThis.__cfbFrameHeadroomMs
     expect(getPreparedSprite('unit:ambulance:base')).not.toBeNull()
     expect(requested.every(url => url.endsWith('@2x.webp'))).toBe(true)
   })

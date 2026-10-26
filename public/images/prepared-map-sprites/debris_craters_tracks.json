@@ -16,7 +16,7 @@
       1
     ]
   },
-  "signature": "177df6f755d7a7155d486ec2ae3e277c303ccb8bab2eaf3f7a7e15f08c60af2f",
+  "signature": "cfd06a8a6ddb815961b122d477907a604f8fb8e7f629b9f3209d82bde7392419",
   "source": {
     "image": "images/map/sprite_sheets/debris_craters_tracks.webp",
     "metadata": "images/map/sprite_sheets/debris_craters_tracks.json",
@@ -60,7 +60,9 @@
       "compressedBytes": 90296,
       "tier": 0,
       "tierName": "coarse",
-      "backingDensity": 0.5
+      "backingDensity": 0.5,
+      "contentIdentity": "a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
+      "url": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3"
     },
     {
       "name": "debris_craters_tracks.final.webp",
@@ -71,7 +73,9 @@
       "compressedBytes": 141212,
       "tier": 2,
       "tierName": "final",
-      "backingDensity": 1
+      "backingDensity": 1,
+      "contentIdentity": "c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
+      "url": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544"
     }
   ],
   "sprites": [
@@ -104,7 +108,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 2,
           "y": 2,
           "width": 63,
@@ -116,7 +120,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 2,
           "y": 2,
           "width": 126,
@@ -156,7 +160,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 69,
           "y": 2,
           "width": 63,
@@ -168,7 +172,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 132,
           "y": 2,
           "width": 126,
@@ -212,7 +216,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 136,
           "y": 2,
           "width": 127,
@@ -224,7 +228,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 262,
           "y": 2,
           "width": 254,
@@ -264,7 +268,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 267,
           "y": 2,
           "width": 63,
@@ -276,7 +280,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 520,
           "y": 2,
           "width": 126,
@@ -316,7 +320,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 334,
           "y": 2,
           "width": 63,
@@ -328,7 +332,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 650,
           "y": 2,
           "width": 126,
@@ -373,7 +377,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 401,
           "y": 2,
           "width": 95,
@@ -385,7 +389,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 780,
           "y": 2,
           "width": 190,
@@ -421,7 +425,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 500,
           "y": 2,
           "width": 31,
@@ -433,7 +437,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 974,
           "y": 2,
           "width": 62,
@@ -469,7 +473,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 535,
           "y": 2,
           "width": 31,
@@ -481,7 +485,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 1040,
           "y": 2,
           "width": 62,
@@ -517,7 +521,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 570,
           "y": 2,
           "width": 31,
@@ -529,7 +533,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 1106,
           "y": 2,
           "width": 62,
@@ -565,7 +569,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 605,
           "y": 2,
           "width": 31,
@@ -577,7 +581,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 1172,
           "y": 2,
           "width": 62,
@@ -613,7 +617,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 640,
           "y": 2,
           "width": 31,
@@ -625,7 +629,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 1238,
           "y": 2,
           "width": 62,
@@ -661,7 +665,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 675,
           "y": 2,
           "width": 31,
@@ -673,7 +677,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 1304,
           "y": 2,
           "width": 62,
@@ -709,7 +713,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 710,
           "y": 2,
           "width": 31,
@@ -721,7 +725,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 1370,
           "y": 2,
           "width": 62,
@@ -757,7 +761,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 745,
           "y": 2,
           "width": 31,
@@ -769,7 +773,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 1436,
           "y": 2,
           "width": 62,
@@ -805,7 +809,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 780,
           "y": 2,
           "width": 31,
@@ -817,7 +821,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 1502,
           "y": 2,
           "width": 62,
@@ -853,7 +857,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 815,
           "y": 2,
           "width": 31,
@@ -865,7 +869,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 1568,
           "y": 2,
           "width": 62,
@@ -901,7 +905,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 850,
           "y": 2,
           "width": 31,
@@ -913,7 +917,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 1634,
           "y": 2,
           "width": 62,
@@ -949,7 +953,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 885,
           "y": 2,
           "width": 31,
@@ -961,7 +965,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 1700,
           "y": 2,
           "width": 62,
@@ -997,7 +1001,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 920,
           "y": 2,
           "width": 31,
@@ -1009,7 +1013,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 1766,
           "y": 2,
           "width": 62,
@@ -1045,7 +1049,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 955,
           "y": 2,
           "width": 31,
@@ -1057,7 +1061,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 1832,
           "y": 2,
           "width": 62,
@@ -1093,7 +1097,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 990,
           "y": 2,
           "width": 31,
@@ -1105,7 +1109,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 1898,
           "y": 2,
           "width": 62,
@@ -1141,7 +1145,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 1025,
           "y": 2,
           "width": 31,
@@ -1153,7 +1157,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 1964,
           "y": 2,
           "width": 62,
@@ -1189,7 +1193,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 1060,
           "y": 2,
           "width": 31,
@@ -1201,7 +1205,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 2,
           "y": 196,
           "width": 62,
@@ -1237,7 +1241,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 1095,
           "y": 2,
           "width": 31,
@@ -1249,7 +1253,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 68,
           "y": 196,
           "width": 62,
@@ -1285,7 +1289,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 1130,
           "y": 2,
           "width": 31,
@@ -1297,7 +1301,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 134,
           "y": 196,
           "width": 62,
@@ -1333,7 +1337,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 1165,
           "y": 2,
           "width": 31,
@@ -1345,7 +1349,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 200,
           "y": 196,
           "width": 62,
@@ -1381,7 +1385,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 1200,
           "y": 2,
           "width": 31,
@@ -1393,7 +1397,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 266,
           "y": 196,
           "width": 62,
@@ -1429,7 +1433,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 1235,
           "y": 2,
           "width": 31,
@@ -1441,7 +1445,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 332,
           "y": 196,
           "width": 62,
@@ -1477,7 +1481,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 1270,
           "y": 2,
           "width": 31,
@@ -1489,7 +1493,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 398,
           "y": 196,
           "width": 62,
@@ -1525,7 +1529,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 1305,
           "y": 2,
           "width": 31,
@@ -1537,7 +1541,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 464,
           "y": 196,
           "width": 62,
@@ -1573,7 +1577,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 1340,
           "y": 2,
           "width": 31,
@@ -1585,7 +1589,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 530,
           "y": 196,
           "width": 62,
@@ -1621,7 +1625,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 1375,
           "y": 2,
           "width": 31,
@@ -1633,7 +1637,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 596,
           "y": 196,
           "width": 62,
@@ -1669,7 +1673,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 1410,
           "y": 2,
           "width": 31,
@@ -1681,7 +1685,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 662,
           "y": 196,
           "width": 62,
@@ -1717,7 +1721,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 1445,
           "y": 2,
           "width": 31,
@@ -1729,7 +1733,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 728,
           "y": 196,
           "width": 62,
@@ -1765,7 +1769,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 1480,
           "y": 2,
           "width": 31,
@@ -1777,7 +1781,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 794,
           "y": 196,
           "width": 62,
@@ -1813,7 +1817,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 1515,
           "y": 2,
           "width": 31,
@@ -1825,7 +1829,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 860,
           "y": 196,
           "width": 62,
@@ -1861,7 +1865,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 1550,
           "y": 2,
           "width": 31,
@@ -1873,7 +1877,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 926,
           "y": 196,
           "width": 62,
@@ -1909,7 +1913,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 1585,
           "y": 2,
           "width": 31,
@@ -1921,7 +1925,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 992,
           "y": 196,
           "width": 62,
@@ -1957,7 +1961,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 1620,
           "y": 2,
           "width": 31,
@@ -1969,7 +1973,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 1058,
           "y": 196,
           "width": 62,
@@ -2005,7 +2009,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 1655,
           "y": 2,
           "width": 31,
@@ -2017,7 +2021,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 1124,
           "y": 196,
           "width": 62,
@@ -2053,7 +2057,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 1690,
           "y": 2,
           "width": 31,
@@ -2065,7 +2069,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 1190,
           "y": 196,
           "width": 62,
@@ -2101,7 +2105,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 1725,
           "y": 2,
           "width": 31,
@@ -2113,7 +2117,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 1256,
           "y": 196,
           "width": 62,
@@ -2149,7 +2153,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 1760,
           "y": 2,
           "width": 31,
@@ -2161,7 +2165,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 1322,
           "y": 196,
           "width": 62,
@@ -2197,7 +2201,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 1795,
           "y": 2,
           "width": 31,
@@ -2209,7 +2213,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 1388,
           "y": 196,
           "width": 62,
@@ -2245,7 +2249,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 1830,
           "y": 2,
           "width": 31,
@@ -2257,7 +2261,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 1454,
           "y": 196,
           "width": 62,
@@ -2293,7 +2297,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 1865,
           "y": 2,
           "width": 31,
@@ -2305,7 +2309,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 1520,
           "y": 196,
           "width": 62,
@@ -2341,7 +2345,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 1900,
           "y": 2,
           "width": 31,
@@ -2353,7 +2357,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 1586,
           "y": 196,
           "width": 62,
@@ -2389,7 +2393,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 1935,
           "y": 2,
           "width": 31,
@@ -2401,7 +2405,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 1652,
           "y": 196,
           "width": 62,
@@ -2437,7 +2441,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 1970,
           "y": 2,
           "width": 31,
@@ -2449,7 +2453,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 1718,
           "y": 196,
           "width": 62,
@@ -2485,7 +2489,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 2005,
           "y": 2,
           "width": 31,
@@ -2497,7 +2501,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 1784,
           "y": 196,
           "width": 62,
@@ -2533,7 +2537,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 2,
           "y": 101,
           "width": 31,
@@ -2545,7 +2549,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 1850,
           "y": 196,
           "width": 62,
@@ -2581,7 +2585,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 37,
           "y": 101,
           "width": 31,
@@ -2593,7 +2597,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 1916,
           "y": 196,
           "width": 62,
@@ -2629,7 +2633,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 72,
           "y": 101,
           "width": 31,
@@ -2641,7 +2645,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 1982,
           "y": 196,
           "width": 62,
@@ -2677,7 +2681,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 107,
           "y": 101,
           "width": 31,
@@ -2689,7 +2693,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 2,
           "y": 262,
           "width": 62,
@@ -2725,7 +2729,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 142,
           "y": 101,
           "width": 31,
@@ -2737,7 +2741,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 68,
           "y": 262,
           "width": 62,
@@ -2773,7 +2777,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 177,
           "y": 101,
           "width": 31,
@@ -2785,7 +2789,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 134,
           "y": 262,
           "width": 62,
@@ -2821,7 +2825,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 212,
           "y": 101,
           "width": 31,
@@ -2833,7 +2837,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 200,
           "y": 262,
           "width": 62,
@@ -2869,7 +2873,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 247,
           "y": 101,
           "width": 31,
@@ -2881,7 +2885,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 266,
           "y": 262,
           "width": 62,
@@ -2917,7 +2921,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 282,
           "y": 101,
           "width": 31,
@@ -2929,7 +2933,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 332,
           "y": 262,
           "width": 62,
@@ -2965,7 +2969,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 317,
           "y": 101,
           "width": 31,
@@ -2977,7 +2981,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 398,
           "y": 262,
           "width": 62,
@@ -3013,7 +3017,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 352,
           "y": 101,
           "width": 31,
@@ -3025,7 +3029,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 464,
           "y": 262,
           "width": 62,
@@ -3061,7 +3065,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 387,
           "y": 101,
           "width": 31,
@@ -3073,7 +3077,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 530,
           "y": 262,
           "width": 62,
@@ -3109,7 +3113,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 422,
           "y": 101,
           "width": 31,
@@ -3121,7 +3125,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 596,
           "y": 262,
           "width": 62,
@@ -3157,7 +3161,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 457,
           "y": 101,
           "width": 31,
@@ -3169,7 +3173,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 662,
           "y": 262,
           "width": 62,
@@ -3205,7 +3209,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 492,
           "y": 101,
           "width": 31,
@@ -3217,7 +3221,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 728,
           "y": 262,
           "width": 62,
@@ -3253,7 +3257,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 527,
           "y": 101,
           "width": 31,
@@ -3265,7 +3269,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 794,
           "y": 262,
           "width": 62,
@@ -3301,7 +3305,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 562,
           "y": 101,
           "width": 31,
@@ -3313,7 +3317,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 860,
           "y": 262,
           "width": 62,
@@ -3349,7 +3353,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 597,
           "y": 101,
           "width": 31,
@@ -3361,7 +3365,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 926,
           "y": 262,
           "width": 62,
@@ -3397,7 +3401,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 632,
           "y": 101,
           "width": 31,
@@ -3409,7 +3413,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 992,
           "y": 262,
           "width": 62,
@@ -3445,7 +3449,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 667,
           "y": 101,
           "width": 31,
@@ -3457,7 +3461,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 1058,
           "y": 262,
           "width": 62,
@@ -3493,7 +3497,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 702,
           "y": 101,
           "width": 31,
@@ -3505,7 +3509,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 1124,
           "y": 262,
           "width": 62,
@@ -3541,7 +3545,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 737,
           "y": 101,
           "width": 31,
@@ -3553,7 +3557,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 1190,
           "y": 262,
           "width": 62,
@@ -3589,7 +3593,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 772,
           "y": 101,
           "width": 31,
@@ -3601,7 +3605,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 1256,
           "y": 262,
           "width": 62,
@@ -3637,7 +3641,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 807,
           "y": 101,
           "width": 31,
@@ -3649,7 +3653,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 1322,
           "y": 262,
           "width": 62,
@@ -3685,7 +3689,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 842,
           "y": 101,
           "width": 31,
@@ -3697,7 +3701,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 1388,
           "y": 262,
           "width": 62,
@@ -3733,7 +3737,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 877,
           "y": 101,
           "width": 31,
@@ -3745,7 +3749,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 1454,
           "y": 262,
           "width": 62,
@@ -3781,7 +3785,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 912,
           "y": 101,
           "width": 31,
@@ -3793,7 +3797,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 1520,
           "y": 262,
           "width": 62,
@@ -3829,7 +3833,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 947,
           "y": 101,
           "width": 31,
@@ -3841,7 +3845,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 1586,
           "y": 262,
           "width": 62,
@@ -3877,7 +3881,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 982,
           "y": 101,
           "width": 31,
@@ -3889,7 +3893,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 1652,
           "y": 262,
           "width": 62,
@@ -3925,7 +3929,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 1017,
           "y": 101,
           "width": 31,
@@ -3937,7 +3941,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 1718,
           "y": 262,
           "width": 62,
@@ -3973,7 +3977,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "debris_craters_tracks.coarse.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.coarse.webp?cfb-content=a78e2da0ad23928a4569c5e31c70fc88f4e79f440b38649d9a821c07c66e25a3",
           "x": 1052,
           "y": 101,
           "width": 31,
@@ -3985,7 +3989,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "debris_craters_tracks.final.webp",
+          "page": "/images/prepared-map-sprites/debris_craters_tracks.final.webp?cfb-content=c77e5836b1bff370208652563851cec061f08e5f9b21dd4e1ce533cb835cf544",
           "x": 1784,
           "y": 262,
           "width": 62,

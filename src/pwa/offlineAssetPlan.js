@@ -140,6 +140,33 @@ export async function loadSpriteSheetsWithOverlap(items, load, {
   return results
 }
 
+/** Selects the active coarse/final representations before any request starts,
+ * then caches only that bounded set and removes stale derivative entries. */
+export async function cacheSelectedOfflineSpriteRepresentations(entries, {
+  cache,
+  load,
+  selectedTier = 'final',
+  selectedDensity = 1,
+  quotaBytes = OFFLINE_SPRITE_STORAGE_QUOTA_BYTES,
+  concurrency = SPRITE_SHEET_LOAD_CONCURRENCY,
+  waitForDownloadSlot = async() => {}
+} = {}) {
+  if (!cache?.put || !cache?.keys || !cache?.delete) throw new TypeError('A writable derivative cache is required')
+  const plan = selectOfflineSpriteRepresentations(entries, { selectedTier, selectedDensity, quotaBytes })
+  await loadSpriteSheetsWithOverlap(plan.assets, async entry => {
+    await waitForDownloadSlot(entry)
+    const response = await load(entry)
+    await cache.put(entry.url, response)
+    return entry.url
+  }, { concurrency })
+  const selectedUrls = new Set(plan.assets.map(entry => entry.url))
+  for (const request of await cache.keys()) {
+    const url = typeof request === 'string' ? request : request.url
+    if (isImmutableSpriteDerivativeUrl(url) && !selectedUrls.has(url)) await cache.delete(request)
+  }
+  return plan
+}
+
 function extensionOf(path) {
   const base = path.slice(path.lastIndexOf('/') + 1)
   const dot = base.lastIndexOf('.')

@@ -16,7 +16,7 @@
       1
     ]
   },
-  "signature": "92b233dd1cdf1af80c85e8475758a4a9719923e21536f5900efb9ffb9eae94f1",
+  "signature": "7ba0fa92f0f15c048a790d3d12ef1582e2bc62e15bfeea39eed4399985b2fd6d",
   "source": {
     "image": "images/map/sprite_sheets/dtv5_city_sand_medium.webp",
     "metadata": "images/map/sprite_sheets/dtv5_city_sand_medium.json",
@@ -1573,7 +1573,9 @@
       "compressedBytes": 108964,
       "tier": 0,
       "tierName": "coarse",
-      "backingDensity": 0.5
+      "backingDensity": 0.5,
+      "contentIdentity": "056ba3e9ef4fd9dedb61eeaeed837c087fb1942d490c6d220554e88ff9437ee1",
+      "url": "/images/prepared-map-sprites/dtv5_city_sand_medium.coarse.webp?cfb-content=056ba3e9ef4fd9dedb61eeaeed837c087fb1942d490c6d220554e88ff9437ee1"
     },
     {
       "name": "dtv5_city_sand_medium.final.webp",
@@ -1584,7 +1586,9 @@
       "compressedBytes": 308472,
       "tier": 2,
       "tierName": "final",
-      "backingDensity": 1
+      "backingDensity": 1,
+      "contentIdentity": "9a6780e045232f103f593655dfb456c409d11ae93d963e54356ccc9ef54f8c5c",
+      "url": "/images/prepared-map-sprites/dtv5_city_sand_medium.final.webp?cfb-content=9a6780e045232f103f593655dfb456c409d11ae93d963e54356ccc9ef54f8c5c"
     }
   ],
   "sprites": [
@@ -1630,7 +1634,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv5_city_sand_medium.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv5_city_sand_medium.coarse.webp?cfb-content=056ba3e9ef4fd9dedb61eeaeed837c087fb1942d490c6d220554e88ff9437ee1",
           "x": 2,
           "y": 2,
           "width": 96,
@@ -1642,7 +1646,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv5_city_sand_medium.final.webp",
+          "page": "/images/prepared-map-sprites/dtv5_city_sand_medium.final.webp?cfb-content=9a6780e045232f103f593655dfb456c409d11ae93d963e54356ccc9ef54f8c5c",
           "x": 2,
           "y": 2,
           "width": 192,
@@ -1695,7 +1699,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv5_city_sand_medium.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv5_city_sand_medium.coarse.webp?cfb-content=056ba3e9ef4fd9dedb61eeaeed837c087fb1942d490c6d220554e88ff9437ee1",
           "x": 102,
           "y": 2,
           "width": 96,
@@ -1707,7 +1711,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv5_city_sand_medium.final.webp",
+          "page": "/images/prepared-map-sprites/dtv5_city_sand_medium.final.webp?cfb-content=9a6780e045232f103f593655dfb456c409d11ae93d963e54356ccc9ef54f8c5c",
           "x": 198,
           "y": 2,
           "width": 192,
@@ -1760,7 +1764,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv5_city_sand_medium.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv5_city_sand_medium.coarse.webp?cfb-content=056ba3e9ef4fd9dedb61eeaeed837c087fb1942d490c6d220554e88ff9437ee1",
           "x": 202,
           "y": 2,
           "width": 96,
@@ -1772,7 +1776,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv5_city_sand_medium.final.webp",
+          "page": "/images/prepared-map-sprites/dtv5_city_sand_medium.final.webp?cfb-content=9a6780e045232f103f593655dfb456c409d11ae93d963e54356ccc9ef54f8c5c",
           "x": 394,
           "y": 2,
           "width": 192,
@@ -1825,7 +1829,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv5_city_sand_medium.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv5_city_sand_medium.coarse.webp?cfb-content=056ba3e9ef4fd9dedb61eeaeed837c087fb1942d490c6d220554e88ff9437ee1",
           "x": 302,
           "y": 2,
           "width": 96,
@@ -1837,7 +1841,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv5_city_sand_medium.final.webp",
+          "page": "/images/prepared-map-sprites/dtv5_city_sand_medium.final.webp?cfb-content=9a6780e045232f103f593655dfb456c409d11ae93d963e54356ccc9ef54f8c5c",
           "x": 590,
           "y": 2,
           "width": 192,
@@ -1890,7 +1894,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv5_city_sand_medium.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv5_city_sand_medium.coarse.webp?cfb-content=056ba3e9ef4fd9dedb61eeaeed837c087fb1942d490c6d220554e88ff9437ee1",
           "x": 402,
           "y": 2,
           "width": 96,
@@ -1902,7 +1906,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv5_city_sand_medium.final.webp",
+          "page": "/images/prepared-map-sprites/dtv5_city_sand_medium.final.webp?cfb-content=9a6780e045232f103f593655dfb456c409d11ae93d963e54356ccc9ef54f8c5c",
           "x": 786,
           "y": 2,
           "width": 192,
@@ -1955,7 +1959,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv5_city_sand_medium.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv5_city_sand_medium.coarse.webp?cfb-content=056ba3e9ef4fd9dedb61eeaeed837c087fb1942d490c6d220554e88ff9437ee1",
           "x": 502,
           "y": 2,
           "width": 96,
@@ -1967,7 +1971,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv5_city_sand_medium.final.webp",
+          "page": "/images/prepared-map-sprites/dtv5_city_sand_medium.final.webp?cfb-content=9a6780e045232f103f593655dfb456c409d11ae93d963e54356ccc9ef54f8c5c",
           "x": 982,
           "y": 2,
           "width": 192,
@@ -2020,7 +2024,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv5_city_sand_medium.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv5_city_sand_medium.coarse.webp?cfb-content=056ba3e9ef4fd9dedb61eeaeed837c087fb1942d490c6d220554e88ff9437ee1",
           "x": 602,
           "y": 2,
           "width": 96,
@@ -2032,7 +2036,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv5_city_sand_medium.final.webp",
+          "page": "/images/prepared-map-sprites/dtv5_city_sand_medium.final.webp?cfb-content=9a6780e045232f103f593655dfb456c409d11ae93d963e54356ccc9ef54f8c5c",
           "x": 1178,
           "y": 2,
           "width": 192,
@@ -2085,7 +2089,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv5_city_sand_medium.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv5_city_sand_medium.coarse.webp?cfb-content=056ba3e9ef4fd9dedb61eeaeed837c087fb1942d490c6d220554e88ff9437ee1",
           "x": 702,
           "y": 2,
           "width": 96,
@@ -2097,7 +2101,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv5_city_sand_medium.final.webp",
+          "page": "/images/prepared-map-sprites/dtv5_city_sand_medium.final.webp?cfb-content=9a6780e045232f103f593655dfb456c409d11ae93d963e54356ccc9ef54f8c5c",
           "x": 1374,
           "y": 2,
           "width": 192,
@@ -2153,7 +2157,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv5_city_sand_medium.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv5_city_sand_medium.coarse.webp?cfb-content=056ba3e9ef4fd9dedb61eeaeed837c087fb1942d490c6d220554e88ff9437ee1",
           "x": 802,
           "y": 2,
           "width": 96,
@@ -2165,7 +2169,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv5_city_sand_medium.final.webp",
+          "page": "/images/prepared-map-sprites/dtv5_city_sand_medium.final.webp?cfb-content=9a6780e045232f103f593655dfb456c409d11ae93d963e54356ccc9ef54f8c5c",
           "x": 1570,
           "y": 2,
           "width": 192,
@@ -2221,7 +2225,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv5_city_sand_medium.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv5_city_sand_medium.coarse.webp?cfb-content=056ba3e9ef4fd9dedb61eeaeed837c087fb1942d490c6d220554e88ff9437ee1",
           "x": 902,
           "y": 2,
           "width": 96,
@@ -2233,7 +2237,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv5_city_sand_medium.final.webp",
+          "page": "/images/prepared-map-sprites/dtv5_city_sand_medium.final.webp?cfb-content=9a6780e045232f103f593655dfb456c409d11ae93d963e54356ccc9ef54f8c5c",
           "x": 1766,
           "y": 2,
           "width": 192,
@@ -2289,7 +2293,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv5_city_sand_medium.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv5_city_sand_medium.coarse.webp?cfb-content=056ba3e9ef4fd9dedb61eeaeed837c087fb1942d490c6d220554e88ff9437ee1",
           "x": 1002,
           "y": 2,
           "width": 96,
@@ -2301,7 +2305,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv5_city_sand_medium.final.webp",
+          "page": "/images/prepared-map-sprites/dtv5_city_sand_medium.final.webp?cfb-content=9a6780e045232f103f593655dfb456c409d11ae93d963e54356ccc9ef54f8c5c",
           "x": 2,
           "y": 262,
           "width": 192,
@@ -2357,7 +2361,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv5_city_sand_medium.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv5_city_sand_medium.coarse.webp?cfb-content=056ba3e9ef4fd9dedb61eeaeed837c087fb1942d490c6d220554e88ff9437ee1",
           "x": 1102,
           "y": 2,
           "width": 96,
@@ -2369,7 +2373,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv5_city_sand_medium.final.webp",
+          "page": "/images/prepared-map-sprites/dtv5_city_sand_medium.final.webp?cfb-content=9a6780e045232f103f593655dfb456c409d11ae93d963e54356ccc9ef54f8c5c",
           "x": 198,
           "y": 262,
           "width": 192,
@@ -2425,7 +2429,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv5_city_sand_medium.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv5_city_sand_medium.coarse.webp?cfb-content=056ba3e9ef4fd9dedb61eeaeed837c087fb1942d490c6d220554e88ff9437ee1",
           "x": 1202,
           "y": 2,
           "width": 96,
@@ -2437,7 +2441,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv5_city_sand_medium.final.webp",
+          "page": "/images/prepared-map-sprites/dtv5_city_sand_medium.final.webp?cfb-content=9a6780e045232f103f593655dfb456c409d11ae93d963e54356ccc9ef54f8c5c",
           "x": 394,
           "y": 262,
           "width": 192,
@@ -2493,7 +2497,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv5_city_sand_medium.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv5_city_sand_medium.coarse.webp?cfb-content=056ba3e9ef4fd9dedb61eeaeed837c087fb1942d490c6d220554e88ff9437ee1",
           "x": 1302,
           "y": 2,
           "width": 96,
@@ -2505,7 +2509,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv5_city_sand_medium.final.webp",
+          "page": "/images/prepared-map-sprites/dtv5_city_sand_medium.final.webp?cfb-content=9a6780e045232f103f593655dfb456c409d11ae93d963e54356ccc9ef54f8c5c",
           "x": 590,
           "y": 262,
           "width": 192,
@@ -2561,7 +2565,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv5_city_sand_medium.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv5_city_sand_medium.coarse.webp?cfb-content=056ba3e9ef4fd9dedb61eeaeed837c087fb1942d490c6d220554e88ff9437ee1",
           "x": 1402,
           "y": 2,
           "width": 96,
@@ -2573,7 +2577,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv5_city_sand_medium.final.webp",
+          "page": "/images/prepared-map-sprites/dtv5_city_sand_medium.final.webp?cfb-content=9a6780e045232f103f593655dfb456c409d11ae93d963e54356ccc9ef54f8c5c",
           "x": 786,
           "y": 262,
           "width": 192,
@@ -2629,7 +2633,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv5_city_sand_medium.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv5_city_sand_medium.coarse.webp?cfb-content=056ba3e9ef4fd9dedb61eeaeed837c087fb1942d490c6d220554e88ff9437ee1",
           "x": 1502,
           "y": 2,
           "width": 96,
@@ -2641,7 +2645,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv5_city_sand_medium.final.webp",
+          "page": "/images/prepared-map-sprites/dtv5_city_sand_medium.final.webp?cfb-content=9a6780e045232f103f593655dfb456c409d11ae93d963e54356ccc9ef54f8c5c",
           "x": 982,
           "y": 262,
           "width": 192,
@@ -2694,7 +2698,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv5_city_sand_medium.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv5_city_sand_medium.coarse.webp?cfb-content=056ba3e9ef4fd9dedb61eeaeed837c087fb1942d490c6d220554e88ff9437ee1",
           "x": 1602,
           "y": 2,
           "width": 96,
@@ -2706,7 +2710,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv5_city_sand_medium.final.webp",
+          "page": "/images/prepared-map-sprites/dtv5_city_sand_medium.final.webp?cfb-content=9a6780e045232f103f593655dfb456c409d11ae93d963e54356ccc9ef54f8c5c",
           "x": 1178,
           "y": 262,
           "width": 192,
@@ -2762,7 +2766,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv5_city_sand_medium.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv5_city_sand_medium.coarse.webp?cfb-content=056ba3e9ef4fd9dedb61eeaeed837c087fb1942d490c6d220554e88ff9437ee1",
           "x": 1702,
           "y": 2,
           "width": 128,
@@ -2774,7 +2778,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv5_city_sand_medium.final.webp",
+          "page": "/images/prepared-map-sprites/dtv5_city_sand_medium.final.webp?cfb-content=9a6780e045232f103f593655dfb456c409d11ae93d963e54356ccc9ef54f8c5c",
           "x": 1374,
           "y": 262,
           "width": 256,
@@ -2827,7 +2831,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv5_city_sand_medium.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv5_city_sand_medium.coarse.webp?cfb-content=056ba3e9ef4fd9dedb61eeaeed837c087fb1942d490c6d220554e88ff9437ee1",
           "x": 1834,
           "y": 2,
           "width": 96,
@@ -2839,7 +2843,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv5_city_sand_medium.final.webp",
+          "page": "/images/prepared-map-sprites/dtv5_city_sand_medium.final.webp?cfb-content=9a6780e045232f103f593655dfb456c409d11ae93d963e54356ccc9ef54f8c5c",
           "x": 1634,
           "y": 262,
           "width": 192,
@@ -2892,7 +2896,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv5_city_sand_medium.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv5_city_sand_medium.coarse.webp?cfb-content=056ba3e9ef4fd9dedb61eeaeed837c087fb1942d490c6d220554e88ff9437ee1",
           "x": 1934,
           "y": 2,
           "width": 96,
@@ -2904,7 +2908,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv5_city_sand_medium.final.webp",
+          "page": "/images/prepared-map-sprites/dtv5_city_sand_medium.final.webp?cfb-content=9a6780e045232f103f593655dfb456c409d11ae93d963e54356ccc9ef54f8c5c",
           "x": 1830,
           "y": 262,
           "width": 192,

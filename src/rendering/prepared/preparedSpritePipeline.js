@@ -24,6 +24,9 @@ let activeDensity = 0
 let activeLookup = null
 let activeBuildingLayers = null
 let aircraftResizeAuditSink = null
+let preparedDemandRevision = 0
+const pendingVisibleDemand = []
+const pendingVisibleDemandIds = new Set()
 
 function assertDensity(density) {
   if (!Number.isFinite(density) || density <= 0) throw new RangeError('Invalid prepared sprite density')
@@ -327,6 +330,7 @@ function createSpriteHandle(entry, image, density, manifest) {
 export async function prepareSpriteRegistry({
   density = (typeof window !== 'undefined' && window.devicePixelRatio) || 1,
   assetGeneration = 0,
+  mapGeneration = 0,
   byteBudget = DEFAULT_BYTE_BUDGET,
   manifestUrl = PREPARED_SPRITE_MANIFEST_URL,
   fetchImpl = globalThis.fetch,
@@ -482,15 +486,57 @@ export async function prepareSpriteRegistry({
       } catch (error) {
         console.warn(`Deferred sprite unavailable: ${id}`, error)
       }
+    }, {
+      concurrency: 2,
+      maxReservedBytes: 32 * 1024 * 1024,
+      hasForegroundSlack: () => {
+        const headroom = globalThis.__cfbFrameHeadroomMs
+        return Number.isFinite(headroom) && headroom >= 2
+      }
     })
+    const generations = Object.freeze({
+      asset: Number.isSafeInteger(assetGeneration) ? assetGeneration : 0,
+      map: Number.isSafeInteger(mapGeneration) ? mapGeneration : 0,
+      density: Math.max(0, Math.round(density * DENSITY_PRECISION))
+    })
+    const scheduler = createSpriteStreamingScheduler(queue)
+    const visibleCoarse = []
+    const lookahead = []
+    const visibleRefinement = []
+    const optional = []
+    let hasCameraSnapshot = false
+    const demandItem = entry => ({ id: entry.id, bytes: entry.logicalWidth * entry.logicalHeight * density * density * 4 })
+    const selectEntries = (ids, output) => {
+      output.length = 0
+      for (const id of ids) {
+        const entry = entriesById.get(id)
+        if (entry && !activeLookup?.has(id)) output.push(demandItem(entry))
+      }
+      return output
+    }
     throwIfAborted(signal)
     bootMark('sprites:end', { entries: entryCount })
     return {
       registry, manifest, density, decodedBytes: registry.decodedBytes,
-      request: id => entriesById.has(id) ? queue.request(id, true) : null,
+      request: id => entriesById.has(id)
+        ? (hasCameraSnapshot
+          ? queue.request(id, { priority: 0, generations })
+          : scheduler.requestCritical(id, { generations }))
+        : null,
+      updateDemand: ({ revision = ++preparedDemandRevision, capturedAt, moving = false, visible = [], ahead = [], refinement = visible, resident = [] } = {}) => {
+        hasCameraSnapshot = true
+        return scheduler.update({
+          revision, capturedAt, moving, generations,
+          visibleCoarse: selectEntries(visible, visibleCoarse),
+          lookahead: selectEntries(ahead, lookahead),
+          visibleRefinement: selectEntries(refinement, visibleRefinement),
+          optional: selectEntries(resident, optional)
+        })
+      },
       preloadRemaining: (priorityTypes = []) => {
-        deferred.sort((a, b) => Number(priorityTypes.includes(b.id.split(':')[1])) - Number(priorityTypes.includes(a.id.split(':')[1])))
-        return Promise.all(deferred.map(entry => queue.request(entry.id)))
+        const candidates = deferred.filter(entry => priorityTypes.includes(entry.id.split(':')[1])).map(entry => entry.id)
+        scheduler.update({ revision: ++preparedDemandRevision, generations, optional: selectEntries(candidates, optional) })
+        return Promise.all(candidates.map(id => queue.request(id, { priority: 3, generations })))
       }
     }
   } catch (error) {
@@ -541,6 +587,8 @@ export function publishPreparedSpriteRegistry(prepared) {
 
 export function disposePreparedSpriteRegistry() {
   backgroundPriorities = null
+  pendingVisibleDemand.length = 0
+  pendingVisibleDemandIds.clear()
   activePrepared = null
   activeRegistry?.dispose()
   activeRegistry = null
@@ -556,10 +604,33 @@ export function preloadRemainingPreparedSprites(priorityTypes = []) {
   return activePrepared?.preloadRemaining?.(priorityTypes)
 }
 
+/** Builds exactly one demand snapshot after visibility culling, never from an
+ * individual entity renderer. Arrays owned by the active preparation are
+ * reused by the scheduler on every camera revision. */
+export function updatePreparedSpriteDemand({ visibleSpriteIds = pendingVisibleDemand, lookaheadSpriteIds = [], moving = false, capturedAt } = {}) {
+  const updated = activePrepared?.updateDemand?.({
+    revision: ++preparedDemandRevision,
+    capturedAt,
+    moving,
+    visible: visibleSpriteIds,
+    ahead: lookaheadSpriteIds,
+    refinement: visibleSpriteIds
+  }) || false
+  if (visibleSpriteIds === pendingVisibleDemand) {
+    pendingVisibleDemand.length = 0
+    pendingVisibleDemandIds.clear()
+  }
+  return updated
+}
+
 export function getPreparedSprite(id) {
   if (!activeRegistry || !activeManifest || !activeLookup) return null
   const sprite = activeLookup.get(id)
   if (!sprite) {
+    if (!pendingVisibleDemandIds.has(id)) {
+      pendingVisibleDemandIds.add(id)
+      pendingVisibleDemand.push(id)
+    }
     activePrepared?.request?.(id)
     return null
   }

@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import {
   OFFLINE_SPRITE_MINIMUM_TIER,
   SPRITE_DERIVATIVE_CACHE_MAX_ENTRIES,
+  cacheSelectedOfflineSpriteRepresentations,
   createImmutableSpriteDerivativeUrl,
   isImmutableSpriteDerivativeUrl,
   loadSpriteSheetsWithOverlap,
@@ -105,5 +106,27 @@ describe('sprite streaming PWA policy', () => {
     const postTask = vi.fn(async callback => callback())
     await yieldOfflineFillToVisibleRequests({ postTask })
     expect(postTask).toHaveBeenCalledWith(expect.any(Function), { priority: 'background' })
+  })
+
+  it('[U06213] caches only selected density tiers and cleans stale derivatives after the selection is known', async() => {
+    const cache = memoryCache()
+    const entry = (tier, density) => ({
+      tier, density, size: 4,
+      url: createImmutableSpriteDerivativeUrl(`/images/prepared/streaming/${tier}-${density}.webp`, `identity-${tier}-${density}`)
+    })
+    const stale = entry('final', 2)
+    await cache.put(stale.url, new Response('stale'))
+    const waited = []
+    const plan = await cacheSelectedOfflineSpriteRepresentations([
+      entry('coarse', 1), entry('intermediate', 1), entry('final', 1), stale
+    ], {
+      cache,
+      selectedDensity: 1,
+      waitForDownloadSlot: async item => waited.push(item.tier),
+      load: async item => new Response(item.tier)
+    })
+    expect(plan.assets.map(item => item.tier)).toEqual(['coarse', 'final'])
+    expect(waited.sort()).toEqual(['coarse', 'final'])
+    expect(await cache.keys()).toEqual(plan.assets.map(item => item.url))
   })
 })

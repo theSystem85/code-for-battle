@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises'
 import sharp from 'sharp'
+import { createImmutableSpriteDerivativeUrl } from '../../../src/pwa/offlineAssetPlan.js'
 import { ATLAS_VERSION, CATALOG_VERSION, collectGroups, metadataSignature, packShelf, sha256 } from './catalog.mjs'
 import { applyDecorationCutout, applySheetPixelRules, PIXEL_RULES_VERSION } from './pixelRules.mjs'
 
@@ -69,6 +70,21 @@ export async function buildSheetArtifacts({ name, imagePath, metadataPath }) {
       .composite(composites).webp({ quality: WEBP_QUALITY, alphaQuality: 100, effort: 4 }).toBuffer()
     pages.push({ name: `${name}.${tier.id}.webp`, bytes, sha256: sha256(bytes), width: packed.width, height: packed.height,
       decodedBytes: packed.width * packed.height * 4, compressedBytes: bytes.length, tier: tier.tier, tierName: tier.id, backingDensity: tier.backingDensity })
+  }
+  for (const page of pages) {
+    page.contentIdentity = sha256(Buffer.from(JSON.stringify({
+      sourceHash: prepared.sourceHash,
+      metadataHash: prepared.metadataHash,
+      algorithm: { buildVersion: BUILD_VERSION, atlasVersion: ATLAS_VERSION, pixelRulesVersion: PIXEL_RULES_VERSION },
+      tier: page.tier,
+      density: page.backingDensity,
+      imageHash: page.sha256
+    })))
+    page.url = createImmutableSpriteDerivativeUrl(`/images/prepared-map-sprites/${page.name}`, page.contentIdentity)
+  }
+  const pageUrls = new Map(pages.map(page => [page.name, page.url]))
+  for (const sources of spriteSources.values()) {
+    for (const source of sources) source.page = pageUrls.get(source.page)
   }
   const sprites = prepared.groups.map(group => ({
     spriteId: `${name}:${group.id}`,
