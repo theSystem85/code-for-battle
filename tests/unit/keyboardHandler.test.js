@@ -555,6 +555,44 @@ describe('KeyboardHandler', () => {
     expect(handler.showNotification).toHaveBeenCalledWith('1 unit stopped attacking', 2000)
   })
 
+  it('[U06554] recalls aircraft assigned to a selected carrier when stop-attack is pressed', () => {
+    const carrier = {
+      id: 'carrier',
+      type: 'aircraftCarrier',
+      owner: gameState.humanPlayer,
+      health: 400,
+      x: 8 * TILE_SIZE,
+      y: 8 * TILE_SIZE,
+      deckSlotCapacity: 4,
+      carrierAircraftIds: [],
+      moveTarget: { x: 14, y: 8 }
+    }
+    const apache = {
+      id: 'apache',
+      type: 'apache',
+      owner: gameState.humanPlayer,
+      health: 100,
+      x: 14 * TILE_SIZE,
+      y: 8 * TILE_SIZE,
+      homeCarrierId: carrier.id,
+      carrierId: null,
+      carrierOperation: null,
+      flightState: 'airborne',
+      target: { id: 'enemy', health: 40 },
+      carrierStrikeActive: true
+    }
+    handler.selectedUnits = [carrier]
+    handler.units = [carrier, apache]
+
+    handler.handleStopAttacking()
+
+    expect(apache.carrierStrikeActive).toBe(false)
+    expect(apache.target).toBeNull()
+    expect(apache.homeCarrierId).toBe(carrier.id)
+    expect(apache.carrierOperation).toMatchObject({ state: 'carrier_rendezvous', carrierId: carrier.id })
+    expect(handler.showNotification).toHaveBeenCalledWith('1 unit stopped attacking', 2000)
+  })
+
   it('[U02297] cancels a linked embarkation when S is pressed for either participant', () => {
     const ferry = {
       id: 'ferry', type: 'vehicleFerry', owner: gameState.humanPlayer,

@@ -957,6 +957,7 @@ export function spawnUnit(factory, type, units, mapGrid, rallyPointTarget = null
     newUnit.helipadTargetId = airstripId
     newUnit.landedHelipadId = airstripId
     newUnit.airstripId = airstripId
+    newUnit.homeAirstripId = airstripId
     newUnit.airstripParkingSlotIndex = parkingSlotIndex
     if (newUnit.type === 'f22Raptor') {
       newUnit.f22State = 'parked'

@@ -188,7 +188,7 @@ export function handleMovementCommand(handler, selectedUnits, targetX, targetY, 
         }
       }
 
-      if (unit.type === 'f35') {
+      if (unit.type === 'f35' || unit.type === 'apache') {
         const targetBuilding = (gameState.buildings || []).find(building =>
           building.owner === unit.owner &&
           building.health > 0 &&

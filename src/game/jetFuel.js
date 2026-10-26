@@ -90,7 +90,7 @@ export function getJetHomeWorldPosition(unit) {
     if (carrier) return getUnitCenter(carrier)
   }
 
-  const boundIds = [unit.airstripId, unit.landedHelipadId, unit.helipadTargetId]
+  const boundIds = [unit.homeAirstripId, unit.airstripId, unit.landedHelipadId, unit.helipadTargetId]
   for (const id of boundIds) {
     const building = findBuildingById(id)
     if (!isUsableHomeBuilding(building, unit.owner)) continue
@@ -152,6 +152,18 @@ export function rejectJetMissionIfImpossible(unit, destCenter, mode) {
     return true
   }
   return false
+}
+
+export function shouldAircraftReturnForFuel(unit, homePosition) {
+  if (!unit || unit.health <= 0) return false
+  if (unit.flightState === 'grounded' || unit.carrierOperation?.state === 'parked') return false
+  if (typeof unit.gas !== 'number' || typeof unit.maxGas !== 'number' || unit.maxGas <= 0) return false
+  const origin = getUnitCenter(unit)
+  if (!origin || !homePosition || !Number.isFinite(homePosition.x) || !Number.isFinite(homePosition.y)) {
+    return unit.gas <= unit.maxGas * JET_FALLBACK_RTB_FUEL_RATIO
+  }
+  const fuelHome = estimateFuelBetweenPoints(unit, origin.x, origin.y, homePosition.x, homePosition.y) * JET_FUEL_SAFETY_MARGIN
+  return unit.gas <= fuelHome
 }
 
 export function shouldJetReturnHomeForFuel(unit) {

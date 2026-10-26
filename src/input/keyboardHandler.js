@@ -28,6 +28,7 @@ import { hasBlockingBuilding } from '../utils/buildingPassability.js'
 import { isLocalPartyAutomationLocked } from '../network/multiplayerStore.js'
 import { createReplayUnitReferences, isReplayInteractionLocked, recordReplayCommand } from '../replaySystem.js'
 import { clearBattleshipFireControl } from '../game/battleshipTurrets.js'
+import { recallCarrierAircraft } from '../game/navalFleetSystem.js'
 import { cancelTransportOperations } from '../game/transportOperationCancellation.js'
 import { releaseMountedCargo } from '../game/jetFuel.js'
 
@@ -1215,6 +1216,9 @@ export class KeyboardHandler {
 
     // Stop attacking for all selected units or buildings
     this.selectedUnits.forEach(unit => {
+      if (unit.type === 'aircraftCarrier') {
+        stoppedCount += recallCarrierAircraft(unit, this.units || [], getSimulationTime(gameState))
+      }
       if (releaseMountedCargo(unit)) {
         releasedMounts++
         stoppedCount++

@@ -276,4 +276,45 @@ describe('helipadLogic', () => {
     expect(helipad.fuel).toBeGreaterThan(50)
     expect(tanker.supplyGas).toBe(0)
   })
+
+  it('[U06553] snaps an apache onto an airstrip parking spot and refills it', () => {
+    const strip = createHelipad({
+      id: 'strip1',
+      type: 'airstrip',
+      x: 1,
+      y: 1,
+      width: 8,
+      height: 6,
+      fuel: 100,
+      maxFuel: 100,
+      ammo: 40,
+      maxAmmo: 50
+    })
+    const spot = { x: 3, y: 4, worldX: 120, worldY: 160 }
+    strip.f22ParkingSpots = [spot]
+    const apache = createApache({
+      x: spot.worldX - 16,
+      y: spot.worldY - 16,
+      flightState: 'airborne',
+      helipadLandingRequested: true,
+      helipadTargetId: 'helipad-strip1',
+      airstripParkingSlotIndex: 0,
+      rocketAmmo: 0,
+      maxRocketAmmo: 10,
+      gas: 0,
+      maxGas: 100,
+      path: []
+    })
+
+    updateHelipadLogic([apache], [strip], {}, 16)
+    expect(apache.x).toBe(spot.worldX - 16)
+    expect(apache.y).toBe(spot.worldY - 16)
+    expect(apache.flightState).toBe('grounded')
+    expect(apache.landedHelipadId).toBe('helipad-strip1')
+
+    updateHelipadLogic([apache], [strip], {}, 1000)
+    expect(apache.rocketAmmo).toBeGreaterThan(0)
+    expect(apache.gas).toBeGreaterThan(0)
+    expect(apache.apacheAmmoEmpty).toBe(false)
+  })
 })
