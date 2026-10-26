@@ -12,7 +12,7 @@ test('[E00021] optional city sheet produces whole destructible buildings and per
     Object.assign(gameState, { mapSeed: 'city-e2e', citySeeds: 2, cityClusterSize: 8 })
     await manager.setIntegratedSpriteSheetConfig({ enabled: true, sheets: [{ sheetPath: 'images/map/sprite_sheets/dtv5_city_temperate_medium.webp', metadata }], biomeTag: 'grass' })
     const mapGrid = Array.from({ length: 96 }, () => Array.from({ length: 96 }, () => ({ type: 'land', biome: 'grass' })))
-    manager.getDecorationLayout(mapGrid)
+    manager.prepareDecorationLayout(mapGrid)
     const building = getCityBuildings(mapGrid)[0]
     if (!building) throw new Error('City sheet did not produce buildings')
     const before = manager.getIntegratedTileForMapTile('land', building.x, building.y, { mapGrid })

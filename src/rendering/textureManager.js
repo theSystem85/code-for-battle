@@ -611,6 +611,16 @@ export class TextureManager {
     }).layout
   }
 
+  /**
+   * Lifecycle helper for configuration phases (sheet apply, save restore):
+   * reuse the published layout when it still matches, otherwise prepare it.
+   * Never call from render lookups.
+   */
+  ensureDecorationLayout(mapGrid) {
+    if (!this.integratedSpriteSheetMode) return null
+    return this.getDecorationLayout(mapGrid) || this.prepareDecorationLayout(mapGrid)
+  }
+
   getGroundDetailForMapTile(mapGrid, x, y) {
     if (!this.integratedSpriteSheetMode || !this.hasGroundDetails || mapGrid?.[y]?.[x]?.type !== 'land') return null
     const layout = this.getDecorationLayout(mapGrid)

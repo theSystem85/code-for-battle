@@ -20,7 +20,7 @@ test('[E00220] new native-alpha city and nature atlases load by default and gene
     const biomes = []
     for (const biome of ['grass', 'soil', 'sand', 'snow']) {
       const grid = Array.from({ length: 96 }, () => Array.from({ length: 96 }, () => ({ type: 'land', biome })))
-      const layout = manager.getDecorationLayout(grid)
+      const layout = manager.prepareDecorationLayout(grid)
       const cells = layout.cells.filter(Boolean)
       const cities = cells.filter(cell => cell.group.tagSet.has('city'))
       const nature = cells.filter(cell => cell.group.tagSet.has('trees') || cell.group.tagSet.has('water') || cell.group.tagSet.has('rocks'))
@@ -108,7 +108,7 @@ test('[E00228] calibrated dtv6 props generate biome-matching forests, shore and 
     const biomes = []
     for (const biome of ['grass', 'soil', 'sand', 'snow']) {
       const grid = Array.from({ length: 96 }, (_, y) => Array.from({ length: 96 }, (_, x) => ({ type: x < 24 ? 'water' : y === 48 ? 'street' : 'land', biome })))
-      const cells = manager.getDecorationLayout(grid).cells.filter(Boolean)
+      const cells = manager.prepareDecorationLayout(grid).cells.filter(Boolean)
       biomes.push({ biome, placed: cells.filter(cell => cell.offsetX === 0 && cell.offsetY === 0).length,
         trees: cells.filter(cell => cell.group.tagSet.has('trees')).length,
         shore: cells.filter(cell => cell.group.tagSet.has('shore')).length,
@@ -157,7 +157,7 @@ test('[E00229] large grass and soil nature sheets load by default, preserve refe
     const result = []
     for (const biome of ['grass', 'soil']) {
       const map = Array.from({ length: 120 }, () => Array.from({ length: 120 }, () => ({ type: 'land', biome })))
-      const cells = manager.getDecorationLayout(map).cells.filter(cell => cell && cell.offsetX === 0 && cell.offsetY === 0)
+      const cells = manager.prepareDecorationLayout(map).cells.filter(cell => cell && cell.offsetX === 0 && cell.offsetY === 0)
       result.push({ biome, trees: cells.filter(cell => cell.group.tagSet.has('trees')).length,
         lakes: cells.filter(cell => cell.group.tagSet.has('water')).length,
         rocks: cells.filter(cell => cell.group.tagSet.has('rocks')).length,

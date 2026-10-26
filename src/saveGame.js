@@ -1891,6 +1891,8 @@ function loadGameFromSaveObject(saveObj, key) {
           biomeTag: gameState.activeSpriteSheetBiomeTag
         })
       restoreSheets.then(() => {
+        // Restoring the sheet catalog retires the layout published above.
+        textureManager.ensureDecorationLayout?.(mapGrid)
         if (mapRenderer) {
           mapRenderer.invalidateAllChunks()
         }

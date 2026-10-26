@@ -355,7 +355,7 @@ test.describe('Sprite Sheet Editor integration', () => {
         sheets: [{ sheetPath: dtPath, metadata: dtMetadata }]
       })
       const grassGrid = mapGrid.map(row => row.map(tile => ({ ...tile, biome: 'grass' })))
-      const layout = textureManager.getDecorationLayout(grassGrid)
+      const layout = textureManager.prepareDecorationLayout(grassGrid)
       const multi = layout.placements.find(p => p.group.width * p.group.height > 1)
       const multiTags = multi
         ? textureManager.getIntegratedTileForMapTile('land', multi.anchorX, multi.anchorY, { mapGrid: grassGrid })?.tags || []

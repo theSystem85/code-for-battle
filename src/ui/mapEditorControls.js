@@ -597,6 +597,11 @@ export async function applyIntegratedSpriteSheetRuntime(metadata = null, { prese
     sheets: resolvedSheets,
     biomeTag: gameState.activeSpriteSheetBiomeTag || 'grass'
   })
+  // A new sheet catalog retires the published decoration layout; republish it
+  // for the current map before occupancy and chunks read city/decor cells.
+  if (Array.isArray(gameState.mapGrid) && gameState.mapGrid.length) {
+    textureManager.ensureDecorationLayout?.(gameState.mapGrid)
+  }
 
   const mapRenderer = getMapRenderer()
   if (mapRenderer) {
