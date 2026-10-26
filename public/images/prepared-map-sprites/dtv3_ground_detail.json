@@ -1,0 +1,1663 @@
+{
+  "schemaVersion": 1,
+  "name": "dtv3_ground_detail",
+  "identity": {
+    "buildVersion": 1,
+    "atlasVersion": 1,
+    "catalogVersion": 1,
+    "pixelRulesVersion": 1,
+    "webpQuality": 85,
+    "padding": 2,
+    "sourceHash": "3c96bb4567617a47ecbab076237ba120aa5cbfac570fc944b9f7ad48bfe9f042",
+    "metadataHash": "657942357acfe81510177f06aed6a50d5845acccac4390fd740ab2b4188e79c8",
+    "metadataSignature": "30a4bee99256f153eab27c205805ab0770b515caa8128a2589ceaf4c5017ba6d",
+    "selectedBackingDensities": [
+      0.5,
+      1
+    ]
+  },
+  "signature": "5c101cf49f02c5f0c51af0b88c6accb5738da75262879394786138122b2aa05c",
+  "source": {
+    "image": "images/map/sprite_sheets/dtv3_ground_detail.webp",
+    "metadata": "images/map/sprite_sheets/dtv3_ground_detail.json",
+    "sourceMetadata": null,
+    "editorMetadata": {
+      "schemaVersion": 1,
+      "tags": [
+        "grass",
+        "ground_detail",
+        "passable",
+        "sand",
+        "snow",
+        "soil"
+      ],
+      "propLayout": [
+        {
+          "id": "ground_detail_tuft_01",
+          "col": 0,
+          "row": 0,
+          "w": 1,
+          "h": 1,
+          "groupId": 1,
+          "tags": [
+            "grass",
+            "soil",
+            "ground_detail",
+            "passable"
+          ]
+        },
+        {
+          "id": "ground_detail_tuft_02",
+          "col": 1,
+          "row": 0,
+          "w": 1,
+          "h": 1,
+          "groupId": 2,
+          "tags": [
+            "grass",
+            "soil",
+            "ground_detail",
+            "passable"
+          ]
+        },
+        {
+          "id": "ground_detail_tuft_03",
+          "col": 2,
+          "row": 0,
+          "w": 1,
+          "h": 1,
+          "groupId": 3,
+          "tags": [
+            "grass",
+            "soil",
+            "ground_detail",
+            "passable"
+          ]
+        },
+        {
+          "id": "ground_detail_tuft_04",
+          "col": 3,
+          "row": 0,
+          "w": 1,
+          "h": 1,
+          "groupId": 4,
+          "tags": [
+            "grass",
+            "soil",
+            "ground_detail",
+            "passable"
+          ]
+        },
+        {
+          "id": "ground_detail_tuft_05",
+          "col": 4,
+          "row": 0,
+          "w": 1,
+          "h": 1,
+          "groupId": 5,
+          "tags": [
+            "grass",
+            "soil",
+            "ground_detail",
+            "passable"
+          ]
+        },
+        {
+          "id": "ground_detail_tuft_06",
+          "col": 5,
+          "row": 0,
+          "w": 1,
+          "h": 1,
+          "groupId": 6,
+          "tags": [
+            "grass",
+            "soil",
+            "ground_detail",
+            "passable"
+          ]
+        },
+        {
+          "id": "ground_detail_weed_07",
+          "col": 0,
+          "row": 1,
+          "w": 1,
+          "h": 1,
+          "groupId": 7,
+          "tags": [
+            "soil",
+            "sand",
+            "grass",
+            "ground_detail",
+            "passable"
+          ]
+        },
+        {
+          "id": "ground_detail_weed_08",
+          "col": 1,
+          "row": 1,
+          "w": 1,
+          "h": 1,
+          "groupId": 8,
+          "tags": [
+            "soil",
+            "sand",
+            "grass",
+            "ground_detail",
+            "passable"
+          ]
+        },
+        {
+          "id": "ground_detail_weed_09",
+          "col": 2,
+          "row": 1,
+          "w": 1,
+          "h": 1,
+          "groupId": 9,
+          "tags": [
+            "soil",
+            "sand",
+            "grass",
+            "ground_detail",
+            "passable"
+          ]
+        },
+        {
+          "id": "ground_detail_pebbles_10",
+          "col": 3,
+          "row": 1,
+          "w": 1,
+          "h": 1,
+          "groupId": 10,
+          "tags": [
+            "grass",
+            "soil",
+            "sand",
+            "snow",
+            "ground_detail",
+            "passable"
+          ]
+        },
+        {
+          "id": "ground_detail_pebbles_11",
+          "col": 4,
+          "row": 1,
+          "w": 1,
+          "h": 1,
+          "groupId": 11,
+          "tags": [
+            "grass",
+            "soil",
+            "sand",
+            "snow",
+            "ground_detail",
+            "passable"
+          ]
+        },
+        {
+          "id": "ground_detail_pebbles_12",
+          "col": 5,
+          "row": 1,
+          "w": 1,
+          "h": 1,
+          "groupId": 12,
+          "tags": [
+            "grass",
+            "soil",
+            "sand",
+            "snow",
+            "ground_detail",
+            "passable"
+          ]
+        },
+        {
+          "id": "ground_detail_tracks_13",
+          "col": 0,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 13,
+          "tags": [
+            "grass",
+            "soil",
+            "sand",
+            "snow",
+            "ground_detail",
+            "passable"
+          ]
+        },
+        {
+          "id": "ground_detail_pebbles_14",
+          "col": 1,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 14,
+          "tags": [
+            "grass",
+            "soil",
+            "sand",
+            "snow",
+            "ground_detail",
+            "passable"
+          ]
+        },
+        {
+          "id": "ground_detail_cracks_15",
+          "col": 2,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 15,
+          "tags": [
+            "soil",
+            "sand",
+            "ground_detail",
+            "passable"
+          ]
+        },
+        {
+          "id": "ground_detail_cracks_16",
+          "col": 3,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 16,
+          "tags": [
+            "soil",
+            "sand",
+            "ground_detail",
+            "passable"
+          ]
+        },
+        {
+          "id": "ground_detail_cracks_17",
+          "col": 4,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 17,
+          "tags": [
+            "soil",
+            "sand",
+            "ground_detail",
+            "passable"
+          ]
+        },
+        {
+          "id": "ground_detail_cracks_18",
+          "col": 5,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 18,
+          "tags": [
+            "soil",
+            "sand",
+            "ground_detail",
+            "passable"
+          ]
+        },
+        {
+          "id": "ground_detail_tracks_19",
+          "col": 0,
+          "row": 3,
+          "w": 1,
+          "h": 1,
+          "groupId": 19,
+          "tags": [
+            "grass",
+            "soil",
+            "sand",
+            "snow",
+            "ground_detail",
+            "passable"
+          ]
+        },
+        {
+          "id": "ground_detail_tracks_20",
+          "col": 1,
+          "row": 3,
+          "w": 1,
+          "h": 1,
+          "groupId": 20,
+          "tags": [
+            "grass",
+            "soil",
+            "sand",
+            "snow",
+            "ground_detail",
+            "passable"
+          ]
+        },
+        {
+          "id": "ground_detail_mud_21",
+          "col": 2,
+          "row": 3,
+          "w": 1,
+          "h": 1,
+          "groupId": 21,
+          "tags": [
+            "grass",
+            "soil",
+            "ground_detail",
+            "passable"
+          ]
+        },
+        {
+          "id": "ground_detail_mud_22",
+          "col": 3,
+          "row": 3,
+          "w": 1,
+          "h": 1,
+          "groupId": 22,
+          "tags": [
+            "grass",
+            "soil",
+            "ground_detail",
+            "passable"
+          ]
+        },
+        {
+          "id": "ground_detail_leaves_23",
+          "col": 4,
+          "row": 3,
+          "w": 1,
+          "h": 1,
+          "groupId": 23,
+          "tags": [
+            "grass",
+            "soil",
+            "ground_detail",
+            "passable"
+          ]
+        },
+        {
+          "id": "ground_detail_leaves_24",
+          "col": 5,
+          "row": 3,
+          "w": 1,
+          "h": 1,
+          "groupId": 24,
+          "tags": [
+            "grass",
+            "soil",
+            "ground_detail",
+            "passable"
+          ]
+        }
+      ]
+    }
+  },
+  "upscaledBeyondMaster": false,
+  "omittedCandidateDensities": [
+    2,
+    3
+  ],
+  "pages": [
+    {
+      "name": "dtv3_ground_detail.coarse.webp",
+      "sha256": "0264cfe6d6ae60aae9fc49dba00ecc38adfa2bfe9578d23bf9dbab3be70a2cf2",
+      "width": 864,
+      "height": 36,
+      "decodedBytes": 124416,
+      "compressedBytes": 24236,
+      "tier": 0,
+      "tierName": "coarse",
+      "backingDensity": 0.5
+    },
+    {
+      "name": "dtv3_ground_detail.final.webp",
+      "sha256": "79fc91962ac4f33c3700314dec6fc6c3d9d0630f93c0deaf191b382b2b093af1",
+      "width": 1632,
+      "height": 68,
+      "decodedBytes": 443904,
+      "compressedBytes": 47210,
+      "tier": 2,
+      "tierName": "final",
+      "backingDensity": 1
+    }
+  ],
+  "sprites": [
+    {
+      "spriteId": "dtv3_ground_detail:tile_0,0",
+      "groupId": "tile_0,0",
+      "savedIdentifiers": [],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "0,0"
+      ],
+      "tags": [
+        "grass",
+        "ground_detail",
+        "passable",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv3_ground_detail.coarse.webp",
+          "x": 2,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv3_ground_detail.final.webp",
+          "x": 2,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv3_ground_detail:tile_0,1",
+      "groupId": "tile_0,1",
+      "savedIdentifiers": [],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 0,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "0,1"
+      ],
+      "tags": [
+        "grass",
+        "ground_detail",
+        "passable",
+        "sand",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv3_ground_detail.coarse.webp",
+          "x": 38,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv3_ground_detail.final.webp",
+          "x": 70,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv3_ground_detail:tile_0,2",
+      "groupId": "tile_0,2",
+      "savedIdentifiers": [],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 0,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "0,2"
+      ],
+      "tags": [
+        "grass",
+        "ground_detail",
+        "passable",
+        "sand",
+        "snow",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv3_ground_detail.coarse.webp",
+          "x": 74,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv3_ground_detail.final.webp",
+          "x": 138,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv3_ground_detail:tile_0,3",
+      "groupId": "tile_0,3",
+      "savedIdentifiers": [],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 0,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "0,3"
+      ],
+      "tags": [
+        "grass",
+        "ground_detail",
+        "passable",
+        "sand",
+        "snow",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv3_ground_detail.coarse.webp",
+          "x": 110,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv3_ground_detail.final.webp",
+          "x": 206,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv3_ground_detail:tile_1,0",
+      "groupId": "tile_1,0",
+      "savedIdentifiers": [],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 64,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "1,0"
+      ],
+      "tags": [
+        "grass",
+        "ground_detail",
+        "passable",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv3_ground_detail.coarse.webp",
+          "x": 146,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv3_ground_detail.final.webp",
+          "x": 274,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv3_ground_detail:tile_1,1",
+      "groupId": "tile_1,1",
+      "savedIdentifiers": [],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 64,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "1,1"
+      ],
+      "tags": [
+        "grass",
+        "ground_detail",
+        "passable",
+        "sand",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv3_ground_detail.coarse.webp",
+          "x": 182,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv3_ground_detail.final.webp",
+          "x": 342,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv3_ground_detail:tile_1,2",
+      "groupId": "tile_1,2",
+      "savedIdentifiers": [],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 64,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "1,2"
+      ],
+      "tags": [
+        "grass",
+        "ground_detail",
+        "passable",
+        "sand",
+        "snow",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv3_ground_detail.coarse.webp",
+          "x": 218,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv3_ground_detail.final.webp",
+          "x": 410,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv3_ground_detail:tile_1,3",
+      "groupId": "tile_1,3",
+      "savedIdentifiers": [],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 64,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "1,3"
+      ],
+      "tags": [
+        "grass",
+        "ground_detail",
+        "passable",
+        "sand",
+        "snow",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv3_ground_detail.coarse.webp",
+          "x": 254,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv3_ground_detail.final.webp",
+          "x": 478,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv3_ground_detail:tile_2,0",
+      "groupId": "tile_2,0",
+      "savedIdentifiers": [],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 128,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "2,0"
+      ],
+      "tags": [
+        "grass",
+        "ground_detail",
+        "passable",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv3_ground_detail.coarse.webp",
+          "x": 290,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv3_ground_detail.final.webp",
+          "x": 546,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv3_ground_detail:tile_2,1",
+      "groupId": "tile_2,1",
+      "savedIdentifiers": [],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 128,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "2,1"
+      ],
+      "tags": [
+        "grass",
+        "ground_detail",
+        "passable",
+        "sand",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv3_ground_detail.coarse.webp",
+          "x": 326,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv3_ground_detail.final.webp",
+          "x": 614,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv3_ground_detail:tile_2,2",
+      "groupId": "tile_2,2",
+      "savedIdentifiers": [],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 128,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "2,2"
+      ],
+      "tags": [
+        "ground_detail",
+        "passable",
+        "sand",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv3_ground_detail.coarse.webp",
+          "x": 362,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv3_ground_detail.final.webp",
+          "x": 682,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv3_ground_detail:tile_2,3",
+      "groupId": "tile_2,3",
+      "savedIdentifiers": [],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 128,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "2,3"
+      ],
+      "tags": [
+        "grass",
+        "ground_detail",
+        "passable",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv3_ground_detail.coarse.webp",
+          "x": 398,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv3_ground_detail.final.webp",
+          "x": 750,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv3_ground_detail:tile_3,0",
+      "groupId": "tile_3,0",
+      "savedIdentifiers": [],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 192,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "3,0"
+      ],
+      "tags": [
+        "grass",
+        "ground_detail",
+        "passable",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv3_ground_detail.coarse.webp",
+          "x": 434,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv3_ground_detail.final.webp",
+          "x": 818,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv3_ground_detail:tile_3,1",
+      "groupId": "tile_3,1",
+      "savedIdentifiers": [],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 192,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "3,1"
+      ],
+      "tags": [
+        "grass",
+        "ground_detail",
+        "passable",
+        "sand",
+        "snow",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv3_ground_detail.coarse.webp",
+          "x": 470,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv3_ground_detail.final.webp",
+          "x": 886,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv3_ground_detail:tile_3,2",
+      "groupId": "tile_3,2",
+      "savedIdentifiers": [],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 192,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "3,2"
+      ],
+      "tags": [
+        "ground_detail",
+        "passable",
+        "sand",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv3_ground_detail.coarse.webp",
+          "x": 506,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv3_ground_detail.final.webp",
+          "x": 954,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv3_ground_detail:tile_3,3",
+      "groupId": "tile_3,3",
+      "savedIdentifiers": [],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 192,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "3,3"
+      ],
+      "tags": [
+        "grass",
+        "ground_detail",
+        "passable",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv3_ground_detail.coarse.webp",
+          "x": 542,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv3_ground_detail.final.webp",
+          "x": 1022,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv3_ground_detail:tile_4,0",
+      "groupId": "tile_4,0",
+      "savedIdentifiers": [],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 256,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "4,0"
+      ],
+      "tags": [
+        "grass",
+        "ground_detail",
+        "passable",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv3_ground_detail.coarse.webp",
+          "x": 578,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv3_ground_detail.final.webp",
+          "x": 1090,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv3_ground_detail:tile_4,1",
+      "groupId": "tile_4,1",
+      "savedIdentifiers": [],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 256,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "4,1"
+      ],
+      "tags": [
+        "grass",
+        "ground_detail",
+        "passable",
+        "sand",
+        "snow",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv3_ground_detail.coarse.webp",
+          "x": 614,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv3_ground_detail.final.webp",
+          "x": 1158,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv3_ground_detail:tile_4,2",
+      "groupId": "tile_4,2",
+      "savedIdentifiers": [],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 256,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "4,2"
+      ],
+      "tags": [
+        "ground_detail",
+        "passable",
+        "sand",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv3_ground_detail.coarse.webp",
+          "x": 650,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv3_ground_detail.final.webp",
+          "x": 1226,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv3_ground_detail:tile_4,3",
+      "groupId": "tile_4,3",
+      "savedIdentifiers": [],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 256,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "4,3"
+      ],
+      "tags": [
+        "grass",
+        "ground_detail",
+        "passable",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv3_ground_detail.coarse.webp",
+          "x": 686,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv3_ground_detail.final.webp",
+          "x": 1294,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv3_ground_detail:tile_5,0",
+      "groupId": "tile_5,0",
+      "savedIdentifiers": [],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 320,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "5,0"
+      ],
+      "tags": [
+        "grass",
+        "ground_detail",
+        "passable",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv3_ground_detail.coarse.webp",
+          "x": 722,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv3_ground_detail.final.webp",
+          "x": 1362,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv3_ground_detail:tile_5,1",
+      "groupId": "tile_5,1",
+      "savedIdentifiers": [],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 320,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "5,1"
+      ],
+      "tags": [
+        "grass",
+        "ground_detail",
+        "passable",
+        "sand",
+        "snow",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv3_ground_detail.coarse.webp",
+          "x": 758,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv3_ground_detail.final.webp",
+          "x": 1430,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv3_ground_detail:tile_5,2",
+      "groupId": "tile_5,2",
+      "savedIdentifiers": [],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 320,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "5,2"
+      ],
+      "tags": [
+        "ground_detail",
+        "passable",
+        "sand",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv3_ground_detail.coarse.webp",
+          "x": 794,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv3_ground_detail.final.webp",
+          "x": 1498,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv3_ground_detail:tile_5,3",
+      "groupId": "tile_5,3",
+      "savedIdentifiers": [],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 320,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "5,3"
+      ],
+      "tags": [
+        "grass",
+        "ground_detail",
+        "passable",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv3_ground_detail.coarse.webp",
+          "x": 830,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv3_ground_detail.final.webp",
+          "x": 1566,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    }
+  ]
+}

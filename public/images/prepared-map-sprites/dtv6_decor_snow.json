@@ -1,0 +1,3008 @@
+{
+  "schemaVersion": 1,
+  "name": "dtv6_decor_snow",
+  "identity": {
+    "buildVersion": 1,
+    "atlasVersion": 1,
+    "catalogVersion": 1,
+    "pixelRulesVersion": 1,
+    "webpQuality": 85,
+    "padding": 2,
+    "sourceHash": "3633aa4ed4e308bcdb88640be35dc7c4eacf3dd174dcf2f481f9249307c1c97a",
+    "metadataHash": "95f55565de215ca46719e5cc384bc78efbd007ef6198173d724be9e42cdfaa40",
+    "metadataSignature": "d27609fca5b724cf40ba406e3f65fa162de0eadc4a93526b50813319360ed17b",
+    "selectedBackingDensities": [
+      0.5,
+      1
+    ]
+  },
+  "signature": "41cff3d475f05d1b53c3ad8b4aba071af8d7b1458a535414d33bbec83644edfb",
+  "source": {
+    "image": "images/map/sprite_sheets/dtv6_decor_snow.webp",
+    "metadata": "images/map/sprite_sheets/dtv6_decor_snow.json",
+    "sourceMetadata": {
+      "path": "images/map/sprite_sheets/sources/alpha_snow.webp",
+      "sha256": "63cc23e1e623ce5f6e31a29f503b275ecb4ef7470dc8638e174d8644c3bc8eb7",
+      "width": 1024,
+      "height": 1536,
+      "detection": {
+        "transparent": true,
+        "alphaCutoff": 128,
+        "gap": 0,
+        "minArea": 1000
+      },
+      "guides": [],
+      "spriteCount": 24,
+      "packing": {
+        "scale": "per-sprite",
+        "padding": 2
+      }
+    },
+    "editorMetadata": {
+      "schemaVersion": 1,
+      "layoutVersion": 2,
+      "name": "dtv6_decor_snow",
+      "grid": {
+        "tileSize": 64,
+        "rowHeight": 64,
+        "borderWidth": 0,
+        "cols": 16,
+        "rows": 5
+      },
+      "tags": [
+        "snow",
+        "winter",
+        "decorative",
+        "water",
+        "impassable",
+        "frozen_lake",
+        "trees",
+        "ruins",
+        "farm",
+        "landmark",
+        "rocks",
+        "roadside",
+        "stones",
+        "passable"
+      ],
+      "propLayout": [
+        {
+          "id": "snow_frozen_stream",
+          "col": 0,
+          "row": 0,
+          "w": 2,
+          "h": 3,
+          "groupId": 1,
+          "tags": [
+            "snow",
+            "winter",
+            "decorative",
+            "water",
+            "impassable",
+            "frozen_lake",
+            "group_1"
+          ],
+          "sourceRect": {
+            "x": 45,
+            "y": 28,
+            "width": 145,
+            "height": 333
+          }
+        },
+        {
+          "id": "snow_pine_grove",
+          "col": 2,
+          "row": 0,
+          "w": 2,
+          "h": 2,
+          "groupId": 2,
+          "tags": [
+            "snow",
+            "winter",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_2"
+          ],
+          "sourceRect": {
+            "x": 241,
+            "y": 55,
+            "width": 240,
+            "height": 271
+          }
+        },
+        {
+          "id": "snow_ruined_house",
+          "col": 4,
+          "row": 0,
+          "w": 2,
+          "h": 2,
+          "groupId": 3,
+          "tags": [
+            "snow",
+            "winter",
+            "decorative",
+            "ruins",
+            "impassable",
+            "group_3"
+          ],
+          "sourceRect": {
+            "x": 519,
+            "y": 82,
+            "width": 269,
+            "height": 255
+          }
+        },
+        {
+          "id": "snow_frozen_pond",
+          "col": 6,
+          "row": 0,
+          "w": 2,
+          "h": 2,
+          "groupId": 4,
+          "tags": [
+            "snow",
+            "winter",
+            "decorative",
+            "water",
+            "impassable",
+            "frozen_lake",
+            "group_4"
+          ],
+          "sourceRect": {
+            "x": 823,
+            "y": 101,
+            "width": 179,
+            "height": 190
+          }
+        },
+        {
+          "id": "snow_log_cabin",
+          "col": 8,
+          "row": 0,
+          "w": 2,
+          "h": 2,
+          "groupId": 5,
+          "tags": [
+            "snow",
+            "winter",
+            "decorative",
+            "farm",
+            "impassable",
+            "group_5"
+          ],
+          "sourceRect": {
+            "x": 23,
+            "y": 392,
+            "width": 202,
+            "height": 177
+          }
+        },
+        {
+          "id": "snow_frozen_lake",
+          "col": 10,
+          "row": 0,
+          "w": 3,
+          "h": 3,
+          "groupId": 6,
+          "tags": [
+            "snow",
+            "winter",
+            "decorative",
+            "water",
+            "impassable",
+            "frozen_lake",
+            "landmark",
+            "group_6"
+          ],
+          "sourceRect": {
+            "x": 257,
+            "y": 353,
+            "width": 346,
+            "height": 334
+          }
+        },
+        {
+          "id": "snow_boulder",
+          "col": 13,
+          "row": 0,
+          "w": 1,
+          "h": 1,
+          "groupId": 7,
+          "tags": [
+            "snow",
+            "winter",
+            "decorative",
+            "rocks",
+            "impassable",
+            "group_7"
+          ],
+          "sourceRect": {
+            "x": 623,
+            "y": 432,
+            "width": 160,
+            "height": 154
+          }
+        },
+        {
+          "id": "snow_expedition_tent",
+          "col": 14,
+          "row": 0,
+          "w": 2,
+          "h": 2,
+          "groupId": 8,
+          "tags": [
+            "snow",
+            "winter",
+            "decorative",
+            "farm",
+            "impassable",
+            "group_8"
+          ],
+          "sourceRect": {
+            "x": 815,
+            "y": 403,
+            "width": 190,
+            "height": 190
+          }
+        },
+        {
+          "id": "snow_pine",
+          "col": 13,
+          "row": 1,
+          "w": 1,
+          "h": 2,
+          "groupId": 9,
+          "tags": [
+            "snow",
+            "winter",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_9"
+          ],
+          "sourceRect": {
+            "x": 38,
+            "y": 645,
+            "width": 165,
+            "height": 205
+          }
+        },
+        {
+          "id": "snow_spruces",
+          "col": 2,
+          "row": 2,
+          "w": 2,
+          "h": 2,
+          "groupId": 10,
+          "tags": [
+            "snow",
+            "winter",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_10"
+          ],
+          "sourceRect": {
+            "x": 262,
+            "y": 688,
+            "width": 210,
+            "height": 180
+          }
+        },
+        {
+          "id": "snow_rock_ridge",
+          "col": 4,
+          "row": 2,
+          "w": 2,
+          "h": 1,
+          "groupId": 11,
+          "tags": [
+            "snow",
+            "winter",
+            "decorative",
+            "rocks",
+            "impassable",
+            "group_11"
+          ],
+          "sourceRect": {
+            "x": 507,
+            "y": 713,
+            "width": 304,
+            "height": 157
+          }
+        },
+        {
+          "id": "snow_car_wreck",
+          "col": 6,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 12,
+          "tags": [
+            "snow",
+            "winter",
+            "decorative",
+            "roadside",
+            "impassable",
+            "group_12"
+          ],
+          "sourceRect": {
+            "x": 848,
+            "y": 671,
+            "width": 143,
+            "height": 187
+          }
+        },
+        {
+          "id": "snow_frosty_shrubs",
+          "col": 7,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 13,
+          "tags": [
+            "snow",
+            "winter",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_13"
+          ],
+          "sourceRect": {
+            "x": 33,
+            "y": 871,
+            "width": 209,
+            "height": 176
+          }
+        },
+        {
+          "id": "snow_loose_stones",
+          "col": 8,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 14,
+          "tags": [
+            "snow",
+            "winter",
+            "decorative",
+            "rocks",
+            "stones",
+            "passable",
+            "group_14"
+          ],
+          "sourceRect": {
+            "x": 287,
+            "y": 911,
+            "width": 223,
+            "height": 144
+          }
+        },
+        {
+          "id": "snow_iron_tank",
+          "col": 9,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 15,
+          "tags": [
+            "snow",
+            "winter",
+            "decorative",
+            "roadside",
+            "impassable",
+            "group_15"
+          ],
+          "sourceRect": {
+            "x": 582,
+            "y": 913,
+            "width": 136,
+            "height": 123
+          }
+        },
+        {
+          "id": "snow_ice_chunks",
+          "col": 14,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 16,
+          "tags": [
+            "snow",
+            "winter",
+            "decorative",
+            "rocks",
+            "impassable",
+            "group_16"
+          ],
+          "sourceRect": {
+            "x": 773,
+            "y": 891,
+            "width": 226,
+            "height": 160
+          }
+        },
+        {
+          "id": "snow_supplies_sled",
+          "col": 15,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 17,
+          "tags": [
+            "snow",
+            "winter",
+            "decorative",
+            "farm",
+            "passable",
+            "group_17"
+          ],
+          "sourceRect": {
+            "x": 28,
+            "y": 1081,
+            "width": 247,
+            "height": 137
+          }
+        },
+        {
+          "id": "snow_firewood",
+          "col": 0,
+          "row": 3,
+          "w": 1,
+          "h": 1,
+          "groupId": 18,
+          "tags": [
+            "snow",
+            "winter",
+            "decorative",
+            "farm",
+            "passable",
+            "group_18"
+          ],
+          "sourceRect": {
+            "x": 310,
+            "y": 1087,
+            "width": 198,
+            "height": 158
+          }
+        },
+        {
+          "id": "snow_crates",
+          "col": 1,
+          "row": 3,
+          "w": 1,
+          "h": 1,
+          "groupId": 19,
+          "tags": [
+            "snow",
+            "winter",
+            "decorative",
+            "roadside",
+            "impassable",
+            "group_19"
+          ],
+          "sourceRect": {
+            "x": 556,
+            "y": 1088,
+            "width": 209,
+            "height": 144
+          }
+        },
+        {
+          "id": "snow_bare_birch",
+          "col": 4,
+          "row": 3,
+          "w": 1,
+          "h": 1,
+          "groupId": 20,
+          "tags": [
+            "snow",
+            "winter",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_20"
+          ],
+          "sourceRect": {
+            "x": 819,
+            "y": 1063,
+            "width": 175,
+            "height": 187
+          }
+        },
+        {
+          "id": "snow_bare_oak",
+          "col": 5,
+          "row": 3,
+          "w": 2,
+          "h": 2,
+          "groupId": 21,
+          "tags": [
+            "snow",
+            "winter",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_21"
+          ],
+          "sourceRect": {
+            "x": 27,
+            "y": 1250,
+            "width": 277,
+            "height": 258
+          }
+        },
+        {
+          "id": "snow_larch",
+          "col": 7,
+          "row": 3,
+          "w": 1,
+          "h": 2,
+          "groupId": 22,
+          "tags": [
+            "snow",
+            "winter",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_22"
+          ],
+          "sourceRect": {
+            "x": 332,
+            "y": 1266,
+            "width": 189,
+            "height": 246
+          }
+        },
+        {
+          "id": "snow_snowy_bush",
+          "col": 8,
+          "row": 3,
+          "w": 1,
+          "h": 1,
+          "groupId": 23,
+          "tags": [
+            "snow",
+            "winter",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_23"
+          ],
+          "sourceRect": {
+            "x": 562,
+            "y": 1304,
+            "width": 226,
+            "height": 191
+          }
+        },
+        {
+          "id": "snow_weather_mast",
+          "col": 9,
+          "row": 3,
+          "w": 1,
+          "h": 2,
+          "groupId": 24,
+          "tags": [
+            "snow",
+            "winter",
+            "decorative",
+            "ruins",
+            "impassable",
+            "group_24"
+          ],
+          "sourceRect": {
+            "x": 844,
+            "y": 1267,
+            "width": 139,
+            "height": 238
+          }
+        }
+      ],
+      "extension": {
+        "imports": [
+          {
+            "id": "snow_frozen_stream",
+            "sourceId": "alpha_snow",
+            "bbox": {
+              "x": 45,
+              "y": 28,
+              "width": 145,
+              "height": 333
+            },
+            "area": 33041,
+            "anchor": "center",
+            "sizeRatio": 0.5645645645645646,
+            "referenceSize": {
+              "width": 96,
+              "height": 188
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 3
+            },
+            "placedAt": {
+              "column": 0,
+              "row": 0
+            },
+            "tags": [
+              "snow",
+              "winter",
+              "decorative",
+              "water",
+              "impassable",
+              "frozen_lake",
+              "group_1"
+            ],
+            "renderRect": {
+              "x": 23,
+              "y": 2,
+              "width": 82,
+              "height": 188
+            }
+          },
+          {
+            "id": "snow_pine_grove",
+            "sourceId": "alpha_snow",
+            "bbox": {
+              "x": 241,
+              "y": 55,
+              "width": 240,
+              "height": 271
+            },
+            "area": 46321,
+            "anchor": "center",
+            "sizeRatio": 0.4575645756457565,
+            "referenceSize": {
+              "width": 116,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 2,
+              "row": 0
+            },
+            "tags": [
+              "snow",
+              "winter",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_2"
+            ],
+            "renderRect": {
+              "x": 9,
+              "y": 2,
+              "width": 110,
+              "height": 124
+            }
+          },
+          {
+            "id": "snow_ruined_house",
+            "sourceId": "alpha_snow",
+            "bbox": {
+              "x": 519,
+              "y": 82,
+              "width": 269,
+              "height": 255
+            },
+            "area": 54934,
+            "anchor": "center",
+            "sizeRatio": 0.4312267657992565,
+            "referenceSize": {
+              "width": 116,
+              "height": 160
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 4,
+              "row": 0
+            },
+            "tags": [
+              "snow",
+              "winter",
+              "decorative",
+              "ruins",
+              "impassable",
+              "group_3"
+            ],
+            "renderRect": {
+              "x": 6,
+              "y": 9,
+              "width": 116,
+              "height": 110
+            }
+          },
+          {
+            "id": "snow_frozen_pond",
+            "sourceId": "alpha_snow",
+            "bbox": {
+              "x": 823,
+              "y": 101,
+              "width": 179,
+              "height": 190
+            },
+            "area": 24478,
+            "anchor": "center",
+            "sizeRatio": 0.5586592178770949,
+            "referenceSize": {
+              "width": 100,
+              "height": 188
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 6,
+              "row": 0
+            },
+            "tags": [
+              "snow",
+              "winter",
+              "decorative",
+              "water",
+              "impassable",
+              "frozen_lake",
+              "group_4"
+            ],
+            "renderRect": {
+              "x": 14,
+              "y": 11,
+              "width": 100,
+              "height": 106
+            }
+          },
+          {
+            "id": "snow_log_cabin",
+            "sourceId": "alpha_snow",
+            "bbox": {
+              "x": 23,
+              "y": 392,
+              "width": 202,
+              "height": 177
+            },
+            "area": 29340,
+            "anchor": "center",
+            "sizeRatio": 0.5346534653465347,
+            "referenceSize": {
+              "width": 108,
+              "height": 152
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 8,
+              "row": 0
+            },
+            "tags": [
+              "snow",
+              "winter",
+              "decorative",
+              "farm",
+              "impassable",
+              "group_5"
+            ],
+            "renderRect": {
+              "x": 10,
+              "y": 16,
+              "width": 108,
+              "height": 95
+            }
+          },
+          {
+            "id": "snow_frozen_lake",
+            "sourceId": "alpha_snow",
+            "bbox": {
+              "x": 257,
+              "y": 353,
+              "width": 346,
+              "height": 334
+            },
+            "area": 91200,
+            "anchor": "center",
+            "sizeRatio": 0.5317919075144508,
+            "referenceSize": {
+              "width": 184,
+              "height": 188
+            },
+            "tileSpan": {
+              "columns": 3,
+              "rows": 3
+            },
+            "placedAt": {
+              "column": 10,
+              "row": 0
+            },
+            "tags": [
+              "snow",
+              "winter",
+              "decorative",
+              "water",
+              "impassable",
+              "frozen_lake",
+              "landmark",
+              "group_6"
+            ],
+            "renderRect": {
+              "x": 4,
+              "y": 7,
+              "width": 184,
+              "height": 178
+            }
+          },
+          {
+            "id": "snow_boulder",
+            "sourceId": "alpha_snow",
+            "bbox": {
+              "x": 623,
+              "y": 432,
+              "width": 160,
+              "height": 154
+            },
+            "area": 18455,
+            "anchor": "center",
+            "sizeRatio": 0.375,
+            "referenceSize": {
+              "width": 60,
+              "height": 100
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 13,
+              "row": 0
+            },
+            "tags": [
+              "snow",
+              "winter",
+              "decorative",
+              "rocks",
+              "impassable",
+              "group_7"
+            ],
+            "renderRect": {
+              "x": 2,
+              "y": 3,
+              "width": 60,
+              "height": 58
+            }
+          },
+          {
+            "id": "snow_expedition_tent",
+            "sourceId": "alpha_snow",
+            "bbox": {
+              "x": 815,
+              "y": 403,
+              "width": 190,
+              "height": 190
+            },
+            "area": 23270,
+            "anchor": "center",
+            "sizeRatio": 0.37894736842105264,
+            "referenceSize": {
+              "width": 72,
+              "height": 152
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 14,
+              "row": 0
+            },
+            "tags": [
+              "snow",
+              "winter",
+              "decorative",
+              "farm",
+              "impassable",
+              "group_8"
+            ],
+            "renderRect": {
+              "x": 28,
+              "y": 28,
+              "width": 72,
+              "height": 72
+            }
+          },
+          {
+            "id": "snow_pine",
+            "sourceId": "alpha_snow",
+            "bbox": {
+              "x": 38,
+              "y": 645,
+              "width": 165,
+              "height": 205
+            },
+            "area": 18182,
+            "anchor": "center",
+            "sizeRatio": 0.3151515151515151,
+            "referenceSize": {
+              "width": 52,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 13,
+              "row": 1
+            },
+            "tags": [
+              "snow",
+              "winter",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_9"
+            ],
+            "renderRect": {
+              "x": 6,
+              "y": 31,
+              "width": 52,
+              "height": 65
+            }
+          },
+          {
+            "id": "snow_spruces",
+            "sourceId": "alpha_snow",
+            "bbox": {
+              "x": 262,
+              "y": 688,
+              "width": 210,
+              "height": 180
+            },
+            "area": 22663,
+            "anchor": "center",
+            "sizeRatio": 0.4380952380952381,
+            "referenceSize": {
+              "width": 92,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 2,
+              "row": 2
+            },
+            "tags": [
+              "snow",
+              "winter",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_10"
+            ],
+            "renderRect": {
+              "x": 18,
+              "y": 24,
+              "width": 92,
+              "height": 79
+            }
+          },
+          {
+            "id": "snow_rock_ridge",
+            "sourceId": "alpha_snow",
+            "bbox": {
+              "x": 507,
+              "y": 713,
+              "width": 304,
+              "height": 157
+            },
+            "area": 33177,
+            "anchor": "center",
+            "sizeRatio": 0.34210526315789475,
+            "referenceSize": {
+              "width": 104,
+              "height": 100
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 4,
+              "row": 2
+            },
+            "tags": [
+              "snow",
+              "winter",
+              "decorative",
+              "rocks",
+              "impassable",
+              "group_11"
+            ],
+            "renderRect": {
+              "x": 12,
+              "y": 5,
+              "width": 104,
+              "height": 54
+            }
+          },
+          {
+            "id": "snow_car_wreck",
+            "sourceId": "alpha_snow",
+            "bbox": {
+              "x": 848,
+              "y": 671,
+              "width": 143,
+              "height": 187
+            },
+            "area": 20491,
+            "anchor": "center",
+            "sizeRatio": 0.3076923076923077,
+            "referenceSize": {
+              "width": 44,
+              "height": 120
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 6,
+              "row": 2
+            },
+            "tags": [
+              "snow",
+              "winter",
+              "decorative",
+              "roadside",
+              "impassable",
+              "group_12"
+            ],
+            "renderRect": {
+              "x": 10,
+              "y": 3,
+              "width": 44,
+              "height": 58
+            }
+          },
+          {
+            "id": "snow_frosty_shrubs",
+            "sourceId": "alpha_snow",
+            "bbox": {
+              "x": 33,
+              "y": 871,
+              "width": 209,
+              "height": 176
+            },
+            "area": 22159,
+            "anchor": "center",
+            "sizeRatio": 0.19138755980861244,
+            "referenceSize": {
+              "width": 40,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 7,
+              "row": 2
+            },
+            "tags": [
+              "snow",
+              "winter",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_13"
+            ],
+            "renderRect": {
+              "x": 12,
+              "y": 15,
+              "width": 40,
+              "height": 34
+            }
+          },
+          {
+            "id": "snow_loose_stones",
+            "sourceId": "alpha_snow",
+            "bbox": {
+              "x": 287,
+              "y": 911,
+              "width": 223,
+              "height": 144
+            },
+            "area": 22616,
+            "anchor": "center",
+            "sizeRatio": 0.17937219730941703,
+            "referenceSize": {
+              "width": 40,
+              "height": 100
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 8,
+              "row": 2
+            },
+            "tags": [
+              "snow",
+              "winter",
+              "decorative",
+              "rocks",
+              "stones",
+              "passable",
+              "group_14"
+            ],
+            "renderRect": {
+              "x": 12,
+              "y": 19,
+              "width": 40,
+              "height": 26
+            }
+          },
+          {
+            "id": "snow_iron_tank",
+            "sourceId": "alpha_snow",
+            "bbox": {
+              "x": 582,
+              "y": 913,
+              "width": 136,
+              "height": 123
+            },
+            "area": 6833,
+            "anchor": "center",
+            "sizeRatio": 0.2647058823529412,
+            "referenceSize": {
+              "width": 36,
+              "height": 120
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 9,
+              "row": 2
+            },
+            "tags": [
+              "snow",
+              "winter",
+              "decorative",
+              "roadside",
+              "impassable",
+              "group_15"
+            ],
+            "renderRect": {
+              "x": 14,
+              "y": 15,
+              "width": 36,
+              "height": 33
+            }
+          },
+          {
+            "id": "snow_ice_chunks",
+            "sourceId": "alpha_snow",
+            "bbox": {
+              "x": 773,
+              "y": 891,
+              "width": 226,
+              "height": 160
+            },
+            "area": 24516,
+            "anchor": "center",
+            "sizeRatio": 0.23008849557522124,
+            "referenceSize": {
+              "width": 52,
+              "height": 100
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 14,
+              "row": 2
+            },
+            "tags": [
+              "snow",
+              "winter",
+              "decorative",
+              "rocks",
+              "impassable",
+              "group_16"
+            ],
+            "renderRect": {
+              "x": 6,
+              "y": 13,
+              "width": 52,
+              "height": 37
+            }
+          },
+          {
+            "id": "snow_supplies_sled",
+            "sourceId": "alpha_snow",
+            "bbox": {
+              "x": 28,
+              "y": 1081,
+              "width": 247,
+              "height": 137
+            },
+            "area": 24050,
+            "anchor": "center",
+            "sizeRatio": 0.21052631578947367,
+            "referenceSize": {
+              "width": 52,
+              "height": 100
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 15,
+              "row": 2
+            },
+            "tags": [
+              "snow",
+              "winter",
+              "decorative",
+              "farm",
+              "passable",
+              "group_17"
+            ],
+            "renderRect": {
+              "x": 6,
+              "y": 17,
+              "width": 52,
+              "height": 29
+            }
+          },
+          {
+            "id": "snow_firewood",
+            "sourceId": "alpha_snow",
+            "bbox": {
+              "x": 310,
+              "y": 1087,
+              "width": 198,
+              "height": 158
+            },
+            "area": 23198,
+            "anchor": "center",
+            "sizeRatio": 0.2828282828282828,
+            "referenceSize": {
+              "width": 56,
+              "height": 100
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 0,
+              "row": 3
+            },
+            "tags": [
+              "snow",
+              "winter",
+              "decorative",
+              "farm",
+              "passable",
+              "group_18"
+            ],
+            "renderRect": {
+              "x": 4,
+              "y": 9,
+              "width": 56,
+              "height": 45
+            }
+          },
+          {
+            "id": "snow_crates",
+            "sourceId": "alpha_snow",
+            "bbox": {
+              "x": 556,
+              "y": 1088,
+              "width": 209,
+              "height": 144
+            },
+            "area": 22443,
+            "anchor": "center",
+            "sizeRatio": 0.1722488038277512,
+            "referenceSize": {
+              "width": 36,
+              "height": 120
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 1,
+              "row": 3
+            },
+            "tags": [
+              "snow",
+              "winter",
+              "decorative",
+              "roadside",
+              "impassable",
+              "group_19"
+            ],
+            "renderRect": {
+              "x": 14,
+              "y": 19,
+              "width": 36,
+              "height": 25
+            }
+          },
+          {
+            "id": "snow_bare_birch",
+            "sourceId": "alpha_snow",
+            "bbox": {
+              "x": 819,
+              "y": 1063,
+              "width": 175,
+              "height": 187
+            },
+            "area": 11532,
+            "anchor": "center",
+            "sizeRatio": 0.2742857142857143,
+            "referenceSize": {
+              "width": 48,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 4,
+              "row": 3
+            },
+            "tags": [
+              "snow",
+              "winter",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_20"
+            ],
+            "renderRect": {
+              "x": 8,
+              "y": 6,
+              "width": 48,
+              "height": 51
+            }
+          },
+          {
+            "id": "snow_bare_oak",
+            "sourceId": "alpha_snow",
+            "bbox": {
+              "x": 27,
+              "y": 1250,
+              "width": 277,
+              "height": 258
+            },
+            "area": 26083,
+            "anchor": "center",
+            "sizeRatio": 0.2743682310469314,
+            "referenceSize": {
+              "width": 76,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 5,
+              "row": 3
+            },
+            "tags": [
+              "snow",
+              "winter",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_21"
+            ],
+            "renderRect": {
+              "x": 26,
+              "y": 28,
+              "width": 76,
+              "height": 71
+            }
+          },
+          {
+            "id": "snow_larch",
+            "sourceId": "alpha_snow",
+            "bbox": {
+              "x": 332,
+              "y": 1266,
+              "width": 189,
+              "height": 246
+            },
+            "area": 22245,
+            "anchor": "center",
+            "sizeRatio": 0.2962962962962963,
+            "referenceSize": {
+              "width": 56,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 7,
+              "row": 3
+            },
+            "tags": [
+              "snow",
+              "winter",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_22"
+            ],
+            "renderRect": {
+              "x": 4,
+              "y": 27,
+              "width": 56,
+              "height": 73
+            }
+          },
+          {
+            "id": "snow_snowy_bush",
+            "sourceId": "alpha_snow",
+            "bbox": {
+              "x": 562,
+              "y": 1304,
+              "width": 226,
+              "height": 191
+            },
+            "area": 27155,
+            "anchor": "center",
+            "sizeRatio": 0.19469026548672566,
+            "referenceSize": {
+              "width": 44,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 8,
+              "row": 3
+            },
+            "tags": [
+              "snow",
+              "winter",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_23"
+            ],
+            "renderRect": {
+              "x": 10,
+              "y": 13,
+              "width": 44,
+              "height": 37
+            }
+          },
+          {
+            "id": "snow_weather_mast",
+            "sourceId": "alpha_snow",
+            "bbox": {
+              "x": 844,
+              "y": 1267,
+              "width": 139,
+              "height": 238
+            },
+            "area": 12021,
+            "anchor": "center",
+            "sizeRatio": 0.28776978417266186,
+            "referenceSize": {
+              "width": 40,
+              "height": 160
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 9,
+              "row": 3
+            },
+            "tags": [
+              "snow",
+              "winter",
+              "decorative",
+              "ruins",
+              "impassable",
+              "group_24"
+            ],
+            "renderRect": {
+              "x": 12,
+              "y": 30,
+              "width": 40,
+              "height": 68
+            }
+          }
+        ],
+        "occupiedTiles": [
+          "0,0",
+          "1,0",
+          "0,1",
+          "1,1",
+          "0,2",
+          "1,2",
+          "2,0",
+          "3,0",
+          "2,1",
+          "3,1",
+          "4,0",
+          "5,0",
+          "4,1",
+          "5,1",
+          "6,0",
+          "7,0",
+          "6,1",
+          "7,1",
+          "8,0",
+          "9,0",
+          "8,1",
+          "9,1",
+          "10,0",
+          "11,0",
+          "12,0",
+          "10,1",
+          "11,1",
+          "12,1",
+          "10,2",
+          "11,2",
+          "12,2",
+          "13,0",
+          "14,0",
+          "15,0",
+          "14,1",
+          "15,1",
+          "13,1",
+          "13,2",
+          "2,2",
+          "3,2",
+          "2,3",
+          "3,3",
+          "4,2",
+          "5,2",
+          "6,2",
+          "7,2",
+          "8,2",
+          "9,2",
+          "14,2",
+          "15,2",
+          "0,3",
+          "1,3",
+          "4,3",
+          "5,3",
+          "6,3",
+          "5,4",
+          "6,4",
+          "7,3",
+          "7,4",
+          "8,3",
+          "9,3",
+          "9,4"
+        ]
+      }
+    }
+  },
+  "upscaledBeyondMaster": false,
+  "omittedCandidateDensities": [
+    2,
+    3
+  ],
+  "pages": [
+    {
+      "name": "dtv6_decor_snow.coarse.webp",
+      "sha256": "8758784e63cfa671df04c4582c56a3ccdcbf092ac522a7a3bfe274180c96ba3b",
+      "width": 1216,
+      "height": 100,
+      "decodedBytes": 486400,
+      "compressedBytes": 40260,
+      "tier": 0,
+      "tierName": "coarse",
+      "backingDensity": 0.5
+    },
+    {
+      "name": "dtv6_decor_snow.final.webp",
+      "sha256": "ff4458618c355420157f102ef9998cfcdf6b8053ff106174683f5b2e902de826",
+      "width": 2000,
+      "height": 328,
+      "decodedBytes": 2624000,
+      "compressedBytes": 116210,
+      "tier": 2,
+      "tierName": "final",
+      "backingDensity": 1
+    }
+  ],
+  "sprites": [
+    {
+      "spriteId": "dtv6_decor_snow:group_1",
+      "groupId": "group_1",
+      "savedIdentifiers": [
+        "snow_frozen_stream"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 192,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 0,
+        "y": 0,
+        "width": 128,
+        "height": 192
+      },
+      "tileKeys": [
+        "0,0",
+        "0,1",
+        "0,2",
+        "1,0",
+        "1,1",
+        "1,2"
+      ],
+      "tags": [
+        "decorative",
+        "frozen_lake",
+        "group_1",
+        "impassable",
+        "snow",
+        "water",
+        "winter"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_snow.coarse.webp",
+          "x": 2,
+          "y": 2,
+          "width": 64,
+          "height": 96,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_snow.final.webp",
+          "x": 2,
+          "y": 2,
+          "width": 128,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_snow:group_2",
+      "groupId": "group_2",
+      "savedIdentifiers": [
+        "snow_pine_grove"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 128,
+        "y": 0,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "2,0",
+        "2,1",
+        "3,0",
+        "3,1"
+      ],
+      "tags": [
+        "decorative",
+        "group_2",
+        "impassable",
+        "snow",
+        "trees",
+        "winter"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_snow.coarse.webp",
+          "x": 70,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_snow.final.webp",
+          "x": 134,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_snow:group_3",
+      "groupId": "group_3",
+      "savedIdentifiers": [
+        "snow_ruined_house"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 256,
+        "y": 0,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "4,0",
+        "4,1",
+        "5,0",
+        "5,1"
+      ],
+      "tags": [
+        "decorative",
+        "group_3",
+        "impassable",
+        "ruins",
+        "snow",
+        "winter"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_snow.coarse.webp",
+          "x": 138,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_snow.final.webp",
+          "x": 266,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_snow:group_4",
+      "groupId": "group_4",
+      "savedIdentifiers": [
+        "snow_frozen_pond"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 384,
+        "y": 0,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "6,0",
+        "6,1",
+        "7,0",
+        "7,1"
+      ],
+      "tags": [
+        "decorative",
+        "frozen_lake",
+        "group_4",
+        "impassable",
+        "snow",
+        "water",
+        "winter"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_snow.coarse.webp",
+          "x": 206,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_snow.final.webp",
+          "x": 398,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_snow:group_5",
+      "groupId": "group_5",
+      "savedIdentifiers": [
+        "snow_log_cabin"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 512,
+        "y": 0,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "8,0",
+        "8,1",
+        "9,0",
+        "9,1"
+      ],
+      "tags": [
+        "decorative",
+        "farm",
+        "group_5",
+        "impassable",
+        "snow",
+        "winter"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_snow.coarse.webp",
+          "x": 274,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_snow.final.webp",
+          "x": 530,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_snow:group_6",
+      "groupId": "group_6",
+      "savedIdentifiers": [
+        "snow_frozen_lake"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 192,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 640,
+        "y": 0,
+        "width": 192,
+        "height": 192
+      },
+      "tileKeys": [
+        "10,0",
+        "10,1",
+        "10,2",
+        "11,0",
+        "11,1",
+        "11,2",
+        "12,0",
+        "12,1",
+        "12,2"
+      ],
+      "tags": [
+        "decorative",
+        "frozen_lake",
+        "group_6",
+        "impassable",
+        "landmark",
+        "snow",
+        "water",
+        "winter"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_snow.coarse.webp",
+          "x": 342,
+          "y": 2,
+          "width": 96,
+          "height": 96,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_snow.final.webp",
+          "x": 662,
+          "y": 2,
+          "width": 192,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_snow:group_7",
+      "groupId": "group_7",
+      "savedIdentifiers": [
+        "snow_boulder"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 832,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "13,0"
+      ],
+      "tags": [
+        "decorative",
+        "group_7",
+        "impassable",
+        "rocks",
+        "snow",
+        "winter"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_snow.coarse.webp",
+          "x": 442,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_snow.final.webp",
+          "x": 858,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_snow:group_8",
+      "groupId": "group_8",
+      "savedIdentifiers": [
+        "snow_expedition_tent"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 896,
+        "y": 0,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "14,0",
+        "14,1",
+        "15,0",
+        "15,1"
+      ],
+      "tags": [
+        "decorative",
+        "farm",
+        "group_8",
+        "impassable",
+        "snow",
+        "winter"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_snow.coarse.webp",
+          "x": 478,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_snow.final.webp",
+          "x": 926,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_snow:group_9",
+      "groupId": "group_9",
+      "savedIdentifiers": [
+        "snow_pine"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 832,
+        "y": 64,
+        "width": 64,
+        "height": 128
+      },
+      "tileKeys": [
+        "13,1",
+        "13,2"
+      ],
+      "tags": [
+        "decorative",
+        "group_9",
+        "impassable",
+        "snow",
+        "trees",
+        "winter"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_snow.coarse.webp",
+          "x": 546,
+          "y": 2,
+          "width": 32,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_snow.final.webp",
+          "x": 1058,
+          "y": 2,
+          "width": 64,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_snow:group_10",
+      "groupId": "group_10",
+      "savedIdentifiers": [
+        "snow_spruces"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 128,
+        "y": 128,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "2,2",
+        "2,3",
+        "3,2",
+        "3,3"
+      ],
+      "tags": [
+        "decorative",
+        "group_10",
+        "impassable",
+        "snow",
+        "trees",
+        "winter"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_snow.coarse.webp",
+          "x": 582,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_snow.final.webp",
+          "x": 1126,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_snow:group_11",
+      "groupId": "group_11",
+      "savedIdentifiers": [
+        "snow_rock_ridge"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 256,
+        "y": 128,
+        "width": 128,
+        "height": 64
+      },
+      "tileKeys": [
+        "4,2",
+        "5,2"
+      ],
+      "tags": [
+        "decorative",
+        "group_11",
+        "impassable",
+        "rocks",
+        "snow",
+        "winter"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_snow.coarse.webp",
+          "x": 650,
+          "y": 2,
+          "width": 64,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_snow.final.webp",
+          "x": 1258,
+          "y": 2,
+          "width": 128,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_snow:group_12",
+      "groupId": "group_12",
+      "savedIdentifiers": [
+        "snow_car_wreck"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 384,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "6,2"
+      ],
+      "tags": [
+        "decorative",
+        "group_12",
+        "impassable",
+        "roadside",
+        "snow",
+        "winter"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_snow.coarse.webp",
+          "x": 718,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_snow.final.webp",
+          "x": 1390,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_snow:group_13",
+      "groupId": "group_13",
+      "savedIdentifiers": [
+        "snow_frosty_shrubs"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 448,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "7,2"
+      ],
+      "tags": [
+        "decorative",
+        "group_13",
+        "impassable",
+        "snow",
+        "trees",
+        "winter"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_snow.coarse.webp",
+          "x": 754,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_snow.final.webp",
+          "x": 1458,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_snow:group_14",
+      "groupId": "group_14",
+      "savedIdentifiers": [
+        "snow_loose_stones"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 512,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "8,2"
+      ],
+      "tags": [
+        "decorative",
+        "group_14",
+        "passable",
+        "rocks",
+        "snow",
+        "stones",
+        "winter"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_snow.coarse.webp",
+          "x": 790,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_snow.final.webp",
+          "x": 1526,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_snow:group_15",
+      "groupId": "group_15",
+      "savedIdentifiers": [
+        "snow_iron_tank"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 576,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "9,2"
+      ],
+      "tags": [
+        "decorative",
+        "group_15",
+        "impassable",
+        "roadside",
+        "snow",
+        "winter"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_snow.coarse.webp",
+          "x": 826,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_snow.final.webp",
+          "x": 1594,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_snow:group_16",
+      "groupId": "group_16",
+      "savedIdentifiers": [
+        "snow_ice_chunks"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 896,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "14,2"
+      ],
+      "tags": [
+        "decorative",
+        "group_16",
+        "impassable",
+        "rocks",
+        "snow",
+        "winter"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_snow.coarse.webp",
+          "x": 862,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_snow.final.webp",
+          "x": 1662,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_snow:group_17",
+      "groupId": "group_17",
+      "savedIdentifiers": [
+        "snow_supplies_sled"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 960,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "15,2"
+      ],
+      "tags": [
+        "decorative",
+        "farm",
+        "group_17",
+        "passable",
+        "snow",
+        "winter"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_snow.coarse.webp",
+          "x": 898,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_snow.final.webp",
+          "x": 1730,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_snow:group_18",
+      "groupId": "group_18",
+      "savedIdentifiers": [
+        "snow_firewood"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 0,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "0,3"
+      ],
+      "tags": [
+        "decorative",
+        "farm",
+        "group_18",
+        "passable",
+        "snow",
+        "winter"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_snow.coarse.webp",
+          "x": 934,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_snow.final.webp",
+          "x": 1798,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_snow:group_19",
+      "groupId": "group_19",
+      "savedIdentifiers": [
+        "snow_crates"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 64,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "1,3"
+      ],
+      "tags": [
+        "decorative",
+        "group_19",
+        "impassable",
+        "roadside",
+        "snow",
+        "winter"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_snow.coarse.webp",
+          "x": 970,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_snow.final.webp",
+          "x": 1866,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_snow:group_20",
+      "groupId": "group_20",
+      "savedIdentifiers": [
+        "snow_bare_birch"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 256,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "4,3"
+      ],
+      "tags": [
+        "decorative",
+        "group_20",
+        "impassable",
+        "snow",
+        "trees",
+        "winter"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_snow.coarse.webp",
+          "x": 1006,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_snow.final.webp",
+          "x": 1934,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_snow:group_21",
+      "groupId": "group_21",
+      "savedIdentifiers": [
+        "snow_bare_oak"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 320,
+        "y": 192,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "5,3",
+        "5,4",
+        "6,3",
+        "6,4"
+      ],
+      "tags": [
+        "decorative",
+        "group_21",
+        "impassable",
+        "snow",
+        "trees",
+        "winter"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_snow.coarse.webp",
+          "x": 1042,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_snow.final.webp",
+          "x": 2,
+          "y": 198,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_snow:group_22",
+      "groupId": "group_22",
+      "savedIdentifiers": [
+        "snow_larch"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 448,
+        "y": 192,
+        "width": 64,
+        "height": 128
+      },
+      "tileKeys": [
+        "7,3",
+        "7,4"
+      ],
+      "tags": [
+        "decorative",
+        "group_22",
+        "impassable",
+        "snow",
+        "trees",
+        "winter"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_snow.coarse.webp",
+          "x": 1110,
+          "y": 2,
+          "width": 32,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_snow.final.webp",
+          "x": 134,
+          "y": 198,
+          "width": 64,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_snow:group_23",
+      "groupId": "group_23",
+      "savedIdentifiers": [
+        "snow_snowy_bush"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 512,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "8,3"
+      ],
+      "tags": [
+        "decorative",
+        "group_23",
+        "impassable",
+        "snow",
+        "trees",
+        "winter"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_snow.coarse.webp",
+          "x": 1146,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_snow.final.webp",
+          "x": 202,
+          "y": 198,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_snow:group_24",
+      "groupId": "group_24",
+      "savedIdentifiers": [
+        "snow_weather_mast"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 576,
+        "y": 192,
+        "width": 64,
+        "height": 128
+      },
+      "tileKeys": [
+        "9,3",
+        "9,4"
+      ],
+      "tags": [
+        "decorative",
+        "group_24",
+        "impassable",
+        "ruins",
+        "snow",
+        "winter"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_snow.coarse.webp",
+          "x": 1182,
+          "y": 2,
+          "width": 32,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_snow.final.webp",
+          "x": 270,
+          "y": 198,
+          "width": 64,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    }
+  ]
+}

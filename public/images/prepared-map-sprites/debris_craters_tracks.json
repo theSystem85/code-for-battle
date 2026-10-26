@@ -1,0 +1,4000 @@
+{
+  "schemaVersion": 1,
+  "name": "debris_craters_tracks",
+  "identity": {
+    "buildVersion": 1,
+    "atlasVersion": 1,
+    "catalogVersion": 1,
+    "pixelRulesVersion": 1,
+    "webpQuality": 85,
+    "padding": 2,
+    "sourceHash": "4b3628236cdc3950f04230a7be4bdbe857a39637623639413034e873133d2b60",
+    "metadataHash": "4e2f4f1d787611b3a553a5d6b80e4dadfb34e5bfb63df7c8968b3d9cfb4bae87",
+    "metadataSignature": "06504202d7fc353d25d45725793d83063aa0fef1fadab1facce2603d087c3d97",
+    "selectedBackingDensities": [
+      0.5,
+      1
+    ]
+  },
+  "signature": "177df6f755d7a7155d486ec2ae3e277c303ccb8bab2eaf3f7a7e15f08c60af2f",
+  "source": {
+    "image": "images/map/sprite_sheets/debris_craters_tracks.webp",
+    "metadata": "images/map/sprite_sheets/debris_craters_tracks.json",
+    "sourceMetadata": null,
+    "editorMetadata": {
+      "schemaVersion": 1,
+      "tags": [
+        "passable",
+        "decorative",
+        "impassable",
+        "intersection",
+        "grass",
+        "soil",
+        "snow",
+        "sand",
+        "rocks",
+        "concrete",
+        "street",
+        "water",
+        "crater",
+        "debris",
+        "impact",
+        "street_vertical",
+        "street_horizontal",
+        "group"
+      ]
+    }
+  },
+  "upscaledBeyondMaster": false,
+  "omittedCandidateDensities": [
+    2,
+    3
+  ],
+  "pages": [
+    {
+      "name": "debris_craters_tracks.coarse.webp",
+      "sha256": "183fedc6d8f247e5adf9124d2da4fdbff7c8cbef2951fe6c762e519ae398a113",
+      "width": 2038,
+      "height": 134,
+      "decodedBytes": 1092368,
+      "compressedBytes": 90296,
+      "tier": 0,
+      "tierName": "coarse",
+      "backingDensity": 0.5
+    },
+    {
+      "name": "debris_craters_tracks.final.webp",
+      "sha256": "57d9680b79a0ed63ac719b025142f777f8ddd8a81a964299be48aa5b00674f8b",
+      "width": 2046,
+      "height": 326,
+      "decodedBytes": 2667984,
+      "compressedBytes": 141212,
+      "tier": 2,
+      "tierName": "final",
+      "backingDensity": 1
+    }
+  ],
+  "sprites": [
+    {
+      "spriteId": "debris_craters_tracks:group_1",
+      "groupId": "group_1",
+      "savedIdentifiers": [],
+      "logicalWidth": 126,
+      "logicalHeight": 126,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 257,
+        "y": 641,
+        "width": 126,
+        "height": 126
+      },
+      "tileKeys": [
+        "4,10",
+        "4,11",
+        "5,10",
+        "5,11"
+      ],
+      "tags": [
+        "debris",
+        "group_1"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 2,
+          "y": 2,
+          "width": 63,
+          "height": 63,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 2,
+          "y": 2,
+          "width": 126,
+          "height": 126,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:group_2",
+      "groupId": "group_2",
+      "savedIdentifiers": [],
+      "logicalWidth": 126,
+      "logicalHeight": 126,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 385,
+        "y": 641,
+        "width": 126,
+        "height": 126
+      },
+      "tileKeys": [
+        "6,10",
+        "6,11",
+        "7,10",
+        "7,11"
+      ],
+      "tags": [
+        "debris",
+        "group_2"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 69,
+          "y": 2,
+          "width": 63,
+          "height": 63,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 132,
+          "y": 2,
+          "width": 126,
+          "height": 126,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:group_3",
+      "groupId": "group_3",
+      "savedIdentifiers": [],
+      "logicalWidth": 254,
+      "logicalHeight": 126,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 513,
+        "y": 641,
+        "width": 254,
+        "height": 126
+      },
+      "tileKeys": [
+        "10,10",
+        "10,11",
+        "11,10",
+        "11,11",
+        "8,10",
+        "8,11",
+        "9,10",
+        "9,11"
+      ],
+      "tags": [
+        "debris",
+        "group_3"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 136,
+          "y": 2,
+          "width": 127,
+          "height": 63,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 262,
+          "y": 2,
+          "width": 254,
+          "height": 126,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:group_4",
+      "groupId": "group_4",
+      "savedIdentifiers": [],
+      "logicalWidth": 126,
+      "logicalHeight": 126,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 641,
+        "y": 513,
+        "width": 126,
+        "height": 126
+      },
+      "tileKeys": [
+        "10,8",
+        "10,9",
+        "11,8",
+        "11,9"
+      ],
+      "tags": [
+        "debris",
+        "group_4"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 267,
+          "y": 2,
+          "width": 63,
+          "height": 63,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 520,
+          "y": 2,
+          "width": 126,
+          "height": 126,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:group_5",
+      "groupId": "group_5",
+      "savedIdentifiers": [],
+      "logicalWidth": 126,
+      "logicalHeight": 126,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 385,
+        "y": 513,
+        "width": 126,
+        "height": 126
+      },
+      "tileKeys": [
+        "6,8",
+        "6,9",
+        "7,8",
+        "7,9"
+      ],
+      "tags": [
+        "debris",
+        "group_5"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 334,
+          "y": 2,
+          "width": 63,
+          "height": 63,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 650,
+          "y": 2,
+          "width": 126,
+          "height": 126,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:group_6",
+      "groupId": "group_6",
+      "savedIdentifiers": [],
+      "logicalWidth": 190,
+      "logicalHeight": 190,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 129,
+        "y": 1,
+        "width": 190,
+        "height": 190
+      },
+      "tileKeys": [
+        "2,0",
+        "2,1",
+        "2,2",
+        "3,0",
+        "3,1",
+        "3,2",
+        "4,0",
+        "4,1",
+        "4,2"
+      ],
+      "tags": [
+        "debris",
+        "group_6"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 401,
+          "y": 2,
+          "width": 95,
+          "height": 95,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 780,
+          "y": 2,
+          "width": 190,
+          "height": 190,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_0,5",
+      "groupId": "tile_0,5",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 1,
+        "y": 321,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "0,5"
+      ],
+      "tags": [
+        "street_vertical"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 500,
+          "y": 2,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 974,
+          "y": 2,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_0,6",
+      "groupId": "tile_0,6",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 1,
+        "y": 385,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "0,6"
+      ],
+      "tags": [
+        "street_vertical"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 535,
+          "y": 2,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 1040,
+          "y": 2,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_0,7",
+      "groupId": "tile_0,7",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 1,
+        "y": 449,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "0,7"
+      ],
+      "tags": [
+        "street_vertical"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 570,
+          "y": 2,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 1106,
+          "y": 2,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_0,8",
+      "groupId": "tile_0,8",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 1,
+        "y": 513,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "0,8"
+      ],
+      "tags": [
+        "debris"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 605,
+          "y": 2,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 1172,
+          "y": 2,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_0,9",
+      "groupId": "tile_0,9",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 1,
+        "y": 577,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "0,9"
+      ],
+      "tags": [
+        "debris"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 640,
+          "y": 2,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 1238,
+          "y": 2,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_0,10",
+      "groupId": "tile_0,10",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 1,
+        "y": 641,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "0,10"
+      ],
+      "tags": [
+        "debris"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 675,
+          "y": 2,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 1304,
+          "y": 2,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_0,11",
+      "groupId": "tile_0,11",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 1,
+        "y": 705,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "0,11"
+      ],
+      "tags": [
+        "debris"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 710,
+          "y": 2,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 1370,
+          "y": 2,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_1,3",
+      "groupId": "tile_1,3",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 65,
+        "y": 193,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "1,3"
+      ],
+      "tags": [
+        "impact"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 745,
+          "y": 2,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 1436,
+          "y": 2,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_1,4",
+      "groupId": "tile_1,4",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 65,
+        "y": 257,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "1,4"
+      ],
+      "tags": [
+        "impact"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 780,
+          "y": 2,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 1502,
+          "y": 2,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_1,5",
+      "groupId": "tile_1,5",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 65,
+        "y": 321,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "1,5"
+      ],
+      "tags": [
+        "street_vertical"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 815,
+          "y": 2,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 1568,
+          "y": 2,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_1,6",
+      "groupId": "tile_1,6",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 65,
+        "y": 385,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "1,6"
+      ],
+      "tags": [
+        "street_vertical"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 850,
+          "y": 2,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 1634,
+          "y": 2,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_1,7",
+      "groupId": "tile_1,7",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 65,
+        "y": 449,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "1,7"
+      ],
+      "tags": [
+        "street_vertical"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 885,
+          "y": 2,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 1700,
+          "y": 2,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_1,8",
+      "groupId": "tile_1,8",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 65,
+        "y": 513,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "1,8"
+      ],
+      "tags": [
+        "debris"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 920,
+          "y": 2,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 1766,
+          "y": 2,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_1,9",
+      "groupId": "tile_1,9",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 65,
+        "y": 577,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "1,9"
+      ],
+      "tags": [
+        "debris"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 955,
+          "y": 2,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 1832,
+          "y": 2,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_1,10",
+      "groupId": "tile_1,10",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 65,
+        "y": 641,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "1,10"
+      ],
+      "tags": [
+        "debris"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 990,
+          "y": 2,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 1898,
+          "y": 2,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_1,11",
+      "groupId": "tile_1,11",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 65,
+        "y": 705,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "1,11"
+      ],
+      "tags": [
+        "crater"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 1025,
+          "y": 2,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 1964,
+          "y": 2,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_1,13",
+      "groupId": "tile_1,13",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 65,
+        "y": 833,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "1,13"
+      ],
+      "tags": [
+        "debris"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 1060,
+          "y": 2,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 2,
+          "y": 196,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_2,5",
+      "groupId": "tile_2,5",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 129,
+        "y": 321,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "2,5"
+      ],
+      "tags": [
+        "street_vertical"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 1095,
+          "y": 2,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 68,
+          "y": 196,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_2,6",
+      "groupId": "tile_2,6",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 129,
+        "y": 385,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "2,6"
+      ],
+      "tags": [
+        "street_vertical"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 1130,
+          "y": 2,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 134,
+          "y": 196,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_2,7",
+      "groupId": "tile_2,7",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 129,
+        "y": 449,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "2,7"
+      ],
+      "tags": [
+        "street_vertical"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 1165,
+          "y": 2,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 200,
+          "y": 196,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_2,10",
+      "groupId": "tile_2,10",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 129,
+        "y": 641,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "2,10"
+      ],
+      "tags": [
+        "debris"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 1200,
+          "y": 2,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 266,
+          "y": 196,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_2,11",
+      "groupId": "tile_2,11",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 129,
+        "y": 705,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "2,11"
+      ],
+      "tags": [
+        "crater"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 1235,
+          "y": 2,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 332,
+          "y": 196,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_3,4",
+      "groupId": "tile_3,4",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 193,
+        "y": 257,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "3,4"
+      ],
+      "tags": [
+        "impact"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 1270,
+          "y": 2,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 398,
+          "y": 196,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_3,5",
+      "groupId": "tile_3,5",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 193,
+        "y": 321,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "3,5"
+      ],
+      "tags": [
+        "street_vertical"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 1305,
+          "y": 2,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 464,
+          "y": 196,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_3,6",
+      "groupId": "tile_3,6",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 193,
+        "y": 385,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "3,6"
+      ],
+      "tags": [
+        "street_vertical"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 1340,
+          "y": 2,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 530,
+          "y": 196,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_3,7",
+      "groupId": "tile_3,7",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 193,
+        "y": 449,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "3,7"
+      ],
+      "tags": [
+        "street_vertical"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 1375,
+          "y": 2,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 596,
+          "y": 196,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_3,10",
+      "groupId": "tile_3,10",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 193,
+        "y": 641,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "3,10"
+      ],
+      "tags": [
+        "debris"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 1410,
+          "y": 2,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 662,
+          "y": 196,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_4,3",
+      "groupId": "tile_4,3",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 257,
+        "y": 193,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "4,3"
+      ],
+      "tags": [
+        "impact"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 1445,
+          "y": 2,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 728,
+          "y": 196,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_4,9",
+      "groupId": "tile_4,9",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 257,
+        "y": 577,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "4,9"
+      ],
+      "tags": [
+        "debris"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 1480,
+          "y": 2,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 794,
+          "y": 196,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_5,0",
+      "groupId": "tile_5,0",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 321,
+        "y": 1,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "5,0"
+      ],
+      "tags": [
+        "impact"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 1515,
+          "y": 2,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 860,
+          "y": 196,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_5,9",
+      "groupId": "tile_5,9",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 321,
+        "y": 577,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "5,9"
+      ],
+      "tags": [
+        "debris"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 1550,
+          "y": 2,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 926,
+          "y": 196,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_6,0",
+      "groupId": "tile_6,0",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 385,
+        "y": 1,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "6,0"
+      ],
+      "tags": [
+        "impact"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 1585,
+          "y": 2,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 992,
+          "y": 196,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_6,4",
+      "groupId": "tile_6,4",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 385,
+        "y": 257,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "6,4"
+      ],
+      "tags": [
+        "street_horizontal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 1620,
+          "y": 2,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 1058,
+          "y": 196,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_6,5",
+      "groupId": "tile_6,5",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 385,
+        "y": 321,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "6,5"
+      ],
+      "tags": [
+        "street_horizontal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 1655,
+          "y": 2,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 1124,
+          "y": 196,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_6,6",
+      "groupId": "tile_6,6",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 385,
+        "y": 385,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "6,6"
+      ],
+      "tags": [
+        "street_horizontal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 1690,
+          "y": 2,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 1190,
+          "y": 196,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_6,7",
+      "groupId": "tile_6,7",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 385,
+        "y": 449,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "6,7"
+      ],
+      "tags": [
+        "street_horizontal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 1725,
+          "y": 2,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 1256,
+          "y": 196,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_7,4",
+      "groupId": "tile_7,4",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 449,
+        "y": 257,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "7,4"
+      ],
+      "tags": [
+        "street_horizontal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 1760,
+          "y": 2,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 1322,
+          "y": 196,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_7,5",
+      "groupId": "tile_7,5",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 449,
+        "y": 321,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "7,5"
+      ],
+      "tags": [
+        "street_horizontal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 1795,
+          "y": 2,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 1388,
+          "y": 196,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_7,6",
+      "groupId": "tile_7,6",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 449,
+        "y": 385,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "7,6"
+      ],
+      "tags": [
+        "street_horizontal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 1830,
+          "y": 2,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 1454,
+          "y": 196,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_7,7",
+      "groupId": "tile_7,7",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 449,
+        "y": 449,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "7,7"
+      ],
+      "tags": [
+        "street_horizontal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 1865,
+          "y": 2,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 1520,
+          "y": 196,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_8,0",
+      "groupId": "tile_8,0",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 513,
+        "y": 1,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "8,0"
+      ],
+      "tags": [
+        "debris"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 1900,
+          "y": 2,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 1586,
+          "y": 196,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_8,1",
+      "groupId": "tile_8,1",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 513,
+        "y": 65,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "8,1"
+      ],
+      "tags": [
+        "debris"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 1935,
+          "y": 2,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 1652,
+          "y": 196,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_8,2",
+      "groupId": "tile_8,2",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 513,
+        "y": 129,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "8,2"
+      ],
+      "tags": [
+        "impact"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 1970,
+          "y": 2,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 1718,
+          "y": 196,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_8,4",
+      "groupId": "tile_8,4",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 513,
+        "y": 257,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "8,4"
+      ],
+      "tags": [
+        "street_vertical"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 2005,
+          "y": 2,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 1784,
+          "y": 196,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_8,5",
+      "groupId": "tile_8,5",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 513,
+        "y": 321,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "8,5"
+      ],
+      "tags": [
+        "street_vertical"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 2,
+          "y": 101,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 1850,
+          "y": 196,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_8,6",
+      "groupId": "tile_8,6",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 513,
+        "y": 385,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "8,6"
+      ],
+      "tags": [
+        "street_vertical"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 37,
+          "y": 101,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 1916,
+          "y": 196,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_8,7",
+      "groupId": "tile_8,7",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 513,
+        "y": 449,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "8,7"
+      ],
+      "tags": [
+        "street_horizontal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 72,
+          "y": 101,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 1982,
+          "y": 196,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_8,8",
+      "groupId": "tile_8,8",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 513,
+        "y": 513,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "8,8"
+      ],
+      "tags": [
+        "debris"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 107,
+          "y": 101,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 2,
+          "y": 262,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_9,0",
+      "groupId": "tile_9,0",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 577,
+        "y": 1,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "9,0"
+      ],
+      "tags": [
+        "debris"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 142,
+          "y": 101,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 68,
+          "y": 262,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_9,1",
+      "groupId": "tile_9,1",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 577,
+        "y": 65,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "9,1"
+      ],
+      "tags": [
+        "debris"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 177,
+          "y": 101,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 134,
+          "y": 262,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_9,2",
+      "groupId": "tile_9,2",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 577,
+        "y": 129,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "9,2"
+      ],
+      "tags": [
+        "impact"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 212,
+          "y": 101,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 200,
+          "y": 262,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_9,4",
+      "groupId": "tile_9,4",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 577,
+        "y": 257,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "9,4"
+      ],
+      "tags": [
+        "street_horizontal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 247,
+          "y": 101,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 266,
+          "y": 262,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_9,5",
+      "groupId": "tile_9,5",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 577,
+        "y": 321,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "9,5"
+      ],
+      "tags": [
+        "street_horizontal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 282,
+          "y": 101,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 332,
+          "y": 262,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_9,8",
+      "groupId": "tile_9,8",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 577,
+        "y": 513,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "9,8"
+      ],
+      "tags": [
+        "debris"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 317,
+          "y": 101,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 398,
+          "y": 262,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_10,0",
+      "groupId": "tile_10,0",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 641,
+        "y": 1,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "10,0"
+      ],
+      "tags": [
+        "debris"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 352,
+          "y": 101,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 464,
+          "y": 262,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_10,4",
+      "groupId": "tile_10,4",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 641,
+        "y": 257,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "10,4"
+      ],
+      "tags": [
+        "street_horizontal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 387,
+          "y": 101,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 530,
+          "y": 262,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_10,5",
+      "groupId": "tile_10,5",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 641,
+        "y": 321,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "10,5"
+      ],
+      "tags": [
+        "street_horizontal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 422,
+          "y": 101,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 596,
+          "y": 262,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_11,4",
+      "groupId": "tile_11,4",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 705,
+        "y": 257,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "11,4"
+      ],
+      "tags": [
+        "impact"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 457,
+          "y": 101,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 662,
+          "y": 262,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_11,5",
+      "groupId": "tile_11,5",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 705,
+        "y": 321,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "11,5"
+      ],
+      "tags": [
+        "street_vertical"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 492,
+          "y": 101,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 728,
+          "y": 262,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_11,6",
+      "groupId": "tile_11,6",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 705,
+        "y": 385,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "11,6"
+      ],
+      "tags": [
+        "street_vertical"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 527,
+          "y": 101,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 794,
+          "y": 262,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_11,7",
+      "groupId": "tile_11,7",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 705,
+        "y": 449,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "11,7"
+      ],
+      "tags": [
+        "street_vertical"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 562,
+          "y": 101,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 860,
+          "y": 262,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_12,6",
+      "groupId": "tile_12,6",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 769,
+        "y": 385,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "12,6"
+      ],
+      "tags": [
+        "street_horizontal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 597,
+          "y": 101,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 926,
+          "y": 262,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_12,7",
+      "groupId": "tile_12,7",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 769,
+        "y": 449,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "12,7"
+      ],
+      "tags": [
+        "street_horizontal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 632,
+          "y": 101,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 992,
+          "y": 262,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_12,8",
+      "groupId": "tile_12,8",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 769,
+        "y": 513,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "12,8"
+      ],
+      "tags": [
+        "debris"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 667,
+          "y": 101,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 1058,
+          "y": 262,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_12,9",
+      "groupId": "tile_12,9",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 769,
+        "y": 577,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "12,9"
+      ],
+      "tags": [
+        "debris"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 702,
+          "y": 101,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 1124,
+          "y": 262,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_13,4",
+      "groupId": "tile_13,4",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 833,
+        "y": 257,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "13,4"
+      ],
+      "tags": [
+        "impact"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 737,
+          "y": 101,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 1190,
+          "y": 262,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_13,6",
+      "groupId": "tile_13,6",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 833,
+        "y": 385,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "13,6"
+      ],
+      "tags": [
+        "street_horizontal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 772,
+          "y": 101,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 1256,
+          "y": 262,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_13,7",
+      "groupId": "tile_13,7",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 833,
+        "y": 449,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "13,7"
+      ],
+      "tags": [
+        "street_horizontal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 807,
+          "y": 101,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 1322,
+          "y": 262,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_13,9",
+      "groupId": "tile_13,9",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 833,
+        "y": 577,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "13,9"
+      ],
+      "tags": [
+        "debris"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 842,
+          "y": 101,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 1388,
+          "y": 262,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_14,0",
+      "groupId": "tile_14,0",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 897,
+        "y": 1,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "14,0"
+      ],
+      "tags": [
+        "crater"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 877,
+          "y": 101,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 1454,
+          "y": 262,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_14,3",
+      "groupId": "tile_14,3",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 897,
+        "y": 193,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "14,3"
+      ],
+      "tags": [
+        "impact"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 912,
+          "y": 101,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 1520,
+          "y": 262,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_14,12",
+      "groupId": "tile_14,12",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 897,
+        "y": 769,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "14,12"
+      ],
+      "tags": [
+        "debris"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 947,
+          "y": 101,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 1586,
+          "y": 262,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_15,0",
+      "groupId": "tile_15,0",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 961,
+        "y": 1,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "15,0"
+      ],
+      "tags": [
+        "crater"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 982,
+          "y": 101,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 1652,
+          "y": 262,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_15,2",
+      "groupId": "tile_15,2",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 961,
+        "y": 129,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "15,2"
+      ],
+      "tags": [
+        "impact"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 1017,
+          "y": 101,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 1718,
+          "y": 262,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "debris_craters_tracks:tile_15,12",
+      "groupId": "tile_15,12",
+      "savedIdentifiers": [],
+      "logicalWidth": 62,
+      "logicalHeight": 62,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 961,
+        "y": 769,
+        "width": 62,
+        "height": 62
+      },
+      "tileKeys": [
+        "15,12"
+      ],
+      "tags": [
+        "debris"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "debris_craters_tracks.coarse.webp",
+          "x": 1052,
+          "y": 101,
+          "width": 31,
+          "height": 31,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "debris_craters_tracks.final.webp",
+          "x": 1784,
+          "y": 262,
+          "width": 62,
+          "height": 62,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    }
+  ]
+}

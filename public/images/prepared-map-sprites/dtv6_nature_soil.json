@@ -1,0 +1,4956 @@
+{
+  "schemaVersion": 1,
+  "name": "dtv6_nature_soil",
+  "identity": {
+    "buildVersion": 1,
+    "atlasVersion": 1,
+    "catalogVersion": 1,
+    "pixelRulesVersion": 1,
+    "webpQuality": 85,
+    "padding": 2,
+    "sourceHash": "ab830b6b50f130951786a4964effa294f03fe00571e2d69e48515ad229d769dd",
+    "metadataHash": "54be1e30443360bb346670b0b352ad777b407d2911351d9334ac89dd1baa0fd4",
+    "metadataSignature": "e67e79ef014a37567f3649dbda588a61a7a60a64e25f2b424fc63f67fedde716",
+    "selectedBackingDensities": [
+      0.5,
+      1
+    ]
+  },
+  "signature": "4838a1c81164420884d7bb728611963bf02d085b7c2868b980a72e8862693905",
+  "source": {
+    "image": "images/map/sprite_sheets/dtv6_nature_soil.webp",
+    "metadata": "images/map/sprite_sheets/dtv6_nature_soil.json",
+    "sourceMetadata": {
+      "path": "images/map/sprite_sheets/sources/alpha_nature_soil.webp",
+      "sha256": "5779a490e8f5b85c58d2f9b04f49f58a7a3e5eb1c5859b6c5bd46c7ac90867c0",
+      "width": 993,
+      "height": 1584,
+      "detection": {
+        "transparent": true,
+        "alphaCutoff": 128,
+        "gap": 0,
+        "minArea": 1000
+      },
+      "guides": [],
+      "spriteCount": 40,
+      "packing": {
+        "scale": "per-sprite",
+        "padding": 2
+      }
+    },
+    "editorMetadata": {
+      "schemaVersion": 1,
+      "layoutVersion": 2,
+      "name": "dtv6_nature_soil",
+      "grid": {
+        "tileSize": 64,
+        "rowHeight": 64,
+        "borderWidth": 0,
+        "cols": 16,
+        "rows": 8
+      },
+      "tags": [
+        "soil",
+        "autumn",
+        "decorative",
+        "trees",
+        "impassable",
+        "shrubs",
+        "passable",
+        "rocks",
+        "stones",
+        "water",
+        "lake"
+      ],
+      "propLayout": [
+        {
+          "id": "soil_oak",
+          "col": 0,
+          "row": 0,
+          "w": 2,
+          "h": 2,
+          "groupId": 1,
+          "tags": [
+            "soil",
+            "autumn",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_1"
+          ],
+          "sourceRect": {
+            "x": 13,
+            "y": 13,
+            "width": 192,
+            "height": 189
+          }
+        },
+        {
+          "id": "soil_beech",
+          "col": 2,
+          "row": 0,
+          "w": 2,
+          "h": 2,
+          "groupId": 2,
+          "tags": [
+            "soil",
+            "autumn",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_2"
+          ],
+          "sourceRect": {
+            "x": 217,
+            "y": 8,
+            "width": 176,
+            "height": 195
+          }
+        },
+        {
+          "id": "soil_chestnut",
+          "col": 4,
+          "row": 0,
+          "w": 2,
+          "h": 2,
+          "groupId": 3,
+          "tags": [
+            "soil",
+            "autumn",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_3"
+          ],
+          "sourceRect": {
+            "x": 406,
+            "y": 13,
+            "width": 179,
+            "height": 191
+          }
+        },
+        {
+          "id": "soil_ash",
+          "col": 6,
+          "row": 0,
+          "w": 2,
+          "h": 2,
+          "groupId": 4,
+          "tags": [
+            "soil",
+            "autumn",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_4"
+          ],
+          "sourceRect": {
+            "x": 594,
+            "y": 14,
+            "width": 188,
+            "height": 191
+          }
+        },
+        {
+          "id": "soil_elm",
+          "col": 8,
+          "row": 0,
+          "w": 2,
+          "h": 2,
+          "groupId": 5,
+          "tags": [
+            "soil",
+            "autumn",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_5"
+          ],
+          "sourceRect": {
+            "x": 787,
+            "y": 15,
+            "width": 195,
+            "height": 189
+          }
+        },
+        {
+          "id": "soil_birch",
+          "col": 10,
+          "row": 0,
+          "w": 1,
+          "h": 2,
+          "groupId": 6,
+          "tags": [
+            "soil",
+            "autumn",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_6"
+          ],
+          "sourceRect": {
+            "x": 30,
+            "y": 217,
+            "width": 163,
+            "height": 211
+          }
+        },
+        {
+          "id": "soil_poplar",
+          "col": 11,
+          "row": 0,
+          "w": 1,
+          "h": 2,
+          "groupId": 7,
+          "tags": [
+            "soil",
+            "autumn",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_7"
+          ],
+          "sourceRect": {
+            "x": 254,
+            "y": 215,
+            "width": 96,
+            "height": 218
+          }
+        },
+        {
+          "id": "soil_maple",
+          "col": 12,
+          "row": 0,
+          "w": 2,
+          "h": 2,
+          "groupId": 8,
+          "tags": [
+            "soil",
+            "autumn",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_8"
+          ],
+          "sourceRect": {
+            "x": 393,
+            "y": 214,
+            "width": 183,
+            "height": 215
+          }
+        },
+        {
+          "id": "soil_willow",
+          "col": 14,
+          "row": 0,
+          "w": 2,
+          "h": 2,
+          "groupId": 9,
+          "tags": [
+            "soil",
+            "autumn",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_9"
+          ],
+          "sourceRect": {
+            "x": 594,
+            "y": 221,
+            "width": 190,
+            "height": 209
+          }
+        },
+        {
+          "id": "soil_young_oak",
+          "col": 0,
+          "row": 2,
+          "w": 1,
+          "h": 2,
+          "groupId": 10,
+          "tags": [
+            "soil",
+            "autumn",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_10"
+          ],
+          "sourceRect": {
+            "x": 801,
+            "y": 217,
+            "width": 174,
+            "height": 212
+          }
+        },
+        {
+          "id": "soil_pine",
+          "col": 1,
+          "row": 2,
+          "w": 2,
+          "h": 2,
+          "groupId": 11,
+          "tags": [
+            "soil",
+            "autumn",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_11"
+          ],
+          "sourceRect": {
+            "x": 18,
+            "y": 438,
+            "width": 192,
+            "height": 208
+          }
+        },
+        {
+          "id": "soil_spruce",
+          "col": 3,
+          "row": 2,
+          "w": 1,
+          "h": 2,
+          "groupId": 12,
+          "tags": [
+            "soil",
+            "autumn",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_12"
+          ],
+          "sourceRect": {
+            "x": 231,
+            "y": 443,
+            "width": 159,
+            "height": 206
+          }
+        },
+        {
+          "id": "soil_fir",
+          "col": 4,
+          "row": 2,
+          "w": 2,
+          "h": 2,
+          "groupId": 13,
+          "tags": [
+            "soil",
+            "autumn",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_13"
+          ],
+          "sourceRect": {
+            "x": 416,
+            "y": 442,
+            "width": 149,
+            "height": 206
+          }
+        },
+        {
+          "id": "soil_larch",
+          "col": 6,
+          "row": 2,
+          "w": 1,
+          "h": 2,
+          "groupId": 14,
+          "tags": [
+            "soil",
+            "autumn",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_14"
+          ],
+          "sourceRect": {
+            "x": 596,
+            "y": 445,
+            "width": 181,
+            "height": 203
+          }
+        },
+        {
+          "id": "soil_scots_pine",
+          "col": 7,
+          "row": 2,
+          "w": 2,
+          "h": 2,
+          "groupId": 15,
+          "tags": [
+            "soil",
+            "autumn",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_15"
+          ],
+          "sourceRect": {
+            "x": 797,
+            "y": 440,
+            "width": 181,
+            "height": 207
+          }
+        },
+        {
+          "id": "soil_leafy_bush",
+          "col": 9,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 16,
+          "tags": [
+            "soil",
+            "autumn",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_16"
+          ],
+          "sourceRect": {
+            "x": 14,
+            "y": 658,
+            "width": 187,
+            "height": 152
+          }
+        },
+        {
+          "id": "soil_bramble",
+          "col": 10,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 17,
+          "tags": [
+            "soil",
+            "autumn",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_17"
+          ],
+          "sourceRect": {
+            "x": 218,
+            "y": 662,
+            "width": 178,
+            "height": 157
+          }
+        },
+        {
+          "id": "soil_hawthorn",
+          "col": 11,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 18,
+          "tags": [
+            "soil",
+            "autumn",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_18"
+          ],
+          "sourceRect": {
+            "x": 408,
+            "y": 662,
+            "width": 169,
+            "height": 159
+          }
+        },
+        {
+          "id": "soil_hazel",
+          "col": 12,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 19,
+          "tags": [
+            "soil",
+            "autumn",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_19"
+          ],
+          "sourceRect": {
+            "x": 596,
+            "y": 658,
+            "width": 186,
+            "height": 163
+          }
+        },
+        {
+          "id": "soil_gorse",
+          "col": 13,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 20,
+          "tags": [
+            "soil",
+            "autumn",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_20"
+          ],
+          "sourceRect": {
+            "x": 793,
+            "y": 659,
+            "width": 189,
+            "height": 163
+          }
+        },
+        {
+          "id": "soil_birch_saplings",
+          "col": 14,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 21,
+          "tags": [
+            "soil",
+            "autumn",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_21"
+          ],
+          "sourceRect": {
+            "x": 32,
+            "y": 825,
+            "width": 156,
+            "height": 175
+          }
+        },
+        {
+          "id": "soil_pine_saplings",
+          "col": 15,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 22,
+          "tags": [
+            "soil",
+            "autumn",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_22"
+          ],
+          "sourceRect": {
+            "x": 202,
+            "y": 824,
+            "width": 194,
+            "height": 176
+          }
+        },
+        {
+          "id": "soil_ferns",
+          "col": 9,
+          "row": 3,
+          "w": 1,
+          "h": 1,
+          "groupId": 23,
+          "tags": [
+            "soil",
+            "autumn",
+            "decorative",
+            "shrubs",
+            "passable",
+            "group_23"
+          ],
+          "sourceRect": {
+            "x": 406,
+            "y": 839,
+            "width": 187,
+            "height": 160
+          }
+        },
+        {
+          "id": "soil_tall_grass",
+          "col": 10,
+          "row": 3,
+          "w": 1,
+          "h": 1,
+          "groupId": 24,
+          "tags": [
+            "soil",
+            "autumn",
+            "decorative",
+            "shrubs",
+            "passable",
+            "group_24"
+          ],
+          "sourceRect": {
+            "x": 612,
+            "y": 840,
+            "width": 165,
+            "height": 160
+          }
+        },
+        {
+          "id": "soil_wildflowers",
+          "col": 11,
+          "row": 3,
+          "w": 1,
+          "h": 1,
+          "groupId": 25,
+          "tags": [
+            "soil",
+            "autumn",
+            "decorative",
+            "shrubs",
+            "passable",
+            "group_25"
+          ],
+          "sourceRect": {
+            "x": 796,
+            "y": 836,
+            "width": 185,
+            "height": 169
+          }
+        },
+        {
+          "id": "soil_granite",
+          "col": 12,
+          "row": 3,
+          "w": 2,
+          "h": 1,
+          "groupId": 26,
+          "tags": [
+            "soil",
+            "autumn",
+            "decorative",
+            "rocks",
+            "impassable",
+            "group_26"
+          ],
+          "sourceRect": {
+            "x": 12,
+            "y": 1009,
+            "width": 190,
+            "height": 162
+          }
+        },
+        {
+          "id": "soil_limestone",
+          "col": 14,
+          "row": 3,
+          "w": 1,
+          "h": 1,
+          "groupId": 27,
+          "tags": [
+            "soil",
+            "autumn",
+            "decorative",
+            "rocks",
+            "impassable",
+            "group_27"
+          ],
+          "sourceRect": {
+            "x": 211,
+            "y": 1011,
+            "width": 187,
+            "height": 158
+          }
+        },
+        {
+          "id": "soil_basalt",
+          "col": 0,
+          "row": 4,
+          "w": 2,
+          "h": 2,
+          "groupId": 28,
+          "tags": [
+            "soil",
+            "autumn",
+            "decorative",
+            "rocks",
+            "impassable",
+            "group_28"
+          ],
+          "sourceRect": {
+            "x": 409,
+            "y": 1010,
+            "width": 174,
+            "height": 166
+          }
+        },
+        {
+          "id": "soil_sandstone",
+          "col": 2,
+          "row": 4,
+          "w": 2,
+          "h": 2,
+          "groupId": 29,
+          "tags": [
+            "soil",
+            "autumn",
+            "decorative",
+            "rocks",
+            "impassable",
+            "group_29"
+          ],
+          "sourceRect": {
+            "x": 597,
+            "y": 1014,
+            "width": 188,
+            "height": 162
+          }
+        },
+        {
+          "id": "soil_layered_rocks",
+          "col": 4,
+          "row": 4,
+          "w": 2,
+          "h": 2,
+          "groupId": 30,
+          "tags": [
+            "soil",
+            "autumn",
+            "decorative",
+            "rocks",
+            "impassable",
+            "group_30"
+          ],
+          "sourceRect": {
+            "x": 796,
+            "y": 1019,
+            "width": 183,
+            "height": 157
+          }
+        },
+        {
+          "id": "soil_river_stones",
+          "col": 15,
+          "row": 3,
+          "w": 1,
+          "h": 1,
+          "groupId": 31,
+          "tags": [
+            "soil",
+            "autumn",
+            "decorative",
+            "rocks",
+            "stones",
+            "passable",
+            "group_31"
+          ],
+          "sourceRect": {
+            "x": 17,
+            "y": 1187,
+            "width": 176,
+            "height": 123
+          }
+        },
+        {
+          "id": "soil_slate_stones",
+          "col": 6,
+          "row": 4,
+          "w": 1,
+          "h": 1,
+          "groupId": 32,
+          "tags": [
+            "soil",
+            "autumn",
+            "decorative",
+            "rocks",
+            "stones",
+            "passable",
+            "group_32"
+          ],
+          "sourceRect": {
+            "x": 209,
+            "y": 1183,
+            "width": 178,
+            "height": 123
+          }
+        },
+        {
+          "id": "soil_mossy_stones",
+          "col": 7,
+          "row": 4,
+          "w": 1,
+          "h": 1,
+          "groupId": 33,
+          "tags": [
+            "soil",
+            "autumn",
+            "decorative",
+            "rocks",
+            "stones",
+            "passable",
+            "group_33"
+          ],
+          "sourceRect": {
+            "x": 401,
+            "y": 1190,
+            "width": 180,
+            "height": 121
+          }
+        },
+        {
+          "id": "soil_pebbles",
+          "col": 8,
+          "row": 4,
+          "w": 1,
+          "h": 1,
+          "groupId": 34,
+          "tags": [
+            "soil",
+            "autumn",
+            "decorative",
+            "rocks",
+            "stones",
+            "passable",
+            "group_34"
+          ],
+          "sourceRect": {
+            "x": 597,
+            "y": 1187,
+            "width": 185,
+            "height": 124
+          }
+        },
+        {
+          "id": "soil_pale_stones",
+          "col": 9,
+          "row": 4,
+          "w": 1,
+          "h": 1,
+          "groupId": 35,
+          "tags": [
+            "soil",
+            "autumn",
+            "decorative",
+            "rocks",
+            "stones",
+            "passable",
+            "group_35"
+          ],
+          "sourceRect": {
+            "x": 796,
+            "y": 1191,
+            "width": 186,
+            "height": 126
+          }
+        },
+        {
+          "id": "soil_reed_pond",
+          "col": 10,
+          "row": 4,
+          "w": 2,
+          "h": 3,
+          "groupId": 36,
+          "tags": [
+            "soil",
+            "autumn",
+            "decorative",
+            "water",
+            "impassable",
+            "lake",
+            "group_36"
+          ],
+          "sourceRect": {
+            "x": 12,
+            "y": 1324,
+            "width": 202,
+            "height": 234
+          }
+        },
+        {
+          "id": "soil_woodland_pond",
+          "col": 12,
+          "row": 4,
+          "w": 2,
+          "h": 3,
+          "groupId": 37,
+          "tags": [
+            "soil",
+            "autumn",
+            "decorative",
+            "water",
+            "impassable",
+            "lake",
+            "group_37"
+          ],
+          "sourceRect": {
+            "x": 228,
+            "y": 1320,
+            "width": 170,
+            "height": 247
+          }
+        },
+        {
+          "id": "soil_lily_pond",
+          "col": 14,
+          "row": 4,
+          "w": 2,
+          "h": 3,
+          "groupId": 38,
+          "tags": [
+            "soil",
+            "autumn",
+            "decorative",
+            "water",
+            "impassable",
+            "lake",
+            "group_38"
+          ],
+          "sourceRect": {
+            "x": 398,
+            "y": 1331,
+            "width": 184,
+            "height": 229
+          }
+        },
+        {
+          "id": "soil_rocky_lake",
+          "col": 6,
+          "row": 5,
+          "w": 2,
+          "h": 3,
+          "groupId": 39,
+          "tags": [
+            "soil",
+            "autumn",
+            "decorative",
+            "water",
+            "impassable",
+            "lake",
+            "group_39"
+          ],
+          "sourceRect": {
+            "x": 591,
+            "y": 1321,
+            "width": 198,
+            "height": 244
+          }
+        },
+        {
+          "id": "soil_wetland_pond",
+          "col": 8,
+          "row": 5,
+          "w": 2,
+          "h": 3,
+          "groupId": 40,
+          "tags": [
+            "soil",
+            "autumn",
+            "decorative",
+            "water",
+            "impassable",
+            "lake",
+            "group_40"
+          ],
+          "sourceRect": {
+            "x": 796,
+            "y": 1337,
+            "width": 187,
+            "height": 227
+          }
+        }
+      ],
+      "extension": {
+        "imports": [
+          {
+            "id": "soil_oak",
+            "sourceId": "alpha_nature_soil",
+            "bbox": {
+              "x": 13,
+              "y": 13,
+              "width": 192,
+              "height": 189
+            },
+            "area": 22467,
+            "anchor": "center",
+            "sizeRatio": 0.4166666666666667,
+            "referenceSize": {
+              "width": 80,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 0,
+              "row": 0
+            },
+            "tags": [
+              "soil",
+              "autumn",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_1"
+            ],
+            "renderRect": {
+              "x": 24,
+              "y": 24,
+              "width": 80,
+              "height": 79
+            }
+          },
+          {
+            "id": "soil_beech",
+            "sourceId": "alpha_nature_soil",
+            "bbox": {
+              "x": 217,
+              "y": 8,
+              "width": 176,
+              "height": 195
+            },
+            "area": 21056,
+            "anchor": "center",
+            "sizeRatio": 0.4318181818181818,
+            "referenceSize": {
+              "width": 76,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 2,
+              "row": 0
+            },
+            "tags": [
+              "soil",
+              "autumn",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_2"
+            ],
+            "renderRect": {
+              "x": 26,
+              "y": 22,
+              "width": 76,
+              "height": 84
+            }
+          },
+          {
+            "id": "soil_chestnut",
+            "sourceId": "alpha_nature_soil",
+            "bbox": {
+              "x": 406,
+              "y": 13,
+              "width": 179,
+              "height": 191
+            },
+            "area": 21692,
+            "anchor": "center",
+            "sizeRatio": 0.44692737430167595,
+            "referenceSize": {
+              "width": 80,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 4,
+              "row": 0
+            },
+            "tags": [
+              "soil",
+              "autumn",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_3"
+            ],
+            "renderRect": {
+              "x": 24,
+              "y": 21,
+              "width": 80,
+              "height": 85
+            }
+          },
+          {
+            "id": "soil_ash",
+            "sourceId": "alpha_nature_soil",
+            "bbox": {
+              "x": 594,
+              "y": 14,
+              "width": 188,
+              "height": 191
+            },
+            "area": 21258,
+            "anchor": "center",
+            "sizeRatio": 0.40425531914893614,
+            "referenceSize": {
+              "width": 76,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 6,
+              "row": 0
+            },
+            "tags": [
+              "soil",
+              "autumn",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_4"
+            ],
+            "renderRect": {
+              "x": 26,
+              "y": 25,
+              "width": 76,
+              "height": 77
+            }
+          },
+          {
+            "id": "soil_elm",
+            "sourceId": "alpha_nature_soil",
+            "bbox": {
+              "x": 787,
+              "y": 15,
+              "width": 195,
+              "height": 189
+            },
+            "area": 22239,
+            "anchor": "center",
+            "sizeRatio": 0.41025641025641024,
+            "referenceSize": {
+              "width": 80,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 8,
+              "row": 0
+            },
+            "tags": [
+              "soil",
+              "autumn",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_5"
+            ],
+            "renderRect": {
+              "x": 24,
+              "y": 25,
+              "width": 80,
+              "height": 78
+            }
+          },
+          {
+            "id": "soil_birch",
+            "sourceId": "alpha_nature_soil",
+            "bbox": {
+              "x": 30,
+              "y": 217,
+              "width": 163,
+              "height": 211
+            },
+            "area": 17478,
+            "anchor": "center",
+            "sizeRatio": 0.31901840490797545,
+            "referenceSize": {
+              "width": 52,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 10,
+              "row": 0
+            },
+            "tags": [
+              "soil",
+              "autumn",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_6"
+            ],
+            "renderRect": {
+              "x": 6,
+              "y": 30,
+              "width": 52,
+              "height": 67
+            }
+          },
+          {
+            "id": "soil_poplar",
+            "sourceId": "alpha_nature_soil",
+            "bbox": {
+              "x": 254,
+              "y": 215,
+              "width": 96,
+              "height": 218
+            },
+            "area": 13186,
+            "anchor": "center",
+            "sizeRatio": 0.375,
+            "referenceSize": {
+              "width": 36,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 11,
+              "row": 0
+            },
+            "tags": [
+              "soil",
+              "autumn",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_7"
+            ],
+            "renderRect": {
+              "x": 14,
+              "y": 23,
+              "width": 36,
+              "height": 82
+            }
+          },
+          {
+            "id": "soil_maple",
+            "sourceId": "alpha_nature_soil",
+            "bbox": {
+              "x": 393,
+              "y": 214,
+              "width": 183,
+              "height": 215
+            },
+            "area": 22776,
+            "anchor": "center",
+            "sizeRatio": 0.41530054644808745,
+            "referenceSize": {
+              "width": 76,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 12,
+              "row": 0
+            },
+            "tags": [
+              "soil",
+              "autumn",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_8"
+            ],
+            "renderRect": {
+              "x": 26,
+              "y": 19,
+              "width": 76,
+              "height": 89
+            }
+          },
+          {
+            "id": "soil_willow",
+            "sourceId": "alpha_nature_soil",
+            "bbox": {
+              "x": 594,
+              "y": 221,
+              "width": 190,
+              "height": 209
+            },
+            "area": 27200,
+            "anchor": "center",
+            "sizeRatio": 0.4421052631578947,
+            "referenceSize": {
+              "width": 84,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 14,
+              "row": 0
+            },
+            "tags": [
+              "soil",
+              "autumn",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_9"
+            ],
+            "renderRect": {
+              "x": 22,
+              "y": 18,
+              "width": 84,
+              "height": 92
+            }
+          },
+          {
+            "id": "soil_young_oak",
+            "sourceId": "alpha_nature_soil",
+            "bbox": {
+              "x": 801,
+              "y": 217,
+              "width": 174,
+              "height": 212
+            },
+            "area": 15446,
+            "anchor": "center",
+            "sizeRatio": 0.2988505747126437,
+            "referenceSize": {
+              "width": 52,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 0,
+              "row": 2
+            },
+            "tags": [
+              "soil",
+              "autumn",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_10"
+            ],
+            "renderRect": {
+              "x": 6,
+              "y": 32,
+              "width": 52,
+              "height": 63
+            }
+          },
+          {
+            "id": "soil_pine",
+            "sourceId": "alpha_nature_soil",
+            "bbox": {
+              "x": 18,
+              "y": 438,
+              "width": 192,
+              "height": 208
+            },
+            "area": 22124,
+            "anchor": "center",
+            "sizeRatio": 0.3541666666666667,
+            "referenceSize": {
+              "width": 68,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 1,
+              "row": 2
+            },
+            "tags": [
+              "soil",
+              "autumn",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_11"
+            ],
+            "renderRect": {
+              "x": 30,
+              "y": 27,
+              "width": 68,
+              "height": 74
+            }
+          },
+          {
+            "id": "soil_spruce",
+            "sourceId": "alpha_nature_soil",
+            "bbox": {
+              "x": 231,
+              "y": 443,
+              "width": 159,
+              "height": 206
+            },
+            "area": 18531,
+            "anchor": "center",
+            "sizeRatio": 0.37735849056603776,
+            "referenceSize": {
+              "width": 60,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 3,
+              "row": 2
+            },
+            "tags": [
+              "soil",
+              "autumn",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_12"
+            ],
+            "renderRect": {
+              "x": 2,
+              "y": 25,
+              "width": 60,
+              "height": 78
+            }
+          },
+          {
+            "id": "soil_fir",
+            "sourceId": "alpha_nature_soil",
+            "bbox": {
+              "x": 416,
+              "y": 442,
+              "width": 149,
+              "height": 206
+            },
+            "area": 16368,
+            "anchor": "center",
+            "sizeRatio": 0.42953020134228187,
+            "referenceSize": {
+              "width": 64,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 4,
+              "row": 2
+            },
+            "tags": [
+              "soil",
+              "autumn",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_13"
+            ],
+            "renderRect": {
+              "x": 32,
+              "y": 20,
+              "width": 64,
+              "height": 88
+            }
+          },
+          {
+            "id": "soil_larch",
+            "sourceId": "alpha_nature_soil",
+            "bbox": {
+              "x": 596,
+              "y": 445,
+              "width": 181,
+              "height": 203
+            },
+            "area": 17411,
+            "anchor": "center",
+            "sizeRatio": 0.3314917127071823,
+            "referenceSize": {
+              "width": 60,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 6,
+              "row": 2
+            },
+            "tags": [
+              "soil",
+              "autumn",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_14"
+            ],
+            "renderRect": {
+              "x": 2,
+              "y": 30,
+              "width": 60,
+              "height": 67
+            }
+          },
+          {
+            "id": "soil_scots_pine",
+            "sourceId": "alpha_nature_soil",
+            "bbox": {
+              "x": 797,
+              "y": 440,
+              "width": 181,
+              "height": 207
+            },
+            "area": 17729,
+            "anchor": "center",
+            "sizeRatio": 0.39779005524861877,
+            "referenceSize": {
+              "width": 72,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 7,
+              "row": 2
+            },
+            "tags": [
+              "soil",
+              "autumn",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_15"
+            ],
+            "renderRect": {
+              "x": 28,
+              "y": 23,
+              "width": 72,
+              "height": 82
+            }
+          },
+          {
+            "id": "soil_leafy_bush",
+            "sourceId": "alpha_nature_soil",
+            "bbox": {
+              "x": 14,
+              "y": 658,
+              "width": 187,
+              "height": 152
+            },
+            "area": 18811,
+            "anchor": "center",
+            "sizeRatio": 0.21390374331550802,
+            "referenceSize": {
+              "width": 40,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 9,
+              "row": 2
+            },
+            "tags": [
+              "soil",
+              "autumn",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_16"
+            ],
+            "renderRect": {
+              "x": 12,
+              "y": 15,
+              "width": 40,
+              "height": 33
+            }
+          },
+          {
+            "id": "soil_bramble",
+            "sourceId": "alpha_nature_soil",
+            "bbox": {
+              "x": 218,
+              "y": 662,
+              "width": 178,
+              "height": 157
+            },
+            "area": 18208,
+            "anchor": "center",
+            "sizeRatio": 0.24719101123595505,
+            "referenceSize": {
+              "width": 44,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 10,
+              "row": 2
+            },
+            "tags": [
+              "soil",
+              "autumn",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_17"
+            ],
+            "renderRect": {
+              "x": 10,
+              "y": 12,
+              "width": 44,
+              "height": 39
+            }
+          },
+          {
+            "id": "soil_hawthorn",
+            "sourceId": "alpha_nature_soil",
+            "bbox": {
+              "x": 408,
+              "y": 662,
+              "width": 169,
+              "height": 159
+            },
+            "area": 16227,
+            "anchor": "center",
+            "sizeRatio": 0.23668639053254437,
+            "referenceSize": {
+              "width": 40,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 11,
+              "row": 2
+            },
+            "tags": [
+              "soil",
+              "autumn",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_18"
+            ],
+            "renderRect": {
+              "x": 12,
+              "y": 13,
+              "width": 40,
+              "height": 38
+            }
+          },
+          {
+            "id": "soil_hazel",
+            "sourceId": "alpha_nature_soil",
+            "bbox": {
+              "x": 596,
+              "y": 658,
+              "width": 186,
+              "height": 163
+            },
+            "area": 19978,
+            "anchor": "center",
+            "sizeRatio": 0.23655913978494625,
+            "referenceSize": {
+              "width": 44,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 12,
+              "row": 2
+            },
+            "tags": [
+              "soil",
+              "autumn",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_19"
+            ],
+            "renderRect": {
+              "x": 10,
+              "y": 12,
+              "width": 44,
+              "height": 39
+            }
+          },
+          {
+            "id": "soil_gorse",
+            "sourceId": "alpha_nature_soil",
+            "bbox": {
+              "x": 793,
+              "y": 659,
+              "width": 189,
+              "height": 163
+            },
+            "area": 20256,
+            "anchor": "center",
+            "sizeRatio": 0.19047619047619047,
+            "referenceSize": {
+              "width": 36,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 13,
+              "row": 2
+            },
+            "tags": [
+              "soil",
+              "autumn",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_20"
+            ],
+            "renderRect": {
+              "x": 14,
+              "y": 16,
+              "width": 36,
+              "height": 31
+            }
+          },
+          {
+            "id": "soil_birch_saplings",
+            "sourceId": "alpha_nature_soil",
+            "bbox": {
+              "x": 32,
+              "y": 825,
+              "width": 156,
+              "height": 175
+            },
+            "area": 16178,
+            "anchor": "center",
+            "sizeRatio": 0.28205128205128205,
+            "referenceSize": {
+              "width": 44,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 14,
+              "row": 2
+            },
+            "tags": [
+              "soil",
+              "autumn",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_21"
+            ],
+            "renderRect": {
+              "x": 10,
+              "y": 7,
+              "width": 44,
+              "height": 49
+            }
+          },
+          {
+            "id": "soil_pine_saplings",
+            "sourceId": "alpha_nature_soil",
+            "bbox": {
+              "x": 202,
+              "y": 824,
+              "width": 194,
+              "height": 176
+            },
+            "area": 19403,
+            "anchor": "center",
+            "sizeRatio": 0.20618556701030927,
+            "referenceSize": {
+              "width": 40,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 15,
+              "row": 2
+            },
+            "tags": [
+              "soil",
+              "autumn",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_22"
+            ],
+            "renderRect": {
+              "x": 12,
+              "y": 14,
+              "width": 40,
+              "height": 36
+            }
+          },
+          {
+            "id": "soil_ferns",
+            "sourceId": "alpha_nature_soil",
+            "bbox": {
+              "x": 406,
+              "y": 839,
+              "width": 187,
+              "height": 160
+            },
+            "area": 18515,
+            "anchor": "center",
+            "sizeRatio": 0.1925133689839572,
+            "referenceSize": {
+              "width": 36,
+              "height": 80
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 9,
+              "row": 3
+            },
+            "tags": [
+              "soil",
+              "autumn",
+              "decorative",
+              "shrubs",
+              "passable",
+              "group_23"
+            ],
+            "renderRect": {
+              "x": 14,
+              "y": 16,
+              "width": 36,
+              "height": 31
+            }
+          },
+          {
+            "id": "soil_tall_grass",
+            "sourceId": "alpha_nature_soil",
+            "bbox": {
+              "x": 612,
+              "y": 840,
+              "width": 165,
+              "height": 160
+            },
+            "area": 18508,
+            "anchor": "center",
+            "sizeRatio": 0.19393939393939394,
+            "referenceSize": {
+              "width": 32,
+              "height": 80
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 10,
+              "row": 3
+            },
+            "tags": [
+              "soil",
+              "autumn",
+              "decorative",
+              "shrubs",
+              "passable",
+              "group_24"
+            ],
+            "renderRect": {
+              "x": 16,
+              "y": 16,
+              "width": 32,
+              "height": 31
+            }
+          },
+          {
+            "id": "soil_wildflowers",
+            "sourceId": "alpha_nature_soil",
+            "bbox": {
+              "x": 796,
+              "y": 836,
+              "width": 185,
+              "height": 169
+            },
+            "area": 20672,
+            "anchor": "center",
+            "sizeRatio": 0.1945945945945946,
+            "referenceSize": {
+              "width": 36,
+              "height": 80
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 11,
+              "row": 3
+            },
+            "tags": [
+              "soil",
+              "autumn",
+              "decorative",
+              "shrubs",
+              "passable",
+              "group_25"
+            ],
+            "renderRect": {
+              "x": 14,
+              "y": 15,
+              "width": 36,
+              "height": 33
+            }
+          },
+          {
+            "id": "soil_granite",
+            "sourceId": "alpha_nature_soil",
+            "bbox": {
+              "x": 12,
+              "y": 1009,
+              "width": 190,
+              "height": 162
+            },
+            "area": 22708,
+            "anchor": "center",
+            "sizeRatio": 0.3368421052631579,
+            "referenceSize": {
+              "width": 64,
+              "height": 80
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 12,
+              "row": 3
+            },
+            "tags": [
+              "soil",
+              "autumn",
+              "decorative",
+              "rocks",
+              "impassable",
+              "group_26"
+            ],
+            "renderRect": {
+              "x": 32,
+              "y": 4,
+              "width": 64,
+              "height": 55
+            }
+          },
+          {
+            "id": "soil_limestone",
+            "sourceId": "alpha_nature_soil",
+            "bbox": {
+              "x": 211,
+              "y": 1011,
+              "width": 187,
+              "height": 158
+            },
+            "area": 22327,
+            "anchor": "center",
+            "sizeRatio": 0.32085561497326204,
+            "referenceSize": {
+              "width": 60,
+              "height": 80
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 14,
+              "row": 3
+            },
+            "tags": [
+              "soil",
+              "autumn",
+              "decorative",
+              "rocks",
+              "impassable",
+              "group_27"
+            ],
+            "renderRect": {
+              "x": 2,
+              "y": 6,
+              "width": 60,
+              "height": 51
+            }
+          },
+          {
+            "id": "soil_basalt",
+            "sourceId": "alpha_nature_soil",
+            "bbox": {
+              "x": 409,
+              "y": 1010,
+              "width": 174,
+              "height": 166
+            },
+            "area": 20446,
+            "anchor": "center",
+            "sizeRatio": 0.39080459770114945,
+            "referenceSize": {
+              "width": 68,
+              "height": 80
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 0,
+              "row": 4
+            },
+            "tags": [
+              "soil",
+              "autumn",
+              "decorative",
+              "rocks",
+              "impassable",
+              "group_28"
+            ],
+            "renderRect": {
+              "x": 30,
+              "y": 31,
+              "width": 68,
+              "height": 65
+            }
+          },
+          {
+            "id": "soil_sandstone",
+            "sourceId": "alpha_nature_soil",
+            "bbox": {
+              "x": 597,
+              "y": 1014,
+              "width": 188,
+              "height": 162
+            },
+            "area": 23399,
+            "anchor": "center",
+            "sizeRatio": 0.40425531914893614,
+            "referenceSize": {
+              "width": 76,
+              "height": 80
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 2,
+              "row": 4
+            },
+            "tags": [
+              "soil",
+              "autumn",
+              "decorative",
+              "rocks",
+              "impassable",
+              "group_29"
+            ],
+            "renderRect": {
+              "x": 26,
+              "y": 31,
+              "width": 76,
+              "height": 65
+            }
+          },
+          {
+            "id": "soil_layered_rocks",
+            "sourceId": "alpha_nature_soil",
+            "bbox": {
+              "x": 796,
+              "y": 1019,
+              "width": 183,
+              "height": 157
+            },
+            "area": 21617,
+            "anchor": "center",
+            "sizeRatio": 0.39344262295081966,
+            "referenceSize": {
+              "width": 72,
+              "height": 80
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 4,
+              "row": 4
+            },
+            "tags": [
+              "soil",
+              "autumn",
+              "decorative",
+              "rocks",
+              "impassable",
+              "group_30"
+            ],
+            "renderRect": {
+              "x": 28,
+              "y": 33,
+              "width": 72,
+              "height": 62
+            }
+          },
+          {
+            "id": "soil_river_stones",
+            "sourceId": "alpha_nature_soil",
+            "bbox": {
+              "x": 17,
+              "y": 1187,
+              "width": 176,
+              "height": 123
+            },
+            "area": 16083,
+            "anchor": "center",
+            "sizeRatio": 0.18181818181818182,
+            "referenceSize": {
+              "width": 32,
+              "height": 80
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 15,
+              "row": 3
+            },
+            "tags": [
+              "soil",
+              "autumn",
+              "decorative",
+              "rocks",
+              "stones",
+              "passable",
+              "group_31"
+            ],
+            "renderRect": {
+              "x": 16,
+              "y": 21,
+              "width": 32,
+              "height": 22
+            }
+          },
+          {
+            "id": "soil_slate_stones",
+            "sourceId": "alpha_nature_soil",
+            "bbox": {
+              "x": 209,
+              "y": 1183,
+              "width": 178,
+              "height": 123
+            },
+            "area": 16351,
+            "anchor": "center",
+            "sizeRatio": 0.20224719101123595,
+            "referenceSize": {
+              "width": 36,
+              "height": 80
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 6,
+              "row": 4
+            },
+            "tags": [
+              "soil",
+              "autumn",
+              "decorative",
+              "rocks",
+              "stones",
+              "passable",
+              "group_32"
+            ],
+            "renderRect": {
+              "x": 14,
+              "y": 19,
+              "width": 36,
+              "height": 25
+            }
+          },
+          {
+            "id": "soil_mossy_stones",
+            "sourceId": "alpha_nature_soil",
+            "bbox": {
+              "x": 401,
+              "y": 1190,
+              "width": 180,
+              "height": 121
+            },
+            "area": 16779,
+            "anchor": "center",
+            "sizeRatio": 0.2,
+            "referenceSize": {
+              "width": 36,
+              "height": 80
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 7,
+              "row": 4
+            },
+            "tags": [
+              "soil",
+              "autumn",
+              "decorative",
+              "rocks",
+              "stones",
+              "passable",
+              "group_33"
+            ],
+            "renderRect": {
+              "x": 14,
+              "y": 20,
+              "width": 36,
+              "height": 24
+            }
+          },
+          {
+            "id": "soil_pebbles",
+            "sourceId": "alpha_nature_soil",
+            "bbox": {
+              "x": 597,
+              "y": 1187,
+              "width": 185,
+              "height": 124
+            },
+            "area": 17590,
+            "anchor": "center",
+            "sizeRatio": 0.17297297297297298,
+            "referenceSize": {
+              "width": 32,
+              "height": 80
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 8,
+              "row": 4
+            },
+            "tags": [
+              "soil",
+              "autumn",
+              "decorative",
+              "rocks",
+              "stones",
+              "passable",
+              "group_34"
+            ],
+            "renderRect": {
+              "x": 16,
+              "y": 21,
+              "width": 32,
+              "height": 21
+            }
+          },
+          {
+            "id": "soil_pale_stones",
+            "sourceId": "alpha_nature_soil",
+            "bbox": {
+              "x": 796,
+              "y": 1191,
+              "width": 186,
+              "height": 126
+            },
+            "area": 17902,
+            "anchor": "center",
+            "sizeRatio": 0.1935483870967742,
+            "referenceSize": {
+              "width": 36,
+              "height": 80
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 9,
+              "row": 4
+            },
+            "tags": [
+              "soil",
+              "autumn",
+              "decorative",
+              "rocks",
+              "stones",
+              "passable",
+              "group_35"
+            ],
+            "renderRect": {
+              "x": 14,
+              "y": 20,
+              "width": 36,
+              "height": 24
+            }
+          },
+          {
+            "id": "soil_reed_pond",
+            "sourceId": "alpha_nature_soil",
+            "bbox": {
+              "x": 12,
+              "y": 1324,
+              "width": 202,
+              "height": 234
+            },
+            "area": 35730,
+            "anchor": "center",
+            "sizeRatio": 0.5742574257425742,
+            "referenceSize": {
+              "width": 116,
+              "height": 144
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 3
+            },
+            "placedAt": {
+              "column": 10,
+              "row": 4
+            },
+            "tags": [
+              "soil",
+              "autumn",
+              "decorative",
+              "water",
+              "impassable",
+              "lake",
+              "group_36"
+            ],
+            "renderRect": {
+              "x": 6,
+              "y": 29,
+              "width": 116,
+              "height": 134
+            }
+          },
+          {
+            "id": "soil_woodland_pond",
+            "sourceId": "alpha_nature_soil",
+            "bbox": {
+              "x": 228,
+              "y": 1320,
+              "width": 170,
+              "height": 247
+            },
+            "area": 30695,
+            "anchor": "center",
+            "sizeRatio": 0.582995951417004,
+            "referenceSize": {
+              "width": 128,
+              "height": 144
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 3
+            },
+            "placedAt": {
+              "column": 12,
+              "row": 4
+            },
+            "tags": [
+              "soil",
+              "autumn",
+              "decorative",
+              "water",
+              "impassable",
+              "lake",
+              "group_37"
+            ],
+            "renderRect": {
+              "x": 14,
+              "y": 24,
+              "width": 99,
+              "height": 144
+            }
+          },
+          {
+            "id": "soil_lily_pond",
+            "sourceId": "alpha_nature_soil",
+            "bbox": {
+              "x": 398,
+              "y": 1331,
+              "width": 184,
+              "height": 229
+            },
+            "area": 32726,
+            "anchor": "center",
+            "sizeRatio": 0.6086956521739131,
+            "referenceSize": {
+              "width": 112,
+              "height": 144
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 3
+            },
+            "placedAt": {
+              "column": 14,
+              "row": 4
+            },
+            "tags": [
+              "soil",
+              "autumn",
+              "decorative",
+              "water",
+              "impassable",
+              "lake",
+              "group_38"
+            ],
+            "renderRect": {
+              "x": 8,
+              "y": 26,
+              "width": 112,
+              "height": 139
+            }
+          },
+          {
+            "id": "soil_rocky_lake",
+            "sourceId": "alpha_nature_soil",
+            "bbox": {
+              "x": 591,
+              "y": 1321,
+              "width": 198,
+              "height": 244
+            },
+            "area": 39554,
+            "anchor": "center",
+            "sizeRatio": 0.5901639344262295,
+            "referenceSize": {
+              "width": 148,
+              "height": 144
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 3
+            },
+            "placedAt": {
+              "column": 6,
+              "row": 5
+            },
+            "tags": [
+              "soil",
+              "autumn",
+              "decorative",
+              "water",
+              "impassable",
+              "lake",
+              "group_39"
+            ],
+            "renderRect": {
+              "x": 5,
+              "y": 24,
+              "width": 117,
+              "height": 144
+            }
+          },
+          {
+            "id": "soil_wetland_pond",
+            "sourceId": "alpha_nature_soil",
+            "bbox": {
+              "x": 796,
+              "y": 1337,
+              "width": 187,
+              "height": 227
+            },
+            "area": 34979,
+            "anchor": "center",
+            "sizeRatio": 0.6343612334801763,
+            "referenceSize": {
+              "width": 124,
+              "height": 144
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 3
+            },
+            "placedAt": {
+              "column": 8,
+              "row": 5
+            },
+            "tags": [
+              "soil",
+              "autumn",
+              "decorative",
+              "water",
+              "impassable",
+              "lake",
+              "group_40"
+            ],
+            "renderRect": {
+              "x": 4,
+              "y": 24,
+              "width": 119,
+              "height": 144
+            }
+          }
+        ],
+        "occupiedTiles": [
+          "0,0",
+          "1,0",
+          "0,1",
+          "1,1",
+          "2,0",
+          "3,0",
+          "2,1",
+          "3,1",
+          "4,0",
+          "5,0",
+          "4,1",
+          "5,1",
+          "6,0",
+          "7,0",
+          "6,1",
+          "7,1",
+          "8,0",
+          "9,0",
+          "8,1",
+          "9,1",
+          "10,0",
+          "10,1",
+          "11,0",
+          "11,1",
+          "12,0",
+          "13,0",
+          "12,1",
+          "13,1",
+          "14,0",
+          "15,0",
+          "14,1",
+          "15,1",
+          "0,2",
+          "0,3",
+          "1,2",
+          "2,2",
+          "1,3",
+          "2,3",
+          "3,2",
+          "3,3",
+          "4,2",
+          "5,2",
+          "4,3",
+          "5,3",
+          "6,2",
+          "6,3",
+          "7,2",
+          "8,2",
+          "7,3",
+          "8,3",
+          "9,2",
+          "10,2",
+          "11,2",
+          "12,2",
+          "13,2",
+          "14,2",
+          "15,2",
+          "9,3",
+          "10,3",
+          "11,3",
+          "12,3",
+          "13,3",
+          "14,3",
+          "0,4",
+          "1,4",
+          "0,5",
+          "1,5",
+          "2,4",
+          "3,4",
+          "2,5",
+          "3,5",
+          "4,4",
+          "5,4",
+          "4,5",
+          "5,5",
+          "15,3",
+          "6,4",
+          "7,4",
+          "8,4",
+          "9,4",
+          "10,4",
+          "11,4",
+          "10,5",
+          "11,5",
+          "10,6",
+          "11,6",
+          "12,4",
+          "13,4",
+          "12,5",
+          "13,5",
+          "12,6",
+          "13,6",
+          "14,4",
+          "15,4",
+          "14,5",
+          "15,5",
+          "14,6",
+          "15,6",
+          "6,5",
+          "7,5",
+          "6,6",
+          "7,6",
+          "6,7",
+          "7,7",
+          "8,5",
+          "9,5",
+          "8,6",
+          "9,6",
+          "8,7",
+          "9,7"
+        ]
+      }
+    }
+  },
+  "upscaledBeyondMaster": false,
+  "omittedCandidateDensities": [
+    2,
+    3
+  ],
+  "pages": [
+    {
+      "name": "dtv6_nature_soil.coarse.webp",
+      "sha256": "b57a335e37c29ac41aaaab407efeca22e7ab933aad2978c78a61d466d439d1ff",
+      "width": 2048,
+      "height": 100,
+      "decodedBytes": 819200,
+      "compressedBytes": 63700,
+      "tier": 0,
+      "tierName": "coarse",
+      "backingDensity": 0.5
+    },
+    {
+      "name": "dtv6_nature_soil.final.webp",
+      "sha256": "fc392fc85bf960f1aca78bcbbc95a3b130c0162c2d1e90c4ff0297a6ae2f0598",
+      "width": 2000,
+      "height": 328,
+      "decodedBytes": 2624000,
+      "compressedBytes": 170328,
+      "tier": 2,
+      "tierName": "final",
+      "backingDensity": 1
+    }
+  ],
+  "sprites": [
+    {
+      "spriteId": "dtv6_nature_soil:group_1",
+      "groupId": "group_1",
+      "savedIdentifiers": [
+        "soil_oak"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 0,
+        "y": 0,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "0,0",
+        "0,1",
+        "1,0",
+        "1,1"
+      ],
+      "tags": [
+        "autumn",
+        "decorative",
+        "group_1",
+        "impassable",
+        "soil",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_soil.coarse.webp",
+          "x": 2,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_soil.final.webp",
+          "x": 2,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_soil:group_2",
+      "groupId": "group_2",
+      "savedIdentifiers": [
+        "soil_beech"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 128,
+        "y": 0,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "2,0",
+        "2,1",
+        "3,0",
+        "3,1"
+      ],
+      "tags": [
+        "autumn",
+        "decorative",
+        "group_2",
+        "impassable",
+        "soil",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_soil.coarse.webp",
+          "x": 70,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_soil.final.webp",
+          "x": 134,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_soil:group_3",
+      "groupId": "group_3",
+      "savedIdentifiers": [
+        "soil_chestnut"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 256,
+        "y": 0,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "4,0",
+        "4,1",
+        "5,0",
+        "5,1"
+      ],
+      "tags": [
+        "autumn",
+        "decorative",
+        "group_3",
+        "impassable",
+        "soil",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_soil.coarse.webp",
+          "x": 138,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_soil.final.webp",
+          "x": 266,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_soil:group_4",
+      "groupId": "group_4",
+      "savedIdentifiers": [
+        "soil_ash"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 384,
+        "y": 0,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "6,0",
+        "6,1",
+        "7,0",
+        "7,1"
+      ],
+      "tags": [
+        "autumn",
+        "decorative",
+        "group_4",
+        "impassable",
+        "soil",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_soil.coarse.webp",
+          "x": 206,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_soil.final.webp",
+          "x": 398,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_soil:group_5",
+      "groupId": "group_5",
+      "savedIdentifiers": [
+        "soil_elm"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 512,
+        "y": 0,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "8,0",
+        "8,1",
+        "9,0",
+        "9,1"
+      ],
+      "tags": [
+        "autumn",
+        "decorative",
+        "group_5",
+        "impassable",
+        "soil",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_soil.coarse.webp",
+          "x": 274,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_soil.final.webp",
+          "x": 530,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_soil:group_6",
+      "groupId": "group_6",
+      "savedIdentifiers": [
+        "soil_birch"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 640,
+        "y": 0,
+        "width": 64,
+        "height": 128
+      },
+      "tileKeys": [
+        "10,0",
+        "10,1"
+      ],
+      "tags": [
+        "autumn",
+        "decorative",
+        "group_6",
+        "impassable",
+        "soil",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_soil.coarse.webp",
+          "x": 342,
+          "y": 2,
+          "width": 32,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_soil.final.webp",
+          "x": 662,
+          "y": 2,
+          "width": 64,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_soil:group_7",
+      "groupId": "group_7",
+      "savedIdentifiers": [
+        "soil_poplar"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 704,
+        "y": 0,
+        "width": 64,
+        "height": 128
+      },
+      "tileKeys": [
+        "11,0",
+        "11,1"
+      ],
+      "tags": [
+        "autumn",
+        "decorative",
+        "group_7",
+        "impassable",
+        "soil",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_soil.coarse.webp",
+          "x": 378,
+          "y": 2,
+          "width": 32,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_soil.final.webp",
+          "x": 730,
+          "y": 2,
+          "width": 64,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_soil:group_8",
+      "groupId": "group_8",
+      "savedIdentifiers": [
+        "soil_maple"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 768,
+        "y": 0,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "12,0",
+        "12,1",
+        "13,0",
+        "13,1"
+      ],
+      "tags": [
+        "autumn",
+        "decorative",
+        "group_8",
+        "impassable",
+        "soil",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_soil.coarse.webp",
+          "x": 414,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_soil.final.webp",
+          "x": 798,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_soil:group_9",
+      "groupId": "group_9",
+      "savedIdentifiers": [
+        "soil_willow"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 896,
+        "y": 0,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "14,0",
+        "14,1",
+        "15,0",
+        "15,1"
+      ],
+      "tags": [
+        "autumn",
+        "decorative",
+        "group_9",
+        "impassable",
+        "soil",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_soil.coarse.webp",
+          "x": 482,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_soil.final.webp",
+          "x": 930,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_soil:group_10",
+      "groupId": "group_10",
+      "savedIdentifiers": [
+        "soil_young_oak"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 0,
+        "y": 128,
+        "width": 64,
+        "height": 128
+      },
+      "tileKeys": [
+        "0,2",
+        "0,3"
+      ],
+      "tags": [
+        "autumn",
+        "decorative",
+        "group_10",
+        "impassable",
+        "soil",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_soil.coarse.webp",
+          "x": 550,
+          "y": 2,
+          "width": 32,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_soil.final.webp",
+          "x": 1062,
+          "y": 2,
+          "width": 64,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_soil:group_11",
+      "groupId": "group_11",
+      "savedIdentifiers": [
+        "soil_pine"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 64,
+        "y": 128,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "1,2",
+        "1,3",
+        "2,2",
+        "2,3"
+      ],
+      "tags": [
+        "autumn",
+        "decorative",
+        "group_11",
+        "impassable",
+        "soil",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_soil.coarse.webp",
+          "x": 586,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_soil.final.webp",
+          "x": 1130,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_soil:group_12",
+      "groupId": "group_12",
+      "savedIdentifiers": [
+        "soil_spruce"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 192,
+        "y": 128,
+        "width": 64,
+        "height": 128
+      },
+      "tileKeys": [
+        "3,2",
+        "3,3"
+      ],
+      "tags": [
+        "autumn",
+        "decorative",
+        "group_12",
+        "impassable",
+        "soil",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_soil.coarse.webp",
+          "x": 654,
+          "y": 2,
+          "width": 32,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_soil.final.webp",
+          "x": 1262,
+          "y": 2,
+          "width": 64,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_soil:group_13",
+      "groupId": "group_13",
+      "savedIdentifiers": [
+        "soil_fir"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 256,
+        "y": 128,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "4,2",
+        "4,3",
+        "5,2",
+        "5,3"
+      ],
+      "tags": [
+        "autumn",
+        "decorative",
+        "group_13",
+        "impassable",
+        "soil",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_soil.coarse.webp",
+          "x": 690,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_soil.final.webp",
+          "x": 1330,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_soil:group_14",
+      "groupId": "group_14",
+      "savedIdentifiers": [
+        "soil_larch"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 384,
+        "y": 128,
+        "width": 64,
+        "height": 128
+      },
+      "tileKeys": [
+        "6,2",
+        "6,3"
+      ],
+      "tags": [
+        "autumn",
+        "decorative",
+        "group_14",
+        "impassable",
+        "soil",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_soil.coarse.webp",
+          "x": 758,
+          "y": 2,
+          "width": 32,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_soil.final.webp",
+          "x": 1462,
+          "y": 2,
+          "width": 64,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_soil:group_15",
+      "groupId": "group_15",
+      "savedIdentifiers": [
+        "soil_scots_pine"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 448,
+        "y": 128,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "7,2",
+        "7,3",
+        "8,2",
+        "8,3"
+      ],
+      "tags": [
+        "autumn",
+        "decorative",
+        "group_15",
+        "impassable",
+        "soil",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_soil.coarse.webp",
+          "x": 794,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_soil.final.webp",
+          "x": 1530,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_soil:group_16",
+      "groupId": "group_16",
+      "savedIdentifiers": [
+        "soil_leafy_bush"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 576,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "9,2"
+      ],
+      "tags": [
+        "autumn",
+        "decorative",
+        "group_16",
+        "impassable",
+        "soil",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_soil.coarse.webp",
+          "x": 862,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_soil.final.webp",
+          "x": 1662,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_soil:group_17",
+      "groupId": "group_17",
+      "savedIdentifiers": [
+        "soil_bramble"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 640,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "10,2"
+      ],
+      "tags": [
+        "autumn",
+        "decorative",
+        "group_17",
+        "impassable",
+        "soil",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_soil.coarse.webp",
+          "x": 898,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_soil.final.webp",
+          "x": 1730,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_soil:group_18",
+      "groupId": "group_18",
+      "savedIdentifiers": [
+        "soil_hawthorn"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 704,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "11,2"
+      ],
+      "tags": [
+        "autumn",
+        "decorative",
+        "group_18",
+        "impassable",
+        "soil",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_soil.coarse.webp",
+          "x": 934,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_soil.final.webp",
+          "x": 1798,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_soil:group_19",
+      "groupId": "group_19",
+      "savedIdentifiers": [
+        "soil_hazel"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 768,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "12,2"
+      ],
+      "tags": [
+        "autumn",
+        "decorative",
+        "group_19",
+        "impassable",
+        "soil",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_soil.coarse.webp",
+          "x": 970,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_soil.final.webp",
+          "x": 1866,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_soil:group_20",
+      "groupId": "group_20",
+      "savedIdentifiers": [
+        "soil_gorse"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 832,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "13,2"
+      ],
+      "tags": [
+        "autumn",
+        "decorative",
+        "group_20",
+        "impassable",
+        "soil",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_soil.coarse.webp",
+          "x": 1006,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_soil.final.webp",
+          "x": 1934,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_soil:group_21",
+      "groupId": "group_21",
+      "savedIdentifiers": [
+        "soil_birch_saplings"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 896,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "14,2"
+      ],
+      "tags": [
+        "autumn",
+        "decorative",
+        "group_21",
+        "impassable",
+        "soil",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_soil.coarse.webp",
+          "x": 1042,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_soil.final.webp",
+          "x": 2,
+          "y": 134,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_soil:group_22",
+      "groupId": "group_22",
+      "savedIdentifiers": [
+        "soil_pine_saplings"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 960,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "15,2"
+      ],
+      "tags": [
+        "autumn",
+        "decorative",
+        "group_22",
+        "impassable",
+        "soil",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_soil.coarse.webp",
+          "x": 1078,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_soil.final.webp",
+          "x": 70,
+          "y": 134,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_soil:group_23",
+      "groupId": "group_23",
+      "savedIdentifiers": [
+        "soil_ferns"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 576,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "9,3"
+      ],
+      "tags": [
+        "autumn",
+        "decorative",
+        "group_23",
+        "passable",
+        "shrubs",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_soil.coarse.webp",
+          "x": 1114,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_soil.final.webp",
+          "x": 138,
+          "y": 134,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_soil:group_24",
+      "groupId": "group_24",
+      "savedIdentifiers": [
+        "soil_tall_grass"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 640,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "10,3"
+      ],
+      "tags": [
+        "autumn",
+        "decorative",
+        "group_24",
+        "passable",
+        "shrubs",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_soil.coarse.webp",
+          "x": 1150,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_soil.final.webp",
+          "x": 206,
+          "y": 134,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_soil:group_25",
+      "groupId": "group_25",
+      "savedIdentifiers": [
+        "soil_wildflowers"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 704,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "11,3"
+      ],
+      "tags": [
+        "autumn",
+        "decorative",
+        "group_25",
+        "passable",
+        "shrubs",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_soil.coarse.webp",
+          "x": 1186,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_soil.final.webp",
+          "x": 274,
+          "y": 134,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_soil:group_26",
+      "groupId": "group_26",
+      "savedIdentifiers": [
+        "soil_granite"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 768,
+        "y": 192,
+        "width": 128,
+        "height": 64
+      },
+      "tileKeys": [
+        "12,3",
+        "13,3"
+      ],
+      "tags": [
+        "autumn",
+        "decorative",
+        "group_26",
+        "impassable",
+        "rocks",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_soil.coarse.webp",
+          "x": 1222,
+          "y": 2,
+          "width": 64,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_soil.final.webp",
+          "x": 342,
+          "y": 134,
+          "width": 128,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_soil:group_27",
+      "groupId": "group_27",
+      "savedIdentifiers": [
+        "soil_limestone"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 896,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "14,3"
+      ],
+      "tags": [
+        "autumn",
+        "decorative",
+        "group_27",
+        "impassable",
+        "rocks",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_soil.coarse.webp",
+          "x": 1290,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_soil.final.webp",
+          "x": 474,
+          "y": 134,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_soil:group_28",
+      "groupId": "group_28",
+      "savedIdentifiers": [
+        "soil_basalt"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 0,
+        "y": 256,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "0,4",
+        "0,5",
+        "1,4",
+        "1,5"
+      ],
+      "tags": [
+        "autumn",
+        "decorative",
+        "group_28",
+        "impassable",
+        "rocks",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_soil.coarse.webp",
+          "x": 1326,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_soil.final.webp",
+          "x": 542,
+          "y": 134,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_soil:group_29",
+      "groupId": "group_29",
+      "savedIdentifiers": [
+        "soil_sandstone"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 128,
+        "y": 256,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "2,4",
+        "2,5",
+        "3,4",
+        "3,5"
+      ],
+      "tags": [
+        "autumn",
+        "decorative",
+        "group_29",
+        "impassable",
+        "rocks",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_soil.coarse.webp",
+          "x": 1394,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_soil.final.webp",
+          "x": 674,
+          "y": 134,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_soil:group_30",
+      "groupId": "group_30",
+      "savedIdentifiers": [
+        "soil_layered_rocks"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 256,
+        "y": 256,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "4,4",
+        "4,5",
+        "5,4",
+        "5,5"
+      ],
+      "tags": [
+        "autumn",
+        "decorative",
+        "group_30",
+        "impassable",
+        "rocks",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_soil.coarse.webp",
+          "x": 1462,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_soil.final.webp",
+          "x": 806,
+          "y": 134,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_soil:group_31",
+      "groupId": "group_31",
+      "savedIdentifiers": [
+        "soil_river_stones"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 960,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "15,3"
+      ],
+      "tags": [
+        "autumn",
+        "decorative",
+        "group_31",
+        "passable",
+        "rocks",
+        "soil",
+        "stones"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_soil.coarse.webp",
+          "x": 1530,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_soil.final.webp",
+          "x": 938,
+          "y": 134,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_soil:group_32",
+      "groupId": "group_32",
+      "savedIdentifiers": [
+        "soil_slate_stones"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 384,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "6,4"
+      ],
+      "tags": [
+        "autumn",
+        "decorative",
+        "group_32",
+        "passable",
+        "rocks",
+        "soil",
+        "stones"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_soil.coarse.webp",
+          "x": 1566,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_soil.final.webp",
+          "x": 1006,
+          "y": 134,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_soil:group_33",
+      "groupId": "group_33",
+      "savedIdentifiers": [
+        "soil_mossy_stones"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 448,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "7,4"
+      ],
+      "tags": [
+        "autumn",
+        "decorative",
+        "group_33",
+        "passable",
+        "rocks",
+        "soil",
+        "stones"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_soil.coarse.webp",
+          "x": 1602,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_soil.final.webp",
+          "x": 1074,
+          "y": 134,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_soil:group_34",
+      "groupId": "group_34",
+      "savedIdentifiers": [
+        "soil_pebbles"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 512,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "8,4"
+      ],
+      "tags": [
+        "autumn",
+        "decorative",
+        "group_34",
+        "passable",
+        "rocks",
+        "soil",
+        "stones"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_soil.coarse.webp",
+          "x": 1638,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_soil.final.webp",
+          "x": 1142,
+          "y": 134,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_soil:group_35",
+      "groupId": "group_35",
+      "savedIdentifiers": [
+        "soil_pale_stones"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 576,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "9,4"
+      ],
+      "tags": [
+        "autumn",
+        "decorative",
+        "group_35",
+        "passable",
+        "rocks",
+        "soil",
+        "stones"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_soil.coarse.webp",
+          "x": 1674,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_soil.final.webp",
+          "x": 1210,
+          "y": 134,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_soil:group_36",
+      "groupId": "group_36",
+      "savedIdentifiers": [
+        "soil_reed_pond"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 192,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 640,
+        "y": 256,
+        "width": 128,
+        "height": 192
+      },
+      "tileKeys": [
+        "10,4",
+        "10,5",
+        "10,6",
+        "11,4",
+        "11,5",
+        "11,6"
+      ],
+      "tags": [
+        "autumn",
+        "decorative",
+        "group_36",
+        "impassable",
+        "lake",
+        "soil",
+        "water"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_soil.coarse.webp",
+          "x": 1710,
+          "y": 2,
+          "width": 64,
+          "height": 96,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_soil.final.webp",
+          "x": 1278,
+          "y": 134,
+          "width": 128,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_soil:group_37",
+      "groupId": "group_37",
+      "savedIdentifiers": [
+        "soil_woodland_pond"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 192,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 768,
+        "y": 256,
+        "width": 128,
+        "height": 192
+      },
+      "tileKeys": [
+        "12,4",
+        "12,5",
+        "12,6",
+        "13,4",
+        "13,5",
+        "13,6"
+      ],
+      "tags": [
+        "autumn",
+        "decorative",
+        "group_37",
+        "impassable",
+        "lake",
+        "soil",
+        "water"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_soil.coarse.webp",
+          "x": 1778,
+          "y": 2,
+          "width": 64,
+          "height": 96,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_soil.final.webp",
+          "x": 1410,
+          "y": 134,
+          "width": 128,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_soil:group_38",
+      "groupId": "group_38",
+      "savedIdentifiers": [
+        "soil_lily_pond"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 192,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 896,
+        "y": 256,
+        "width": 128,
+        "height": 192
+      },
+      "tileKeys": [
+        "14,4",
+        "14,5",
+        "14,6",
+        "15,4",
+        "15,5",
+        "15,6"
+      ],
+      "tags": [
+        "autumn",
+        "decorative",
+        "group_38",
+        "impassable",
+        "lake",
+        "soil",
+        "water"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_soil.coarse.webp",
+          "x": 1846,
+          "y": 2,
+          "width": 64,
+          "height": 96,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_soil.final.webp",
+          "x": 1542,
+          "y": 134,
+          "width": 128,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_soil:group_39",
+      "groupId": "group_39",
+      "savedIdentifiers": [
+        "soil_rocky_lake"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 192,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 384,
+        "y": 320,
+        "width": 128,
+        "height": 192
+      },
+      "tileKeys": [
+        "6,5",
+        "6,6",
+        "6,7",
+        "7,5",
+        "7,6",
+        "7,7"
+      ],
+      "tags": [
+        "autumn",
+        "decorative",
+        "group_39",
+        "impassable",
+        "lake",
+        "soil",
+        "water"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_soil.coarse.webp",
+          "x": 1914,
+          "y": 2,
+          "width": 64,
+          "height": 96,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_soil.final.webp",
+          "x": 1674,
+          "y": 134,
+          "width": 128,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_soil:group_40",
+      "groupId": "group_40",
+      "savedIdentifiers": [
+        "soil_wetland_pond"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 192,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 512,
+        "y": 320,
+        "width": 128,
+        "height": 192
+      },
+      "tileKeys": [
+        "8,5",
+        "8,6",
+        "8,7",
+        "9,5",
+        "9,6",
+        "9,7"
+      ],
+      "tags": [
+        "autumn",
+        "decorative",
+        "group_40",
+        "impassable",
+        "lake",
+        "soil",
+        "water"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_soil.coarse.webp",
+          "x": 1982,
+          "y": 2,
+          "width": 64,
+          "height": 96,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_soil.final.webp",
+          "x": 1806,
+          "y": 134,
+          "width": 128,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    }
+  ]
+}
