@@ -49,7 +49,9 @@ export function createIdleAssetQueue(load, {
   let sequence = 0
 
   const hasPending = () => queues.some(queue => queue.size)
-  const canUseTurn = deadline => !deadline || deadline.timeRemaining?.() >= minIdleMs || Boolean(deadline.didTimeout && hasForegroundSlack())
+  const hasForegroundDemand = () => queues[IDLE_ASSET_PRIORITIES.VISIBLE_COARSE].size > 0 || queues[IDLE_ASSET_PRIORITIES.LOOKAHEAD].size > 0
+  const canUseTurn = deadline => !deadline || deadline.timeRemaining?.() >= minIdleMs ||
+    Boolean(deadline.didTimeout && (hasForegroundDemand() || hasForegroundSlack()))
   const settle = ({ job, value, error }) => {
     reservedBytes -= job.bytes
     running--

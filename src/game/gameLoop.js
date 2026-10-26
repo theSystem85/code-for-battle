@@ -297,6 +297,7 @@ export class GameLoop {
     this.fpsDisplay.render(gameCtx, gameCanvas)
     const frameEnd = performance.now()
     const totalPausedFrameMs = frameEnd - frameStart
+    globalThis.__cfbFrameHeadroomMs = Math.max(0, (1000 / 75) - totalPausedFrameMs)
     const updateMs = Math.max(0, updateEnd - frameStart)
     const renderMs = Math.max(0, renderEnd - updateEnd)
     this.fpsDisplay.reportFrameBreakdown({
@@ -504,6 +505,7 @@ export class GameLoop {
     const updateMs = Math.max(0, updateEnd - frameStart)
     const renderMs = Math.max(0, renderEnd - updateEnd)
     const idleMs = Math.max(0, frameEnd - frameStart - updateMs - renderMs)
+    globalThis.__cfbFrameHeadroomMs = Math.max(0, (1000 / 75) - (frameEnd - frameStart))
     this.fpsDisplay.reportFrameBreakdown({ updateMs, renderMs, idleMs })
     performanceMonitor.recordFrame({
       frameInterval: now - (this.lastFrameTimestampForMonitor || now),

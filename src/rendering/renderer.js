@@ -24,6 +24,7 @@ import { renderMineIndicators, renderMineDeploymentPreview, renderSweepAreaPrevi
 import { GameWebGLRenderer } from './webglRenderer.js'
 import { GameWebGPURenderer } from './webgpuRenderer.js'
 import { prewarmDestructionExplosionTexture } from '../game/spriteSheetEffects.js'
+import { updatePreparedSpriteDemand } from './prepared/preparedSpritePipeline.js'
 import { gameState } from '../gameState.js'
 import { getCanvasLogicalSize } from './renderingUtils.js'
 import { selectedUnits } from '../inputHandler.js'
@@ -720,6 +721,10 @@ export class Renderer {
     if (monitorTiming) {
       performanceMonitor.recordRendererPhases({ terrainMs, entitiesMs, effectsMs, uiMs })
     }
+    updatePreparedSpriteDemand({
+      moving: Boolean(gameState.isRightDragging || gameState.keyboardCameraX || gameState.keyboardCameraY || gameState.dragVelocity?.x || gameState.dragVelocity?.y),
+      capturedAt: typeof performance !== 'undefined' ? performance.now() : 0
+    })
   }
 
   renderMinimap(minimapCtx, minimapCanvas, mapGrid, scrollOffset, gameCanvas, units, buildings, gameState) {

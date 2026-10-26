@@ -16,7 +16,7 @@
       1
     ]
   },
-  "signature": "41cff3d475f05d1b53c3ad8b4aba071af8d7b1458a535414d33bbec83644edfb",
+  "signature": "b22c83aa4b21c5da360dba5b144c46454a3ec6de417e2f06e5c166b85e22c906",
   "source": {
     "image": "images/map/sprite_sheets/dtv6_decor_snow.webp",
     "metadata": "images/map/sprite_sheets/dtv6_decor_snow.json",
@@ -1626,7 +1626,9 @@
       "compressedBytes": 40260,
       "tier": 0,
       "tierName": "coarse",
-      "backingDensity": 0.5
+      "backingDensity": 0.5,
+      "contentIdentity": "91891d04d1d65c92141310eaef90fbc9f364b2f585118ceef7154a3885313759",
+      "url": "/images/prepared-map-sprites/dtv6_decor_snow.coarse.webp?cfb-content=91891d04d1d65c92141310eaef90fbc9f364b2f585118ceef7154a3885313759"
     },
     {
       "name": "dtv6_decor_snow.final.webp",
@@ -1637,7 +1639,9 @@
       "compressedBytes": 116210,
       "tier": 2,
       "tierName": "final",
-      "backingDensity": 1
+      "backingDensity": 1,
+      "contentIdentity": "b7a08935d12593b8cf48a9adbeffb01cc110038c1ae3ce069fdbb6ee3ce093f6",
+      "url": "/images/prepared-map-sprites/dtv6_decor_snow.final.webp?cfb-content=b7a08935d12593b8cf48a9adbeffb01cc110038c1ae3ce069fdbb6ee3ce093f6"
     }
   ],
   "sprites": [
@@ -1679,7 +1683,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_snow.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_snow.coarse.webp?cfb-content=91891d04d1d65c92141310eaef90fbc9f364b2f585118ceef7154a3885313759",
           "x": 2,
           "y": 2,
           "width": 64,
@@ -1691,7 +1695,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_snow.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_snow.final.webp?cfb-content=b7a08935d12593b8cf48a9adbeffb01cc110038c1ae3ce069fdbb6ee3ce093f6",
           "x": 2,
           "y": 2,
           "width": 128,
@@ -1737,7 +1741,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_snow.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_snow.coarse.webp?cfb-content=91891d04d1d65c92141310eaef90fbc9f364b2f585118ceef7154a3885313759",
           "x": 70,
           "y": 2,
           "width": 64,
@@ -1749,7 +1753,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_snow.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_snow.final.webp?cfb-content=b7a08935d12593b8cf48a9adbeffb01cc110038c1ae3ce069fdbb6ee3ce093f6",
           "x": 134,
           "y": 2,
           "width": 128,
@@ -1795,7 +1799,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_snow.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_snow.coarse.webp?cfb-content=91891d04d1d65c92141310eaef90fbc9f364b2f585118ceef7154a3885313759",
           "x": 138,
           "y": 2,
           "width": 64,
@@ -1807,7 +1811,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_snow.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_snow.final.webp?cfb-content=b7a08935d12593b8cf48a9adbeffb01cc110038c1ae3ce069fdbb6ee3ce093f6",
           "x": 266,
           "y": 2,
           "width": 128,
@@ -1854,7 +1858,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_snow.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_snow.coarse.webp?cfb-content=91891d04d1d65c92141310eaef90fbc9f364b2f585118ceef7154a3885313759",
           "x": 206,
           "y": 2,
           "width": 64,
@@ -1866,7 +1870,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_snow.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_snow.final.webp?cfb-content=b7a08935d12593b8cf48a9adbeffb01cc110038c1ae3ce069fdbb6ee3ce093f6",
           "x": 398,
           "y": 2,
           "width": 128,
@@ -1912,7 +1916,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_snow.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_snow.coarse.webp?cfb-content=91891d04d1d65c92141310eaef90fbc9f364b2f585118ceef7154a3885313759",
           "x": 274,
           "y": 2,
           "width": 64,
@@ -1924,7 +1928,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_snow.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_snow.final.webp?cfb-content=b7a08935d12593b8cf48a9adbeffb01cc110038c1ae3ce069fdbb6ee3ce093f6",
           "x": 530,
           "y": 2,
           "width": 128,
@@ -1977,7 +1981,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_snow.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_snow.coarse.webp?cfb-content=91891d04d1d65c92141310eaef90fbc9f364b2f585118ceef7154a3885313759",
           "x": 342,
           "y": 2,
           "width": 96,
@@ -1989,7 +1993,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_snow.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_snow.final.webp?cfb-content=b7a08935d12593b8cf48a9adbeffb01cc110038c1ae3ce069fdbb6ee3ce093f6",
           "x": 662,
           "y": 2,
           "width": 192,
@@ -2032,7 +2036,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_snow.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_snow.coarse.webp?cfb-content=91891d04d1d65c92141310eaef90fbc9f364b2f585118ceef7154a3885313759",
           "x": 442,
           "y": 2,
           "width": 32,
@@ -2044,7 +2048,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_snow.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_snow.final.webp?cfb-content=b7a08935d12593b8cf48a9adbeffb01cc110038c1ae3ce069fdbb6ee3ce093f6",
           "x": 858,
           "y": 2,
           "width": 64,
@@ -2090,7 +2094,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_snow.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_snow.coarse.webp?cfb-content=91891d04d1d65c92141310eaef90fbc9f364b2f585118ceef7154a3885313759",
           "x": 478,
           "y": 2,
           "width": 64,
@@ -2102,7 +2106,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_snow.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_snow.final.webp?cfb-content=b7a08935d12593b8cf48a9adbeffb01cc110038c1ae3ce069fdbb6ee3ce093f6",
           "x": 926,
           "y": 2,
           "width": 128,
@@ -2146,7 +2150,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_snow.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_snow.coarse.webp?cfb-content=91891d04d1d65c92141310eaef90fbc9f364b2f585118ceef7154a3885313759",
           "x": 546,
           "y": 2,
           "width": 32,
@@ -2158,7 +2162,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_snow.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_snow.final.webp?cfb-content=b7a08935d12593b8cf48a9adbeffb01cc110038c1ae3ce069fdbb6ee3ce093f6",
           "x": 1058,
           "y": 2,
           "width": 64,
@@ -2204,7 +2208,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_snow.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_snow.coarse.webp?cfb-content=91891d04d1d65c92141310eaef90fbc9f364b2f585118ceef7154a3885313759",
           "x": 582,
           "y": 2,
           "width": 64,
@@ -2216,7 +2220,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_snow.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_snow.final.webp?cfb-content=b7a08935d12593b8cf48a9adbeffb01cc110038c1ae3ce069fdbb6ee3ce093f6",
           "x": 1126,
           "y": 2,
           "width": 128,
@@ -2260,7 +2264,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_snow.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_snow.coarse.webp?cfb-content=91891d04d1d65c92141310eaef90fbc9f364b2f585118ceef7154a3885313759",
           "x": 650,
           "y": 2,
           "width": 64,
@@ -2272,7 +2276,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_snow.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_snow.final.webp?cfb-content=b7a08935d12593b8cf48a9adbeffb01cc110038c1ae3ce069fdbb6ee3ce093f6",
           "x": 1258,
           "y": 2,
           "width": 128,
@@ -2315,7 +2319,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_snow.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_snow.coarse.webp?cfb-content=91891d04d1d65c92141310eaef90fbc9f364b2f585118ceef7154a3885313759",
           "x": 718,
           "y": 2,
           "width": 32,
@@ -2327,7 +2331,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_snow.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_snow.final.webp?cfb-content=b7a08935d12593b8cf48a9adbeffb01cc110038c1ae3ce069fdbb6ee3ce093f6",
           "x": 1390,
           "y": 2,
           "width": 64,
@@ -2370,7 +2374,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_snow.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_snow.coarse.webp?cfb-content=91891d04d1d65c92141310eaef90fbc9f364b2f585118ceef7154a3885313759",
           "x": 754,
           "y": 2,
           "width": 32,
@@ -2382,7 +2386,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_snow.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_snow.final.webp?cfb-content=b7a08935d12593b8cf48a9adbeffb01cc110038c1ae3ce069fdbb6ee3ce093f6",
           "x": 1458,
           "y": 2,
           "width": 64,
@@ -2426,7 +2430,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_snow.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_snow.coarse.webp?cfb-content=91891d04d1d65c92141310eaef90fbc9f364b2f585118ceef7154a3885313759",
           "x": 790,
           "y": 2,
           "width": 32,
@@ -2438,7 +2442,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_snow.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_snow.final.webp?cfb-content=b7a08935d12593b8cf48a9adbeffb01cc110038c1ae3ce069fdbb6ee3ce093f6",
           "x": 1526,
           "y": 2,
           "width": 64,
@@ -2481,7 +2485,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_snow.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_snow.coarse.webp?cfb-content=91891d04d1d65c92141310eaef90fbc9f364b2f585118ceef7154a3885313759",
           "x": 826,
           "y": 2,
           "width": 32,
@@ -2493,7 +2497,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_snow.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_snow.final.webp?cfb-content=b7a08935d12593b8cf48a9adbeffb01cc110038c1ae3ce069fdbb6ee3ce093f6",
           "x": 1594,
           "y": 2,
           "width": 64,
@@ -2536,7 +2540,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_snow.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_snow.coarse.webp?cfb-content=91891d04d1d65c92141310eaef90fbc9f364b2f585118ceef7154a3885313759",
           "x": 862,
           "y": 2,
           "width": 32,
@@ -2548,7 +2552,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_snow.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_snow.final.webp?cfb-content=b7a08935d12593b8cf48a9adbeffb01cc110038c1ae3ce069fdbb6ee3ce093f6",
           "x": 1662,
           "y": 2,
           "width": 64,
@@ -2591,7 +2595,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_snow.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_snow.coarse.webp?cfb-content=91891d04d1d65c92141310eaef90fbc9f364b2f585118ceef7154a3885313759",
           "x": 898,
           "y": 2,
           "width": 32,
@@ -2603,7 +2607,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_snow.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_snow.final.webp?cfb-content=b7a08935d12593b8cf48a9adbeffb01cc110038c1ae3ce069fdbb6ee3ce093f6",
           "x": 1730,
           "y": 2,
           "width": 64,
@@ -2646,7 +2650,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_snow.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_snow.coarse.webp?cfb-content=91891d04d1d65c92141310eaef90fbc9f364b2f585118ceef7154a3885313759",
           "x": 934,
           "y": 2,
           "width": 32,
@@ -2658,7 +2662,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_snow.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_snow.final.webp?cfb-content=b7a08935d12593b8cf48a9adbeffb01cc110038c1ae3ce069fdbb6ee3ce093f6",
           "x": 1798,
           "y": 2,
           "width": 64,
@@ -2701,7 +2705,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_snow.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_snow.coarse.webp?cfb-content=91891d04d1d65c92141310eaef90fbc9f364b2f585118ceef7154a3885313759",
           "x": 970,
           "y": 2,
           "width": 32,
@@ -2713,7 +2717,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_snow.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_snow.final.webp?cfb-content=b7a08935d12593b8cf48a9adbeffb01cc110038c1ae3ce069fdbb6ee3ce093f6",
           "x": 1866,
           "y": 2,
           "width": 64,
@@ -2756,7 +2760,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_snow.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_snow.coarse.webp?cfb-content=91891d04d1d65c92141310eaef90fbc9f364b2f585118ceef7154a3885313759",
           "x": 1006,
           "y": 2,
           "width": 32,
@@ -2768,7 +2772,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_snow.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_snow.final.webp?cfb-content=b7a08935d12593b8cf48a9adbeffb01cc110038c1ae3ce069fdbb6ee3ce093f6",
           "x": 1934,
           "y": 2,
           "width": 64,
@@ -2814,7 +2818,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_snow.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_snow.coarse.webp?cfb-content=91891d04d1d65c92141310eaef90fbc9f364b2f585118ceef7154a3885313759",
           "x": 1042,
           "y": 2,
           "width": 64,
@@ -2826,7 +2830,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_snow.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_snow.final.webp?cfb-content=b7a08935d12593b8cf48a9adbeffb01cc110038c1ae3ce069fdbb6ee3ce093f6",
           "x": 2,
           "y": 198,
           "width": 128,
@@ -2870,7 +2874,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_snow.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_snow.coarse.webp?cfb-content=91891d04d1d65c92141310eaef90fbc9f364b2f585118ceef7154a3885313759",
           "x": 1110,
           "y": 2,
           "width": 32,
@@ -2882,7 +2886,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_snow.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_snow.final.webp?cfb-content=b7a08935d12593b8cf48a9adbeffb01cc110038c1ae3ce069fdbb6ee3ce093f6",
           "x": 134,
           "y": 198,
           "width": 64,
@@ -2925,7 +2929,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_snow.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_snow.coarse.webp?cfb-content=91891d04d1d65c92141310eaef90fbc9f364b2f585118ceef7154a3885313759",
           "x": 1146,
           "y": 2,
           "width": 32,
@@ -2937,7 +2941,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_snow.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_snow.final.webp?cfb-content=b7a08935d12593b8cf48a9adbeffb01cc110038c1ae3ce069fdbb6ee3ce093f6",
           "x": 202,
           "y": 198,
           "width": 64,
@@ -2981,7 +2985,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_snow.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_snow.coarse.webp?cfb-content=91891d04d1d65c92141310eaef90fbc9f364b2f585118ceef7154a3885313759",
           "x": 1182,
           "y": 2,
           "width": 32,
@@ -2993,7 +2997,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_snow.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_snow.final.webp?cfb-content=b7a08935d12593b8cf48a9adbeffb01cc110038c1ae3ce069fdbb6ee3ce093f6",
           "x": 270,
           "y": 198,
           "width": 64,

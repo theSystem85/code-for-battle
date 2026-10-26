@@ -384,7 +384,7 @@ The integration-owner-only paths are exactly: `src/rendering/textureManager.js`,
 - [x] Extend `src/utils/idleAssetQueue.js` behind the frozen contract: visible coarse > lookahead > visible refinement > optional work, with bounded aging to prevent starvation, generation cancellation, deduplication and controlled retries.
 - [x] Admit work using both concurrency and byte reservations. Honor idle deadline/timeout and explicit foreground slack; async completion work must also be bounded. Implement timer fallback without assuming a 16 ms delay provides idle time.
 - [x] Coalesce camera demand snapshots outside per-entity loops. Pause optional upgrades/rotations during rapid camera movement, then resume after a settled dwell interval with hysteresis. Bound obsolete requests and avoid building new Maps/Sets every frame.
-- [ ] Replace enqueue-all behavior at integration with actual demand/resident policy; preserve pre-readiness requests for critical assets.
+- [x] Replace enqueue-all behavior at integration with actual demand/resident policy; preserve pre-readiness requests for critical assets.
 
 **Exclusive component paths:** `src/utils/idleAssetQueue.js`, new scheduler module and scheduler unit tests. Camera/startup/prepared registry wiring is integration-owned.
 
@@ -426,7 +426,7 @@ S06 software integration is covered by focused generation, tier-promotion, layou
 ### S09 — versioned tiers, load overlap and offline policy
 
 - [x] Inspect NetworkFirst sheet routes and offline downloader activity alongside streaming traces. Use immutable content/version identity for derivative manifests/images; avoid mixed metadata/art revisions. Retain correct updates/offline fallback for original mutable editor assets.
-- [ ] Use bounded overlapping sheet loads instead of serial network latency where useful, constrained by S04/S05 budgets. Avoid loading source plus derivative or every DPR/tier unnecessarily.
+- [x] Use bounded overlapping sheet loads instead of serial network latency where useful, constrained by S04/S05 budgets. Avoid loading source plus derivative or every DPR/tier unnecessarily.
 - [x] Define offline tier policy explicitly (minimum usable representation and selected final tier, storage quotas, upgrades/cleanup); yield offline fills to visible requests. Prepared imagery is currently excluded from bulk download, so verify offline rendering rather than assuming new derivative routes are covered.
 
 **Exclusive component paths:** `src/pwa/offlineAssetPlan.js`, `src/pwa/sw.js`, offline downloader/manifest plugin and focused PWA tests. Build/Vite/TextureManager wiring belongs to integration owner. Register exact downloader paths at S00 before dispatch.

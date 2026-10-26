@@ -16,7 +16,7 @@
       1
     ]
   },
-  "signature": "700153fc16fb72b7d4b5193fea0fe60d95c335e5c933a939988f7b362b7287f0",
+  "signature": "3d0ccbf91bd75e408f60498252130e63267041d5439d853218792f391fdbe2ef",
   "source": {
     "image": "images/map/sprite_sheets/dtv6_decor_sand.webp",
     "metadata": "images/map/sprite_sheets/dtv6_decor_sand.json",
@@ -1566,7 +1566,9 @@
       "compressedBytes": 38836,
       "tier": 0,
       "tierName": "coarse",
-      "backingDensity": 0.5
+      "backingDensity": 0.5,
+      "contentIdentity": "1884ffe2599e04ee6ab4ddd6a293730de64fedf9db7a8f1d98b971f513482f92",
+      "url": "/images/prepared-map-sprites/dtv6_decor_sand.coarse.webp?cfb-content=1884ffe2599e04ee6ab4ddd6a293730de64fedf9db7a8f1d98b971f513482f92"
     },
     {
       "name": "dtv6_decor_sand.final.webp",
@@ -1577,7 +1579,9 @@
       "compressedBytes": 101988,
       "tier": 2,
       "tierName": "final",
-      "backingDensity": 1
+      "backingDensity": 1,
+      "contentIdentity": "30448f0879db34a86dd0f81df36b9e1b6636a460d9c7cc7929bcdf93c7f8608a",
+      "url": "/images/prepared-map-sprites/dtv6_decor_sand.final.webp?cfb-content=30448f0879db34a86dd0f81df36b9e1b6636a460d9c7cc7929bcdf93c7f8608a"
     }
   ],
   "sprites": [
@@ -1613,7 +1617,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_sand.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_sand.coarse.webp?cfb-content=1884ffe2599e04ee6ab4ddd6a293730de64fedf9db7a8f1d98b971f513482f92",
           "x": 2,
           "y": 2,
           "width": 32,
@@ -1625,7 +1629,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_sand.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_sand.final.webp?cfb-content=30448f0879db34a86dd0f81df36b9e1b6636a460d9c7cc7929bcdf93c7f8608a",
           "x": 2,
           "y": 2,
           "width": 64,
@@ -1676,7 +1680,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_sand.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_sand.coarse.webp?cfb-content=1884ffe2599e04ee6ab4ddd6a293730de64fedf9db7a8f1d98b971f513482f92",
           "x": 38,
           "y": 2,
           "width": 96,
@@ -1688,7 +1692,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_sand.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_sand.final.webp?cfb-content=30448f0879db34a86dd0f81df36b9e1b6636a460d9c7cc7929bcdf93c7f8608a",
           "x": 70,
           "y": 2,
           "width": 192,
@@ -1731,7 +1735,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_sand.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_sand.coarse.webp?cfb-content=1884ffe2599e04ee6ab4ddd6a293730de64fedf9db7a8f1d98b971f513482f92",
           "x": 138,
           "y": 2,
           "width": 32,
@@ -1743,7 +1747,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_sand.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_sand.final.webp?cfb-content=30448f0879db34a86dd0f81df36b9e1b6636a460d9c7cc7929bcdf93c7f8608a",
           "x": 266,
           "y": 2,
           "width": 64,
@@ -1788,7 +1792,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_sand.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_sand.coarse.webp?cfb-content=1884ffe2599e04ee6ab4ddd6a293730de64fedf9db7a8f1d98b971f513482f92",
           "x": 174,
           "y": 2,
           "width": 64,
@@ -1800,7 +1804,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_sand.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_sand.final.webp?cfb-content=30448f0879db34a86dd0f81df36b9e1b6636a460d9c7cc7929bcdf93c7f8608a",
           "x": 334,
           "y": 2,
           "width": 128,
@@ -1845,7 +1849,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_sand.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_sand.coarse.webp?cfb-content=1884ffe2599e04ee6ab4ddd6a293730de64fedf9db7a8f1d98b971f513482f92",
           "x": 242,
           "y": 2,
           "width": 64,
@@ -1857,7 +1861,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_sand.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_sand.final.webp?cfb-content=30448f0879db34a86dd0f81df36b9e1b6636a460d9c7cc7929bcdf93c7f8608a",
           "x": 466,
           "y": 2,
           "width": 128,
@@ -1901,7 +1905,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_sand.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_sand.coarse.webp?cfb-content=1884ffe2599e04ee6ab4ddd6a293730de64fedf9db7a8f1d98b971f513482f92",
           "x": 310,
           "y": 2,
           "width": 64,
@@ -1913,7 +1917,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_sand.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_sand.final.webp?cfb-content=30448f0879db34a86dd0f81df36b9e1b6636a460d9c7cc7929bcdf93c7f8608a",
           "x": 598,
           "y": 2,
           "width": 128,
@@ -1955,7 +1959,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_sand.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_sand.coarse.webp?cfb-content=1884ffe2599e04ee6ab4ddd6a293730de64fedf9db7a8f1d98b971f513482f92",
           "x": 378,
           "y": 2,
           "width": 32,
@@ -1967,7 +1971,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_sand.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_sand.final.webp?cfb-content=30448f0879db34a86dd0f81df36b9e1b6636a460d9c7cc7929bcdf93c7f8608a",
           "x": 730,
           "y": 2,
           "width": 64,
@@ -2012,7 +2016,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_sand.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_sand.coarse.webp?cfb-content=1884ffe2599e04ee6ab4ddd6a293730de64fedf9db7a8f1d98b971f513482f92",
           "x": 414,
           "y": 2,
           "width": 64,
@@ -2024,7 +2028,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_sand.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_sand.final.webp?cfb-content=30448f0879db34a86dd0f81df36b9e1b6636a460d9c7cc7929bcdf93c7f8608a",
           "x": 798,
           "y": 2,
           "width": 128,
@@ -2069,7 +2073,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_sand.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_sand.coarse.webp?cfb-content=1884ffe2599e04ee6ab4ddd6a293730de64fedf9db7a8f1d98b971f513482f92",
           "x": 482,
           "y": 2,
           "width": 64,
@@ -2081,7 +2085,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_sand.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_sand.final.webp?cfb-content=30448f0879db34a86dd0f81df36b9e1b6636a460d9c7cc7929bcdf93c7f8608a",
           "x": 930,
           "y": 2,
           "width": 128,
@@ -2124,7 +2128,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_sand.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_sand.coarse.webp?cfb-content=1884ffe2599e04ee6ab4ddd6a293730de64fedf9db7a8f1d98b971f513482f92",
           "x": 550,
           "y": 2,
           "width": 32,
@@ -2136,7 +2140,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_sand.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_sand.final.webp?cfb-content=30448f0879db34a86dd0f81df36b9e1b6636a460d9c7cc7929bcdf93c7f8608a",
           "x": 1062,
           "y": 2,
           "width": 64,
@@ -2179,7 +2183,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_sand.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_sand.coarse.webp?cfb-content=1884ffe2599e04ee6ab4ddd6a293730de64fedf9db7a8f1d98b971f513482f92",
           "x": 586,
           "y": 2,
           "width": 64,
@@ -2191,7 +2195,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_sand.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_sand.final.webp?cfb-content=30448f0879db34a86dd0f81df36b9e1b6636a460d9c7cc7929bcdf93c7f8608a",
           "x": 1130,
           "y": 2,
           "width": 128,
@@ -2236,7 +2240,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_sand.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_sand.coarse.webp?cfb-content=1884ffe2599e04ee6ab4ddd6a293730de64fedf9db7a8f1d98b971f513482f92",
           "x": 654,
           "y": 2,
           "width": 64,
@@ -2248,7 +2252,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_sand.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_sand.final.webp?cfb-content=30448f0879db34a86dd0f81df36b9e1b6636a460d9c7cc7929bcdf93c7f8608a",
           "x": 1262,
           "y": 2,
           "width": 128,
@@ -2290,7 +2294,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_sand.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_sand.coarse.webp?cfb-content=1884ffe2599e04ee6ab4ddd6a293730de64fedf9db7a8f1d98b971f513482f92",
           "x": 722,
           "y": 2,
           "width": 32,
@@ -2302,7 +2306,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_sand.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_sand.final.webp?cfb-content=30448f0879db34a86dd0f81df36b9e1b6636a460d9c7cc7929bcdf93c7f8608a",
           "x": 1394,
           "y": 2,
           "width": 64,
@@ -2344,7 +2348,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_sand.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_sand.coarse.webp?cfb-content=1884ffe2599e04ee6ab4ddd6a293730de64fedf9db7a8f1d98b971f513482f92",
           "x": 758,
           "y": 2,
           "width": 32,
@@ -2356,7 +2360,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_sand.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_sand.final.webp?cfb-content=30448f0879db34a86dd0f81df36b9e1b6636a460d9c7cc7929bcdf93c7f8608a",
           "x": 1462,
           "y": 2,
           "width": 64,
@@ -2399,7 +2403,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_sand.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_sand.coarse.webp?cfb-content=1884ffe2599e04ee6ab4ddd6a293730de64fedf9db7a8f1d98b971f513482f92",
           "x": 794,
           "y": 2,
           "width": 32,
@@ -2411,7 +2415,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_sand.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_sand.final.webp?cfb-content=30448f0879db34a86dd0f81df36b9e1b6636a460d9c7cc7929bcdf93c7f8608a",
           "x": 1530,
           "y": 2,
           "width": 64,
@@ -2452,7 +2456,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_sand.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_sand.coarse.webp?cfb-content=1884ffe2599e04ee6ab4ddd6a293730de64fedf9db7a8f1d98b971f513482f92",
           "x": 830,
           "y": 2,
           "width": 32,
@@ -2464,7 +2468,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_sand.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_sand.final.webp?cfb-content=30448f0879db34a86dd0f81df36b9e1b6636a460d9c7cc7929bcdf93c7f8608a",
           "x": 1598,
           "y": 2,
           "width": 64,
@@ -2505,7 +2509,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_sand.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_sand.coarse.webp?cfb-content=1884ffe2599e04ee6ab4ddd6a293730de64fedf9db7a8f1d98b971f513482f92",
           "x": 866,
           "y": 2,
           "width": 32,
@@ -2517,7 +2521,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_sand.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_sand.final.webp?cfb-content=30448f0879db34a86dd0f81df36b9e1b6636a460d9c7cc7929bcdf93c7f8608a",
           "x": 1666,
           "y": 2,
           "width": 64,
@@ -2559,7 +2563,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_sand.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_sand.coarse.webp?cfb-content=1884ffe2599e04ee6ab4ddd6a293730de64fedf9db7a8f1d98b971f513482f92",
           "x": 902,
           "y": 2,
           "width": 32,
@@ -2571,7 +2575,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_sand.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_sand.final.webp?cfb-content=30448f0879db34a86dd0f81df36b9e1b6636a460d9c7cc7929bcdf93c7f8608a",
           "x": 1734,
           "y": 2,
           "width": 64,
@@ -2613,7 +2617,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_sand.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_sand.coarse.webp?cfb-content=1884ffe2599e04ee6ab4ddd6a293730de64fedf9db7a8f1d98b971f513482f92",
           "x": 938,
           "y": 2,
           "width": 32,
@@ -2625,7 +2629,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_sand.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_sand.final.webp?cfb-content=30448f0879db34a86dd0f81df36b9e1b6636a460d9c7cc7929bcdf93c7f8608a",
           "x": 1802,
           "y": 2,
           "width": 64,
@@ -2667,7 +2671,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_sand.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_sand.coarse.webp?cfb-content=1884ffe2599e04ee6ab4ddd6a293730de64fedf9db7a8f1d98b971f513482f92",
           "x": 974,
           "y": 2,
           "width": 32,
@@ -2679,7 +2683,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_sand.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_sand.final.webp?cfb-content=30448f0879db34a86dd0f81df36b9e1b6636a460d9c7cc7929bcdf93c7f8608a",
           "x": 1870,
           "y": 2,
           "width": 64,
@@ -2724,7 +2728,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_sand.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_sand.coarse.webp?cfb-content=1884ffe2599e04ee6ab4ddd6a293730de64fedf9db7a8f1d98b971f513482f92",
           "x": 1010,
           "y": 2,
           "width": 64,
@@ -2736,7 +2740,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_sand.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_sand.final.webp?cfb-content=30448f0879db34a86dd0f81df36b9e1b6636a460d9c7cc7929bcdf93c7f8608a",
           "x": 2,
           "y": 198,
           "width": 128,
@@ -2781,7 +2785,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_sand.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_sand.coarse.webp?cfb-content=1884ffe2599e04ee6ab4ddd6a293730de64fedf9db7a8f1d98b971f513482f92",
           "x": 1078,
           "y": 2,
           "width": 64,
@@ -2793,7 +2797,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_sand.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_sand.final.webp?cfb-content=30448f0879db34a86dd0f81df36b9e1b6636a460d9c7cc7929bcdf93c7f8608a",
           "x": 134,
           "y": 198,
           "width": 128,
@@ -2838,7 +2842,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_sand.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_sand.coarse.webp?cfb-content=1884ffe2599e04ee6ab4ddd6a293730de64fedf9db7a8f1d98b971f513482f92",
           "x": 1146,
           "y": 2,
           "width": 64,
@@ -2850,7 +2854,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_sand.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_sand.final.webp?cfb-content=30448f0879db34a86dd0f81df36b9e1b6636a460d9c7cc7929bcdf93c7f8608a",
           "x": 266,
           "y": 198,
           "width": 128,
@@ -2893,7 +2897,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_sand.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_sand.coarse.webp?cfb-content=1884ffe2599e04ee6ab4ddd6a293730de64fedf9db7a8f1d98b971f513482f92",
           "x": 1214,
           "y": 2,
           "width": 32,
@@ -2905,7 +2909,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_sand.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_sand.final.webp?cfb-content=30448f0879db34a86dd0f81df36b9e1b6636a460d9c7cc7929bcdf93c7f8608a",
           "x": 398,
           "y": 198,
           "width": 64,

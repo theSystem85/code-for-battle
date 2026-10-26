@@ -16,7 +16,7 @@
       1
     ]
   },
-  "signature": "0f7993452d192c54e3c7c9712f7e0460d5d0e9106ab110f5e6ab32baec219cfe",
+  "signature": "fb369c8d9ad3126c232dd834008fc96740e947a6f6f05b268b07ed55b1e10f3b",
   "source": {
     "image": "images/map/sprite_sheets/dtv6_decor_universal.webp",
     "metadata": "images/map/sprite_sheets/dtv6_decor_universal.json",
@@ -1582,7 +1582,9 @@
       "compressedBytes": 41836,
       "tier": 0,
       "tierName": "coarse",
-      "backingDensity": 0.5
+      "backingDensity": 0.5,
+      "contentIdentity": "95c21cef1759fbfc6ee2c325eb8eef3c2ce576bcc7352796eaa2168a7f13ded8",
+      "url": "/images/prepared-map-sprites/dtv6_decor_universal.coarse.webp?cfb-content=95c21cef1759fbfc6ee2c325eb8eef3c2ce576bcc7352796eaa2168a7f13ded8"
     },
     {
       "name": "dtv6_decor_universal.final.webp",
@@ -1593,7 +1595,9 @@
       "compressedBytes": 109728,
       "tier": 2,
       "tierName": "final",
-      "backingDensity": 1
+      "backingDensity": 1,
+      "contentIdentity": "8e2fee38e4c7e41bb97f2664441e25000aab812f0fb053d9e58850177b277996",
+      "url": "/images/prepared-map-sprites/dtv6_decor_universal.final.webp?cfb-content=8e2fee38e4c7e41bb97f2664441e25000aab812f0fb053d9e58850177b277996"
     }
   ],
   "sprites": [
@@ -1633,7 +1637,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_universal.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_universal.coarse.webp?cfb-content=95c21cef1759fbfc6ee2c325eb8eef3c2ce576bcc7352796eaa2168a7f13ded8",
           "x": 2,
           "y": 2,
           "width": 64,
@@ -1645,7 +1649,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_universal.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_universal.final.webp?cfb-content=8e2fee38e4c7e41bb97f2664441e25000aab812f0fb053d9e58850177b277996",
           "x": 2,
           "y": 2,
           "width": 128,
@@ -1696,7 +1700,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_universal.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_universal.coarse.webp?cfb-content=95c21cef1759fbfc6ee2c325eb8eef3c2ce576bcc7352796eaa2168a7f13ded8",
           "x": 70,
           "y": 2,
           "width": 96,
@@ -1708,7 +1712,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_universal.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_universal.final.webp?cfb-content=8e2fee38e4c7e41bb97f2664441e25000aab812f0fb053d9e58850177b277996",
           "x": 134,
           "y": 2,
           "width": 192,
@@ -1753,7 +1757,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_universal.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_universal.coarse.webp?cfb-content=95c21cef1759fbfc6ee2c325eb8eef3c2ce576bcc7352796eaa2168a7f13ded8",
           "x": 170,
           "y": 2,
           "width": 64,
@@ -1765,7 +1769,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_universal.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_universal.final.webp?cfb-content=8e2fee38e4c7e41bb97f2664441e25000aab812f0fb053d9e58850177b277996",
           "x": 330,
           "y": 2,
           "width": 128,
@@ -1813,7 +1817,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_universal.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_universal.coarse.webp?cfb-content=95c21cef1759fbfc6ee2c325eb8eef3c2ce576bcc7352796eaa2168a7f13ded8",
           "x": 238,
           "y": 2,
           "width": 64,
@@ -1825,7 +1829,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_universal.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_universal.final.webp?cfb-content=8e2fee38e4c7e41bb97f2664441e25000aab812f0fb053d9e58850177b277996",
           "x": 462,
           "y": 2,
           "width": 128,
@@ -1876,7 +1880,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_universal.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_universal.coarse.webp?cfb-content=95c21cef1759fbfc6ee2c325eb8eef3c2ce576bcc7352796eaa2168a7f13ded8",
           "x": 306,
           "y": 2,
           "width": 96,
@@ -1888,7 +1892,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_universal.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_universal.final.webp?cfb-content=8e2fee38e4c7e41bb97f2664441e25000aab812f0fb053d9e58850177b277996",
           "x": 594,
           "y": 2,
           "width": 192,
@@ -1933,7 +1937,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_universal.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_universal.coarse.webp?cfb-content=95c21cef1759fbfc6ee2c325eb8eef3c2ce576bcc7352796eaa2168a7f13ded8",
           "x": 406,
           "y": 2,
           "width": 64,
@@ -1945,7 +1949,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_universal.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_universal.final.webp?cfb-content=8e2fee38e4c7e41bb97f2664441e25000aab812f0fb053d9e58850177b277996",
           "x": 790,
           "y": 2,
           "width": 128,
@@ -1987,7 +1991,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_universal.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_universal.coarse.webp?cfb-content=95c21cef1759fbfc6ee2c325eb8eef3c2ce576bcc7352796eaa2168a7f13ded8",
           "x": 474,
           "y": 2,
           "width": 32,
@@ -1999,7 +2003,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_universal.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_universal.final.webp?cfb-content=8e2fee38e4c7e41bb97f2664441e25000aab812f0fb053d9e58850177b277996",
           "x": 922,
           "y": 2,
           "width": 64,
@@ -2044,7 +2048,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_universal.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_universal.coarse.webp?cfb-content=95c21cef1759fbfc6ee2c325eb8eef3c2ce576bcc7352796eaa2168a7f13ded8",
           "x": 510,
           "y": 2,
           "width": 64,
@@ -2056,7 +2060,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_universal.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_universal.final.webp?cfb-content=8e2fee38e4c7e41bb97f2664441e25000aab812f0fb053d9e58850177b277996",
           "x": 990,
           "y": 2,
           "width": 128,
@@ -2101,7 +2105,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_universal.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_universal.coarse.webp?cfb-content=95c21cef1759fbfc6ee2c325eb8eef3c2ce576bcc7352796eaa2168a7f13ded8",
           "x": 578,
           "y": 2,
           "width": 64,
@@ -2113,7 +2117,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_universal.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_universal.final.webp?cfb-content=8e2fee38e4c7e41bb97f2664441e25000aab812f0fb053d9e58850177b277996",
           "x": 1122,
           "y": 2,
           "width": 128,
@@ -2156,7 +2160,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_universal.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_universal.coarse.webp?cfb-content=95c21cef1759fbfc6ee2c325eb8eef3c2ce576bcc7352796eaa2168a7f13ded8",
           "x": 646,
           "y": 2,
           "width": 64,
@@ -2168,7 +2172,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_universal.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_universal.final.webp?cfb-content=8e2fee38e4c7e41bb97f2664441e25000aab812f0fb053d9e58850177b277996",
           "x": 1254,
           "y": 2,
           "width": 128,
@@ -2210,7 +2214,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_universal.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_universal.coarse.webp?cfb-content=95c21cef1759fbfc6ee2c325eb8eef3c2ce576bcc7352796eaa2168a7f13ded8",
           "x": 714,
           "y": 2,
           "width": 32,
@@ -2222,7 +2226,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_universal.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_universal.final.webp?cfb-content=8e2fee38e4c7e41bb97f2664441e25000aab812f0fb053d9e58850177b277996",
           "x": 1386,
           "y": 2,
           "width": 64,
@@ -2264,7 +2268,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_universal.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_universal.coarse.webp?cfb-content=95c21cef1759fbfc6ee2c325eb8eef3c2ce576bcc7352796eaa2168a7f13ded8",
           "x": 750,
           "y": 2,
           "width": 32,
@@ -2276,7 +2280,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_universal.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_universal.final.webp?cfb-content=8e2fee38e4c7e41bb97f2664441e25000aab812f0fb053d9e58850177b277996",
           "x": 1454,
           "y": 2,
           "width": 64,
@@ -2318,7 +2322,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_universal.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_universal.coarse.webp?cfb-content=95c21cef1759fbfc6ee2c325eb8eef3c2ce576bcc7352796eaa2168a7f13ded8",
           "x": 786,
           "y": 2,
           "width": 32,
@@ -2330,7 +2334,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_universal.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_universal.final.webp?cfb-content=8e2fee38e4c7e41bb97f2664441e25000aab812f0fb053d9e58850177b277996",
           "x": 1522,
           "y": 2,
           "width": 64,
@@ -2372,7 +2376,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_universal.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_universal.coarse.webp?cfb-content=95c21cef1759fbfc6ee2c325eb8eef3c2ce576bcc7352796eaa2168a7f13ded8",
           "x": 822,
           "y": 2,
           "width": 32,
@@ -2384,7 +2388,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_universal.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_universal.final.webp?cfb-content=8e2fee38e4c7e41bb97f2664441e25000aab812f0fb053d9e58850177b277996",
           "x": 1590,
           "y": 2,
           "width": 64,
@@ -2426,7 +2430,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_universal.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_universal.coarse.webp?cfb-content=95c21cef1759fbfc6ee2c325eb8eef3c2ce576bcc7352796eaa2168a7f13ded8",
           "x": 858,
           "y": 2,
           "width": 32,
@@ -2438,7 +2442,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_universal.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_universal.final.webp?cfb-content=8e2fee38e4c7e41bb97f2664441e25000aab812f0fb053d9e58850177b277996",
           "x": 1658,
           "y": 2,
           "width": 64,
@@ -2480,7 +2484,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_universal.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_universal.coarse.webp?cfb-content=95c21cef1759fbfc6ee2c325eb8eef3c2ce576bcc7352796eaa2168a7f13ded8",
           "x": 894,
           "y": 2,
           "width": 32,
@@ -2492,7 +2496,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_universal.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_universal.final.webp?cfb-content=8e2fee38e4c7e41bb97f2664441e25000aab812f0fb053d9e58850177b277996",
           "x": 1726,
           "y": 2,
           "width": 64,
@@ -2535,7 +2539,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_universal.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_universal.coarse.webp?cfb-content=95c21cef1759fbfc6ee2c325eb8eef3c2ce576bcc7352796eaa2168a7f13ded8",
           "x": 930,
           "y": 2,
           "width": 64,
@@ -2547,7 +2551,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_universal.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_universal.final.webp?cfb-content=8e2fee38e4c7e41bb97f2664441e25000aab812f0fb053d9e58850177b277996",
           "x": 1794,
           "y": 2,
           "width": 128,
@@ -2592,7 +2596,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_universal.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_universal.coarse.webp?cfb-content=95c21cef1759fbfc6ee2c325eb8eef3c2ce576bcc7352796eaa2168a7f13ded8",
           "x": 998,
           "y": 2,
           "width": 64,
@@ -2604,7 +2608,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_universal.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_universal.final.webp?cfb-content=8e2fee38e4c7e41bb97f2664441e25000aab812f0fb053d9e58850177b277996",
           "x": 2,
           "y": 198,
           "width": 128,
@@ -2646,7 +2650,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_universal.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_universal.coarse.webp?cfb-content=95c21cef1759fbfc6ee2c325eb8eef3c2ce576bcc7352796eaa2168a7f13ded8",
           "x": 1066,
           "y": 2,
           "width": 32,
@@ -2658,7 +2662,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_universal.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_universal.final.webp?cfb-content=8e2fee38e4c7e41bb97f2664441e25000aab812f0fb053d9e58850177b277996",
           "x": 134,
           "y": 198,
           "width": 64,
@@ -2703,7 +2707,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_universal.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_universal.coarse.webp?cfb-content=95c21cef1759fbfc6ee2c325eb8eef3c2ce576bcc7352796eaa2168a7f13ded8",
           "x": 1102,
           "y": 2,
           "width": 64,
@@ -2715,7 +2719,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_universal.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_universal.final.webp?cfb-content=8e2fee38e4c7e41bb97f2664441e25000aab812f0fb053d9e58850177b277996",
           "x": 202,
           "y": 198,
           "width": 128,
@@ -2758,7 +2762,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_universal.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_universal.coarse.webp?cfb-content=95c21cef1759fbfc6ee2c325eb8eef3c2ce576bcc7352796eaa2168a7f13ded8",
           "x": 1170,
           "y": 2,
           "width": 32,
@@ -2770,7 +2774,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_universal.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_universal.final.webp?cfb-content=8e2fee38e4c7e41bb97f2664441e25000aab812f0fb053d9e58850177b277996",
           "x": 334,
           "y": 198,
           "width": 64,
@@ -2812,7 +2816,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_universal.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_universal.coarse.webp?cfb-content=95c21cef1759fbfc6ee2c325eb8eef3c2ce576bcc7352796eaa2168a7f13ded8",
           "x": 1206,
           "y": 2,
           "width": 32,
@@ -2824,7 +2828,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_universal.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_universal.final.webp?cfb-content=8e2fee38e4c7e41bb97f2664441e25000aab812f0fb053d9e58850177b277996",
           "x": 402,
           "y": 198,
           "width": 64,
@@ -2869,7 +2873,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_universal.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_universal.coarse.webp?cfb-content=95c21cef1759fbfc6ee2c325eb8eef3c2ce576bcc7352796eaa2168a7f13ded8",
           "x": 1242,
           "y": 2,
           "width": 64,
@@ -2881,7 +2885,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_universal.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_universal.final.webp?cfb-content=8e2fee38e4c7e41bb97f2664441e25000aab812f0fb053d9e58850177b277996",
           "x": 470,
           "y": 198,
           "width": 128,
@@ -2926,7 +2930,7 @@
         {
           "tier": 0,
           "tierName": "coarse",
-          "page": "dtv6_decor_universal.coarse.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_universal.coarse.webp?cfb-content=95c21cef1759fbfc6ee2c325eb8eef3c2ce576bcc7352796eaa2168a7f13ded8",
           "x": 1310,
           "y": 2,
           "width": 64,
@@ -2938,7 +2942,7 @@
         {
           "tier": 2,
           "tierName": "final",
-          "page": "dtv6_decor_universal.final.webp",
+          "page": "/images/prepared-map-sprites/dtv6_decor_universal.final.webp?cfb-content=8e2fee38e4c7e41bb97f2664441e25000aab812f0fb053d9e58850177b277996",
           "x": 602,
           "y": 198,
           "width": 128,
