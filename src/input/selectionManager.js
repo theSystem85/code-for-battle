@@ -52,7 +52,7 @@ export class SelectionManager {
 
   // Determine if a unit can be selected based on configuration
   isSelectableUnit(unit) {
-    if (unit?.factoryExit || unit?.embarkedOnId || unit?.transportTransfer) return false
+    if (unit?.embarkedOnId || unit?.transportTransfer) return false
     if (unit?.type === 'submarine' && unit.depthState === 'submerged' && !this.isHumanPlayerUnit(unit)) return false
     if (this.isHumanPlayerUnit(unit)) {
       return unit.health > 0
@@ -65,7 +65,7 @@ export class SelectionManager {
 
   // Determine if a unit can receive commands
   isCommandableUnit(unit) {
-    if (unit?.factoryExit || unit?.transportOperation || unit?.transportTransfer || unit?.transportBoardingLocked) return false
+    if (unit?.transportOperation || unit?.transportTransfer || unit?.transportBoardingLocked) return false
     return this.isHumanPlayerUnit(unit) || ENABLE_ENEMY_CONTROL
   }
 
@@ -76,7 +76,6 @@ export class SelectionManager {
   }
 
   handleUnitSelection(clickedUnit, e, units, factories, selectedUnits) {
-    if (clickedUnit?.factoryExit) return
     hideLlmQueueTooltip()
     this.clearWreckSelection()
     const currentTime = performance.now()

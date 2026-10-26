@@ -460,7 +460,8 @@ describe('KeyboardHandler', () => {
       health: 50,
       x: 5 * TILE_SIZE,
       y: 4 * TILE_SIZE,
-      selected: false
+      selected: false,
+      factoryExit: { phase: 'moving' }
     }
     const unitDead = {
       id: 'u2',

@@ -4,7 +4,10 @@ import { addMovableOccupancy } from './occupancyTags.js'
 
 // Preserve the crawl speed, but hand off at the first outside tile beside the door.
 const FACTORY_EXIT_MS_PER_TILE = 3800 / Math.hypot(2.3, 2.3)
-export const FACTORY_EXIT_DURATION = Math.round(Math.hypot(1.3, 2.3) * FACTORY_EXIT_MS_PER_TILE)
+// The illustrated doorway runs a little more southward than the tile diagonal.
+// Keep the handoff on the same outside tile while following the opening's centre.
+export const FACTORY_EXIT_END_Y_OFFSET = 3.15
+export const FACTORY_EXIT_DURATION = Math.round(Math.hypot(1.3, FACTORY_EXIT_END_Y_OFFSET - 0.7) * FACTORY_EXIT_MS_PER_TILE)
 // The next queued vehicle starts once the previous one is about 40% out of the gate.
 export const FACTORY_EXIT_STAGGER = Math.round(FACTORY_EXIT_DURATION * 0.4)
 // How long a vehicle waits for a blocked exit tile before choosing the next free spot.
@@ -27,7 +30,7 @@ export function beginFactoryExit(unit, factory, rallyPoint = null) {
   unit.factoryExit = {
     factoryId: getBuildingIdentifier(factory), factoryX: factory.x, factoryY: factory.y,
     startX, startY, endX: factory.x * TILE_SIZE,
-    endY: (factory.y + 3) * TILE_SIZE,
+    endY: (factory.y + FACTORY_EXIT_END_Y_OFFSET) * TILE_SIZE,
     elapsed: 0, duration: FACTORY_EXIT_DURATION, phase: 'waiting', waited: 0,
     rallyPoint: rallyPoint ? { x: rallyPoint.x, y: rallyPoint.y } : null
   }
