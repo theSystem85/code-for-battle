@@ -379,9 +379,9 @@ The integration-owner-only paths are exactly: `src/rendering/textureManager.js`,
 
 ### S05 — demand-driven scheduler with backpressure
 
-- [ ] Extend `src/utils/idleAssetQueue.js` behind the frozen contract: visible coarse > lookahead > visible refinement > optional work, with bounded aging to prevent starvation, generation cancellation, deduplication and controlled retries.
-- [ ] Admit work using both concurrency and byte reservations. Honor idle deadline/timeout and explicit foreground slack; async completion work must also be bounded. Implement timer fallback without assuming a 16 ms delay provides idle time.
-- [ ] Coalesce camera demand snapshots outside per-entity loops. Pause optional upgrades/rotations during rapid camera movement, then resume after a settled dwell interval with hysteresis. Bound obsolete requests and avoid building new Maps/Sets every frame.
+- [x] Extend `src/utils/idleAssetQueue.js` behind the frozen contract: visible coarse > lookahead > visible refinement > optional work, with bounded aging to prevent starvation, generation cancellation, deduplication and controlled retries.
+- [x] Admit work using both concurrency and byte reservations. Honor idle deadline/timeout and explicit foreground slack; async completion work must also be bounded. Implement timer fallback without assuming a 16 ms delay provides idle time.
+- [x] Coalesce camera demand snapshots outside per-entity loops. Pause optional upgrades/rotations during rapid camera movement, then resume after a settled dwell interval with hysteresis. Bound obsolete requests and avoid building new Maps/Sets every frame.
 - [ ] Replace enqueue-all behavior at integration with actual demand/resident policy; preserve pre-readiness requests for critical assets.
 
 **Exclusive component paths:** `src/utils/idleAssetQueue.js`, new scheduler module and scheduler unit tests. Camera/startup/prepared registry wiring is integration-owned.
