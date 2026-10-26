@@ -49,10 +49,7 @@ export class EventHandlers {
     this.moneyEl = moneyEl
     this.gameInstance = gameInstance
     this.mobileChainBuildGesture = null
-    this.mobileTwoFingerCancelGesture = null
     this.mobileChainBuildSuppressClickUntil = 0
-    this.mobilePlanLastTapTime = 0
-    this.mobilePlanLastTapPos = null
 
     this.setupGameControls()
     this.setupBuildingPlacement()
@@ -268,35 +265,6 @@ export class EventHandlers {
       gameState.mobileBuildPaintTiles = []
     }
 
-    const clearSelections = () => {
-      this.units.forEach(unit => {
-        if (unit) unit.selected = false
-      })
-      this.factories.forEach(factory => {
-        if (factory) factory.selected = false
-      })
-      if (Array.isArray(gameState.buildings)) {
-        gameState.buildings.forEach(building => {
-          if (building) building.selected = false
-        })
-      }
-      gameState.selectionActive = false
-      gameState.selectionStart = { x: 0, y: 0 }
-      gameState.selectionEnd = { x: 0, y: 0 }
-    }
-
-    const cancelMobilePlanningAndPlacement = () => {
-      clearMobilePaintMode()
-      resetGestureState()
-      gameState.buildingPlacementMode = false
-      gameState.currentBuildingType = null
-      gameState.chainBuildMode = false
-      gameState.chainBuildingType = null
-      gameState.chainBuildingButton = null
-      gameState.chainBuildPrimed = false
-      clearSelections()
-    }
-
     const toWorld = (event) => {
       const gameRect = gameCanvas.getBoundingClientRect()
       return {
@@ -489,20 +457,6 @@ export class EventHandlers {
         return
       }
 
-      const now = performance.now()
-      const isDoubleTap = this.mobilePlanLastTapPos &&
-        now - this.mobilePlanLastTapTime <= 320 &&
-        Math.hypot(event.clientX - this.mobilePlanLastTapPos.x, event.clientY - this.mobilePlanLastTapPos.y) <= 24
-
-      this.mobilePlanLastTapTime = now
-      this.mobilePlanLastTapPos = { x: event.clientX, y: event.clientY }
-
-      if (isDoubleTap) {
-        cancelMobilePlanningAndPlacement()
-        this.mobileChainBuildSuppressClickUntil = now + 250
-        return
-      }
-
       const { worldX, worldY } = toWorld(event)
       const tileX = Math.floor(worldX / TILE_SIZE)
       const tileY = Math.floor(worldY / TILE_SIZE)
@@ -518,40 +472,19 @@ export class EventHandlers {
         lastTileX: tileX,
         lastTileY: tileY,
         holdTimer: null,
+        held: false,
         active: false
       }
+
+      // Touch has no hover event, so drive the same placement-preview state as
+      // desktop as soon as a finger rests on the battlefield.
+      this.handleBuildingPlacementOverlay(event)
 
       this.mobileChainBuildGesture.holdTimer = window.setTimeout(() => {
         if (!this.mobileChainBuildGesture || this.mobileChainBuildGesture.pointerId !== event.pointerId) {
           return
         }
-        const currentType = gameState.currentBuildingType
-        if (!currentType) {
-          resetGestureState()
-          return
-        }
-        const buttonRef = productionQueue.completedBuildings.find(building => building.type === currentType)?.button || null
-        if (!buttonRef) {
-          resetGestureState()
-          return
-        }
-
-        const occupiedTiles = getBlueprintOccupiedTiles()
-        if (!canPlaceWithoutBlueprintOverlap(currentType, this.mobileChainBuildGesture.startTileX, this.mobileChainBuildGesture.startTileY, occupiedTiles, [])) {
-          resetGestureState()
-          return
-        }
-
-        this.mobileChainBuildGesture.active = true
-        gameState.mobileBuildPaintMode = true
-        gameState.mobileBuildPaintType = currentType
-        gameState.mobileBuildPaintButton = buttonRef
-        gameState.mobileBuildPaintTiles = []
-        addPaintTile(this.mobileChainBuildGesture.startTileX, this.mobileChainBuildGesture.startTileY)
-
-        gameState.selectionActive = false
-        gameState.selectionStart = { x: 0, y: 0 }
-        gameState.selectionEnd = { x: 0, y: 0 }
+        this.mobileChainBuildGesture.held = true
       }, HOLD_DELAY_MS)
     }, { passive: true })
 
@@ -561,14 +494,31 @@ export class EventHandlers {
       }
 
       const gesture = this.mobileChainBuildGesture
+      this.handleBuildingPlacementOverlay(event)
       const moveDistance = Math.hypot(
         event.clientX - gesture.startClientX,
         event.clientY - gesture.startClientY
       )
 
-      if (!gesture.active && moveDistance > 10) {
+      if (!gesture.held && moveDistance > 10) {
         resetGestureState()
         return
+      }
+
+      if (gesture.held && !gesture.active && moveDistance > 10) {
+        const currentType = gameState.currentBuildingType
+        const buttonRef = productionQueue.completedBuildings.find(building => building.type === currentType)?.button || null
+        const occupiedTiles = getBlueprintOccupiedTiles()
+        if (!currentType || !buttonRef || !canPlaceWithoutBlueprintOverlap(currentType, gesture.startTileX, gesture.startTileY, occupiedTiles, [])) {
+          return
+        }
+
+        gesture.active = true
+        gameState.mobileBuildPaintMode = true
+        gameState.mobileBuildPaintType = currentType
+        gameState.mobileBuildPaintButton = buttonRef
+        gameState.mobileBuildPaintTiles = []
+        addPaintTile(gesture.startTileX, gesture.startTileY)
       }
 
       if (gesture.active) {
@@ -598,97 +548,33 @@ export class EventHandlers {
       const gestureWasActive = this.mobileChainBuildGesture.active
       resetGestureState()
 
-      if (!gestureWasActive) {
+      this.mobileChainBuildSuppressClickUntil = performance.now() + 250
+      if (event.type === 'pointercancel') {
         return
       }
 
-      this.mobileChainBuildSuppressClickUntil = performance.now() + 250
-      queueMobilePaintedBuildings()
-      clearMobilePaintMode()
-      gameState.chainBuildMode = false
-      gameState.chainBuildingType = null
-      gameState.chainBuildingButton = null
-      gameState.chainBuildPrimed = false
+      if (gestureWasActive) {
+        queueMobilePaintedBuildings()
+        clearMobilePaintMode()
+        gameState.chainBuildMode = false
+        gameState.chainBuildingType = null
+        gameState.chainBuildingButton = null
+        gameState.chainBuildPrimed = false
+        return
+      }
+
+      this.handleBuildingPlacementOverlay(event)
+      this.handleBuildingPlacement(event)
+      // An invalid release is the touch cancellation gesture. Keep the
+      // completed building available, but close placement mode and its overlay.
+      if (gameState.buildingPlacementMode) {
+        productionQueue.exitBuildingPlacementMode()
+      }
     }
 
     gameCanvas.addEventListener('pointerup', finalizeMobileChainGesture, { passive: true })
     gameCanvas.addEventListener('pointercancel', finalizeMobileChainGesture, { passive: true })
 
-    const resetTwoFingerCancelGesture = () => {
-      this.mobileTwoFingerCancelGesture = null
-    }
-
-    const isMobileConstructionInteractionActive = () => (
-      gameState.mobileBuildPaintMode || (gameState.buildingPlacementMode && Boolean(gameState.currentBuildingType))
-    )
-
-    gameCanvas.addEventListener('touchstart', (event) => {
-      if (!isMobileConstructionInteractionActive()) {
-        resetTwoFingerCancelGesture()
-        return
-      }
-
-      if (event.touches.length !== 2) {
-        if (event.touches.length > 2) {
-          resetTwoFingerCancelGesture()
-        }
-        return
-      }
-
-      const [firstTouch, secondTouch] = event.touches
-      this.mobileTwoFingerCancelGesture = {
-        startedAt: performance.now(),
-        firstTouchId: firstTouch.identifier,
-        secondTouchId: secondTouch.identifier,
-        firstStartX: firstTouch.clientX,
-        firstStartY: firstTouch.clientY,
-        secondStartX: secondTouch.clientX,
-        secondStartY: secondTouch.clientY,
-        moved: false
-      }
-    }, { passive: true })
-
-    gameCanvas.addEventListener('touchmove', (event) => {
-      const gesture = this.mobileTwoFingerCancelGesture
-      if (!gesture || event.touches.length !== 2 || gesture.moved) {
-        return
-      }
-
-      const firstTouch = Array.from(event.touches).find(touch => touch.identifier === gesture.firstTouchId)
-      const secondTouch = Array.from(event.touches).find(touch => touch.identifier === gesture.secondTouchId)
-      if (!firstTouch || !secondTouch) {
-        gesture.moved = true
-        return
-      }
-
-      const firstDistance = Math.hypot(firstTouch.clientX - gesture.firstStartX, firstTouch.clientY - gesture.firstStartY)
-      const secondDistance = Math.hypot(secondTouch.clientX - gesture.secondStartX, secondTouch.clientY - gesture.secondStartY)
-      if (firstDistance > 14 || secondDistance > 14) {
-        gesture.moved = true
-      }
-    }, { passive: true })
-
-    gameCanvas.addEventListener('touchend', () => {
-      const gesture = this.mobileTwoFingerCancelGesture
-      if (!gesture) {
-        return
-      }
-
-      if (!isMobileConstructionInteractionActive()) {
-        resetTwoFingerCancelGesture()
-        return
-      }
-
-      const elapsedMs = performance.now() - gesture.startedAt
-      if (!gesture.moved && elapsedMs <= 320) {
-        cancelMobilePlanningAndPlacement()
-        this.mobileChainBuildSuppressClickUntil = performance.now() + 250
-      }
-
-      resetTwoFingerCancelGesture()
-    }, { passive: true })
-
-    gameCanvas.addEventListener('touchcancel', resetTwoFingerCancelGesture, { passive: true })
   }
 
   setupMobileDropListeners() {

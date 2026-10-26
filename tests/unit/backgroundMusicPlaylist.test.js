@@ -13,7 +13,11 @@ class FakeAudio extends window.EventTarget {
   }
 
   load() {
-    Promise.resolve().then(() => this.dispatchEvent(new window.Event('canplaythrough')))
+    if (FakeAudio.autoLoad) Promise.resolve().then(() => this.resolveLoad())
+  }
+
+  resolveLoad() {
+    this.dispatchEvent(new window.Event('canplaythrough'))
   }
 
   play() {
@@ -31,6 +35,7 @@ class FakeAudio extends window.EventTarget {
   }
 }
 FakeAudio.instances = []
+FakeAudio.autoLoad = true
 
 const flush = () => new Promise(resolve => setTimeout(resolve, 0))
 
@@ -39,6 +44,7 @@ describe('background music playlist', () => {
 
   beforeEach(async() => {
     FakeAudio.instances = []
+    FakeAudio.autoLoad = true
     vi.resetModules()
     vi.stubGlobal('Audio', FakeAudio)
     vi.spyOn(Math, 'random').mockReturnValue(0)
@@ -196,5 +202,24 @@ describe('background music playlist', () => {
     expect(second.paused).toBe(false)
     expect(second.loop).toBe(false)
     expect(second.volume).toBeCloseTo(0.5)
+  })
+
+  it('[U06224] keeps a newer music cue when lazy playlist initialization finishes later', async() => {
+    FakeAudio.autoLoad = false
+    const initialization = sound.initBackgroundMusic()
+    const playlist = FakeAudio.instances.find(audio => audio.src === 'sound/music/music01.mp3')
+
+    const cue = sound.playMusicCue(sound.STORY_INTRO_MUSIC_FILE)
+    const story = FakeAudio.instances.find(audio => audio.src === `sound/music/${sound.STORY_INTRO_MUSIC_FILE}`)
+    story.resolveLoad()
+    await cue
+    expect(sound.bgMusicAudio).toBe(story)
+    expect(story.paused).toBe(false)
+
+    playlist.resolveLoad()
+    await initialization
+    expect(sound.bgMusicAudio).toBe(story)
+    expect(story.paused).toBe(false)
+    expect(FakeAudio.instances.filter(audio => !audio.paused)).toEqual([story])
   })
 })

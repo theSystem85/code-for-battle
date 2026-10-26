@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { getMasterVolume, setMasterVolume } from '../../src/sound.js'
+import { getMasterVolume, getMixBalance, setMasterVolume, setMixBalance } from '../../src/sound.js'
 import {
   MILESTONE_NARRATION_GAIN,
   applyMilestoneVideoAudioState,
@@ -142,6 +142,32 @@ describe('milestone embedded vs separate audio', () => {
     expect(result.playingMuted).toBe(true)
     expect(video.muted).toBe(true)
     expect(video.volume).toBe(0)
+  })
+
+  it('[U06244] follows master volume changes independently of the music-effects balance', () => {
+    const previousMaster = getMasterVolume()
+    const previousBalance = getMixBalance()
+    const video = fakeVideo()
+    video.muted = false
+    const audio = { volume: 1 }
+
+    videoOverlay.currentVideo = video
+    videoOverlay.currentAudio = audio
+    videoOverlay.isPlaying = true
+    videoOverlay.embeddedUnmutePending = false
+    videoOverlay.lastAudioFade = 1
+
+    setMixBalance(100)
+    setMasterVolume(0.4)
+
+    expect(audio.volume).toBeCloseTo(MILESTONE_NARRATION_GAIN * 0.4)
+    expect(video.volume).toBeCloseTo(MILESTONE_VIDEO_BED_GAIN * 0.4)
+
+    videoOverlay.isPlaying = false
+    videoOverlay.currentAudio = null
+    videoOverlay.currentVideo = null
+    setMixBalance(previousBalance)
+    setMasterVolume(previousMaster)
   })
 
   it('[U02736] fades milestone audio with the radar and stops it when the clip is interrupted', () => {

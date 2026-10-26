@@ -386,7 +386,7 @@
             <li><strong>Shift + Scroll</strong> on a build button — batch-queue multiple units/buildings.</li>
             <li><strong>Shift + Click upper half</strong> of a stack — add 5 to queue.</li>
             <li><strong>Shift + Click lower half</strong> — remove 5 from queue.</li>
-            <li><strong>Shift + Drag</strong> — chain-build mode: draw connected lines of buildings (walls, turrets, etc.).</li>
+            <li><strong>Chain planning:</strong> with a mouse, hold Shift while dragging a ready building, then keep Shift held and drag the map after the first blueprint. On touch, select a ready building, press and hold a valid tile, then drag before lifting your finger.</li>
           </ul>
         </div>
       </details>
@@ -467,6 +467,10 @@
       <h2>3. Building Placement</h2>
       <p>Finished buildings show an animated inner glow. Placement mode opens automatically when a building finishes, and after a successful placement the next ready building becomes active. Both options are enabled by default and can be changed independently in <strong>Settings → Runtime Config → Building placement</strong>.</p>
       <p>Click the <strong>Buildings tab again while it is open</strong> to place all ready buildings one by one, even if automatic continuation is disabled. The Buildings tab glows inward while any buildings are ready. Invalid map clicks leave the current building ready; press <kbd>Esc</kbd> to stop placing without losing ready buildings.</p>
+      <h3>Placement preview and chain planning</h3>
+      <p><strong>Mouse:</strong> moving the pointer over the battlefield displays the footprint overlay. Primary-click a valid footprint to construct. To plan a chain, queue multiple copies, hold <kbd>Shift</kbd>, and drag a ready building from the build bar to a valid starting tile. Keep <kbd>Shift</kbd> held and drag from that first blueprint to preview a straight horizontal or vertical chain; release to queue the valid positions.</p>
+      <p><strong>Touch:</strong> select a ready building, then press and hold one finger on the map. The footprint overlay appears under the finger with the same valid/invalid information as mouse hover. Release without dragging to place one building when the footprint is valid. Releasing over an invalid footprint cancels placement and keeps the ready building available; this invalid release is the touch cancel path.</p>
+      <p>To activate <strong>chain planning on touch</strong>, start that same press-and-hold on a valid tile, wait for the preview, and—without lifting—drag at least one tile across the map. The drag deliberately changes the gesture from single placement to chain painting. Release to add every valid painted position. Merely holding still never enters chain planning, preventing an inspection hold from accidentally creating a chain.</p>
       <p>Click the <strong>Units tab again while it is open</strong> to smoothly focus and select the most recently produced surviving unit. Further clicks visit earlier produced units, then wrap around. Whenever a new unit finishes, the next click starts again at the newest unit. Starting units are not included.</p>
       <ul>
         <li>Buildings must be placed within <strong>3 tiles</strong> (Chebyshev distance) of an existing friendly building.</li>

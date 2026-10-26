@@ -89,4 +89,12 @@ describe('input method guide', () => {
     expect(inputAwareStepText({ id: 'attack' }, 'trackpad')).toContain('Primary click on an enemy')
     expect(inputAwareStepText({ id: 'move-units' }, 'trackpad')).toContain('two-finger scrolling')
   })
+  it('[U06240] includes an advanced chain-planning lesson for mouse and touch', () => {
+    const step = buildTutorialSteps().find(candidate => candidate.id === 'advanced-chain-planning')
+    expect(step.title).toContain('Advanced Tutorial')
+    expect(step.text.desktop).toMatch(/Shift.*drag/i)
+    expect(step.text.mobile).toMatch(/press and hold.*drag/i)
+    expect(step.text.mobile).toMatch(/invalid tile cancels/i)
+    expect(step.hint).toMatch(/stationary touch hold never starts a chain/i)
+  })
 })
