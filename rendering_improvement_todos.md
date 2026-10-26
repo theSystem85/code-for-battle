@@ -348,9 +348,9 @@ The integration-owner-only paths are exactly: `src/rendering/textureManager.js`,
 
 ### S02 — remove background tank rotation contention
 
-- [ ] Move existing angle/part preparation into the worker contract, or build packed rotation atlases before deployment; compare transfer/storage/upload/residency costs before choosing. Keep the current visual result and angle count; do not add angle buckets to continuously rotated units.
-- [ ] Request only needed variants, enforce a byte reservation before staging, and publish complete part sets atomically. Retain correct live-rotation behavior until ready. Budget temporary supersampling separately.
-- [ ] On reset, cancellation, partial failure or superseded density, explicitly release every staged canvas/bitmap. Current early returns from `buildTankRotationCache()` leave unpublished frame cleanup to GC.
+- [x] Move existing angle/part preparation into the worker contract, or build packed rotation atlases before deployment; compare transfer/storage/upload/residency costs before choosing. Keep the current visual result and angle count; do not add angle buckets to continuously rotated units.
+- [x] Request only needed variants, enforce a byte reservation before staging, and publish complete part sets atomically. Retain correct live-rotation behavior until ready. Budget temporary supersampling separately.
+- [x] On reset, cancellation, partial failure or superseded density, explicitly release every staged canvas/bitmap. Current early returns from `buildTankRotationCache()` leave unpublished frame cleanup to GC.
 
 **Exclusive component paths:** `src/rendering/tankRotationCache.js`, new rotation worker module, `tests/unit/tankRotationCache.test.js` and uniquely named worker tests. `tankImageRenderer.js`/startup glue edits belong to integration owner.
 
