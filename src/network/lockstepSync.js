@@ -400,6 +400,7 @@ function applyMoveInput(input) {
     const unit = mainUnits.find(u => u.id === unitId)
     if (unit && !unit.factoryExit) {
       unit.moveTarget = { x: targetX, y: targetY }
+      unit.movePatienceResetRequested = true
       unit.attackTarget = null
       unit.path = null
       unit.pathIndex = 0

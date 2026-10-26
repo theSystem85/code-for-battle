@@ -922,6 +922,7 @@ describe('UnitCommandsHandler attack group and movement', () => {
     expect(battleship.lastHullTargetId).toBe(target.id)
     expect(battleship.path).toEqual([{ x: 2, y: 2 }])
     expect(battleship.moveTarget).toEqual({ x: 2, y: 2 })
+    expect(battleship.movePatienceResetRequested).toBe(true)
   })
 
   it('[U04723] handleMovementCommand puts harvesters into manual hold when moving to non-ore tiles', () => {
