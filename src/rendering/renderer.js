@@ -57,6 +57,7 @@ export class Renderer {
   constructor() {
     this.textureManager = new TextureManager()
     this.mapRenderer = new MapRenderer(this.textureManager)
+    this.textureManager.onSpriteTierPublication = publication => this.mapRenderer.notifySpriteTierPublication(publication)
     // Impassable decorations (trees, frozen lakes, city blocks) never carry impact decals.
     const textureManager = this.textureManager
     setDecalSurfaceBlocker('impassableDecorations', (mapGrid, tileX, tileY, tile) => {

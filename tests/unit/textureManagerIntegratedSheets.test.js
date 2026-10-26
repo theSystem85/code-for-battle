@@ -3,6 +3,46 @@ import { TextureManager } from '../../src/rendering/textureManager.js'
 import { buildOccupancyMap } from '../../src/units.js'
 
 describe('TextureManager integrated multi-sheet selection', () => {
+  it('[U06212] loads only the demanded generated manifest and final page, reuses signatures, and publishes it', async() => {
+    const manager = new TextureManager()
+    const manifest = {
+      signature: 'sheet-signature',
+      identity: { metadataSignature: 'metadata-signature' },
+      source: { image: 'images/map/sprite_sheets/terrain.webp' },
+      pages: [{ name: 'terrain.coarse.webp', tier: 0, tierName: 'coarse', decodedBytes: 64 }, { name: 'terrain.final.webp', tier: 2, tierName: 'final', decodedBytes: 256 }],
+      sprites: [{ spriteId: 'terrain:group_1', logicalWidth: 64, logicalHeight: 64, anchorX: 0.5, anchorY: 1, tileKeys: ['0,0'], sources: [{ tier: 2, x: 2, y: 3, width: 64, height: 64 }] }]
+    }
+    vi.spyOn(manager, 'loadPreparedMapSpriteCatalog').mockResolvedValue({ sheets: [{ name: 'terrain', manifest: 'terrain.json' }] })
+    const originalFetch = globalThis.fetch
+    globalThis.fetch = vi.fn(async url => ({ ok: true, json: async() => {
+      expect(url).toBe('/images/prepared-map-sprites/terrain.json')
+      return manifest
+    } }))
+    const pageImage = { width: 100, height: 100 }
+    const loadImage = vi.spyOn(manager, 'loadIntegratedSpriteSheetImage').mockResolvedValue(pageImage)
+    const publish = vi.fn()
+    manager.onSpriteTierPublication = publish
+    try {
+      await manager.setIntegratedSpriteSheetConfig({ enabled: true, biomeTag: 'grass', sheets: [{
+        sheetPath: 'images/map/sprite_sheets/terrain.webp',
+        metadata: { tileSize: 64, blendMode: 'black', tiles: { '0,0': { tags: ['grass', 'passable'], rect: { x: 99, y: 99, width: 64, height: 64 } } } }
+      }] })
+    } finally {
+      globalThis.fetch = originalFetch
+    }
+    expect(loadImage).toHaveBeenCalledOnce()
+    expect(loadImage).toHaveBeenCalledWith('images/prepared-map-sprites/terrain.final.webp')
+    expect(manager.integratedTagBuckets.grass[0]).toEqual(expect.objectContaining({
+      image: pageImage,
+      spriteId: 'images/map/sprite_sheets/terrain.webp',
+      metadataSignature: 'metadata-signature',
+      signature: 'sheet-signature',
+      rect: { x: 2, y: 3, width: 64, height: 64 }
+    }))
+    expect(publish).toHaveBeenCalledWith(expect.objectContaining({ spriteId: 'images/map/sprite_sheets/terrain.webp', tier: 2 }))
+    expect(Object.isFrozen(publish.mock.calls[0][0])).toBe(true)
+  })
+
   it('[U04447] invalidates layout and changes blocked occupancy after an optional sheet tag edit', async() => {
     const manager = new TextureManager()
     vi.spyOn(manager, 'loadIntegratedSpriteSheetImage').mockResolvedValue({ width: 64, height: 64 })

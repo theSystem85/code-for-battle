@@ -20,7 +20,8 @@ vi.mock('../../src/rendering/textureManager.js', () => ({
 
 vi.mock('../../src/rendering/mapRenderer.js', () => ({
   MapRenderer: createSimpleRendererClass({
-    render: vi.fn()
+    render: vi.fn(),
+    notifySpriteTierPublication: vi.fn()
   })
 }))
 
@@ -140,6 +141,13 @@ vi.mock('../../src/rendering/howitzerImageRenderer.js', () => ({ preloadHowitzer
 vi.mock('../../src/inputHandler.js', () => ({ selectedUnits: [] }))
 
 describe('Renderer airborne layering', () => {
+  it('[U06211] forwards the unchanged sprite publication from the texture manager to the map renderer', () => {
+    const renderer = new Renderer()
+    const publication = Object.freeze({ spriteId: 'images/map/sprite_sheets/terrain.webp', tier: 2, revision: 1 })
+    renderer.textureManager.onSpriteTierPublication(publication)
+    expect(renderer.mapRenderer.notifySpriteTierPublication).toHaveBeenCalledWith(publication)
+  })
+
   let Renderer
 
   beforeEach(async() => {

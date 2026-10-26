@@ -175,7 +175,7 @@ export function classifyOfflinePath(relativePath) {
   if (BOOT_EXTENSIONS.has(extension)) return 'boot'
   if (isBootShellImagePath(path) && (extension === 'png' || extension === 'webp' || extension === 'gif')) return 'boot'
   // Prepared variants and source unit imagery are fetched on demand at the active DPR.
-  if ((relative.startsWith('images/prepared/') && extension !== 'json') || relative.startsWith('images/map/units/')) return 'exclude'
+  if (((relative.startsWith('images/prepared/') || relative.startsWith('images/prepared-map-sprites/')) && extension !== 'json') || relative.startsWith('images/map/units/')) return 'exclude'
   if (BULK_EXTENSIONS.has(extension)) return 'bulk'
   return 'exclude'
 }
