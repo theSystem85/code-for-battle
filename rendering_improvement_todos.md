@@ -401,9 +401,9 @@ The integration-owner-only paths are exactly: `src/rendering/textureManager.js`,
 
 ### S07 — persistent bounded sprite preparation workers
 
-- [ ] Implement worker-side fetch/blob decode (`createImageBitmap`) and OffscreenCanvas preparation for custom/dynamic sheets, using metadata-aware edge-connected keying and group cutouts rather than the explosion-only simple key algorithm. Transfer ownership of bitmap results; avoid cloning RGBA buffers or simulation state.
-- [ ] Reuse a small bounded pool with cancellation, backpressure, capability handshake, crash/timeout recovery and stale-result cleanup. Do not spawn a worker per tile. Account for image/linear buffers and multiple in-flight jobs before allocating.
-- [ ] Provide prebuilt bundled derivatives or explicit custom-asset preparation state when worker capabilities/CSP fail. No silent full-sheet synchronous conversion during gameplay. Main-thread handle publication remains bounded; worker rendering does not remove GPU upload cost.
+- [x] Implement worker-side fetch/blob decode (`createImageBitmap`) and OffscreenCanvas preparation for custom/dynamic sheets, using metadata-aware edge-connected keying and group cutouts rather than the explosion-only simple key algorithm. Transfer ownership of bitmap results; avoid cloning RGBA buffers or simulation state.
+- [x] Reuse a small bounded pool with cancellation, backpressure, capability handshake, crash/timeout recovery and stale-result cleanup. Do not spawn a worker per tile. Account for image/linear buffers and multiple in-flight jobs before allocating.
+- [x] Provide prebuilt bundled derivatives or explicit custom-asset preparation state when worker capabilities/CSP fail. No silent full-sheet synchronous conversion during gameplay. Main-thread handle publication remains bounded; worker rendering does not remove GPU upload cost.
 
 **Exclusive component paths:** new `src/rendering/spritePreparationPool.js`, `src/rendering/spritePreparation.worker.js`, worker protocol tests/fixtures. Existing explosion modules and shared pixel-helper edits require ownership transfer after S01/S00, or integration-owner wiring.
 

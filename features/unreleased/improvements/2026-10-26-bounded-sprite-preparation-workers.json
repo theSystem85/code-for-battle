@@ -1,0 +1,1 @@
+{ "description": "Custom sprite sheets can now be prepared in bounded background workers without blocking gameplay." }
