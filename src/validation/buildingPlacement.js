@@ -9,14 +9,46 @@
 
 import { MAX_BUILDING_GAP_TILES, TILE_SIZE } from '../config.js'
 import { buildingData } from '../data/buildingData.js'
+import { getRegisteredDecorationLayout } from '../game/decorationLayoutRegistry.js'
 import { gameState } from '../gameState.js'
 import { hasMovableOccupancy } from '../game/occupancyTags.js'
+import { getValidDecorationCell } from '../rendering/decorationLayout.js'
 
 const NON_EXPANDING_BUILD_AREA_TYPES = new Set(['street', 'concreteWall'])
 export const SHIPYARD_BUILD_RANGE_TILES = 4
+export const PLACEMENT_OVERLAY_GREEN = 'rgba(0, 255, 0, 0.5)'
+export const PLACEMENT_OVERLAY_ORANGE = 'rgba(255, 165, 0, 0.5)'
+export const PLACEMENT_OVERLAY_RED = 'rgba(255, 0, 0, 0.5)'
 
-export function shouldShowPlacementTileAsValid(buildingType, tileValid, placementValid) {
-  return Boolean(tileValid && (buildingType === 'shipyard' || placementValid))
+/**
+ * Living city buildings and stone decorations block construction.
+ * The lookup is one layout-cell read. The decoration footprint is validated
+ * only when that cell is a city or a stone, so ordinary land stays O(1).
+ */
+export function isDecorativeBuildBlocker(mapGrid, tileX, tileY) {
+  const tile = mapGrid?.[tileY]?.[tileX]
+  if (tile?.cityBuilding?.health > 0) return true
+  const layout = getRegisteredDecorationLayout(mapGrid)
+  if (!layout || tileX < 0 || tileY < 0 || tileX >= layout.width || tileY >= layout.height) return false
+  const cell = layout.cells?.[tileY * layout.width + tileX]
+  if (!cell) return false
+  // A living city occupies its whole footprint, including tiles that are not the anchor.
+  if (cell.cityBuilding?.health > 0) return true
+  if (cell.group?.tagSet?.has('stones') !== true) return false
+  return getValidDecorationCell(layout, mapGrid, tileX, tileY) != null
+}
+
+/**
+ * Green only when the tile itself is free and the footprint reaches a friendly base.
+ * `footprintInRange` is true when any footprint tile is inside build range.
+ */
+export function shouldShowPlacementTileAsValid(_buildingType, tileValid, footprintInRange) {
+  return placementTileOverlayFill(tileValid, footprintInRange) === PLACEMENT_OVERLAY_GREEN
+}
+
+export function placementTileOverlayFill(tileValid, footprintInRange) {
+  if (!tileValid) return PLACEMENT_OVERLAY_RED
+  return footprintInRange ? PLACEMENT_OVERLAY_GREEN : PLACEMENT_OVERLAY_ORANGE
 }
 
 function hasMovablePlacementBlocker(mapGrid, x, y) {
@@ -40,7 +72,8 @@ export function isShipyardPlacementTileValid(tileX, tileY, mapGrid, units = []) 
     !tile.seedCrystal &&
     !tile.noBuild &&
     !hasMovablePlacementBlocker(mapGrid, tileX, tileY) &&
-    !hasUnitAtTile(units, tileX, tileY)
+    !hasUnitAtTile(units, tileX, tileY) &&
+    !isDecorativeBuildBlocker(mapGrid, tileX, tileY)
   )
 }
 
@@ -131,6 +164,25 @@ export function isNearExistingBuilding(tileX, tileY, buildings, factories, maxDi
 }
 
 /**
+ * True when map edit mode skips range, or any footprint tile is within the
+ * building's base range. Shipyards use four tiles; every other type uses three.
+ * One in-range tile makes the whole footprint "in range".
+ */
+export function isBuildingFootprintInBuildRange(type, tileX, tileY, buildings, factories, owner = 'player', options = {}) {
+  if (options.mapEditMode) return true
+  if (!buildingData[type]) return false
+  const width = buildingData[type].width
+  const height = buildingData[type].height
+  const buildRange = type === 'shipyard' ? SHIPYARD_BUILD_RANGE_TILES : MAX_BUILDING_GAP_TILES
+  for (let y = tileY; y < tileY + height; y++) {
+    for (let x = tileX; x < tileX + width; x++) {
+      if (isNearExistingBuilding(x, y, buildings, factories, buildRange, owner, type)) return true
+    }
+  }
+  return false
+}
+
+/**
  * Check if a building can be placed at given coordinates
  * @param {string} type - Building type
  * @param {number} tileX - X tile position
@@ -168,26 +220,9 @@ export function canPlaceBuilding(type, tileX, tileY, mapGrid, units, buildings, 
     return false
   }
 
-  // Check if ANY tile of the building is within range of an existing building
-  // Skip range check in edit mode
-  const mapEditMode = options.mapEditMode || false
-  if (!mapEditMode) {
-    let isAnyTileInRange = false
-    for (let y = tileY; y < tileY + height; y++) {
-      for (let x = tileX; x < tileX + width; x++) {
-        const buildRange = isShipyard ? SHIPYARD_BUILD_RANGE_TILES : MAX_BUILDING_GAP_TILES
-        if (isNearExistingBuilding(x, y, buildings, factories, buildRange, owner, type)) {
-          isAnyTileInRange = true
-          break
-        }
-      }
-      if (isAnyTileInRange) break
-    }
-
-    // If no tile is in range, return false
-    if (!isAnyTileInRange) {
-      return false
-    }
+  // Any one footprint tile inside base range is enough. Edit mode skips range.
+  if (!isBuildingFootprintInBuildRange(type, tileX, tileY, buildings, factories, owner, options)) {
+    return false
   }
 
   // Check if any tile is blocked
@@ -201,7 +236,8 @@ export function canPlaceBuilding(type, tileX, tileY, mapGrid, units, buildings, 
           mapGrid[y][x].building ||
           mapGrid[y][x].buildOnlyOccupied ||
           hasMovablePlacementBlocker(mapGrid, x, y) ||
-          (!isFactoryOrRefinery && mapGrid[y][x].noBuild)) {
+          (!isFactoryOrRefinery && mapGrid[y][x].noBuild) ||
+          (!isShipyard && isDecorativeBuildBlocker(mapGrid, x, y))) {
         return false
       }
 
@@ -288,7 +324,8 @@ export function isTileValid(tileX, tileY, mapGrid, _units, _buildings, _factorie
       mapGrid[tileY][tileX].building ||
       mapGrid[tileY][tileX].buildOnlyOccupied ||
       hasMovablePlacementBlocker(mapGrid, tileX, tileY) ||
-      (!isFactoryOrRefinery && mapGrid[tileY][tileX].noBuild)) {
+      (!isFactoryOrRefinery && mapGrid[tileY][tileX].noBuild) ||
+      isDecorativeBuildBlocker(mapGrid, tileX, tileY)) {
     return false
   }
 

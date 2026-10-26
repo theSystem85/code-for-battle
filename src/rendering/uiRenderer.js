@@ -1,6 +1,6 @@
 // rendering/uiRenderer.js
 import { TILE_SIZE, MAX_BUILDING_GAP_TILES } from '../config.js'
-import { buildingData, isTileValid, canPlaceBuilding, shouldShowPlacementTileAsValid } from '../buildings.js'
+import { buildingData, isTileValid, canPlaceBuilding, isBuildingFootprintInBuildRange, placementTileOverlayFill } from '../buildings.js'
 import { gameState } from '../gameState.js'
 import { showNotification } from '../ui/notifications.js'
 import { getCurrentGame } from '../main.js'
@@ -220,15 +220,15 @@ export class UIRenderer {
         const tileY = Math.floor(mouseY / TILE_SIZE)
 
         const planningBuildings = mapBlueprintsToFootprints(gameState.blueprints || [], gameState.humanPlayer)
-        const isPlacementAllowed = canPlaceBuilding(
+        const footprintBuildings = [...buildings, ...planningBuildings]
+        const footprintInRange = isBuildingFootprintInBuildRange(
           gameState.currentBuildingType,
           tileX,
           tileY,
-          gameState.mapGrid || mapGrid,
-          units,
-          [...buildings, ...planningBuildings],
+          footprintBuildings,
           factories,
-          gameState.humanPlayer
+          gameState.humanPlayer,
+          { mapEditMode: gameState.mapEditMode }
         )
 
         // Draw placement grid
@@ -241,7 +241,7 @@ export class UIRenderer {
             const screenX = currentTileX * TILE_SIZE - scrollOffset.x
             const screenY = currentTileY * TILE_SIZE - scrollOffset.y
 
-            // Check if valid placement for this tile (terrain/units check only)
+            // Blocked tiles stay red. Open tiles are green inside base range and orange outside it.
             const isValid = isTileValid(
               currentTileX,
               currentTileY,
@@ -253,13 +253,7 @@ export class UIRenderer {
               { x: tileX, y: tileY }
             )
 
-            // Determine final color
-            const tileIsGreen = shouldShowPlacementTileAsValid(
-              gameState.currentBuildingType,
-              isValid,
-              isPlacementAllowed
-            )
-            ctx.fillStyle = tileIsGreen ? 'rgba(0, 255, 0, 0.5)' : 'rgba(255, 0, 0, 0.5)'
+            ctx.fillStyle = placementTileOverlayFill(isValid, footprintInRange)
             ctx.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE)
 
             // Draw tile outline
