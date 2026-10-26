@@ -470,6 +470,7 @@ describe('updateGame.js', () => {
       updateGameModule.updateGame(16, [], [], [], [], gameState)
 
       expect(mainUnits[0].moveTarget).toEqual({ x: 2, y: 3 })
+      expect(mainUnits[0].movePatienceResetRequested).toBe(true)
       expect(mainUnits[0].attackTarget).toBeNull()
       expect(mainUnits[0].guardPosition).toBeNull()
     })

@@ -20,6 +20,7 @@ import { FRAME_PHASE, framePhases } from './performance/framePhases.js'
 
 import { updateEnemyAI } from './enemy.js'
 import { cleanupDestroyedSelectedUnits, getUnitCommandsHandler } from './inputHandler.js'
+import './game/stuckClusterNotification.js'
 import { updateBuildingsUnderRepair, updateBuildingsAwaitingRepair, buildingData, cacheBuildingSmokeScales } from './buildings.js'
 import { handleSelfRepair } from './utils.js'
 import { updateGuardBehavior } from './behaviours/guard.js'
@@ -273,6 +274,7 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
               if (unit.owner === partyId && !unit.transportOperation && !unit.transportTransfer) {
                 // Set movement target in TILE coordinates - the movement system will handle pathfinding
                 unit.moveTarget = { x: tileX, y: tileY }
+                unit.movePatienceResetRequested = true
                 unit.attackTarget = null
                 unit.guardPosition = null
                 unit.mapArrivalAction = null
@@ -336,6 +338,7 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
                 const tileX = Math.floor(targetX / TILE_SIZE)
                 const tileY = Math.floor(targetY / TILE_SIZE)
                 unit.moveTarget = { x: tileX, y: tileY }
+                unit.movePatienceResetRequested = true
                 unit.target = null
               } else {
                 window.logger.warn('[Host] Target not found:', targetId)

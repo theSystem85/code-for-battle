@@ -13,6 +13,7 @@ import { gameRandom } from '../utils/gameRandom.js'
 import { hasBlockingBuilding } from '../utils/buildingPassability.js'
 import { hasFixedOccupancy } from './occupancyTags.js'
 import { getSimulationTime } from './time.js'
+import { noteLocalDodge, reportPlayerStuckCluster, updateMovePatience } from './movementPatience.js'
 
 const F22_STATE_MACHINE_STATES = new Set([
   'wait_takeoff_clearance',
@@ -118,6 +119,7 @@ function beginLocalAvoidance(unit, detourTiles, now) {
   unit.dodgeEndTime = now + 2500
   unit.localAvoidanceRemainingSteps = detourTiles.length
   unit.localAvoidanceTotalSteps = detourTiles.length
+  noteLocalDodge(unit, now)
 
   return true
 }
@@ -172,11 +174,26 @@ export function handleStuckUnit(unit, mapGrid, occupancyMap, units, gameState = 
   // This prevents immediate re-path jitter while still allowing stuck recovery
   // when the unit is genuinely blocked.
   const now = gameState ? getSimulationTime(gameState) : performance.now()
+  // Captured before a patience dodge flips isDodging, so the short grace period
+  // below still applies to the older stuck handler on this frame.
   const isPlayerUnit = gameState && (unit.owner === gameState.humanPlayer ||
     (gameState.humanPlayer === 'player1' && unit.owner === 'player'))
   const hasRecentPath = unit.lastPathCalcTime && (now - unit.lastPathCalcTime < 2000)
   const hasActivePlayerMove = isPlayerUnit && unit.moveTarget && unit.path && unit.path.length > 0 &&
     !unit.isRetreating && !unit.sweepingOverrideMovement && !unit.isDodging
+
+  // Runs for player and AI units on the same movement tick. A fresh player path
+  // still skips the older handler below, but patience keeps its own 10s clock.
+  if (updateMovePatience(unit, now)) {
+    let dodged = false
+    if (mapGrid && units) {
+      dodged = tryDodgeMovement(unit, mapGrid, occupancyMap, units, now) ||
+        tryRandomStuckMovement(unit, mapGrid, occupancyMap, units, now)
+    }
+    reportPlayerStuckCluster(unit, units, gameState, now)
+    if (dodged) return
+  }
+
   if (hasActivePlayerMove && hasRecentPath) {
     return
   }
