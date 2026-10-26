@@ -194,16 +194,22 @@ describe('MapRenderer bounded terrain residency', () => {
     expect(chunk.decorativeKey).toBe('current')
   })
 
-  it('[U06498] re-keys decorative pages on a sprite tier publication without dropping the published page', () => {
+  it('[U06498] re-keys a dependent decorative page without dropping its published canvas', () => {
     const renderer = new MapRenderer(makeTextureManager())
+    const mapGrid = makeMap(1)
+    renderer.terrainRevisions.ensureMap(mapGrid)
     const chunk = {
       key: '0,0', startX: 0, startY: 0, endX: 1, endY: 1,
+      chunkX: 0, chunkY: 0,
       revisionSnapshot: { layout: 0, surface: 0, asset: 0 },
       decorativeCanvas: {}
     }
+    renderer.chunkCache.set(chunk.key, chunk)
+    renderer.decorativePageDependencies.replacePage(chunk.key, ['images/map/sprite_sheets/dtv6_decor_a.webp'])
     const before = renderer.getDecorativeKey(chunk)
     chunk.decorativeKey = before
     renderer.notifySpriteTierPublication({ spriteId: 'images/map/sprite_sheets/dtv6_decor_a.webp', tier: 2, revision: 7 })
+    renderer.terrainRevisions.getChunkRevisions(0, 0, chunk.revisionSnapshot)
 
     expect(renderer.getDecorativeKey(chunk)).not.toBe(before)
     expect(chunk.decorativeCanvas).toBeTruthy()

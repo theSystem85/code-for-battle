@@ -199,4 +199,78 @@ describe('MapRenderer revisioned terrain cache', () => {
       fullRebuild.terrainByteBudget.getUsage()
     )
   })
+
+  it('[U06500] keeps every decorative page stable when an unrelated building sprite tier publishes', () => {
+    const renderer = new MapRenderer(makeTextureManager())
+    const mapGrid = makeMap(64, 64)
+    renderer.renderTiles(makeOutputContext(), mapGrid, { x: 0, y: 0 }, 0, 0, 64, 64, {}, {})
+    const before = [...renderer.chunkCache.values()].map(chunk => {
+      chunk.decorativeCanvas = { id: chunk.key }
+      chunk.decorativeReadyAt = 1234
+      chunk.decorativeKey = renderer.getDecorativeKey(chunk)
+      return {
+        chunk,
+        key: chunk.decorativeKey,
+        canvas: chunk.decorativeCanvas,
+        readyAt: chunk.decorativeReadyAt
+      }
+    })
+
+    expect(renderer.notifySpriteTierPublication({
+      spriteId: '/images/map/buildings/construction-yard.webp',
+      tier: 1,
+      revision: 1
+    })).toBe(0)
+
+    for (const snapshot of before) {
+      expect(renderer.getDecorativeKey(snapshot.chunk)).toBe(snapshot.key)
+      expect(snapshot.chunk.decorativeCanvas).toBe(snapshot.canvas)
+      expect(snapshot.chunk.decorativeReadyAt).toBe(snapshot.readyAt)
+    }
+  })
+
+  it('[U06501] invalidates only decorative pages that used the published sprite sheet', () => {
+    const renderer = new MapRenderer(makeTextureManager())
+    const mapGrid = makeMap(64, 64)
+    renderer.renderTiles(makeOutputContext(), mapGrid, { x: 0, y: 0 }, 0, 0, 64, 64, {}, {})
+    const affected = renderer.chunkCache.get('0,0')
+    const unaffected = renderer.chunkCache.get('1,0')
+    renderer.decorativePageDependencies.replacePage(affected.key, ['/images/map/decorations/props.webp'])
+
+    expect(renderer.notifySpriteTierPublication({
+      spriteId: '/images/map/decorations/props.webp',
+      tier: 1,
+      revision: 1
+    })).toBe(1)
+
+    const affectedRevision = {}
+    const unaffectedRevision = {}
+    renderer.terrainRevisions.getChunkRevisions(affected.chunkX, affected.chunkY, affectedRevision)
+    renderer.terrainRevisions.getChunkRevisions(unaffected.chunkX, unaffected.chunkY, unaffectedRevision)
+    expect(affectedRevision.asset).toBe(1)
+    expect(unaffectedRevision.asset).toBe(0)
+  })
+
+  it('[U06502] preserves the original fade timestamp when replacing a published decorative page', () => {
+    installTraceCanvases()
+    const textureManager = makeTextureManager()
+    textureManager.integratedSpriteSheetMode = true
+    const renderer = new MapRenderer(textureManager)
+    const mapGrid = makeMap(1, 1)
+    renderer.terrainRevisions.ensureMap(mapGrid)
+    const chunk = renderer.getOrCreateChunk(0, 0, 0, 0, 1, 1)
+    chunk.decorativeCanvas = { id: 'published' }
+    chunk.decorativeReadyAt = 1234
+    vi.spyOn(renderer, 'drawDecorativeLayer').mockImplementation(() => {})
+    renderer.decorativeWarmQueue.set(chunk.key, {
+      chunk,
+      mapGrid,
+      useTexture: true,
+      key: renderer.getDecorativeKey(chunk)
+    })
+
+    expect(renderer.processDecorativeWarmQueue({ timeRemaining: () => 10 })).toBe(true)
+    expect(chunk.decorativeCanvas).not.toEqual({ id: 'published' })
+    expect(chunk.decorativeReadyAt).toBe(1234)
+  })
 })

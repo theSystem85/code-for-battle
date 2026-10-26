@@ -263,6 +263,7 @@ export class MapRenderer {
     this.chunkUseCounter = 0
     this.chunkWarmQueueCounter = 0
     this.pageDependencies = new StaticPageDependencyIndex()
+    this.decorativePageDependencies = new StaticPageDependencyIndex()
     this.collectingPageAssets = null
     this.terrainSpriteTier = SPRITE_TIER_IDS.FINAL
     this.densityGeneration = 0
@@ -308,7 +309,6 @@ export class MapRenderer {
     this.decorativeWarmScheduled = false
     this.decorativeIdleHeadroomMs = 2
     this.decorativeCameraMoving = false
-    this.decorativeAssetGeneration = 0
     // Still-camera fallback budget when the browser reports no idle headroom
     // (or no requestIdleCallback). Bounded so a frame is never held long.
     this.decorativeStillBudgetMs = 3
@@ -647,12 +647,12 @@ export class MapRenderer {
 
   notifySpriteTierPublication(publication) {
     if (!publication?.spriteId) return 0
-    // Decorative pages are prepared outside the base pass, so they are not
-    // tracked as page dependencies. Any tier publication (for example the
-    // coarse -> final upgrade) re-keys them; the published page stays drawn
-    // until its idle-prepared replacement is complete.
-    this.decorativeAssetGeneration++
-    const pageKeys = this.pageDependencies.publishAssetTier(
+    const basePageKeys = this.pageDependencies.publishAssetTier(
+      publication.spriteId,
+      publication.tier,
+      publication.revision
+    )
+    const decorativePageKeys = this.decorativePageDependencies.publishAssetTier(
       publication.spriteId,
       publication.tier,
       publication.revision
@@ -660,7 +660,7 @@ export class MapRenderer {
     const mapGrid = this.terrainRevisions.mapGrid
     if (!mapGrid) return 0
     let invalidated = 0
-    for (const pageKey of pageKeys) {
+    for (const pageKey of new Set([...basePageKeys, ...decorativePageKeys])) {
       const chunk = this.chunkCache.get(pageKey)
       if (!chunk) continue
       const bounds = { left: chunk.startX, top: chunk.startY, right: chunk.endX, bottom: chunk.endY }
@@ -696,6 +696,7 @@ export class MapRenderer {
     for (const chunk of this.chunkCache.values()) this.releaseChunkResources(chunk)
     this.chunkCache.clear()
     this.pageDependencies.clear()
+    this.decorativePageDependencies.clear()
     this.chunkWarmQueue.clear()
     this.chunkWarmGeneration++
     this.prewarmedState.mapGeneration = -1
@@ -911,6 +912,7 @@ export class MapRenderer {
 
   releaseChunkResources(chunk) {
     this.pageDependencies.removePage(chunk.key)
+    this.decorativePageDependencies.removePage(chunk.key)
     chunk.residentToken?.release()
     chunk.residentToken = null
     chunk.residentBytes = 0
@@ -1164,7 +1166,7 @@ export class MapRenderer {
   getDecorativeKey(chunk) {
     return `${this.terrainRevisions.mapGeneration}|${chunk.revisionSnapshot.layout}|` +
       `${chunk.revisionSnapshot.surface}|${chunk.revisionSnapshot.asset}|` +
-      `${this.textureManager.integratedRenderSignature}|${this.decorativeAssetGeneration}`
+      `${this.textureManager.integratedRenderSignature}`
   }
 
   queueDecorativeChunk(chunk, mapGrid, useTexture) {
@@ -1239,19 +1241,30 @@ export class MapRenderer {
     )) {
       const x = chunk.startX + entry.nextTile % columns
       const y = chunk.startY + Math.floor(entry.nextTile / columns)
-      this.drawDecorativeLayer(
-        entry.ctx, mapGrid, x, y, x + 1, y + 1,
-        chunk.offsetX, chunk.offsetY, useTexture
-      )
+      const previousCollector = this.collectingPageAssets
+      entry.pageAssets ||= new Set()
+      this.collectingPageAssets = entry.pageAssets
+      try {
+        this.drawDecorativeLayer(
+          entry.ctx, mapGrid, x, y, x + 1, y + 1,
+          chunk.offsetX, chunk.offsetY, useTexture
+        )
+      } finally {
+        this.collectingPageAssets = previousCollector
+      }
       entry.nextTile++
     }
     if (entry.nextTile < tileCount) return false
     entry.stagingToken.release()
     this.decorativeWarmQueue.delete(chunk.key)
+    const firstPublication = !chunk.decorativeCanvas
     chunk.decorativeCanvas = entry.canvas
     chunk.decorativeCtx = entry.ctx
     chunk.decorativeKey = key
-    chunk.decorativeReadyAt = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()
+    this.decorativePageDependencies.replacePage(chunk.key, entry.pageAssets || [])
+    if (firstPublication) {
+      chunk.decorativeReadyAt = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()
+    }
     return true
   }
 
