@@ -1,0 +1,2953 @@
+{
+  "schemaVersion": 1,
+  "name": "dtv6_decor_universal",
+  "identity": {
+    "buildVersion": 1,
+    "atlasVersion": 1,
+    "catalogVersion": 1,
+    "pixelRulesVersion": 1,
+    "webpQuality": 85,
+    "padding": 2,
+    "sourceHash": "a7bf30e7a745011bab56b5944fbe00e97ea7a1cbf7c3a70608ea84d6ebb24c9e",
+    "metadataHash": "d97bd4dde3be947399f19c5a4673ab9326d7ffe9391e72dc26298c679f1c7b7f",
+    "metadataSignature": "43f89af993a6cffe044478fe1c06928327f0b19db40fac2bcf5d4138a7689c7c",
+    "selectedBackingDensities": [
+      0.5,
+      1
+    ]
+  },
+  "signature": "0f7993452d192c54e3c7c9712f7e0460d5d0e9106ab110f5e6ab32baec219cfe",
+  "source": {
+    "image": "images/map/sprite_sheets/dtv6_decor_universal.webp",
+    "metadata": "images/map/sprite_sheets/dtv6_decor_universal.json",
+    "sourceMetadata": {
+      "path": "images/map/sprite_sheets/sources/alpha_universal.webp",
+      "sha256": "b8b7380775d0ae22fb75424e60b0b4143fe8fdc4eb3733734274c83824008e94",
+      "width": 1024,
+      "height": 1536,
+      "detection": {
+        "transparent": true,
+        "alphaCutoff": 128,
+        "gap": 0,
+        "minArea": 1000
+      },
+      "guides": [],
+      "spriteCount": 24,
+      "packing": {
+        "scale": "per-sprite",
+        "padding": 2
+      }
+    },
+    "editorMetadata": {
+      "schemaVersion": 1,
+      "layoutVersion": 2,
+      "name": "dtv6_decor_universal",
+      "grid": {
+        "tileSize": 64,
+        "rowHeight": 64,
+        "borderWidth": 0,
+        "cols": 16,
+        "rows": 6
+      },
+      "tags": [
+        "universal",
+        "decorative",
+        "ruins",
+        "impassable",
+        "landmark",
+        "rare",
+        "roadside"
+      ],
+      "propLayout": [
+        {
+          "id": "universal_wall_ruin",
+          "col": 0,
+          "row": 0,
+          "w": 2,
+          "h": 3,
+          "groupId": 1,
+          "tags": [
+            "universal",
+            "decorative",
+            "ruins",
+            "impassable",
+            "group_1"
+          ],
+          "sourceRect": {
+            "x": 43,
+            "y": 15,
+            "width": 134,
+            "height": 328
+          }
+        },
+        {
+          "id": "universal_village_block",
+          "col": 2,
+          "row": 0,
+          "w": 3,
+          "h": 3,
+          "groupId": 2,
+          "tags": [
+            "universal",
+            "decorative",
+            "ruins",
+            "impassable",
+            "landmark",
+            "group_2"
+          ],
+          "sourceRect": {
+            "x": 216,
+            "y": 36,
+            "width": 371,
+            "height": 318
+          }
+        },
+        {
+          "id": "universal_house_ruin",
+          "col": 5,
+          "row": 0,
+          "w": 2,
+          "h": 2,
+          "groupId": 3,
+          "tags": [
+            "universal",
+            "decorative",
+            "ruins",
+            "impassable",
+            "group_3"
+          ],
+          "sourceRect": {
+            "x": 607,
+            "y": 90,
+            "width": 227,
+            "height": 215
+          }
+        },
+        {
+          "id": "universal_water_tower",
+          "col": 7,
+          "row": 0,
+          "w": 2,
+          "h": 3,
+          "groupId": 4,
+          "tags": [
+            "universal",
+            "decorative",
+            "ruins",
+            "impassable",
+            "rare",
+            "group_4"
+          ],
+          "sourceRect": {
+            "x": 860,
+            "y": 71,
+            "width": 140,
+            "height": 253
+          }
+        },
+        {
+          "id": "universal_fuel_depot",
+          "col": 9,
+          "row": 0,
+          "w": 3,
+          "h": 3,
+          "groupId": 5,
+          "tags": [
+            "universal",
+            "decorative",
+            "ruins",
+            "impassable",
+            "rare",
+            "group_5"
+          ],
+          "sourceRect": {
+            "x": 27,
+            "y": 370,
+            "width": 264,
+            "height": 202
+          }
+        },
+        {
+          "id": "universal_truck_convoy",
+          "col": 12,
+          "row": 0,
+          "w": 2,
+          "h": 2,
+          "groupId": 6,
+          "tags": [
+            "universal",
+            "decorative",
+            "roadside",
+            "impassable",
+            "group_6"
+          ],
+          "sourceRect": {
+            "x": 313,
+            "y": 372,
+            "width": 285,
+            "height": 199
+          }
+        },
+        {
+          "id": "universal_tank_hulk",
+          "col": 14,
+          "row": 0,
+          "w": 1,
+          "h": 1,
+          "groupId": 7,
+          "tags": [
+            "universal",
+            "decorative",
+            "ruins",
+            "impassable",
+            "group_7"
+          ],
+          "sourceRect": {
+            "x": 607,
+            "y": 382,
+            "width": 203,
+            "height": 196
+          }
+        },
+        {
+          "id": "universal_pillbox",
+          "col": 14,
+          "row": 1,
+          "w": 2,
+          "h": 2,
+          "groupId": 8,
+          "tags": [
+            "universal",
+            "decorative",
+            "ruins",
+            "impassable",
+            "group_8"
+          ],
+          "sourceRect": {
+            "x": 833,
+            "y": 389,
+            "width": 168,
+            "height": 180
+          }
+        },
+        {
+          "id": "universal_containers",
+          "col": 5,
+          "row": 2,
+          "w": 2,
+          "h": 2,
+          "groupId": 9,
+          "tags": [
+            "universal",
+            "decorative",
+            "roadside",
+            "impassable",
+            "group_9"
+          ],
+          "sourceRect": {
+            "x": 29,
+            "y": 604,
+            "width": 274,
+            "height": 195
+          }
+        },
+        {
+          "id": "universal_sandbags",
+          "col": 12,
+          "row": 2,
+          "w": 2,
+          "h": 1,
+          "groupId": 10,
+          "tags": [
+            "universal",
+            "decorative",
+            "ruins",
+            "impassable",
+            "group_10"
+          ],
+          "sourceRect": {
+            "x": 343,
+            "y": 615,
+            "width": 218,
+            "height": 180
+          }
+        },
+        {
+          "id": "universal_car_wreck",
+          "col": 15,
+          "row": 0,
+          "w": 1,
+          "h": 1,
+          "groupId": 11,
+          "tags": [
+            "universal",
+            "decorative",
+            "roadside",
+            "impassable",
+            "group_11"
+          ],
+          "sourceRect": {
+            "x": 615,
+            "y": 611,
+            "width": 149,
+            "height": 183
+          }
+        },
+        {
+          "id": "universal_crates",
+          "col": 0,
+          "row": 3,
+          "w": 1,
+          "h": 1,
+          "groupId": 12,
+          "tags": [
+            "universal",
+            "decorative",
+            "roadside",
+            "impassable",
+            "group_12"
+          ],
+          "sourceRect": {
+            "x": 811,
+            "y": 627,
+            "width": 181,
+            "height": 158
+          }
+        },
+        {
+          "id": "universal_tires",
+          "col": 1,
+          "row": 3,
+          "w": 1,
+          "h": 1,
+          "groupId": 13,
+          "tags": [
+            "universal",
+            "decorative",
+            "roadside",
+            "impassable",
+            "group_13"
+          ],
+          "sourceRect": {
+            "x": 32,
+            "y": 841,
+            "width": 222,
+            "height": 185
+          }
+        },
+        {
+          "id": "universal_barrels",
+          "col": 2,
+          "row": 3,
+          "w": 1,
+          "h": 1,
+          "groupId": 14,
+          "tags": [
+            "universal",
+            "decorative",
+            "roadside",
+            "impassable",
+            "group_14"
+          ],
+          "sourceRect": {
+            "x": 286,
+            "y": 854,
+            "width": 194,
+            "height": 174
+          }
+        },
+        {
+          "id": "universal_cable_drums",
+          "col": 3,
+          "row": 3,
+          "w": 1,
+          "h": 1,
+          "groupId": 15,
+          "tags": [
+            "universal",
+            "decorative",
+            "roadside",
+            "impassable",
+            "group_15"
+          ],
+          "sourceRect": {
+            "x": 511,
+            "y": 817,
+            "width": 243,
+            "height": 222
+          }
+        },
+        {
+          "id": "universal_iron_tank",
+          "col": 4,
+          "row": 3,
+          "w": 1,
+          "h": 1,
+          "groupId": 16,
+          "tags": [
+            "universal",
+            "decorative",
+            "roadside",
+            "impassable",
+            "group_16"
+          ],
+          "sourceRect": {
+            "x": 824,
+            "y": 844,
+            "width": 170,
+            "height": 179
+          }
+        },
+        {
+          "id": "universal_rubble",
+          "col": 7,
+          "row": 3,
+          "w": 2,
+          "h": 1,
+          "groupId": 17,
+          "tags": [
+            "universal",
+            "decorative",
+            "ruins",
+            "impassable",
+            "group_17"
+          ],
+          "sourceRect": {
+            "x": 26,
+            "y": 1059,
+            "width": 256,
+            "height": 193
+          }
+        },
+        {
+          "id": "universal_girders",
+          "col": 9,
+          "row": 3,
+          "w": 2,
+          "h": 2,
+          "groupId": 18,
+          "tags": [
+            "universal",
+            "decorative",
+            "ruins",
+            "impassable",
+            "group_18"
+          ],
+          "sourceRect": {
+            "x": 302,
+            "y": 1065,
+            "width": 221,
+            "height": 181
+          }
+        },
+        {
+          "id": "universal_generator",
+          "col": 11,
+          "row": 3,
+          "w": 1,
+          "h": 1,
+          "groupId": 19,
+          "tags": [
+            "universal",
+            "decorative",
+            "roadside",
+            "impassable",
+            "group_19"
+          ],
+          "sourceRect": {
+            "x": 545,
+            "y": 1076,
+            "width": 218,
+            "height": 171
+          }
+        },
+        {
+          "id": "universal_concrete_steps",
+          "col": 12,
+          "row": 3,
+          "w": 2,
+          "h": 2,
+          "groupId": 20,
+          "tags": [
+            "universal",
+            "decorative",
+            "ruins",
+            "impassable",
+            "group_20"
+          ],
+          "sourceRect": {
+            "x": 784,
+            "y": 1067,
+            "width": 218,
+            "height": 187
+          }
+        },
+        {
+          "id": "universal_brick_chimney",
+          "col": 14,
+          "row": 3,
+          "w": 1,
+          "h": 2,
+          "groupId": 21,
+          "tags": [
+            "universal",
+            "decorative",
+            "ruins",
+            "impassable",
+            "group_21"
+          ],
+          "sourceRect": {
+            "x": 33,
+            "y": 1264,
+            "width": 185,
+            "height": 244
+          }
+        },
+        {
+          "id": "universal_collapsed_cart",
+          "col": 15,
+          "row": 3,
+          "w": 1,
+          "h": 1,
+          "groupId": 22,
+          "tags": [
+            "universal",
+            "decorative",
+            "ruins",
+            "impassable",
+            "group_22"
+          ],
+          "sourceRect": {
+            "x": 239,
+            "y": 1309,
+            "width": 231,
+            "height": 176
+          }
+        },
+        {
+          "id": "universal_checkpoint",
+          "col": 0,
+          "row": 4,
+          "w": 2,
+          "h": 2,
+          "groupId": 23,
+          "tags": [
+            "universal",
+            "decorative",
+            "ruins",
+            "impassable",
+            "group_23"
+          ],
+          "sourceRect": {
+            "x": 482,
+            "y": 1284,
+            "width": 241,
+            "height": 225
+          }
+        },
+        {
+          "id": "universal_machinery",
+          "col": 2,
+          "row": 4,
+          "w": 2,
+          "h": 2,
+          "groupId": 24,
+          "tags": [
+            "universal",
+            "decorative",
+            "roadside",
+            "impassable",
+            "group_24"
+          ],
+          "sourceRect": {
+            "x": 753,
+            "y": 1308,
+            "width": 241,
+            "height": 191
+          }
+        }
+      ],
+      "extension": {
+        "imports": [
+          {
+            "id": "universal_wall_ruin",
+            "sourceId": "alpha_universal",
+            "bbox": {
+              "x": 43,
+              "y": 15,
+              "width": 134,
+              "height": 328
+            },
+            "area": 23810,
+            "anchor": "center",
+            "sizeRatio": 0.4878048780487805,
+            "referenceSize": {
+              "width": 128,
+              "height": 160
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 3
+            },
+            "placedAt": {
+              "column": 0,
+              "row": 0
+            },
+            "tags": [
+              "universal",
+              "decorative",
+              "ruins",
+              "impassable",
+              "group_1"
+            ],
+            "renderRect": {
+              "x": 31,
+              "y": 16,
+              "width": 65,
+              "height": 160
+            }
+          },
+          {
+            "id": "universal_village_block",
+            "sourceId": "alpha_universal",
+            "bbox": {
+              "x": 216,
+              "y": 36,
+              "width": 371,
+              "height": 318
+            },
+            "area": 93699,
+            "anchor": "center",
+            "sizeRatio": 0.49595687331536387,
+            "referenceSize": {
+              "width": 184,
+              "height": 160
+            },
+            "tileSpan": {
+              "columns": 3,
+              "rows": 3
+            },
+            "placedAt": {
+              "column": 2,
+              "row": 0
+            },
+            "tags": [
+              "universal",
+              "decorative",
+              "ruins",
+              "impassable",
+              "landmark",
+              "group_2"
+            ],
+            "renderRect": {
+              "x": 4,
+              "y": 17,
+              "width": 184,
+              "height": 158
+            }
+          },
+          {
+            "id": "universal_house_ruin",
+            "sourceId": "alpha_universal",
+            "bbox": {
+              "x": 607,
+              "y": 90,
+              "width": 227,
+              "height": 215
+            },
+            "area": 39540,
+            "anchor": "center",
+            "sizeRatio": 0.5110132158590308,
+            "referenceSize": {
+              "width": 116,
+              "height": 160
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 5,
+              "row": 0
+            },
+            "tags": [
+              "universal",
+              "decorative",
+              "ruins",
+              "impassable",
+              "group_3"
+            ],
+            "renderRect": {
+              "x": 6,
+              "y": 9,
+              "width": 116,
+              "height": 110
+            }
+          },
+          {
+            "id": "universal_water_tower",
+            "sourceId": "alpha_universal",
+            "bbox": {
+              "x": 860,
+              "y": 71,
+              "width": 140,
+              "height": 253
+            },
+            "area": 25750,
+            "anchor": "center",
+            "sizeRatio": 0.5142857142857142,
+            "referenceSize": {
+              "width": 72,
+              "height": 160
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 3
+            },
+            "placedAt": {
+              "column": 7,
+              "row": 0
+            },
+            "tags": [
+              "universal",
+              "decorative",
+              "ruins",
+              "impassable",
+              "rare",
+              "group_4"
+            ],
+            "renderRect": {
+              "x": 28,
+              "y": 31,
+              "width": 72,
+              "height": 130
+            }
+          },
+          {
+            "id": "universal_fuel_depot",
+            "sourceId": "alpha_universal",
+            "bbox": {
+              "x": 27,
+              "y": 370,
+              "width": 264,
+              "height": 202
+            },
+            "area": 46956,
+            "anchor": "center",
+            "sizeRatio": 0.6363636363636364,
+            "referenceSize": {
+              "width": 168,
+              "height": 160
+            },
+            "tileSpan": {
+              "columns": 3,
+              "rows": 3
+            },
+            "placedAt": {
+              "column": 9,
+              "row": 0
+            },
+            "tags": [
+              "universal",
+              "decorative",
+              "ruins",
+              "impassable",
+              "rare",
+              "group_5"
+            ],
+            "renderRect": {
+              "x": 12,
+              "y": 31,
+              "width": 168,
+              "height": 129
+            }
+          },
+          {
+            "id": "universal_truck_convoy",
+            "sourceId": "alpha_universal",
+            "bbox": {
+              "x": 313,
+              "y": 372,
+              "width": 285,
+              "height": 199
+            },
+            "area": 42308,
+            "anchor": "center",
+            "sizeRatio": 0.3929824561403509,
+            "referenceSize": {
+              "width": 112,
+              "height": 120
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 12,
+              "row": 0
+            },
+            "tags": [
+              "universal",
+              "decorative",
+              "roadside",
+              "impassable",
+              "group_6"
+            ],
+            "renderRect": {
+              "x": 8,
+              "y": 25,
+              "width": 112,
+              "height": 78
+            }
+          },
+          {
+            "id": "universal_tank_hulk",
+            "sourceId": "alpha_universal",
+            "bbox": {
+              "x": 607,
+              "y": 382,
+              "width": 203,
+              "height": 196
+            },
+            "area": 28735,
+            "anchor": "center",
+            "sizeRatio": 0.2955665024630542,
+            "referenceSize": {
+              "width": 60,
+              "height": 160
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 14,
+              "row": 0
+            },
+            "tags": [
+              "universal",
+              "decorative",
+              "ruins",
+              "impassable",
+              "group_7"
+            ],
+            "renderRect": {
+              "x": 2,
+              "y": 3,
+              "width": 60,
+              "height": 58
+            }
+          },
+          {
+            "id": "universal_pillbox",
+            "sourceId": "alpha_universal",
+            "bbox": {
+              "x": 833,
+              "y": 389,
+              "width": 168,
+              "height": 180
+            },
+            "area": 24295,
+            "anchor": "center",
+            "sizeRatio": 0.42857142857142855,
+            "referenceSize": {
+              "width": 72,
+              "height": 160
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 14,
+              "row": 1
+            },
+            "tags": [
+              "universal",
+              "decorative",
+              "ruins",
+              "impassable",
+              "group_8"
+            ],
+            "renderRect": {
+              "x": 28,
+              "y": 25,
+              "width": 72,
+              "height": 77
+            }
+          },
+          {
+            "id": "universal_containers",
+            "sourceId": "alpha_universal",
+            "bbox": {
+              "x": 29,
+              "y": 604,
+              "width": 274,
+              "height": 195
+            },
+            "area": 48289,
+            "anchor": "center",
+            "sizeRatio": 0.43795620437956206,
+            "referenceSize": {
+              "width": 120,
+              "height": 120
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 5,
+              "row": 2
+            },
+            "tags": [
+              "universal",
+              "decorative",
+              "roadside",
+              "impassable",
+              "group_9"
+            ],
+            "renderRect": {
+              "x": 4,
+              "y": 21,
+              "width": 120,
+              "height": 85
+            }
+          },
+          {
+            "id": "universal_sandbags",
+            "sourceId": "alpha_universal",
+            "bbox": {
+              "x": 343,
+              "y": 615,
+              "width": 218,
+              "height": 180
+            },
+            "area": 31872,
+            "anchor": "center",
+            "sizeRatio": 0.29357798165137616,
+            "referenceSize": {
+              "width": 64,
+              "height": 160
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 12,
+              "row": 2
+            },
+            "tags": [
+              "universal",
+              "decorative",
+              "ruins",
+              "impassable",
+              "group_10"
+            ],
+            "renderRect": {
+              "x": 32,
+              "y": 5,
+              "width": 64,
+              "height": 53
+            }
+          },
+          {
+            "id": "universal_car_wreck",
+            "sourceId": "alpha_universal",
+            "bbox": {
+              "x": 615,
+              "y": 611,
+              "width": 149,
+              "height": 183
+            },
+            "area": 22244,
+            "anchor": "center",
+            "sizeRatio": 0.2953020134228188,
+            "referenceSize": {
+              "width": 44,
+              "height": 120
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 15,
+              "row": 0
+            },
+            "tags": [
+              "universal",
+              "decorative",
+              "roadside",
+              "impassable",
+              "group_11"
+            ],
+            "renderRect": {
+              "x": 10,
+              "y": 5,
+              "width": 44,
+              "height": 54
+            }
+          },
+          {
+            "id": "universal_crates",
+            "sourceId": "alpha_universal",
+            "bbox": {
+              "x": 811,
+              "y": 627,
+              "width": 181,
+              "height": 158
+            },
+            "area": 23669,
+            "anchor": "center",
+            "sizeRatio": 0.19889502762430938,
+            "referenceSize": {
+              "width": 36,
+              "height": 120
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 0,
+              "row": 3
+            },
+            "tags": [
+              "universal",
+              "decorative",
+              "roadside",
+              "impassable",
+              "group_12"
+            ],
+            "renderRect": {
+              "x": 14,
+              "y": 16,
+              "width": 36,
+              "height": 31
+            }
+          },
+          {
+            "id": "universal_tires",
+            "sourceId": "alpha_universal",
+            "bbox": {
+              "x": 32,
+              "y": 841,
+              "width": 222,
+              "height": 185
+            },
+            "area": 29252,
+            "anchor": "center",
+            "sizeRatio": 0.21621621621621623,
+            "referenceSize": {
+              "width": 48,
+              "height": 120
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 1,
+              "row": 3
+            },
+            "tags": [
+              "universal",
+              "decorative",
+              "roadside",
+              "impassable",
+              "group_13"
+            ],
+            "renderRect": {
+              "x": 8,
+              "y": 12,
+              "width": 48,
+              "height": 40
+            }
+          },
+          {
+            "id": "universal_barrels",
+            "sourceId": "alpha_universal",
+            "bbox": {
+              "x": 286,
+              "y": 854,
+              "width": 194,
+              "height": 174
+            },
+            "area": 24321,
+            "anchor": "center",
+            "sizeRatio": 0.18556701030927836,
+            "referenceSize": {
+              "width": 36,
+              "height": 120
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 2,
+              "row": 3
+            },
+            "tags": [
+              "universal",
+              "decorative",
+              "roadside",
+              "impassable",
+              "group_14"
+            ],
+            "renderRect": {
+              "x": 14,
+              "y": 16,
+              "width": 36,
+              "height": 32
+            }
+          },
+          {
+            "id": "universal_cable_drums",
+            "sourceId": "alpha_universal",
+            "bbox": {
+              "x": 511,
+              "y": 817,
+              "width": 243,
+              "height": 222
+            },
+            "area": 30348,
+            "anchor": "center",
+            "sizeRatio": 0.23045267489711935,
+            "referenceSize": {
+              "width": 56,
+              "height": 120
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 3,
+              "row": 3
+            },
+            "tags": [
+              "universal",
+              "decorative",
+              "roadside",
+              "impassable",
+              "group_15"
+            ],
+            "renderRect": {
+              "x": 4,
+              "y": 6,
+              "width": 56,
+              "height": 51
+            }
+          },
+          {
+            "id": "universal_iron_tank",
+            "sourceId": "alpha_universal",
+            "bbox": {
+              "x": 824,
+              "y": 844,
+              "width": 170,
+              "height": 179
+            },
+            "area": 10685,
+            "anchor": "center",
+            "sizeRatio": 0.21176470588235294,
+            "referenceSize": {
+              "width": 36,
+              "height": 120
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 4,
+              "row": 3
+            },
+            "tags": [
+              "universal",
+              "decorative",
+              "roadside",
+              "impassable",
+              "group_16"
+            ],
+            "renderRect": {
+              "x": 14,
+              "y": 13,
+              "width": 36,
+              "height": 38
+            }
+          },
+          {
+            "id": "universal_rubble",
+            "sourceId": "alpha_universal",
+            "bbox": {
+              "x": 26,
+              "y": 1059,
+              "width": 256,
+              "height": 193
+            },
+            "area": 35034,
+            "anchor": "center",
+            "sizeRatio": 0.28125,
+            "referenceSize": {
+              "width": 72,
+              "height": 160
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 7,
+              "row": 3
+            },
+            "tags": [
+              "universal",
+              "decorative",
+              "ruins",
+              "impassable",
+              "group_17"
+            ],
+            "renderRect": {
+              "x": 28,
+              "y": 5,
+              "width": 72,
+              "height": 54
+            }
+          },
+          {
+            "id": "universal_girders",
+            "sourceId": "alpha_universal",
+            "bbox": {
+              "x": 302,
+              "y": 1065,
+              "width": 221,
+              "height": 181
+            },
+            "area": 24360,
+            "anchor": "center",
+            "sizeRatio": 0.36199095022624433,
+            "referenceSize": {
+              "width": 80,
+              "height": 160
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 9,
+              "row": 3
+            },
+            "tags": [
+              "universal",
+              "decorative",
+              "ruins",
+              "impassable",
+              "group_18"
+            ],
+            "renderRect": {
+              "x": 24,
+              "y": 31,
+              "width": 80,
+              "height": 66
+            }
+          },
+          {
+            "id": "universal_generator",
+            "sourceId": "alpha_universal",
+            "bbox": {
+              "x": 545,
+              "y": 1076,
+              "width": 218,
+              "height": 171
+            },
+            "area": 28980,
+            "anchor": "center",
+            "sizeRatio": 0.22018348623853212,
+            "referenceSize": {
+              "width": 48,
+              "height": 120
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 11,
+              "row": 3
+            },
+            "tags": [
+              "universal",
+              "decorative",
+              "roadside",
+              "impassable",
+              "group_19"
+            ],
+            "renderRect": {
+              "x": 8,
+              "y": 13,
+              "width": 48,
+              "height": 38
+            }
+          },
+          {
+            "id": "universal_concrete_steps",
+            "sourceId": "alpha_universal",
+            "bbox": {
+              "x": 784,
+              "y": 1067,
+              "width": 218,
+              "height": 187
+            },
+            "area": 31809,
+            "anchor": "center",
+            "sizeRatio": 0.3302752293577982,
+            "referenceSize": {
+              "width": 72,
+              "height": 160
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 12,
+              "row": 3
+            },
+            "tags": [
+              "universal",
+              "decorative",
+              "ruins",
+              "impassable",
+              "group_20"
+            ],
+            "renderRect": {
+              "x": 28,
+              "y": 33,
+              "width": 72,
+              "height": 62
+            }
+          },
+          {
+            "id": "universal_brick_chimney",
+            "sourceId": "alpha_universal",
+            "bbox": {
+              "x": 33,
+              "y": 1264,
+              "width": 185,
+              "height": 244
+            },
+            "area": 24619,
+            "anchor": "center",
+            "sizeRatio": 0.32432432432432434,
+            "referenceSize": {
+              "width": 60,
+              "height": 160
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 14,
+              "row": 3
+            },
+            "tags": [
+              "universal",
+              "decorative",
+              "ruins",
+              "impassable",
+              "group_21"
+            ],
+            "renderRect": {
+              "x": 2,
+              "y": 24,
+              "width": 60,
+              "height": 79
+            }
+          },
+          {
+            "id": "universal_collapsed_cart",
+            "sourceId": "alpha_universal",
+            "bbox": {
+              "x": 239,
+              "y": 1309,
+              "width": 231,
+              "height": 176
+            },
+            "area": 24741,
+            "anchor": "center",
+            "sizeRatio": 0.24242424242424243,
+            "referenceSize": {
+              "width": 56,
+              "height": 160
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 15,
+              "row": 3
+            },
+            "tags": [
+              "universal",
+              "decorative",
+              "ruins",
+              "impassable",
+              "group_22"
+            ],
+            "renderRect": {
+              "x": 4,
+              "y": 10,
+              "width": 56,
+              "height": 43
+            }
+          },
+          {
+            "id": "universal_checkpoint",
+            "sourceId": "alpha_universal",
+            "bbox": {
+              "x": 482,
+              "y": 1284,
+              "width": 241,
+              "height": 225
+            },
+            "area": 36756,
+            "anchor": "center",
+            "sizeRatio": 0.33195020746887965,
+            "referenceSize": {
+              "width": 80,
+              "height": 160
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 0,
+              "row": 4
+            },
+            "tags": [
+              "universal",
+              "decorative",
+              "ruins",
+              "impassable",
+              "group_23"
+            ],
+            "renderRect": {
+              "x": 24,
+              "y": 26,
+              "width": 80,
+              "height": 75
+            }
+          },
+          {
+            "id": "universal_machinery",
+            "sourceId": "alpha_universal",
+            "bbox": {
+              "x": 753,
+              "y": 1308,
+              "width": 241,
+              "height": 191
+            },
+            "area": 33512,
+            "anchor": "center",
+            "sizeRatio": 0.3651452282157676,
+            "referenceSize": {
+              "width": 88,
+              "height": 120
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 2,
+              "row": 4
+            },
+            "tags": [
+              "universal",
+              "decorative",
+              "roadside",
+              "impassable",
+              "group_24"
+            ],
+            "renderRect": {
+              "x": 20,
+              "y": 29,
+              "width": 88,
+              "height": 70
+            }
+          }
+        ],
+        "occupiedTiles": [
+          "0,0",
+          "1,0",
+          "0,1",
+          "1,1",
+          "0,2",
+          "1,2",
+          "2,0",
+          "3,0",
+          "4,0",
+          "2,1",
+          "3,1",
+          "4,1",
+          "2,2",
+          "3,2",
+          "4,2",
+          "5,0",
+          "6,0",
+          "5,1",
+          "6,1",
+          "7,0",
+          "8,0",
+          "7,1",
+          "8,1",
+          "7,2",
+          "8,2",
+          "9,0",
+          "10,0",
+          "11,0",
+          "9,1",
+          "10,1",
+          "11,1",
+          "9,2",
+          "10,2",
+          "11,2",
+          "12,0",
+          "13,0",
+          "12,1",
+          "13,1",
+          "14,0",
+          "14,1",
+          "15,1",
+          "14,2",
+          "15,2",
+          "5,2",
+          "6,2",
+          "5,3",
+          "6,3",
+          "12,2",
+          "13,2",
+          "15,0",
+          "0,3",
+          "1,3",
+          "2,3",
+          "3,3",
+          "4,3",
+          "7,3",
+          "8,3",
+          "9,3",
+          "10,3",
+          "9,4",
+          "10,4",
+          "11,3",
+          "12,3",
+          "13,3",
+          "12,4",
+          "13,4",
+          "14,3",
+          "14,4",
+          "15,3",
+          "0,4",
+          "1,4",
+          "0,5",
+          "1,5",
+          "2,4",
+          "3,4",
+          "2,5",
+          "3,5"
+        ]
+      }
+    }
+  },
+  "upscaledBeyondMaster": false,
+  "omittedCandidateDensities": [
+    2,
+    3
+  ],
+  "pages": [
+    {
+      "name": "dtv6_decor_universal.coarse.webp",
+      "sha256": "06a49d608a1fc4a75ae682be240b289b16e62b805c11fe62609642231171b41e",
+      "width": 1376,
+      "height": 100,
+      "decodedBytes": 550400,
+      "compressedBytes": 41836,
+      "tier": 0,
+      "tierName": "coarse",
+      "backingDensity": 0.5
+    },
+    {
+      "name": "dtv6_decor_universal.final.webp",
+      "sha256": "348dc20a9d432331092e78ddb4ee79314877c0955d3a23b1f2fb0ce85f9350bb",
+      "width": 1924,
+      "height": 328,
+      "decodedBytes": 2524288,
+      "compressedBytes": 109728,
+      "tier": 2,
+      "tierName": "final",
+      "backingDensity": 1
+    }
+  ],
+  "sprites": [
+    {
+      "spriteId": "dtv6_decor_universal:group_1",
+      "groupId": "group_1",
+      "savedIdentifiers": [
+        "universal_wall_ruin"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 192,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 0,
+        "y": 0,
+        "width": 128,
+        "height": 192
+      },
+      "tileKeys": [
+        "0,0",
+        "0,1",
+        "0,2",
+        "1,0",
+        "1,1",
+        "1,2"
+      ],
+      "tags": [
+        "decorative",
+        "group_1",
+        "impassable",
+        "ruins",
+        "universal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_universal.coarse.webp",
+          "x": 2,
+          "y": 2,
+          "width": 64,
+          "height": 96,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_universal.final.webp",
+          "x": 2,
+          "y": 2,
+          "width": 128,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_universal:group_2",
+      "groupId": "group_2",
+      "savedIdentifiers": [
+        "universal_village_block"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 192,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 128,
+        "y": 0,
+        "width": 192,
+        "height": 192
+      },
+      "tileKeys": [
+        "2,0",
+        "2,1",
+        "2,2",
+        "3,0",
+        "3,1",
+        "3,2",
+        "4,0",
+        "4,1",
+        "4,2"
+      ],
+      "tags": [
+        "decorative",
+        "group_2",
+        "impassable",
+        "landmark",
+        "ruins",
+        "universal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_universal.coarse.webp",
+          "x": 70,
+          "y": 2,
+          "width": 96,
+          "height": 96,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_universal.final.webp",
+          "x": 134,
+          "y": 2,
+          "width": 192,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_universal:group_3",
+      "groupId": "group_3",
+      "savedIdentifiers": [
+        "universal_house_ruin"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 320,
+        "y": 0,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "5,0",
+        "5,1",
+        "6,0",
+        "6,1"
+      ],
+      "tags": [
+        "decorative",
+        "group_3",
+        "impassable",
+        "ruins",
+        "universal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_universal.coarse.webp",
+          "x": 170,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_universal.final.webp",
+          "x": 330,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_universal:group_4",
+      "groupId": "group_4",
+      "savedIdentifiers": [
+        "universal_water_tower"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 192,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 448,
+        "y": 0,
+        "width": 128,
+        "height": 192
+      },
+      "tileKeys": [
+        "7,0",
+        "7,1",
+        "7,2",
+        "8,0",
+        "8,1",
+        "8,2"
+      ],
+      "tags": [
+        "decorative",
+        "group_4",
+        "impassable",
+        "rare",
+        "ruins",
+        "universal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_universal.coarse.webp",
+          "x": 238,
+          "y": 2,
+          "width": 64,
+          "height": 96,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_universal.final.webp",
+          "x": 462,
+          "y": 2,
+          "width": 128,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_universal:group_5",
+      "groupId": "group_5",
+      "savedIdentifiers": [
+        "universal_fuel_depot"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 192,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 576,
+        "y": 0,
+        "width": 192,
+        "height": 192
+      },
+      "tileKeys": [
+        "10,0",
+        "10,1",
+        "10,2",
+        "11,0",
+        "11,1",
+        "11,2",
+        "9,0",
+        "9,1",
+        "9,2"
+      ],
+      "tags": [
+        "decorative",
+        "group_5",
+        "impassable",
+        "rare",
+        "ruins",
+        "universal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_universal.coarse.webp",
+          "x": 306,
+          "y": 2,
+          "width": 96,
+          "height": 96,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_universal.final.webp",
+          "x": 594,
+          "y": 2,
+          "width": 192,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_universal:group_6",
+      "groupId": "group_6",
+      "savedIdentifiers": [
+        "universal_truck_convoy"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 768,
+        "y": 0,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "12,0",
+        "12,1",
+        "13,0",
+        "13,1"
+      ],
+      "tags": [
+        "decorative",
+        "group_6",
+        "impassable",
+        "roadside",
+        "universal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_universal.coarse.webp",
+          "x": 406,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_universal.final.webp",
+          "x": 790,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_universal:group_7",
+      "groupId": "group_7",
+      "savedIdentifiers": [
+        "universal_tank_hulk"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 896,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "14,0"
+      ],
+      "tags": [
+        "decorative",
+        "group_7",
+        "impassable",
+        "ruins",
+        "universal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_universal.coarse.webp",
+          "x": 474,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_universal.final.webp",
+          "x": 922,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_universal:group_8",
+      "groupId": "group_8",
+      "savedIdentifiers": [
+        "universal_pillbox"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 896,
+        "y": 64,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "14,1",
+        "14,2",
+        "15,1",
+        "15,2"
+      ],
+      "tags": [
+        "decorative",
+        "group_8",
+        "impassable",
+        "ruins",
+        "universal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_universal.coarse.webp",
+          "x": 510,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_universal.final.webp",
+          "x": 990,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_universal:group_9",
+      "groupId": "group_9",
+      "savedIdentifiers": [
+        "universal_containers"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 320,
+        "y": 128,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "5,2",
+        "5,3",
+        "6,2",
+        "6,3"
+      ],
+      "tags": [
+        "decorative",
+        "group_9",
+        "impassable",
+        "roadside",
+        "universal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_universal.coarse.webp",
+          "x": 578,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_universal.final.webp",
+          "x": 1122,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_universal:group_10",
+      "groupId": "group_10",
+      "savedIdentifiers": [
+        "universal_sandbags"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 768,
+        "y": 128,
+        "width": 128,
+        "height": 64
+      },
+      "tileKeys": [
+        "12,2",
+        "13,2"
+      ],
+      "tags": [
+        "decorative",
+        "group_10",
+        "impassable",
+        "ruins",
+        "universal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_universal.coarse.webp",
+          "x": 646,
+          "y": 2,
+          "width": 64,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_universal.final.webp",
+          "x": 1254,
+          "y": 2,
+          "width": 128,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_universal:group_11",
+      "groupId": "group_11",
+      "savedIdentifiers": [
+        "universal_car_wreck"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 960,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "15,0"
+      ],
+      "tags": [
+        "decorative",
+        "group_11",
+        "impassable",
+        "roadside",
+        "universal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_universal.coarse.webp",
+          "x": 714,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_universal.final.webp",
+          "x": 1386,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_universal:group_12",
+      "groupId": "group_12",
+      "savedIdentifiers": [
+        "universal_crates"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 0,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "0,3"
+      ],
+      "tags": [
+        "decorative",
+        "group_12",
+        "impassable",
+        "roadside",
+        "universal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_universal.coarse.webp",
+          "x": 750,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_universal.final.webp",
+          "x": 1454,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_universal:group_13",
+      "groupId": "group_13",
+      "savedIdentifiers": [
+        "universal_tires"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 64,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "1,3"
+      ],
+      "tags": [
+        "decorative",
+        "group_13",
+        "impassable",
+        "roadside",
+        "universal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_universal.coarse.webp",
+          "x": 786,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_universal.final.webp",
+          "x": 1522,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_universal:group_14",
+      "groupId": "group_14",
+      "savedIdentifiers": [
+        "universal_barrels"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 128,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "2,3"
+      ],
+      "tags": [
+        "decorative",
+        "group_14",
+        "impassable",
+        "roadside",
+        "universal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_universal.coarse.webp",
+          "x": 822,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_universal.final.webp",
+          "x": 1590,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_universal:group_15",
+      "groupId": "group_15",
+      "savedIdentifiers": [
+        "universal_cable_drums"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 192,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "3,3"
+      ],
+      "tags": [
+        "decorative",
+        "group_15",
+        "impassable",
+        "roadside",
+        "universal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_universal.coarse.webp",
+          "x": 858,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_universal.final.webp",
+          "x": 1658,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_universal:group_16",
+      "groupId": "group_16",
+      "savedIdentifiers": [
+        "universal_iron_tank"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 256,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "4,3"
+      ],
+      "tags": [
+        "decorative",
+        "group_16",
+        "impassable",
+        "roadside",
+        "universal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_universal.coarse.webp",
+          "x": 894,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_universal.final.webp",
+          "x": 1726,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_universal:group_17",
+      "groupId": "group_17",
+      "savedIdentifiers": [
+        "universal_rubble"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 448,
+        "y": 192,
+        "width": 128,
+        "height": 64
+      },
+      "tileKeys": [
+        "7,3",
+        "8,3"
+      ],
+      "tags": [
+        "decorative",
+        "group_17",
+        "impassable",
+        "ruins",
+        "universal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_universal.coarse.webp",
+          "x": 930,
+          "y": 2,
+          "width": 64,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_universal.final.webp",
+          "x": 1794,
+          "y": 2,
+          "width": 128,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_universal:group_18",
+      "groupId": "group_18",
+      "savedIdentifiers": [
+        "universal_girders"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 576,
+        "y": 192,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "10,3",
+        "10,4",
+        "9,3",
+        "9,4"
+      ],
+      "tags": [
+        "decorative",
+        "group_18",
+        "impassable",
+        "ruins",
+        "universal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_universal.coarse.webp",
+          "x": 998,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_universal.final.webp",
+          "x": 2,
+          "y": 198,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_universal:group_19",
+      "groupId": "group_19",
+      "savedIdentifiers": [
+        "universal_generator"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 704,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "11,3"
+      ],
+      "tags": [
+        "decorative",
+        "group_19",
+        "impassable",
+        "roadside",
+        "universal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_universal.coarse.webp",
+          "x": 1066,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_universal.final.webp",
+          "x": 134,
+          "y": 198,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_universal:group_20",
+      "groupId": "group_20",
+      "savedIdentifiers": [
+        "universal_concrete_steps"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 768,
+        "y": 192,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "12,3",
+        "12,4",
+        "13,3",
+        "13,4"
+      ],
+      "tags": [
+        "decorative",
+        "group_20",
+        "impassable",
+        "ruins",
+        "universal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_universal.coarse.webp",
+          "x": 1102,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_universal.final.webp",
+          "x": 202,
+          "y": 198,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_universal:group_21",
+      "groupId": "group_21",
+      "savedIdentifiers": [
+        "universal_brick_chimney"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 896,
+        "y": 192,
+        "width": 64,
+        "height": 128
+      },
+      "tileKeys": [
+        "14,3",
+        "14,4"
+      ],
+      "tags": [
+        "decorative",
+        "group_21",
+        "impassable",
+        "ruins",
+        "universal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_universal.coarse.webp",
+          "x": 1170,
+          "y": 2,
+          "width": 32,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_universal.final.webp",
+          "x": 334,
+          "y": 198,
+          "width": 64,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_universal:group_22",
+      "groupId": "group_22",
+      "savedIdentifiers": [
+        "universal_collapsed_cart"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 960,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "15,3"
+      ],
+      "tags": [
+        "decorative",
+        "group_22",
+        "impassable",
+        "ruins",
+        "universal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_universal.coarse.webp",
+          "x": 1206,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_universal.final.webp",
+          "x": 402,
+          "y": 198,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_universal:group_23",
+      "groupId": "group_23",
+      "savedIdentifiers": [
+        "universal_checkpoint"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 0,
+        "y": 256,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "0,4",
+        "0,5",
+        "1,4",
+        "1,5"
+      ],
+      "tags": [
+        "decorative",
+        "group_23",
+        "impassable",
+        "ruins",
+        "universal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_universal.coarse.webp",
+          "x": 1242,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_universal.final.webp",
+          "x": 470,
+          "y": 198,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_universal:group_24",
+      "groupId": "group_24",
+      "savedIdentifiers": [
+        "universal_machinery"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 128,
+        "y": 256,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "2,4",
+        "2,5",
+        "3,4",
+        "3,5"
+      ],
+      "tags": [
+        "decorative",
+        "group_24",
+        "impassable",
+        "roadside",
+        "universal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_universal.coarse.webp",
+          "x": 1310,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_universal.final.webp",
+          "x": 602,
+          "y": 198,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    }
+  ]
+}

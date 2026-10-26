@@ -1,0 +1,3430 @@
+{
+  "schemaVersion": 1,
+  "name": "dtv7_nature_grass_large",
+  "identity": {
+    "buildVersion": 1,
+    "atlasVersion": 1,
+    "catalogVersion": 1,
+    "pixelRulesVersion": 1,
+    "webpQuality": 85,
+    "padding": 2,
+    "sourceHash": "5707d5bc42f6dd9d3fdf81bcb70d764a2e37776a3fb2bf645c8b30da2e49d589",
+    "metadataHash": "09c6901c135abefa5fecdd42f7bd0e31c3c13f6f03f09dec95aba19dc317e655",
+    "metadataSignature": "55413cd8efa2fc182bc8bc6b01663680b7710db0f7be636680375c1c72ee3110",
+    "selectedBackingDensities": [
+      0.5,
+      1
+    ]
+  },
+  "signature": "e68d29e23bba7fa45fa73d1354b74748ecc6e874e617e01749fc5357ee8a5f85",
+  "source": {
+    "image": "images/map/sprite_sheets/dtv7_nature_grass_large.webp",
+    "metadata": "images/map/sprite_sheets/dtv7_nature_grass_large.json",
+    "sourceMetadata": {
+      "path": "images/map/sprite_sheets/sources/woodland_lakes_stones_grass.webp",
+      "sha256": "12557fbb7b419e2961eade22b903915909d551c8ce26160a0f66da20686ac050",
+      "width": 1024,
+      "height": 1536,
+      "detection": {
+        "transparent": true,
+        "alphaCutoff": 128,
+        "gap": 0,
+        "minArea": 1000
+      },
+      "guides": [],
+      "spriteCount": 24,
+      "packing": {
+        "scale": "per-sprite",
+        "padding": 2,
+        "maxScale": 2
+      }
+    },
+    "editorMetadata": {
+      "schemaVersion": 1,
+      "layoutVersion": 1,
+      "name": "dtv7_nature_grass_large",
+      "grid": {
+        "tileSize": 64,
+        "rowHeight": 64,
+        "borderWidth": 0,
+        "cols": 16,
+        "rows": 20
+      },
+      "tags": [
+        "grass",
+        "summer",
+        "decorative",
+        "trees",
+        "impassable",
+        "water",
+        "lake",
+        "rocks",
+        "stones",
+        "passable"
+      ],
+      "propLayout": [
+        {
+          "id": "grass_broadleaf_copse",
+          "col": 0,
+          "row": 0,
+          "w": 3,
+          "h": 3,
+          "groupId": 1,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_1"
+          ],
+          "sourceRect": {
+            "x": 15,
+            "y": 70,
+            "width": 232,
+            "height": 205
+          }
+        },
+        {
+          "id": "grass_birch_stand",
+          "col": 3,
+          "row": 0,
+          "w": 3,
+          "h": 3,
+          "groupId": 2,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_2"
+          ],
+          "sourceRect": {
+            "x": 277,
+            "y": 77,
+            "width": 211,
+            "height": 201
+          }
+        },
+        {
+          "id": "grass_woodland_clearing",
+          "col": 6,
+          "row": 0,
+          "w": 4,
+          "h": 3,
+          "groupId": 3,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_3"
+          ],
+          "sourceRect": {
+            "x": 514,
+            "y": 70,
+            "width": 234,
+            "height": 212
+          }
+        },
+        {
+          "id": "grass_mixed_grove",
+          "col": 10,
+          "row": 0,
+          "w": 4,
+          "h": 3,
+          "groupId": 4,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_4"
+          ],
+          "sourceRect": {
+            "x": 769,
+            "y": 55,
+            "width": 240,
+            "height": 235
+          }
+        },
+        {
+          "id": "grass_willow_copse",
+          "col": 0,
+          "row": 3,
+          "w": 3,
+          "h": 3,
+          "groupId": 5,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_5"
+          ],
+          "sourceRect": {
+            "x": 15,
+            "y": 308,
+            "width": 238,
+            "height": 225
+          }
+        },
+        {
+          "id": "grass_pine_log_grove",
+          "col": 3,
+          "row": 3,
+          "w": 3,
+          "h": 3,
+          "groupId": 6,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_6"
+          ],
+          "sourceRect": {
+            "x": 267,
+            "y": 309,
+            "width": 230,
+            "height": 226
+          }
+        },
+        {
+          "id": "grass_curved_clearing",
+          "col": 6,
+          "row": 3,
+          "w": 4,
+          "h": 4,
+          "groupId": 7,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_7"
+          ],
+          "sourceRect": {
+            "x": 511,
+            "y": 322,
+            "width": 240,
+            "height": 207
+          }
+        },
+        {
+          "id": "grass_dense_woodland",
+          "col": 10,
+          "row": 3,
+          "w": 5,
+          "h": 4,
+          "groupId": 8,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_8"
+          ],
+          "sourceRect": {
+            "x": 767,
+            "y": 312,
+            "width": 241,
+            "height": 215
+          }
+        },
+        {
+          "id": "grass_reed_pond",
+          "col": 0,
+          "row": 6,
+          "w": 3,
+          "h": 3,
+          "groupId": 9,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "water",
+            "lake",
+            "impassable",
+            "group_9"
+          ],
+          "sourceRect": {
+            "x": 22,
+            "y": 593,
+            "width": 208,
+            "height": 189
+          }
+        },
+        {
+          "id": "grass_rocky_pond",
+          "col": 3,
+          "row": 6,
+          "w": 3,
+          "h": 3,
+          "groupId": 10,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "water",
+            "lake",
+            "impassable",
+            "group_10"
+          ],
+          "sourceRect": {
+            "x": 268,
+            "y": 576,
+            "width": 223,
+            "height": 217
+          }
+        },
+        {
+          "id": "grass_kidney_lake",
+          "col": 6,
+          "row": 7,
+          "w": 4,
+          "h": 3,
+          "groupId": 11,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "water",
+            "lake",
+            "impassable",
+            "group_11"
+          ],
+          "sourceRect": {
+            "x": 519,
+            "y": 564,
+            "width": 236,
+            "height": 231
+          }
+        },
+        {
+          "id": "grass_long_woodland_lake",
+          "col": 10,
+          "row": 7,
+          "w": 4,
+          "h": 4,
+          "groupId": 12,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "water",
+            "lake",
+            "impassable",
+            "group_12"
+          ],
+          "sourceRect": {
+            "x": 801,
+            "y": 544,
+            "width": 198,
+            "height": 260
+          }
+        },
+        {
+          "id": "grass_crescent_lake",
+          "col": 0,
+          "row": 9,
+          "w": 4,
+          "h": 4,
+          "groupId": 13,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "water",
+            "lake",
+            "impassable",
+            "group_13"
+          ],
+          "sourceRect": {
+            "x": 15,
+            "y": 835,
+            "width": 230,
+            "height": 234
+          }
+        },
+        {
+          "id": "grass_twin_lobed_lake",
+          "col": 4,
+          "row": 10,
+          "w": 5,
+          "h": 4,
+          "groupId": 14,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "water",
+            "lake",
+            "impassable",
+            "group_14"
+          ],
+          "sourceRect": {
+            "x": 258,
+            "y": 864,
+            "width": 241,
+            "height": 185
+          }
+        },
+        {
+          "id": "grass_island_lake",
+          "col": 9,
+          "row": 11,
+          "w": 5,
+          "h": 4,
+          "groupId": 15,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "water",
+            "lake",
+            "impassable",
+            "group_15"
+          ],
+          "sourceRect": {
+            "x": 513,
+            "y": 834,
+            "width": 248,
+            "height": 241
+          }
+        },
+        {
+          "id": "grass_broad_shallow_lake",
+          "col": 0,
+          "row": 14,
+          "w": 6,
+          "h": 6,
+          "groupId": 16,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "water",
+            "lake",
+            "impassable",
+            "group_16"
+          ],
+          "sourceRect": {
+            "x": 772,
+            "y": 822,
+            "width": 242,
+            "height": 263
+          }
+        },
+        {
+          "id": "grass_granite_boulders",
+          "col": 14,
+          "row": 0,
+          "w": 2,
+          "h": 2,
+          "groupId": 17,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "rocks",
+            "impassable",
+            "group_17"
+          ],
+          "sourceRect": {
+            "x": 18,
+            "y": 1122,
+            "width": 220,
+            "height": 179
+          }
+        },
+        {
+          "id": "grass_limestone_shelves",
+          "col": 14,
+          "row": 7,
+          "w": 2,
+          "h": 2,
+          "groupId": 18,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "rocks",
+            "impassable",
+            "group_18"
+          ],
+          "sourceRect": {
+            "x": 266,
+            "y": 1112,
+            "width": 234,
+            "height": 182
+          }
+        },
+        {
+          "id": "grass_basalt_formation",
+          "col": 14,
+          "row": 9,
+          "w": 2,
+          "h": 2,
+          "groupId": 19,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "rocks",
+            "impassable",
+            "group_19"
+          ],
+          "sourceRect": {
+            "x": 525,
+            "y": 1143,
+            "width": 232,
+            "height": 159
+          }
+        },
+        {
+          "id": "grass_sandstone_slabs",
+          "col": 14,
+          "row": 11,
+          "w": 2,
+          "h": 2,
+          "groupId": 20,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "rocks",
+            "impassable",
+            "group_20"
+          ],
+          "sourceRect": {
+            "x": 784,
+            "y": 1125,
+            "width": 221,
+            "height": 175
+          }
+        },
+        {
+          "id": "grass_river_stone_patch",
+          "col": 14,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 21,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "rocks",
+            "stones",
+            "passable",
+            "group_21"
+          ],
+          "sourceRect": {
+            "x": 21,
+            "y": 1352,
+            "width": 218,
+            "height": 152
+          }
+        },
+        {
+          "id": "grass_mossy_boulders",
+          "col": 14,
+          "row": 13,
+          "w": 2,
+          "h": 2,
+          "groupId": 22,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "rocks",
+            "impassable",
+            "group_22"
+          ],
+          "sourceRect": {
+            "x": 261,
+            "y": 1329,
+            "width": 237,
+            "height": 179
+          }
+        },
+        {
+          "id": "grass_low_rocky_ridge",
+          "col": 6,
+          "row": 14,
+          "w": 3,
+          "h": 2,
+          "groupId": 23,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "rocks",
+            "impassable",
+            "group_23"
+          ],
+          "sourceRect": {
+            "x": 513,
+            "y": 1353,
+            "width": 245,
+            "height": 151
+          }
+        },
+        {
+          "id": "grass_fieldstone_formation",
+          "col": 9,
+          "row": 15,
+          "w": 3,
+          "h": 2,
+          "groupId": 24,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "rocks",
+            "stones",
+            "passable",
+            "group_24"
+          ],
+          "sourceRect": {
+            "x": 770,
+            "y": 1339,
+            "width": 238,
+            "height": 177
+          }
+        }
+      ],
+      "extension": {
+        "imports": [
+          {
+            "id": "grass_broadleaf_copse",
+            "sourceId": "woodland_lakes_stones_grass",
+            "bbox": {
+              "x": 15,
+              "y": 70,
+              "width": 232,
+              "height": 205
+            },
+            "area": 31977,
+            "anchor": "center",
+            "sizeRatio": 0.6439024390243903,
+            "referenceSize": {
+              "width": 164,
+              "height": 132
+            },
+            "tileSpan": {
+              "columns": 3,
+              "rows": 3
+            },
+            "placedAt": {
+              "column": 0,
+              "row": 0
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_1"
+            ],
+            "renderRect": {
+              "x": 21,
+              "y": 30,
+              "width": 149,
+              "height": 132
+            }
+          },
+          {
+            "id": "grass_birch_stand",
+            "sourceId": "woodland_lakes_stones_grass",
+            "bbox": {
+              "x": 277,
+              "y": 77,
+              "width": 211,
+              "height": 201
+            },
+            "area": 27342,
+            "anchor": "center",
+            "sizeRatio": 0.7761194029850746,
+            "referenceSize": {
+              "width": 188,
+              "height": 156
+            },
+            "tileSpan": {
+              "columns": 3,
+              "rows": 3
+            },
+            "placedAt": {
+              "column": 3,
+              "row": 0
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_2"
+            ],
+            "renderRect": {
+              "x": 14,
+              "y": 18,
+              "width": 164,
+              "height": 156
+            }
+          },
+          {
+            "id": "grass_woodland_clearing",
+            "sourceId": "woodland_lakes_stones_grass",
+            "bbox": {
+              "x": 514,
+              "y": 70,
+              "width": 234,
+              "height": 212
+            },
+            "area": 33766,
+            "anchor": "center",
+            "sizeRatio": 0.8113207547169812,
+            "referenceSize": {
+              "width": 216,
+              "height": 172
+            },
+            "tileSpan": {
+              "columns": 4,
+              "rows": 3
+            },
+            "placedAt": {
+              "column": 6,
+              "row": 0
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_3"
+            ],
+            "renderRect": {
+              "x": 33,
+              "y": 10,
+              "width": 190,
+              "height": 172
+            }
+          },
+          {
+            "id": "grass_mixed_grove",
+            "sourceId": "woodland_lakes_stones_grass",
+            "bbox": {
+              "x": 769,
+              "y": 55,
+              "width": 240,
+              "height": 235
+            },
+            "area": 38870,
+            "anchor": "center",
+            "sizeRatio": 0.8,
+            "referenceSize": {
+              "width": 248,
+              "height": 188
+            },
+            "tileSpan": {
+              "columns": 4,
+              "rows": 3
+            },
+            "placedAt": {
+              "column": 10,
+              "row": 0
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_4"
+            ],
+            "renderRect": {
+              "x": 32,
+              "y": 2,
+              "width": 192,
+              "height": 188
+            }
+          },
+          {
+            "id": "grass_willow_copse",
+            "sourceId": "woodland_lakes_stones_grass",
+            "bbox": {
+              "x": 15,
+              "y": 308,
+              "width": 238,
+              "height": 225
+            },
+            "area": 33610,
+            "anchor": "center",
+            "sizeRatio": 0.64,
+            "referenceSize": {
+              "width": 176,
+              "height": 144
+            },
+            "tileSpan": {
+              "columns": 3,
+              "rows": 3
+            },
+            "placedAt": {
+              "column": 0,
+              "row": 3
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_5"
+            ],
+            "renderRect": {
+              "x": 20,
+              "y": 24,
+              "width": 152,
+              "height": 144
+            }
+          },
+          {
+            "id": "grass_pine_log_grove",
+            "sourceId": "woodland_lakes_stones_grass",
+            "bbox": {
+              "x": 267,
+              "y": 309,
+              "width": 230,
+              "height": 226
+            },
+            "area": 33381,
+            "anchor": "center",
+            "sizeRatio": 0.7256637168141593,
+            "referenceSize": {
+              "width": 208,
+              "height": 164
+            },
+            "tileSpan": {
+              "columns": 3,
+              "rows": 3
+            },
+            "placedAt": {
+              "column": 3,
+              "row": 3
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_6"
+            ],
+            "renderRect": {
+              "x": 12,
+              "y": 14,
+              "width": 167,
+              "height": 164
+            }
+          },
+          {
+            "id": "grass_curved_clearing",
+            "sourceId": "woodland_lakes_stones_grass",
+            "bbox": {
+              "x": 511,
+              "y": 322,
+              "width": 240,
+              "height": 207
+            },
+            "area": 37029,
+            "anchor": "center",
+            "sizeRatio": 0.9855072463768116,
+            "referenceSize": {
+              "width": 252,
+              "height": 204
+            },
+            "tileSpan": {
+              "columns": 4,
+              "rows": 4
+            },
+            "placedAt": {
+              "column": 6,
+              "row": 3
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_7"
+            ],
+            "renderRect": {
+              "x": 9,
+              "y": 26,
+              "width": 237,
+              "height": 204
+            }
+          },
+          {
+            "id": "grass_dense_woodland",
+            "sourceId": "woodland_lakes_stones_grass",
+            "bbox": {
+              "x": 767,
+              "y": 312,
+              "width": 241,
+              "height": 215
+            },
+            "area": 37279,
+            "anchor": "center",
+            "sizeRatio": 1.0976744186046512,
+            "referenceSize": {
+              "width": 300,
+              "height": 236
+            },
+            "tileSpan": {
+              "columns": 5,
+              "rows": 4
+            },
+            "placedAt": {
+              "column": 10,
+              "row": 3
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_8"
+            ],
+            "renderRect": {
+              "x": 27,
+              "y": 10,
+              "width": 265,
+              "height": 236
+            }
+          },
+          {
+            "id": "grass_reed_pond",
+            "sourceId": "woodland_lakes_stones_grass",
+            "bbox": {
+              "x": 22,
+              "y": 593,
+              "width": 208,
+              "height": 189
+            },
+            "area": 27360,
+            "anchor": "center",
+            "sizeRatio": 0.8253968253968254,
+            "referenceSize": {
+              "width": 188,
+              "height": 156
+            },
+            "tileSpan": {
+              "columns": 3,
+              "rows": 3
+            },
+            "placedAt": {
+              "column": 0,
+              "row": 6
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "water",
+              "lake",
+              "impassable",
+              "group_9"
+            ],
+            "renderRect": {
+              "x": 10,
+              "y": 18,
+              "width": 172,
+              "height": 156
+            }
+          },
+          {
+            "id": "grass_rocky_pond",
+            "sourceId": "woodland_lakes_stones_grass",
+            "bbox": {
+              "x": 268,
+              "y": 576,
+              "width": 223,
+              "height": 217
+            },
+            "area": 34980,
+            "anchor": "center",
+            "sizeRatio": 0.7926267281105991,
+            "referenceSize": {
+              "width": 216,
+              "height": 172
+            },
+            "tileSpan": {
+              "columns": 3,
+              "rows": 3
+            },
+            "placedAt": {
+              "column": 3,
+              "row": 6
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "water",
+              "lake",
+              "impassable",
+              "group_10"
+            ],
+            "renderRect": {
+              "x": 7,
+              "y": 10,
+              "width": 177,
+              "height": 172
+            }
+          },
+          {
+            "id": "grass_kidney_lake",
+            "sourceId": "woodland_lakes_stones_grass",
+            "bbox": {
+              "x": 519,
+              "y": 564,
+              "width": 236,
+              "height": 231
+            },
+            "area": 35362,
+            "anchor": "center",
+            "sizeRatio": 0.8138528138528138,
+            "referenceSize": {
+              "width": 248,
+              "height": 188
+            },
+            "tileSpan": {
+              "columns": 4,
+              "rows": 3
+            },
+            "placedAt": {
+              "column": 6,
+              "row": 7
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "water",
+              "lake",
+              "impassable",
+              "group_11"
+            ],
+            "renderRect": {
+              "x": 32,
+              "y": 2,
+              "width": 192,
+              "height": 188
+            }
+          },
+          {
+            "id": "grass_long_woodland_lake",
+            "sourceId": "woodland_lakes_stones_grass",
+            "bbox": {
+              "x": 801,
+              "y": 544,
+              "width": 198,
+              "height": 260
+            },
+            "area": 35220,
+            "anchor": "center",
+            "sizeRatio": 0.9692307692307692,
+            "referenceSize": {
+              "width": 192,
+              "height": 252
+            },
+            "tileSpan": {
+              "columns": 4,
+              "rows": 4
+            },
+            "placedAt": {
+              "column": 10,
+              "row": 7
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "water",
+              "lake",
+              "impassable",
+              "group_12"
+            ],
+            "renderRect": {
+              "x": 32,
+              "y": 2,
+              "width": 192,
+              "height": 252
+            }
+          },
+          {
+            "id": "grass_crescent_lake",
+            "sourceId": "woodland_lakes_stones_grass",
+            "bbox": {
+              "x": 15,
+              "y": 835,
+              "width": 230,
+              "height": 234
+            },
+            "area": 37776,
+            "anchor": "center",
+            "sizeRatio": 0.9572649572649573,
+            "referenceSize": {
+              "width": 248,
+              "height": 224
+            },
+            "tileSpan": {
+              "columns": 4,
+              "rows": 4
+            },
+            "placedAt": {
+              "column": 0,
+              "row": 9
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "water",
+              "lake",
+              "impassable",
+              "group_13"
+            ],
+            "renderRect": {
+              "x": 18,
+              "y": 16,
+              "width": 220,
+              "height": 224
+            }
+          },
+          {
+            "id": "grass_twin_lobed_lake",
+            "sourceId": "woodland_lakes_stones_grass",
+            "bbox": {
+              "x": 258,
+              "y": 864,
+              "width": 241,
+              "height": 185
+            },
+            "area": 30134,
+            "anchor": "center",
+            "sizeRatio": 1.2108108108108109,
+            "referenceSize": {
+              "width": 300,
+              "height": 224
+            },
+            "tileSpan": {
+              "columns": 5,
+              "rows": 4
+            },
+            "placedAt": {
+              "column": 4,
+              "row": 10
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "water",
+              "lake",
+              "impassable",
+              "group_14"
+            ],
+            "renderRect": {
+              "x": 14,
+              "y": 16,
+              "width": 292,
+              "height": 224
+            }
+          },
+          {
+            "id": "grass_island_lake",
+            "sourceId": "woodland_lakes_stones_grass",
+            "bbox": {
+              "x": 513,
+              "y": 834,
+              "width": 248,
+              "height": 241
+            },
+            "area": 46111,
+            "anchor": "center",
+            "sizeRatio": 1.0290456431535269,
+            "referenceSize": {
+              "width": 316,
+              "height": 248
+            },
+            "tileSpan": {
+              "columns": 5,
+              "rows": 4
+            },
+            "placedAt": {
+              "column": 9,
+              "row": 11
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "water",
+              "lake",
+              "impassable",
+              "group_15"
+            ],
+            "renderRect": {
+              "x": 32,
+              "y": 4,
+              "width": 255,
+              "height": 248
+            }
+          },
+          {
+            "id": "grass_broad_shallow_lake",
+            "sourceId": "woodland_lakes_stones_grass",
+            "bbox": {
+              "x": 772,
+              "y": 822,
+              "width": 242,
+              "height": 263
+            },
+            "area": 42604,
+            "anchor": "center",
+            "sizeRatio": 1.4448669201520912,
+            "referenceSize": {
+              "width": 372,
+              "height": 380
+            },
+            "tileSpan": {
+              "columns": 6,
+              "rows": 6
+            },
+            "placedAt": {
+              "column": 0,
+              "row": 14
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "water",
+              "lake",
+              "impassable",
+              "group_16"
+            ],
+            "renderRect": {
+              "x": 17,
+              "y": 2,
+              "width": 350,
+              "height": 380
+            }
+          },
+          {
+            "id": "grass_granite_boulders",
+            "sourceId": "woodland_lakes_stones_grass",
+            "bbox": {
+              "x": 18,
+              "y": 1122,
+              "width": 220,
+              "height": 179
+            },
+            "area": 27684,
+            "anchor": "center",
+            "sizeRatio": 0.4692737430167598,
+            "referenceSize": {
+              "width": 104,
+              "height": 84
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 14,
+              "row": 0
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "rocks",
+              "impassable",
+              "group_17"
+            ],
+            "renderRect": {
+              "x": 12,
+              "y": 22,
+              "width": 103,
+              "height": 84
+            }
+          },
+          {
+            "id": "grass_limestone_shelves",
+            "sourceId": "woodland_lakes_stones_grass",
+            "bbox": {
+              "x": 266,
+              "y": 1112,
+              "width": 234,
+              "height": 182
+            },
+            "area": 31054,
+            "anchor": "center",
+            "sizeRatio": 0.46153846153846156,
+            "referenceSize": {
+              "width": 116,
+              "height": 84
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 14,
+              "row": 7
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "rocks",
+              "impassable",
+              "group_18"
+            ],
+            "renderRect": {
+              "x": 10,
+              "y": 22,
+              "width": 108,
+              "height": 84
+            }
+          },
+          {
+            "id": "grass_basalt_formation",
+            "sourceId": "woodland_lakes_stones_grass",
+            "bbox": {
+              "x": 525,
+              "y": 1143,
+              "width": 232,
+              "height": 159
+            },
+            "area": 25542,
+            "anchor": "center",
+            "sizeRatio": 0.43103448275862066,
+            "referenceSize": {
+              "width": 100,
+              "height": 76
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 14,
+              "row": 9
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "rocks",
+              "impassable",
+              "group_19"
+            ],
+            "renderRect": {
+              "x": 14,
+              "y": 29,
+              "width": 100,
+              "height": 69
+            }
+          },
+          {
+            "id": "grass_sandstone_slabs",
+            "sourceId": "woodland_lakes_stones_grass",
+            "bbox": {
+              "x": 784,
+              "y": 1125,
+              "width": 221,
+              "height": 175
+            },
+            "area": 29198,
+            "anchor": "center",
+            "sizeRatio": 0.48,
+            "referenceSize": {
+              "width": 120,
+              "height": 84
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 14,
+              "row": 11
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "rocks",
+              "impassable",
+              "group_20"
+            ],
+            "renderRect": {
+              "x": 11,
+              "y": 22,
+              "width": 106,
+              "height": 84
+            }
+          },
+          {
+            "id": "grass_river_stone_patch",
+            "sourceId": "woodland_lakes_stones_grass",
+            "bbox": {
+              "x": 21,
+              "y": 1352,
+              "width": 218,
+              "height": 152
+            },
+            "area": 22836,
+            "anchor": "center",
+            "sizeRatio": 0.25688073394495414,
+            "referenceSize": {
+              "width": 56,
+              "height": 44
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 14,
+              "row": 2
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "rocks",
+              "stones",
+              "passable",
+              "group_21"
+            ],
+            "renderRect": {
+              "x": 4,
+              "y": 12,
+              "width": 56,
+              "height": 39
+            }
+          },
+          {
+            "id": "grass_mossy_boulders",
+            "sourceId": "woodland_lakes_stones_grass",
+            "bbox": {
+              "x": 261,
+              "y": 1329,
+              "width": 237,
+              "height": 179
+            },
+            "area": 30800,
+            "anchor": "center",
+            "sizeRatio": 0.47257383966244726,
+            "referenceSize": {
+              "width": 112,
+              "height": 88
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 14,
+              "row": 13
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "rocks",
+              "impassable",
+              "group_22"
+            ],
+            "renderRect": {
+              "x": 8,
+              "y": 21,
+              "width": 112,
+              "height": 85
+            }
+          },
+          {
+            "id": "grass_low_rocky_ridge",
+            "sourceId": "woodland_lakes_stones_grass",
+            "bbox": {
+              "x": 513,
+              "y": 1353,
+              "width": 245,
+              "height": 151
+            },
+            "area": 27039,
+            "anchor": "center",
+            "sizeRatio": 0.6622516556291391,
+            "referenceSize": {
+              "width": 168,
+              "height": 100
+            },
+            "tileSpan": {
+              "columns": 3,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 6,
+              "row": 14
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "rocks",
+              "impassable",
+              "group_23"
+            ],
+            "renderRect": {
+              "x": 15,
+              "y": 14,
+              "width": 162,
+              "height": 100
+            }
+          },
+          {
+            "id": "grass_fieldstone_formation",
+            "sourceId": "woodland_lakes_stones_grass",
+            "bbox": {
+              "x": 770,
+              "y": 1339,
+              "width": 238,
+              "height": 177
+            },
+            "area": 28341,
+            "anchor": "center",
+            "sizeRatio": 0.5875706214689266,
+            "referenceSize": {
+              "width": 156,
+              "height": 104
+            },
+            "tileSpan": {
+              "columns": 3,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 9,
+              "row": 15
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "rocks",
+              "stones",
+              "passable",
+              "group_24"
+            ],
+            "renderRect": {
+              "x": 26,
+              "y": 12,
+              "width": 140,
+              "height": 104
+            }
+          }
+        ],
+        "occupiedTiles": [
+          "0,0",
+          "1,0",
+          "2,0",
+          "0,1",
+          "1,1",
+          "2,1",
+          "0,2",
+          "1,2",
+          "2,2",
+          "3,0",
+          "4,0",
+          "5,0",
+          "3,1",
+          "4,1",
+          "5,1",
+          "3,2",
+          "4,2",
+          "5,2",
+          "6,0",
+          "7,0",
+          "8,0",
+          "9,0",
+          "6,1",
+          "7,1",
+          "8,1",
+          "9,1",
+          "6,2",
+          "7,2",
+          "8,2",
+          "9,2",
+          "10,0",
+          "11,0",
+          "12,0",
+          "13,0",
+          "10,1",
+          "11,1",
+          "12,1",
+          "13,1",
+          "10,2",
+          "11,2",
+          "12,2",
+          "13,2",
+          "0,3",
+          "1,3",
+          "2,3",
+          "0,4",
+          "1,4",
+          "2,4",
+          "0,5",
+          "1,5",
+          "2,5",
+          "3,3",
+          "4,3",
+          "5,3",
+          "3,4",
+          "4,4",
+          "5,4",
+          "3,5",
+          "4,5",
+          "5,5",
+          "6,3",
+          "7,3",
+          "8,3",
+          "9,3",
+          "6,4",
+          "7,4",
+          "8,4",
+          "9,4",
+          "6,5",
+          "7,5",
+          "8,5",
+          "9,5",
+          "6,6",
+          "7,6",
+          "8,6",
+          "9,6",
+          "10,3",
+          "11,3",
+          "12,3",
+          "13,3",
+          "14,3",
+          "10,4",
+          "11,4",
+          "12,4",
+          "13,4",
+          "14,4",
+          "10,5",
+          "11,5",
+          "12,5",
+          "13,5",
+          "14,5",
+          "10,6",
+          "11,6",
+          "12,6",
+          "13,6",
+          "14,6",
+          "0,6",
+          "1,6",
+          "2,6",
+          "0,7",
+          "1,7",
+          "2,7",
+          "0,8",
+          "1,8",
+          "2,8",
+          "3,6",
+          "4,6",
+          "5,6",
+          "3,7",
+          "4,7",
+          "5,7",
+          "3,8",
+          "4,8",
+          "5,8",
+          "6,7",
+          "7,7",
+          "8,7",
+          "9,7",
+          "6,8",
+          "7,8",
+          "8,8",
+          "9,8",
+          "6,9",
+          "7,9",
+          "8,9",
+          "9,9",
+          "10,7",
+          "11,7",
+          "12,7",
+          "13,7",
+          "10,8",
+          "11,8",
+          "12,8",
+          "13,8",
+          "10,9",
+          "11,9",
+          "12,9",
+          "13,9",
+          "10,10",
+          "11,10",
+          "12,10",
+          "13,10",
+          "0,9",
+          "1,9",
+          "2,9",
+          "3,9",
+          "0,10",
+          "1,10",
+          "2,10",
+          "3,10",
+          "0,11",
+          "1,11",
+          "2,11",
+          "3,11",
+          "0,12",
+          "1,12",
+          "2,12",
+          "3,12",
+          "4,10",
+          "5,10",
+          "6,10",
+          "7,10",
+          "8,10",
+          "4,11",
+          "5,11",
+          "6,11",
+          "7,11",
+          "8,11",
+          "4,12",
+          "5,12",
+          "6,12",
+          "7,12",
+          "8,12",
+          "4,13",
+          "5,13",
+          "6,13",
+          "7,13",
+          "8,13",
+          "9,11",
+          "10,11",
+          "11,11",
+          "12,11",
+          "13,11",
+          "9,12",
+          "10,12",
+          "11,12",
+          "12,12",
+          "13,12",
+          "9,13",
+          "10,13",
+          "11,13",
+          "12,13",
+          "13,13",
+          "9,14",
+          "10,14",
+          "11,14",
+          "12,14",
+          "13,14",
+          "0,14",
+          "1,14",
+          "2,14",
+          "3,14",
+          "4,14",
+          "5,14",
+          "0,15",
+          "1,15",
+          "2,15",
+          "3,15",
+          "4,15",
+          "5,15",
+          "0,16",
+          "1,16",
+          "2,16",
+          "3,16",
+          "4,16",
+          "5,16",
+          "0,17",
+          "1,17",
+          "2,17",
+          "3,17",
+          "4,17",
+          "5,17",
+          "0,18",
+          "1,18",
+          "2,18",
+          "3,18",
+          "4,18",
+          "5,18",
+          "0,19",
+          "1,19",
+          "2,19",
+          "3,19",
+          "4,19",
+          "5,19",
+          "14,0",
+          "15,0",
+          "14,1",
+          "15,1",
+          "14,7",
+          "15,7",
+          "14,8",
+          "15,8",
+          "14,9",
+          "15,9",
+          "14,10",
+          "15,10",
+          "14,11",
+          "15,11",
+          "14,12",
+          "15,12",
+          "14,2",
+          "14,13",
+          "15,13",
+          "14,14",
+          "15,14",
+          "6,14",
+          "7,14",
+          "8,14",
+          "6,15",
+          "7,15",
+          "8,15",
+          "9,15",
+          "10,15",
+          "11,15",
+          "9,16",
+          "10,16",
+          "11,16"
+        ]
+      }
+    }
+  },
+  "upscaledBeyondMaster": false,
+  "omittedCandidateDensities": [
+    2,
+    3
+  ],
+  "pages": [
+    {
+      "name": "dtv7_nature_grass_large.coarse.webp",
+      "sha256": "c1c0c7efb3579137a07a4d9110d7e4126516c6dd5de994c37c190da9413842d8",
+      "width": 1884,
+      "height": 328,
+      "decodedBytes": 2471808,
+      "compressedBytes": 146092,
+      "tier": 0,
+      "tierName": "coarse",
+      "backingDensity": 0.5
+    },
+    {
+      "name": "dtv7_nature_grass_large.final.webp",
+      "sha256": "5ba41720edde98064d1b4088bd455f82bb293bd677ae9fb10d0ab7c232e49956",
+      "width": 1888,
+      "height": 908,
+      "decodedBytes": 6857216,
+      "compressedBytes": 417910,
+      "tier": 2,
+      "tierName": "final",
+      "backingDensity": 1
+    }
+  ],
+  "sprites": [
+    {
+      "spriteId": "dtv7_nature_grass_large:group_1",
+      "groupId": "group_1",
+      "savedIdentifiers": [
+        "grass_broadleaf_copse"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 192,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 0,
+        "y": 0,
+        "width": 192,
+        "height": 192
+      },
+      "tileKeys": [
+        "0,0",
+        "0,1",
+        "0,2",
+        "1,0",
+        "1,1",
+        "1,2",
+        "2,0",
+        "2,1",
+        "2,2"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_1",
+        "impassable",
+        "summer",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv7_nature_grass_large.coarse.webp",
+          "x": 2,
+          "y": 2,
+          "width": 96,
+          "height": 96,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv7_nature_grass_large.final.webp",
+          "x": 2,
+          "y": 2,
+          "width": 192,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv7_nature_grass_large:group_2",
+      "groupId": "group_2",
+      "savedIdentifiers": [
+        "grass_birch_stand"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 192,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 192,
+        "y": 0,
+        "width": 192,
+        "height": 192
+      },
+      "tileKeys": [
+        "3,0",
+        "3,1",
+        "3,2",
+        "4,0",
+        "4,1",
+        "4,2",
+        "5,0",
+        "5,1",
+        "5,2"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_2",
+        "impassable",
+        "summer",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv7_nature_grass_large.coarse.webp",
+          "x": 102,
+          "y": 2,
+          "width": 96,
+          "height": 96,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv7_nature_grass_large.final.webp",
+          "x": 198,
+          "y": 2,
+          "width": 192,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv7_nature_grass_large:group_3",
+      "groupId": "group_3",
+      "savedIdentifiers": [
+        "grass_woodland_clearing"
+      ],
+      "logicalWidth": 256,
+      "logicalHeight": 192,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 384,
+        "y": 0,
+        "width": 256,
+        "height": 192
+      },
+      "tileKeys": [
+        "6,0",
+        "6,1",
+        "6,2",
+        "7,0",
+        "7,1",
+        "7,2",
+        "8,0",
+        "8,1",
+        "8,2",
+        "9,0",
+        "9,1",
+        "9,2"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_3",
+        "impassable",
+        "summer",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv7_nature_grass_large.coarse.webp",
+          "x": 202,
+          "y": 2,
+          "width": 128,
+          "height": 96,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv7_nature_grass_large.final.webp",
+          "x": 394,
+          "y": 2,
+          "width": 256,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv7_nature_grass_large:group_4",
+      "groupId": "group_4",
+      "savedIdentifiers": [
+        "grass_mixed_grove"
+      ],
+      "logicalWidth": 256,
+      "logicalHeight": 192,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 640,
+        "y": 0,
+        "width": 256,
+        "height": 192
+      },
+      "tileKeys": [
+        "10,0",
+        "10,1",
+        "10,2",
+        "11,0",
+        "11,1",
+        "11,2",
+        "12,0",
+        "12,1",
+        "12,2",
+        "13,0",
+        "13,1",
+        "13,2"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_4",
+        "impassable",
+        "summer",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv7_nature_grass_large.coarse.webp",
+          "x": 334,
+          "y": 2,
+          "width": 128,
+          "height": 96,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv7_nature_grass_large.final.webp",
+          "x": 654,
+          "y": 2,
+          "width": 256,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv7_nature_grass_large:group_5",
+      "groupId": "group_5",
+      "savedIdentifiers": [
+        "grass_willow_copse"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 192,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 0,
+        "y": 192,
+        "width": 192,
+        "height": 192
+      },
+      "tileKeys": [
+        "0,3",
+        "0,4",
+        "0,5",
+        "1,3",
+        "1,4",
+        "1,5",
+        "2,3",
+        "2,4",
+        "2,5"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_5",
+        "impassable",
+        "summer",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv7_nature_grass_large.coarse.webp",
+          "x": 466,
+          "y": 2,
+          "width": 96,
+          "height": 96,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv7_nature_grass_large.final.webp",
+          "x": 914,
+          "y": 2,
+          "width": 192,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv7_nature_grass_large:group_6",
+      "groupId": "group_6",
+      "savedIdentifiers": [
+        "grass_pine_log_grove"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 192,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 192,
+        "y": 192,
+        "width": 192,
+        "height": 192
+      },
+      "tileKeys": [
+        "3,3",
+        "3,4",
+        "3,5",
+        "4,3",
+        "4,4",
+        "4,5",
+        "5,3",
+        "5,4",
+        "5,5"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_6",
+        "impassable",
+        "summer",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv7_nature_grass_large.coarse.webp",
+          "x": 566,
+          "y": 2,
+          "width": 96,
+          "height": 96,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv7_nature_grass_large.final.webp",
+          "x": 1110,
+          "y": 2,
+          "width": 192,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv7_nature_grass_large:group_7",
+      "groupId": "group_7",
+      "savedIdentifiers": [
+        "grass_curved_clearing"
+      ],
+      "logicalWidth": 256,
+      "logicalHeight": 256,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 384,
+        "y": 192,
+        "width": 256,
+        "height": 256
+      },
+      "tileKeys": [
+        "6,3",
+        "6,4",
+        "6,5",
+        "6,6",
+        "7,3",
+        "7,4",
+        "7,5",
+        "7,6",
+        "8,3",
+        "8,4",
+        "8,5",
+        "8,6",
+        "9,3",
+        "9,4",
+        "9,5",
+        "9,6"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_7",
+        "impassable",
+        "summer",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv7_nature_grass_large.coarse.webp",
+          "x": 666,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv7_nature_grass_large.final.webp",
+          "x": 1306,
+          "y": 2,
+          "width": 256,
+          "height": 256,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv7_nature_grass_large:group_8",
+      "groupId": "group_8",
+      "savedIdentifiers": [
+        "grass_dense_woodland"
+      ],
+      "logicalWidth": 320,
+      "logicalHeight": 256,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 640,
+        "y": 192,
+        "width": 320,
+        "height": 256
+      },
+      "tileKeys": [
+        "10,3",
+        "10,4",
+        "10,5",
+        "10,6",
+        "11,3",
+        "11,4",
+        "11,5",
+        "11,6",
+        "12,3",
+        "12,4",
+        "12,5",
+        "12,6",
+        "13,3",
+        "13,4",
+        "13,5",
+        "13,6",
+        "14,3",
+        "14,4",
+        "14,5",
+        "14,6"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_8",
+        "impassable",
+        "summer",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv7_nature_grass_large.coarse.webp",
+          "x": 798,
+          "y": 2,
+          "width": 160,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv7_nature_grass_large.final.webp",
+          "x": 1566,
+          "y": 2,
+          "width": 320,
+          "height": 256,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv7_nature_grass_large:group_9",
+      "groupId": "group_9",
+      "savedIdentifiers": [
+        "grass_reed_pond"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 192,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 0,
+        "y": 384,
+        "width": 192,
+        "height": 192
+      },
+      "tileKeys": [
+        "0,6",
+        "0,7",
+        "0,8",
+        "1,6",
+        "1,7",
+        "1,8",
+        "2,6",
+        "2,7",
+        "2,8"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_9",
+        "impassable",
+        "lake",
+        "summer",
+        "water"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv7_nature_grass_large.coarse.webp",
+          "x": 962,
+          "y": 2,
+          "width": 96,
+          "height": 96,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv7_nature_grass_large.final.webp",
+          "x": 2,
+          "y": 262,
+          "width": 192,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv7_nature_grass_large:group_10",
+      "groupId": "group_10",
+      "savedIdentifiers": [
+        "grass_rocky_pond"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 192,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 192,
+        "y": 384,
+        "width": 192,
+        "height": 192
+      },
+      "tileKeys": [
+        "3,6",
+        "3,7",
+        "3,8",
+        "4,6",
+        "4,7",
+        "4,8",
+        "5,6",
+        "5,7",
+        "5,8"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_10",
+        "impassable",
+        "lake",
+        "summer",
+        "water"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv7_nature_grass_large.coarse.webp",
+          "x": 1062,
+          "y": 2,
+          "width": 96,
+          "height": 96,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv7_nature_grass_large.final.webp",
+          "x": 198,
+          "y": 262,
+          "width": 192,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv7_nature_grass_large:group_11",
+      "groupId": "group_11",
+      "savedIdentifiers": [
+        "grass_kidney_lake"
+      ],
+      "logicalWidth": 256,
+      "logicalHeight": 192,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 384,
+        "y": 448,
+        "width": 256,
+        "height": 192
+      },
+      "tileKeys": [
+        "6,7",
+        "6,8",
+        "6,9",
+        "7,7",
+        "7,8",
+        "7,9",
+        "8,7",
+        "8,8",
+        "8,9",
+        "9,7",
+        "9,8",
+        "9,9"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_11",
+        "impassable",
+        "lake",
+        "summer",
+        "water"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv7_nature_grass_large.coarse.webp",
+          "x": 1162,
+          "y": 2,
+          "width": 128,
+          "height": 96,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv7_nature_grass_large.final.webp",
+          "x": 394,
+          "y": 262,
+          "width": 256,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv7_nature_grass_large:group_12",
+      "groupId": "group_12",
+      "savedIdentifiers": [
+        "grass_long_woodland_lake"
+      ],
+      "logicalWidth": 256,
+      "logicalHeight": 256,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 640,
+        "y": 448,
+        "width": 256,
+        "height": 256
+      },
+      "tileKeys": [
+        "10,10",
+        "10,7",
+        "10,8",
+        "10,9",
+        "11,10",
+        "11,7",
+        "11,8",
+        "11,9",
+        "12,10",
+        "12,7",
+        "12,8",
+        "12,9",
+        "13,10",
+        "13,7",
+        "13,8",
+        "13,9"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_12",
+        "impassable",
+        "lake",
+        "summer",
+        "water"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv7_nature_grass_large.coarse.webp",
+          "x": 1294,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv7_nature_grass_large.final.webp",
+          "x": 654,
+          "y": 262,
+          "width": 256,
+          "height": 256,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv7_nature_grass_large:group_13",
+      "groupId": "group_13",
+      "savedIdentifiers": [
+        "grass_crescent_lake"
+      ],
+      "logicalWidth": 256,
+      "logicalHeight": 256,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 0,
+        "y": 576,
+        "width": 256,
+        "height": 256
+      },
+      "tileKeys": [
+        "0,10",
+        "0,11",
+        "0,12",
+        "0,9",
+        "1,10",
+        "1,11",
+        "1,12",
+        "1,9",
+        "2,10",
+        "2,11",
+        "2,12",
+        "2,9",
+        "3,10",
+        "3,11",
+        "3,12",
+        "3,9"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_13",
+        "impassable",
+        "lake",
+        "summer",
+        "water"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv7_nature_grass_large.coarse.webp",
+          "x": 1426,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv7_nature_grass_large.final.webp",
+          "x": 914,
+          "y": 262,
+          "width": 256,
+          "height": 256,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv7_nature_grass_large:group_14",
+      "groupId": "group_14",
+      "savedIdentifiers": [
+        "grass_twin_lobed_lake"
+      ],
+      "logicalWidth": 320,
+      "logicalHeight": 256,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 256,
+        "y": 640,
+        "width": 320,
+        "height": 256
+      },
+      "tileKeys": [
+        "4,10",
+        "4,11",
+        "4,12",
+        "4,13",
+        "5,10",
+        "5,11",
+        "5,12",
+        "5,13",
+        "6,10",
+        "6,11",
+        "6,12",
+        "6,13",
+        "7,10",
+        "7,11",
+        "7,12",
+        "7,13",
+        "8,10",
+        "8,11",
+        "8,12",
+        "8,13"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_14",
+        "impassable",
+        "lake",
+        "summer",
+        "water"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv7_nature_grass_large.coarse.webp",
+          "x": 1558,
+          "y": 2,
+          "width": 160,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv7_nature_grass_large.final.webp",
+          "x": 1174,
+          "y": 262,
+          "width": 320,
+          "height": 256,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv7_nature_grass_large:group_15",
+      "groupId": "group_15",
+      "savedIdentifiers": [
+        "grass_island_lake"
+      ],
+      "logicalWidth": 320,
+      "logicalHeight": 256,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 576,
+        "y": 704,
+        "width": 320,
+        "height": 256
+      },
+      "tileKeys": [
+        "10,11",
+        "10,12",
+        "10,13",
+        "10,14",
+        "11,11",
+        "11,12",
+        "11,13",
+        "11,14",
+        "12,11",
+        "12,12",
+        "12,13",
+        "12,14",
+        "13,11",
+        "13,12",
+        "13,13",
+        "13,14",
+        "9,11",
+        "9,12",
+        "9,13",
+        "9,14"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_15",
+        "impassable",
+        "lake",
+        "summer",
+        "water"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv7_nature_grass_large.coarse.webp",
+          "x": 1722,
+          "y": 2,
+          "width": 160,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv7_nature_grass_large.final.webp",
+          "x": 1498,
+          "y": 262,
+          "width": 320,
+          "height": 256,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv7_nature_grass_large:group_16",
+      "groupId": "group_16",
+      "savedIdentifiers": [
+        "grass_broad_shallow_lake"
+      ],
+      "logicalWidth": 384,
+      "logicalHeight": 384,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 0,
+        "y": 896,
+        "width": 384,
+        "height": 384
+      },
+      "tileKeys": [
+        "0,14",
+        "0,15",
+        "0,16",
+        "0,17",
+        "0,18",
+        "0,19",
+        "1,14",
+        "1,15",
+        "1,16",
+        "1,17",
+        "1,18",
+        "1,19",
+        "2,14",
+        "2,15",
+        "2,16",
+        "2,17",
+        "2,18",
+        "2,19",
+        "3,14",
+        "3,15",
+        "3,16",
+        "3,17",
+        "3,18",
+        "3,19",
+        "4,14",
+        "4,15",
+        "4,16",
+        "4,17",
+        "4,18",
+        "4,19",
+        "5,14",
+        "5,15",
+        "5,16",
+        "5,17",
+        "5,18",
+        "5,19"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_16",
+        "impassable",
+        "lake",
+        "summer",
+        "water"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv7_nature_grass_large.coarse.webp",
+          "x": 2,
+          "y": 134,
+          "width": 192,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv7_nature_grass_large.final.webp",
+          "x": 2,
+          "y": 522,
+          "width": 384,
+          "height": 384,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv7_nature_grass_large:group_17",
+      "groupId": "group_17",
+      "savedIdentifiers": [
+        "grass_granite_boulders"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 896,
+        "y": 0,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "14,0",
+        "14,1",
+        "15,0",
+        "15,1"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_17",
+        "impassable",
+        "rocks",
+        "summer"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv7_nature_grass_large.coarse.webp",
+          "x": 198,
+          "y": 134,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv7_nature_grass_large.final.webp",
+          "x": 390,
+          "y": 522,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv7_nature_grass_large:group_18",
+      "groupId": "group_18",
+      "savedIdentifiers": [
+        "grass_limestone_shelves"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 896,
+        "y": 448,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "14,7",
+        "14,8",
+        "15,7",
+        "15,8"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_18",
+        "impassable",
+        "rocks",
+        "summer"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv7_nature_grass_large.coarse.webp",
+          "x": 266,
+          "y": 134,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv7_nature_grass_large.final.webp",
+          "x": 522,
+          "y": 522,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv7_nature_grass_large:group_19",
+      "groupId": "group_19",
+      "savedIdentifiers": [
+        "grass_basalt_formation"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 896,
+        "y": 576,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "14,10",
+        "14,9",
+        "15,10",
+        "15,9"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_19",
+        "impassable",
+        "rocks",
+        "summer"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv7_nature_grass_large.coarse.webp",
+          "x": 334,
+          "y": 134,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv7_nature_grass_large.final.webp",
+          "x": 654,
+          "y": 522,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv7_nature_grass_large:group_20",
+      "groupId": "group_20",
+      "savedIdentifiers": [
+        "grass_sandstone_slabs"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 896,
+        "y": 704,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "14,11",
+        "14,12",
+        "15,11",
+        "15,12"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_20",
+        "impassable",
+        "rocks",
+        "summer"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv7_nature_grass_large.coarse.webp",
+          "x": 402,
+          "y": 134,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv7_nature_grass_large.final.webp",
+          "x": 786,
+          "y": 522,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv7_nature_grass_large:group_21",
+      "groupId": "group_21",
+      "savedIdentifiers": [
+        "grass_river_stone_patch"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 896,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "14,2"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_21",
+        "passable",
+        "rocks",
+        "stones",
+        "summer"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv7_nature_grass_large.coarse.webp",
+          "x": 470,
+          "y": 134,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv7_nature_grass_large.final.webp",
+          "x": 918,
+          "y": 522,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv7_nature_grass_large:group_22",
+      "groupId": "group_22",
+      "savedIdentifiers": [
+        "grass_mossy_boulders"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 896,
+        "y": 832,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "14,13",
+        "14,14",
+        "15,13",
+        "15,14"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_22",
+        "impassable",
+        "rocks",
+        "summer"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv7_nature_grass_large.coarse.webp",
+          "x": 506,
+          "y": 134,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv7_nature_grass_large.final.webp",
+          "x": 986,
+          "y": 522,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv7_nature_grass_large:group_23",
+      "groupId": "group_23",
+      "savedIdentifiers": [
+        "grass_low_rocky_ridge"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 384,
+        "y": 896,
+        "width": 192,
+        "height": 128
+      },
+      "tileKeys": [
+        "6,14",
+        "6,15",
+        "7,14",
+        "7,15",
+        "8,14",
+        "8,15"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_23",
+        "impassable",
+        "rocks",
+        "summer"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv7_nature_grass_large.coarse.webp",
+          "x": 574,
+          "y": 134,
+          "width": 96,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv7_nature_grass_large.final.webp",
+          "x": 1118,
+          "y": 522,
+          "width": 192,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv7_nature_grass_large:group_24",
+      "groupId": "group_24",
+      "savedIdentifiers": [
+        "grass_fieldstone_formation"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 576,
+        "y": 960,
+        "width": 192,
+        "height": 128
+      },
+      "tileKeys": [
+        "10,15",
+        "10,16",
+        "11,15",
+        "11,16",
+        "9,15",
+        "9,16"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_24",
+        "passable",
+        "rocks",
+        "stones",
+        "summer"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv7_nature_grass_large.coarse.webp",
+          "x": 674,
+          "y": 134,
+          "width": 96,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv7_nature_grass_large.final.webp",
+          "x": 1314,
+          "y": 522,
+          "width": 192,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    }
+  ]
+}

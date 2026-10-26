@@ -1,0 +1,174 @@
+{
+  "schemaVersion": 1,
+  "signature": "495412fa8a3ecb4ab4ec782263955683485dac1acdfe5a9fb4089f81c5369d37",
+  "sheets": [
+    {
+      "name": "crystals_q90_1024x1024",
+      "manifest": "crystals_q90_1024x1024.json",
+      "signature": "7aac13cf779c2500a7916ac8fa94e33cadb4d8e254be4f6b44d7d8256503ee79",
+      "metadataSignature": "e154e49e53986fe0aff69c6adbeeaf741cb20e1c22062d519dbe8a964be00e4c",
+      "decodedBytes": 6282296,
+      "compressedBytes": 495530
+    },
+    {
+      "name": "debris_craters_tracks",
+      "manifest": "debris_craters_tracks.json",
+      "signature": "177df6f755d7a7155d486ec2ae3e277c303ccb8bab2eaf3f7a7e15f08c60af2f",
+      "metadataSignature": "06504202d7fc353d25d45725793d83063aa0fef1fadab1facce2603d087c3d97",
+      "decodedBytes": 3760352,
+      "compressedBytes": 231508
+    },
+    {
+      "name": "dtv3_ground_detail",
+      "manifest": "dtv3_ground_detail.json",
+      "signature": "5c101cf49f02c5f0c51af0b88c6accb5738da75262879394786138122b2aa05c",
+      "metadataSignature": "30a4bee99256f153eab27c205805ab0770b515caa8128a2589ceaf4c5017ba6d",
+      "decodedBytes": 568320,
+      "compressedBytes": 71446
+    },
+    {
+      "name": "dtv4_nature_sand",
+      "manifest": "dtv4_nature_sand.json",
+      "signature": "de50eb978390b03d2c3b1325112710ad6a6be6ca080e6a0599f9f4cf42fa5a56",
+      "metadataSignature": "0485b4cc4f5125453d983d0f1e3ae6b19fd0fe8389aefd394191c26008a5a58a",
+      "decodedBytes": 17800000,
+      "compressedBytes": 815004
+    },
+    {
+      "name": "dtv4_nature_snow",
+      "manifest": "dtv4_nature_snow.json",
+      "signature": "05b437ec5c4f1820d5e02699575bd6db932ff287d217e38cd203c51eecfc16f8",
+      "metadataSignature": "1d1b053bf5aaf1dec3e5cf4a736cb53600cb7d8b4898319de4f341bfe7e094c2",
+      "decodedBytes": 14739968,
+      "compressedBytes": 772832
+    },
+    {
+      "name": "dtv5_city_sand_low",
+      "manifest": "dtv5_city_sand_low.json",
+      "signature": "62900d16389a45a1e92ecd10db93161a36558fd74895ad029f835261cdfa4d0a",
+      "metadataSignature": "d077937003ce3c60c7ad7001193b274ea982c5e5b65e672532e206ae788117ef",
+      "decodedBytes": 2469504,
+      "compressedBytes": 182330
+    },
+    {
+      "name": "dtv5_city_sand_medium",
+      "manifest": "dtv5_city_sand_medium.json",
+      "signature": "92b233dd1cdf1af80c85e8475758a4a9719923e21536f5900efb9ffb9eae94f1",
+      "metadataSignature": "e1a7db78315e57cfcfb6ae8aa2d5440a6beab61bbfc10b5e26301dca7c5d726d",
+      "decodedBytes": 5282816,
+      "compressedBytes": 417436
+    },
+    {
+      "name": "dtv5_city_snow_low",
+      "manifest": "dtv5_city_snow_low.json",
+      "signature": "a2df64e266c9908ab4b05eb6d8afea2aa2a99e6e3c8f8109d820712af538407d",
+      "metadataSignature": "94fbd2e904529ec4b64c6cb8061a5b7831935cf17875d9c95301f3dc16789261",
+      "decodedBytes": 2482688,
+      "compressedBytes": 219036
+    },
+    {
+      "name": "dtv5_city_snow_medium",
+      "manifest": "dtv5_city_snow_medium.json",
+      "signature": "e2906ec02dc4762511772d9868efa90e6994547ea1d364c15b6ac374a8f3a9ce",
+      "metadataSignature": "f230ad62d57122fc7f96b81db967ac326140543fb946fa6bca7a98bb2ede0a17",
+      "decodedBytes": 5132800,
+      "compressedBytes": 492968
+    },
+    {
+      "name": "dtv5_city_temperate_low",
+      "manifest": "dtv5_city_temperate_low.json",
+      "signature": "843b8cf42096a05980b2bc41d9d3621874adf28648d4fdea781ae195f99e260f",
+      "metadataSignature": "cde80ec9901f5b9cee149e8ffafedc55695afae8b9fa1535c495e6943e7dd7d7",
+      "decodedBytes": 3661440,
+      "compressedBytes": 199854
+    },
+    {
+      "name": "dtv5_city_temperate_medium",
+      "manifest": "dtv5_city_temperate_medium.json",
+      "signature": "94fae0e3fbbdd14289051188cc1e6c4aab773afea0429151e38fba4f96f6e4fb",
+      "metadataSignature": "57be52831b9c7603de236feee92ef09fd38aff0020160b5dfd4df4d28b0567fc",
+      "decodedBytes": 5132800,
+      "compressedBytes": 470222
+    },
+    {
+      "name": "dtv6_decor_grass",
+      "manifest": "dtv6_decor_grass.json",
+      "signature": "fc94a7f562c1bfa903cbf68e7affe0a91e00eced8b450cd07804aafb089c6ecc",
+      "metadataSignature": "a75a0f04d921bbf8abd78c55ff10ef51a134ff09822ddabc352c1000b0dd0510",
+      "decodedBytes": 3197056,
+      "compressedBytes": 163810
+    },
+    {
+      "name": "dtv6_decor_sand",
+      "manifest": "dtv6_decor_sand.json",
+      "signature": "700153fc16fb72b7d4b5193fea0fe60d95c335e5c933a939988f7b362b7287f0",
+      "metadataSignature": "e6cbef49e97f4be72db0a662601327c80ae3064cca91220dc6d6ad36086c9c4d",
+      "decodedBytes": 3039232,
+      "compressedBytes": 140824
+    },
+    {
+      "name": "dtv6_decor_snow",
+      "manifest": "dtv6_decor_snow.json",
+      "signature": "41cff3d475f05d1b53c3ad8b4aba071af8d7b1458a535414d33bbec83644edfb",
+      "metadataSignature": "d27609fca5b724cf40ba406e3f65fa162de0eadc4a93526b50813319360ed17b",
+      "decodedBytes": 3110400,
+      "compressedBytes": 156470
+    },
+    {
+      "name": "dtv6_decor_soil",
+      "manifest": "dtv6_decor_soil.json",
+      "signature": "d86a2580caec481c73cf5c2582563ea66ab938c85a1c5ff230b448cda8b485de",
+      "metadataSignature": "8fd5ca5e9fb83d02e8269576472378a6cefe032870577106cf8f65d232ae20a9",
+      "decodedBytes": 3123200,
+      "compressedBytes": 143592
+    },
+    {
+      "name": "dtv6_decor_universal",
+      "manifest": "dtv6_decor_universal.json",
+      "signature": "0f7993452d192c54e3c7c9712f7e0460d5d0e9106ab110f5e6ab32baec219cfe",
+      "metadataSignature": "43f89af993a6cffe044478fe1c06928327f0b19db40fac2bcf5d4138a7689c7c",
+      "decodedBytes": 3074688,
+      "compressedBytes": 151564
+    },
+    {
+      "name": "dtv6_nature_grass",
+      "manifest": "dtv6_nature_grass.json",
+      "signature": "3e221e76eed6c593ac87352affee5deea55d39119fff46d85a7d953b1f10775a",
+      "metadataSignature": "86ef05c40258bcd43430e4d25593940ff02ac7a7931a563213ddec176c27f898",
+      "decodedBytes": 3443200,
+      "compressedBytes": 223034
+    },
+    {
+      "name": "dtv6_nature_soil",
+      "manifest": "dtv6_nature_soil.json",
+      "signature": "4838a1c81164420884d7bb728611963bf02d085b7c2868b980a72e8862693905",
+      "metadataSignature": "e67e79ef014a37567f3649dbda588a61a7a60a64e25f2b424fc63f67fedde716",
+      "decodedBytes": 3443200,
+      "compressedBytes": 234028
+    },
+    {
+      "name": "dtv6_shore",
+      "manifest": "dtv6_shore.json",
+      "signature": "c8bd865ebcfe82eba5f2c21ae3f2d3160554591efadd59f0b2b170bf3a03ee19",
+      "metadataSignature": "454a0c268394c53eda0533342e174e42ff78fe6aaf069344955bbab93c40e365",
+      "decodedBytes": 2006528,
+      "compressedBytes": 101086
+    },
+    {
+      "name": "dtv7_nature_grass_large",
+      "manifest": "dtv7_nature_grass_large.json",
+      "signature": "e68d29e23bba7fa45fa73d1354b74748ecc6e874e617e01749fc5357ee8a5f85",
+      "metadataSignature": "55413cd8efa2fc182bc8bc6b01663680b7710db0f7be636680375c1c72ee3110",
+      "decodedBytes": 9329024,
+      "compressedBytes": 564002
+    },
+    {
+      "name": "dtv7_nature_soil_large",
+      "manifest": "dtv7_nature_soil_large.json",
+      "signature": "3d89e2c9138e361586b87bd32cf0eaff63b7b027f0921dab5ca6b770d67a505e",
+      "metadataSignature": "7bca37c3ac765743e891be4a5ab20f7446ade0726cb50f62f6a4ccad3b7359ee",
+      "decodedBytes": 9019904,
+      "compressedBytes": 576256
+    }
+  ]
+}

@@ -1,0 +1,2705 @@
+{
+  "schemaVersion": 1,
+  "name": "dtv5_city_snow_low",
+  "identity": {
+    "buildVersion": 1,
+    "atlasVersion": 1,
+    "catalogVersion": 1,
+    "pixelRulesVersion": 1,
+    "webpQuality": 85,
+    "padding": 2,
+    "sourceHash": "f9473368c1a17cffacbe9ffd5c75866273ff131d6e5c41b8a7a254e204099cb7",
+    "metadataHash": "7fa4e7e647e83046891ce74b82f7ba9e9f0d0362e54fab565f2703feebd8b565",
+    "metadataSignature": "94fbd2e904529ec4b64c6cb8061a5b7831935cf17875d9c95301f3dc16789261",
+    "selectedBackingDensities": [
+      0.5,
+      1
+    ]
+  },
+  "signature": "a2df64e266c9908ab4b05eb6d8afea2aa2a99e6e3c8f8109d820712af538407d",
+  "source": {
+    "image": "images/map/sprite_sheets/dtv5_city_snow_low.webp",
+    "metadata": "images/map/sprite_sheets/dtv5_city_snow_low.json",
+    "sourceMetadata": {
+      "path": "images/map/sprite_sheets/sources/cities_snow_low.webp",
+      "sha256": "ffe7771de154e13036940c4034b72e51f54faa8e7d8d58dcb33ba78f2d816c25",
+      "width": 1024,
+      "height": 1536,
+      "detection": {
+        "transparent": true,
+        "alphaCutoff": 16,
+        "gap": 0,
+        "minArea": 1000
+      },
+      "guides": [],
+      "spriteCount": 20,
+      "packing": {
+        "scale": 0.5,
+        "padding": 2
+      }
+    },
+    "editorMetadata": {
+      "schemaVersion": 1,
+      "layoutVersion": 6,
+      "name": "dtv5_city_snow_low",
+      "grid": {
+        "tileSize": 64,
+        "rowHeight": 64,
+        "borderWidth": 0,
+        "cols": 16,
+        "rows": 6
+      },
+      "tags": [
+        "snow",
+        "winter",
+        "decorative",
+        "city",
+        "density_1",
+        "passable",
+        "overhang",
+        "impassable",
+        "density_2",
+        "density_3"
+      ],
+      "propLayout": [
+        {
+          "id": "cities_snow_low_city_001",
+          "col": 0,
+          "row": 0,
+          "w": 2,
+          "h": 2,
+          "groupId": 1,
+          "tags": [
+            "snow",
+            "winter",
+            "decorative",
+            "city",
+            "impassable",
+            "density_1",
+            "group_1"
+          ],
+          "density": 1,
+          "sourceRect": {
+            "x": 16,
+            "y": 85,
+            "width": 238,
+            "height": 199
+          },
+          "footprint": {
+            "x": 0,
+            "y": 1,
+            "width": 2,
+            "height": 1
+          }
+        },
+        {
+          "id": "cities_snow_low_city_002",
+          "col": 2,
+          "row": 0,
+          "w": 2,
+          "h": 2,
+          "groupId": 2,
+          "tags": [
+            "snow",
+            "winter",
+            "decorative",
+            "city",
+            "impassable",
+            "density_1",
+            "group_2"
+          ],
+          "density": 1,
+          "sourceRect": {
+            "x": 279,
+            "y": 91,
+            "width": 227,
+            "height": 195
+          },
+          "footprint": {
+            "x": 0,
+            "y": 1,
+            "width": 2,
+            "height": 1
+          }
+        },
+        {
+          "id": "cities_snow_low_city_003",
+          "col": 4,
+          "row": 0,
+          "w": 2,
+          "h": 2,
+          "groupId": 3,
+          "tags": [
+            "snow",
+            "winter",
+            "decorative",
+            "city",
+            "impassable",
+            "density_1",
+            "group_3"
+          ],
+          "density": 1,
+          "sourceRect": {
+            "x": 525,
+            "y": 99,
+            "width": 236,
+            "height": 185
+          },
+          "footprint": {
+            "x": 0,
+            "y": 1,
+            "width": 2,
+            "height": 1
+          }
+        },
+        {
+          "id": "cities_snow_low_city_004",
+          "col": 6,
+          "row": 0,
+          "w": 2,
+          "h": 2,
+          "groupId": 4,
+          "tags": [
+            "snow",
+            "winter",
+            "decorative",
+            "city",
+            "impassable",
+            "density_1",
+            "group_4"
+          ],
+          "density": 1,
+          "sourceRect": {
+            "x": 780,
+            "y": 86,
+            "width": 230,
+            "height": 196
+          },
+          "footprint": {
+            "x": 0,
+            "y": 1,
+            "width": 2,
+            "height": 1
+          }
+        },
+        {
+          "id": "cities_snow_low_city_005",
+          "col": 8,
+          "row": 0,
+          "w": 3,
+          "h": 2,
+          "groupId": 5,
+          "tags": [
+            "snow",
+            "winter",
+            "decorative",
+            "city",
+            "impassable",
+            "density_2",
+            "group_5"
+          ],
+          "density": 2,
+          "sourceRect": {
+            "x": 12,
+            "y": 338,
+            "width": 250,
+            "height": 233
+          },
+          "footprint": {
+            "x": 0,
+            "y": 0,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "id": "cities_snow_low_city_006",
+          "col": 11,
+          "row": 0,
+          "w": 2,
+          "h": 2,
+          "groupId": 6,
+          "tags": [
+            "snow",
+            "winter",
+            "decorative",
+            "city",
+            "impassable",
+            "density_2",
+            "group_6"
+          ],
+          "density": 2,
+          "sourceRect": {
+            "x": 274,
+            "y": 336,
+            "width": 239,
+            "height": 236
+          },
+          "footprint": {
+            "x": 0,
+            "y": 0,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "id": "cities_snow_low_city_007",
+          "col": 13,
+          "row": 0,
+          "w": 2,
+          "h": 2,
+          "groupId": 7,
+          "tags": [
+            "snow",
+            "winter",
+            "decorative",
+            "city",
+            "impassable",
+            "density_2",
+            "group_7"
+          ],
+          "density": 2,
+          "sourceRect": {
+            "x": 525,
+            "y": 345,
+            "width": 240,
+            "height": 227
+          },
+          "footprint": {
+            "x": 0,
+            "y": 0,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "id": "cities_snow_low_city_008",
+          "col": 0,
+          "row": 2,
+          "w": 2,
+          "h": 2,
+          "groupId": 8,
+          "tags": [
+            "snow",
+            "winter",
+            "decorative",
+            "city",
+            "impassable",
+            "density_2",
+            "group_8"
+          ],
+          "density": 2,
+          "sourceRect": {
+            "x": 779,
+            "y": 344,
+            "width": 236,
+            "height": 231
+          },
+          "footprint": {
+            "x": 0,
+            "y": 0,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "id": "cities_snow_low_city_009",
+          "col": 2,
+          "row": 2,
+          "w": 2,
+          "h": 2,
+          "groupId": 9,
+          "tags": [
+            "snow",
+            "winter",
+            "decorative",
+            "city",
+            "impassable",
+            "density_3",
+            "group_9"
+          ],
+          "density": 3,
+          "sourceRect": {
+            "x": 16,
+            "y": 652,
+            "width": 242,
+            "height": 213
+          },
+          "footprint": {
+            "x": 0,
+            "y": 0,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "id": "cities_snow_low_city_010",
+          "col": 4,
+          "row": 2,
+          "w": 2,
+          "h": 2,
+          "groupId": 10,
+          "tags": [
+            "snow",
+            "winter",
+            "decorative",
+            "city",
+            "impassable",
+            "density_3",
+            "group_10"
+          ],
+          "density": 3,
+          "sourceRect": {
+            "x": 273,
+            "y": 656,
+            "width": 242,
+            "height": 212
+          },
+          "footprint": {
+            "x": 0,
+            "y": 0,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "id": "cities_snow_low_city_011",
+          "col": 6,
+          "row": 2,
+          "w": 2,
+          "h": 2,
+          "groupId": 11,
+          "tags": [
+            "snow",
+            "winter",
+            "decorative",
+            "city",
+            "impassable",
+            "density_3",
+            "group_11"
+          ],
+          "density": 3,
+          "sourceRect": {
+            "x": 525,
+            "y": 664,
+            "width": 235,
+            "height": 200
+          },
+          "footprint": {
+            "x": 0,
+            "y": 0,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "id": "cities_snow_low_city_012",
+          "col": 8,
+          "row": 2,
+          "w": 2,
+          "h": 2,
+          "groupId": 12,
+          "tags": [
+            "snow",
+            "winter",
+            "decorative",
+            "city",
+            "impassable",
+            "density_3",
+            "group_12"
+          ],
+          "density": 3,
+          "sourceRect": {
+            "x": 774,
+            "y": 626,
+            "width": 236,
+            "height": 238
+          },
+          "footprint": {
+            "x": 0,
+            "y": 0,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "id": "cities_snow_low_city_013",
+          "col": 10,
+          "row": 2,
+          "w": 3,
+          "h": 2,
+          "groupId": 13,
+          "tags": [
+            "snow",
+            "winter",
+            "decorative",
+            "city",
+            "impassable",
+            "density_2",
+            "group_13"
+          ],
+          "density": 2,
+          "sourceRect": {
+            "x": 11,
+            "y": 955,
+            "width": 250,
+            "height": 198
+          },
+          "footprint": {
+            "x": 0,
+            "y": 0,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "id": "cities_snow_low_city_014",
+          "col": 13,
+          "row": 2,
+          "w": 2,
+          "h": 2,
+          "groupId": 14,
+          "tags": [
+            "snow",
+            "winter",
+            "decorative",
+            "city",
+            "impassable",
+            "density_2",
+            "group_14"
+          ],
+          "density": 2,
+          "sourceRect": {
+            "x": 272,
+            "y": 947,
+            "width": 241,
+            "height": 212
+          },
+          "footprint": {
+            "x": 0,
+            "y": 0,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "id": "cities_snow_low_city_015",
+          "col": 0,
+          "row": 4,
+          "w": 2,
+          "h": 2,
+          "groupId": 15,
+          "tags": [
+            "snow",
+            "winter",
+            "decorative",
+            "city",
+            "impassable",
+            "density_2",
+            "group_15"
+          ],
+          "density": 2,
+          "sourceRect": {
+            "x": 524,
+            "y": 964,
+            "width": 243,
+            "height": 196
+          },
+          "footprint": {
+            "x": 0,
+            "y": 0,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "id": "cities_snow_low_city_016",
+          "col": 2,
+          "row": 4,
+          "w": 2,
+          "h": 2,
+          "groupId": 16,
+          "tags": [
+            "snow",
+            "winter",
+            "decorative",
+            "city",
+            "impassable",
+            "density_2",
+            "group_16"
+          ],
+          "density": 2,
+          "sourceRect": {
+            "x": 780,
+            "y": 958,
+            "width": 233,
+            "height": 198
+          },
+          "footprint": {
+            "x": 0,
+            "y": 0,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "id": "cities_snow_low_city_017",
+          "col": 4,
+          "row": 4,
+          "w": 3,
+          "h": 2,
+          "groupId": 17,
+          "tags": [
+            "snow",
+            "winter",
+            "decorative",
+            "city",
+            "impassable",
+            "density_3",
+            "group_17"
+          ],
+          "density": 3,
+          "sourceRect": {
+            "x": 9,
+            "y": 1230,
+            "width": 256,
+            "height": 223
+          },
+          "footprint": {
+            "x": 0,
+            "y": 0,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "id": "cities_snow_low_city_018",
+          "col": 7,
+          "row": 4,
+          "w": 2,
+          "h": 2,
+          "groupId": 18,
+          "tags": [
+            "snow",
+            "winter",
+            "decorative",
+            "city",
+            "impassable",
+            "density_3",
+            "group_18"
+          ],
+          "density": 3,
+          "sourceRect": {
+            "x": 274,
+            "y": 1228,
+            "width": 242,
+            "height": 226
+          },
+          "footprint": {
+            "x": 0,
+            "y": 0,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "id": "cities_snow_low_city_019",
+          "col": 9,
+          "row": 4,
+          "w": 2,
+          "h": 2,
+          "groupId": 19,
+          "tags": [
+            "snow",
+            "winter",
+            "decorative",
+            "city",
+            "impassable",
+            "density_3",
+            "group_19"
+          ],
+          "density": 3,
+          "sourceRect": {
+            "x": 529,
+            "y": 1229,
+            "width": 236,
+            "height": 230
+          },
+          "footprint": {
+            "x": 0,
+            "y": 0,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "id": "cities_snow_low_city_020",
+          "col": 11,
+          "row": 4,
+          "w": 2,
+          "h": 2,
+          "groupId": 20,
+          "tags": [
+            "snow",
+            "winter",
+            "decorative",
+            "city",
+            "impassable",
+            "density_3",
+            "group_20"
+          ],
+          "density": 3,
+          "sourceRect": {
+            "x": 776,
+            "y": 1224,
+            "width": 240,
+            "height": 237
+          },
+          "footprint": {
+            "x": 0,
+            "y": 0,
+            "width": 2,
+            "height": 2
+          }
+        }
+      ],
+      "extension": {
+        "imports": [
+          {
+            "id": "cities_snow_low_city_001",
+            "sourceId": "cities_snow_low",
+            "bbox": {
+              "x": 16,
+              "y": 85,
+              "width": 238,
+              "height": 199
+            },
+            "area": 35120,
+            "anchor": "center",
+            "sizeRatio": 0.5,
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 0,
+              "row": 0
+            },
+            "tags": [
+              "snow",
+              "winter",
+              "decorative",
+              "city",
+              "impassable",
+              "density_1",
+              "group_1"
+            ],
+            "renderRect": {
+              "x": 4,
+              "y": 14,
+              "width": 119,
+              "height": 100
+            }
+          },
+          {
+            "id": "cities_snow_low_city_002",
+            "sourceId": "cities_snow_low",
+            "bbox": {
+              "x": 279,
+              "y": 91,
+              "width": 227,
+              "height": 195
+            },
+            "area": 33929,
+            "anchor": "center",
+            "sizeRatio": 0.5,
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 2,
+              "row": 0
+            },
+            "tags": [
+              "snow",
+              "winter",
+              "decorative",
+              "city",
+              "impassable",
+              "density_1",
+              "group_2"
+            ],
+            "renderRect": {
+              "x": 7,
+              "y": 15,
+              "width": 114,
+              "height": 98
+            }
+          },
+          {
+            "id": "cities_snow_low_city_003",
+            "sourceId": "cities_snow_low",
+            "bbox": {
+              "x": 525,
+              "y": 99,
+              "width": 236,
+              "height": 185
+            },
+            "area": 35373,
+            "anchor": "center",
+            "sizeRatio": 0.5,
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 4,
+              "row": 0
+            },
+            "tags": [
+              "snow",
+              "winter",
+              "decorative",
+              "city",
+              "impassable",
+              "density_1",
+              "group_3"
+            ],
+            "renderRect": {
+              "x": 5,
+              "y": 17,
+              "width": 118,
+              "height": 93
+            }
+          },
+          {
+            "id": "cities_snow_low_city_004",
+            "sourceId": "cities_snow_low",
+            "bbox": {
+              "x": 780,
+              "y": 86,
+              "width": 230,
+              "height": 196
+            },
+            "area": 35489,
+            "anchor": "center",
+            "sizeRatio": 0.5,
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 6,
+              "row": 0
+            },
+            "tags": [
+              "snow",
+              "winter",
+              "decorative",
+              "city",
+              "impassable",
+              "density_1",
+              "group_4"
+            ],
+            "renderRect": {
+              "x": 6,
+              "y": 15,
+              "width": 115,
+              "height": 98
+            }
+          },
+          {
+            "id": "cities_snow_low_city_005",
+            "sourceId": "cities_snow_low",
+            "bbox": {
+              "x": 12,
+              "y": 338,
+              "width": 250,
+              "height": 233
+            },
+            "area": 45735,
+            "anchor": "center",
+            "sizeRatio": 0.5,
+            "tileSpan": {
+              "columns": 3,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 8,
+              "row": 0
+            },
+            "tags": [
+              "snow",
+              "winter",
+              "decorative",
+              "city",
+              "impassable",
+              "density_2",
+              "group_5"
+            ],
+            "renderRect": {
+              "x": 33,
+              "y": 5,
+              "width": 125,
+              "height": 117
+            }
+          },
+          {
+            "id": "cities_snow_low_city_006",
+            "sourceId": "cities_snow_low",
+            "bbox": {
+              "x": 274,
+              "y": 336,
+              "width": 239,
+              "height": 236
+            },
+            "area": 44741,
+            "anchor": "center",
+            "sizeRatio": 0.5,
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 11,
+              "row": 0
+            },
+            "tags": [
+              "snow",
+              "winter",
+              "decorative",
+              "city",
+              "impassable",
+              "density_2",
+              "group_6"
+            ],
+            "renderRect": {
+              "x": 4,
+              "y": 5,
+              "width": 120,
+              "height": 118
+            }
+          },
+          {
+            "id": "cities_snow_low_city_007",
+            "sourceId": "cities_snow_low",
+            "bbox": {
+              "x": 525,
+              "y": 345,
+              "width": 240,
+              "height": 227
+            },
+            "area": 42856,
+            "anchor": "center",
+            "sizeRatio": 0.5,
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 13,
+              "row": 0
+            },
+            "tags": [
+              "snow",
+              "winter",
+              "decorative",
+              "city",
+              "impassable",
+              "density_2",
+              "group_7"
+            ],
+            "renderRect": {
+              "x": 4,
+              "y": 7,
+              "width": 120,
+              "height": 114
+            }
+          },
+          {
+            "id": "cities_snow_low_city_008",
+            "sourceId": "cities_snow_low",
+            "bbox": {
+              "x": 779,
+              "y": 344,
+              "width": 236,
+              "height": 231
+            },
+            "area": 42365,
+            "anchor": "center",
+            "sizeRatio": 0.5,
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 0,
+              "row": 2
+            },
+            "tags": [
+              "snow",
+              "winter",
+              "decorative",
+              "city",
+              "impassable",
+              "density_2",
+              "group_8"
+            ],
+            "renderRect": {
+              "x": 5,
+              "y": 6,
+              "width": 118,
+              "height": 116
+            }
+          },
+          {
+            "id": "cities_snow_low_city_009",
+            "sourceId": "cities_snow_low",
+            "bbox": {
+              "x": 16,
+              "y": 652,
+              "width": 242,
+              "height": 213
+            },
+            "area": 40519,
+            "anchor": "center",
+            "sizeRatio": 0.5,
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 2,
+              "row": 2
+            },
+            "tags": [
+              "snow",
+              "winter",
+              "decorative",
+              "city",
+              "impassable",
+              "density_3",
+              "group_9"
+            ],
+            "renderRect": {
+              "x": 3,
+              "y": 10,
+              "width": 121,
+              "height": 107
+            }
+          },
+          {
+            "id": "cities_snow_low_city_010",
+            "sourceId": "cities_snow_low",
+            "bbox": {
+              "x": 273,
+              "y": 656,
+              "width": 242,
+              "height": 212
+            },
+            "area": 40942,
+            "anchor": "center",
+            "sizeRatio": 0.5,
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 4,
+              "row": 2
+            },
+            "tags": [
+              "snow",
+              "winter",
+              "decorative",
+              "city",
+              "impassable",
+              "density_3",
+              "group_10"
+            ],
+            "renderRect": {
+              "x": 3,
+              "y": 11,
+              "width": 121,
+              "height": 106
+            }
+          },
+          {
+            "id": "cities_snow_low_city_011",
+            "sourceId": "cities_snow_low",
+            "bbox": {
+              "x": 525,
+              "y": 664,
+              "width": 235,
+              "height": 200
+            },
+            "area": 36732,
+            "anchor": "center",
+            "sizeRatio": 0.5,
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 6,
+              "row": 2
+            },
+            "tags": [
+              "snow",
+              "winter",
+              "decorative",
+              "city",
+              "impassable",
+              "density_3",
+              "group_11"
+            ],
+            "renderRect": {
+              "x": 5,
+              "y": 14,
+              "width": 118,
+              "height": 100
+            }
+          },
+          {
+            "id": "cities_snow_low_city_012",
+            "sourceId": "cities_snow_low",
+            "bbox": {
+              "x": 774,
+              "y": 626,
+              "width": 236,
+              "height": 238
+            },
+            "area": 39870,
+            "anchor": "center",
+            "sizeRatio": 0.5,
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 8,
+              "row": 2
+            },
+            "tags": [
+              "snow",
+              "winter",
+              "decorative",
+              "city",
+              "impassable",
+              "density_3",
+              "group_12"
+            ],
+            "renderRect": {
+              "x": 5,
+              "y": 4,
+              "width": 118,
+              "height": 119
+            }
+          },
+          {
+            "id": "cities_snow_low_city_013",
+            "sourceId": "cities_snow_low",
+            "bbox": {
+              "x": 11,
+              "y": 955,
+              "width": 250,
+              "height": 198
+            },
+            "area": 37895,
+            "anchor": "center",
+            "sizeRatio": 0.5,
+            "tileSpan": {
+              "columns": 3,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 10,
+              "row": 2
+            },
+            "tags": [
+              "snow",
+              "winter",
+              "decorative",
+              "city",
+              "impassable",
+              "density_2",
+              "group_13"
+            ],
+            "renderRect": {
+              "x": 33,
+              "y": 14,
+              "width": 125,
+              "height": 99
+            }
+          },
+          {
+            "id": "cities_snow_low_city_014",
+            "sourceId": "cities_snow_low",
+            "bbox": {
+              "x": 272,
+              "y": 947,
+              "width": 241,
+              "height": 212
+            },
+            "area": 39258,
+            "anchor": "center",
+            "sizeRatio": 0.5,
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 13,
+              "row": 2
+            },
+            "tags": [
+              "snow",
+              "winter",
+              "decorative",
+              "city",
+              "impassable",
+              "density_2",
+              "group_14"
+            ],
+            "renderRect": {
+              "x": 3,
+              "y": 11,
+              "width": 121,
+              "height": 106
+            }
+          },
+          {
+            "id": "cities_snow_low_city_015",
+            "sourceId": "cities_snow_low",
+            "bbox": {
+              "x": 524,
+              "y": 964,
+              "width": 243,
+              "height": 196
+            },
+            "area": 37626,
+            "anchor": "center",
+            "sizeRatio": 0.5,
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 0,
+              "row": 4
+            },
+            "tags": [
+              "snow",
+              "winter",
+              "decorative",
+              "city",
+              "impassable",
+              "density_2",
+              "group_15"
+            ],
+            "renderRect": {
+              "x": 3,
+              "y": 15,
+              "width": 122,
+              "height": 98
+            }
+          },
+          {
+            "id": "cities_snow_low_city_016",
+            "sourceId": "cities_snow_low",
+            "bbox": {
+              "x": 780,
+              "y": 958,
+              "width": 233,
+              "height": 198
+            },
+            "area": 36586,
+            "anchor": "center",
+            "sizeRatio": 0.5,
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 2,
+              "row": 4
+            },
+            "tags": [
+              "snow",
+              "winter",
+              "decorative",
+              "city",
+              "impassable",
+              "density_2",
+              "group_16"
+            ],
+            "renderRect": {
+              "x": 5,
+              "y": 14,
+              "width": 117,
+              "height": 99
+            }
+          },
+          {
+            "id": "cities_snow_low_city_017",
+            "sourceId": "cities_snow_low",
+            "bbox": {
+              "x": 9,
+              "y": 1230,
+              "width": 256,
+              "height": 223
+            },
+            "area": 46166,
+            "anchor": "center",
+            "sizeRatio": 0.5,
+            "tileSpan": {
+              "columns": 3,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 4,
+              "row": 4
+            },
+            "tags": [
+              "snow",
+              "winter",
+              "decorative",
+              "city",
+              "impassable",
+              "density_3",
+              "group_17"
+            ],
+            "renderRect": {
+              "x": 32,
+              "y": 8,
+              "width": 128,
+              "height": 112
+            }
+          },
+          {
+            "id": "cities_snow_low_city_018",
+            "sourceId": "cities_snow_low",
+            "bbox": {
+              "x": 274,
+              "y": 1228,
+              "width": 242,
+              "height": 226
+            },
+            "area": 42765,
+            "anchor": "center",
+            "sizeRatio": 0.5,
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 7,
+              "row": 4
+            },
+            "tags": [
+              "snow",
+              "winter",
+              "decorative",
+              "city",
+              "impassable",
+              "density_3",
+              "group_18"
+            ],
+            "renderRect": {
+              "x": 3,
+              "y": 7,
+              "width": 121,
+              "height": 113
+            }
+          },
+          {
+            "id": "cities_snow_low_city_019",
+            "sourceId": "cities_snow_low",
+            "bbox": {
+              "x": 529,
+              "y": 1229,
+              "width": 236,
+              "height": 230
+            },
+            "area": 43373,
+            "anchor": "center",
+            "sizeRatio": 0.5,
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 9,
+              "row": 4
+            },
+            "tags": [
+              "snow",
+              "winter",
+              "decorative",
+              "city",
+              "impassable",
+              "density_3",
+              "group_19"
+            ],
+            "renderRect": {
+              "x": 5,
+              "y": 6,
+              "width": 118,
+              "height": 115
+            }
+          },
+          {
+            "id": "cities_snow_low_city_020",
+            "sourceId": "cities_snow_low",
+            "bbox": {
+              "x": 776,
+              "y": 1224,
+              "width": 240,
+              "height": 237
+            },
+            "area": 44174,
+            "anchor": "center",
+            "sizeRatio": 0.5,
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 11,
+              "row": 4
+            },
+            "tags": [
+              "snow",
+              "winter",
+              "decorative",
+              "city",
+              "impassable",
+              "density_3",
+              "group_20"
+            ],
+            "renderRect": {
+              "x": 4,
+              "y": 4,
+              "width": 120,
+              "height": 119
+            }
+          }
+        ],
+        "occupiedTiles": [
+          "0,0",
+          "1,0",
+          "0,1",
+          "1,1",
+          "2,0",
+          "3,0",
+          "2,1",
+          "3,1",
+          "4,0",
+          "5,0",
+          "4,1",
+          "5,1",
+          "6,0",
+          "7,0",
+          "6,1",
+          "7,1",
+          "8,0",
+          "9,0",
+          "10,0",
+          "8,1",
+          "9,1",
+          "10,1",
+          "11,0",
+          "12,0",
+          "11,1",
+          "12,1",
+          "13,0",
+          "14,0",
+          "13,1",
+          "14,1",
+          "0,2",
+          "1,2",
+          "0,3",
+          "1,3",
+          "2,2",
+          "3,2",
+          "2,3",
+          "3,3",
+          "4,2",
+          "5,2",
+          "4,3",
+          "5,3",
+          "6,2",
+          "7,2",
+          "6,3",
+          "7,3",
+          "8,2",
+          "9,2",
+          "8,3",
+          "9,3",
+          "10,2",
+          "11,2",
+          "12,2",
+          "10,3",
+          "11,3",
+          "12,3",
+          "13,2",
+          "14,2",
+          "13,3",
+          "14,3",
+          "0,4",
+          "1,4",
+          "0,5",
+          "1,5",
+          "2,4",
+          "3,4",
+          "2,5",
+          "3,5",
+          "4,4",
+          "5,4",
+          "6,4",
+          "4,5",
+          "5,5",
+          "6,5",
+          "7,4",
+          "8,4",
+          "7,5",
+          "8,5",
+          "9,4",
+          "10,4",
+          "9,5",
+          "10,5",
+          "11,4",
+          "12,4",
+          "11,5",
+          "12,5"
+        ]
+      }
+    }
+  },
+  "upscaledBeyondMaster": false,
+  "omittedCandidateDensities": [
+    2,
+    3
+  ],
+  "pages": [
+    {
+      "name": "dtv5_city_snow_low.coarse.webp",
+      "sha256": "f268087c373bd3cdf6c5d021a91fc947d6a53c0a8ff82fa33e84987614295205",
+      "width": 1456,
+      "height": 68,
+      "decodedBytes": 396032,
+      "compressedBytes": 59934,
+      "tier": 0,
+      "tierName": "coarse",
+      "backingDensity": 0.5
+    },
+    {
+      "name": "dtv5_city_snow_low.final.webp",
+      "sha256": "c10fc41566efd252f7c4b4b099fb5d1501087b0016295621031de243fef2081c",
+      "width": 1976,
+      "height": 264,
+      "decodedBytes": 2086656,
+      "compressedBytes": 159102,
+      "tier": 2,
+      "tierName": "final",
+      "backingDensity": 1
+    }
+  ],
+  "sprites": [
+    {
+      "spriteId": "dtv5_city_snow_low:group_1",
+      "groupId": "group_1",
+      "savedIdentifiers": [
+        "cities_snow_low_city_001"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 0,
+        "y": 0,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "0,0",
+        "0,1",
+        "1,0",
+        "1,1"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_1",
+        "group_1",
+        "impassable",
+        "overhang",
+        "passable",
+        "snow",
+        "winter"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_snow_low.coarse.webp",
+          "x": 2,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_snow_low.final.webp",
+          "x": 2,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_snow_low:group_2",
+      "groupId": "group_2",
+      "savedIdentifiers": [
+        "cities_snow_low_city_002"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 128,
+        "y": 0,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "2,0",
+        "2,1",
+        "3,0",
+        "3,1"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_1",
+        "group_2",
+        "impassable",
+        "overhang",
+        "passable",
+        "snow",
+        "winter"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_snow_low.coarse.webp",
+          "x": 70,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_snow_low.final.webp",
+          "x": 134,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_snow_low:group_3",
+      "groupId": "group_3",
+      "savedIdentifiers": [
+        "cities_snow_low_city_003"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 256,
+        "y": 0,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "4,0",
+        "4,1",
+        "5,0",
+        "5,1"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_1",
+        "group_3",
+        "impassable",
+        "overhang",
+        "passable",
+        "snow",
+        "winter"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_snow_low.coarse.webp",
+          "x": 138,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_snow_low.final.webp",
+          "x": 266,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_snow_low:group_4",
+      "groupId": "group_4",
+      "savedIdentifiers": [
+        "cities_snow_low_city_004"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 384,
+        "y": 0,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "6,0",
+        "6,1",
+        "7,0",
+        "7,1"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_1",
+        "group_4",
+        "impassable",
+        "overhang",
+        "passable",
+        "snow",
+        "winter"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_snow_low.coarse.webp",
+          "x": 206,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_snow_low.final.webp",
+          "x": 398,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_snow_low:group_5",
+      "groupId": "group_5",
+      "savedIdentifiers": [
+        "cities_snow_low_city_005"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 512,
+        "y": 0,
+        "width": 192,
+        "height": 128
+      },
+      "tileKeys": [
+        "10,0",
+        "10,1",
+        "8,0",
+        "8,1",
+        "9,0",
+        "9,1"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_2",
+        "group_5",
+        "impassable",
+        "snow",
+        "winter"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_snow_low.coarse.webp",
+          "x": 274,
+          "y": 2,
+          "width": 96,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_snow_low.final.webp",
+          "x": 530,
+          "y": 2,
+          "width": 192,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_snow_low:group_6",
+      "groupId": "group_6",
+      "savedIdentifiers": [
+        "cities_snow_low_city_006"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 704,
+        "y": 0,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "11,0",
+        "11,1",
+        "12,0",
+        "12,1"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_2",
+        "group_6",
+        "impassable",
+        "snow",
+        "winter"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_snow_low.coarse.webp",
+          "x": 374,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_snow_low.final.webp",
+          "x": 726,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_snow_low:group_7",
+      "groupId": "group_7",
+      "savedIdentifiers": [
+        "cities_snow_low_city_007"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 832,
+        "y": 0,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "13,0",
+        "13,1",
+        "14,0",
+        "14,1"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_2",
+        "group_7",
+        "impassable",
+        "snow",
+        "winter"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_snow_low.coarse.webp",
+          "x": 442,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_snow_low.final.webp",
+          "x": 858,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_snow_low:group_8",
+      "groupId": "group_8",
+      "savedIdentifiers": [
+        "cities_snow_low_city_008"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 0,
+        "y": 128,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "0,2",
+        "0,3",
+        "1,2",
+        "1,3"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_2",
+        "group_8",
+        "impassable",
+        "snow",
+        "winter"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_snow_low.coarse.webp",
+          "x": 510,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_snow_low.final.webp",
+          "x": 990,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_snow_low:group_9",
+      "groupId": "group_9",
+      "savedIdentifiers": [
+        "cities_snow_low_city_009"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 128,
+        "y": 128,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "2,2",
+        "2,3",
+        "3,2",
+        "3,3"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_3",
+        "group_9",
+        "impassable",
+        "snow",
+        "winter"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_snow_low.coarse.webp",
+          "x": 578,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_snow_low.final.webp",
+          "x": 1122,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_snow_low:group_10",
+      "groupId": "group_10",
+      "savedIdentifiers": [
+        "cities_snow_low_city_010"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 256,
+        "y": 128,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "4,2",
+        "4,3",
+        "5,2",
+        "5,3"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_3",
+        "group_10",
+        "impassable",
+        "snow",
+        "winter"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_snow_low.coarse.webp",
+          "x": 646,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_snow_low.final.webp",
+          "x": 1254,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_snow_low:group_11",
+      "groupId": "group_11",
+      "savedIdentifiers": [
+        "cities_snow_low_city_011"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 384,
+        "y": 128,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "6,2",
+        "6,3",
+        "7,2",
+        "7,3"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_3",
+        "group_11",
+        "impassable",
+        "snow",
+        "winter"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_snow_low.coarse.webp",
+          "x": 714,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_snow_low.final.webp",
+          "x": 1386,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_snow_low:group_12",
+      "groupId": "group_12",
+      "savedIdentifiers": [
+        "cities_snow_low_city_012"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 512,
+        "y": 128,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "8,2",
+        "8,3",
+        "9,2",
+        "9,3"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_3",
+        "group_12",
+        "impassable",
+        "snow",
+        "winter"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_snow_low.coarse.webp",
+          "x": 782,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_snow_low.final.webp",
+          "x": 1518,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_snow_low:group_13",
+      "groupId": "group_13",
+      "savedIdentifiers": [
+        "cities_snow_low_city_013"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 640,
+        "y": 128,
+        "width": 192,
+        "height": 128
+      },
+      "tileKeys": [
+        "10,2",
+        "10,3",
+        "11,2",
+        "11,3",
+        "12,2",
+        "12,3"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_2",
+        "group_13",
+        "impassable",
+        "snow",
+        "winter"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_snow_low.coarse.webp",
+          "x": 850,
+          "y": 2,
+          "width": 96,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_snow_low.final.webp",
+          "x": 1650,
+          "y": 2,
+          "width": 192,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_snow_low:group_14",
+      "groupId": "group_14",
+      "savedIdentifiers": [
+        "cities_snow_low_city_014"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 832,
+        "y": 128,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "13,2",
+        "13,3",
+        "14,2",
+        "14,3"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_2",
+        "group_14",
+        "impassable",
+        "snow",
+        "winter"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_snow_low.coarse.webp",
+          "x": 950,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_snow_low.final.webp",
+          "x": 1846,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_snow_low:group_15",
+      "groupId": "group_15",
+      "savedIdentifiers": [
+        "cities_snow_low_city_015"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 0,
+        "y": 256,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "0,4",
+        "0,5",
+        "1,4",
+        "1,5"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_2",
+        "group_15",
+        "impassable",
+        "snow",
+        "winter"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_snow_low.coarse.webp",
+          "x": 1018,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_snow_low.final.webp",
+          "x": 2,
+          "y": 134,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_snow_low:group_16",
+      "groupId": "group_16",
+      "savedIdentifiers": [
+        "cities_snow_low_city_016"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 128,
+        "y": 256,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "2,4",
+        "2,5",
+        "3,4",
+        "3,5"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_2",
+        "group_16",
+        "impassable",
+        "snow",
+        "winter"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_snow_low.coarse.webp",
+          "x": 1086,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_snow_low.final.webp",
+          "x": 134,
+          "y": 134,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_snow_low:group_17",
+      "groupId": "group_17",
+      "savedIdentifiers": [
+        "cities_snow_low_city_017"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 256,
+        "y": 256,
+        "width": 192,
+        "height": 128
+      },
+      "tileKeys": [
+        "4,4",
+        "4,5",
+        "5,4",
+        "5,5",
+        "6,4",
+        "6,5"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_3",
+        "group_17",
+        "impassable",
+        "snow",
+        "winter"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_snow_low.coarse.webp",
+          "x": 1154,
+          "y": 2,
+          "width": 96,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_snow_low.final.webp",
+          "x": 266,
+          "y": 134,
+          "width": 192,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_snow_low:group_18",
+      "groupId": "group_18",
+      "savedIdentifiers": [
+        "cities_snow_low_city_018"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 448,
+        "y": 256,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "7,4",
+        "7,5",
+        "8,4",
+        "8,5"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_3",
+        "group_18",
+        "impassable",
+        "snow",
+        "winter"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_snow_low.coarse.webp",
+          "x": 1254,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_snow_low.final.webp",
+          "x": 462,
+          "y": 134,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_snow_low:group_19",
+      "groupId": "group_19",
+      "savedIdentifiers": [
+        "cities_snow_low_city_019"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 576,
+        "y": 256,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "10,4",
+        "10,5",
+        "9,4",
+        "9,5"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_3",
+        "group_19",
+        "impassable",
+        "snow",
+        "winter"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_snow_low.coarse.webp",
+          "x": 1322,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_snow_low.final.webp",
+          "x": 594,
+          "y": 134,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_snow_low:group_20",
+      "groupId": "group_20",
+      "savedIdentifiers": [
+        "cities_snow_low_city_020"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 704,
+        "y": 256,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "11,4",
+        "11,5",
+        "12,4",
+        "12,5"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_3",
+        "group_20",
+        "impassable",
+        "snow",
+        "winter"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_snow_low.coarse.webp",
+          "x": 1390,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_snow_low.final.webp",
+          "x": 726,
+          "y": 134,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,4950 @@
+{
+  "schemaVersion": 1,
+  "name": "dtv6_nature_grass",
+  "identity": {
+    "buildVersion": 1,
+    "atlasVersion": 1,
+    "catalogVersion": 1,
+    "pixelRulesVersion": 1,
+    "webpQuality": 85,
+    "padding": 2,
+    "sourceHash": "87265e515f421f1b5e2f591e3f01cc0ba10e6d03349cb81cc60c2803bd23cafd",
+    "metadataHash": "25d6ac7181e9dae990e8b361cce1442be4876a06bb8fa73f05574c72dccd2f8c",
+    "metadataSignature": "86ef05c40258bcd43430e4d25593940ff02ac7a7931a563213ddec176c27f898",
+    "selectedBackingDensities": [
+      0.5,
+      1
+    ]
+  },
+  "signature": "3e221e76eed6c593ac87352affee5deea55d39119fff46d85a7d953b1f10775a",
+  "source": {
+    "image": "images/map/sprite_sheets/dtv6_nature_grass.webp",
+    "metadata": "images/map/sprite_sheets/dtv6_nature_grass.json",
+    "sourceMetadata": {
+      "path": "images/map/sprite_sheets/sources/alpha_nature_grass.webp",
+      "sha256": "b6782bb283742102575a347421e9324f76076254931a609ece5d633b8af3f378",
+      "width": 992,
+      "height": 1586,
+      "detection": {
+        "transparent": true,
+        "alphaCutoff": 128,
+        "gap": 0,
+        "minArea": 1000
+      },
+      "guides": [],
+      "spriteCount": 40,
+      "packing": {
+        "scale": "per-sprite",
+        "padding": 2
+      }
+    },
+    "editorMetadata": {
+      "schemaVersion": 1,
+      "layoutVersion": 2,
+      "name": "dtv6_nature_grass",
+      "grid": {
+        "tileSize": 64,
+        "rowHeight": 64,
+        "borderWidth": 0,
+        "cols": 16,
+        "rows": 8
+      },
+      "tags": [
+        "grass",
+        "summer",
+        "decorative",
+        "trees",
+        "impassable",
+        "shrubs",
+        "passable",
+        "rocks",
+        "stones",
+        "water",
+        "lake"
+      ],
+      "propLayout": [
+        {
+          "id": "grass_oak",
+          "col": 0,
+          "row": 0,
+          "w": 2,
+          "h": 2,
+          "groupId": 1,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_1"
+          ],
+          "sourceRect": {
+            "x": 17,
+            "y": 12,
+            "width": 195,
+            "height": 189
+          }
+        },
+        {
+          "id": "grass_beech",
+          "col": 2,
+          "row": 0,
+          "w": 2,
+          "h": 2,
+          "groupId": 2,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_2"
+          ],
+          "sourceRect": {
+            "x": 224,
+            "y": 13,
+            "width": 176,
+            "height": 190
+          }
+        },
+        {
+          "id": "grass_chestnut",
+          "col": 4,
+          "row": 0,
+          "w": 2,
+          "h": 2,
+          "groupId": 3,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_3"
+          ],
+          "sourceRect": {
+            "x": 414,
+            "y": 15,
+            "width": 174,
+            "height": 187
+          }
+        },
+        {
+          "id": "grass_ash",
+          "col": 6,
+          "row": 0,
+          "w": 2,
+          "h": 2,
+          "groupId": 4,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_4"
+          ],
+          "sourceRect": {
+            "x": 601,
+            "y": 14,
+            "width": 178,
+            "height": 193
+          }
+        },
+        {
+          "id": "grass_elm",
+          "col": 8,
+          "row": 0,
+          "w": 2,
+          "h": 2,
+          "groupId": 5,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_5"
+          ],
+          "sourceRect": {
+            "x": 789,
+            "y": 23,
+            "width": 187,
+            "height": 185
+          }
+        },
+        {
+          "id": "grass_birch",
+          "col": 10,
+          "row": 0,
+          "w": 1,
+          "h": 2,
+          "groupId": 6,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_6"
+          ],
+          "sourceRect": {
+            "x": 37,
+            "y": 211,
+            "width": 164,
+            "height": 221
+          }
+        },
+        {
+          "id": "grass_poplar",
+          "col": 11,
+          "row": 0,
+          "w": 1,
+          "h": 2,
+          "groupId": 7,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_7"
+          ],
+          "sourceRect": {
+            "x": 257,
+            "y": 210,
+            "width": 88,
+            "height": 225
+          }
+        },
+        {
+          "id": "grass_maple",
+          "col": 12,
+          "row": 0,
+          "w": 2,
+          "h": 2,
+          "groupId": 8,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_8"
+          ],
+          "sourceRect": {
+            "x": 389,
+            "y": 213,
+            "width": 188,
+            "height": 222
+          }
+        },
+        {
+          "id": "grass_willow",
+          "col": 14,
+          "row": 0,
+          "w": 2,
+          "h": 2,
+          "groupId": 9,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_9"
+          ],
+          "sourceRect": {
+            "x": 590,
+            "y": 226,
+            "width": 193,
+            "height": 206
+          }
+        },
+        {
+          "id": "grass_young_oak",
+          "col": 0,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 10,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_10"
+          ],
+          "sourceRect": {
+            "x": 792,
+            "y": 225,
+            "width": 179,
+            "height": 207
+          }
+        },
+        {
+          "id": "grass_pine",
+          "col": 1,
+          "row": 2,
+          "w": 2,
+          "h": 2,
+          "groupId": 11,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_11"
+          ],
+          "sourceRect": {
+            "x": 15,
+            "y": 433,
+            "width": 206,
+            "height": 214
+          }
+        },
+        {
+          "id": "grass_spruce",
+          "col": 3,
+          "row": 2,
+          "w": 1,
+          "h": 2,
+          "groupId": 12,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_12"
+          ],
+          "sourceRect": {
+            "x": 237,
+            "y": 436,
+            "width": 154,
+            "height": 217
+          }
+        },
+        {
+          "id": "grass_fir",
+          "col": 4,
+          "row": 2,
+          "w": 2,
+          "h": 2,
+          "groupId": 13,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_13"
+          ],
+          "sourceRect": {
+            "x": 416,
+            "y": 443,
+            "width": 162,
+            "height": 210
+          }
+        },
+        {
+          "id": "grass_larch",
+          "col": 6,
+          "row": 2,
+          "w": 1,
+          "h": 2,
+          "groupId": 14,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_14"
+          ],
+          "sourceRect": {
+            "x": 605,
+            "y": 439,
+            "width": 180,
+            "height": 215
+          }
+        },
+        {
+          "id": "grass_scots_pine",
+          "col": 7,
+          "row": 2,
+          "w": 2,
+          "h": 2,
+          "groupId": 15,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_15"
+          ],
+          "sourceRect": {
+            "x": 798,
+            "y": 439,
+            "width": 180,
+            "height": 215
+          }
+        },
+        {
+          "id": "grass_leafy_bush",
+          "col": 9,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 16,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_16"
+          ],
+          "sourceRect": {
+            "x": 18,
+            "y": 659,
+            "width": 177,
+            "height": 158
+          }
+        },
+        {
+          "id": "grass_bramble",
+          "col": 10,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 17,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_17"
+          ],
+          "sourceRect": {
+            "x": 206,
+            "y": 662,
+            "width": 190,
+            "height": 159
+          }
+        },
+        {
+          "id": "grass_hawthorn",
+          "col": 11,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 18,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_18"
+          ],
+          "sourceRect": {
+            "x": 402,
+            "y": 661,
+            "width": 192,
+            "height": 163
+          }
+        },
+        {
+          "id": "grass_hazel",
+          "col": 12,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 19,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_19"
+          ],
+          "sourceRect": {
+            "x": 604,
+            "y": 661,
+            "width": 180,
+            "height": 161
+          }
+        },
+        {
+          "id": "grass_gorse",
+          "col": 13,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 20,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_20"
+          ],
+          "sourceRect": {
+            "x": 790,
+            "y": 662,
+            "width": 188,
+            "height": 157
+          }
+        },
+        {
+          "id": "grass_birch_saplings",
+          "col": 14,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 21,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_21"
+          ],
+          "sourceRect": {
+            "x": 29,
+            "y": 826,
+            "width": 156,
+            "height": 176
+          }
+        },
+        {
+          "id": "grass_pine_saplings",
+          "col": 15,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 22,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_22"
+          ],
+          "sourceRect": {
+            "x": 206,
+            "y": 826,
+            "width": 174,
+            "height": 173
+          }
+        },
+        {
+          "id": "grass_ferns",
+          "col": 0,
+          "row": 3,
+          "w": 1,
+          "h": 1,
+          "groupId": 23,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "shrubs",
+            "passable",
+            "group_23"
+          ],
+          "sourceRect": {
+            "x": 397,
+            "y": 837,
+            "width": 196,
+            "height": 162
+          }
+        },
+        {
+          "id": "grass_tall_grass",
+          "col": 9,
+          "row": 3,
+          "w": 1,
+          "h": 1,
+          "groupId": 24,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "shrubs",
+            "passable",
+            "group_24"
+          ],
+          "sourceRect": {
+            "x": 605,
+            "y": 854,
+            "width": 159,
+            "height": 148
+          }
+        },
+        {
+          "id": "grass_wildflowers",
+          "col": 10,
+          "row": 3,
+          "w": 1,
+          "h": 1,
+          "groupId": 25,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "shrubs",
+            "passable",
+            "group_25"
+          ],
+          "sourceRect": {
+            "x": 790,
+            "y": 830,
+            "width": 187,
+            "height": 175
+          }
+        },
+        {
+          "id": "grass_granite",
+          "col": 11,
+          "row": 3,
+          "w": 2,
+          "h": 1,
+          "groupId": 26,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "rocks",
+            "impassable",
+            "group_26"
+          ],
+          "sourceRect": {
+            "x": 15,
+            "y": 1018,
+            "width": 185,
+            "height": 158
+          }
+        },
+        {
+          "id": "grass_limestone",
+          "col": 13,
+          "row": 3,
+          "w": 1,
+          "h": 1,
+          "groupId": 27,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "rocks",
+            "impassable",
+            "group_27"
+          ],
+          "sourceRect": {
+            "x": 211,
+            "y": 1018,
+            "width": 185,
+            "height": 155
+          }
+        },
+        {
+          "id": "grass_basalt",
+          "col": 14,
+          "row": 3,
+          "w": 2,
+          "h": 1,
+          "groupId": 28,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "rocks",
+            "impassable",
+            "group_28"
+          ],
+          "sourceRect": {
+            "x": 400,
+            "y": 1017,
+            "width": 189,
+            "height": 167
+          }
+        },
+        {
+          "id": "grass_sandstone",
+          "col": 0,
+          "row": 4,
+          "w": 2,
+          "h": 2,
+          "groupId": 29,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "rocks",
+            "impassable",
+            "group_29"
+          ],
+          "sourceRect": {
+            "x": 594,
+            "y": 1020,
+            "width": 193,
+            "height": 161
+          }
+        },
+        {
+          "id": "grass_layered_rocks",
+          "col": 2,
+          "row": 4,
+          "w": 2,
+          "h": 2,
+          "groupId": 30,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "rocks",
+            "impassable",
+            "group_30"
+          ],
+          "sourceRect": {
+            "x": 796,
+            "y": 1020,
+            "width": 182,
+            "height": 163
+          }
+        },
+        {
+          "id": "grass_river_stones",
+          "col": 4,
+          "row": 4,
+          "w": 1,
+          "h": 1,
+          "groupId": 31,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "rocks",
+            "stones",
+            "passable",
+            "group_31"
+          ],
+          "sourceRect": {
+            "x": 18,
+            "y": 1195,
+            "width": 174,
+            "height": 113
+          }
+        },
+        {
+          "id": "grass_slate_stones",
+          "col": 5,
+          "row": 4,
+          "w": 1,
+          "h": 1,
+          "groupId": 32,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "rocks",
+            "stones",
+            "passable",
+            "group_32"
+          ],
+          "sourceRect": {
+            "x": 209,
+            "y": 1192,
+            "width": 181,
+            "height": 117
+          }
+        },
+        {
+          "id": "grass_mossy_stones",
+          "col": 6,
+          "row": 4,
+          "w": 1,
+          "h": 1,
+          "groupId": 33,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "rocks",
+            "stones",
+            "passable",
+            "group_33"
+          ],
+          "sourceRect": {
+            "x": 405,
+            "y": 1200,
+            "width": 176,
+            "height": 112
+          }
+        },
+        {
+          "id": "grass_pebbles",
+          "col": 7,
+          "row": 4,
+          "w": 1,
+          "h": 1,
+          "groupId": 34,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "rocks",
+            "stones",
+            "passable",
+            "group_34"
+          ],
+          "sourceRect": {
+            "x": 599,
+            "y": 1200,
+            "width": 177,
+            "height": 111
+          }
+        },
+        {
+          "id": "grass_pale_stones",
+          "col": 8,
+          "row": 4,
+          "w": 1,
+          "h": 1,
+          "groupId": 35,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "rocks",
+            "stones",
+            "passable",
+            "group_35"
+          ],
+          "sourceRect": {
+            "x": 792,
+            "y": 1196,
+            "width": 184,
+            "height": 117
+          }
+        },
+        {
+          "id": "grass_reed_pond",
+          "col": 9,
+          "row": 4,
+          "w": 2,
+          "h": 3,
+          "groupId": 36,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "water",
+            "impassable",
+            "lake",
+            "group_36"
+          ],
+          "sourceRect": {
+            "x": 11,
+            "y": 1328,
+            "width": 216,
+            "height": 237
+          }
+        },
+        {
+          "id": "grass_woodland_pond",
+          "col": 11,
+          "row": 4,
+          "w": 2,
+          "h": 3,
+          "groupId": 37,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "water",
+            "impassable",
+            "lake",
+            "group_37"
+          ],
+          "sourceRect": {
+            "x": 228,
+            "y": 1319,
+            "width": 170,
+            "height": 254
+          }
+        },
+        {
+          "id": "grass_lily_pond",
+          "col": 13,
+          "row": 4,
+          "w": 2,
+          "h": 3,
+          "groupId": 38,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "water",
+            "impassable",
+            "lake",
+            "group_38"
+          ],
+          "sourceRect": {
+            "x": 392,
+            "y": 1332,
+            "width": 201,
+            "height": 238
+          }
+        },
+        {
+          "id": "grass_rocky_lake",
+          "col": 4,
+          "row": 5,
+          "w": 2,
+          "h": 3,
+          "groupId": 39,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "water",
+            "impassable",
+            "lake",
+            "group_39"
+          ],
+          "sourceRect": {
+            "x": 586,
+            "y": 1321,
+            "width": 205,
+            "height": 253
+          }
+        },
+        {
+          "id": "grass_wetland_pond",
+          "col": 6,
+          "row": 5,
+          "w": 2,
+          "h": 3,
+          "groupId": 40,
+          "tags": [
+            "grass",
+            "summer",
+            "decorative",
+            "water",
+            "impassable",
+            "lake",
+            "group_40"
+          ],
+          "sourceRect": {
+            "x": 793,
+            "y": 1336,
+            "width": 190,
+            "height": 232
+          }
+        }
+      ],
+      "extension": {
+        "imports": [
+          {
+            "id": "grass_oak",
+            "sourceId": "alpha_nature_grass",
+            "bbox": {
+              "x": 17,
+              "y": 12,
+              "width": 195,
+              "height": 189
+            },
+            "area": 23549,
+            "anchor": "center",
+            "sizeRatio": 0.41025641025641024,
+            "referenceSize": {
+              "width": 80,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 0,
+              "row": 0
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_1"
+            ],
+            "renderRect": {
+              "x": 24,
+              "y": 25,
+              "width": 80,
+              "height": 78
+            }
+          },
+          {
+            "id": "grass_beech",
+            "sourceId": "alpha_nature_grass",
+            "bbox": {
+              "x": 224,
+              "y": 13,
+              "width": 176,
+              "height": 190
+            },
+            "area": 21098,
+            "anchor": "center",
+            "sizeRatio": 0.4318181818181818,
+            "referenceSize": {
+              "width": 76,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 2,
+              "row": 0
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_2"
+            ],
+            "renderRect": {
+              "x": 26,
+              "y": 23,
+              "width": 76,
+              "height": 82
+            }
+          },
+          {
+            "id": "grass_chestnut",
+            "sourceId": "alpha_nature_grass",
+            "bbox": {
+              "x": 414,
+              "y": 15,
+              "width": 174,
+              "height": 187
+            },
+            "area": 21481,
+            "anchor": "center",
+            "sizeRatio": 0.45977011494252873,
+            "referenceSize": {
+              "width": 80,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 4,
+              "row": 0
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_3"
+            ],
+            "renderRect": {
+              "x": 24,
+              "y": 21,
+              "width": 80,
+              "height": 86
+            }
+          },
+          {
+            "id": "grass_ash",
+            "sourceId": "alpha_nature_grass",
+            "bbox": {
+              "x": 601,
+              "y": 14,
+              "width": 178,
+              "height": 193
+            },
+            "area": 19139,
+            "anchor": "center",
+            "sizeRatio": 0.42696629213483145,
+            "referenceSize": {
+              "width": 76,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 6,
+              "row": 0
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_4"
+            ],
+            "renderRect": {
+              "x": 26,
+              "y": 23,
+              "width": 76,
+              "height": 82
+            }
+          },
+          {
+            "id": "grass_elm",
+            "sourceId": "alpha_nature_grass",
+            "bbox": {
+              "x": 789,
+              "y": 23,
+              "width": 187,
+              "height": 185
+            },
+            "area": 21217,
+            "anchor": "center",
+            "sizeRatio": 0.42780748663101603,
+            "referenceSize": {
+              "width": 80,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 8,
+              "row": 0
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_5"
+            ],
+            "renderRect": {
+              "x": 24,
+              "y": 24,
+              "width": 80,
+              "height": 79
+            }
+          },
+          {
+            "id": "grass_birch",
+            "sourceId": "alpha_nature_grass",
+            "bbox": {
+              "x": 37,
+              "y": 211,
+              "width": 164,
+              "height": 221
+            },
+            "area": 16992,
+            "anchor": "center",
+            "sizeRatio": 0.3170731707317073,
+            "referenceSize": {
+              "width": 52,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 10,
+              "row": 0
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_6"
+            ],
+            "renderRect": {
+              "x": 6,
+              "y": 29,
+              "width": 52,
+              "height": 70
+            }
+          },
+          {
+            "id": "grass_poplar",
+            "sourceId": "alpha_nature_grass",
+            "bbox": {
+              "x": 257,
+              "y": 210,
+              "width": 88,
+              "height": 225
+            },
+            "area": 13537,
+            "anchor": "center",
+            "sizeRatio": 0.4090909090909091,
+            "referenceSize": {
+              "width": 36,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 11,
+              "row": 0
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_7"
+            ],
+            "renderRect": {
+              "x": 14,
+              "y": 18,
+              "width": 36,
+              "height": 92
+            }
+          },
+          {
+            "id": "grass_maple",
+            "sourceId": "alpha_nature_grass",
+            "bbox": {
+              "x": 389,
+              "y": 213,
+              "width": 188,
+              "height": 222
+            },
+            "area": 23816,
+            "anchor": "center",
+            "sizeRatio": 0.40425531914893614,
+            "referenceSize": {
+              "width": 76,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 12,
+              "row": 0
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_8"
+            ],
+            "renderRect": {
+              "x": 26,
+              "y": 19,
+              "width": 76,
+              "height": 90
+            }
+          },
+          {
+            "id": "grass_willow",
+            "sourceId": "alpha_nature_grass",
+            "bbox": {
+              "x": 590,
+              "y": 226,
+              "width": 193,
+              "height": 206
+            },
+            "area": 27004,
+            "anchor": "center",
+            "sizeRatio": 0.43523316062176165,
+            "referenceSize": {
+              "width": 84,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 14,
+              "row": 0
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_9"
+            ],
+            "renderRect": {
+              "x": 22,
+              "y": 19,
+              "width": 84,
+              "height": 90
+            }
+          },
+          {
+            "id": "grass_young_oak",
+            "sourceId": "alpha_nature_grass",
+            "bbox": {
+              "x": 792,
+              "y": 225,
+              "width": 179,
+              "height": 207
+            },
+            "area": 17987,
+            "anchor": "center",
+            "sizeRatio": 0.2905027932960894,
+            "referenceSize": {
+              "width": 52,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 0,
+              "row": 2
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_10"
+            ],
+            "renderRect": {
+              "x": 6,
+              "y": 2,
+              "width": 52,
+              "height": 60
+            }
+          },
+          {
+            "id": "grass_pine",
+            "sourceId": "alpha_nature_grass",
+            "bbox": {
+              "x": 15,
+              "y": 433,
+              "width": 206,
+              "height": 214
+            },
+            "area": 22204,
+            "anchor": "center",
+            "sizeRatio": 0.3300970873786408,
+            "referenceSize": {
+              "width": 68,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 1,
+              "row": 2
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_11"
+            ],
+            "renderRect": {
+              "x": 30,
+              "y": 28,
+              "width": 68,
+              "height": 71
+            }
+          },
+          {
+            "id": "grass_spruce",
+            "sourceId": "alpha_nature_grass",
+            "bbox": {
+              "x": 237,
+              "y": 436,
+              "width": 154,
+              "height": 217
+            },
+            "area": 17261,
+            "anchor": "center",
+            "sizeRatio": 0.38961038961038963,
+            "referenceSize": {
+              "width": 60,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 3,
+              "row": 2
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_12"
+            ],
+            "renderRect": {
+              "x": 2,
+              "y": 21,
+              "width": 60,
+              "height": 85
+            }
+          },
+          {
+            "id": "grass_fir",
+            "sourceId": "alpha_nature_grass",
+            "bbox": {
+              "x": 416,
+              "y": 443,
+              "width": 162,
+              "height": 210
+            },
+            "area": 16661,
+            "anchor": "center",
+            "sizeRatio": 0.3950617283950617,
+            "referenceSize": {
+              "width": 64,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 4,
+              "row": 2
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_13"
+            ],
+            "renderRect": {
+              "x": 32,
+              "y": 22,
+              "width": 64,
+              "height": 83
+            }
+          },
+          {
+            "id": "grass_larch",
+            "sourceId": "alpha_nature_grass",
+            "bbox": {
+              "x": 605,
+              "y": 439,
+              "width": 180,
+              "height": 215
+            },
+            "area": 18187,
+            "anchor": "center",
+            "sizeRatio": 0.3333333333333333,
+            "referenceSize": {
+              "width": 60,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 6,
+              "row": 2
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_14"
+            ],
+            "renderRect": {
+              "x": 2,
+              "y": 28,
+              "width": 60,
+              "height": 72
+            }
+          },
+          {
+            "id": "grass_scots_pine",
+            "sourceId": "alpha_nature_grass",
+            "bbox": {
+              "x": 798,
+              "y": 439,
+              "width": 180,
+              "height": 215
+            },
+            "area": 16576,
+            "anchor": "center",
+            "sizeRatio": 0.4,
+            "referenceSize": {
+              "width": 72,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 7,
+              "row": 2
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_15"
+            ],
+            "renderRect": {
+              "x": 28,
+              "y": 21,
+              "width": 72,
+              "height": 86
+            }
+          },
+          {
+            "id": "grass_leafy_bush",
+            "sourceId": "alpha_nature_grass",
+            "bbox": {
+              "x": 18,
+              "y": 659,
+              "width": 177,
+              "height": 158
+            },
+            "area": 19305,
+            "anchor": "center",
+            "sizeRatio": 0.22598870056497175,
+            "referenceSize": {
+              "width": 40,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 9,
+              "row": 2
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_16"
+            ],
+            "renderRect": {
+              "x": 12,
+              "y": 14,
+              "width": 40,
+              "height": 36
+            }
+          },
+          {
+            "id": "grass_bramble",
+            "sourceId": "alpha_nature_grass",
+            "bbox": {
+              "x": 206,
+              "y": 662,
+              "width": 190,
+              "height": 159
+            },
+            "area": 21936,
+            "anchor": "center",
+            "sizeRatio": 0.23157894736842105,
+            "referenceSize": {
+              "width": 44,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 10,
+              "row": 2
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_17"
+            ],
+            "renderRect": {
+              "x": 10,
+              "y": 13,
+              "width": 44,
+              "height": 37
+            }
+          },
+          {
+            "id": "grass_hawthorn",
+            "sourceId": "alpha_nature_grass",
+            "bbox": {
+              "x": 402,
+              "y": 661,
+              "width": 192,
+              "height": 163
+            },
+            "area": 21479,
+            "anchor": "center",
+            "sizeRatio": 0.20833333333333334,
+            "referenceSize": {
+              "width": 40,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 11,
+              "row": 2
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_18"
+            ],
+            "renderRect": {
+              "x": 12,
+              "y": 15,
+              "width": 40,
+              "height": 34
+            }
+          },
+          {
+            "id": "grass_hazel",
+            "sourceId": "alpha_nature_grass",
+            "bbox": {
+              "x": 604,
+              "y": 661,
+              "width": 180,
+              "height": 161
+            },
+            "area": 19425,
+            "anchor": "center",
+            "sizeRatio": 0.24444444444444444,
+            "referenceSize": {
+              "width": 44,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 12,
+              "row": 2
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_19"
+            ],
+            "renderRect": {
+              "x": 10,
+              "y": 12,
+              "width": 44,
+              "height": 39
+            }
+          },
+          {
+            "id": "grass_gorse",
+            "sourceId": "alpha_nature_grass",
+            "bbox": {
+              "x": 790,
+              "y": 662,
+              "width": 188,
+              "height": 157
+            },
+            "area": 19343,
+            "anchor": "center",
+            "sizeRatio": 0.19148936170212766,
+            "referenceSize": {
+              "width": 36,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 13,
+              "row": 2
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_20"
+            ],
+            "renderRect": {
+              "x": 14,
+              "y": 17,
+              "width": 36,
+              "height": 30
+            }
+          },
+          {
+            "id": "grass_birch_saplings",
+            "sourceId": "alpha_nature_grass",
+            "bbox": {
+              "x": 29,
+              "y": 826,
+              "width": 156,
+              "height": 176
+            },
+            "area": 14902,
+            "anchor": "center",
+            "sizeRatio": 0.28205128205128205,
+            "referenceSize": {
+              "width": 44,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 14,
+              "row": 2
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_21"
+            ],
+            "renderRect": {
+              "x": 10,
+              "y": 7,
+              "width": 44,
+              "height": 50
+            }
+          },
+          {
+            "id": "grass_pine_saplings",
+            "sourceId": "alpha_nature_grass",
+            "bbox": {
+              "x": 206,
+              "y": 826,
+              "width": 174,
+              "height": 173
+            },
+            "area": 16617,
+            "anchor": "center",
+            "sizeRatio": 0.22988505747126436,
+            "referenceSize": {
+              "width": 40,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 15,
+              "row": 2
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_22"
+            ],
+            "renderRect": {
+              "x": 12,
+              "y": 12,
+              "width": 40,
+              "height": 40
+            }
+          },
+          {
+            "id": "grass_ferns",
+            "sourceId": "alpha_nature_grass",
+            "bbox": {
+              "x": 397,
+              "y": 837,
+              "width": 196,
+              "height": 162
+            },
+            "area": 20623,
+            "anchor": "center",
+            "sizeRatio": 0.1836734693877551,
+            "referenceSize": {
+              "width": 36,
+              "height": 80
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 0,
+              "row": 3
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "shrubs",
+              "passable",
+              "group_23"
+            ],
+            "renderRect": {
+              "x": 14,
+              "y": 17,
+              "width": 36,
+              "height": 30
+            }
+          },
+          {
+            "id": "grass_tall_grass",
+            "sourceId": "alpha_nature_grass",
+            "bbox": {
+              "x": 605,
+              "y": 854,
+              "width": 159,
+              "height": 148
+            },
+            "area": 13285,
+            "anchor": "center",
+            "sizeRatio": 0.20125786163522014,
+            "referenceSize": {
+              "width": 32,
+              "height": 80
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 9,
+              "row": 3
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "shrubs",
+              "passable",
+              "group_24"
+            ],
+            "renderRect": {
+              "x": 16,
+              "y": 17,
+              "width": 32,
+              "height": 30
+            }
+          },
+          {
+            "id": "grass_wildflowers",
+            "sourceId": "alpha_nature_grass",
+            "bbox": {
+              "x": 790,
+              "y": 830,
+              "width": 187,
+              "height": 175
+            },
+            "area": 18749,
+            "anchor": "center",
+            "sizeRatio": 0.1925133689839572,
+            "referenceSize": {
+              "width": 36,
+              "height": 80
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 10,
+              "row": 3
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "shrubs",
+              "passable",
+              "group_25"
+            ],
+            "renderRect": {
+              "x": 14,
+              "y": 15,
+              "width": 36,
+              "height": 34
+            }
+          },
+          {
+            "id": "grass_granite",
+            "sourceId": "alpha_nature_grass",
+            "bbox": {
+              "x": 15,
+              "y": 1018,
+              "width": 185,
+              "height": 158
+            },
+            "area": 22654,
+            "anchor": "center",
+            "sizeRatio": 0.34594594594594597,
+            "referenceSize": {
+              "width": 64,
+              "height": 80
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 11,
+              "row": 3
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "rocks",
+              "impassable",
+              "group_26"
+            ],
+            "renderRect": {
+              "x": 32,
+              "y": 4,
+              "width": 64,
+              "height": 55
+            }
+          },
+          {
+            "id": "grass_limestone",
+            "sourceId": "alpha_nature_grass",
+            "bbox": {
+              "x": 211,
+              "y": 1018,
+              "width": 185,
+              "height": 155
+            },
+            "area": 21523,
+            "anchor": "center",
+            "sizeRatio": 0.32432432432432434,
+            "referenceSize": {
+              "width": 60,
+              "height": 80
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 13,
+              "row": 3
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "rocks",
+              "impassable",
+              "group_27"
+            ],
+            "renderRect": {
+              "x": 2,
+              "y": 7,
+              "width": 60,
+              "height": 50
+            }
+          },
+          {
+            "id": "grass_basalt",
+            "sourceId": "alpha_nature_grass",
+            "bbox": {
+              "x": 400,
+              "y": 1017,
+              "width": 189,
+              "height": 167
+            },
+            "area": 21158,
+            "anchor": "center",
+            "sizeRatio": 0.35978835978835977,
+            "referenceSize": {
+              "width": 68,
+              "height": 80
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 14,
+              "row": 3
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "rocks",
+              "impassable",
+              "group_28"
+            ],
+            "renderRect": {
+              "x": 30,
+              "y": 2,
+              "width": 68,
+              "height": 60
+            }
+          },
+          {
+            "id": "grass_sandstone",
+            "sourceId": "alpha_nature_grass",
+            "bbox": {
+              "x": 594,
+              "y": 1020,
+              "width": 193,
+              "height": 161
+            },
+            "area": 23394,
+            "anchor": "center",
+            "sizeRatio": 0.39378238341968913,
+            "referenceSize": {
+              "width": 76,
+              "height": 80
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 0,
+              "row": 4
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "rocks",
+              "impassable",
+              "group_29"
+            ],
+            "renderRect": {
+              "x": 26,
+              "y": 32,
+              "width": 76,
+              "height": 63
+            }
+          },
+          {
+            "id": "grass_layered_rocks",
+            "sourceId": "alpha_nature_grass",
+            "bbox": {
+              "x": 796,
+              "y": 1020,
+              "width": 182,
+              "height": 163
+            },
+            "area": 22744,
+            "anchor": "center",
+            "sizeRatio": 0.3956043956043956,
+            "referenceSize": {
+              "width": 72,
+              "height": 80
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 2,
+              "row": 4
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "rocks",
+              "impassable",
+              "group_30"
+            ],
+            "renderRect": {
+              "x": 28,
+              "y": 32,
+              "width": 72,
+              "height": 64
+            }
+          },
+          {
+            "id": "grass_river_stones",
+            "sourceId": "alpha_nature_grass",
+            "bbox": {
+              "x": 18,
+              "y": 1195,
+              "width": 174,
+              "height": 113
+            },
+            "area": 15043,
+            "anchor": "center",
+            "sizeRatio": 0.1839080459770115,
+            "referenceSize": {
+              "width": 32,
+              "height": 80
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 4,
+              "row": 4
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "rocks",
+              "stones",
+              "passable",
+              "group_31"
+            ],
+            "renderRect": {
+              "x": 16,
+              "y": 21,
+              "width": 32,
+              "height": 21
+            }
+          },
+          {
+            "id": "grass_slate_stones",
+            "sourceId": "alpha_nature_grass",
+            "bbox": {
+              "x": 209,
+              "y": 1192,
+              "width": 181,
+              "height": 117
+            },
+            "area": 15541,
+            "anchor": "center",
+            "sizeRatio": 0.19889502762430938,
+            "referenceSize": {
+              "width": 36,
+              "height": 80
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 5,
+              "row": 4
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "rocks",
+              "stones",
+              "passable",
+              "group_32"
+            ],
+            "renderRect": {
+              "x": 14,
+              "y": 20,
+              "width": 36,
+              "height": 23
+            }
+          },
+          {
+            "id": "grass_mossy_stones",
+            "sourceId": "alpha_nature_grass",
+            "bbox": {
+              "x": 405,
+              "y": 1200,
+              "width": 176,
+              "height": 112
+            },
+            "area": 14518,
+            "anchor": "center",
+            "sizeRatio": 0.20454545454545456,
+            "referenceSize": {
+              "width": 36,
+              "height": 80
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 6,
+              "row": 4
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "rocks",
+              "stones",
+              "passable",
+              "group_33"
+            ],
+            "renderRect": {
+              "x": 14,
+              "y": 20,
+              "width": 36,
+              "height": 23
+            }
+          },
+          {
+            "id": "grass_pebbles",
+            "sourceId": "alpha_nature_grass",
+            "bbox": {
+              "x": 599,
+              "y": 1200,
+              "width": 177,
+              "height": 111
+            },
+            "area": 14889,
+            "anchor": "center",
+            "sizeRatio": 0.1807909604519774,
+            "referenceSize": {
+              "width": 32,
+              "height": 80
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 7,
+              "row": 4
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "rocks",
+              "stones",
+              "passable",
+              "group_34"
+            ],
+            "renderRect": {
+              "x": 16,
+              "y": 22,
+              "width": 32,
+              "height": 20
+            }
+          },
+          {
+            "id": "grass_pale_stones",
+            "sourceId": "alpha_nature_grass",
+            "bbox": {
+              "x": 792,
+              "y": 1196,
+              "width": 184,
+              "height": 117
+            },
+            "area": 15718,
+            "anchor": "center",
+            "sizeRatio": 0.1956521739130435,
+            "referenceSize": {
+              "width": 36,
+              "height": 80
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 8,
+              "row": 4
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "rocks",
+              "stones",
+              "passable",
+              "group_35"
+            ],
+            "renderRect": {
+              "x": 14,
+              "y": 20,
+              "width": 36,
+              "height": 23
+            }
+          },
+          {
+            "id": "grass_reed_pond",
+            "sourceId": "alpha_nature_grass",
+            "bbox": {
+              "x": 11,
+              "y": 1328,
+              "width": 216,
+              "height": 237
+            },
+            "area": 38281,
+            "anchor": "center",
+            "sizeRatio": 0.5370370370370371,
+            "referenceSize": {
+              "width": 116,
+              "height": 144
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 3
+            },
+            "placedAt": {
+              "column": 9,
+              "row": 4
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "water",
+              "impassable",
+              "lake",
+              "group_36"
+            ],
+            "renderRect": {
+              "x": 6,
+              "y": 32,
+              "width": 116,
+              "height": 127
+            }
+          },
+          {
+            "id": "grass_woodland_pond",
+            "sourceId": "alpha_nature_grass",
+            "bbox": {
+              "x": 228,
+              "y": 1319,
+              "width": 170,
+              "height": 254
+            },
+            "area": 31021,
+            "anchor": "center",
+            "sizeRatio": 0.5669291338582677,
+            "referenceSize": {
+              "width": 128,
+              "height": 144
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 3
+            },
+            "placedAt": {
+              "column": 11,
+              "row": 4
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "water",
+              "impassable",
+              "lake",
+              "group_37"
+            ],
+            "renderRect": {
+              "x": 16,
+              "y": 24,
+              "width": 96,
+              "height": 144
+            }
+          },
+          {
+            "id": "grass_lily_pond",
+            "sourceId": "alpha_nature_grass",
+            "bbox": {
+              "x": 392,
+              "y": 1332,
+              "width": 201,
+              "height": 238
+            },
+            "area": 35435,
+            "anchor": "center",
+            "sizeRatio": 0.5572139303482587,
+            "referenceSize": {
+              "width": 112,
+              "height": 144
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 3
+            },
+            "placedAt": {
+              "column": 13,
+              "row": 4
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "water",
+              "impassable",
+              "lake",
+              "group_38"
+            ],
+            "renderRect": {
+              "x": 8,
+              "y": 29,
+              "width": 112,
+              "height": 133
+            }
+          },
+          {
+            "id": "grass_rocky_lake",
+            "sourceId": "alpha_nature_grass",
+            "bbox": {
+              "x": 586,
+              "y": 1321,
+              "width": 205,
+              "height": 253
+            },
+            "area": 41089,
+            "anchor": "center",
+            "sizeRatio": 0.5691699604743083,
+            "referenceSize": {
+              "width": 148,
+              "height": 144
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 3
+            },
+            "placedAt": {
+              "column": 4,
+              "row": 5
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "water",
+              "impassable",
+              "lake",
+              "group_39"
+            ],
+            "renderRect": {
+              "x": 5,
+              "y": 24,
+              "width": 117,
+              "height": 144
+            }
+          },
+          {
+            "id": "grass_wetland_pond",
+            "sourceId": "alpha_nature_grass",
+            "bbox": {
+              "x": 793,
+              "y": 1336,
+              "width": 190,
+              "height": 232
+            },
+            "area": 35491,
+            "anchor": "center",
+            "sizeRatio": 0.6206896551724138,
+            "referenceSize": {
+              "width": 124,
+              "height": 144
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 3
+            },
+            "placedAt": {
+              "column": 6,
+              "row": 5
+            },
+            "tags": [
+              "grass",
+              "summer",
+              "decorative",
+              "water",
+              "impassable",
+              "lake",
+              "group_40"
+            ],
+            "renderRect": {
+              "x": 5,
+              "y": 24,
+              "width": 118,
+              "height": 144
+            }
+          }
+        ],
+        "occupiedTiles": [
+          "0,0",
+          "1,0",
+          "0,1",
+          "1,1",
+          "2,0",
+          "3,0",
+          "2,1",
+          "3,1",
+          "4,0",
+          "5,0",
+          "4,1",
+          "5,1",
+          "6,0",
+          "7,0",
+          "6,1",
+          "7,1",
+          "8,0",
+          "9,0",
+          "8,1",
+          "9,1",
+          "10,0",
+          "10,1",
+          "11,0",
+          "11,1",
+          "12,0",
+          "13,0",
+          "12,1",
+          "13,1",
+          "14,0",
+          "15,0",
+          "14,1",
+          "15,1",
+          "0,2",
+          "1,2",
+          "2,2",
+          "1,3",
+          "2,3",
+          "3,2",
+          "3,3",
+          "4,2",
+          "5,2",
+          "4,3",
+          "5,3",
+          "6,2",
+          "6,3",
+          "7,2",
+          "8,2",
+          "7,3",
+          "8,3",
+          "9,2",
+          "10,2",
+          "11,2",
+          "12,2",
+          "13,2",
+          "14,2",
+          "15,2",
+          "0,3",
+          "9,3",
+          "10,3",
+          "11,3",
+          "12,3",
+          "13,3",
+          "14,3",
+          "15,3",
+          "0,4",
+          "1,4",
+          "0,5",
+          "1,5",
+          "2,4",
+          "3,4",
+          "2,5",
+          "3,5",
+          "4,4",
+          "5,4",
+          "6,4",
+          "7,4",
+          "8,4",
+          "9,4",
+          "10,4",
+          "9,5",
+          "10,5",
+          "9,6",
+          "10,6",
+          "11,4",
+          "12,4",
+          "11,5",
+          "12,5",
+          "11,6",
+          "12,6",
+          "13,4",
+          "14,4",
+          "13,5",
+          "14,5",
+          "13,6",
+          "14,6",
+          "4,5",
+          "5,5",
+          "4,6",
+          "5,6",
+          "4,7",
+          "5,7",
+          "6,5",
+          "7,5",
+          "6,6",
+          "7,6",
+          "6,7",
+          "7,7"
+        ]
+      }
+    }
+  },
+  "upscaledBeyondMaster": false,
+  "omittedCandidateDensities": [
+    2,
+    3
+  ],
+  "pages": [
+    {
+      "name": "dtv6_nature_grass.coarse.webp",
+      "sha256": "99cd2cc79465cee2eedbd5329fb83f0fdda03277c063784ee01c3697df502641",
+      "width": 2048,
+      "height": 100,
+      "decodedBytes": 819200,
+      "compressedBytes": 61290,
+      "tier": 0,
+      "tierName": "coarse",
+      "backingDensity": 0.5
+    },
+    {
+      "name": "dtv6_nature_grass.final.webp",
+      "sha256": "9805894d0976a0ae799f12ab51d7aae25e618b62c545e50ee2b8ca86c173d4fd",
+      "width": 2000,
+      "height": 328,
+      "decodedBytes": 2624000,
+      "compressedBytes": 161744,
+      "tier": 2,
+      "tierName": "final",
+      "backingDensity": 1
+    }
+  ],
+  "sprites": [
+    {
+      "spriteId": "dtv6_nature_grass:group_1",
+      "groupId": "group_1",
+      "savedIdentifiers": [
+        "grass_oak"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 0,
+        "y": 0,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "0,0",
+        "0,1",
+        "1,0",
+        "1,1"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_1",
+        "impassable",
+        "summer",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_grass.coarse.webp",
+          "x": 2,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_grass.final.webp",
+          "x": 2,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_grass:group_2",
+      "groupId": "group_2",
+      "savedIdentifiers": [
+        "grass_beech"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 128,
+        "y": 0,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "2,0",
+        "2,1",
+        "3,0",
+        "3,1"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_2",
+        "impassable",
+        "summer",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_grass.coarse.webp",
+          "x": 70,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_grass.final.webp",
+          "x": 134,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_grass:group_3",
+      "groupId": "group_3",
+      "savedIdentifiers": [
+        "grass_chestnut"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 256,
+        "y": 0,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "4,0",
+        "4,1",
+        "5,0",
+        "5,1"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_3",
+        "impassable",
+        "summer",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_grass.coarse.webp",
+          "x": 138,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_grass.final.webp",
+          "x": 266,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_grass:group_4",
+      "groupId": "group_4",
+      "savedIdentifiers": [
+        "grass_ash"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 384,
+        "y": 0,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "6,0",
+        "6,1",
+        "7,0",
+        "7,1"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_4",
+        "impassable",
+        "summer",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_grass.coarse.webp",
+          "x": 206,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_grass.final.webp",
+          "x": 398,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_grass:group_5",
+      "groupId": "group_5",
+      "savedIdentifiers": [
+        "grass_elm"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 512,
+        "y": 0,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "8,0",
+        "8,1",
+        "9,0",
+        "9,1"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_5",
+        "impassable",
+        "summer",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_grass.coarse.webp",
+          "x": 274,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_grass.final.webp",
+          "x": 530,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_grass:group_6",
+      "groupId": "group_6",
+      "savedIdentifiers": [
+        "grass_birch"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 640,
+        "y": 0,
+        "width": 64,
+        "height": 128
+      },
+      "tileKeys": [
+        "10,0",
+        "10,1"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_6",
+        "impassable",
+        "summer",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_grass.coarse.webp",
+          "x": 342,
+          "y": 2,
+          "width": 32,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_grass.final.webp",
+          "x": 662,
+          "y": 2,
+          "width": 64,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_grass:group_7",
+      "groupId": "group_7",
+      "savedIdentifiers": [
+        "grass_poplar"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 704,
+        "y": 0,
+        "width": 64,
+        "height": 128
+      },
+      "tileKeys": [
+        "11,0",
+        "11,1"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_7",
+        "impassable",
+        "summer",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_grass.coarse.webp",
+          "x": 378,
+          "y": 2,
+          "width": 32,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_grass.final.webp",
+          "x": 730,
+          "y": 2,
+          "width": 64,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_grass:group_8",
+      "groupId": "group_8",
+      "savedIdentifiers": [
+        "grass_maple"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 768,
+        "y": 0,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "12,0",
+        "12,1",
+        "13,0",
+        "13,1"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_8",
+        "impassable",
+        "summer",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_grass.coarse.webp",
+          "x": 414,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_grass.final.webp",
+          "x": 798,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_grass:group_9",
+      "groupId": "group_9",
+      "savedIdentifiers": [
+        "grass_willow"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 896,
+        "y": 0,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "14,0",
+        "14,1",
+        "15,0",
+        "15,1"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_9",
+        "impassable",
+        "summer",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_grass.coarse.webp",
+          "x": 482,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_grass.final.webp",
+          "x": 930,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_grass:group_10",
+      "groupId": "group_10",
+      "savedIdentifiers": [
+        "grass_young_oak"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 0,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "0,2"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_10",
+        "impassable",
+        "summer",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_grass.coarse.webp",
+          "x": 550,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_grass.final.webp",
+          "x": 1062,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_grass:group_11",
+      "groupId": "group_11",
+      "savedIdentifiers": [
+        "grass_pine"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 64,
+        "y": 128,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "1,2",
+        "1,3",
+        "2,2",
+        "2,3"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_11",
+        "impassable",
+        "summer",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_grass.coarse.webp",
+          "x": 586,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_grass.final.webp",
+          "x": 1130,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_grass:group_12",
+      "groupId": "group_12",
+      "savedIdentifiers": [
+        "grass_spruce"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 192,
+        "y": 128,
+        "width": 64,
+        "height": 128
+      },
+      "tileKeys": [
+        "3,2",
+        "3,3"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_12",
+        "impassable",
+        "summer",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_grass.coarse.webp",
+          "x": 654,
+          "y": 2,
+          "width": 32,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_grass.final.webp",
+          "x": 1262,
+          "y": 2,
+          "width": 64,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_grass:group_13",
+      "groupId": "group_13",
+      "savedIdentifiers": [
+        "grass_fir"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 256,
+        "y": 128,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "4,2",
+        "4,3",
+        "5,2",
+        "5,3"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_13",
+        "impassable",
+        "summer",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_grass.coarse.webp",
+          "x": 690,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_grass.final.webp",
+          "x": 1330,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_grass:group_14",
+      "groupId": "group_14",
+      "savedIdentifiers": [
+        "grass_larch"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 384,
+        "y": 128,
+        "width": 64,
+        "height": 128
+      },
+      "tileKeys": [
+        "6,2",
+        "6,3"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_14",
+        "impassable",
+        "summer",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_grass.coarse.webp",
+          "x": 758,
+          "y": 2,
+          "width": 32,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_grass.final.webp",
+          "x": 1462,
+          "y": 2,
+          "width": 64,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_grass:group_15",
+      "groupId": "group_15",
+      "savedIdentifiers": [
+        "grass_scots_pine"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 448,
+        "y": 128,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "7,2",
+        "7,3",
+        "8,2",
+        "8,3"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_15",
+        "impassable",
+        "summer",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_grass.coarse.webp",
+          "x": 794,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_grass.final.webp",
+          "x": 1530,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_grass:group_16",
+      "groupId": "group_16",
+      "savedIdentifiers": [
+        "grass_leafy_bush"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 576,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "9,2"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_16",
+        "impassable",
+        "summer",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_grass.coarse.webp",
+          "x": 862,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_grass.final.webp",
+          "x": 1662,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_grass:group_17",
+      "groupId": "group_17",
+      "savedIdentifiers": [
+        "grass_bramble"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 640,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "10,2"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_17",
+        "impassable",
+        "summer",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_grass.coarse.webp",
+          "x": 898,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_grass.final.webp",
+          "x": 1730,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_grass:group_18",
+      "groupId": "group_18",
+      "savedIdentifiers": [
+        "grass_hawthorn"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 704,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "11,2"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_18",
+        "impassable",
+        "summer",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_grass.coarse.webp",
+          "x": 934,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_grass.final.webp",
+          "x": 1798,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_grass:group_19",
+      "groupId": "group_19",
+      "savedIdentifiers": [
+        "grass_hazel"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 768,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "12,2"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_19",
+        "impassable",
+        "summer",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_grass.coarse.webp",
+          "x": 970,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_grass.final.webp",
+          "x": 1866,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_grass:group_20",
+      "groupId": "group_20",
+      "savedIdentifiers": [
+        "grass_gorse"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 832,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "13,2"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_20",
+        "impassable",
+        "summer",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_grass.coarse.webp",
+          "x": 1006,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_grass.final.webp",
+          "x": 1934,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_grass:group_21",
+      "groupId": "group_21",
+      "savedIdentifiers": [
+        "grass_birch_saplings"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 896,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "14,2"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_21",
+        "impassable",
+        "summer",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_grass.coarse.webp",
+          "x": 1042,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_grass.final.webp",
+          "x": 2,
+          "y": 134,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_grass:group_22",
+      "groupId": "group_22",
+      "savedIdentifiers": [
+        "grass_pine_saplings"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 960,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "15,2"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_22",
+        "impassable",
+        "summer",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_grass.coarse.webp",
+          "x": 1078,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_grass.final.webp",
+          "x": 70,
+          "y": 134,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_grass:group_23",
+      "groupId": "group_23",
+      "savedIdentifiers": [
+        "grass_ferns"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 0,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "0,3"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_23",
+        "passable",
+        "shrubs",
+        "summer"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_grass.coarse.webp",
+          "x": 1114,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_grass.final.webp",
+          "x": 138,
+          "y": 134,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_grass:group_24",
+      "groupId": "group_24",
+      "savedIdentifiers": [
+        "grass_tall_grass"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 576,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "9,3"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_24",
+        "passable",
+        "shrubs",
+        "summer"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_grass.coarse.webp",
+          "x": 1150,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_grass.final.webp",
+          "x": 206,
+          "y": 134,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_grass:group_25",
+      "groupId": "group_25",
+      "savedIdentifiers": [
+        "grass_wildflowers"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 640,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "10,3"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_25",
+        "passable",
+        "shrubs",
+        "summer"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_grass.coarse.webp",
+          "x": 1186,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_grass.final.webp",
+          "x": 274,
+          "y": 134,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_grass:group_26",
+      "groupId": "group_26",
+      "savedIdentifiers": [
+        "grass_granite"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 704,
+        "y": 192,
+        "width": 128,
+        "height": 64
+      },
+      "tileKeys": [
+        "11,3",
+        "12,3"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_26",
+        "impassable",
+        "rocks",
+        "summer"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_grass.coarse.webp",
+          "x": 1222,
+          "y": 2,
+          "width": 64,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_grass.final.webp",
+          "x": 342,
+          "y": 134,
+          "width": 128,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_grass:group_27",
+      "groupId": "group_27",
+      "savedIdentifiers": [
+        "grass_limestone"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 832,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "13,3"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_27",
+        "impassable",
+        "rocks",
+        "summer"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_grass.coarse.webp",
+          "x": 1290,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_grass.final.webp",
+          "x": 474,
+          "y": 134,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_grass:group_28",
+      "groupId": "group_28",
+      "savedIdentifiers": [
+        "grass_basalt"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 896,
+        "y": 192,
+        "width": 128,
+        "height": 64
+      },
+      "tileKeys": [
+        "14,3",
+        "15,3"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_28",
+        "impassable",
+        "rocks",
+        "summer"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_grass.coarse.webp",
+          "x": 1326,
+          "y": 2,
+          "width": 64,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_grass.final.webp",
+          "x": 542,
+          "y": 134,
+          "width": 128,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_grass:group_29",
+      "groupId": "group_29",
+      "savedIdentifiers": [
+        "grass_sandstone"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 0,
+        "y": 256,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "0,4",
+        "0,5",
+        "1,4",
+        "1,5"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_29",
+        "impassable",
+        "rocks",
+        "summer"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_grass.coarse.webp",
+          "x": 1394,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_grass.final.webp",
+          "x": 674,
+          "y": 134,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_grass:group_30",
+      "groupId": "group_30",
+      "savedIdentifiers": [
+        "grass_layered_rocks"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 128,
+        "y": 256,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "2,4",
+        "2,5",
+        "3,4",
+        "3,5"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_30",
+        "impassable",
+        "rocks",
+        "summer"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_grass.coarse.webp",
+          "x": 1462,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_grass.final.webp",
+          "x": 806,
+          "y": 134,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_grass:group_31",
+      "groupId": "group_31",
+      "savedIdentifiers": [
+        "grass_river_stones"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 256,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "4,4"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_31",
+        "passable",
+        "rocks",
+        "stones",
+        "summer"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_grass.coarse.webp",
+          "x": 1530,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_grass.final.webp",
+          "x": 938,
+          "y": 134,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_grass:group_32",
+      "groupId": "group_32",
+      "savedIdentifiers": [
+        "grass_slate_stones"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 320,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "5,4"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_32",
+        "passable",
+        "rocks",
+        "stones",
+        "summer"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_grass.coarse.webp",
+          "x": 1566,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_grass.final.webp",
+          "x": 1006,
+          "y": 134,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_grass:group_33",
+      "groupId": "group_33",
+      "savedIdentifiers": [
+        "grass_mossy_stones"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 384,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "6,4"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_33",
+        "passable",
+        "rocks",
+        "stones",
+        "summer"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_grass.coarse.webp",
+          "x": 1602,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_grass.final.webp",
+          "x": 1074,
+          "y": 134,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_grass:group_34",
+      "groupId": "group_34",
+      "savedIdentifiers": [
+        "grass_pebbles"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 448,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "7,4"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_34",
+        "passable",
+        "rocks",
+        "stones",
+        "summer"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_grass.coarse.webp",
+          "x": 1638,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_grass.final.webp",
+          "x": 1142,
+          "y": 134,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_grass:group_35",
+      "groupId": "group_35",
+      "savedIdentifiers": [
+        "grass_pale_stones"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 512,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "8,4"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_35",
+        "passable",
+        "rocks",
+        "stones",
+        "summer"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_grass.coarse.webp",
+          "x": 1674,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_grass.final.webp",
+          "x": 1210,
+          "y": 134,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_grass:group_36",
+      "groupId": "group_36",
+      "savedIdentifiers": [
+        "grass_reed_pond"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 192,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 576,
+        "y": 256,
+        "width": 128,
+        "height": 192
+      },
+      "tileKeys": [
+        "10,4",
+        "10,5",
+        "10,6",
+        "9,4",
+        "9,5",
+        "9,6"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_36",
+        "impassable",
+        "lake",
+        "summer",
+        "water"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_grass.coarse.webp",
+          "x": 1710,
+          "y": 2,
+          "width": 64,
+          "height": 96,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_grass.final.webp",
+          "x": 1278,
+          "y": 134,
+          "width": 128,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_grass:group_37",
+      "groupId": "group_37",
+      "savedIdentifiers": [
+        "grass_woodland_pond"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 192,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 704,
+        "y": 256,
+        "width": 128,
+        "height": 192
+      },
+      "tileKeys": [
+        "11,4",
+        "11,5",
+        "11,6",
+        "12,4",
+        "12,5",
+        "12,6"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_37",
+        "impassable",
+        "lake",
+        "summer",
+        "water"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_grass.coarse.webp",
+          "x": 1778,
+          "y": 2,
+          "width": 64,
+          "height": 96,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_grass.final.webp",
+          "x": 1410,
+          "y": 134,
+          "width": 128,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_grass:group_38",
+      "groupId": "group_38",
+      "savedIdentifiers": [
+        "grass_lily_pond"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 192,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 832,
+        "y": 256,
+        "width": 128,
+        "height": 192
+      },
+      "tileKeys": [
+        "13,4",
+        "13,5",
+        "13,6",
+        "14,4",
+        "14,5",
+        "14,6"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_38",
+        "impassable",
+        "lake",
+        "summer",
+        "water"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_grass.coarse.webp",
+          "x": 1846,
+          "y": 2,
+          "width": 64,
+          "height": 96,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_grass.final.webp",
+          "x": 1542,
+          "y": 134,
+          "width": 128,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_grass:group_39",
+      "groupId": "group_39",
+      "savedIdentifiers": [
+        "grass_rocky_lake"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 192,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 256,
+        "y": 320,
+        "width": 128,
+        "height": 192
+      },
+      "tileKeys": [
+        "4,5",
+        "4,6",
+        "4,7",
+        "5,5",
+        "5,6",
+        "5,7"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_39",
+        "impassable",
+        "lake",
+        "summer",
+        "water"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_grass.coarse.webp",
+          "x": 1914,
+          "y": 2,
+          "width": 64,
+          "height": 96,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_grass.final.webp",
+          "x": 1674,
+          "y": 134,
+          "width": 128,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_nature_grass:group_40",
+      "groupId": "group_40",
+      "savedIdentifiers": [
+        "grass_wetland_pond"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 192,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 384,
+        "y": 320,
+        "width": 128,
+        "height": 192
+      },
+      "tileKeys": [
+        "6,5",
+        "6,6",
+        "6,7",
+        "7,5",
+        "7,6",
+        "7,7"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_40",
+        "impassable",
+        "lake",
+        "summer",
+        "water"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_nature_grass.coarse.webp",
+          "x": 1982,
+          "y": 2,
+          "width": 64,
+          "height": 96,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_nature_grass.final.webp",
+          "x": 1806,
+          "y": 134,
+          "width": 128,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    }
+  ]
+}

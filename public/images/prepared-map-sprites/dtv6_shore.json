@@ -1,0 +1,4473 @@
+{
+  "schemaVersion": 1,
+  "name": "dtv6_shore",
+  "identity": {
+    "buildVersion": 1,
+    "atlasVersion": 1,
+    "catalogVersion": 1,
+    "pixelRulesVersion": 1,
+    "webpQuality": 85,
+    "padding": 2,
+    "sourceHash": "2475122c4605e0df0b528431cee848c66a354c246290f48bae222f89d38b21eb",
+    "metadataHash": "58fbdc2efc4d216c047eaa3bab75cef70ded3d8374e3e1f5ae3c79f551e309e3",
+    "metadataSignature": "454a0c268394c53eda0533342e174e42ff78fe6aaf069344955bbab93c40e365",
+    "selectedBackingDensities": [
+      0.5,
+      1
+    ]
+  },
+  "signature": "c8bd865ebcfe82eba5f2c21ae3f2d3160554591efadd59f0b2b170bf3a03ee19",
+  "source": {
+    "image": "images/map/sprite_sheets/dtv6_shore.webp",
+    "metadata": "images/map/sprite_sheets/dtv6_shore.json",
+    "sourceMetadata": {
+      "path": "images/map/sprite_sheets/sources/alpha_shore.webp",
+      "sha256": "45c7d66190e2c2c4198aad941e29222bc88ff49c892cfc3f0bbf295a85ea20df",
+      "width": 1536,
+      "height": 1024,
+      "detection": {
+        "transparent": true,
+        "alphaCutoff": 16,
+        "gap": 0,
+        "minArea": 1000
+      },
+      "guides": [],
+      "spriteCount": 36,
+      "packing": {
+        "scale": "per-sprite",
+        "padding": 2
+      }
+    },
+    "editorMetadata": {
+      "schemaVersion": 1,
+      "layoutVersion": 2,
+      "name": "dtv6_shore",
+      "grid": {
+        "tileSize": 64,
+        "rowHeight": 64,
+        "borderWidth": 0,
+        "cols": 16,
+        "rows": 3
+      },
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "shore",
+        "onshore",
+        "passable",
+        "universal",
+        "rocks",
+        "stones",
+        "shore_trans",
+        "impassable",
+        "offshore",
+        "snow",
+        "winter"
+      ],
+      "propLayout": [
+        {
+          "id": "universal_cattails",
+          "col": 0,
+          "row": 0,
+          "w": 1,
+          "h": 1,
+          "groupId": 1,
+          "tags": [
+            "grass",
+            "soil",
+            "sand",
+            "decorative",
+            "shore",
+            "onshore",
+            "passable",
+            "group_1"
+          ],
+          "sourceRect": {
+            "x": 40,
+            "y": 12,
+            "width": 194,
+            "height": 194
+          }
+        },
+        {
+          "id": "universal_flowering_reeds",
+          "col": 1,
+          "row": 0,
+          "w": 1,
+          "h": 1,
+          "groupId": 2,
+          "tags": [
+            "grass",
+            "soil",
+            "sand",
+            "decorative",
+            "shore",
+            "onshore",
+            "passable",
+            "group_2"
+          ],
+          "sourceRect": {
+            "x": 270,
+            "y": 10,
+            "width": 224,
+            "height": 196
+          }
+        },
+        {
+          "id": "universal_bent_reeds",
+          "col": 2,
+          "row": 0,
+          "w": 1,
+          "h": 1,
+          "groupId": 3,
+          "tags": [
+            "grass",
+            "soil",
+            "sand",
+            "decorative",
+            "shore",
+            "onshore",
+            "passable",
+            "group_3"
+          ],
+          "sourceRect": {
+            "x": 525,
+            "y": 16,
+            "width": 231,
+            "height": 187
+          }
+        },
+        {
+          "id": "universal_dense_cattails",
+          "col": 3,
+          "row": 0,
+          "w": 1,
+          "h": 1,
+          "groupId": 4,
+          "tags": [
+            "grass",
+            "soil",
+            "sand",
+            "decorative",
+            "shore",
+            "onshore",
+            "passable",
+            "group_4"
+          ],
+          "sourceRect": {
+            "x": 782,
+            "y": 17,
+            "width": 218,
+            "height": 190
+          }
+        },
+        {
+          "id": "universal_green_reeds",
+          "col": 4,
+          "row": 0,
+          "w": 1,
+          "h": 1,
+          "groupId": 5,
+          "tags": [
+            "grass",
+            "soil",
+            "sand",
+            "decorative",
+            "shore",
+            "onshore",
+            "passable",
+            "group_5"
+          ],
+          "sourceRect": {
+            "x": 1031,
+            "y": 10,
+            "width": 231,
+            "height": 198
+          }
+        },
+        {
+          "id": "universal_dry_reeds",
+          "col": 5,
+          "row": 0,
+          "w": 1,
+          "h": 1,
+          "groupId": 6,
+          "tags": [
+            "grass",
+            "soil",
+            "sand",
+            "decorative",
+            "shore",
+            "onshore",
+            "passable",
+            "group_6"
+          ],
+          "sourceRect": {
+            "x": 1290,
+            "y": 13,
+            "width": 212,
+            "height": 195
+          }
+        },
+        {
+          "id": "universal_flowering_sedge",
+          "col": 6,
+          "row": 0,
+          "w": 1,
+          "h": 1,
+          "groupId": 7,
+          "tags": [
+            "grass",
+            "soil",
+            "decorative",
+            "shore",
+            "onshore",
+            "passable",
+            "group_7"
+          ],
+          "sourceRect": {
+            "x": 39,
+            "y": 210,
+            "width": 203,
+            "height": 164
+          }
+        },
+        {
+          "id": "universal_rushes",
+          "col": 7,
+          "row": 0,
+          "w": 1,
+          "h": 1,
+          "groupId": 8,
+          "tags": [
+            "grass",
+            "soil",
+            "decorative",
+            "shore",
+            "onshore",
+            "passable",
+            "group_8"
+          ],
+          "sourceRect": {
+            "x": 274,
+            "y": 214,
+            "width": 207,
+            "height": 167
+          }
+        },
+        {
+          "id": "universal_grass_hummock",
+          "col": 8,
+          "row": 0,
+          "w": 1,
+          "h": 1,
+          "groupId": 9,
+          "tags": [
+            "grass",
+            "soil",
+            "decorative",
+            "shore",
+            "onshore",
+            "passable",
+            "group_9"
+          ],
+          "sourceRect": {
+            "x": 527,
+            "y": 210,
+            "width": 223,
+            "height": 165
+          }
+        },
+        {
+          "id": "universal_bank_rushes",
+          "col": 9,
+          "row": 0,
+          "w": 1,
+          "h": 1,
+          "groupId": 10,
+          "tags": [
+            "grass",
+            "soil",
+            "decorative",
+            "shore",
+            "onshore",
+            "passable",
+            "group_10"
+          ],
+          "sourceRect": {
+            "x": 778,
+            "y": 224,
+            "width": 222,
+            "height": 146
+          }
+        },
+        {
+          "id": "universal_broadleaf_sedge",
+          "col": 10,
+          "row": 0,
+          "w": 1,
+          "h": 1,
+          "groupId": 11,
+          "tags": [
+            "grass",
+            "soil",
+            "decorative",
+            "shore",
+            "onshore",
+            "passable",
+            "group_11"
+          ],
+          "sourceRect": {
+            "x": 1031,
+            "y": 211,
+            "width": 231,
+            "height": 168
+          }
+        },
+        {
+          "id": "universal_dry_hummock",
+          "col": 11,
+          "row": 0,
+          "w": 1,
+          "h": 1,
+          "groupId": 12,
+          "tags": [
+            "grass",
+            "soil",
+            "decorative",
+            "shore",
+            "onshore",
+            "passable",
+            "group_12"
+          ],
+          "sourceRect": {
+            "x": 1284,
+            "y": 215,
+            "width": 232,
+            "height": 167
+          }
+        },
+        {
+          "id": "universal_mossy_rocks",
+          "col": 12,
+          "row": 0,
+          "w": 1,
+          "h": 1,
+          "groupId": 13,
+          "tags": [
+            "universal",
+            "decorative",
+            "shore",
+            "onshore",
+            "passable",
+            "rocks",
+            "stones",
+            "group_13"
+          ],
+          "sourceRect": {
+            "x": 22,
+            "y": 382,
+            "width": 230,
+            "height": 151
+          }
+        },
+        {
+          "id": "universal_sandstone_pebbles",
+          "col": 13,
+          "row": 0,
+          "w": 1,
+          "h": 1,
+          "groupId": 14,
+          "tags": [
+            "universal",
+            "decorative",
+            "shore",
+            "onshore",
+            "passable",
+            "rocks",
+            "stones",
+            "group_14"
+          ],
+          "sourceRect": {
+            "x": 276,
+            "y": 388,
+            "width": 227,
+            "height": 140
+          }
+        },
+        {
+          "id": "universal_river_pebbles",
+          "col": 14,
+          "row": 0,
+          "w": 1,
+          "h": 1,
+          "groupId": 15,
+          "tags": [
+            "universal",
+            "decorative",
+            "shore",
+            "onshore",
+            "passable",
+            "rocks",
+            "stones",
+            "group_15"
+          ],
+          "sourceRect": {
+            "x": 534,
+            "y": 395,
+            "width": 204,
+            "height": 130
+          }
+        },
+        {
+          "id": "universal_slate_chips",
+          "col": 15,
+          "row": 0,
+          "w": 1,
+          "h": 1,
+          "groupId": 16,
+          "tags": [
+            "universal",
+            "decorative",
+            "shore",
+            "onshore",
+            "passable",
+            "rocks",
+            "stones",
+            "group_16"
+          ],
+          "sourceRect": {
+            "x": 781,
+            "y": 388,
+            "width": 215,
+            "height": 138
+          }
+        },
+        {
+          "id": "universal_pale_rocks",
+          "col": 0,
+          "row": 1,
+          "w": 1,
+          "h": 1,
+          "groupId": 17,
+          "tags": [
+            "universal",
+            "decorative",
+            "shore",
+            "onshore",
+            "passable",
+            "rocks",
+            "stones",
+            "group_17"
+          ],
+          "sourceRect": {
+            "x": 1031,
+            "y": 387,
+            "width": 228,
+            "height": 141
+          }
+        },
+        {
+          "id": "universal_granite_bank",
+          "col": 1,
+          "row": 1,
+          "w": 1,
+          "h": 1,
+          "groupId": 18,
+          "tags": [
+            "universal",
+            "decorative",
+            "shore",
+            "onshore",
+            "passable",
+            "rocks",
+            "stones",
+            "group_18"
+          ],
+          "sourceRect": {
+            "x": 1285,
+            "y": 393,
+            "width": 226,
+            "height": 131
+          }
+        },
+        {
+          "id": "universal_driftwood",
+          "col": 2,
+          "row": 1,
+          "w": 1,
+          "h": 1,
+          "groupId": 19,
+          "tags": [
+            "universal",
+            "decorative",
+            "shore",
+            "onshore",
+            "passable",
+            "group_19"
+          ],
+          "sourceRect": {
+            "x": 20,
+            "y": 536,
+            "width": 232,
+            "height": 151
+          }
+        },
+        {
+          "id": "universal_broken_pier",
+          "col": 3,
+          "row": 1,
+          "w": 2,
+          "h": 1,
+          "groupId": 20,
+          "tags": [
+            "universal",
+            "decorative",
+            "shore",
+            "shore_trans",
+            "passable",
+            "group_20"
+          ],
+          "sourceRect": {
+            "x": 274,
+            "y": 556,
+            "width": 221,
+            "height": 111
+          }
+        },
+        {
+          "id": "universal_jetty",
+          "col": 5,
+          "row": 1,
+          "w": 2,
+          "h": 1,
+          "groupId": 21,
+          "tags": [
+            "universal",
+            "decorative",
+            "shore",
+            "shore_trans",
+            "passable",
+            "group_21"
+          ],
+          "sourceRect": {
+            "x": 519,
+            "y": 560,
+            "width": 233,
+            "height": 111
+          }
+        },
+        {
+          "id": "universal_fishing_hut",
+          "col": 7,
+          "row": 1,
+          "w": 2,
+          "h": 2,
+          "groupId": 22,
+          "tags": [
+            "universal",
+            "decorative",
+            "shore",
+            "shore_trans",
+            "impassable",
+            "group_22"
+          ],
+          "sourceRect": {
+            "x": 770,
+            "y": 544,
+            "width": 235,
+            "height": 139
+          }
+        },
+        {
+          "id": "universal_boathouse",
+          "col": 9,
+          "row": 1,
+          "w": 2,
+          "h": 2,
+          "groupId": 23,
+          "tags": [
+            "universal",
+            "decorative",
+            "shore",
+            "shore_trans",
+            "impassable",
+            "group_23"
+          ],
+          "sourceRect": {
+            "x": 1024,
+            "y": 541,
+            "width": 246,
+            "height": 134
+          }
+        },
+        {
+          "id": "universal_bank_planks",
+          "col": 11,
+          "row": 1,
+          "w": 1,
+          "h": 1,
+          "groupId": 24,
+          "tags": [
+            "universal",
+            "decorative",
+            "shore",
+            "onshore",
+            "passable",
+            "group_24"
+          ],
+          "sourceRect": {
+            "x": 1293,
+            "y": 550,
+            "width": 224,
+            "height": 122
+          }
+        },
+        {
+          "id": "universal_lily_pads",
+          "col": 12,
+          "row": 1,
+          "w": 1,
+          "h": 1,
+          "groupId": 25,
+          "tags": [
+            "grass",
+            "soil",
+            "sand",
+            "decorative",
+            "shore",
+            "offshore",
+            "passable",
+            "group_25"
+          ],
+          "sourceRect": {
+            "x": 27,
+            "y": 683,
+            "width": 194,
+            "height": 140
+          }
+        },
+        {
+          "id": "universal_water_lilies",
+          "col": 13,
+          "row": 1,
+          "w": 1,
+          "h": 1,
+          "groupId": 26,
+          "tags": [
+            "grass",
+            "soil",
+            "sand",
+            "decorative",
+            "shore",
+            "offshore",
+            "passable",
+            "group_26"
+          ],
+          "sourceRect": {
+            "x": 264,
+            "y": 685,
+            "width": 223,
+            "height": 147
+          }
+        },
+        {
+          "id": "universal_pond_leaves",
+          "col": 14,
+          "row": 1,
+          "w": 1,
+          "h": 1,
+          "groupId": 27,
+          "tags": [
+            "grass",
+            "soil",
+            "sand",
+            "decorative",
+            "shore",
+            "offshore",
+            "passable",
+            "group_27"
+          ],
+          "sourceRect": {
+            "x": 518,
+            "y": 685,
+            "width": 186,
+            "height": 147
+          }
+        },
+        {
+          "id": "universal_floating_log",
+          "col": 15,
+          "row": 1,
+          "w": 1,
+          "h": 1,
+          "groupId": 28,
+          "tags": [
+            "universal",
+            "decorative",
+            "shore",
+            "offshore",
+            "passable",
+            "group_28"
+          ],
+          "sourceRect": {
+            "x": 748,
+            "y": 719,
+            "width": 252,
+            "height": 98
+          }
+        },
+        {
+          "id": "universal_rowing_boat",
+          "col": 0,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 29,
+          "tags": [
+            "universal",
+            "decorative",
+            "shore",
+            "offshore",
+            "passable",
+            "group_29"
+          ],
+          "sourceRect": {
+            "x": 1028,
+            "y": 694,
+            "width": 220,
+            "height": 129
+          }
+        },
+        {
+          "id": "universal_skiff",
+          "col": 1,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 30,
+          "tags": [
+            "universal",
+            "decorative",
+            "shore",
+            "offshore",
+            "passable",
+            "group_30"
+          ],
+          "sourceRect": {
+            "x": 1296,
+            "y": 715,
+            "width": 204,
+            "height": 103
+          }
+        },
+        {
+          "id": "universal_weathered_stump",
+          "col": 2,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 31,
+          "tags": [
+            "universal",
+            "decorative",
+            "shore",
+            "onshore",
+            "passable",
+            "group_31"
+          ],
+          "sourceRect": {
+            "x": 29,
+            "y": 822,
+            "width": 206,
+            "height": 187
+          }
+        },
+        {
+          "id": "universal_snowy_reeds",
+          "col": 3,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 32,
+          "tags": [
+            "snow",
+            "decorative",
+            "shore",
+            "onshore",
+            "passable",
+            "winter",
+            "group_32"
+          ],
+          "sourceRect": {
+            "x": 266,
+            "y": 836,
+            "width": 215,
+            "height": 170
+          }
+        },
+        {
+          "id": "universal_snowy_rocks",
+          "col": 4,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 33,
+          "tags": [
+            "snow",
+            "decorative",
+            "shore",
+            "onshore",
+            "passable",
+            "rocks",
+            "stones",
+            "winter",
+            "group_33"
+          ],
+          "sourceRect": {
+            "x": 501,
+            "y": 839,
+            "width": 250,
+            "height": 168
+          }
+        },
+        {
+          "id": "universal_icy_driftwood",
+          "col": 5,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 34,
+          "tags": [
+            "snow",
+            "decorative",
+            "shore",
+            "onshore",
+            "passable",
+            "winter",
+            "group_34"
+          ],
+          "sourceRect": {
+            "x": 765,
+            "y": 833,
+            "width": 256,
+            "height": 175
+          }
+        },
+        {
+          "id": "universal_snowy_grass",
+          "col": 6,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 35,
+          "tags": [
+            "snow",
+            "decorative",
+            "shore",
+            "onshore",
+            "passable",
+            "winter",
+            "group_35"
+          ],
+          "sourceRect": {
+            "x": 1035,
+            "y": 840,
+            "width": 228,
+            "height": 164
+          }
+        },
+        {
+          "id": "universal_ice_rubble",
+          "col": 11,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 36,
+          "tags": [
+            "snow",
+            "decorative",
+            "shore",
+            "onshore",
+            "passable",
+            "rocks",
+            "stones",
+            "winter",
+            "group_36"
+          ],
+          "sourceRect": {
+            "x": 1285,
+            "y": 850,
+            "width": 232,
+            "height": 149
+          }
+        }
+      ],
+      "extension": {
+        "imports": [
+          {
+            "id": "universal_cattails",
+            "sourceId": "alpha_shore",
+            "bbox": {
+              "x": 40,
+              "y": 12,
+              "width": 194,
+              "height": 194
+            },
+            "area": 21049,
+            "anchor": "center",
+            "sizeRatio": 0.18556701030927836,
+            "referenceSize": {
+              "width": 36,
+              "height": 56
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 0,
+              "row": 0
+            },
+            "tags": [
+              "grass",
+              "soil",
+              "sand",
+              "decorative",
+              "shore",
+              "onshore",
+              "passable",
+              "group_1"
+            ],
+            "renderRect": {
+              "x": 14,
+              "y": 14,
+              "width": 36,
+              "height": 36
+            }
+          },
+          {
+            "id": "universal_flowering_reeds",
+            "sourceId": "alpha_shore",
+            "bbox": {
+              "x": 270,
+              "y": 10,
+              "width": 224,
+              "height": 196
+            },
+            "area": 30718,
+            "anchor": "center",
+            "sizeRatio": 0.17857142857142858,
+            "referenceSize": {
+              "width": 40,
+              "height": 56
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 1,
+              "row": 0
+            },
+            "tags": [
+              "grass",
+              "soil",
+              "sand",
+              "decorative",
+              "shore",
+              "onshore",
+              "passable",
+              "group_2"
+            ],
+            "renderRect": {
+              "x": 12,
+              "y": 14,
+              "width": 40,
+              "height": 35
+            }
+          },
+          {
+            "id": "universal_bent_reeds",
+            "sourceId": "alpha_shore",
+            "bbox": {
+              "x": 525,
+              "y": 16,
+              "width": 231,
+              "height": 187
+            },
+            "area": 27248,
+            "anchor": "center",
+            "sizeRatio": 0.19047619047619047,
+            "referenceSize": {
+              "width": 44,
+              "height": 56
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 2,
+              "row": 0
+            },
+            "tags": [
+              "grass",
+              "soil",
+              "sand",
+              "decorative",
+              "shore",
+              "onshore",
+              "passable",
+              "group_3"
+            ],
+            "renderRect": {
+              "x": 10,
+              "y": 14,
+              "width": 44,
+              "height": 36
+            }
+          },
+          {
+            "id": "universal_dense_cattails",
+            "sourceId": "alpha_shore",
+            "bbox": {
+              "x": 782,
+              "y": 17,
+              "width": 218,
+              "height": 190
+            },
+            "area": 26850,
+            "anchor": "center",
+            "sizeRatio": 0.1834862385321101,
+            "referenceSize": {
+              "width": 40,
+              "height": 56
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 3,
+              "row": 0
+            },
+            "tags": [
+              "grass",
+              "soil",
+              "sand",
+              "decorative",
+              "shore",
+              "onshore",
+              "passable",
+              "group_4"
+            ],
+            "renderRect": {
+              "x": 12,
+              "y": 14,
+              "width": 40,
+              "height": 35
+            }
+          },
+          {
+            "id": "universal_green_reeds",
+            "sourceId": "alpha_shore",
+            "bbox": {
+              "x": 1031,
+              "y": 10,
+              "width": 231,
+              "height": 198
+            },
+            "area": 30435,
+            "anchor": "center",
+            "sizeRatio": 0.15584415584415584,
+            "referenceSize": {
+              "width": 36,
+              "height": 56
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 4,
+              "row": 0
+            },
+            "tags": [
+              "grass",
+              "soil",
+              "sand",
+              "decorative",
+              "shore",
+              "onshore",
+              "passable",
+              "group_5"
+            ],
+            "renderRect": {
+              "x": 14,
+              "y": 16,
+              "width": 36,
+              "height": 31
+            }
+          },
+          {
+            "id": "universal_dry_reeds",
+            "sourceId": "alpha_shore",
+            "bbox": {
+              "x": 1290,
+              "y": 13,
+              "width": 212,
+              "height": 195
+            },
+            "area": 26240,
+            "anchor": "center",
+            "sizeRatio": 0.16981132075471697,
+            "referenceSize": {
+              "width": 36,
+              "height": 56
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 5,
+              "row": 0
+            },
+            "tags": [
+              "grass",
+              "soil",
+              "sand",
+              "decorative",
+              "shore",
+              "onshore",
+              "passable",
+              "group_6"
+            ],
+            "renderRect": {
+              "x": 14,
+              "y": 15,
+              "width": 36,
+              "height": 33
+            }
+          },
+          {
+            "id": "universal_flowering_sedge",
+            "sourceId": "alpha_shore",
+            "bbox": {
+              "x": 39,
+              "y": 210,
+              "width": 203,
+              "height": 164
+            },
+            "area": 23920,
+            "anchor": "center",
+            "sizeRatio": 0.17733990147783252,
+            "referenceSize": {
+              "width": 36,
+              "height": 56
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 6,
+              "row": 0
+            },
+            "tags": [
+              "grass",
+              "soil",
+              "decorative",
+              "shore",
+              "onshore",
+              "passable",
+              "group_7"
+            ],
+            "renderRect": {
+              "x": 14,
+              "y": 17,
+              "width": 36,
+              "height": 29
+            }
+          },
+          {
+            "id": "universal_rushes",
+            "sourceId": "alpha_shore",
+            "bbox": {
+              "x": 274,
+              "y": 214,
+              "width": 207,
+              "height": 167
+            },
+            "area": 22371,
+            "anchor": "center",
+            "sizeRatio": 0.17391304347826086,
+            "referenceSize": {
+              "width": 36,
+              "height": 56
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 7,
+              "row": 0
+            },
+            "tags": [
+              "grass",
+              "soil",
+              "decorative",
+              "shore",
+              "onshore",
+              "passable",
+              "group_8"
+            ],
+            "renderRect": {
+              "x": 14,
+              "y": 17,
+              "width": 36,
+              "height": 29
+            }
+          },
+          {
+            "id": "universal_grass_hummock",
+            "sourceId": "alpha_shore",
+            "bbox": {
+              "x": 527,
+              "y": 210,
+              "width": 223,
+              "height": 165
+            },
+            "area": 27314,
+            "anchor": "center",
+            "sizeRatio": 0.17937219730941703,
+            "referenceSize": {
+              "width": 40,
+              "height": 56
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 8,
+              "row": 0
+            },
+            "tags": [
+              "grass",
+              "soil",
+              "decorative",
+              "shore",
+              "onshore",
+              "passable",
+              "group_9"
+            ],
+            "renderRect": {
+              "x": 12,
+              "y": 17,
+              "width": 40,
+              "height": 30
+            }
+          },
+          {
+            "id": "universal_bank_rushes",
+            "sourceId": "alpha_shore",
+            "bbox": {
+              "x": 778,
+              "y": 224,
+              "width": 222,
+              "height": 146
+            },
+            "area": 22971,
+            "anchor": "center",
+            "sizeRatio": 0.18018018018018017,
+            "referenceSize": {
+              "width": 40,
+              "height": 56
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 9,
+              "row": 0
+            },
+            "tags": [
+              "grass",
+              "soil",
+              "decorative",
+              "shore",
+              "onshore",
+              "passable",
+              "group_10"
+            ],
+            "renderRect": {
+              "x": 12,
+              "y": 19,
+              "width": 40,
+              "height": 26
+            }
+          },
+          {
+            "id": "universal_broadleaf_sedge",
+            "sourceId": "alpha_shore",
+            "bbox": {
+              "x": 1031,
+              "y": 211,
+              "width": 231,
+              "height": 168
+            },
+            "area": 28342,
+            "anchor": "center",
+            "sizeRatio": 0.17316017316017315,
+            "referenceSize": {
+              "width": 40,
+              "height": 56
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 10,
+              "row": 0
+            },
+            "tags": [
+              "grass",
+              "soil",
+              "decorative",
+              "shore",
+              "onshore",
+              "passable",
+              "group_11"
+            ],
+            "renderRect": {
+              "x": 12,
+              "y": 17,
+              "width": 40,
+              "height": 29
+            }
+          },
+          {
+            "id": "universal_dry_hummock",
+            "sourceId": "alpha_shore",
+            "bbox": {
+              "x": 1284,
+              "y": 215,
+              "width": 232,
+              "height": 167
+            },
+            "area": 25289,
+            "anchor": "center",
+            "sizeRatio": 0.15517241379310345,
+            "referenceSize": {
+              "width": 36,
+              "height": 56
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 11,
+              "row": 0
+            },
+            "tags": [
+              "grass",
+              "soil",
+              "decorative",
+              "shore",
+              "onshore",
+              "passable",
+              "group_12"
+            ],
+            "renderRect": {
+              "x": 14,
+              "y": 19,
+              "width": 36,
+              "height": 26
+            }
+          },
+          {
+            "id": "universal_mossy_rocks",
+            "sourceId": "alpha_shore",
+            "bbox": {
+              "x": 22,
+              "y": 382,
+              "width": 230,
+              "height": 151
+            },
+            "area": 25073,
+            "anchor": "center",
+            "sizeRatio": 0.24347826086956523,
+            "referenceSize": {
+              "width": 56,
+              "height": 56
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 12,
+              "row": 0
+            },
+            "tags": [
+              "universal",
+              "decorative",
+              "shore",
+              "onshore",
+              "passable",
+              "rocks",
+              "stones",
+              "group_13"
+            ],
+            "renderRect": {
+              "x": 4,
+              "y": 13,
+              "width": 56,
+              "height": 37
+            }
+          },
+          {
+            "id": "universal_sandstone_pebbles",
+            "sourceId": "alpha_shore",
+            "bbox": {
+              "x": 276,
+              "y": 388,
+              "width": 227,
+              "height": 140
+            },
+            "area": 20750,
+            "anchor": "center",
+            "sizeRatio": 0.21145374449339208,
+            "referenceSize": {
+              "width": 48,
+              "height": 56
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 13,
+              "row": 0
+            },
+            "tags": [
+              "universal",
+              "decorative",
+              "shore",
+              "onshore",
+              "passable",
+              "rocks",
+              "stones",
+              "group_14"
+            ],
+            "renderRect": {
+              "x": 8,
+              "y": 17,
+              "width": 48,
+              "height": 30
+            }
+          },
+          {
+            "id": "universal_river_pebbles",
+            "sourceId": "alpha_shore",
+            "bbox": {
+              "x": 534,
+              "y": 395,
+              "width": 204,
+              "height": 130
+            },
+            "area": 17358,
+            "anchor": "center",
+            "sizeRatio": 0.21568627450980393,
+            "referenceSize": {
+              "width": 44,
+              "height": 56
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 14,
+              "row": 0
+            },
+            "tags": [
+              "universal",
+              "decorative",
+              "shore",
+              "onshore",
+              "passable",
+              "rocks",
+              "stones",
+              "group_15"
+            ],
+            "renderRect": {
+              "x": 10,
+              "y": 18,
+              "width": 44,
+              "height": 28
+            }
+          },
+          {
+            "id": "universal_slate_chips",
+            "sourceId": "alpha_shore",
+            "bbox": {
+              "x": 781,
+              "y": 388,
+              "width": 215,
+              "height": 138
+            },
+            "area": 21544,
+            "anchor": "center",
+            "sizeRatio": 0.22325581395348837,
+            "referenceSize": {
+              "width": 48,
+              "height": 56
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 15,
+              "row": 0
+            },
+            "tags": [
+              "universal",
+              "decorative",
+              "shore",
+              "onshore",
+              "passable",
+              "rocks",
+              "stones",
+              "group_16"
+            ],
+            "renderRect": {
+              "x": 8,
+              "y": 16,
+              "width": 48,
+              "height": 31
+            }
+          },
+          {
+            "id": "universal_pale_rocks",
+            "sourceId": "alpha_shore",
+            "bbox": {
+              "x": 1031,
+              "y": 387,
+              "width": 228,
+              "height": 141
+            },
+            "area": 22081,
+            "anchor": "center",
+            "sizeRatio": 0.22807017543859648,
+            "referenceSize": {
+              "width": 52,
+              "height": 56
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 0,
+              "row": 1
+            },
+            "tags": [
+              "universal",
+              "decorative",
+              "shore",
+              "onshore",
+              "passable",
+              "rocks",
+              "stones",
+              "group_17"
+            ],
+            "renderRect": {
+              "x": 6,
+              "y": 16,
+              "width": 52,
+              "height": 32
+            }
+          },
+          {
+            "id": "universal_granite_bank",
+            "sourceId": "alpha_shore",
+            "bbox": {
+              "x": 1285,
+              "y": 393,
+              "width": 226,
+              "height": 131
+            },
+            "area": 20922,
+            "anchor": "center",
+            "sizeRatio": 0.24778761061946902,
+            "referenceSize": {
+              "width": 56,
+              "height": 56
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 1,
+              "row": 1
+            },
+            "tags": [
+              "universal",
+              "decorative",
+              "shore",
+              "onshore",
+              "passable",
+              "rocks",
+              "stones",
+              "group_18"
+            ],
+            "renderRect": {
+              "x": 4,
+              "y": 16,
+              "width": 56,
+              "height": 32
+            }
+          },
+          {
+            "id": "universal_driftwood",
+            "sourceId": "alpha_shore",
+            "bbox": {
+              "x": 20,
+              "y": 536,
+              "width": 232,
+              "height": 151
+            },
+            "area": 15006,
+            "anchor": "center",
+            "sizeRatio": 0.25862068965517243,
+            "referenceSize": {
+              "width": 60,
+              "height": 56
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 2,
+              "row": 1
+            },
+            "tags": [
+              "universal",
+              "decorative",
+              "shore",
+              "onshore",
+              "passable",
+              "group_19"
+            ],
+            "renderRect": {
+              "x": 2,
+              "y": 12,
+              "width": 60,
+              "height": 39
+            }
+          },
+          {
+            "id": "universal_broken_pier",
+            "sourceId": "alpha_shore",
+            "bbox": {
+              "x": 274,
+              "y": 556,
+              "width": 221,
+              "height": 111
+            },
+            "area": 12609,
+            "anchor": "center",
+            "sizeRatio": 0.5045045045045045,
+            "referenceSize": {
+              "width": 116,
+              "height": 56
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 3,
+              "row": 1
+            },
+            "tags": [
+              "universal",
+              "decorative",
+              "shore",
+              "shore_trans",
+              "passable",
+              "group_20"
+            ],
+            "renderRect": {
+              "x": 8,
+              "y": 4,
+              "width": 111,
+              "height": 56
+            }
+          },
+          {
+            "id": "universal_jetty",
+            "sourceId": "alpha_shore",
+            "bbox": {
+              "x": 519,
+              "y": 560,
+              "width": 233,
+              "height": 111
+            },
+            "area": 18052,
+            "anchor": "center",
+            "sizeRatio": 0.5045045045045045,
+            "referenceSize": {
+              "width": 120,
+              "height": 56
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 5,
+              "row": 1
+            },
+            "tags": [
+              "universal",
+              "decorative",
+              "shore",
+              "shore_trans",
+              "passable",
+              "group_21"
+            ],
+            "renderRect": {
+              "x": 5,
+              "y": 4,
+              "width": 118,
+              "height": 56
+            }
+          },
+          {
+            "id": "universal_fishing_hut",
+            "sourceId": "alpha_shore",
+            "bbox": {
+              "x": 770,
+              "y": 544,
+              "width": 235,
+              "height": 139
+            },
+            "area": 21236,
+            "anchor": "center",
+            "sizeRatio": 0.5106382978723404,
+            "referenceSize": {
+              "width": 120,
+              "height": 88
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 7,
+              "row": 1
+            },
+            "tags": [
+              "universal",
+              "decorative",
+              "shore",
+              "shore_trans",
+              "impassable",
+              "group_22"
+            ],
+            "renderRect": {
+              "x": 4,
+              "y": 28,
+              "width": 120,
+              "height": 71
+            }
+          },
+          {
+            "id": "universal_boathouse",
+            "sourceId": "alpha_shore",
+            "bbox": {
+              "x": 1024,
+              "y": 541,
+              "width": 246,
+              "height": 134
+            },
+            "area": 22433,
+            "anchor": "center",
+            "sizeRatio": 0.4878048780487805,
+            "referenceSize": {
+              "width": 120,
+              "height": 88
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 9,
+              "row": 1
+            },
+            "tags": [
+              "universal",
+              "decorative",
+              "shore",
+              "shore_trans",
+              "impassable",
+              "group_23"
+            ],
+            "renderRect": {
+              "x": 4,
+              "y": 31,
+              "width": 120,
+              "height": 65
+            }
+          },
+          {
+            "id": "universal_bank_planks",
+            "sourceId": "alpha_shore",
+            "bbox": {
+              "x": 1293,
+              "y": 550,
+              "width": 224,
+              "height": 122
+            },
+            "area": 19601,
+            "anchor": "center",
+            "sizeRatio": 0.25,
+            "referenceSize": {
+              "width": 56,
+              "height": 56
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 11,
+              "row": 1
+            },
+            "tags": [
+              "universal",
+              "decorative",
+              "shore",
+              "onshore",
+              "passable",
+              "group_24"
+            ],
+            "renderRect": {
+              "x": 4,
+              "y": 16,
+              "width": 56,
+              "height": 31
+            }
+          },
+          {
+            "id": "universal_lily_pads",
+            "sourceId": "alpha_shore",
+            "bbox": {
+              "x": 27,
+              "y": 683,
+              "width": 194,
+              "height": 140
+            },
+            "area": 18238,
+            "anchor": "center",
+            "sizeRatio": 0.20618556701030927,
+            "referenceSize": {
+              "width": 40,
+              "height": 56
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 12,
+              "row": 1
+            },
+            "tags": [
+              "grass",
+              "soil",
+              "sand",
+              "decorative",
+              "shore",
+              "offshore",
+              "passable",
+              "group_25"
+            ],
+            "renderRect": {
+              "x": 12,
+              "y": 17,
+              "width": 40,
+              "height": 29
+            }
+          },
+          {
+            "id": "universal_water_lilies",
+            "sourceId": "alpha_shore",
+            "bbox": {
+              "x": 264,
+              "y": 685,
+              "width": 223,
+              "height": 147
+            },
+            "area": 21639,
+            "anchor": "center",
+            "sizeRatio": 0.19730941704035873,
+            "referenceSize": {
+              "width": 44,
+              "height": 56
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 13,
+              "row": 1
+            },
+            "tags": [
+              "grass",
+              "soil",
+              "sand",
+              "decorative",
+              "shore",
+              "offshore",
+              "passable",
+              "group_26"
+            ],
+            "renderRect": {
+              "x": 10,
+              "y": 17,
+              "width": 44,
+              "height": 29
+            }
+          },
+          {
+            "id": "universal_pond_leaves",
+            "sourceId": "alpha_shore",
+            "bbox": {
+              "x": 518,
+              "y": 685,
+              "width": 186,
+              "height": 147
+            },
+            "area": 18976,
+            "anchor": "center",
+            "sizeRatio": 0.21505376344086022,
+            "referenceSize": {
+              "width": 40,
+              "height": 56
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 14,
+              "row": 1
+            },
+            "tags": [
+              "grass",
+              "soil",
+              "sand",
+              "decorative",
+              "shore",
+              "offshore",
+              "passable",
+              "group_27"
+            ],
+            "renderRect": {
+              "x": 12,
+              "y": 16,
+              "width": 40,
+              "height": 32
+            }
+          },
+          {
+            "id": "universal_floating_log",
+            "sourceId": "alpha_shore",
+            "bbox": {
+              "x": 748,
+              "y": 719,
+              "width": 252,
+              "height": 98
+            },
+            "area": 12450,
+            "anchor": "center",
+            "sizeRatio": 0.2222222222222222,
+            "referenceSize": {
+              "width": 56,
+              "height": 56
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 15,
+              "row": 1
+            },
+            "tags": [
+              "universal",
+              "decorative",
+              "shore",
+              "offshore",
+              "passable",
+              "group_28"
+            ],
+            "renderRect": {
+              "x": 4,
+              "y": 21,
+              "width": 56,
+              "height": 22
+            }
+          },
+          {
+            "id": "universal_rowing_boat",
+            "sourceId": "alpha_shore",
+            "bbox": {
+              "x": 1028,
+              "y": 694,
+              "width": 220,
+              "height": 129
+            },
+            "area": 17950,
+            "anchor": "center",
+            "sizeRatio": 0.2545454545454545,
+            "referenceSize": {
+              "width": 56,
+              "height": 56
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 0,
+              "row": 2
+            },
+            "tags": [
+              "universal",
+              "decorative",
+              "shore",
+              "offshore",
+              "passable",
+              "group_29"
+            ],
+            "renderRect": {
+              "x": 4,
+              "y": 15,
+              "width": 56,
+              "height": 33
+            }
+          },
+          {
+            "id": "universal_skiff",
+            "sourceId": "alpha_shore",
+            "bbox": {
+              "x": 1296,
+              "y": 715,
+              "width": 204,
+              "height": 103
+            },
+            "area": 14267,
+            "anchor": "center",
+            "sizeRatio": 0.2549019607843137,
+            "referenceSize": {
+              "width": 52,
+              "height": 56
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 1,
+              "row": 2
+            },
+            "tags": [
+              "universal",
+              "decorative",
+              "shore",
+              "offshore",
+              "passable",
+              "group_30"
+            ],
+            "renderRect": {
+              "x": 6,
+              "y": 19,
+              "width": 52,
+              "height": 26
+            }
+          },
+          {
+            "id": "universal_weathered_stump",
+            "sourceId": "alpha_shore",
+            "bbox": {
+              "x": 29,
+              "y": 822,
+              "width": 206,
+              "height": 187
+            },
+            "area": 16213,
+            "anchor": "center",
+            "sizeRatio": 0.17475728155339806,
+            "referenceSize": {
+              "width": 36,
+              "height": 56
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 2,
+              "row": 2
+            },
+            "tags": [
+              "universal",
+              "decorative",
+              "shore",
+              "onshore",
+              "passable",
+              "group_31"
+            ],
+            "renderRect": {
+              "x": 14,
+              "y": 15,
+              "width": 36,
+              "height": 33
+            }
+          },
+          {
+            "id": "universal_snowy_reeds",
+            "sourceId": "alpha_shore",
+            "bbox": {
+              "x": 266,
+              "y": 836,
+              "width": 215,
+              "height": 170
+            },
+            "area": 25204,
+            "anchor": "center",
+            "sizeRatio": 0.18604651162790697,
+            "referenceSize": {
+              "width": 40,
+              "height": 56
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 3,
+              "row": 2
+            },
+            "tags": [
+              "snow",
+              "decorative",
+              "shore",
+              "onshore",
+              "passable",
+              "winter",
+              "group_32"
+            ],
+            "renderRect": {
+              "x": 12,
+              "y": 16,
+              "width": 40,
+              "height": 32
+            }
+          },
+          {
+            "id": "universal_snowy_rocks",
+            "sourceId": "alpha_shore",
+            "bbox": {
+              "x": 501,
+              "y": 839,
+              "width": 250,
+              "height": 168
+            },
+            "area": 28274,
+            "anchor": "center",
+            "sizeRatio": 0.208,
+            "referenceSize": {
+              "width": 52,
+              "height": 56
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 4,
+              "row": 2
+            },
+            "tags": [
+              "snow",
+              "decorative",
+              "shore",
+              "onshore",
+              "passable",
+              "rocks",
+              "stones",
+              "winter",
+              "group_33"
+            ],
+            "renderRect": {
+              "x": 6,
+              "y": 14,
+              "width": 52,
+              "height": 35
+            }
+          },
+          {
+            "id": "universal_icy_driftwood",
+            "sourceId": "alpha_shore",
+            "bbox": {
+              "x": 765,
+              "y": 833,
+              "width": 256,
+              "height": 175
+            },
+            "area": 19496,
+            "anchor": "center",
+            "sizeRatio": 0.21875,
+            "referenceSize": {
+              "width": 56,
+              "height": 56
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 5,
+              "row": 2
+            },
+            "tags": [
+              "snow",
+              "decorative",
+              "shore",
+              "onshore",
+              "passable",
+              "winter",
+              "group_34"
+            ],
+            "renderRect": {
+              "x": 4,
+              "y": 13,
+              "width": 56,
+              "height": 38
+            }
+          },
+          {
+            "id": "universal_snowy_grass",
+            "sourceId": "alpha_shore",
+            "bbox": {
+              "x": 1035,
+              "y": 840,
+              "width": 228,
+              "height": 164
+            },
+            "area": 24057,
+            "anchor": "center",
+            "sizeRatio": 0.17543859649122806,
+            "referenceSize": {
+              "width": 40,
+              "height": 56
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 6,
+              "row": 2
+            },
+            "tags": [
+              "snow",
+              "decorative",
+              "shore",
+              "onshore",
+              "passable",
+              "winter",
+              "group_35"
+            ],
+            "renderRect": {
+              "x": 12,
+              "y": 17,
+              "width": 40,
+              "height": 29
+            }
+          },
+          {
+            "id": "universal_ice_rubble",
+            "sourceId": "alpha_shore",
+            "bbox": {
+              "x": 1285,
+              "y": 850,
+              "width": 232,
+              "height": 149
+            },
+            "area": 22631,
+            "anchor": "center",
+            "sizeRatio": 0.20689655172413793,
+            "referenceSize": {
+              "width": 48,
+              "height": 56
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 11,
+              "row": 2
+            },
+            "tags": [
+              "snow",
+              "decorative",
+              "shore",
+              "onshore",
+              "passable",
+              "rocks",
+              "stones",
+              "winter",
+              "group_36"
+            ],
+            "renderRect": {
+              "x": 8,
+              "y": 16,
+              "width": 48,
+              "height": 31
+            }
+          }
+        ],
+        "occupiedTiles": [
+          "0,0",
+          "1,0",
+          "2,0",
+          "3,0",
+          "4,0",
+          "5,0",
+          "6,0",
+          "7,0",
+          "8,0",
+          "9,0",
+          "10,0",
+          "11,0",
+          "12,0",
+          "13,0",
+          "14,0",
+          "15,0",
+          "0,1",
+          "1,1",
+          "2,1",
+          "3,1",
+          "4,1",
+          "5,1",
+          "6,1",
+          "7,1",
+          "8,1",
+          "7,2",
+          "8,2",
+          "9,1",
+          "10,1",
+          "9,2",
+          "10,2",
+          "11,1",
+          "12,1",
+          "13,1",
+          "14,1",
+          "15,1",
+          "0,2",
+          "1,2",
+          "2,2",
+          "3,2",
+          "4,2",
+          "5,2",
+          "6,2",
+          "11,2"
+        ]
+      }
+    }
+  },
+  "upscaledBeyondMaster": false,
+  "omittedCandidateDensities": [
+    2,
+    3
+  ],
+  "pages": [
+    {
+      "name": "dtv6_shore.coarse.webp",
+      "sha256": "cb220e485d192eeb579e9e534bd5e23cf44b40ce30a86136f63cceb6ea124ba7",
+      "width": 1424,
+      "height": 68,
+      "decodedBytes": 387328,
+      "compressedBytes": 28758,
+      "tier": 0,
+      "tierName": "coarse",
+      "backingDensity": 0.5
+    },
+    {
+      "name": "dtv6_shore.final.webp",
+      "sha256": "339135adf7adc4a6881ef453053b9756b3a04dd4120a5b58de387ccfd9c62508",
+      "width": 2024,
+      "height": 200,
+      "decodedBytes": 1619200,
+      "compressedBytes": 72328,
+      "tier": 2,
+      "tierName": "final",
+      "backingDensity": 1
+    }
+  ],
+  "sprites": [
+    {
+      "spriteId": "dtv6_shore:group_1",
+      "groupId": "group_1",
+      "savedIdentifiers": [
+        "universal_cattails"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "0,0"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_1",
+        "onshore",
+        "passable",
+        "sand",
+        "shore",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_shore.coarse.webp",
+          "x": 2,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_shore.final.webp",
+          "x": 2,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_shore:group_2",
+      "groupId": "group_2",
+      "savedIdentifiers": [
+        "universal_flowering_reeds"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 64,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "1,0"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_2",
+        "onshore",
+        "passable",
+        "sand",
+        "shore",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_shore.coarse.webp",
+          "x": 38,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_shore.final.webp",
+          "x": 70,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_shore:group_3",
+      "groupId": "group_3",
+      "savedIdentifiers": [
+        "universal_bent_reeds"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 128,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "2,0"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_3",
+        "onshore",
+        "passable",
+        "sand",
+        "shore",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_shore.coarse.webp",
+          "x": 74,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_shore.final.webp",
+          "x": 138,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_shore:group_4",
+      "groupId": "group_4",
+      "savedIdentifiers": [
+        "universal_dense_cattails"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 192,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "3,0"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_4",
+        "onshore",
+        "passable",
+        "sand",
+        "shore",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_shore.coarse.webp",
+          "x": 110,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_shore.final.webp",
+          "x": 206,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_shore:group_5",
+      "groupId": "group_5",
+      "savedIdentifiers": [
+        "universal_green_reeds"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 256,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "4,0"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_5",
+        "onshore",
+        "passable",
+        "sand",
+        "shore",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_shore.coarse.webp",
+          "x": 146,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_shore.final.webp",
+          "x": 274,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_shore:group_6",
+      "groupId": "group_6",
+      "savedIdentifiers": [
+        "universal_dry_reeds"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 320,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "5,0"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_6",
+        "onshore",
+        "passable",
+        "sand",
+        "shore",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_shore.coarse.webp",
+          "x": 182,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_shore.final.webp",
+          "x": 342,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_shore:group_7",
+      "groupId": "group_7",
+      "savedIdentifiers": [
+        "universal_flowering_sedge"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 384,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "6,0"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_7",
+        "onshore",
+        "passable",
+        "shore",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_shore.coarse.webp",
+          "x": 218,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_shore.final.webp",
+          "x": 410,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_shore:group_8",
+      "groupId": "group_8",
+      "savedIdentifiers": [
+        "universal_rushes"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 448,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "7,0"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_8",
+        "onshore",
+        "passable",
+        "shore",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_shore.coarse.webp",
+          "x": 254,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_shore.final.webp",
+          "x": 478,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_shore:group_9",
+      "groupId": "group_9",
+      "savedIdentifiers": [
+        "universal_grass_hummock"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 512,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "8,0"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_9",
+        "onshore",
+        "passable",
+        "shore",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_shore.coarse.webp",
+          "x": 290,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_shore.final.webp",
+          "x": 546,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_shore:group_10",
+      "groupId": "group_10",
+      "savedIdentifiers": [
+        "universal_bank_rushes"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 576,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "9,0"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_10",
+        "onshore",
+        "passable",
+        "shore",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_shore.coarse.webp",
+          "x": 326,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_shore.final.webp",
+          "x": 614,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_shore:group_11",
+      "groupId": "group_11",
+      "savedIdentifiers": [
+        "universal_broadleaf_sedge"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 640,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "10,0"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_11",
+        "onshore",
+        "passable",
+        "shore",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_shore.coarse.webp",
+          "x": 362,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_shore.final.webp",
+          "x": 682,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_shore:group_12",
+      "groupId": "group_12",
+      "savedIdentifiers": [
+        "universal_dry_hummock"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 704,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "11,0"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_12",
+        "onshore",
+        "passable",
+        "shore",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_shore.coarse.webp",
+          "x": 398,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_shore.final.webp",
+          "x": 750,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_shore:group_13",
+      "groupId": "group_13",
+      "savedIdentifiers": [
+        "universal_mossy_rocks"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 768,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "12,0"
+      ],
+      "tags": [
+        "decorative",
+        "group_13",
+        "onshore",
+        "passable",
+        "rocks",
+        "shore",
+        "stones",
+        "universal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_shore.coarse.webp",
+          "x": 434,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_shore.final.webp",
+          "x": 818,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_shore:group_14",
+      "groupId": "group_14",
+      "savedIdentifiers": [
+        "universal_sandstone_pebbles"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 832,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "13,0"
+      ],
+      "tags": [
+        "decorative",
+        "group_14",
+        "onshore",
+        "passable",
+        "rocks",
+        "shore",
+        "stones",
+        "universal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_shore.coarse.webp",
+          "x": 470,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_shore.final.webp",
+          "x": 886,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_shore:group_15",
+      "groupId": "group_15",
+      "savedIdentifiers": [
+        "universal_river_pebbles"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 896,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "14,0"
+      ],
+      "tags": [
+        "decorative",
+        "group_15",
+        "onshore",
+        "passable",
+        "rocks",
+        "shore",
+        "stones",
+        "universal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_shore.coarse.webp",
+          "x": 506,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_shore.final.webp",
+          "x": 954,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_shore:group_16",
+      "groupId": "group_16",
+      "savedIdentifiers": [
+        "universal_slate_chips"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 960,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "15,0"
+      ],
+      "tags": [
+        "decorative",
+        "group_16",
+        "onshore",
+        "passable",
+        "rocks",
+        "shore",
+        "stones",
+        "universal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_shore.coarse.webp",
+          "x": 542,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_shore.final.webp",
+          "x": 1022,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_shore:group_17",
+      "groupId": "group_17",
+      "savedIdentifiers": [
+        "universal_pale_rocks"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 0,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "0,1"
+      ],
+      "tags": [
+        "decorative",
+        "group_17",
+        "onshore",
+        "passable",
+        "rocks",
+        "shore",
+        "stones",
+        "universal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_shore.coarse.webp",
+          "x": 578,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_shore.final.webp",
+          "x": 1090,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_shore:group_18",
+      "groupId": "group_18",
+      "savedIdentifiers": [
+        "universal_granite_bank"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 64,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "1,1"
+      ],
+      "tags": [
+        "decorative",
+        "group_18",
+        "onshore",
+        "passable",
+        "rocks",
+        "shore",
+        "stones",
+        "universal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_shore.coarse.webp",
+          "x": 614,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_shore.final.webp",
+          "x": 1158,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_shore:group_19",
+      "groupId": "group_19",
+      "savedIdentifiers": [
+        "universal_driftwood"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 128,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "2,1"
+      ],
+      "tags": [
+        "decorative",
+        "group_19",
+        "onshore",
+        "passable",
+        "shore",
+        "universal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_shore.coarse.webp",
+          "x": 650,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_shore.final.webp",
+          "x": 1226,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_shore:group_20",
+      "groupId": "group_20",
+      "savedIdentifiers": [
+        "universal_broken_pier"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 192,
+        "y": 64,
+        "width": 128,
+        "height": 64
+      },
+      "tileKeys": [
+        "3,1",
+        "4,1"
+      ],
+      "tags": [
+        "decorative",
+        "group_20",
+        "passable",
+        "shore",
+        "shore_trans",
+        "universal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_shore.coarse.webp",
+          "x": 686,
+          "y": 2,
+          "width": 64,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_shore.final.webp",
+          "x": 1294,
+          "y": 2,
+          "width": 128,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_shore:group_21",
+      "groupId": "group_21",
+      "savedIdentifiers": [
+        "universal_jetty"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 320,
+        "y": 64,
+        "width": 128,
+        "height": 64
+      },
+      "tileKeys": [
+        "5,1",
+        "6,1"
+      ],
+      "tags": [
+        "decorative",
+        "group_21",
+        "passable",
+        "shore",
+        "shore_trans",
+        "universal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_shore.coarse.webp",
+          "x": 754,
+          "y": 2,
+          "width": 64,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_shore.final.webp",
+          "x": 1426,
+          "y": 2,
+          "width": 128,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_shore:group_22",
+      "groupId": "group_22",
+      "savedIdentifiers": [
+        "universal_fishing_hut"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 448,
+        "y": 64,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "7,1",
+        "7,2",
+        "8,1",
+        "8,2"
+      ],
+      "tags": [
+        "decorative",
+        "group_22",
+        "impassable",
+        "shore",
+        "shore_trans",
+        "universal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_shore.coarse.webp",
+          "x": 822,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_shore.final.webp",
+          "x": 1558,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_shore:group_23",
+      "groupId": "group_23",
+      "savedIdentifiers": [
+        "universal_boathouse"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 576,
+        "y": 64,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "10,1",
+        "10,2",
+        "9,1",
+        "9,2"
+      ],
+      "tags": [
+        "decorative",
+        "group_23",
+        "impassable",
+        "shore",
+        "shore_trans",
+        "universal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_shore.coarse.webp",
+          "x": 890,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_shore.final.webp",
+          "x": 1690,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_shore:group_24",
+      "groupId": "group_24",
+      "savedIdentifiers": [
+        "universal_bank_planks"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 704,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "11,1"
+      ],
+      "tags": [
+        "decorative",
+        "group_24",
+        "onshore",
+        "passable",
+        "shore",
+        "universal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_shore.coarse.webp",
+          "x": 958,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_shore.final.webp",
+          "x": 1822,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_shore:group_25",
+      "groupId": "group_25",
+      "savedIdentifiers": [
+        "universal_lily_pads"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 768,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "12,1"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_25",
+        "offshore",
+        "passable",
+        "sand",
+        "shore",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_shore.coarse.webp",
+          "x": 994,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_shore.final.webp",
+          "x": 1890,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_shore:group_26",
+      "groupId": "group_26",
+      "savedIdentifiers": [
+        "universal_water_lilies"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 832,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "13,1"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_26",
+        "offshore",
+        "passable",
+        "sand",
+        "shore",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_shore.coarse.webp",
+          "x": 1030,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_shore.final.webp",
+          "x": 1958,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_shore:group_27",
+      "groupId": "group_27",
+      "savedIdentifiers": [
+        "universal_pond_leaves"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 896,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "14,1"
+      ],
+      "tags": [
+        "decorative",
+        "grass",
+        "group_27",
+        "offshore",
+        "passable",
+        "sand",
+        "shore",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_shore.coarse.webp",
+          "x": 1066,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_shore.final.webp",
+          "x": 2,
+          "y": 134,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_shore:group_28",
+      "groupId": "group_28",
+      "savedIdentifiers": [
+        "universal_floating_log"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 960,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "15,1"
+      ],
+      "tags": [
+        "decorative",
+        "group_28",
+        "offshore",
+        "passable",
+        "shore",
+        "universal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_shore.coarse.webp",
+          "x": 1102,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_shore.final.webp",
+          "x": 70,
+          "y": 134,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_shore:group_29",
+      "groupId": "group_29",
+      "savedIdentifiers": [
+        "universal_rowing_boat"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 0,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "0,2"
+      ],
+      "tags": [
+        "decorative",
+        "group_29",
+        "offshore",
+        "passable",
+        "shore",
+        "universal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_shore.coarse.webp",
+          "x": 1138,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_shore.final.webp",
+          "x": 138,
+          "y": 134,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_shore:group_30",
+      "groupId": "group_30",
+      "savedIdentifiers": [
+        "universal_skiff"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 64,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "1,2"
+      ],
+      "tags": [
+        "decorative",
+        "group_30",
+        "offshore",
+        "passable",
+        "shore",
+        "universal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_shore.coarse.webp",
+          "x": 1174,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_shore.final.webp",
+          "x": 206,
+          "y": 134,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_shore:group_31",
+      "groupId": "group_31",
+      "savedIdentifiers": [
+        "universal_weathered_stump"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 128,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "2,2"
+      ],
+      "tags": [
+        "decorative",
+        "group_31",
+        "onshore",
+        "passable",
+        "shore",
+        "universal"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_shore.coarse.webp",
+          "x": 1210,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_shore.final.webp",
+          "x": 274,
+          "y": 134,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_shore:group_32",
+      "groupId": "group_32",
+      "savedIdentifiers": [
+        "universal_snowy_reeds"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 192,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "3,2"
+      ],
+      "tags": [
+        "decorative",
+        "group_32",
+        "onshore",
+        "passable",
+        "shore",
+        "snow",
+        "winter"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_shore.coarse.webp",
+          "x": 1246,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_shore.final.webp",
+          "x": 342,
+          "y": 134,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_shore:group_33",
+      "groupId": "group_33",
+      "savedIdentifiers": [
+        "universal_snowy_rocks"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 256,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "4,2"
+      ],
+      "tags": [
+        "decorative",
+        "group_33",
+        "onshore",
+        "passable",
+        "rocks",
+        "shore",
+        "snow",
+        "stones",
+        "winter"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_shore.coarse.webp",
+          "x": 1282,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_shore.final.webp",
+          "x": 410,
+          "y": 134,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_shore:group_34",
+      "groupId": "group_34",
+      "savedIdentifiers": [
+        "universal_icy_driftwood"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 320,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "5,2"
+      ],
+      "tags": [
+        "decorative",
+        "group_34",
+        "onshore",
+        "passable",
+        "shore",
+        "snow",
+        "winter"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_shore.coarse.webp",
+          "x": 1318,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_shore.final.webp",
+          "x": 478,
+          "y": 134,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_shore:group_35",
+      "groupId": "group_35",
+      "savedIdentifiers": [
+        "universal_snowy_grass"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 384,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "6,2"
+      ],
+      "tags": [
+        "decorative",
+        "group_35",
+        "onshore",
+        "passable",
+        "shore",
+        "snow",
+        "winter"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_shore.coarse.webp",
+          "x": 1354,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_shore.final.webp",
+          "x": 546,
+          "y": 134,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_shore:group_36",
+      "groupId": "group_36",
+      "savedIdentifiers": [
+        "universal_ice_rubble"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 704,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "11,2"
+      ],
+      "tags": [
+        "decorative",
+        "group_36",
+        "onshore",
+        "passable",
+        "rocks",
+        "shore",
+        "snow",
+        "stones",
+        "winter"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_shore.coarse.webp",
+          "x": 1390,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_shore.final.webp",
+          "x": 614,
+          "y": 134,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    }
+  ]
+}

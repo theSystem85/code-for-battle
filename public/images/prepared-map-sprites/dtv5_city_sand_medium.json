@@ -1,0 +1,2919 @@
+{
+  "schemaVersion": 1,
+  "name": "dtv5_city_sand_medium",
+  "identity": {
+    "buildVersion": 1,
+    "atlasVersion": 1,
+    "catalogVersion": 1,
+    "pixelRulesVersion": 1,
+    "webpQuality": 85,
+    "padding": 2,
+    "sourceHash": "5b2c67f24d62954ae91fd17bff0c213a98e33471f5f60b1b6210fa77c23815f5",
+    "metadataHash": "c7aa7abc8d727709fd71e8961123e64c6e7ea3fa01bcde857f0f5ef69524f6dd",
+    "metadataSignature": "e1a7db78315e57cfcfb6ae8aa2d5440a6beab61bbfc10b5e26301dca7c5d726d",
+    "selectedBackingDensities": [
+      0.5,
+      1
+    ]
+  },
+  "signature": "92b233dd1cdf1af80c85e8475758a4a9719923e21536f5900efb9ffb9eae94f1",
+  "source": {
+    "image": "images/map/sprite_sheets/dtv5_city_sand_medium.webp",
+    "metadata": "images/map/sprite_sheets/dtv5_city_sand_medium.json",
+    "sourceMetadata": {
+      "path": "images/map/sprite_sheets/sources/cities_sand_medium.webp",
+      "sha256": "2c0330919b73fa9ab7dffd2d624a6110f8808bf1b0349584af86f02f33de72de",
+      "width": 1024,
+      "height": 1536,
+      "detection": {
+        "transparent": true,
+        "alphaCutoff": 16,
+        "gap": 0,
+        "minArea": 1000
+      },
+      "guides": [],
+      "spriteCount": 20,
+      "packing": {
+        "scale": 0.75,
+        "padding": 2
+      }
+    },
+    "editorMetadata": {
+      "schemaVersion": 1,
+      "layoutVersion": 6,
+      "name": "dtv5_city_sand_medium",
+      "grid": {
+        "tileSize": 64,
+        "rowHeight": 64,
+        "borderWidth": 0,
+        "cols": 16,
+        "rows": 14
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "city",
+        "density_4",
+        "passable",
+        "overhang",
+        "impassable",
+        "density_5",
+        "density_6",
+        "density_7"
+      ],
+      "propLayout": [
+        {
+          "id": "cities_sand_medium_city_001",
+          "col": 0,
+          "row": 0,
+          "w": 3,
+          "h": 3,
+          "groupId": 1,
+          "tags": [
+            "sand",
+            "decorative",
+            "city",
+            "impassable",
+            "density_4",
+            "group_1"
+          ],
+          "density": 4,
+          "sourceRect": {
+            "x": 26,
+            "y": 78,
+            "width": 234,
+            "height": 195
+          },
+          "footprint": {
+            "x": 0,
+            "y": 1,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "id": "cities_sand_medium_city_002",
+          "col": 3,
+          "row": 0,
+          "w": 3,
+          "h": 3,
+          "groupId": 2,
+          "tags": [
+            "sand",
+            "decorative",
+            "city",
+            "impassable",
+            "density_4",
+            "group_2"
+          ],
+          "density": 4,
+          "sourceRect": {
+            "x": 283,
+            "y": 76,
+            "width": 227,
+            "height": 197
+          },
+          "footprint": {
+            "x": 0,
+            "y": 1,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "id": "cities_sand_medium_city_003",
+          "col": 6,
+          "row": 0,
+          "w": 3,
+          "h": 3,
+          "groupId": 3,
+          "tags": [
+            "sand",
+            "decorative",
+            "city",
+            "impassable",
+            "density_4",
+            "group_3"
+          ],
+          "density": 4,
+          "sourceRect": {
+            "x": 530,
+            "y": 86,
+            "width": 214,
+            "height": 187
+          },
+          "footprint": {
+            "x": 0,
+            "y": 1,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "id": "cities_sand_medium_city_004",
+          "col": 9,
+          "row": 0,
+          "w": 3,
+          "h": 3,
+          "groupId": 4,
+          "tags": [
+            "sand",
+            "decorative",
+            "city",
+            "impassable",
+            "density_4",
+            "group_4"
+          ],
+          "density": 4,
+          "sourceRect": {
+            "x": 783,
+            "y": 93,
+            "width": 219,
+            "height": 190
+          },
+          "footprint": {
+            "x": 0,
+            "y": 1,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "id": "cities_sand_medium_city_005",
+          "col": 12,
+          "row": 0,
+          "w": 3,
+          "h": 3,
+          "groupId": 5,
+          "tags": [
+            "sand",
+            "decorative",
+            "city",
+            "impassable",
+            "density_5",
+            "group_5"
+          ],
+          "density": 5,
+          "sourceRect": {
+            "x": 32,
+            "y": 320,
+            "width": 224,
+            "height": 231
+          },
+          "footprint": {
+            "x": 0,
+            "y": 1,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "id": "cities_sand_medium_city_006",
+          "col": 0,
+          "row": 3,
+          "w": 3,
+          "h": 3,
+          "groupId": 6,
+          "tags": [
+            "sand",
+            "decorative",
+            "city",
+            "impassable",
+            "density_5",
+            "group_6"
+          ],
+          "density": 5,
+          "sourceRect": {
+            "x": 278,
+            "y": 307,
+            "width": 228,
+            "height": 240
+          },
+          "footprint": {
+            "x": 0,
+            "y": 1,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "id": "cities_sand_medium_city_007",
+          "col": 3,
+          "row": 3,
+          "w": 3,
+          "h": 3,
+          "groupId": 7,
+          "tags": [
+            "sand",
+            "decorative",
+            "city",
+            "impassable",
+            "density_5",
+            "group_7"
+          ],
+          "density": 5,
+          "sourceRect": {
+            "x": 528,
+            "y": 329,
+            "width": 231,
+            "height": 218
+          },
+          "footprint": {
+            "x": 0,
+            "y": 1,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "id": "cities_sand_medium_city_008",
+          "col": 6,
+          "row": 3,
+          "w": 3,
+          "h": 3,
+          "groupId": 8,
+          "tags": [
+            "sand",
+            "decorative",
+            "city",
+            "impassable",
+            "density_5",
+            "group_8"
+          ],
+          "density": 5,
+          "sourceRect": {
+            "x": 784,
+            "y": 323,
+            "width": 216,
+            "height": 230
+          },
+          "footprint": {
+            "x": 0,
+            "y": 1,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "id": "cities_sand_medium_city_009",
+          "col": 9,
+          "row": 3,
+          "w": 3,
+          "h": 4,
+          "groupId": 9,
+          "tags": [
+            "sand",
+            "decorative",
+            "city",
+            "impassable",
+            "density_6",
+            "group_9"
+          ],
+          "density": 6,
+          "sourceRect": {
+            "x": 30,
+            "y": 588,
+            "width": 229,
+            "height": 254
+          },
+          "footprint": {
+            "x": 0,
+            "y": 1,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "id": "cities_sand_medium_city_010",
+          "col": 12,
+          "row": 3,
+          "w": 3,
+          "h": 4,
+          "groupId": 10,
+          "tags": [
+            "sand",
+            "decorative",
+            "city",
+            "impassable",
+            "density_6",
+            "group_10"
+          ],
+          "density": 6,
+          "sourceRect": {
+            "x": 278,
+            "y": 588,
+            "width": 237,
+            "height": 257
+          },
+          "footprint": {
+            "x": 0,
+            "y": 1,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "id": "cities_sand_medium_city_011",
+          "col": 0,
+          "row": 6,
+          "w": 3,
+          "h": 4,
+          "groupId": 11,
+          "tags": [
+            "sand",
+            "decorative",
+            "city",
+            "impassable",
+            "density_6",
+            "group_11"
+          ],
+          "density": 6,
+          "sourceRect": {
+            "x": 541,
+            "y": 586,
+            "width": 219,
+            "height": 260
+          },
+          "footprint": {
+            "x": 0,
+            "y": 1,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "id": "cities_sand_medium_city_012",
+          "col": 3,
+          "row": 6,
+          "w": 3,
+          "h": 4,
+          "groupId": 12,
+          "tags": [
+            "sand",
+            "decorative",
+            "city",
+            "impassable",
+            "density_6",
+            "group_12"
+          ],
+          "density": 6,
+          "sourceRect": {
+            "x": 779,
+            "y": 587,
+            "width": 227,
+            "height": 261
+          },
+          "footprint": {
+            "x": 0,
+            "y": 1,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "id": "cities_sand_medium_city_013",
+          "col": 6,
+          "row": 6,
+          "w": 3,
+          "h": 4,
+          "groupId": 13,
+          "tags": [
+            "sand",
+            "decorative",
+            "city",
+            "impassable",
+            "density_7",
+            "group_13"
+          ],
+          "density": 7,
+          "sourceRect": {
+            "x": 34,
+            "y": 871,
+            "width": 225,
+            "height": 298
+          },
+          "footprint": {
+            "x": 0,
+            "y": 1,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "id": "cities_sand_medium_city_014",
+          "col": 9,
+          "row": 7,
+          "w": 3,
+          "h": 4,
+          "groupId": 14,
+          "tags": [
+            "sand",
+            "decorative",
+            "city",
+            "impassable",
+            "density_7",
+            "group_14"
+          ],
+          "density": 7,
+          "sourceRect": {
+            "x": 284,
+            "y": 888,
+            "width": 220,
+            "height": 286
+          },
+          "footprint": {
+            "x": 0,
+            "y": 1,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "id": "cities_sand_medium_city_015",
+          "col": 12,
+          "row": 7,
+          "w": 3,
+          "h": 4,
+          "groupId": 15,
+          "tags": [
+            "sand",
+            "decorative",
+            "city",
+            "impassable",
+            "density_7",
+            "group_15"
+          ],
+          "density": 7,
+          "sourceRect": {
+            "x": 533,
+            "y": 884,
+            "width": 218,
+            "height": 290
+          },
+          "footprint": {
+            "x": 0,
+            "y": 1,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "id": "cities_sand_medium_city_016",
+          "col": 0,
+          "row": 10,
+          "w": 3,
+          "h": 4,
+          "groupId": 16,
+          "tags": [
+            "sand",
+            "decorative",
+            "city",
+            "impassable",
+            "density_7",
+            "group_16"
+          ],
+          "density": 7,
+          "sourceRect": {
+            "x": 789,
+            "y": 872,
+            "width": 219,
+            "height": 309
+          },
+          "footprint": {
+            "x": 0,
+            "y": 1,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "id": "cities_sand_medium_city_017",
+          "col": 3,
+          "row": 10,
+          "w": 3,
+          "h": 3,
+          "groupId": 17,
+          "tags": [
+            "sand",
+            "decorative",
+            "city",
+            "impassable",
+            "density_5",
+            "group_17"
+          ],
+          "density": 5,
+          "sourceRect": {
+            "x": 14,
+            "y": 1215,
+            "width": 229,
+            "height": 234
+          },
+          "footprint": {
+            "x": 0,
+            "y": 1,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "id": "cities_sand_medium_city_018",
+          "col": 6,
+          "row": 11,
+          "w": 4,
+          "h": 3,
+          "groupId": 18,
+          "tags": [
+            "sand",
+            "decorative",
+            "city",
+            "impassable",
+            "density_5",
+            "group_18"
+          ],
+          "density": 5,
+          "sourceRect": {
+            "x": 255,
+            "y": 1242,
+            "width": 263,
+            "height": 192
+          },
+          "footprint": {
+            "x": 0,
+            "y": 1,
+            "width": 4,
+            "height": 2
+          }
+        },
+        {
+          "id": "cities_sand_medium_city_019",
+          "col": 10,
+          "row": 11,
+          "w": 3,
+          "h": 3,
+          "groupId": 19,
+          "tags": [
+            "sand",
+            "decorative",
+            "city",
+            "impassable",
+            "density_5",
+            "group_19"
+          ],
+          "density": 5,
+          "sourceRect": {
+            "x": 525,
+            "y": 1223,
+            "width": 239,
+            "height": 219
+          },
+          "footprint": {
+            "x": 0,
+            "y": 1,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "id": "cities_sand_medium_city_020",
+          "col": 13,
+          "row": 11,
+          "w": 3,
+          "h": 3,
+          "groupId": 20,
+          "tags": [
+            "sand",
+            "decorative",
+            "city",
+            "impassable",
+            "density_5",
+            "group_20"
+          ],
+          "density": 5,
+          "sourceRect": {
+            "x": 777,
+            "y": 1242,
+            "width": 240,
+            "height": 210
+          },
+          "footprint": {
+            "x": 0,
+            "y": 1,
+            "width": 3,
+            "height": 2
+          }
+        }
+      ],
+      "extension": {
+        "imports": [
+          {
+            "id": "cities_sand_medium_city_001",
+            "sourceId": "cities_sand_medium",
+            "bbox": {
+              "x": 26,
+              "y": 78,
+              "width": 234,
+              "height": 195
+            },
+            "area": 37177,
+            "anchor": "center",
+            "sizeRatio": 0.75,
+            "tileSpan": {
+              "columns": 3,
+              "rows": 3
+            },
+            "placedAt": {
+              "column": 0,
+              "row": 0
+            },
+            "tags": [
+              "sand",
+              "decorative",
+              "city",
+              "impassable",
+              "density_4",
+              "group_1"
+            ],
+            "renderRect": {
+              "x": 8,
+              "y": 23,
+              "width": 176,
+              "height": 146
+            }
+          },
+          {
+            "id": "cities_sand_medium_city_002",
+            "sourceId": "cities_sand_medium",
+            "bbox": {
+              "x": 283,
+              "y": 76,
+              "width": 227,
+              "height": 197
+            },
+            "area": 35660,
+            "anchor": "center",
+            "sizeRatio": 0.75,
+            "tileSpan": {
+              "columns": 3,
+              "rows": 3
+            },
+            "placedAt": {
+              "column": 3,
+              "row": 0
+            },
+            "tags": [
+              "sand",
+              "decorative",
+              "city",
+              "impassable",
+              "density_4",
+              "group_2"
+            ],
+            "renderRect": {
+              "x": 11,
+              "y": 22,
+              "width": 170,
+              "height": 148
+            }
+          },
+          {
+            "id": "cities_sand_medium_city_003",
+            "sourceId": "cities_sand_medium",
+            "bbox": {
+              "x": 530,
+              "y": 86,
+              "width": 214,
+              "height": 187
+            },
+            "area": 34226,
+            "anchor": "center",
+            "sizeRatio": 0.75,
+            "tileSpan": {
+              "columns": 3,
+              "rows": 3
+            },
+            "placedAt": {
+              "column": 6,
+              "row": 0
+            },
+            "tags": [
+              "sand",
+              "decorative",
+              "city",
+              "impassable",
+              "density_4",
+              "group_3"
+            ],
+            "renderRect": {
+              "x": 15,
+              "y": 26,
+              "width": 161,
+              "height": 140
+            }
+          },
+          {
+            "id": "cities_sand_medium_city_004",
+            "sourceId": "cities_sand_medium",
+            "bbox": {
+              "x": 783,
+              "y": 93,
+              "width": 219,
+              "height": 190
+            },
+            "area": 35957,
+            "anchor": "center",
+            "sizeRatio": 0.75,
+            "tileSpan": {
+              "columns": 3,
+              "rows": 3
+            },
+            "placedAt": {
+              "column": 9,
+              "row": 0
+            },
+            "tags": [
+              "sand",
+              "decorative",
+              "city",
+              "impassable",
+              "density_4",
+              "group_4"
+            ],
+            "renderRect": {
+              "x": 14,
+              "y": 24,
+              "width": 164,
+              "height": 143
+            }
+          },
+          {
+            "id": "cities_sand_medium_city_005",
+            "sourceId": "cities_sand_medium",
+            "bbox": {
+              "x": 32,
+              "y": 320,
+              "width": 224,
+              "height": 231
+            },
+            "area": 42805,
+            "anchor": "center",
+            "sizeRatio": 0.75,
+            "tileSpan": {
+              "columns": 3,
+              "rows": 3
+            },
+            "placedAt": {
+              "column": 12,
+              "row": 0
+            },
+            "tags": [
+              "sand",
+              "decorative",
+              "city",
+              "impassable",
+              "density_5",
+              "group_5"
+            ],
+            "renderRect": {
+              "x": 12,
+              "y": 9,
+              "width": 168,
+              "height": 173
+            }
+          },
+          {
+            "id": "cities_sand_medium_city_006",
+            "sourceId": "cities_sand_medium",
+            "bbox": {
+              "x": 278,
+              "y": 307,
+              "width": 228,
+              "height": 240
+            },
+            "area": 43401,
+            "anchor": "center",
+            "sizeRatio": 0.75,
+            "tileSpan": {
+              "columns": 3,
+              "rows": 3
+            },
+            "placedAt": {
+              "column": 0,
+              "row": 3
+            },
+            "tags": [
+              "sand",
+              "decorative",
+              "city",
+              "impassable",
+              "density_5",
+              "group_6"
+            ],
+            "renderRect": {
+              "x": 10,
+              "y": 6,
+              "width": 171,
+              "height": 180
+            }
+          },
+          {
+            "id": "cities_sand_medium_city_007",
+            "sourceId": "cities_sand_medium",
+            "bbox": {
+              "x": 528,
+              "y": 329,
+              "width": 231,
+              "height": 218
+            },
+            "area": 42352,
+            "anchor": "center",
+            "sizeRatio": 0.75,
+            "tileSpan": {
+              "columns": 3,
+              "rows": 3
+            },
+            "placedAt": {
+              "column": 3,
+              "row": 3
+            },
+            "tags": [
+              "sand",
+              "decorative",
+              "city",
+              "impassable",
+              "density_5",
+              "group_7"
+            ],
+            "renderRect": {
+              "x": 9,
+              "y": 14,
+              "width": 173,
+              "height": 164
+            }
+          },
+          {
+            "id": "cities_sand_medium_city_008",
+            "sourceId": "cities_sand_medium",
+            "bbox": {
+              "x": 784,
+              "y": 323,
+              "width": 216,
+              "height": 230
+            },
+            "area": 39500,
+            "anchor": "center",
+            "sizeRatio": 0.75,
+            "tileSpan": {
+              "columns": 3,
+              "rows": 3
+            },
+            "placedAt": {
+              "column": 6,
+              "row": 3
+            },
+            "tags": [
+              "sand",
+              "decorative",
+              "city",
+              "impassable",
+              "density_5",
+              "group_8"
+            ],
+            "renderRect": {
+              "x": 15,
+              "y": 9,
+              "width": 162,
+              "height": 173
+            }
+          },
+          {
+            "id": "cities_sand_medium_city_009",
+            "sourceId": "cities_sand_medium",
+            "bbox": {
+              "x": 30,
+              "y": 588,
+              "width": 229,
+              "height": 254
+            },
+            "area": 47722,
+            "anchor": "center",
+            "sizeRatio": 0.75,
+            "tileSpan": {
+              "columns": 3,
+              "rows": 4
+            },
+            "placedAt": {
+              "column": 9,
+              "row": 3
+            },
+            "tags": [
+              "sand",
+              "decorative",
+              "city",
+              "impassable",
+              "density_6",
+              "group_9"
+            ],
+            "renderRect": {
+              "x": 10,
+              "y": 32,
+              "width": 172,
+              "height": 191
+            }
+          },
+          {
+            "id": "cities_sand_medium_city_010",
+            "sourceId": "cities_sand_medium",
+            "bbox": {
+              "x": 278,
+              "y": 588,
+              "width": 237,
+              "height": 257
+            },
+            "area": 49026,
+            "anchor": "center",
+            "sizeRatio": 0.75,
+            "tileSpan": {
+              "columns": 3,
+              "rows": 4
+            },
+            "placedAt": {
+              "column": 12,
+              "row": 3
+            },
+            "tags": [
+              "sand",
+              "decorative",
+              "city",
+              "impassable",
+              "density_6",
+              "group_10"
+            ],
+            "renderRect": {
+              "x": 7,
+              "y": 31,
+              "width": 178,
+              "height": 193
+            }
+          },
+          {
+            "id": "cities_sand_medium_city_011",
+            "sourceId": "cities_sand_medium",
+            "bbox": {
+              "x": 541,
+              "y": 586,
+              "width": 219,
+              "height": 260
+            },
+            "area": 47595,
+            "anchor": "center",
+            "sizeRatio": 0.75,
+            "tileSpan": {
+              "columns": 3,
+              "rows": 4
+            },
+            "placedAt": {
+              "column": 0,
+              "row": 6
+            },
+            "tags": [
+              "sand",
+              "decorative",
+              "city",
+              "impassable",
+              "density_6",
+              "group_11"
+            ],
+            "renderRect": {
+              "x": 14,
+              "y": 30,
+              "width": 164,
+              "height": 195
+            }
+          },
+          {
+            "id": "cities_sand_medium_city_012",
+            "sourceId": "cities_sand_medium",
+            "bbox": {
+              "x": 779,
+              "y": 587,
+              "width": 227,
+              "height": 261
+            },
+            "area": 48158,
+            "anchor": "center",
+            "sizeRatio": 0.75,
+            "tileSpan": {
+              "columns": 3,
+              "rows": 4
+            },
+            "placedAt": {
+              "column": 3,
+              "row": 6
+            },
+            "tags": [
+              "sand",
+              "decorative",
+              "city",
+              "impassable",
+              "density_6",
+              "group_12"
+            ],
+            "renderRect": {
+              "x": 11,
+              "y": 30,
+              "width": 170,
+              "height": 196
+            }
+          },
+          {
+            "id": "cities_sand_medium_city_013",
+            "sourceId": "cities_sand_medium",
+            "bbox": {
+              "x": 34,
+              "y": 871,
+              "width": 225,
+              "height": 298
+            },
+            "area": 55828,
+            "anchor": "center",
+            "sizeRatio": 0.75,
+            "tileSpan": {
+              "columns": 3,
+              "rows": 4
+            },
+            "placedAt": {
+              "column": 6,
+              "row": 6
+            },
+            "tags": [
+              "sand",
+              "decorative",
+              "city",
+              "impassable",
+              "density_7",
+              "group_13"
+            ],
+            "renderRect": {
+              "x": 11,
+              "y": 16,
+              "width": 169,
+              "height": 224
+            }
+          },
+          {
+            "id": "cities_sand_medium_city_014",
+            "sourceId": "cities_sand_medium",
+            "bbox": {
+              "x": 284,
+              "y": 888,
+              "width": 220,
+              "height": 286
+            },
+            "area": 50161,
+            "anchor": "center",
+            "sizeRatio": 0.75,
+            "tileSpan": {
+              "columns": 3,
+              "rows": 4
+            },
+            "placedAt": {
+              "column": 9,
+              "row": 7
+            },
+            "tags": [
+              "sand",
+              "decorative",
+              "city",
+              "impassable",
+              "density_7",
+              "group_14"
+            ],
+            "renderRect": {
+              "x": 13,
+              "y": 20,
+              "width": 165,
+              "height": 215
+            }
+          },
+          {
+            "id": "cities_sand_medium_city_015",
+            "sourceId": "cities_sand_medium",
+            "bbox": {
+              "x": 533,
+              "y": 884,
+              "width": 218,
+              "height": 290
+            },
+            "area": 52227,
+            "anchor": "center",
+            "sizeRatio": 0.75,
+            "tileSpan": {
+              "columns": 3,
+              "rows": 4
+            },
+            "placedAt": {
+              "column": 12,
+              "row": 7
+            },
+            "tags": [
+              "sand",
+              "decorative",
+              "city",
+              "impassable",
+              "density_7",
+              "group_15"
+            ],
+            "renderRect": {
+              "x": 14,
+              "y": 19,
+              "width": 164,
+              "height": 218
+            }
+          },
+          {
+            "id": "cities_sand_medium_city_016",
+            "sourceId": "cities_sand_medium",
+            "bbox": {
+              "x": 789,
+              "y": 872,
+              "width": 219,
+              "height": 309
+            },
+            "area": 51574,
+            "anchor": "center",
+            "sizeRatio": 0.75,
+            "tileSpan": {
+              "columns": 3,
+              "rows": 4
+            },
+            "placedAt": {
+              "column": 0,
+              "row": 10
+            },
+            "tags": [
+              "sand",
+              "decorative",
+              "city",
+              "impassable",
+              "density_7",
+              "group_16"
+            ],
+            "renderRect": {
+              "x": 14,
+              "y": 12,
+              "width": 164,
+              "height": 232
+            }
+          },
+          {
+            "id": "cities_sand_medium_city_017",
+            "sourceId": "cities_sand_medium",
+            "bbox": {
+              "x": 14,
+              "y": 1215,
+              "width": 229,
+              "height": 234
+            },
+            "area": 44594,
+            "anchor": "center",
+            "sizeRatio": 0.75,
+            "tileSpan": {
+              "columns": 3,
+              "rows": 3
+            },
+            "placedAt": {
+              "column": 3,
+              "row": 10
+            },
+            "tags": [
+              "sand",
+              "decorative",
+              "city",
+              "impassable",
+              "density_5",
+              "group_17"
+            ],
+            "renderRect": {
+              "x": 10,
+              "y": 8,
+              "width": 172,
+              "height": 176
+            }
+          },
+          {
+            "id": "cities_sand_medium_city_018",
+            "sourceId": "cities_sand_medium",
+            "bbox": {
+              "x": 255,
+              "y": 1242,
+              "width": 263,
+              "height": 192
+            },
+            "area": 43666,
+            "anchor": "center",
+            "sizeRatio": 0.75,
+            "tileSpan": {
+              "columns": 4,
+              "rows": 3
+            },
+            "placedAt": {
+              "column": 6,
+              "row": 11
+            },
+            "tags": [
+              "sand",
+              "decorative",
+              "city",
+              "impassable",
+              "density_5",
+              "group_18"
+            ],
+            "renderRect": {
+              "x": 29,
+              "y": 24,
+              "width": 197,
+              "height": 144
+            }
+          },
+          {
+            "id": "cities_sand_medium_city_019",
+            "sourceId": "cities_sand_medium",
+            "bbox": {
+              "x": 525,
+              "y": 1223,
+              "width": 239,
+              "height": 219
+            },
+            "area": 40622,
+            "anchor": "center",
+            "sizeRatio": 0.75,
+            "tileSpan": {
+              "columns": 3,
+              "rows": 3
+            },
+            "placedAt": {
+              "column": 10,
+              "row": 11
+            },
+            "tags": [
+              "sand",
+              "decorative",
+              "city",
+              "impassable",
+              "density_5",
+              "group_19"
+            ],
+            "renderRect": {
+              "x": 6,
+              "y": 14,
+              "width": 179,
+              "height": 164
+            }
+          },
+          {
+            "id": "cities_sand_medium_city_020",
+            "sourceId": "cities_sand_medium",
+            "bbox": {
+              "x": 777,
+              "y": 1242,
+              "width": 240,
+              "height": 210
+            },
+            "area": 42554,
+            "anchor": "center",
+            "sizeRatio": 0.75,
+            "tileSpan": {
+              "columns": 3,
+              "rows": 3
+            },
+            "placedAt": {
+              "column": 13,
+              "row": 11
+            },
+            "tags": [
+              "sand",
+              "decorative",
+              "city",
+              "impassable",
+              "density_5",
+              "group_20"
+            ],
+            "renderRect": {
+              "x": 6,
+              "y": 17,
+              "width": 180,
+              "height": 158
+            }
+          }
+        ],
+        "occupiedTiles": [
+          "0,0",
+          "1,0",
+          "2,0",
+          "0,1",
+          "1,1",
+          "2,1",
+          "0,2",
+          "1,2",
+          "2,2",
+          "3,0",
+          "4,0",
+          "5,0",
+          "3,1",
+          "4,1",
+          "5,1",
+          "3,2",
+          "4,2",
+          "5,2",
+          "6,0",
+          "7,0",
+          "8,0",
+          "6,1",
+          "7,1",
+          "8,1",
+          "6,2",
+          "7,2",
+          "8,2",
+          "9,0",
+          "10,0",
+          "11,0",
+          "9,1",
+          "10,1",
+          "11,1",
+          "9,2",
+          "10,2",
+          "11,2",
+          "12,0",
+          "13,0",
+          "14,0",
+          "12,1",
+          "13,1",
+          "14,1",
+          "12,2",
+          "13,2",
+          "14,2",
+          "0,3",
+          "1,3",
+          "2,3",
+          "0,4",
+          "1,4",
+          "2,4",
+          "0,5",
+          "1,5",
+          "2,5",
+          "3,3",
+          "4,3",
+          "5,3",
+          "3,4",
+          "4,4",
+          "5,4",
+          "3,5",
+          "4,5",
+          "5,5",
+          "6,3",
+          "7,3",
+          "8,3",
+          "6,4",
+          "7,4",
+          "8,4",
+          "6,5",
+          "7,5",
+          "8,5",
+          "9,3",
+          "10,3",
+          "11,3",
+          "9,4",
+          "10,4",
+          "11,4",
+          "9,5",
+          "10,5",
+          "11,5",
+          "9,6",
+          "10,6",
+          "11,6",
+          "12,3",
+          "13,3",
+          "14,3",
+          "12,4",
+          "13,4",
+          "14,4",
+          "12,5",
+          "13,5",
+          "14,5",
+          "12,6",
+          "13,6",
+          "14,6",
+          "0,6",
+          "1,6",
+          "2,6",
+          "0,7",
+          "1,7",
+          "2,7",
+          "0,8",
+          "1,8",
+          "2,8",
+          "0,9",
+          "1,9",
+          "2,9",
+          "3,6",
+          "4,6",
+          "5,6",
+          "3,7",
+          "4,7",
+          "5,7",
+          "3,8",
+          "4,8",
+          "5,8",
+          "3,9",
+          "4,9",
+          "5,9",
+          "6,6",
+          "7,6",
+          "8,6",
+          "6,7",
+          "7,7",
+          "8,7",
+          "6,8",
+          "7,8",
+          "8,8",
+          "6,9",
+          "7,9",
+          "8,9",
+          "9,7",
+          "10,7",
+          "11,7",
+          "9,8",
+          "10,8",
+          "11,8",
+          "9,9",
+          "10,9",
+          "11,9",
+          "9,10",
+          "10,10",
+          "11,10",
+          "12,7",
+          "13,7",
+          "14,7",
+          "12,8",
+          "13,8",
+          "14,8",
+          "12,9",
+          "13,9",
+          "14,9",
+          "12,10",
+          "13,10",
+          "14,10",
+          "0,10",
+          "1,10",
+          "2,10",
+          "0,11",
+          "1,11",
+          "2,11",
+          "0,12",
+          "1,12",
+          "2,12",
+          "0,13",
+          "1,13",
+          "2,13",
+          "3,10",
+          "4,10",
+          "5,10",
+          "3,11",
+          "4,11",
+          "5,11",
+          "3,12",
+          "4,12",
+          "5,12",
+          "6,11",
+          "7,11",
+          "8,11",
+          "9,11",
+          "6,12",
+          "7,12",
+          "8,12",
+          "9,12",
+          "6,13",
+          "7,13",
+          "8,13",
+          "9,13",
+          "10,11",
+          "11,11",
+          "12,11",
+          "10,12",
+          "11,12",
+          "12,12",
+          "10,13",
+          "11,13",
+          "12,13",
+          "13,11",
+          "14,11",
+          "15,11",
+          "13,12",
+          "14,12",
+          "15,12",
+          "13,13",
+          "14,13",
+          "15,13"
+        ]
+      }
+    }
+  },
+  "upscaledBeyondMaster": false,
+  "omittedCandidateDensities": [
+    2,
+    3
+  ],
+  "pages": [
+    {
+      "name": "dtv5_city_sand_medium.coarse.webp",
+      "sha256": "5040f584c0ad1e0e81605a3393eefbd7b576fcf524def5f95e3c5c50312d74d1",
+      "width": 2032,
+      "height": 132,
+      "decodedBytes": 1072896,
+      "compressedBytes": 108964,
+      "tier": 0,
+      "tierName": "coarse",
+      "backingDensity": 0.5
+    },
+    {
+      "name": "dtv5_city_sand_medium.final.webp",
+      "sha256": "7c81b75147bc81f1d4d8fd4e20d5759789932ff1a4a1936607a060ea60dd3ac0",
+      "width": 2024,
+      "height": 520,
+      "decodedBytes": 4209920,
+      "compressedBytes": 308472,
+      "tier": 2,
+      "tierName": "final",
+      "backingDensity": 1
+    }
+  ],
+  "sprites": [
+    {
+      "spriteId": "dtv5_city_sand_medium:group_1",
+      "groupId": "group_1",
+      "savedIdentifiers": [
+        "cities_sand_medium_city_001"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 192,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 0,
+        "y": 0,
+        "width": 192,
+        "height": 192
+      },
+      "tileKeys": [
+        "0,0",
+        "0,1",
+        "0,2",
+        "1,0",
+        "1,1",
+        "1,2",
+        "2,0",
+        "2,1",
+        "2,2"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_4",
+        "group_1",
+        "impassable",
+        "overhang",
+        "passable",
+        "sand"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_sand_medium.coarse.webp",
+          "x": 2,
+          "y": 2,
+          "width": 96,
+          "height": 96,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_sand_medium.final.webp",
+          "x": 2,
+          "y": 2,
+          "width": 192,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_sand_medium:group_2",
+      "groupId": "group_2",
+      "savedIdentifiers": [
+        "cities_sand_medium_city_002"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 192,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 192,
+        "y": 0,
+        "width": 192,
+        "height": 192
+      },
+      "tileKeys": [
+        "3,0",
+        "3,1",
+        "3,2",
+        "4,0",
+        "4,1",
+        "4,2",
+        "5,0",
+        "5,1",
+        "5,2"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_4",
+        "group_2",
+        "impassable",
+        "overhang",
+        "passable",
+        "sand"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_sand_medium.coarse.webp",
+          "x": 102,
+          "y": 2,
+          "width": 96,
+          "height": 96,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_sand_medium.final.webp",
+          "x": 198,
+          "y": 2,
+          "width": 192,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_sand_medium:group_3",
+      "groupId": "group_3",
+      "savedIdentifiers": [
+        "cities_sand_medium_city_003"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 192,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 384,
+        "y": 0,
+        "width": 192,
+        "height": 192
+      },
+      "tileKeys": [
+        "6,0",
+        "6,1",
+        "6,2",
+        "7,0",
+        "7,1",
+        "7,2",
+        "8,0",
+        "8,1",
+        "8,2"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_4",
+        "group_3",
+        "impassable",
+        "overhang",
+        "passable",
+        "sand"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_sand_medium.coarse.webp",
+          "x": 202,
+          "y": 2,
+          "width": 96,
+          "height": 96,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_sand_medium.final.webp",
+          "x": 394,
+          "y": 2,
+          "width": 192,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_sand_medium:group_4",
+      "groupId": "group_4",
+      "savedIdentifiers": [
+        "cities_sand_medium_city_004"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 192,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 576,
+        "y": 0,
+        "width": 192,
+        "height": 192
+      },
+      "tileKeys": [
+        "10,0",
+        "10,1",
+        "10,2",
+        "11,0",
+        "11,1",
+        "11,2",
+        "9,0",
+        "9,1",
+        "9,2"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_4",
+        "group_4",
+        "impassable",
+        "overhang",
+        "passable",
+        "sand"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_sand_medium.coarse.webp",
+          "x": 302,
+          "y": 2,
+          "width": 96,
+          "height": 96,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_sand_medium.final.webp",
+          "x": 590,
+          "y": 2,
+          "width": 192,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_sand_medium:group_5",
+      "groupId": "group_5",
+      "savedIdentifiers": [
+        "cities_sand_medium_city_005"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 192,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 768,
+        "y": 0,
+        "width": 192,
+        "height": 192
+      },
+      "tileKeys": [
+        "12,0",
+        "12,1",
+        "12,2",
+        "13,0",
+        "13,1",
+        "13,2",
+        "14,0",
+        "14,1",
+        "14,2"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_5",
+        "group_5",
+        "impassable",
+        "overhang",
+        "passable",
+        "sand"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_sand_medium.coarse.webp",
+          "x": 402,
+          "y": 2,
+          "width": 96,
+          "height": 96,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_sand_medium.final.webp",
+          "x": 786,
+          "y": 2,
+          "width": 192,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_sand_medium:group_6",
+      "groupId": "group_6",
+      "savedIdentifiers": [
+        "cities_sand_medium_city_006"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 192,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 0,
+        "y": 192,
+        "width": 192,
+        "height": 192
+      },
+      "tileKeys": [
+        "0,3",
+        "0,4",
+        "0,5",
+        "1,3",
+        "1,4",
+        "1,5",
+        "2,3",
+        "2,4",
+        "2,5"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_5",
+        "group_6",
+        "impassable",
+        "overhang",
+        "passable",
+        "sand"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_sand_medium.coarse.webp",
+          "x": 502,
+          "y": 2,
+          "width": 96,
+          "height": 96,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_sand_medium.final.webp",
+          "x": 982,
+          "y": 2,
+          "width": 192,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_sand_medium:group_7",
+      "groupId": "group_7",
+      "savedIdentifiers": [
+        "cities_sand_medium_city_007"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 192,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 192,
+        "y": 192,
+        "width": 192,
+        "height": 192
+      },
+      "tileKeys": [
+        "3,3",
+        "3,4",
+        "3,5",
+        "4,3",
+        "4,4",
+        "4,5",
+        "5,3",
+        "5,4",
+        "5,5"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_5",
+        "group_7",
+        "impassable",
+        "overhang",
+        "passable",
+        "sand"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_sand_medium.coarse.webp",
+          "x": 602,
+          "y": 2,
+          "width": 96,
+          "height": 96,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_sand_medium.final.webp",
+          "x": 1178,
+          "y": 2,
+          "width": 192,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_sand_medium:group_8",
+      "groupId": "group_8",
+      "savedIdentifiers": [
+        "cities_sand_medium_city_008"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 192,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 384,
+        "y": 192,
+        "width": 192,
+        "height": 192
+      },
+      "tileKeys": [
+        "6,3",
+        "6,4",
+        "6,5",
+        "7,3",
+        "7,4",
+        "7,5",
+        "8,3",
+        "8,4",
+        "8,5"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_5",
+        "group_8",
+        "impassable",
+        "overhang",
+        "passable",
+        "sand"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_sand_medium.coarse.webp",
+          "x": 702,
+          "y": 2,
+          "width": 96,
+          "height": 96,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_sand_medium.final.webp",
+          "x": 1374,
+          "y": 2,
+          "width": 192,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_sand_medium:group_9",
+      "groupId": "group_9",
+      "savedIdentifiers": [
+        "cities_sand_medium_city_009"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 256,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 576,
+        "y": 192,
+        "width": 192,
+        "height": 256
+      },
+      "tileKeys": [
+        "10,3",
+        "10,4",
+        "10,5",
+        "10,6",
+        "11,3",
+        "11,4",
+        "11,5",
+        "11,6",
+        "9,3",
+        "9,4",
+        "9,5",
+        "9,6"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_6",
+        "group_9",
+        "impassable",
+        "overhang",
+        "passable",
+        "sand"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_sand_medium.coarse.webp",
+          "x": 802,
+          "y": 2,
+          "width": 96,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_sand_medium.final.webp",
+          "x": 1570,
+          "y": 2,
+          "width": 192,
+          "height": 256,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_sand_medium:group_10",
+      "groupId": "group_10",
+      "savedIdentifiers": [
+        "cities_sand_medium_city_010"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 256,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 768,
+        "y": 192,
+        "width": 192,
+        "height": 256
+      },
+      "tileKeys": [
+        "12,3",
+        "12,4",
+        "12,5",
+        "12,6",
+        "13,3",
+        "13,4",
+        "13,5",
+        "13,6",
+        "14,3",
+        "14,4",
+        "14,5",
+        "14,6"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_6",
+        "group_10",
+        "impassable",
+        "overhang",
+        "passable",
+        "sand"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_sand_medium.coarse.webp",
+          "x": 902,
+          "y": 2,
+          "width": 96,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_sand_medium.final.webp",
+          "x": 1766,
+          "y": 2,
+          "width": 192,
+          "height": 256,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_sand_medium:group_11",
+      "groupId": "group_11",
+      "savedIdentifiers": [
+        "cities_sand_medium_city_011"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 256,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 0,
+        "y": 384,
+        "width": 192,
+        "height": 256
+      },
+      "tileKeys": [
+        "0,6",
+        "0,7",
+        "0,8",
+        "0,9",
+        "1,6",
+        "1,7",
+        "1,8",
+        "1,9",
+        "2,6",
+        "2,7",
+        "2,8",
+        "2,9"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_6",
+        "group_11",
+        "impassable",
+        "overhang",
+        "passable",
+        "sand"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_sand_medium.coarse.webp",
+          "x": 1002,
+          "y": 2,
+          "width": 96,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_sand_medium.final.webp",
+          "x": 2,
+          "y": 262,
+          "width": 192,
+          "height": 256,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_sand_medium:group_12",
+      "groupId": "group_12",
+      "savedIdentifiers": [
+        "cities_sand_medium_city_012"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 256,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 192,
+        "y": 384,
+        "width": 192,
+        "height": 256
+      },
+      "tileKeys": [
+        "3,6",
+        "3,7",
+        "3,8",
+        "3,9",
+        "4,6",
+        "4,7",
+        "4,8",
+        "4,9",
+        "5,6",
+        "5,7",
+        "5,8",
+        "5,9"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_6",
+        "group_12",
+        "impassable",
+        "overhang",
+        "passable",
+        "sand"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_sand_medium.coarse.webp",
+          "x": 1102,
+          "y": 2,
+          "width": 96,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_sand_medium.final.webp",
+          "x": 198,
+          "y": 262,
+          "width": 192,
+          "height": 256,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_sand_medium:group_13",
+      "groupId": "group_13",
+      "savedIdentifiers": [
+        "cities_sand_medium_city_013"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 256,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 384,
+        "y": 384,
+        "width": 192,
+        "height": 256
+      },
+      "tileKeys": [
+        "6,6",
+        "6,7",
+        "6,8",
+        "6,9",
+        "7,6",
+        "7,7",
+        "7,8",
+        "7,9",
+        "8,6",
+        "8,7",
+        "8,8",
+        "8,9"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_7",
+        "group_13",
+        "impassable",
+        "overhang",
+        "passable",
+        "sand"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_sand_medium.coarse.webp",
+          "x": 1202,
+          "y": 2,
+          "width": 96,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_sand_medium.final.webp",
+          "x": 394,
+          "y": 262,
+          "width": 192,
+          "height": 256,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_sand_medium:group_14",
+      "groupId": "group_14",
+      "savedIdentifiers": [
+        "cities_sand_medium_city_014"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 256,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 576,
+        "y": 448,
+        "width": 192,
+        "height": 256
+      },
+      "tileKeys": [
+        "10,10",
+        "10,7",
+        "10,8",
+        "10,9",
+        "11,10",
+        "11,7",
+        "11,8",
+        "11,9",
+        "9,10",
+        "9,7",
+        "9,8",
+        "9,9"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_7",
+        "group_14",
+        "impassable",
+        "overhang",
+        "passable",
+        "sand"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_sand_medium.coarse.webp",
+          "x": 1302,
+          "y": 2,
+          "width": 96,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_sand_medium.final.webp",
+          "x": 590,
+          "y": 262,
+          "width": 192,
+          "height": 256,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_sand_medium:group_15",
+      "groupId": "group_15",
+      "savedIdentifiers": [
+        "cities_sand_medium_city_015"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 256,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 768,
+        "y": 448,
+        "width": 192,
+        "height": 256
+      },
+      "tileKeys": [
+        "12,10",
+        "12,7",
+        "12,8",
+        "12,9",
+        "13,10",
+        "13,7",
+        "13,8",
+        "13,9",
+        "14,10",
+        "14,7",
+        "14,8",
+        "14,9"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_7",
+        "group_15",
+        "impassable",
+        "overhang",
+        "passable",
+        "sand"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_sand_medium.coarse.webp",
+          "x": 1402,
+          "y": 2,
+          "width": 96,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_sand_medium.final.webp",
+          "x": 786,
+          "y": 262,
+          "width": 192,
+          "height": 256,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_sand_medium:group_16",
+      "groupId": "group_16",
+      "savedIdentifiers": [
+        "cities_sand_medium_city_016"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 256,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 0,
+        "y": 640,
+        "width": 192,
+        "height": 256
+      },
+      "tileKeys": [
+        "0,10",
+        "0,11",
+        "0,12",
+        "0,13",
+        "1,10",
+        "1,11",
+        "1,12",
+        "1,13",
+        "2,10",
+        "2,11",
+        "2,12",
+        "2,13"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_7",
+        "group_16",
+        "impassable",
+        "overhang",
+        "passable",
+        "sand"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_sand_medium.coarse.webp",
+          "x": 1502,
+          "y": 2,
+          "width": 96,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_sand_medium.final.webp",
+          "x": 982,
+          "y": 262,
+          "width": 192,
+          "height": 256,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_sand_medium:group_17",
+      "groupId": "group_17",
+      "savedIdentifiers": [
+        "cities_sand_medium_city_017"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 192,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 192,
+        "y": 640,
+        "width": 192,
+        "height": 192
+      },
+      "tileKeys": [
+        "3,10",
+        "3,11",
+        "3,12",
+        "4,10",
+        "4,11",
+        "4,12",
+        "5,10",
+        "5,11",
+        "5,12"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_5",
+        "group_17",
+        "impassable",
+        "overhang",
+        "passable",
+        "sand"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_sand_medium.coarse.webp",
+          "x": 1602,
+          "y": 2,
+          "width": 96,
+          "height": 96,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_sand_medium.final.webp",
+          "x": 1178,
+          "y": 262,
+          "width": 192,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_sand_medium:group_18",
+      "groupId": "group_18",
+      "savedIdentifiers": [
+        "cities_sand_medium_city_018"
+      ],
+      "logicalWidth": 256,
+      "logicalHeight": 192,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 384,
+        "y": 704,
+        "width": 256,
+        "height": 192
+      },
+      "tileKeys": [
+        "6,11",
+        "6,12",
+        "6,13",
+        "7,11",
+        "7,12",
+        "7,13",
+        "8,11",
+        "8,12",
+        "8,13",
+        "9,11",
+        "9,12",
+        "9,13"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_5",
+        "group_18",
+        "impassable",
+        "overhang",
+        "passable",
+        "sand"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_sand_medium.coarse.webp",
+          "x": 1702,
+          "y": 2,
+          "width": 128,
+          "height": 96,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_sand_medium.final.webp",
+          "x": 1374,
+          "y": 262,
+          "width": 256,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_sand_medium:group_19",
+      "groupId": "group_19",
+      "savedIdentifiers": [
+        "cities_sand_medium_city_019"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 192,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 640,
+        "y": 704,
+        "width": 192,
+        "height": 192
+      },
+      "tileKeys": [
+        "10,11",
+        "10,12",
+        "10,13",
+        "11,11",
+        "11,12",
+        "11,13",
+        "12,11",
+        "12,12",
+        "12,13"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_5",
+        "group_19",
+        "impassable",
+        "overhang",
+        "passable",
+        "sand"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_sand_medium.coarse.webp",
+          "x": 1834,
+          "y": 2,
+          "width": 96,
+          "height": 96,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_sand_medium.final.webp",
+          "x": 1634,
+          "y": 262,
+          "width": 192,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_sand_medium:group_20",
+      "groupId": "group_20",
+      "savedIdentifiers": [
+        "cities_sand_medium_city_020"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 192,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 832,
+        "y": 704,
+        "width": 192,
+        "height": 192
+      },
+      "tileKeys": [
+        "13,11",
+        "13,12",
+        "13,13",
+        "14,11",
+        "14,12",
+        "14,13",
+        "15,11",
+        "15,12",
+        "15,13"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_5",
+        "group_20",
+        "impassable",
+        "overhang",
+        "passable",
+        "sand"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_sand_medium.coarse.webp",
+          "x": 1934,
+          "y": 2,
+          "width": 96,
+          "height": 96,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_sand_medium.final.webp",
+          "x": 1830,
+          "y": 262,
+          "width": 192,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    }
+  ]
+}

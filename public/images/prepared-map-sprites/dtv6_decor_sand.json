@@ -1,0 +1,2920 @@
+{
+  "schemaVersion": 1,
+  "name": "dtv6_decor_sand",
+  "identity": {
+    "buildVersion": 1,
+    "atlasVersion": 1,
+    "catalogVersion": 1,
+    "pixelRulesVersion": 1,
+    "webpQuality": 85,
+    "padding": 2,
+    "sourceHash": "1a8b5a72652414e8467edc126cf88b7b69362eec80933135db90d3d9a3d1bec4",
+    "metadataHash": "c6494561973837c45fa700dc9f071a57d54f587dae01944360c6173c84daeeea",
+    "metadataSignature": "e6cbef49e97f4be72db0a662601327c80ae3064cca91220dc6d6ad36086c9c4d",
+    "selectedBackingDensities": [
+      0.5,
+      1
+    ]
+  },
+  "signature": "700153fc16fb72b7d4b5193fea0fe60d95c335e5c933a939988f7b362b7287f0",
+  "source": {
+    "image": "images/map/sprite_sheets/dtv6_decor_sand.webp",
+    "metadata": "images/map/sprite_sheets/dtv6_decor_sand.json",
+    "sourceMetadata": {
+      "path": "images/map/sprite_sheets/sources/alpha_sand.webp",
+      "sha256": "596c16b2a0e8b60ab5e2d2e800828a221b310204a75ae055d80e76f3ba3531ba",
+      "width": 1024,
+      "height": 1536,
+      "detection": {
+        "transparent": true,
+        "alphaCutoff": 128,
+        "gap": 0,
+        "minArea": 1000
+      },
+      "guides": [],
+      "spriteCount": 24,
+      "packing": {
+        "scale": "per-sprite",
+        "padding": 2
+      }
+    },
+    "editorMetadata": {
+      "schemaVersion": 1,
+      "layoutVersion": 2,
+      "name": "dtv6_decor_sand",
+      "grid": {
+        "tileSize": 64,
+        "rowHeight": 64,
+        "borderWidth": 0,
+        "cols": 16,
+        "rows": 5
+      },
+      "tags": [
+        "sand",
+        "decorative",
+        "trees",
+        "impassable",
+        "water",
+        "landmark",
+        "farm",
+        "ruins",
+        "passable",
+        "roadside",
+        "rocks",
+        "stones"
+      ],
+      "propLayout": [
+        {
+          "id": "sand_palm_row",
+          "col": 0,
+          "row": 0,
+          "w": 1,
+          "h": 2,
+          "groupId": 1,
+          "tags": [
+            "sand",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_1"
+          ],
+          "sourceRect": {
+            "x": 42,
+            "y": 26,
+            "width": 123,
+            "height": 367
+          }
+        },
+        {
+          "id": "sand_oasis",
+          "col": 1,
+          "row": 0,
+          "w": 3,
+          "h": 3,
+          "groupId": 2,
+          "tags": [
+            "sand",
+            "decorative",
+            "water",
+            "impassable",
+            "landmark",
+            "group_2"
+          ],
+          "sourceRect": {
+            "x": 211,
+            "y": 41,
+            "width": 395,
+            "height": 353
+          }
+        },
+        {
+          "id": "sand_saguaros",
+          "col": 4,
+          "row": 0,
+          "w": 1,
+          "h": 2,
+          "groupId": 3,
+          "tags": [
+            "sand",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_3"
+          ],
+          "sourceRect": {
+            "x": 616,
+            "y": 95,
+            "width": 159,
+            "height": 229
+          }
+        },
+        {
+          "id": "sand_adobe_hut",
+          "col": 5,
+          "row": 0,
+          "w": 2,
+          "h": 2,
+          "groupId": 4,
+          "tags": [
+            "sand",
+            "decorative",
+            "farm",
+            "impassable",
+            "group_4"
+          ],
+          "sourceRect": {
+            "x": 791,
+            "y": 112,
+            "width": 214,
+            "height": 212
+          }
+        },
+        {
+          "id": "sand_sandstone_arch",
+          "col": 7,
+          "row": 0,
+          "w": 2,
+          "h": 2,
+          "groupId": 5,
+          "tags": [
+            "sand",
+            "decorative",
+            "ruins",
+            "impassable",
+            "group_5"
+          ],
+          "sourceRect": {
+            "x": 16,
+            "y": 405,
+            "width": 216,
+            "height": 179
+          }
+        },
+        {
+          "id": "sand_dune",
+          "col": 9,
+          "row": 0,
+          "w": 2,
+          "h": 2,
+          "groupId": 6,
+          "tags": [
+            "sand",
+            "decorative",
+            "passable",
+            "group_6"
+          ],
+          "sourceRect": {
+            "x": 255,
+            "y": 432,
+            "width": 242,
+            "height": 166
+          }
+        },
+        {
+          "id": "sand_car_wreck",
+          "col": 11,
+          "row": 0,
+          "w": 1,
+          "h": 1,
+          "groupId": 7,
+          "tags": [
+            "sand",
+            "decorative",
+            "roadside",
+            "impassable",
+            "group_7"
+          ],
+          "sourceRect": {
+            "x": 514,
+            "y": 435,
+            "width": 210,
+            "height": 163
+          }
+        },
+        {
+          "id": "sand_mudbrick_ruin",
+          "col": 12,
+          "row": 0,
+          "w": 2,
+          "h": 2,
+          "groupId": 8,
+          "tags": [
+            "sand",
+            "decorative",
+            "ruins",
+            "impassable",
+            "group_8"
+          ],
+          "sourceRect": {
+            "x": 751,
+            "y": 360,
+            "width": 257,
+            "height": 247
+          }
+        },
+        {
+          "id": "sand_sandstone_outcrop",
+          "col": 14,
+          "row": 0,
+          "w": 2,
+          "h": 2,
+          "groupId": 9,
+          "tags": [
+            "sand",
+            "decorative",
+            "rocks",
+            "impassable",
+            "group_9"
+          ],
+          "sourceRect": {
+            "x": 16,
+            "y": 611,
+            "width": 304,
+            "height": 252
+          }
+        },
+        {
+          "id": "sand_palm",
+          "col": 11,
+          "row": 1,
+          "w": 1,
+          "h": 2,
+          "groupId": 10,
+          "tags": [
+            "sand",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_10"
+          ],
+          "sourceRect": {
+            "x": 339,
+            "y": 614,
+            "width": 175,
+            "height": 228
+          }
+        },
+        {
+          "id": "sand_truck_wreck",
+          "col": 4,
+          "row": 2,
+          "w": 2,
+          "h": 1,
+          "groupId": 11,
+          "tags": [
+            "sand",
+            "decorative",
+            "roadside",
+            "impassable",
+            "group_11"
+          ],
+          "sourceRect": {
+            "x": 510,
+            "y": 693,
+            "width": 218,
+            "height": 141
+          }
+        },
+        {
+          "id": "sand_tent_camp",
+          "col": 6,
+          "row": 2,
+          "w": 2,
+          "h": 2,
+          "groupId": 12,
+          "tags": [
+            "sand",
+            "decorative",
+            "farm",
+            "impassable",
+            "group_12"
+          ],
+          "sourceRect": {
+            "x": 739,
+            "y": 659,
+            "width": 269,
+            "height": 178
+          }
+        },
+        {
+          "id": "sand_dry_shrubs",
+          "col": 0,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 13,
+          "tags": [
+            "sand",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_13"
+          ],
+          "sourceRect": {
+            "x": 31,
+            "y": 882,
+            "width": 242,
+            "height": 168
+          }
+        },
+        {
+          "id": "sand_barrel_cacti",
+          "col": 8,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 14,
+          "tags": [
+            "sand",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_14"
+          ],
+          "sourceRect": {
+            "x": 309,
+            "y": 895,
+            "width": 181,
+            "height": 152
+          }
+        },
+        {
+          "id": "sand_loose_boulders",
+          "col": 9,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 15,
+          "tags": [
+            "sand",
+            "decorative",
+            "rocks",
+            "stones",
+            "passable",
+            "group_15"
+          ],
+          "sourceRect": {
+            "x": 532,
+            "y": 886,
+            "width": 254,
+            "height": 171
+          }
+        },
+        {
+          "id": "sand_skull_bones",
+          "col": 10,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 16,
+          "tags": [
+            "sand",
+            "decorative",
+            "passable",
+            "group_16"
+          ],
+          "sourceRect": {
+            "x": 843,
+            "y": 864,
+            "width": 134,
+            "height": 172
+          }
+        },
+        {
+          "id": "sand_skeleton",
+          "col": 12,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 17,
+          "tags": [
+            "sand",
+            "decorative",
+            "passable",
+            "group_17"
+          ],
+          "sourceRect": {
+            "x": 34,
+            "y": 1097,
+            "width": 206,
+            "height": 159
+          }
+        },
+        {
+          "id": "sand_dead_tree",
+          "col": 13,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 18,
+          "tags": [
+            "sand",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_18"
+          ],
+          "sourceRect": {
+            "x": 272,
+            "y": 1066,
+            "width": 240,
+            "height": 201
+          }
+        },
+        {
+          "id": "sand_stone_well",
+          "col": 14,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 19,
+          "tags": [
+            "sand",
+            "decorative",
+            "farm",
+            "impassable",
+            "group_19"
+          ],
+          "sourceRect": {
+            "x": 523,
+            "y": 1085,
+            "width": 244,
+            "height": 195
+          }
+        },
+        {
+          "id": "sand_barrels",
+          "col": 15,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 20,
+          "tags": [
+            "sand",
+            "decorative",
+            "roadside",
+            "impassable",
+            "group_20"
+          ],
+          "sourceRect": {
+            "x": 794,
+            "y": 1092,
+            "width": 207,
+            "height": 164
+          }
+        },
+        {
+          "id": "sand_acacia",
+          "col": 0,
+          "row": 3,
+          "w": 2,
+          "h": 2,
+          "groupId": 21,
+          "tags": [
+            "sand",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_21"
+          ],
+          "sourceRect": {
+            "x": 24,
+            "y": 1284,
+            "width": 258,
+            "height": 213
+          }
+        },
+        {
+          "id": "sand_ruined_cistern",
+          "col": 2,
+          "row": 3,
+          "w": 2,
+          "h": 2,
+          "groupId": 22,
+          "tags": [
+            "sand",
+            "decorative",
+            "ruins",
+            "impassable",
+            "group_22"
+          ],
+          "sourceRect": {
+            "x": 293,
+            "y": 1308,
+            "width": 221,
+            "height": 184
+          }
+        },
+        {
+          "id": "sand_dry_wash",
+          "col": 4,
+          "row": 3,
+          "w": 2,
+          "h": 2,
+          "groupId": 23,
+          "tags": [
+            "sand",
+            "decorative",
+            "rocks",
+            "impassable",
+            "group_23"
+          ],
+          "sourceRect": {
+            "x": 530,
+            "y": 1316,
+            "width": 258,
+            "height": 180
+          }
+        },
+        {
+          "id": "sand_water_tank",
+          "col": 8,
+          "row": 3,
+          "w": 1,
+          "h": 2,
+          "groupId": 24,
+          "tags": [
+            "sand",
+            "decorative",
+            "roadside",
+            "impassable",
+            "group_24"
+          ],
+          "sourceRect": {
+            "x": 804,
+            "y": 1276,
+            "width": 194,
+            "height": 223
+          }
+        }
+      ],
+      "extension": {
+        "imports": [
+          {
+            "id": "sand_palm_row",
+            "sourceId": "alpha_sand",
+            "bbox": {
+              "x": 42,
+              "y": 26,
+              "width": 123,
+              "height": 367
+            },
+            "area": 30804,
+            "anchor": "center",
+            "sizeRatio": 0.33787465940054495,
+            "referenceSize": {
+              "width": 96,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 0,
+              "row": 0
+            },
+            "tags": [
+              "sand",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_1"
+            ],
+            "renderRect": {
+              "x": 11,
+              "y": 2,
+              "width": 42,
+              "height": 124
+            }
+          },
+          {
+            "id": "sand_oasis",
+            "sourceId": "alpha_sand",
+            "bbox": {
+              "x": 211,
+              "y": 41,
+              "width": 395,
+              "height": 353
+            },
+            "area": 101464,
+            "anchor": "center",
+            "sizeRatio": 0.45569620253164556,
+            "referenceSize": {
+              "width": 180,
+              "height": 188
+            },
+            "tileSpan": {
+              "columns": 3,
+              "rows": 3
+            },
+            "placedAt": {
+              "column": 1,
+              "row": 0
+            },
+            "tags": [
+              "sand",
+              "decorative",
+              "water",
+              "impassable",
+              "landmark",
+              "group_2"
+            ],
+            "renderRect": {
+              "x": 6,
+              "y": 15,
+              "width": 180,
+              "height": 161
+            }
+          },
+          {
+            "id": "sand_saguaros",
+            "sourceId": "alpha_sand",
+            "bbox": {
+              "x": 616,
+              "y": 95,
+              "width": 159,
+              "height": 229
+            },
+            "area": 21954,
+            "anchor": "center",
+            "sizeRatio": 0.37735849056603776,
+            "referenceSize": {
+              "width": 60,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 4,
+              "row": 0
+            },
+            "tags": [
+              "sand",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_3"
+            ],
+            "renderRect": {
+              "x": 2,
+              "y": 21,
+              "width": 60,
+              "height": 86
+            }
+          },
+          {
+            "id": "sand_adobe_hut",
+            "sourceId": "alpha_sand",
+            "bbox": {
+              "x": 791,
+              "y": 112,
+              "width": 214,
+              "height": 212
+            },
+            "area": 34491,
+            "anchor": "center",
+            "sizeRatio": 0.5046728971962616,
+            "referenceSize": {
+              "width": 108,
+              "height": 152
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 5,
+              "row": 0
+            },
+            "tags": [
+              "sand",
+              "decorative",
+              "farm",
+              "impassable",
+              "group_4"
+            ],
+            "renderRect": {
+              "x": 10,
+              "y": 10,
+              "width": 108,
+              "height": 107
+            }
+          },
+          {
+            "id": "sand_sandstone_arch",
+            "sourceId": "alpha_sand",
+            "bbox": {
+              "x": 16,
+              "y": 405,
+              "width": 216,
+              "height": 179
+            },
+            "area": 24802,
+            "anchor": "center",
+            "sizeRatio": 0.4074074074074074,
+            "referenceSize": {
+              "width": 88,
+              "height": 160
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 7,
+              "row": 0
+            },
+            "tags": [
+              "sand",
+              "decorative",
+              "ruins",
+              "impassable",
+              "group_5"
+            ],
+            "renderRect": {
+              "x": 20,
+              "y": 27,
+              "width": 88,
+              "height": 73
+            }
+          },
+          {
+            "id": "sand_dune",
+            "sourceId": "alpha_sand",
+            "bbox": {
+              "x": 255,
+              "y": 432,
+              "width": 242,
+              "height": 166
+            },
+            "area": 29378,
+            "anchor": "center",
+            "sizeRatio": 0.4297520661157025,
+            "referenceSize": {
+              "width": 104,
+              "height": 100
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 9,
+              "row": 0
+            },
+            "tags": [
+              "sand",
+              "decorative",
+              "passable",
+              "group_6"
+            ],
+            "renderRect": {
+              "x": 12,
+              "y": 28,
+              "width": 104,
+              "height": 71
+            }
+          },
+          {
+            "id": "sand_car_wreck",
+            "sourceId": "alpha_sand",
+            "bbox": {
+              "x": 514,
+              "y": 435,
+              "width": 210,
+              "height": 163
+            },
+            "area": 24493,
+            "anchor": "center",
+            "sizeRatio": 0.20952380952380953,
+            "referenceSize": {
+              "width": 44,
+              "height": 120
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 11,
+              "row": 0
+            },
+            "tags": [
+              "sand",
+              "decorative",
+              "roadside",
+              "impassable",
+              "group_7"
+            ],
+            "renderRect": {
+              "x": 10,
+              "y": 15,
+              "width": 44,
+              "height": 34
+            }
+          },
+          {
+            "id": "sand_mudbrick_ruin",
+            "sourceId": "alpha_sand",
+            "bbox": {
+              "x": 751,
+              "y": 360,
+              "width": 257,
+              "height": 247
+            },
+            "area": 52288,
+            "anchor": "center",
+            "sizeRatio": 0.45136186770428016,
+            "referenceSize": {
+              "width": 116,
+              "height": 160
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 12,
+              "row": 0
+            },
+            "tags": [
+              "sand",
+              "decorative",
+              "ruins",
+              "impassable",
+              "group_8"
+            ],
+            "renderRect": {
+              "x": 6,
+              "y": 8,
+              "width": 116,
+              "height": 111
+            }
+          },
+          {
+            "id": "sand_sandstone_outcrop",
+            "sourceId": "alpha_sand",
+            "bbox": {
+              "x": 16,
+              "y": 611,
+              "width": 304,
+              "height": 252
+            },
+            "area": 54237,
+            "anchor": "center",
+            "sizeRatio": 0.2894736842105263,
+            "referenceSize": {
+              "width": 88,
+              "height": 100
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 14,
+              "row": 0
+            },
+            "tags": [
+              "sand",
+              "decorative",
+              "rocks",
+              "impassable",
+              "group_9"
+            ],
+            "renderRect": {
+              "x": 20,
+              "y": 27,
+              "width": 88,
+              "height": 73
+            }
+          },
+          {
+            "id": "sand_palm",
+            "sourceId": "alpha_sand",
+            "bbox": {
+              "x": 339,
+              "y": 614,
+              "width": 175,
+              "height": 228
+            },
+            "area": 21063,
+            "anchor": "center",
+            "sizeRatio": 0.29714285714285715,
+            "referenceSize": {
+              "width": 52,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 11,
+              "row": 1
+            },
+            "tags": [
+              "sand",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_10"
+            ],
+            "renderRect": {
+              "x": 6,
+              "y": 30,
+              "width": 52,
+              "height": 68
+            }
+          },
+          {
+            "id": "sand_truck_wreck",
+            "sourceId": "alpha_sand",
+            "bbox": {
+              "x": 510,
+              "y": 693,
+              "width": 218,
+              "height": 141
+            },
+            "area": 21576,
+            "anchor": "center",
+            "sizeRatio": 0.29357798165137616,
+            "referenceSize": {
+              "width": 64,
+              "height": 120
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 4,
+              "row": 2
+            },
+            "tags": [
+              "sand",
+              "decorative",
+              "roadside",
+              "impassable",
+              "group_11"
+            ],
+            "renderRect": {
+              "x": 32,
+              "y": 11,
+              "width": 64,
+              "height": 41
+            }
+          },
+          {
+            "id": "sand_tent_camp",
+            "sourceId": "alpha_sand",
+            "bbox": {
+              "x": 739,
+              "y": 659,
+              "width": 269,
+              "height": 178
+            },
+            "area": 33141,
+            "anchor": "center",
+            "sizeRatio": 0.37174721189591076,
+            "referenceSize": {
+              "width": 100,
+              "height": 152
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 6,
+              "row": 2
+            },
+            "tags": [
+              "sand",
+              "decorative",
+              "farm",
+              "impassable",
+              "group_12"
+            ],
+            "renderRect": {
+              "x": 14,
+              "y": 31,
+              "width": 100,
+              "height": 66
+            }
+          },
+          {
+            "id": "sand_dry_shrubs",
+            "sourceId": "alpha_sand",
+            "bbox": {
+              "x": 31,
+              "y": 882,
+              "width": 242,
+              "height": 168
+            },
+            "area": 23408,
+            "anchor": "center",
+            "sizeRatio": 0.1652892561983471,
+            "referenceSize": {
+              "width": 40,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 0,
+              "row": 2
+            },
+            "tags": [
+              "sand",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_13"
+            ],
+            "renderRect": {
+              "x": 12,
+              "y": 18,
+              "width": 40,
+              "height": 28
+            }
+          },
+          {
+            "id": "sand_barrel_cacti",
+            "sourceId": "alpha_sand",
+            "bbox": {
+              "x": 309,
+              "y": 895,
+              "width": 181,
+              "height": 152
+            },
+            "area": 18641,
+            "anchor": "center",
+            "sizeRatio": 0.22099447513812154,
+            "referenceSize": {
+              "width": 40,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 8,
+              "row": 2
+            },
+            "tags": [
+              "sand",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_14"
+            ],
+            "renderRect": {
+              "x": 12,
+              "y": 15,
+              "width": 40,
+              "height": 34
+            }
+          },
+          {
+            "id": "sand_loose_boulders",
+            "sourceId": "alpha_sand",
+            "bbox": {
+              "x": 532,
+              "y": 886,
+              "width": 254,
+              "height": 171
+            },
+            "area": 29725,
+            "anchor": "center",
+            "sizeRatio": 0.1889763779527559,
+            "referenceSize": {
+              "width": 48,
+              "height": 100
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 9,
+              "row": 2
+            },
+            "tags": [
+              "sand",
+              "decorative",
+              "rocks",
+              "stones",
+              "passable",
+              "group_15"
+            ],
+            "renderRect": {
+              "x": 8,
+              "y": 16,
+              "width": 48,
+              "height": 32
+            }
+          },
+          {
+            "id": "sand_skull_bones",
+            "sourceId": "alpha_sand",
+            "bbox": {
+              "x": 843,
+              "y": 864,
+              "width": 134,
+              "height": 172
+            },
+            "area": 10987,
+            "anchor": "center",
+            "sizeRatio": 0.208955223880597,
+            "referenceSize": {
+              "width": 28,
+              "height": 100
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 10,
+              "row": 2
+            },
+            "tags": [
+              "sand",
+              "decorative",
+              "passable",
+              "group_16"
+            ],
+            "renderRect": {
+              "x": 18,
+              "y": 14,
+              "width": 28,
+              "height": 36
+            }
+          },
+          {
+            "id": "sand_skeleton",
+            "sourceId": "alpha_sand",
+            "bbox": {
+              "x": 34,
+              "y": 1097,
+              "width": 206,
+              "height": 159
+            },
+            "area": 22398,
+            "anchor": "center",
+            "sizeRatio": 0.1941747572815534,
+            "referenceSize": {
+              "width": 40,
+              "height": 100
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 12,
+              "row": 2
+            },
+            "tags": [
+              "sand",
+              "decorative",
+              "passable",
+              "group_17"
+            ],
+            "renderRect": {
+              "x": 12,
+              "y": 16,
+              "width": 40,
+              "height": 31
+            }
+          },
+          {
+            "id": "sand_dead_tree",
+            "sourceId": "alpha_sand",
+            "bbox": {
+              "x": 272,
+              "y": 1066,
+              "width": 240,
+              "height": 201
+            },
+            "area": 20053,
+            "anchor": "center",
+            "sizeRatio": 0.21666666666666667,
+            "referenceSize": {
+              "width": 52,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 13,
+              "row": 2
+            },
+            "tags": [
+              "sand",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_18"
+            ],
+            "renderRect": {
+              "x": 6,
+              "y": 10,
+              "width": 52,
+              "height": 44
+            }
+          },
+          {
+            "id": "sand_stone_well",
+            "sourceId": "alpha_sand",
+            "bbox": {
+              "x": 523,
+              "y": 1085,
+              "width": 244,
+              "height": 195
+            },
+            "area": 30898,
+            "anchor": "center",
+            "sizeRatio": 0.14754098360655737,
+            "referenceSize": {
+              "width": 36,
+              "height": 152
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 14,
+              "row": 2
+            },
+            "tags": [
+              "sand",
+              "decorative",
+              "farm",
+              "impassable",
+              "group_19"
+            ],
+            "renderRect": {
+              "x": 14,
+              "y": 17,
+              "width": 36,
+              "height": 29
+            }
+          },
+          {
+            "id": "sand_barrels",
+            "sourceId": "alpha_sand",
+            "bbox": {
+              "x": 794,
+              "y": 1092,
+              "width": 207,
+              "height": 164
+            },
+            "area": 23834,
+            "anchor": "center",
+            "sizeRatio": 0.17391304347826086,
+            "referenceSize": {
+              "width": 36,
+              "height": 120
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 15,
+              "row": 2
+            },
+            "tags": [
+              "sand",
+              "decorative",
+              "roadside",
+              "impassable",
+              "group_20"
+            ],
+            "renderRect": {
+              "x": 14,
+              "y": 17,
+              "width": 36,
+              "height": 29
+            }
+          },
+          {
+            "id": "sand_acacia",
+            "sourceId": "alpha_sand",
+            "bbox": {
+              "x": 24,
+              "y": 1284,
+              "width": 258,
+              "height": 213
+            },
+            "area": 28441,
+            "anchor": "center",
+            "sizeRatio": 0.31007751937984496,
+            "referenceSize": {
+              "width": 80,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 0,
+              "row": 3
+            },
+            "tags": [
+              "sand",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_21"
+            ],
+            "renderRect": {
+              "x": 24,
+              "y": 31,
+              "width": 80,
+              "height": 66
+            }
+          },
+          {
+            "id": "sand_ruined_cistern",
+            "sourceId": "alpha_sand",
+            "bbox": {
+              "x": 293,
+              "y": 1308,
+              "width": 221,
+              "height": 184
+            },
+            "area": 29470,
+            "anchor": "center",
+            "sizeRatio": 0.47058823529411764,
+            "referenceSize": {
+              "width": 104,
+              "height": 160
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 2,
+              "row": 3
+            },
+            "tags": [
+              "sand",
+              "decorative",
+              "ruins",
+              "impassable",
+              "group_22"
+            ],
+            "renderRect": {
+              "x": 12,
+              "y": 20,
+              "width": 104,
+              "height": 87
+            }
+          },
+          {
+            "id": "sand_dry_wash",
+            "sourceId": "alpha_sand",
+            "bbox": {
+              "x": 530,
+              "y": 1316,
+              "width": 258,
+              "height": 180
+            },
+            "area": 33069,
+            "anchor": "center",
+            "sizeRatio": 0.34108527131782945,
+            "referenceSize": {
+              "width": 88,
+              "height": 100
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 4,
+              "row": 3
+            },
+            "tags": [
+              "sand",
+              "decorative",
+              "rocks",
+              "impassable",
+              "group_23"
+            ],
+            "renderRect": {
+              "x": 20,
+              "y": 33,
+              "width": 88,
+              "height": 61
+            }
+          },
+          {
+            "id": "sand_water_tank",
+            "sourceId": "alpha_sand",
+            "bbox": {
+              "x": 804,
+              "y": 1276,
+              "width": 194,
+              "height": 223
+            },
+            "area": 29038,
+            "anchor": "center",
+            "sizeRatio": 0.28865979381443296,
+            "referenceSize": {
+              "width": 56,
+              "height": 120
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 8,
+              "row": 3
+            },
+            "tags": [
+              "sand",
+              "decorative",
+              "roadside",
+              "impassable",
+              "group_24"
+            ],
+            "renderRect": {
+              "x": 4,
+              "y": 32,
+              "width": 56,
+              "height": 64
+            }
+          }
+        ],
+        "occupiedTiles": [
+          "0,0",
+          "0,1",
+          "1,0",
+          "2,0",
+          "3,0",
+          "1,1",
+          "2,1",
+          "3,1",
+          "1,2",
+          "2,2",
+          "3,2",
+          "4,0",
+          "4,1",
+          "5,0",
+          "6,0",
+          "5,1",
+          "6,1",
+          "7,0",
+          "8,0",
+          "7,1",
+          "8,1",
+          "9,0",
+          "10,0",
+          "9,1",
+          "10,1",
+          "11,0",
+          "12,0",
+          "13,0",
+          "12,1",
+          "13,1",
+          "14,0",
+          "15,0",
+          "14,1",
+          "15,1",
+          "11,1",
+          "11,2",
+          "4,2",
+          "5,2",
+          "6,2",
+          "7,2",
+          "6,3",
+          "7,3",
+          "0,2",
+          "8,2",
+          "9,2",
+          "10,2",
+          "12,2",
+          "13,2",
+          "14,2",
+          "15,2",
+          "0,3",
+          "1,3",
+          "0,4",
+          "1,4",
+          "2,3",
+          "3,3",
+          "2,4",
+          "3,4",
+          "4,3",
+          "5,3",
+          "4,4",
+          "5,4",
+          "8,3",
+          "8,4"
+        ]
+      }
+    }
+  },
+  "upscaledBeyondMaster": false,
+  "omittedCandidateDensities": [
+    2,
+    3
+  ],
+  "pages": [
+    {
+      "name": "dtv6_decor_sand.coarse.webp",
+      "sha256": "5791b399c18e43886e2d0194beece23ae192e13f033cab158d6850a08f222a8c",
+      "width": 1248,
+      "height": 100,
+      "decodedBytes": 499200,
+      "compressedBytes": 38836,
+      "tier": 0,
+      "tierName": "coarse",
+      "backingDensity": 0.5
+    },
+    {
+      "name": "dtv6_decor_sand.final.webp",
+      "sha256": "ec46bebaf54e54dbeff06e4f4c5a8027064e69d28e0743c8888016fb9fc65953",
+      "width": 1936,
+      "height": 328,
+      "decodedBytes": 2540032,
+      "compressedBytes": 101988,
+      "tier": 2,
+      "tierName": "final",
+      "backingDensity": 1
+    }
+  ],
+  "sprites": [
+    {
+      "spriteId": "dtv6_decor_sand:group_1",
+      "groupId": "group_1",
+      "savedIdentifiers": [
+        "sand_palm_row"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 128
+      },
+      "tileKeys": [
+        "0,0",
+        "0,1"
+      ],
+      "tags": [
+        "decorative",
+        "group_1",
+        "impassable",
+        "sand",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_sand.coarse.webp",
+          "x": 2,
+          "y": 2,
+          "width": 32,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_sand.final.webp",
+          "x": 2,
+          "y": 2,
+          "width": 64,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_sand:group_2",
+      "groupId": "group_2",
+      "savedIdentifiers": [
+        "sand_oasis"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 192,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 64,
+        "y": 0,
+        "width": 192,
+        "height": 192
+      },
+      "tileKeys": [
+        "1,0",
+        "1,1",
+        "1,2",
+        "2,0",
+        "2,1",
+        "2,2",
+        "3,0",
+        "3,1",
+        "3,2"
+      ],
+      "tags": [
+        "decorative",
+        "group_2",
+        "impassable",
+        "landmark",
+        "sand",
+        "water"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_sand.coarse.webp",
+          "x": 38,
+          "y": 2,
+          "width": 96,
+          "height": 96,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_sand.final.webp",
+          "x": 70,
+          "y": 2,
+          "width": 192,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_sand:group_3",
+      "groupId": "group_3",
+      "savedIdentifiers": [
+        "sand_saguaros"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 256,
+        "y": 0,
+        "width": 64,
+        "height": 128
+      },
+      "tileKeys": [
+        "4,0",
+        "4,1"
+      ],
+      "tags": [
+        "decorative",
+        "group_3",
+        "impassable",
+        "sand",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_sand.coarse.webp",
+          "x": 138,
+          "y": 2,
+          "width": 32,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_sand.final.webp",
+          "x": 266,
+          "y": 2,
+          "width": 64,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_sand:group_4",
+      "groupId": "group_4",
+      "savedIdentifiers": [
+        "sand_adobe_hut"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 320,
+        "y": 0,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "5,0",
+        "5,1",
+        "6,0",
+        "6,1"
+      ],
+      "tags": [
+        "decorative",
+        "farm",
+        "group_4",
+        "impassable",
+        "sand"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_sand.coarse.webp",
+          "x": 174,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_sand.final.webp",
+          "x": 334,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_sand:group_5",
+      "groupId": "group_5",
+      "savedIdentifiers": [
+        "sand_sandstone_arch"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 448,
+        "y": 0,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "7,0",
+        "7,1",
+        "8,0",
+        "8,1"
+      ],
+      "tags": [
+        "decorative",
+        "group_5",
+        "impassable",
+        "ruins",
+        "sand"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_sand.coarse.webp",
+          "x": 242,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_sand.final.webp",
+          "x": 466,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_sand:group_6",
+      "groupId": "group_6",
+      "savedIdentifiers": [
+        "sand_dune"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 576,
+        "y": 0,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "10,0",
+        "10,1",
+        "9,0",
+        "9,1"
+      ],
+      "tags": [
+        "decorative",
+        "group_6",
+        "passable",
+        "sand"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_sand.coarse.webp",
+          "x": 310,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_sand.final.webp",
+          "x": 598,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_sand:group_7",
+      "groupId": "group_7",
+      "savedIdentifiers": [
+        "sand_car_wreck"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 704,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "11,0"
+      ],
+      "tags": [
+        "decorative",
+        "group_7",
+        "impassable",
+        "roadside",
+        "sand"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_sand.coarse.webp",
+          "x": 378,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_sand.final.webp",
+          "x": 730,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_sand:group_8",
+      "groupId": "group_8",
+      "savedIdentifiers": [
+        "sand_mudbrick_ruin"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 768,
+        "y": 0,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "12,0",
+        "12,1",
+        "13,0",
+        "13,1"
+      ],
+      "tags": [
+        "decorative",
+        "group_8",
+        "impassable",
+        "ruins",
+        "sand"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_sand.coarse.webp",
+          "x": 414,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_sand.final.webp",
+          "x": 798,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_sand:group_9",
+      "groupId": "group_9",
+      "savedIdentifiers": [
+        "sand_sandstone_outcrop"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 896,
+        "y": 0,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "14,0",
+        "14,1",
+        "15,0",
+        "15,1"
+      ],
+      "tags": [
+        "decorative",
+        "group_9",
+        "impassable",
+        "rocks",
+        "sand"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_sand.coarse.webp",
+          "x": 482,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_sand.final.webp",
+          "x": 930,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_sand:group_10",
+      "groupId": "group_10",
+      "savedIdentifiers": [
+        "sand_palm"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 704,
+        "y": 64,
+        "width": 64,
+        "height": 128
+      },
+      "tileKeys": [
+        "11,1",
+        "11,2"
+      ],
+      "tags": [
+        "decorative",
+        "group_10",
+        "impassable",
+        "sand",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_sand.coarse.webp",
+          "x": 550,
+          "y": 2,
+          "width": 32,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_sand.final.webp",
+          "x": 1062,
+          "y": 2,
+          "width": 64,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_sand:group_11",
+      "groupId": "group_11",
+      "savedIdentifiers": [
+        "sand_truck_wreck"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 256,
+        "y": 128,
+        "width": 128,
+        "height": 64
+      },
+      "tileKeys": [
+        "4,2",
+        "5,2"
+      ],
+      "tags": [
+        "decorative",
+        "group_11",
+        "impassable",
+        "roadside",
+        "sand"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_sand.coarse.webp",
+          "x": 586,
+          "y": 2,
+          "width": 64,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_sand.final.webp",
+          "x": 1130,
+          "y": 2,
+          "width": 128,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_sand:group_12",
+      "groupId": "group_12",
+      "savedIdentifiers": [
+        "sand_tent_camp"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 384,
+        "y": 128,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "6,2",
+        "6,3",
+        "7,2",
+        "7,3"
+      ],
+      "tags": [
+        "decorative",
+        "farm",
+        "group_12",
+        "impassable",
+        "sand"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_sand.coarse.webp",
+          "x": 654,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_sand.final.webp",
+          "x": 1262,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_sand:group_13",
+      "groupId": "group_13",
+      "savedIdentifiers": [
+        "sand_dry_shrubs"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 0,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "0,2"
+      ],
+      "tags": [
+        "decorative",
+        "group_13",
+        "impassable",
+        "sand",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_sand.coarse.webp",
+          "x": 722,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_sand.final.webp",
+          "x": 1394,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_sand:group_14",
+      "groupId": "group_14",
+      "savedIdentifiers": [
+        "sand_barrel_cacti"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 512,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "8,2"
+      ],
+      "tags": [
+        "decorative",
+        "group_14",
+        "impassable",
+        "sand",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_sand.coarse.webp",
+          "x": 758,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_sand.final.webp",
+          "x": 1462,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_sand:group_15",
+      "groupId": "group_15",
+      "savedIdentifiers": [
+        "sand_loose_boulders"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 576,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "9,2"
+      ],
+      "tags": [
+        "decorative",
+        "group_15",
+        "passable",
+        "rocks",
+        "sand",
+        "stones"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_sand.coarse.webp",
+          "x": 794,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_sand.final.webp",
+          "x": 1530,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_sand:group_16",
+      "groupId": "group_16",
+      "savedIdentifiers": [
+        "sand_skull_bones"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 640,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "10,2"
+      ],
+      "tags": [
+        "decorative",
+        "group_16",
+        "passable",
+        "sand"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_sand.coarse.webp",
+          "x": 830,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_sand.final.webp",
+          "x": 1598,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_sand:group_17",
+      "groupId": "group_17",
+      "savedIdentifiers": [
+        "sand_skeleton"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 768,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "12,2"
+      ],
+      "tags": [
+        "decorative",
+        "group_17",
+        "passable",
+        "sand"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_sand.coarse.webp",
+          "x": 866,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_sand.final.webp",
+          "x": 1666,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_sand:group_18",
+      "groupId": "group_18",
+      "savedIdentifiers": [
+        "sand_dead_tree"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 832,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "13,2"
+      ],
+      "tags": [
+        "decorative",
+        "group_18",
+        "impassable",
+        "sand",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_sand.coarse.webp",
+          "x": 902,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_sand.final.webp",
+          "x": 1734,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_sand:group_19",
+      "groupId": "group_19",
+      "savedIdentifiers": [
+        "sand_stone_well"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 896,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "14,2"
+      ],
+      "tags": [
+        "decorative",
+        "farm",
+        "group_19",
+        "impassable",
+        "sand"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_sand.coarse.webp",
+          "x": 938,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_sand.final.webp",
+          "x": 1802,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_sand:group_20",
+      "groupId": "group_20",
+      "savedIdentifiers": [
+        "sand_barrels"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 960,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "15,2"
+      ],
+      "tags": [
+        "decorative",
+        "group_20",
+        "impassable",
+        "roadside",
+        "sand"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_sand.coarse.webp",
+          "x": 974,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_sand.final.webp",
+          "x": 1870,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_sand:group_21",
+      "groupId": "group_21",
+      "savedIdentifiers": [
+        "sand_acacia"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 0,
+        "y": 192,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "0,3",
+        "0,4",
+        "1,3",
+        "1,4"
+      ],
+      "tags": [
+        "decorative",
+        "group_21",
+        "impassable",
+        "sand",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_sand.coarse.webp",
+          "x": 1010,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_sand.final.webp",
+          "x": 2,
+          "y": 198,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_sand:group_22",
+      "groupId": "group_22",
+      "savedIdentifiers": [
+        "sand_ruined_cistern"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 128,
+        "y": 192,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "2,3",
+        "2,4",
+        "3,3",
+        "3,4"
+      ],
+      "tags": [
+        "decorative",
+        "group_22",
+        "impassable",
+        "ruins",
+        "sand"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_sand.coarse.webp",
+          "x": 1078,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_sand.final.webp",
+          "x": 134,
+          "y": 198,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_sand:group_23",
+      "groupId": "group_23",
+      "savedIdentifiers": [
+        "sand_dry_wash"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 256,
+        "y": 192,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "4,3",
+        "4,4",
+        "5,3",
+        "5,4"
+      ],
+      "tags": [
+        "decorative",
+        "group_23",
+        "impassable",
+        "rocks",
+        "sand"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_sand.coarse.webp",
+          "x": 1146,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_sand.final.webp",
+          "x": 266,
+          "y": 198,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_sand:group_24",
+      "groupId": "group_24",
+      "savedIdentifiers": [
+        "sand_water_tank"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 512,
+        "y": 192,
+        "width": 64,
+        "height": 128
+      },
+      "tileKeys": [
+        "8,3",
+        "8,4"
+      ],
+      "tags": [
+        "decorative",
+        "group_24",
+        "impassable",
+        "roadside",
+        "sand"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_sand.coarse.webp",
+          "x": 1214,
+          "y": 2,
+          "width": 32,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_sand.final.webp",
+          "x": 398,
+          "y": 198,
+          "width": 64,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    }
+  ]
+}

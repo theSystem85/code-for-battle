@@ -1,0 +1,2986 @@
+{
+  "schemaVersion": 1,
+  "name": "dtv5_city_temperate_medium",
+  "identity": {
+    "buildVersion": 1,
+    "atlasVersion": 1,
+    "catalogVersion": 1,
+    "pixelRulesVersion": 1,
+    "webpQuality": 85,
+    "padding": 2,
+    "sourceHash": "31d770ccad16ed64cfb3b48ef0660dafce429bf8e2f8c5330ef4f9463aa47727",
+    "metadataHash": "8edf072b8347a70f12862eff704db924145005be48d3c76052e194d2ae9ab10d",
+    "metadataSignature": "57be52831b9c7603de236feee92ef09fd38aff0020160b5dfd4df4d28b0567fc",
+    "selectedBackingDensities": [
+      0.5,
+      1
+    ]
+  },
+  "signature": "94fae0e3fbbdd14289051188cc1e6c4aab773afea0429151e38fba4f96f6e4fb",
+  "source": {
+    "image": "images/map/sprite_sheets/dtv5_city_temperate_medium.webp",
+    "metadata": "images/map/sprite_sheets/dtv5_city_temperate_medium.json",
+    "sourceMetadata": {
+      "path": "images/map/sprite_sheets/sources/cities_temperate_medium.webp",
+      "sha256": "ededa2d4ad87a75883978b87d71ecb71d89791a4132d5ee5b3cc2595bf5d142b",
+      "width": 1024,
+      "height": 1536,
+      "detection": {
+        "transparent": true,
+        "alphaCutoff": 16,
+        "gap": 0,
+        "minArea": 1000
+      },
+      "guides": [],
+      "spriteCount": 20,
+      "packing": {
+        "scale": 0.75,
+        "padding": 2
+      }
+    },
+    "editorMetadata": {
+      "schemaVersion": 1,
+      "layoutVersion": 6,
+      "name": "dtv5_city_temperate_medium",
+      "grid": {
+        "tileSize": 64,
+        "rowHeight": 64,
+        "borderWidth": 0,
+        "cols": 16,
+        "rows": 15
+      },
+      "tags": [
+        "grass",
+        "soil",
+        "decorative",
+        "city",
+        "density_4",
+        "passable",
+        "overhang",
+        "impassable",
+        "density_5",
+        "density_6",
+        "density_7"
+      ],
+      "propLayout": [
+        {
+          "id": "cities_temperate_medium_city_001",
+          "col": 0,
+          "row": 0,
+          "w": 3,
+          "h": 3,
+          "groupId": 1,
+          "tags": [
+            "grass",
+            "soil",
+            "decorative",
+            "city",
+            "impassable",
+            "density_4",
+            "group_1"
+          ],
+          "density": 4,
+          "sourceRect": {
+            "x": 38,
+            "y": 40,
+            "width": 226,
+            "height": 240
+          },
+          "footprint": {
+            "x": 0,
+            "y": 1,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "id": "cities_temperate_medium_city_002",
+          "col": 3,
+          "row": 0,
+          "w": 3,
+          "h": 3,
+          "groupId": 2,
+          "tags": [
+            "grass",
+            "soil",
+            "decorative",
+            "city",
+            "impassable",
+            "density_4",
+            "group_2"
+          ],
+          "density": 4,
+          "sourceRect": {
+            "x": 288,
+            "y": 43,
+            "width": 218,
+            "height": 237
+          },
+          "footprint": {
+            "x": 0,
+            "y": 1,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "id": "cities_temperate_medium_city_003",
+          "col": 6,
+          "row": 0,
+          "w": 3,
+          "h": 3,
+          "groupId": 3,
+          "tags": [
+            "grass",
+            "soil",
+            "decorative",
+            "city",
+            "impassable",
+            "density_4",
+            "group_3"
+          ],
+          "density": 4,
+          "sourceRect": {
+            "x": 526,
+            "y": 50,
+            "width": 211,
+            "height": 230
+          },
+          "footprint": {
+            "x": 0,
+            "y": 1,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "id": "cities_temperate_medium_city_004",
+          "col": 9,
+          "row": 0,
+          "w": 3,
+          "h": 3,
+          "groupId": 4,
+          "tags": [
+            "grass",
+            "soil",
+            "decorative",
+            "city",
+            "impassable",
+            "density_4",
+            "group_4"
+          ],
+          "density": 4,
+          "sourceRect": {
+            "x": 770,
+            "y": 37,
+            "width": 222,
+            "height": 243
+          },
+          "footprint": {
+            "x": 0,
+            "y": 1,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "id": "cities_temperate_medium_city_005",
+          "col": 12,
+          "row": 0,
+          "w": 3,
+          "h": 3,
+          "groupId": 5,
+          "tags": [
+            "grass",
+            "soil",
+            "decorative",
+            "city",
+            "impassable",
+            "density_5",
+            "group_5"
+          ],
+          "density": 5,
+          "sourceRect": {
+            "x": 34,
+            "y": 312,
+            "width": 227,
+            "height": 244
+          },
+          "footprint": {
+            "x": 0,
+            "y": 1,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "id": "cities_temperate_medium_city_006",
+          "col": 0,
+          "row": 3,
+          "w": 3,
+          "h": 3,
+          "groupId": 6,
+          "tags": [
+            "grass",
+            "soil",
+            "decorative",
+            "city",
+            "impassable",
+            "density_5",
+            "group_6"
+          ],
+          "density": 5,
+          "sourceRect": {
+            "x": 281,
+            "y": 325,
+            "width": 225,
+            "height": 234
+          },
+          "footprint": {
+            "x": 0,
+            "y": 1,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "id": "cities_temperate_medium_city_007",
+          "col": 3,
+          "row": 3,
+          "w": 3,
+          "h": 3,
+          "groupId": 7,
+          "tags": [
+            "grass",
+            "soil",
+            "decorative",
+            "city",
+            "impassable",
+            "density_5",
+            "group_7"
+          ],
+          "density": 5,
+          "sourceRect": {
+            "x": 522,
+            "y": 324,
+            "width": 229,
+            "height": 238
+          },
+          "footprint": {
+            "x": 0,
+            "y": 1,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "id": "cities_temperate_medium_city_008",
+          "col": 6,
+          "row": 3,
+          "w": 3,
+          "h": 3,
+          "groupId": 8,
+          "tags": [
+            "grass",
+            "soil",
+            "decorative",
+            "city",
+            "impassable",
+            "density_5",
+            "group_8"
+          ],
+          "density": 5,
+          "sourceRect": {
+            "x": 770,
+            "y": 313,
+            "width": 226,
+            "height": 247
+          },
+          "footprint": {
+            "x": 0,
+            "y": 1,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "id": "cities_temperate_medium_city_009",
+          "col": 9,
+          "row": 3,
+          "w": 3,
+          "h": 4,
+          "groupId": 9,
+          "tags": [
+            "grass",
+            "soil",
+            "decorative",
+            "city",
+            "impassable",
+            "density_6",
+            "group_9"
+          ],
+          "density": 6,
+          "sourceRect": {
+            "x": 30,
+            "y": 618,
+            "width": 238,
+            "height": 255
+          },
+          "footprint": {
+            "x": 0,
+            "y": 1,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "id": "cities_temperate_medium_city_010",
+          "col": 12,
+          "row": 3,
+          "w": 3,
+          "h": 4,
+          "groupId": 10,
+          "tags": [
+            "grass",
+            "soil",
+            "decorative",
+            "city",
+            "impassable",
+            "density_6",
+            "group_10"
+          ],
+          "density": 6,
+          "sourceRect": {
+            "x": 281,
+            "y": 607,
+            "width": 227,
+            "height": 262
+          },
+          "footprint": {
+            "x": 0,
+            "y": 1,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "id": "cities_temperate_medium_city_011",
+          "col": 0,
+          "row": 6,
+          "w": 3,
+          "h": 4,
+          "groupId": 11,
+          "tags": [
+            "grass",
+            "soil",
+            "decorative",
+            "city",
+            "impassable",
+            "density_6",
+            "group_11"
+          ],
+          "density": 6,
+          "sourceRect": {
+            "x": 520,
+            "y": 623,
+            "width": 231,
+            "height": 252
+          },
+          "footprint": {
+            "x": 0,
+            "y": 1,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "id": "cities_temperate_medium_city_012",
+          "col": 3,
+          "row": 6,
+          "w": 3,
+          "h": 4,
+          "groupId": 12,
+          "tags": [
+            "grass",
+            "soil",
+            "decorative",
+            "city",
+            "impassable",
+            "density_6",
+            "group_12"
+          ],
+          "density": 6,
+          "sourceRect": {
+            "x": 766,
+            "y": 606,
+            "width": 229,
+            "height": 269
+          },
+          "footprint": {
+            "x": 0,
+            "y": 1,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "id": "cities_temperate_medium_city_013",
+          "col": 6,
+          "row": 6,
+          "w": 3,
+          "h": 4,
+          "groupId": 13,
+          "tags": [
+            "grass",
+            "soil",
+            "decorative",
+            "city",
+            "impassable",
+            "density_7",
+            "group_13"
+          ],
+          "density": 7,
+          "sourceRect": {
+            "x": 32,
+            "y": 899,
+            "width": 236,
+            "height": 275
+          },
+          "footprint": {
+            "x": 0,
+            "y": 1,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "id": "cities_temperate_medium_city_014",
+          "col": 9,
+          "row": 7,
+          "w": 3,
+          "h": 4,
+          "groupId": 14,
+          "tags": [
+            "grass",
+            "soil",
+            "decorative",
+            "city",
+            "impassable",
+            "density_7",
+            "group_14"
+          ],
+          "density": 7,
+          "sourceRect": {
+            "x": 282,
+            "y": 907,
+            "width": 230,
+            "height": 268
+          },
+          "footprint": {
+            "x": 0,
+            "y": 1,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "id": "cities_temperate_medium_city_015",
+          "col": 12,
+          "row": 7,
+          "w": 3,
+          "h": 4,
+          "groupId": 15,
+          "tags": [
+            "grass",
+            "soil",
+            "decorative",
+            "city",
+            "impassable",
+            "density_7",
+            "group_15"
+          ],
+          "density": 7,
+          "sourceRect": {
+            "x": 523,
+            "y": 917,
+            "width": 229,
+            "height": 262
+          },
+          "footprint": {
+            "x": 0,
+            "y": 1,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "id": "cities_temperate_medium_city_016",
+          "col": 0,
+          "row": 10,
+          "w": 3,
+          "h": 4,
+          "groupId": 16,
+          "tags": [
+            "grass",
+            "soil",
+            "decorative",
+            "city",
+            "impassable",
+            "density_7",
+            "group_16"
+          ],
+          "density": 7,
+          "sourceRect": {
+            "x": 764,
+            "y": 904,
+            "width": 239,
+            "height": 274
+          },
+          "footprint": {
+            "x": 0,
+            "y": 1,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "id": "cities_temperate_medium_city_017",
+          "col": 3,
+          "row": 10,
+          "w": 3,
+          "h": 3,
+          "groupId": 17,
+          "tags": [
+            "grass",
+            "soil",
+            "decorative",
+            "city",
+            "impassable",
+            "density_5",
+            "group_17"
+          ],
+          "density": 5,
+          "sourceRect": {
+            "x": 18,
+            "y": 1238,
+            "width": 243,
+            "height": 235
+          },
+          "footprint": {
+            "x": 0,
+            "y": 1,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "id": "cities_temperate_medium_city_018",
+          "col": 6,
+          "row": 10,
+          "w": 3,
+          "h": 4,
+          "groupId": 18,
+          "tags": [
+            "grass",
+            "soil",
+            "decorative",
+            "city",
+            "impassable",
+            "density_5",
+            "group_18"
+          ],
+          "density": 5,
+          "sourceRect": {
+            "x": 273,
+            "y": 1209,
+            "width": 242,
+            "height": 262
+          },
+          "footprint": {
+            "x": 0,
+            "y": 1,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "id": "cities_temperate_medium_city_019",
+          "col": 9,
+          "row": 11,
+          "w": 3,
+          "h": 3,
+          "groupId": 19,
+          "tags": [
+            "grass",
+            "soil",
+            "decorative",
+            "city",
+            "impassable",
+            "density_5",
+            "group_19"
+          ],
+          "density": 5,
+          "sourceRect": {
+            "x": 523,
+            "y": 1226,
+            "width": 229,
+            "height": 239
+          },
+          "footprint": {
+            "x": 0,
+            "y": 1,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "id": "cities_temperate_medium_city_020",
+          "col": 12,
+          "row": 11,
+          "w": 3,
+          "h": 4,
+          "groupId": 20,
+          "tags": [
+            "grass",
+            "soil",
+            "decorative",
+            "city",
+            "impassable",
+            "density_5",
+            "group_20"
+          ],
+          "density": 5,
+          "sourceRect": {
+            "x": 773,
+            "y": 1224,
+            "width": 235,
+            "height": 254
+          },
+          "footprint": {
+            "x": 0,
+            "y": 1,
+            "width": 3,
+            "height": 3
+          }
+        }
+      ],
+      "extension": {
+        "imports": [
+          {
+            "id": "cities_temperate_medium_city_001",
+            "sourceId": "cities_temperate_medium",
+            "bbox": {
+              "x": 38,
+              "y": 40,
+              "width": 226,
+              "height": 240
+            },
+            "area": 44241,
+            "anchor": "center",
+            "sizeRatio": 0.75,
+            "tileSpan": {
+              "columns": 3,
+              "rows": 3
+            },
+            "placedAt": {
+              "column": 0,
+              "row": 0
+            },
+            "tags": [
+              "grass",
+              "soil",
+              "decorative",
+              "city",
+              "impassable",
+              "density_4",
+              "group_1"
+            ],
+            "renderRect": {
+              "x": 11,
+              "y": 6,
+              "width": 170,
+              "height": 180
+            }
+          },
+          {
+            "id": "cities_temperate_medium_city_002",
+            "sourceId": "cities_temperate_medium",
+            "bbox": {
+              "x": 288,
+              "y": 43,
+              "width": 218,
+              "height": 237
+            },
+            "area": 42095,
+            "anchor": "center",
+            "sizeRatio": 0.75,
+            "tileSpan": {
+              "columns": 3,
+              "rows": 3
+            },
+            "placedAt": {
+              "column": 3,
+              "row": 0
+            },
+            "tags": [
+              "grass",
+              "soil",
+              "decorative",
+              "city",
+              "impassable",
+              "density_4",
+              "group_2"
+            ],
+            "renderRect": {
+              "x": 14,
+              "y": 7,
+              "width": 164,
+              "height": 178
+            }
+          },
+          {
+            "id": "cities_temperate_medium_city_003",
+            "sourceId": "cities_temperate_medium",
+            "bbox": {
+              "x": 526,
+              "y": 50,
+              "width": 211,
+              "height": 230
+            },
+            "area": 41558,
+            "anchor": "center",
+            "sizeRatio": 0.75,
+            "tileSpan": {
+              "columns": 3,
+              "rows": 3
+            },
+            "placedAt": {
+              "column": 6,
+              "row": 0
+            },
+            "tags": [
+              "grass",
+              "soil",
+              "decorative",
+              "city",
+              "impassable",
+              "density_4",
+              "group_3"
+            ],
+            "renderRect": {
+              "x": 17,
+              "y": 9,
+              "width": 158,
+              "height": 173
+            }
+          },
+          {
+            "id": "cities_temperate_medium_city_004",
+            "sourceId": "cities_temperate_medium",
+            "bbox": {
+              "x": 770,
+              "y": 37,
+              "width": 222,
+              "height": 243
+            },
+            "area": 45124,
+            "anchor": "center",
+            "sizeRatio": 0.75,
+            "tileSpan": {
+              "columns": 3,
+              "rows": 3
+            },
+            "placedAt": {
+              "column": 9,
+              "row": 0
+            },
+            "tags": [
+              "grass",
+              "soil",
+              "decorative",
+              "city",
+              "impassable",
+              "density_4",
+              "group_4"
+            ],
+            "renderRect": {
+              "x": 12,
+              "y": 5,
+              "width": 167,
+              "height": 182
+            }
+          },
+          {
+            "id": "cities_temperate_medium_city_005",
+            "sourceId": "cities_temperate_medium",
+            "bbox": {
+              "x": 34,
+              "y": 312,
+              "width": 227,
+              "height": 244
+            },
+            "area": 44660,
+            "anchor": "center",
+            "sizeRatio": 0.75,
+            "tileSpan": {
+              "columns": 3,
+              "rows": 3
+            },
+            "placedAt": {
+              "column": 12,
+              "row": 0
+            },
+            "tags": [
+              "grass",
+              "soil",
+              "decorative",
+              "city",
+              "impassable",
+              "density_5",
+              "group_5"
+            ],
+            "renderRect": {
+              "x": 11,
+              "y": 4,
+              "width": 170,
+              "height": 183
+            }
+          },
+          {
+            "id": "cities_temperate_medium_city_006",
+            "sourceId": "cities_temperate_medium",
+            "bbox": {
+              "x": 281,
+              "y": 325,
+              "width": 225,
+              "height": 234
+            },
+            "area": 43711,
+            "anchor": "center",
+            "sizeRatio": 0.75,
+            "tileSpan": {
+              "columns": 3,
+              "rows": 3
+            },
+            "placedAt": {
+              "column": 0,
+              "row": 3
+            },
+            "tags": [
+              "grass",
+              "soil",
+              "decorative",
+              "city",
+              "impassable",
+              "density_5",
+              "group_6"
+            ],
+            "renderRect": {
+              "x": 11,
+              "y": 8,
+              "width": 169,
+              "height": 176
+            }
+          },
+          {
+            "id": "cities_temperate_medium_city_007",
+            "sourceId": "cities_temperate_medium",
+            "bbox": {
+              "x": 522,
+              "y": 324,
+              "width": 229,
+              "height": 238
+            },
+            "area": 46160,
+            "anchor": "center",
+            "sizeRatio": 0.75,
+            "tileSpan": {
+              "columns": 3,
+              "rows": 3
+            },
+            "placedAt": {
+              "column": 3,
+              "row": 3
+            },
+            "tags": [
+              "grass",
+              "soil",
+              "decorative",
+              "city",
+              "impassable",
+              "density_5",
+              "group_7"
+            ],
+            "renderRect": {
+              "x": 10,
+              "y": 6,
+              "width": 172,
+              "height": 179
+            }
+          },
+          {
+            "id": "cities_temperate_medium_city_008",
+            "sourceId": "cities_temperate_medium",
+            "bbox": {
+              "x": 770,
+              "y": 313,
+              "width": 226,
+              "height": 247
+            },
+            "area": 47497,
+            "anchor": "center",
+            "sizeRatio": 0.75,
+            "tileSpan": {
+              "columns": 3,
+              "rows": 3
+            },
+            "placedAt": {
+              "column": 6,
+              "row": 3
+            },
+            "tags": [
+              "grass",
+              "soil",
+              "decorative",
+              "city",
+              "impassable",
+              "density_5",
+              "group_8"
+            ],
+            "renderRect": {
+              "x": 11,
+              "y": 3,
+              "width": 170,
+              "height": 185
+            }
+          },
+          {
+            "id": "cities_temperate_medium_city_009",
+            "sourceId": "cities_temperate_medium",
+            "bbox": {
+              "x": 30,
+              "y": 618,
+              "width": 238,
+              "height": 255
+            },
+            "area": 52383,
+            "anchor": "center",
+            "sizeRatio": 0.75,
+            "tileSpan": {
+              "columns": 3,
+              "rows": 4
+            },
+            "placedAt": {
+              "column": 9,
+              "row": 3
+            },
+            "tags": [
+              "grass",
+              "soil",
+              "decorative",
+              "city",
+              "impassable",
+              "density_6",
+              "group_9"
+            ],
+            "renderRect": {
+              "x": 6,
+              "y": 32,
+              "width": 179,
+              "height": 191
+            }
+          },
+          {
+            "id": "cities_temperate_medium_city_010",
+            "sourceId": "cities_temperate_medium",
+            "bbox": {
+              "x": 281,
+              "y": 607,
+              "width": 227,
+              "height": 262
+            },
+            "area": 50894,
+            "anchor": "center",
+            "sizeRatio": 0.75,
+            "tileSpan": {
+              "columns": 3,
+              "rows": 4
+            },
+            "placedAt": {
+              "column": 12,
+              "row": 3
+            },
+            "tags": [
+              "grass",
+              "soil",
+              "decorative",
+              "city",
+              "impassable",
+              "density_6",
+              "group_10"
+            ],
+            "renderRect": {
+              "x": 11,
+              "y": 29,
+              "width": 170,
+              "height": 197
+            }
+          },
+          {
+            "id": "cities_temperate_medium_city_011",
+            "sourceId": "cities_temperate_medium",
+            "bbox": {
+              "x": 520,
+              "y": 623,
+              "width": 231,
+              "height": 252
+            },
+            "area": 50388,
+            "anchor": "center",
+            "sizeRatio": 0.75,
+            "tileSpan": {
+              "columns": 3,
+              "rows": 4
+            },
+            "placedAt": {
+              "column": 0,
+              "row": 6
+            },
+            "tags": [
+              "grass",
+              "soil",
+              "decorative",
+              "city",
+              "impassable",
+              "density_6",
+              "group_11"
+            ],
+            "renderRect": {
+              "x": 9,
+              "y": 33,
+              "width": 173,
+              "height": 189
+            }
+          },
+          {
+            "id": "cities_temperate_medium_city_012",
+            "sourceId": "cities_temperate_medium",
+            "bbox": {
+              "x": 766,
+              "y": 606,
+              "width": 229,
+              "height": 269
+            },
+            "area": 53016,
+            "anchor": "center",
+            "sizeRatio": 0.75,
+            "tileSpan": {
+              "columns": 3,
+              "rows": 4
+            },
+            "placedAt": {
+              "column": 3,
+              "row": 6
+            },
+            "tags": [
+              "grass",
+              "soil",
+              "decorative",
+              "city",
+              "impassable",
+              "density_6",
+              "group_12"
+            ],
+            "renderRect": {
+              "x": 10,
+              "y": 27,
+              "width": 172,
+              "height": 202
+            }
+          },
+          {
+            "id": "cities_temperate_medium_city_013",
+            "sourceId": "cities_temperate_medium",
+            "bbox": {
+              "x": 32,
+              "y": 899,
+              "width": 236,
+              "height": 275
+            },
+            "area": 55407,
+            "anchor": "center",
+            "sizeRatio": 0.75,
+            "tileSpan": {
+              "columns": 3,
+              "rows": 4
+            },
+            "placedAt": {
+              "column": 6,
+              "row": 6
+            },
+            "tags": [
+              "grass",
+              "soil",
+              "decorative",
+              "city",
+              "impassable",
+              "density_7",
+              "group_13"
+            ],
+            "renderRect": {
+              "x": 7,
+              "y": 25,
+              "width": 177,
+              "height": 206
+            }
+          },
+          {
+            "id": "cities_temperate_medium_city_014",
+            "sourceId": "cities_temperate_medium",
+            "bbox": {
+              "x": 282,
+              "y": 907,
+              "width": 230,
+              "height": 268
+            },
+            "area": 52675,
+            "anchor": "center",
+            "sizeRatio": 0.75,
+            "tileSpan": {
+              "columns": 3,
+              "rows": 4
+            },
+            "placedAt": {
+              "column": 9,
+              "row": 7
+            },
+            "tags": [
+              "grass",
+              "soil",
+              "decorative",
+              "city",
+              "impassable",
+              "density_7",
+              "group_14"
+            ],
+            "renderRect": {
+              "x": 9,
+              "y": 27,
+              "width": 173,
+              "height": 201
+            }
+          },
+          {
+            "id": "cities_temperate_medium_city_015",
+            "sourceId": "cities_temperate_medium",
+            "bbox": {
+              "x": 523,
+              "y": 917,
+              "width": 229,
+              "height": 262
+            },
+            "area": 48885,
+            "anchor": "center",
+            "sizeRatio": 0.75,
+            "tileSpan": {
+              "columns": 3,
+              "rows": 4
+            },
+            "placedAt": {
+              "column": 12,
+              "row": 7
+            },
+            "tags": [
+              "grass",
+              "soil",
+              "decorative",
+              "city",
+              "impassable",
+              "density_7",
+              "group_15"
+            ],
+            "renderRect": {
+              "x": 10,
+              "y": 29,
+              "width": 172,
+              "height": 197
+            }
+          },
+          {
+            "id": "cities_temperate_medium_city_016",
+            "sourceId": "cities_temperate_medium",
+            "bbox": {
+              "x": 764,
+              "y": 904,
+              "width": 239,
+              "height": 274
+            },
+            "area": 54960,
+            "anchor": "center",
+            "sizeRatio": 0.75,
+            "tileSpan": {
+              "columns": 3,
+              "rows": 4
+            },
+            "placedAt": {
+              "column": 0,
+              "row": 10
+            },
+            "tags": [
+              "grass",
+              "soil",
+              "decorative",
+              "city",
+              "impassable",
+              "density_7",
+              "group_16"
+            ],
+            "renderRect": {
+              "x": 6,
+              "y": 25,
+              "width": 179,
+              "height": 206
+            }
+          },
+          {
+            "id": "cities_temperate_medium_city_017",
+            "sourceId": "cities_temperate_medium",
+            "bbox": {
+              "x": 18,
+              "y": 1238,
+              "width": 243,
+              "height": 235
+            },
+            "area": 47752,
+            "anchor": "center",
+            "sizeRatio": 0.75,
+            "tileSpan": {
+              "columns": 3,
+              "rows": 3
+            },
+            "placedAt": {
+              "column": 3,
+              "row": 10
+            },
+            "tags": [
+              "grass",
+              "soil",
+              "decorative",
+              "city",
+              "impassable",
+              "density_5",
+              "group_17"
+            ],
+            "renderRect": {
+              "x": 5,
+              "y": 8,
+              "width": 182,
+              "height": 176
+            }
+          },
+          {
+            "id": "cities_temperate_medium_city_018",
+            "sourceId": "cities_temperate_medium",
+            "bbox": {
+              "x": 273,
+              "y": 1209,
+              "width": 242,
+              "height": 262
+            },
+            "area": 50894,
+            "anchor": "center",
+            "sizeRatio": 0.75,
+            "tileSpan": {
+              "columns": 3,
+              "rows": 4
+            },
+            "placedAt": {
+              "column": 6,
+              "row": 10
+            },
+            "tags": [
+              "grass",
+              "soil",
+              "decorative",
+              "city",
+              "impassable",
+              "density_5",
+              "group_18"
+            ],
+            "renderRect": {
+              "x": 5,
+              "y": 29,
+              "width": 182,
+              "height": 197
+            }
+          },
+          {
+            "id": "cities_temperate_medium_city_019",
+            "sourceId": "cities_temperate_medium",
+            "bbox": {
+              "x": 523,
+              "y": 1226,
+              "width": 229,
+              "height": 239
+            },
+            "area": 46664,
+            "anchor": "center",
+            "sizeRatio": 0.75,
+            "tileSpan": {
+              "columns": 3,
+              "rows": 3
+            },
+            "placedAt": {
+              "column": 9,
+              "row": 11
+            },
+            "tags": [
+              "grass",
+              "soil",
+              "decorative",
+              "city",
+              "impassable",
+              "density_5",
+              "group_19"
+            ],
+            "renderRect": {
+              "x": 10,
+              "y": 6,
+              "width": 172,
+              "height": 179
+            }
+          },
+          {
+            "id": "cities_temperate_medium_city_020",
+            "sourceId": "cities_temperate_medium",
+            "bbox": {
+              "x": 773,
+              "y": 1224,
+              "width": 235,
+              "height": 254
+            },
+            "area": 50124,
+            "anchor": "center",
+            "sizeRatio": 0.75,
+            "tileSpan": {
+              "columns": 3,
+              "rows": 4
+            },
+            "placedAt": {
+              "column": 12,
+              "row": 11
+            },
+            "tags": [
+              "grass",
+              "soil",
+              "decorative",
+              "city",
+              "impassable",
+              "density_5",
+              "group_20"
+            ],
+            "renderRect": {
+              "x": 8,
+              "y": 32,
+              "width": 176,
+              "height": 191
+            }
+          }
+        ],
+        "occupiedTiles": [
+          "0,0",
+          "1,0",
+          "2,0",
+          "0,1",
+          "1,1",
+          "2,1",
+          "0,2",
+          "1,2",
+          "2,2",
+          "3,0",
+          "4,0",
+          "5,0",
+          "3,1",
+          "4,1",
+          "5,1",
+          "3,2",
+          "4,2",
+          "5,2",
+          "6,0",
+          "7,0",
+          "8,0",
+          "6,1",
+          "7,1",
+          "8,1",
+          "6,2",
+          "7,2",
+          "8,2",
+          "9,0",
+          "10,0",
+          "11,0",
+          "9,1",
+          "10,1",
+          "11,1",
+          "9,2",
+          "10,2",
+          "11,2",
+          "12,0",
+          "13,0",
+          "14,0",
+          "12,1",
+          "13,1",
+          "14,1",
+          "12,2",
+          "13,2",
+          "14,2",
+          "0,3",
+          "1,3",
+          "2,3",
+          "0,4",
+          "1,4",
+          "2,4",
+          "0,5",
+          "1,5",
+          "2,5",
+          "3,3",
+          "4,3",
+          "5,3",
+          "3,4",
+          "4,4",
+          "5,4",
+          "3,5",
+          "4,5",
+          "5,5",
+          "6,3",
+          "7,3",
+          "8,3",
+          "6,4",
+          "7,4",
+          "8,4",
+          "6,5",
+          "7,5",
+          "8,5",
+          "9,3",
+          "10,3",
+          "11,3",
+          "9,4",
+          "10,4",
+          "11,4",
+          "9,5",
+          "10,5",
+          "11,5",
+          "9,6",
+          "10,6",
+          "11,6",
+          "12,3",
+          "13,3",
+          "14,3",
+          "12,4",
+          "13,4",
+          "14,4",
+          "12,5",
+          "13,5",
+          "14,5",
+          "12,6",
+          "13,6",
+          "14,6",
+          "0,6",
+          "1,6",
+          "2,6",
+          "0,7",
+          "1,7",
+          "2,7",
+          "0,8",
+          "1,8",
+          "2,8",
+          "0,9",
+          "1,9",
+          "2,9",
+          "3,6",
+          "4,6",
+          "5,6",
+          "3,7",
+          "4,7",
+          "5,7",
+          "3,8",
+          "4,8",
+          "5,8",
+          "3,9",
+          "4,9",
+          "5,9",
+          "6,6",
+          "7,6",
+          "8,6",
+          "6,7",
+          "7,7",
+          "8,7",
+          "6,8",
+          "7,8",
+          "8,8",
+          "6,9",
+          "7,9",
+          "8,9",
+          "9,7",
+          "10,7",
+          "11,7",
+          "9,8",
+          "10,8",
+          "11,8",
+          "9,9",
+          "10,9",
+          "11,9",
+          "9,10",
+          "10,10",
+          "11,10",
+          "12,7",
+          "13,7",
+          "14,7",
+          "12,8",
+          "13,8",
+          "14,8",
+          "12,9",
+          "13,9",
+          "14,9",
+          "12,10",
+          "13,10",
+          "14,10",
+          "0,10",
+          "1,10",
+          "2,10",
+          "0,11",
+          "1,11",
+          "2,11",
+          "0,12",
+          "1,12",
+          "2,12",
+          "0,13",
+          "1,13",
+          "2,13",
+          "3,10",
+          "4,10",
+          "5,10",
+          "3,11",
+          "4,11",
+          "5,11",
+          "3,12",
+          "4,12",
+          "5,12",
+          "6,10",
+          "7,10",
+          "8,10",
+          "6,11",
+          "7,11",
+          "8,11",
+          "6,12",
+          "7,12",
+          "8,12",
+          "6,13",
+          "7,13",
+          "8,13",
+          "9,11",
+          "10,11",
+          "11,11",
+          "9,12",
+          "10,12",
+          "11,12",
+          "9,13",
+          "10,13",
+          "11,13",
+          "12,11",
+          "13,11",
+          "14,11",
+          "12,12",
+          "13,12",
+          "14,12",
+          "12,13",
+          "13,13",
+          "14,13",
+          "12,14",
+          "13,14",
+          "14,14"
+        ]
+      }
+    }
+  },
+  "upscaledBeyondMaster": false,
+  "omittedCandidateDensities": [
+    2,
+    3
+  ],
+  "pages": [
+    {
+      "name": "dtv5_city_temperate_medium.coarse.webp",
+      "sha256": "74aeed1571797597ee2b2a25038a6c91be24a53545c856932e1011a799fab550",
+      "width": 2000,
+      "height": 132,
+      "decodedBytes": 1056000,
+      "compressedBytes": 119910,
+      "tier": 0,
+      "tierName": "coarse",
+      "backingDensity": 0.5
+    },
+    {
+      "name": "dtv5_city_temperate_medium.final.webp",
+      "sha256": "752d671923e4f7985c38d1ae11e836b70e9ccb6d0af05e0793d166209ea2ee29",
+      "width": 1960,
+      "height": 520,
+      "decodedBytes": 4076800,
+      "compressedBytes": 350312,
+      "tier": 2,
+      "tierName": "final",
+      "backingDensity": 1
+    }
+  ],
+  "sprites": [
+    {
+      "spriteId": "dtv5_city_temperate_medium:group_1",
+      "groupId": "group_1",
+      "savedIdentifiers": [
+        "cities_temperate_medium_city_001"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 192,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 0,
+        "y": 0,
+        "width": 192,
+        "height": 192
+      },
+      "tileKeys": [
+        "0,0",
+        "0,1",
+        "0,2",
+        "1,0",
+        "1,1",
+        "1,2",
+        "2,0",
+        "2,1",
+        "2,2"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_4",
+        "grass",
+        "group_1",
+        "impassable",
+        "overhang",
+        "passable",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_temperate_medium.coarse.webp",
+          "x": 2,
+          "y": 2,
+          "width": 96,
+          "height": 96,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_temperate_medium.final.webp",
+          "x": 2,
+          "y": 2,
+          "width": 192,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_temperate_medium:group_2",
+      "groupId": "group_2",
+      "savedIdentifiers": [
+        "cities_temperate_medium_city_002"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 192,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 192,
+        "y": 0,
+        "width": 192,
+        "height": 192
+      },
+      "tileKeys": [
+        "3,0",
+        "3,1",
+        "3,2",
+        "4,0",
+        "4,1",
+        "4,2",
+        "5,0",
+        "5,1",
+        "5,2"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_4",
+        "grass",
+        "group_2",
+        "impassable",
+        "overhang",
+        "passable",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_temperate_medium.coarse.webp",
+          "x": 102,
+          "y": 2,
+          "width": 96,
+          "height": 96,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_temperate_medium.final.webp",
+          "x": 198,
+          "y": 2,
+          "width": 192,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_temperate_medium:group_3",
+      "groupId": "group_3",
+      "savedIdentifiers": [
+        "cities_temperate_medium_city_003"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 192,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 384,
+        "y": 0,
+        "width": 192,
+        "height": 192
+      },
+      "tileKeys": [
+        "6,0",
+        "6,1",
+        "6,2",
+        "7,0",
+        "7,1",
+        "7,2",
+        "8,0",
+        "8,1",
+        "8,2"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_4",
+        "grass",
+        "group_3",
+        "impassable",
+        "overhang",
+        "passable",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_temperate_medium.coarse.webp",
+          "x": 202,
+          "y": 2,
+          "width": 96,
+          "height": 96,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_temperate_medium.final.webp",
+          "x": 394,
+          "y": 2,
+          "width": 192,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_temperate_medium:group_4",
+      "groupId": "group_4",
+      "savedIdentifiers": [
+        "cities_temperate_medium_city_004"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 192,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 576,
+        "y": 0,
+        "width": 192,
+        "height": 192
+      },
+      "tileKeys": [
+        "10,0",
+        "10,1",
+        "10,2",
+        "11,0",
+        "11,1",
+        "11,2",
+        "9,0",
+        "9,1",
+        "9,2"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_4",
+        "grass",
+        "group_4",
+        "impassable",
+        "overhang",
+        "passable",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_temperate_medium.coarse.webp",
+          "x": 302,
+          "y": 2,
+          "width": 96,
+          "height": 96,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_temperate_medium.final.webp",
+          "x": 590,
+          "y": 2,
+          "width": 192,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_temperate_medium:group_5",
+      "groupId": "group_5",
+      "savedIdentifiers": [
+        "cities_temperate_medium_city_005"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 192,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 768,
+        "y": 0,
+        "width": 192,
+        "height": 192
+      },
+      "tileKeys": [
+        "12,0",
+        "12,1",
+        "12,2",
+        "13,0",
+        "13,1",
+        "13,2",
+        "14,0",
+        "14,1",
+        "14,2"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_5",
+        "grass",
+        "group_5",
+        "impassable",
+        "overhang",
+        "passable",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_temperate_medium.coarse.webp",
+          "x": 402,
+          "y": 2,
+          "width": 96,
+          "height": 96,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_temperate_medium.final.webp",
+          "x": 786,
+          "y": 2,
+          "width": 192,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_temperate_medium:group_6",
+      "groupId": "group_6",
+      "savedIdentifiers": [
+        "cities_temperate_medium_city_006"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 192,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 0,
+        "y": 192,
+        "width": 192,
+        "height": 192
+      },
+      "tileKeys": [
+        "0,3",
+        "0,4",
+        "0,5",
+        "1,3",
+        "1,4",
+        "1,5",
+        "2,3",
+        "2,4",
+        "2,5"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_5",
+        "grass",
+        "group_6",
+        "impassable",
+        "overhang",
+        "passable",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_temperate_medium.coarse.webp",
+          "x": 502,
+          "y": 2,
+          "width": 96,
+          "height": 96,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_temperate_medium.final.webp",
+          "x": 982,
+          "y": 2,
+          "width": 192,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_temperate_medium:group_7",
+      "groupId": "group_7",
+      "savedIdentifiers": [
+        "cities_temperate_medium_city_007"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 192,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 192,
+        "y": 192,
+        "width": 192,
+        "height": 192
+      },
+      "tileKeys": [
+        "3,3",
+        "3,4",
+        "3,5",
+        "4,3",
+        "4,4",
+        "4,5",
+        "5,3",
+        "5,4",
+        "5,5"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_5",
+        "grass",
+        "group_7",
+        "impassable",
+        "overhang",
+        "passable",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_temperate_medium.coarse.webp",
+          "x": 602,
+          "y": 2,
+          "width": 96,
+          "height": 96,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_temperate_medium.final.webp",
+          "x": 1178,
+          "y": 2,
+          "width": 192,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_temperate_medium:group_8",
+      "groupId": "group_8",
+      "savedIdentifiers": [
+        "cities_temperate_medium_city_008"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 192,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 384,
+        "y": 192,
+        "width": 192,
+        "height": 192
+      },
+      "tileKeys": [
+        "6,3",
+        "6,4",
+        "6,5",
+        "7,3",
+        "7,4",
+        "7,5",
+        "8,3",
+        "8,4",
+        "8,5"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_5",
+        "grass",
+        "group_8",
+        "impassable",
+        "overhang",
+        "passable",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_temperate_medium.coarse.webp",
+          "x": 702,
+          "y": 2,
+          "width": 96,
+          "height": 96,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_temperate_medium.final.webp",
+          "x": 1374,
+          "y": 2,
+          "width": 192,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_temperate_medium:group_9",
+      "groupId": "group_9",
+      "savedIdentifiers": [
+        "cities_temperate_medium_city_009"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 256,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 576,
+        "y": 192,
+        "width": 192,
+        "height": 256
+      },
+      "tileKeys": [
+        "10,3",
+        "10,4",
+        "10,5",
+        "10,6",
+        "11,3",
+        "11,4",
+        "11,5",
+        "11,6",
+        "9,3",
+        "9,4",
+        "9,5",
+        "9,6"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_6",
+        "grass",
+        "group_9",
+        "impassable",
+        "overhang",
+        "passable",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_temperate_medium.coarse.webp",
+          "x": 802,
+          "y": 2,
+          "width": 96,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_temperate_medium.final.webp",
+          "x": 1570,
+          "y": 2,
+          "width": 192,
+          "height": 256,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_temperate_medium:group_10",
+      "groupId": "group_10",
+      "savedIdentifiers": [
+        "cities_temperate_medium_city_010"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 256,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 768,
+        "y": 192,
+        "width": 192,
+        "height": 256
+      },
+      "tileKeys": [
+        "12,3",
+        "12,4",
+        "12,5",
+        "12,6",
+        "13,3",
+        "13,4",
+        "13,5",
+        "13,6",
+        "14,3",
+        "14,4",
+        "14,5",
+        "14,6"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_6",
+        "grass",
+        "group_10",
+        "impassable",
+        "overhang",
+        "passable",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_temperate_medium.coarse.webp",
+          "x": 902,
+          "y": 2,
+          "width": 96,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_temperate_medium.final.webp",
+          "x": 1766,
+          "y": 2,
+          "width": 192,
+          "height": 256,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_temperate_medium:group_11",
+      "groupId": "group_11",
+      "savedIdentifiers": [
+        "cities_temperate_medium_city_011"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 256,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 0,
+        "y": 384,
+        "width": 192,
+        "height": 256
+      },
+      "tileKeys": [
+        "0,6",
+        "0,7",
+        "0,8",
+        "0,9",
+        "1,6",
+        "1,7",
+        "1,8",
+        "1,9",
+        "2,6",
+        "2,7",
+        "2,8",
+        "2,9"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_6",
+        "grass",
+        "group_11",
+        "impassable",
+        "overhang",
+        "passable",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_temperate_medium.coarse.webp",
+          "x": 1002,
+          "y": 2,
+          "width": 96,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_temperate_medium.final.webp",
+          "x": 2,
+          "y": 262,
+          "width": 192,
+          "height": 256,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_temperate_medium:group_12",
+      "groupId": "group_12",
+      "savedIdentifiers": [
+        "cities_temperate_medium_city_012"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 256,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 192,
+        "y": 384,
+        "width": 192,
+        "height": 256
+      },
+      "tileKeys": [
+        "3,6",
+        "3,7",
+        "3,8",
+        "3,9",
+        "4,6",
+        "4,7",
+        "4,8",
+        "4,9",
+        "5,6",
+        "5,7",
+        "5,8",
+        "5,9"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_6",
+        "grass",
+        "group_12",
+        "impassable",
+        "overhang",
+        "passable",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_temperate_medium.coarse.webp",
+          "x": 1102,
+          "y": 2,
+          "width": 96,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_temperate_medium.final.webp",
+          "x": 198,
+          "y": 262,
+          "width": 192,
+          "height": 256,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_temperate_medium:group_13",
+      "groupId": "group_13",
+      "savedIdentifiers": [
+        "cities_temperate_medium_city_013"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 256,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 384,
+        "y": 384,
+        "width": 192,
+        "height": 256
+      },
+      "tileKeys": [
+        "6,6",
+        "6,7",
+        "6,8",
+        "6,9",
+        "7,6",
+        "7,7",
+        "7,8",
+        "7,9",
+        "8,6",
+        "8,7",
+        "8,8",
+        "8,9"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_7",
+        "grass",
+        "group_13",
+        "impassable",
+        "overhang",
+        "passable",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_temperate_medium.coarse.webp",
+          "x": 1202,
+          "y": 2,
+          "width": 96,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_temperate_medium.final.webp",
+          "x": 394,
+          "y": 262,
+          "width": 192,
+          "height": 256,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_temperate_medium:group_14",
+      "groupId": "group_14",
+      "savedIdentifiers": [
+        "cities_temperate_medium_city_014"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 256,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 576,
+        "y": 448,
+        "width": 192,
+        "height": 256
+      },
+      "tileKeys": [
+        "10,10",
+        "10,7",
+        "10,8",
+        "10,9",
+        "11,10",
+        "11,7",
+        "11,8",
+        "11,9",
+        "9,10",
+        "9,7",
+        "9,8",
+        "9,9"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_7",
+        "grass",
+        "group_14",
+        "impassable",
+        "overhang",
+        "passable",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_temperate_medium.coarse.webp",
+          "x": 1302,
+          "y": 2,
+          "width": 96,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_temperate_medium.final.webp",
+          "x": 590,
+          "y": 262,
+          "width": 192,
+          "height": 256,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_temperate_medium:group_15",
+      "groupId": "group_15",
+      "savedIdentifiers": [
+        "cities_temperate_medium_city_015"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 256,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 768,
+        "y": 448,
+        "width": 192,
+        "height": 256
+      },
+      "tileKeys": [
+        "12,10",
+        "12,7",
+        "12,8",
+        "12,9",
+        "13,10",
+        "13,7",
+        "13,8",
+        "13,9",
+        "14,10",
+        "14,7",
+        "14,8",
+        "14,9"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_7",
+        "grass",
+        "group_15",
+        "impassable",
+        "overhang",
+        "passable",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_temperate_medium.coarse.webp",
+          "x": 1402,
+          "y": 2,
+          "width": 96,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_temperate_medium.final.webp",
+          "x": 786,
+          "y": 262,
+          "width": 192,
+          "height": 256,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_temperate_medium:group_16",
+      "groupId": "group_16",
+      "savedIdentifiers": [
+        "cities_temperate_medium_city_016"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 256,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 0,
+        "y": 640,
+        "width": 192,
+        "height": 256
+      },
+      "tileKeys": [
+        "0,10",
+        "0,11",
+        "0,12",
+        "0,13",
+        "1,10",
+        "1,11",
+        "1,12",
+        "1,13",
+        "2,10",
+        "2,11",
+        "2,12",
+        "2,13"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_7",
+        "grass",
+        "group_16",
+        "impassable",
+        "overhang",
+        "passable",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_temperate_medium.coarse.webp",
+          "x": 1502,
+          "y": 2,
+          "width": 96,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_temperate_medium.final.webp",
+          "x": 982,
+          "y": 262,
+          "width": 192,
+          "height": 256,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_temperate_medium:group_17",
+      "groupId": "group_17",
+      "savedIdentifiers": [
+        "cities_temperate_medium_city_017"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 192,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 192,
+        "y": 640,
+        "width": 192,
+        "height": 192
+      },
+      "tileKeys": [
+        "3,10",
+        "3,11",
+        "3,12",
+        "4,10",
+        "4,11",
+        "4,12",
+        "5,10",
+        "5,11",
+        "5,12"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_5",
+        "grass",
+        "group_17",
+        "impassable",
+        "overhang",
+        "passable",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_temperate_medium.coarse.webp",
+          "x": 1602,
+          "y": 2,
+          "width": 96,
+          "height": 96,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_temperate_medium.final.webp",
+          "x": 1178,
+          "y": 262,
+          "width": 192,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_temperate_medium:group_18",
+      "groupId": "group_18",
+      "savedIdentifiers": [
+        "cities_temperate_medium_city_018"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 256,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 384,
+        "y": 640,
+        "width": 192,
+        "height": 256
+      },
+      "tileKeys": [
+        "6,10",
+        "6,11",
+        "6,12",
+        "6,13",
+        "7,10",
+        "7,11",
+        "7,12",
+        "7,13",
+        "8,10",
+        "8,11",
+        "8,12",
+        "8,13"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_5",
+        "grass",
+        "group_18",
+        "impassable",
+        "overhang",
+        "passable",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_temperate_medium.coarse.webp",
+          "x": 1702,
+          "y": 2,
+          "width": 96,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_temperate_medium.final.webp",
+          "x": 1374,
+          "y": 262,
+          "width": 192,
+          "height": 256,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_temperate_medium:group_19",
+      "groupId": "group_19",
+      "savedIdentifiers": [
+        "cities_temperate_medium_city_019"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 192,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 576,
+        "y": 704,
+        "width": 192,
+        "height": 192
+      },
+      "tileKeys": [
+        "10,11",
+        "10,12",
+        "10,13",
+        "11,11",
+        "11,12",
+        "11,13",
+        "9,11",
+        "9,12",
+        "9,13"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_5",
+        "grass",
+        "group_19",
+        "impassable",
+        "overhang",
+        "passable",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_temperate_medium.coarse.webp",
+          "x": 1802,
+          "y": 2,
+          "width": 96,
+          "height": 96,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_temperate_medium.final.webp",
+          "x": 1570,
+          "y": 262,
+          "width": 192,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv5_city_temperate_medium:group_20",
+      "groupId": "group_20",
+      "savedIdentifiers": [
+        "cities_temperate_medium_city_020"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 256,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 768,
+        "y": 704,
+        "width": 192,
+        "height": 256
+      },
+      "tileKeys": [
+        "12,11",
+        "12,12",
+        "12,13",
+        "12,14",
+        "13,11",
+        "13,12",
+        "13,13",
+        "13,14",
+        "14,11",
+        "14,12",
+        "14,13",
+        "14,14"
+      ],
+      "tags": [
+        "city",
+        "decorative",
+        "density_5",
+        "grass",
+        "group_20",
+        "impassable",
+        "overhang",
+        "passable",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv5_city_temperate_medium.coarse.webp",
+          "x": 1902,
+          "y": 2,
+          "width": 96,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv5_city_temperate_medium.final.webp",
+          "x": 1766,
+          "y": 262,
+          "width": 192,
+          "height": 256,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    }
+  ]
+}

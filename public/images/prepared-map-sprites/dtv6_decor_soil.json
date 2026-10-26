@@ -1,0 +1,2918 @@
+{
+  "schemaVersion": 1,
+  "name": "dtv6_decor_soil",
+  "identity": {
+    "buildVersion": 1,
+    "atlasVersion": 1,
+    "catalogVersion": 1,
+    "pixelRulesVersion": 1,
+    "webpQuality": 85,
+    "padding": 2,
+    "sourceHash": "90ed107ded6208da5879251a63d605fed6eac68913f4742a463a67ef09a1a0dc",
+    "metadataHash": "db41d8d589d3fc5ce55ccf0e6549ba9d4888fb48f389d5c2cbea23102829092f",
+    "metadataSignature": "8fd5ca5e9fb83d02e8269576472378a6cefe032870577106cf8f65d232ae20a9",
+    "selectedBackingDensities": [
+      0.5,
+      1
+    ]
+  },
+  "signature": "d86a2580caec481c73cf5c2582563ea66ab938c85a1c5ff230b448cda8b485de",
+  "source": {
+    "image": "images/map/sprite_sheets/dtv6_decor_soil.webp",
+    "metadata": "images/map/sprite_sheets/dtv6_decor_soil.json",
+    "sourceMetadata": {
+      "path": "images/map/sprite_sheets/sources/alpha_soil.webp",
+      "sha256": "38908ac18947177a886e784d520e07b0b61bca785a55e4be05668a476c9036bf",
+      "width": 1086,
+      "height": 1448,
+      "detection": {
+        "transparent": true,
+        "alphaCutoff": 128,
+        "gap": 0,
+        "minArea": 1000
+      },
+      "guides": [],
+      "spriteCount": 24,
+      "packing": {
+        "scale": "per-sprite",
+        "padding": 2
+      }
+    },
+    "editorMetadata": {
+      "schemaVersion": 1,
+      "layoutVersion": 2,
+      "name": "dtv6_decor_soil",
+      "grid": {
+        "tileSize": 64,
+        "rowHeight": 64,
+        "borderWidth": 0,
+        "cols": 16,
+        "rows": 5
+      },
+      "tags": [
+        "soil",
+        "decorative",
+        "ruins",
+        "impassable",
+        "landmark",
+        "trees",
+        "water",
+        "farm",
+        "passable",
+        "roadside",
+        "rocks",
+        "stones"
+      ],
+      "propLayout": [
+        {
+          "id": "soil_ruined_farmstead",
+          "col": 0,
+          "row": 0,
+          "w": 3,
+          "h": 3,
+          "groupId": 1,
+          "tags": [
+            "soil",
+            "decorative",
+            "ruins",
+            "impassable",
+            "landmark",
+            "group_1"
+          ],
+          "sourceRect": {
+            "x": 13,
+            "y": 17,
+            "width": 354,
+            "height": 339
+          }
+        },
+        {
+          "id": "soil_autumn_grove",
+          "col": 3,
+          "row": 0,
+          "w": 2,
+          "h": 2,
+          "groupId": 2,
+          "tags": [
+            "soil",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_2"
+          ],
+          "sourceRect": {
+            "x": 386,
+            "y": 62,
+            "width": 261,
+            "height": 251
+          }
+        },
+        {
+          "id": "soil_dead_tree_row",
+          "col": 5,
+          "row": 0,
+          "w": 1,
+          "h": 2,
+          "groupId": 3,
+          "tags": [
+            "soil",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_3"
+          ],
+          "sourceRect": {
+            "x": 681,
+            "y": 13,
+            "width": 89,
+            "height": 332
+          }
+        },
+        {
+          "id": "soil_muddy_pond",
+          "col": 6,
+          "row": 0,
+          "w": 3,
+          "h": 2,
+          "groupId": 4,
+          "tags": [
+            "soil",
+            "decorative",
+            "water",
+            "impassable",
+            "group_4"
+          ],
+          "sourceRect": {
+            "x": 806,
+            "y": 75,
+            "width": 267,
+            "height": 244
+          }
+        },
+        {
+          "id": "soil_log_pile",
+          "col": 9,
+          "row": 0,
+          "w": 1,
+          "h": 1,
+          "groupId": 5,
+          "tags": [
+            "soil",
+            "decorative",
+            "farm",
+            "passable",
+            "group_5"
+          ],
+          "sourceRect": {
+            "x": 33,
+            "y": 423,
+            "width": 230,
+            "height": 96
+          }
+        },
+        {
+          "id": "soil_watchtower",
+          "col": 10,
+          "row": 0,
+          "w": 1,
+          "h": 2,
+          "groupId": 6,
+          "tags": [
+            "soil",
+            "decorative",
+            "ruins",
+            "impassable",
+            "group_6"
+          ],
+          "sourceRect": {
+            "x": 334,
+            "y": 361,
+            "width": 165,
+            "height": 189
+          }
+        },
+        {
+          "id": "soil_pumpjack",
+          "col": 11,
+          "row": 0,
+          "w": 2,
+          "h": 1,
+          "groupId": 7,
+          "tags": [
+            "soil",
+            "decorative",
+            "ruins",
+            "impassable",
+            "group_7"
+          ],
+          "sourceRect": {
+            "x": 567,
+            "y": 402,
+            "width": 204,
+            "height": 130
+          }
+        },
+        {
+          "id": "soil_dead_tree",
+          "col": 13,
+          "row": 0,
+          "w": 1,
+          "h": 1,
+          "groupId": 8,
+          "tags": [
+            "soil",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_8"
+          ],
+          "sourceRect": {
+            "x": 828,
+            "y": 345,
+            "width": 222,
+            "height": 213
+          }
+        },
+        {
+          "id": "soil_autumn_tree",
+          "col": 14,
+          "row": 0,
+          "w": 2,
+          "h": 2,
+          "groupId": 9,
+          "tags": [
+            "soil",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_9"
+          ],
+          "sourceRect": {
+            "x": 24,
+            "y": 541,
+            "width": 219,
+            "height": 210
+          }
+        },
+        {
+          "id": "soil_fence_plough",
+          "col": 11,
+          "row": 1,
+          "w": 2,
+          "h": 1,
+          "groupId": 10,
+          "tags": [
+            "soil",
+            "decorative",
+            "farm",
+            "passable",
+            "group_10"
+          ],
+          "sourceRect": {
+            "x": 262,
+            "y": 609,
+            "width": 297,
+            "height": 138
+          }
+        },
+        {
+          "id": "soil_water_tank",
+          "col": 9,
+          "row": 1,
+          "w": 1,
+          "h": 2,
+          "groupId": 11,
+          "tags": [
+            "soil",
+            "decorative",
+            "roadside",
+            "impassable",
+            "group_11"
+          ],
+          "sourceRect": {
+            "x": 591,
+            "y": 553,
+            "width": 179,
+            "height": 203
+          }
+        },
+        {
+          "id": "soil_collapsed_shed",
+          "col": 3,
+          "row": 2,
+          "w": 2,
+          "h": 2,
+          "groupId": 12,
+          "tags": [
+            "soil",
+            "decorative",
+            "ruins",
+            "impassable",
+            "group_12"
+          ],
+          "sourceRect": {
+            "x": 809,
+            "y": 583,
+            "width": 247,
+            "height": 174
+          }
+        },
+        {
+          "id": "soil_thornbush",
+          "col": 13,
+          "row": 1,
+          "w": 1,
+          "h": 1,
+          "groupId": 13,
+          "tags": [
+            "soil",
+            "decorative",
+            "trees",
+            "impassable",
+            "group_13"
+          ],
+          "sourceRect": {
+            "x": 42,
+            "y": 776,
+            "width": 228,
+            "height": 178
+          }
+        },
+        {
+          "id": "soil_rusty_tractor",
+          "col": 5,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 14,
+          "tags": [
+            "soil",
+            "decorative",
+            "roadside",
+            "impassable",
+            "group_14"
+          ],
+          "sourceRect": {
+            "x": 331,
+            "y": 764,
+            "width": 162,
+            "height": 197
+          }
+        },
+        {
+          "id": "soil_wheelbarrow",
+          "col": 6,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 15,
+          "tags": [
+            "soil",
+            "decorative",
+            "farm",
+            "passable",
+            "group_15"
+          ],
+          "sourceRect": {
+            "x": 598,
+            "y": 785,
+            "width": 131,
+            "height": 180
+          }
+        },
+        {
+          "id": "soil_stone_well",
+          "col": 7,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 16,
+          "tags": [
+            "soil",
+            "decorative",
+            "farm",
+            "impassable",
+            "group_16"
+          ],
+          "sourceRect": {
+            "x": 828,
+            "y": 780,
+            "width": 197,
+            "height": 178
+          }
+        },
+        {
+          "id": "soil_scarecrow",
+          "col": 8,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 17,
+          "tags": [
+            "soil",
+            "decorative",
+            "farm",
+            "passable",
+            "group_17"
+          ],
+          "sourceRect": {
+            "x": 50,
+            "y": 981,
+            "width": 164,
+            "height": 183
+          }
+        },
+        {
+          "id": "soil_tree_stumps",
+          "col": 10,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 18,
+          "tags": [
+            "soil",
+            "decorative",
+            "passable",
+            "group_18"
+          ],
+          "sourceRect": {
+            "x": 283,
+            "y": 994,
+            "width": 237,
+            "height": 175
+          }
+        },
+        {
+          "id": "soil_loose_stones",
+          "col": 11,
+          "row": 2,
+          "w": 1,
+          "h": 1,
+          "groupId": 19,
+          "tags": [
+            "soil",
+            "decorative",
+            "rocks",
+            "stones",
+            "passable",
+            "group_19"
+          ],
+          "sourceRect": {
+            "x": 568,
+            "y": 987,
+            "width": 226,
+            "height": 178
+          }
+        },
+        {
+          "id": "soil_grain_silo",
+          "col": 12,
+          "row": 2,
+          "w": 2,
+          "h": 2,
+          "groupId": 20,
+          "tags": [
+            "soil",
+            "decorative",
+            "farm",
+            "impassable",
+            "group_20"
+          ],
+          "sourceRect": {
+            "x": 855,
+            "y": 963,
+            "width": 183,
+            "height": 234
+          }
+        },
+        {
+          "id": "soil_bare_orchard",
+          "col": 14,
+          "row": 2,
+          "w": 2,
+          "h": 2,
+          "groupId": 21,
+          "tags": [
+            "soil",
+            "decorative",
+            "farm",
+            "passable",
+            "group_21"
+          ],
+          "sourceRect": {
+            "x": 35,
+            "y": 1200,
+            "width": 250,
+            "height": 217
+          }
+        },
+        {
+          "id": "soil_hay_wagon",
+          "col": 0,
+          "row": 3,
+          "w": 1,
+          "h": 1,
+          "groupId": 22,
+          "tags": [
+            "soil",
+            "decorative",
+            "farm",
+            "passable",
+            "group_22"
+          ],
+          "sourceRect": {
+            "x": 299,
+            "y": 1243,
+            "width": 235,
+            "height": 146
+          }
+        },
+        {
+          "id": "soil_brick_kiln",
+          "col": 1,
+          "row": 3,
+          "w": 2,
+          "h": 2,
+          "groupId": 23,
+          "tags": [
+            "soil",
+            "decorative",
+            "ruins",
+            "impassable",
+            "group_23"
+          ],
+          "sourceRect": {
+            "x": 557,
+            "y": 1183,
+            "width": 240,
+            "height": 233
+          }
+        },
+        {
+          "id": "soil_irrigation_trough",
+          "col": 5,
+          "row": 3,
+          "w": 1,
+          "h": 1,
+          "groupId": 24,
+          "tags": [
+            "soil",
+            "decorative",
+            "farm",
+            "passable",
+            "group_24"
+          ],
+          "sourceRect": {
+            "x": 819,
+            "y": 1231,
+            "width": 249,
+            "height": 157
+          }
+        }
+      ],
+      "extension": {
+        "imports": [
+          {
+            "id": "soil_ruined_farmstead",
+            "sourceId": "alpha_soil",
+            "bbox": {
+              "x": 13,
+              "y": 17,
+              "width": 354,
+              "height": 339
+            },
+            "area": 88141,
+            "anchor": "center",
+            "sizeRatio": 0.471976401179941,
+            "referenceSize": {
+              "width": 176,
+              "height": 160
+            },
+            "tileSpan": {
+              "columns": 3,
+              "rows": 3
+            },
+            "placedAt": {
+              "column": 0,
+              "row": 0
+            },
+            "tags": [
+              "soil",
+              "decorative",
+              "ruins",
+              "impassable",
+              "landmark",
+              "group_1"
+            ],
+            "renderRect": {
+              "x": 12,
+              "y": 16,
+              "width": 167,
+              "height": 160
+            }
+          },
+          {
+            "id": "soil_autumn_grove",
+            "sourceId": "alpha_soil",
+            "bbox": {
+              "x": 386,
+              "y": 62,
+              "width": 261,
+              "height": 251
+            },
+            "area": 46101,
+            "anchor": "center",
+            "sizeRatio": 0.42911877394636017,
+            "referenceSize": {
+              "width": 112,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 3,
+              "row": 0
+            },
+            "tags": [
+              "soil",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_2"
+            ],
+            "renderRect": {
+              "x": 8,
+              "y": 10,
+              "width": 112,
+              "height": 108
+            }
+          },
+          {
+            "id": "soil_dead_tree_row",
+            "sourceId": "alpha_soil",
+            "bbox": {
+              "x": 681,
+              "y": 13,
+              "width": 89,
+              "height": 332
+            },
+            "area": 19845,
+            "anchor": "center",
+            "sizeRatio": 0.37349397590361444,
+            "referenceSize": {
+              "width": 58,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 5,
+              "row": 0
+            },
+            "tags": [
+              "soil",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_3"
+            ],
+            "renderRect": {
+              "x": 15,
+              "y": 2,
+              "width": 33,
+              "height": 124
+            }
+          },
+          {
+            "id": "soil_muddy_pond",
+            "sourceId": "alpha_soil",
+            "bbox": {
+              "x": 806,
+              "y": 75,
+              "width": 267,
+              "height": 244
+            },
+            "area": 51763,
+            "anchor": "center",
+            "sizeRatio": 0.4943820224719101,
+            "referenceSize": {
+              "width": 132,
+              "height": 188
+            },
+            "tileSpan": {
+              "columns": 3,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 6,
+              "row": 0
+            },
+            "tags": [
+              "soil",
+              "decorative",
+              "water",
+              "impassable",
+              "group_4"
+            ],
+            "renderRect": {
+              "x": 30,
+              "y": 3,
+              "width": 132,
+              "height": 121
+            }
+          },
+          {
+            "id": "soil_log_pile",
+            "sourceId": "alpha_soil",
+            "bbox": {
+              "x": 33,
+              "y": 423,
+              "width": 230,
+              "height": 96
+            },
+            "area": 15546,
+            "anchor": "center",
+            "sizeRatio": 0.24347826086956523,
+            "referenceSize": {
+              "width": 56,
+              "height": 100
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 9,
+              "row": 0
+            },
+            "tags": [
+              "soil",
+              "decorative",
+              "farm",
+              "passable",
+              "group_5"
+            ],
+            "renderRect": {
+              "x": 4,
+              "y": 20,
+              "width": 56,
+              "height": 23
+            }
+          },
+          {
+            "id": "soil_watchtower",
+            "sourceId": "alpha_soil",
+            "bbox": {
+              "x": 334,
+              "y": 361,
+              "width": 165,
+              "height": 189
+            },
+            "area": 21020,
+            "anchor": "center",
+            "sizeRatio": 0.36363636363636365,
+            "referenceSize": {
+              "width": 60,
+              "height": 160
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 10,
+              "row": 0
+            },
+            "tags": [
+              "soil",
+              "decorative",
+              "ruins",
+              "impassable",
+              "group_6"
+            ],
+            "renderRect": {
+              "x": 2,
+              "y": 29,
+              "width": 60,
+              "height": 69
+            }
+          },
+          {
+            "id": "soil_pumpjack",
+            "sourceId": "alpha_soil",
+            "bbox": {
+              "x": 567,
+              "y": 402,
+              "width": 204,
+              "height": 130
+            },
+            "area": 17751,
+            "anchor": "center",
+            "sizeRatio": 0.43137254901960786,
+            "referenceSize": {
+              "width": 88,
+              "height": 160
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 11,
+              "row": 0
+            },
+            "tags": [
+              "soil",
+              "decorative",
+              "ruins",
+              "impassable",
+              "group_7"
+            ],
+            "renderRect": {
+              "x": 20,
+              "y": 4,
+              "width": 88,
+              "height": 56
+            }
+          },
+          {
+            "id": "soil_dead_tree",
+            "sourceId": "alpha_soil",
+            "bbox": {
+              "x": 828,
+              "y": 345,
+              "width": 222,
+              "height": 213
+            },
+            "area": 19414,
+            "anchor": "center",
+            "sizeRatio": 0.21621621621621623,
+            "referenceSize": {
+              "width": 48,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 13,
+              "row": 0
+            },
+            "tags": [
+              "soil",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_8"
+            ],
+            "renderRect": {
+              "x": 8,
+              "y": 9,
+              "width": 48,
+              "height": 46
+            }
+          },
+          {
+            "id": "soil_autumn_tree",
+            "sourceId": "alpha_soil",
+            "bbox": {
+              "x": 24,
+              "y": 541,
+              "width": 219,
+              "height": 210
+            },
+            "area": 30829,
+            "anchor": "center",
+            "sizeRatio": 0.3470319634703196,
+            "referenceSize": {
+              "width": 76,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 14,
+              "row": 0
+            },
+            "tags": [
+              "soil",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_9"
+            ],
+            "renderRect": {
+              "x": 26,
+              "y": 27,
+              "width": 76,
+              "height": 73
+            }
+          },
+          {
+            "id": "soil_fence_plough",
+            "sourceId": "alpha_soil",
+            "bbox": {
+              "x": 262,
+              "y": 609,
+              "width": 297,
+              "height": 138
+            },
+            "area": 27909,
+            "anchor": "center",
+            "sizeRatio": 0.2558922558922559,
+            "referenceSize": {
+              "width": 76,
+              "height": 100
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 11,
+              "row": 1
+            },
+            "tags": [
+              "soil",
+              "decorative",
+              "farm",
+              "passable",
+              "group_10"
+            ],
+            "renderRect": {
+              "x": 26,
+              "y": 14,
+              "width": 76,
+              "height": 35
+            }
+          },
+          {
+            "id": "soil_water_tank",
+            "sourceId": "alpha_soil",
+            "bbox": {
+              "x": 591,
+              "y": 553,
+              "width": 179,
+              "height": 203
+            },
+            "area": 25517,
+            "anchor": "center",
+            "sizeRatio": 0.3128491620111732,
+            "referenceSize": {
+              "width": 56,
+              "height": 120
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 9,
+              "row": 1
+            },
+            "tags": [
+              "soil",
+              "decorative",
+              "roadside",
+              "impassable",
+              "group_11"
+            ],
+            "renderRect": {
+              "x": 4,
+              "y": 32,
+              "width": 56,
+              "height": 64
+            }
+          },
+          {
+            "id": "soil_collapsed_shed",
+            "sourceId": "alpha_soil",
+            "bbox": {
+              "x": 809,
+              "y": 583,
+              "width": 247,
+              "height": 174
+            },
+            "area": 30909,
+            "anchor": "center",
+            "sizeRatio": 0.42105263157894735,
+            "referenceSize": {
+              "width": 104,
+              "height": 160
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 3,
+              "row": 2
+            },
+            "tags": [
+              "soil",
+              "decorative",
+              "ruins",
+              "impassable",
+              "group_12"
+            ],
+            "renderRect": {
+              "x": 12,
+              "y": 27,
+              "width": 104,
+              "height": 73
+            }
+          },
+          {
+            "id": "soil_thornbush",
+            "sourceId": "alpha_soil",
+            "bbox": {
+              "x": 42,
+              "y": 776,
+              "width": 228,
+              "height": 178
+            },
+            "area": 25674,
+            "anchor": "center",
+            "sizeRatio": 0.17543859649122806,
+            "referenceSize": {
+              "width": 40,
+              "height": 124
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 13,
+              "row": 1
+            },
+            "tags": [
+              "soil",
+              "decorative",
+              "trees",
+              "impassable",
+              "group_13"
+            ],
+            "renderRect": {
+              "x": 12,
+              "y": 16,
+              "width": 40,
+              "height": 31
+            }
+          },
+          {
+            "id": "soil_rusty_tractor",
+            "sourceId": "alpha_soil",
+            "bbox": {
+              "x": 331,
+              "y": 764,
+              "width": 162,
+              "height": 197
+            },
+            "area": 22187,
+            "anchor": "center",
+            "sizeRatio": 0.2962962962962963,
+            "referenceSize": {
+              "width": 48,
+              "height": 120
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 5,
+              "row": 2
+            },
+            "tags": [
+              "soil",
+              "decorative",
+              "roadside",
+              "impassable",
+              "group_14"
+            ],
+            "renderRect": {
+              "x": 8,
+              "y": 3,
+              "width": 48,
+              "height": 58
+            }
+          },
+          {
+            "id": "soil_wheelbarrow",
+            "sourceId": "alpha_soil",
+            "bbox": {
+              "x": 598,
+              "y": 785,
+              "width": 131,
+              "height": 180
+            },
+            "area": 14506,
+            "anchor": "center",
+            "sizeRatio": 0.24427480916030533,
+            "referenceSize": {
+              "width": 32,
+              "height": 100
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 6,
+              "row": 2
+            },
+            "tags": [
+              "soil",
+              "decorative",
+              "farm",
+              "passable",
+              "group_15"
+            ],
+            "renderRect": {
+              "x": 16,
+              "y": 10,
+              "width": 32,
+              "height": 44
+            }
+          },
+          {
+            "id": "soil_stone_well",
+            "sourceId": "alpha_soil",
+            "bbox": {
+              "x": 828,
+              "y": 780,
+              "width": 197,
+              "height": 178
+            },
+            "area": 25445,
+            "anchor": "center",
+            "sizeRatio": 0.18274111675126903,
+            "referenceSize": {
+              "width": 36,
+              "height": 152
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 7,
+              "row": 2
+            },
+            "tags": [
+              "soil",
+              "decorative",
+              "farm",
+              "impassable",
+              "group_16"
+            ],
+            "renderRect": {
+              "x": 14,
+              "y": 15,
+              "width": 36,
+              "height": 33
+            }
+          },
+          {
+            "id": "soil_scarecrow",
+            "sourceId": "alpha_soil",
+            "bbox": {
+              "x": 50,
+              "y": 981,
+              "width": 164,
+              "height": 183
+            },
+            "area": 15084,
+            "anchor": "center",
+            "sizeRatio": 0.1951219512195122,
+            "referenceSize": {
+              "width": 32,
+              "height": 100
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 8,
+              "row": 2
+            },
+            "tags": [
+              "soil",
+              "decorative",
+              "farm",
+              "passable",
+              "group_17"
+            ],
+            "renderRect": {
+              "x": 16,
+              "y": 14,
+              "width": 32,
+              "height": 36
+            }
+          },
+          {
+            "id": "soil_tree_stumps",
+            "sourceId": "alpha_soil",
+            "bbox": {
+              "x": 283,
+              "y": 994,
+              "width": 237,
+              "height": 175
+            },
+            "area": 28940,
+            "anchor": "center",
+            "sizeRatio": 0.16877637130801687,
+            "referenceSize": {
+              "width": 40,
+              "height": 100
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 10,
+              "row": 2
+            },
+            "tags": [
+              "soil",
+              "decorative",
+              "passable",
+              "group_18"
+            ],
+            "renderRect": {
+              "x": 12,
+              "y": 17,
+              "width": 40,
+              "height": 30
+            }
+          },
+          {
+            "id": "soil_loose_stones",
+            "sourceId": "alpha_soil",
+            "bbox": {
+              "x": 568,
+              "y": 987,
+              "width": 226,
+              "height": 178
+            },
+            "area": 26557,
+            "anchor": "center",
+            "sizeRatio": 0.1592920353982301,
+            "referenceSize": {
+              "width": 36,
+              "height": 100
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 11,
+              "row": 2
+            },
+            "tags": [
+              "soil",
+              "decorative",
+              "rocks",
+              "stones",
+              "passable",
+              "group_19"
+            ],
+            "renderRect": {
+              "x": 14,
+              "y": 18,
+              "width": 36,
+              "height": 28
+            }
+          },
+          {
+            "id": "soil_grain_silo",
+            "sourceId": "alpha_soil",
+            "bbox": {
+              "x": 855,
+              "y": 963,
+              "width": 183,
+              "height": 234
+            },
+            "area": 28479,
+            "anchor": "center",
+            "sizeRatio": 0.39344262295081966,
+            "referenceSize": {
+              "width": 72,
+              "height": 152
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 12,
+              "row": 2
+            },
+            "tags": [
+              "soil",
+              "decorative",
+              "farm",
+              "impassable",
+              "group_20"
+            ],
+            "renderRect": {
+              "x": 28,
+              "y": 18,
+              "width": 72,
+              "height": 92
+            }
+          },
+          {
+            "id": "soil_bare_orchard",
+            "sourceId": "alpha_soil",
+            "bbox": {
+              "x": 35,
+              "y": 1200,
+              "width": 250,
+              "height": 217
+            },
+            "area": 31035,
+            "anchor": "center",
+            "sizeRatio": 0.384,
+            "referenceSize": {
+              "width": 96,
+              "height": 100
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 14,
+              "row": 2
+            },
+            "tags": [
+              "soil",
+              "decorative",
+              "farm",
+              "passable",
+              "group_21"
+            ],
+            "renderRect": {
+              "x": 16,
+              "y": 22,
+              "width": 96,
+              "height": 83
+            }
+          },
+          {
+            "id": "soil_hay_wagon",
+            "sourceId": "alpha_soil",
+            "bbox": {
+              "x": 299,
+              "y": 1243,
+              "width": 235,
+              "height": 146
+            },
+            "area": 26026,
+            "anchor": "center",
+            "sizeRatio": 0.23829787234042554,
+            "referenceSize": {
+              "width": 56,
+              "height": 100
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 0,
+              "row": 3
+            },
+            "tags": [
+              "soil",
+              "decorative",
+              "farm",
+              "passable",
+              "group_22"
+            ],
+            "renderRect": {
+              "x": 4,
+              "y": 14,
+              "width": 56,
+              "height": 35
+            }
+          },
+          {
+            "id": "soil_brick_kiln",
+            "sourceId": "alpha_soil",
+            "bbox": {
+              "x": 557,
+              "y": 1183,
+              "width": 240,
+              "height": 233
+            },
+            "area": 38639,
+            "anchor": "center",
+            "sizeRatio": 0.4166666666666667,
+            "referenceSize": {
+              "width": 100,
+              "height": 160
+            },
+            "tileSpan": {
+              "columns": 2,
+              "rows": 2
+            },
+            "placedAt": {
+              "column": 1,
+              "row": 3
+            },
+            "tags": [
+              "soil",
+              "decorative",
+              "ruins",
+              "impassable",
+              "group_23"
+            ],
+            "renderRect": {
+              "x": 14,
+              "y": 15,
+              "width": 100,
+              "height": 97
+            }
+          },
+          {
+            "id": "soil_irrigation_trough",
+            "sourceId": "alpha_soil",
+            "bbox": {
+              "x": 819,
+              "y": 1231,
+              "width": 249,
+              "height": 157
+            },
+            "area": 23237,
+            "anchor": "center",
+            "sizeRatio": 0.2248995983935743,
+            "referenceSize": {
+              "width": 56,
+              "height": 100
+            },
+            "tileSpan": {
+              "columns": 1,
+              "rows": 1
+            },
+            "placedAt": {
+              "column": 5,
+              "row": 3
+            },
+            "tags": [
+              "soil",
+              "decorative",
+              "farm",
+              "passable",
+              "group_24"
+            ],
+            "renderRect": {
+              "x": 4,
+              "y": 14,
+              "width": 56,
+              "height": 35
+            }
+          }
+        ],
+        "occupiedTiles": [
+          "0,0",
+          "1,0",
+          "2,0",
+          "0,1",
+          "1,1",
+          "2,1",
+          "0,2",
+          "1,2",
+          "2,2",
+          "3,0",
+          "4,0",
+          "3,1",
+          "4,1",
+          "5,0",
+          "5,1",
+          "6,0",
+          "7,0",
+          "8,0",
+          "6,1",
+          "7,1",
+          "8,1",
+          "9,0",
+          "10,0",
+          "10,1",
+          "11,0",
+          "12,0",
+          "13,0",
+          "14,0",
+          "15,0",
+          "14,1",
+          "15,1",
+          "11,1",
+          "12,1",
+          "9,1",
+          "9,2",
+          "3,2",
+          "4,2",
+          "3,3",
+          "4,3",
+          "13,1",
+          "5,2",
+          "6,2",
+          "7,2",
+          "8,2",
+          "10,2",
+          "11,2",
+          "12,2",
+          "13,2",
+          "12,3",
+          "13,3",
+          "14,2",
+          "15,2",
+          "14,3",
+          "15,3",
+          "0,3",
+          "1,3",
+          "2,3",
+          "1,4",
+          "2,4",
+          "5,3"
+        ]
+      }
+    }
+  },
+  "upscaledBeyondMaster": false,
+  "omittedCandidateDensities": [
+    2,
+    3
+  ],
+  "pages": [
+    {
+      "name": "dtv6_decor_soil.coarse.webp",
+      "sha256": "0a72e4c330cf52c7876f98a9c8daa66e794a3be3ff122c894d1c9d0e2021abe0",
+      "width": 1248,
+      "height": 100,
+      "decodedBytes": 499200,
+      "compressedBytes": 37814,
+      "tier": 0,
+      "tierName": "coarse",
+      "backingDensity": 0.5
+    },
+    {
+      "name": "dtv6_decor_soil.final.webp",
+      "sha256": "92f6490504b257fc17e5eb4ca321540f18f849b087eb863169c228e5cb50c9ed",
+      "width": 2000,
+      "height": 328,
+      "decodedBytes": 2624000,
+      "compressedBytes": 105778,
+      "tier": 2,
+      "tierName": "final",
+      "backingDensity": 1
+    }
+  ],
+  "sprites": [
+    {
+      "spriteId": "dtv6_decor_soil:group_1",
+      "groupId": "group_1",
+      "savedIdentifiers": [
+        "soil_ruined_farmstead"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 192,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 0,
+        "y": 0,
+        "width": 192,
+        "height": 192
+      },
+      "tileKeys": [
+        "0,0",
+        "0,1",
+        "0,2",
+        "1,0",
+        "1,1",
+        "1,2",
+        "2,0",
+        "2,1",
+        "2,2"
+      ],
+      "tags": [
+        "decorative",
+        "group_1",
+        "impassable",
+        "landmark",
+        "ruins",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_soil.coarse.webp",
+          "x": 2,
+          "y": 2,
+          "width": 96,
+          "height": 96,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_soil.final.webp",
+          "x": 2,
+          "y": 2,
+          "width": 192,
+          "height": 192,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_soil:group_2",
+      "groupId": "group_2",
+      "savedIdentifiers": [
+        "soil_autumn_grove"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 192,
+        "y": 0,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "3,0",
+        "3,1",
+        "4,0",
+        "4,1"
+      ],
+      "tags": [
+        "decorative",
+        "group_2",
+        "impassable",
+        "soil",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_soil.coarse.webp",
+          "x": 102,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_soil.final.webp",
+          "x": 198,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_soil:group_3",
+      "groupId": "group_3",
+      "savedIdentifiers": [
+        "soil_dead_tree_row"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 320,
+        "y": 0,
+        "width": 64,
+        "height": 128
+      },
+      "tileKeys": [
+        "5,0",
+        "5,1"
+      ],
+      "tags": [
+        "decorative",
+        "group_3",
+        "impassable",
+        "soil",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_soil.coarse.webp",
+          "x": 170,
+          "y": 2,
+          "width": 32,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_soil.final.webp",
+          "x": 330,
+          "y": 2,
+          "width": 64,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_soil:group_4",
+      "groupId": "group_4",
+      "savedIdentifiers": [
+        "soil_muddy_pond"
+      ],
+      "logicalWidth": 192,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 384,
+        "y": 0,
+        "width": 192,
+        "height": 128
+      },
+      "tileKeys": [
+        "6,0",
+        "6,1",
+        "7,0",
+        "7,1",
+        "8,0",
+        "8,1"
+      ],
+      "tags": [
+        "decorative",
+        "group_4",
+        "impassable",
+        "soil",
+        "water"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_soil.coarse.webp",
+          "x": 206,
+          "y": 2,
+          "width": 96,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_soil.final.webp",
+          "x": 398,
+          "y": 2,
+          "width": 192,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_soil:group_5",
+      "groupId": "group_5",
+      "savedIdentifiers": [
+        "soil_log_pile"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 576,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "9,0"
+      ],
+      "tags": [
+        "decorative",
+        "farm",
+        "group_5",
+        "passable",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_soil.coarse.webp",
+          "x": 306,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_soil.final.webp",
+          "x": 594,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_soil:group_6",
+      "groupId": "group_6",
+      "savedIdentifiers": [
+        "soil_watchtower"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 640,
+        "y": 0,
+        "width": 64,
+        "height": 128
+      },
+      "tileKeys": [
+        "10,0",
+        "10,1"
+      ],
+      "tags": [
+        "decorative",
+        "group_6",
+        "impassable",
+        "ruins",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_soil.coarse.webp",
+          "x": 342,
+          "y": 2,
+          "width": 32,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_soil.final.webp",
+          "x": 662,
+          "y": 2,
+          "width": 64,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_soil:group_7",
+      "groupId": "group_7",
+      "savedIdentifiers": [
+        "soil_pumpjack"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 704,
+        "y": 0,
+        "width": 128,
+        "height": 64
+      },
+      "tileKeys": [
+        "11,0",
+        "12,0"
+      ],
+      "tags": [
+        "decorative",
+        "group_7",
+        "impassable",
+        "ruins",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_soil.coarse.webp",
+          "x": 378,
+          "y": 2,
+          "width": 64,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_soil.final.webp",
+          "x": 730,
+          "y": 2,
+          "width": 128,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_soil:group_8",
+      "groupId": "group_8",
+      "savedIdentifiers": [
+        "soil_dead_tree"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 832,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "13,0"
+      ],
+      "tags": [
+        "decorative",
+        "group_8",
+        "impassable",
+        "soil",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_soil.coarse.webp",
+          "x": 446,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_soil.final.webp",
+          "x": 862,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_soil:group_9",
+      "groupId": "group_9",
+      "savedIdentifiers": [
+        "soil_autumn_tree"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 896,
+        "y": 0,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "14,0",
+        "14,1",
+        "15,0",
+        "15,1"
+      ],
+      "tags": [
+        "decorative",
+        "group_9",
+        "impassable",
+        "soil",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_soil.coarse.webp",
+          "x": 482,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_soil.final.webp",
+          "x": 930,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_soil:group_10",
+      "groupId": "group_10",
+      "savedIdentifiers": [
+        "soil_fence_plough"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 704,
+        "y": 64,
+        "width": 128,
+        "height": 64
+      },
+      "tileKeys": [
+        "11,1",
+        "12,1"
+      ],
+      "tags": [
+        "decorative",
+        "farm",
+        "group_10",
+        "passable",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_soil.coarse.webp",
+          "x": 550,
+          "y": 2,
+          "width": 64,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_soil.final.webp",
+          "x": 1062,
+          "y": 2,
+          "width": 128,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_soil:group_11",
+      "groupId": "group_11",
+      "savedIdentifiers": [
+        "soil_water_tank"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 576,
+        "y": 64,
+        "width": 64,
+        "height": 128
+      },
+      "tileKeys": [
+        "9,1",
+        "9,2"
+      ],
+      "tags": [
+        "decorative",
+        "group_11",
+        "impassable",
+        "roadside",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_soil.coarse.webp",
+          "x": 618,
+          "y": 2,
+          "width": 32,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_soil.final.webp",
+          "x": 1194,
+          "y": 2,
+          "width": 64,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_soil:group_12",
+      "groupId": "group_12",
+      "savedIdentifiers": [
+        "soil_collapsed_shed"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 192,
+        "y": 128,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "3,2",
+        "3,3",
+        "4,2",
+        "4,3"
+      ],
+      "tags": [
+        "decorative",
+        "group_12",
+        "impassable",
+        "ruins",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_soil.coarse.webp",
+          "x": 654,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_soil.final.webp",
+          "x": 1262,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_soil:group_13",
+      "groupId": "group_13",
+      "savedIdentifiers": [
+        "soil_thornbush"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 832,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "13,1"
+      ],
+      "tags": [
+        "decorative",
+        "group_13",
+        "impassable",
+        "soil",
+        "trees"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_soil.coarse.webp",
+          "x": 722,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_soil.final.webp",
+          "x": 1394,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_soil:group_14",
+      "groupId": "group_14",
+      "savedIdentifiers": [
+        "soil_rusty_tractor"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 320,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "5,2"
+      ],
+      "tags": [
+        "decorative",
+        "group_14",
+        "impassable",
+        "roadside",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_soil.coarse.webp",
+          "x": 758,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_soil.final.webp",
+          "x": 1462,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_soil:group_15",
+      "groupId": "group_15",
+      "savedIdentifiers": [
+        "soil_wheelbarrow"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 384,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "6,2"
+      ],
+      "tags": [
+        "decorative",
+        "farm",
+        "group_15",
+        "passable",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_soil.coarse.webp",
+          "x": 794,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_soil.final.webp",
+          "x": 1530,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_soil:group_16",
+      "groupId": "group_16",
+      "savedIdentifiers": [
+        "soil_stone_well"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 448,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "7,2"
+      ],
+      "tags": [
+        "decorative",
+        "farm",
+        "group_16",
+        "impassable",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_soil.coarse.webp",
+          "x": 830,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_soil.final.webp",
+          "x": 1598,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_soil:group_17",
+      "groupId": "group_17",
+      "savedIdentifiers": [
+        "soil_scarecrow"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 512,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "8,2"
+      ],
+      "tags": [
+        "decorative",
+        "farm",
+        "group_17",
+        "passable",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_soil.coarse.webp",
+          "x": 866,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_soil.final.webp",
+          "x": 1666,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_soil:group_18",
+      "groupId": "group_18",
+      "savedIdentifiers": [
+        "soil_tree_stumps"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 640,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "10,2"
+      ],
+      "tags": [
+        "decorative",
+        "group_18",
+        "passable",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_soil.coarse.webp",
+          "x": 902,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_soil.final.webp",
+          "x": 1734,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_soil:group_19",
+      "groupId": "group_19",
+      "savedIdentifiers": [
+        "soil_loose_stones"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 704,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "11,2"
+      ],
+      "tags": [
+        "decorative",
+        "group_19",
+        "passable",
+        "rocks",
+        "soil",
+        "stones"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_soil.coarse.webp",
+          "x": 938,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_soil.final.webp",
+          "x": 1802,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_soil:group_20",
+      "groupId": "group_20",
+      "savedIdentifiers": [
+        "soil_grain_silo"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 768,
+        "y": 128,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "12,2",
+        "12,3",
+        "13,2",
+        "13,3"
+      ],
+      "tags": [
+        "decorative",
+        "farm",
+        "group_20",
+        "impassable",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_soil.coarse.webp",
+          "x": 974,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_soil.final.webp",
+          "x": 1870,
+          "y": 2,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_soil:group_21",
+      "groupId": "group_21",
+      "savedIdentifiers": [
+        "soil_bare_orchard"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 896,
+        "y": 128,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "14,2",
+        "14,3",
+        "15,2",
+        "15,3"
+      ],
+      "tags": [
+        "decorative",
+        "farm",
+        "group_21",
+        "passable",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_soil.coarse.webp",
+          "x": 1042,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_soil.final.webp",
+          "x": 2,
+          "y": 198,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_soil:group_22",
+      "groupId": "group_22",
+      "savedIdentifiers": [
+        "soil_hay_wagon"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 0,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "0,3"
+      ],
+      "tags": [
+        "decorative",
+        "farm",
+        "group_22",
+        "passable",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_soil.coarse.webp",
+          "x": 1110,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_soil.final.webp",
+          "x": 134,
+          "y": 198,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_soil:group_23",
+      "groupId": "group_23",
+      "savedIdentifiers": [
+        "soil_brick_kiln"
+      ],
+      "logicalWidth": 128,
+      "logicalHeight": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 64,
+        "y": 192,
+        "width": 128,
+        "height": 128
+      },
+      "tileKeys": [
+        "1,3",
+        "1,4",
+        "2,3",
+        "2,4"
+      ],
+      "tags": [
+        "decorative",
+        "group_23",
+        "impassable",
+        "ruins",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_soil.coarse.webp",
+          "x": 1146,
+          "y": 2,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_soil.final.webp",
+          "x": 202,
+          "y": 198,
+          "width": 128,
+          "height": 128,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    },
+    {
+      "spriteId": "dtv6_decor_soil:group_24",
+      "groupId": "group_24",
+      "savedIdentifiers": [
+        "soil_irrigation_trough"
+      ],
+      "logicalWidth": 64,
+      "logicalHeight": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "sourceRect": {
+        "x": 320,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "tileKeys": [
+        "5,3"
+      ],
+      "tags": [
+        "decorative",
+        "farm",
+        "group_24",
+        "passable",
+        "soil"
+      ],
+      "coverage": null,
+      "sources": [
+        {
+          "tier": 0,
+          "tierName": "coarse",
+          "page": "dtv6_decor_soil.coarse.webp",
+          "x": 1214,
+          "y": 2,
+          "width": 32,
+          "height": 32,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 0.5
+        },
+        {
+          "tier": 2,
+          "tierName": "final",
+          "page": "dtv6_decor_soil.final.webp",
+          "x": 334,
+          "y": 198,
+          "width": 64,
+          "height": 64,
+          "padding": 2,
+          "gutter": 2,
+          "backingDensity": 1
+        }
+      ]
+    }
+  ]
+}
