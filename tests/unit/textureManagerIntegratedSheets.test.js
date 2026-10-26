@@ -3,14 +3,17 @@ import { TextureManager } from '../../src/rendering/textureManager.js'
 import { buildOccupancyMap } from '../../src/units.js'
 
 describe('TextureManager integrated multi-sheet selection', () => {
-  it('[U06212] loads only the demanded generated manifest and final page, reuses signatures, and publishes it', async() => {
+  it('[U06212] publishes a coarse prepared page before upgrading the same logical sprites to final', async() => {
     const manager = new TextureManager()
     const manifest = {
       signature: 'sheet-signature',
       identity: { metadataSignature: 'metadata-signature' },
       source: { image: 'images/map/sprite_sheets/terrain.webp' },
       pages: [{ name: 'terrain.coarse.webp', tier: 0, tierName: 'coarse', decodedBytes: 64 }, { name: 'terrain.final.webp', tier: 2, tierName: 'final', decodedBytes: 256 }],
-      sprites: [{ spriteId: 'terrain:group_1', logicalWidth: 64, logicalHeight: 64, anchorX: 0.5, anchorY: 1, tileKeys: ['0,0'], sources: [{ tier: 2, x: 2, y: 3, width: 64, height: 64 }] }]
+      sprites: [{ spriteId: 'terrain:group_1', logicalWidth: 64, logicalHeight: 64, anchorX: 0.5, anchorY: 1, tileKeys: ['0,0'], sources: [
+        { tier: 0, x: 1, y: 1, width: 32, height: 32 },
+        { tier: 2, x: 2, y: 3, width: 64, height: 64 }
+      ] }]
     }
     vi.spyOn(manager, 'loadPreparedMapSpriteCatalog').mockResolvedValue({ sheets: [{ name: 'terrain', manifest: 'terrain.json' }] })
     const originalFetch = globalThis.fetch
@@ -18,8 +21,12 @@ describe('TextureManager integrated multi-sheet selection', () => {
       expect(url).toBe('/images/prepared-map-sprites/terrain.json')
       return manifest
     } }))
-    const pageImage = { width: 100, height: 100 }
-    const loadImage = vi.spyOn(manager, 'loadIntegratedSpriteSheetImage').mockResolvedValue(pageImage)
+    const coarseImage = { id: 'coarse', width: 50, height: 50 }
+    const finalImage = { id: 'final', width: 100, height: 100 }
+    let resolveFinal
+    const loadImage = vi.spyOn(manager, 'loadIntegratedSpriteSheetImage').mockImplementation(path => path.includes('.coarse.')
+      ? Promise.resolve(coarseImage)
+      : new Promise(resolve => { resolveFinal = () => resolve(finalImage) }))
     const publish = vi.fn()
     manager.onSpriteTierPublication = publish
     try {
@@ -30,17 +37,42 @@ describe('TextureManager integrated multi-sheet selection', () => {
     } finally {
       globalThis.fetch = originalFetch
     }
-    expect(loadImage).toHaveBeenCalledOnce()
-    expect(loadImage).toHaveBeenCalledWith('images/prepared-map-sprites/terrain.final.webp')
+    expect(loadImage).toHaveBeenCalledWith('images/prepared-map-sprites/terrain.coarse.webp')
     expect(manager.integratedTagBuckets.grass[0]).toEqual(expect.objectContaining({
-      image: pageImage,
+      image: coarseImage,
       spriteId: 'images/map/sprite_sheets/terrain.webp',
       metadataSignature: 'metadata-signature',
       signature: 'sheet-signature',
-      rect: { x: 2, y: 3, width: 64, height: 64 }
+      logicalWidth: 64,
+      rect: { x: 1, y: 1, width: 32, height: 32 }
     }))
-    expect(publish).toHaveBeenCalledWith(expect.objectContaining({ spriteId: 'images/map/sprite_sheets/terrain.webp', tier: 2 }))
+    expect(publish).toHaveBeenCalledWith(expect.objectContaining({ spriteId: 'images/map/sprite_sheets/terrain.webp', tier: 0 }))
     expect(Object.isFrozen(publish.mock.calls[0][0])).toBe(true)
+    const mapGrid = [[{ type: 'land', biome: 'grass' }]]
+    const coarseLayout = manager.prepareDecorationLayout(mapGrid)
+
+    await vi.waitFor(() => expect(resolveFinal).toBeTypeOf('function'))
+    resolveFinal()
+    await vi.waitFor(() => expect(manager.integratedTagBuckets.grass[0].image).toBe(finalImage))
+    await vi.waitFor(() => expect(manager.getDecorationLayout(mapGrid)).toEqual(coarseLayout))
+    expect(manager.integratedTagBuckets.grass[0].rect).toEqual({ x: 2, y: 3, width: 64, height: 64 })
+    expect(publish).toHaveBeenLastCalledWith(expect.objectContaining({ spriteId: 'images/map/sprite_sheets/terrain.webp', tier: 2 }))
+  })
+
+  it('[U06499] keeps an already-resident final page instead of downgrading to coarse on reconfiguration', async() => {
+    const manager = new TextureManager()
+    const manifest = {
+      signature: 's', identity: { metadataSignature: 'm' }, source: { image: 'images/map/sprite_sheets/terrain.webp' },
+      pages: [{ name: 'terrain.coarse.webp', tier: 0, tierName: 'coarse' }, { name: 'terrain.final.webp', tier: 2, tierName: 'final' }],
+      sprites: []
+    }
+    vi.spyOn(manager, 'loadPreparedMapSpriteCatalog').mockResolvedValue({ sheets: [{ name: 'terrain', manifest: 'terrain.json' }] })
+    manager.preparedMapSpriteManifests.set('terrain', manifest)
+    const finalImage = { id: 'final' }
+    manager.integratedSpriteSheetImagesByPath['images/prepared-map-sprites/terrain.final.webp'] = finalImage
+    const prepared = await manager.loadPreparedMapSpriteSheet('images/map/sprite_sheets/terrain.webp', 'coarse')
+    expect(prepared.page.tierName).toBe('final')
+    expect(prepared.image).toBe(finalImage)
   })
 
   it('[U06214] overlaps integrated sheet loads with bounded concurrency while preserving sheet order', async() => {
