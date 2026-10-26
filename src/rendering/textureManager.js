@@ -24,6 +24,7 @@ import { getPreparedSpriteState } from './prepared/preparedSpritePipeline.js'
 import { cutoutDecorationGroup } from './decorationCutout.js'
 import { DecorationLayoutPreparation } from './decorationLayoutPreparation.js'
 import { createSpritePublication, createSpriteReservationToken } from './spriteStreamingLifecycle.js'
+import { loadSpriteSheetsWithOverlap } from '../pwa/offlineAssetPlan.js'
 
 const PREPARED_MAP_SPRITE_ROOT = '/images/prepared-map-sprites/'
 
@@ -224,7 +225,7 @@ export class TextureManager {
     }
     const page = manifest.pages?.find(candidate => candidate.tierName === 'final') || manifest.pages?.at(-1)
     if (!page) return null
-    const image = await this.loadIntegratedSpriteSheetImage(`${PREPARED_MAP_SPRITE_ROOT.slice(1)}${page.name}`)
+    const image = await this.loadIntegratedSpriteSheetImage(page.url || `${PREPARED_MAP_SPRITE_ROOT.slice(1)}${page.name}`)
     if (!image) return null
     return { catalogEntry, manifest, page, image }
   }
@@ -548,14 +549,25 @@ export class TextureManager {
         }])
 
     const normalizedEntries = []
+    const candidates = []
     for (const entry of sheetEntries) {
       const sheetPath = entry?.sheetPath
       const metadata = expandCompactSpriteSheetMetadata(entry?.metadata)
       if (!sheetPath || !metadata) continue
       if (!this.hasTaggedIntegratedTiles(metadata)) continue
+      candidates.push({ sheetPath, metadata })
+    }
+    // Bounded overlap hides per-sheet network latency; a selected derivative
+    // never also requests its source sheet. Results keep declaration order.
+    const loaded = await loadSpriteSheetsWithOverlap(candidates, async({ sheetPath }) => {
       const prepared = await this.loadPreparedMapSpriteSheet(sheetPath)
       const image = prepared?.image || await this.loadIntegratedSpriteSheetImage(sheetPath)
-      preparation.assertCurrent(this.texturePreparationGeneration)
+      return { prepared, image }
+    })
+    preparation.assertCurrent(this.texturePreparationGeneration)
+    for (let index = 0; index < candidates.length; index++) {
+      const { sheetPath, metadata } = candidates[index]
+      const { prepared, image } = loaded[index] || {}
       if (!image) continue
       const preparedMetadata = prepared ? this.buildPreparedMapSpriteMetadata(metadata, prepared) : metadata
       normalizedEntries.push({
