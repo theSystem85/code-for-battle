@@ -312,10 +312,26 @@ Sorted by expected combined frame-time and memory impact; the memory column make
 
 ### S00 — freeze contracts, attribution and ownership
 
-- [ ] Add bounded, opt-in stage counters/spans for sheet load/decode/key/cutout/catalog, rotation generation, queue waits, bitmap creation/publication, chunk rebuild/upload and bytes by tier/generation. Reuse existing profiler IDs/contracts; no per-entity trace-object allocations.
-- [ ] Record cold and warm causal traces using the spec protocol. No hardware GPU means leave captures pending, not a software benchmark substitute. Prioritize fixes using captured self times and byte peaks once available.
-- [ ] Freeze worker request/result, stable sprite ID/logical geometry, per-tier source rectangles, reservation/release tokens, visibility-demand snapshots, generation cancellation, publication/revision and diagnostic schemas in new dedicated modules. Allocate their exact filenames before dispatch. Establish worker capability/fallback contract and document progressive-tier sampling exception.
-- [ ] Freeze shared integration ownership: only this owner edits `textureManager.js`, `spriteSheetAnimation.js`, `preparedSpritePipeline.js`, `preparedSpriteRegistry.js`, `prepared/renderingPipeline.js`, startup/load/settings wiring, package scripts, Vite config, shared docs and manifest registrations during independent development. Do not dispatch another lane to these files simultaneously.
+- [x] Add bounded, opt-in stage counters/spans for sheet load/decode/key/cutout/catalog, rotation generation, queue waits, bitmap creation/publication, chunk rebuild/upload and bytes by tier/generation. Stable sprite IDs 90–98 live in `src/performance/profilerIds.js`; chunk rebuild and upload reuse existing IDs 15 and 31. The fixed typed-array counter schema and stage-to-profiler-ID table live in `src/rendering/spriteStreamingDiagnostics.js`. Recording is a no-op while disabled and creates no per-event objects.
+- [ ] Record cold and warm causal traces using the spec protocol. **Pending: this agent environment has no verified hardware GPU.** No software renderer measurements were taken and no fabricated baseline is substituted. Patrick must capture cold/warm traces on qualifying hardware after the implementation lanes integrate the contracts.
+- [x] Freeze the new dedicated modules: `src/rendering/spriteStreamingProtocol.js` (worker request/result, capability and fallback), `src/rendering/spriteStreamingGeometry.js` (stable IDs/logical geometry and per-tier rectangles), `src/rendering/spriteStreamingLifecycle.js` (reservations/releases, demand snapshots, cancellation and publication/revision), and `src/rendering/spriteStreamingDiagnostics.js` (bounded attribution schema). The progressive-tier sampling exception is limited to drawing a prepared lower tier into unchanged logical geometry; it never changes simulation dimensions, final density or DPR.
+- [x] Freeze shared integration ownership: only the S00/S06 integration owner edits the reserved paths listed below during independent development. Component lanes must return proposed integration patches rather than editing them concurrently.
+
+#### S00 frozen path ownership for independent lanes S01–S09
+
+| Lane | Exclusive paths | Paths reserved to the integration owner |
+|---|---|---|
+| S01 | `scripts/build-map-sprite-tiers.mjs`; `scripts/lib/mapSpriteBuild/**`; `public/images/prepared-map-sprites/**`; uniquely named build fixture tests | `src/rendering/blackKeyPixels.js`; `src/rendering/decorationCutout.js`; package scripts; `vite.config.js`; manifest registrations |
+| S02 | `src/rendering/tankRotationCache.js`; new rotation worker modules; `tests/unit/tankRotationCache.test.js`; uniquely named worker tests | `src/rendering/tankImageRenderer.js`; startup wiring |
+| S03 | `src/rendering/mapRenderer.js`; new static-page worker/adapters; focused map-cache tests | `src/rendering.js`; shared mutation and startup modules |
+| S04 | `src/rendering/prepared/spriteResourceStore.js`; focused resource-lifecycle tests | `src/rendering/prepared/preparedSpriteRegistry.js`; `src/assetLoading.js`; explosion integration |
+| S05 | `src/utils/idleAssetQueue.js`; new scheduler module; scheduler unit tests | camera, startup and prepared-registry wiring |
+| S06 | Serialized integration after S01–S05/S07 land; all paths in the reserved list below | Every active component lane path until its owner has landed |
+| S07 | `src/rendering/spritePreparationPool.js`; `src/rendering/spritePreparation.worker.js`; uniquely named protocol tests/fixtures | existing explosion modules and shared pixel helpers |
+| S08 | `src/rendering/decorationLayout.js`; new preparation adapter; layout fixture tests | `src/rendering/textureManager.js`; `src/rendering.js`; city-state wiring |
+| S09 | `src/pwa/offlineAssetPlan.js`; `src/pwa/sw.js`; offline downloader/manifest plugin; focused PWA tests | build/Vite/TextureManager wiring and manifest registrations |
+
+The integration-owner-only paths are exactly: `src/rendering/textureManager.js`, `src/rendering/spriteSheetAnimation.js`, `src/rendering/prepared/preparedSpritePipeline.js`, `src/rendering/prepared/preparedSpriteRegistry.js`, `src/rendering/prepared/renderingPipeline.js`, `src/rendering.js`, `src/assetLoading.js`, `src/game/gameOrchestrator.js` startup/load wiring, display/settings wiring, `package.json`, `package-lock.json`, `vite.config.js`, shared documentation, and all shared asset/offline manifest registrations. Ownership lasts until independent S01–S05 and S07–S09 work is landed and S06 begins serialized integration.
 
 **Done:** downstream lanes can implement and test against frozen fixtures/interfaces; exact path ownership recorded; hardware trace status explicit. This is the execution barrier, not a requirement to invent baseline timings before starting safe component work.
 
