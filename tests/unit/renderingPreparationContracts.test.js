@@ -63,4 +63,16 @@ describe('rendering preparation contracts', () => {
     token.release()
     expect(budget.getUsage().terrainStaging).toBe(0)
   })
+
+  it('[U06209] treats an identical prepared sprite registration as idempotent', () => {
+    const registry = new PreparedSpriteRegistry({ assetGeneration: 1, density: 1, byteBudget: 64 })
+    const sprite = { image: { close: vi.fn() } }
+    const dispose = vi.fn()
+    expect(registry.register('asset@1:unit:lightTank:barrel', sprite, { decodedBytes: 32, dispose })).toBe(sprite)
+    expect(registry.register('asset@1:unit:lightTank:barrel', sprite, { decodedBytes: 32, dispose })).toBe(sprite)
+    expect(registry.decodedBytes).toBe(32)
+    expect(() => registry.register('asset@1:unit:lightTank:barrel', { image: {} }, { decodedBytes: 32 })).toThrow(/incompatible/)
+    registry.dispose()
+    expect(dispose).toHaveBeenCalledOnce()
+  })
 })

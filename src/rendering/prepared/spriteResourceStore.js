@@ -66,7 +66,11 @@ export class SpriteResourceStore {
     if (this.disposed) throw new Error('Sprite resource store is disposed')
     if (!SPRITE_STREAMING_BYTE_CLASSES.includes(byteClass)) throw new TypeError('Invalid sprite byte class')
     requireBytes(bytes)
-    const available = this.budgets[byteClass] - this.totals[byteClass]
+    let available = this.budgets[byteClass] - this.totals[byteClass]
+    if (byteClass === 'resident' && bytes > available) {
+      this.evict(bytes - Math.max(0, available))
+      available = this.budgets[byteClass] - this.totals[byteClass]
+    }
     if (bytes > available) throw new SpriteResourceBudgetError(byteClass, bytes, Math.max(0, available))
     const token = createSpriteReservationToken({
       tokenId: `sprite-resource-${this.nextToken++}`,
@@ -163,6 +167,17 @@ export class SpriteResourceStore {
     return true
   }
 
+  /** Pin exactly the resources which are visible in the current frame. */
+  setVisible(spriteIds = []) {
+    const visible = new Set(spriteIds)
+    for (const resource of this.resources.values()) resource.pins = 0
+    for (const spriteId of visible) {
+      const publication = this.publications.get(spriteId)
+      const resource = publication && this.resources.get(publication.resourceId)
+      if (resource && !resource.closed) resource.pins++
+    }
+  }
+
   publish(spriteId, publication) {
     const resource = this.resources.get(publication?.resourceId)
     if (!resource || resource.closed) return false
@@ -217,6 +232,12 @@ export class SpriteResourceStore {
   disposeResource(resourceId, reason = 'disposed') {
     const resource = this.resources.get(resourceId)
     if (!resource || resource.closed || resource.references > 0 || resource.pins > 0) return false
+    // A stale lookup must never survive resource teardown, even when a caller
+    // forgot to remove an unpublished/failed tier explicitly.
+    for (const [spriteId, publication] of this.publications) {
+      if (publication.resourceId === resourceId) this.remove(spriteId)
+    }
+    if (resource.references > 0) return false
     resource.closed = true
     closeValue(resource.value)
     for (const token of resource.tokens) this.release(token, reason)

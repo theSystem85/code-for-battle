@@ -2,6 +2,7 @@ import { TILE_SIZE } from '../config.js'
 import { getCanvasLogicalSize } from './renderingUtils.js'
 import { applyBlackKey, applyEdgeConnectedBlackKey, buildBlackKeySeedMask } from './blackKeyPixels.js'
 import { prepareExplosionInWorker } from './explosionPreparation.js'
+import { SpriteResourceStore } from './prepared/spriteResourceStore.js'
 
 const FILENAME_PATTERN = /^(\d+)x(\d+)_([0-9]+)x([0-9]+)_.+\.[a-z0-9]+$/i
 const BLACK_ALPHA_CUTOFF_BRIGHTNESS = 24
@@ -15,6 +16,12 @@ const MAX_SHEET_BYTES = 16 * 1024 * 1024
 const MAX_CACHE_BYTES = 64 * 1024 * 1024
 const MAX_SHEETS = 32
 let reservedBytes = 0
+let explosionStore = new SpriteResourceStore({ budgets: {
+  staging: MAX_CACHE_BYTES, transfer: MAX_CACHE_BYTES, resident: MAX_CACHE_BYTES
+} })
+const explosionGenerations = Object.freeze({ asset: 0, map: 0, density: 0 })
+explosionStore.setCurrentGenerations(explosionGenerations)
+let explosionRevision = 0
 
 function normalizeBlackKeyConfig(config = null) {
   const cutoffBrightness = Number.isFinite(config?.cutoffBrightness)
@@ -195,7 +202,17 @@ function findSheet(assetPath) {
 function ensureSheet(assetPath) {
   const existing = findSheet(assetPath)
   if (existing) return existing
-  if (textureCache.size >= MAX_SHEETS) return null
+  if (textureCache.size >= MAX_SHEETS) {
+    const [oldestKey, oldest] = textureCache.entries().next().value || []
+    if (!oldest || !oldest.resourceId) return null
+    // Remove every lookup before closing the underlying bitmap/image.
+    textureCache.delete(oldestKey)
+    for (const [alias, candidate] of sheetAliases) if (candidate === oldest) sheetAliases.delete(alias)
+    explosionStore.remove(oldest.resourceId)
+    explosionStore.disposeResource(oldest.resourceId, 'explosion-count-limit')
+    reservedBytes -= oldest.residentBytes || 0
+    oldest.image.src = ''
+  }
   const key = sheetURL(assetPath)
   const img = new Image()
   img.decoding = 'async'
@@ -211,22 +228,88 @@ function ensureSheet(assetPath) {
 }
 
 async function prepareSheet(entry) {
-  await entry.image.decode()
+  try {
+    await entry.image.decode()
+  } catch (error) {
+    removeFailedSheet(entry)
+    throw error
+  }
   const bytes = entry.image.naturalWidth * entry.image.naturalHeight * 4
   // Account for both the source and processed sheet; no gameplay eviction.
   if (!bytes || bytes > MAX_SHEET_BYTES || reservedBytes + bytes * 2 > MAX_CACHE_BYTES) {
     entry.image.src = ''
     throw new Error('Explosion sheet exceeds the prepared texture byte budget')
   }
-  reservedBytes += bytes * 2
+  const resourceId = `explosion-sheet-${++explosionRevision}`
+  let staging
+  let transfer
+  const releaseTemps = reason => {
+    if (staging) { explosionStore.release(staging, reason); staging = null }
+    if (transfer) { explosionStore.release(transfer, reason); transfer = null }
+  }
   try {
-    entry.black = await prepareExplosionInWorker(entry.image)
-  } catch {
+    staging = explosionStore.reserve({ owner: resourceId, byteClass: 'staging', bytes })
+    transfer = explosionStore.reserve({ owner: resourceId, byteClass: 'transfer', bytes })
+    entry.black = await prepareExplosionInWorker(entry.image, {
+      store: explosionStore, key: resourceId, generations: explosionGenerations
+    })
+  } catch (error) {
     // Older Safari/CSP/worker failures use the same pixels during preparation,
     // before publishing the asset. No synchronous conversion in render calls.
+    if (error?.message?.includes('budget')) {
+      releaseTemps('explosion-failed')
+      removeFailedSheet(entry)
+      throw error
+    }
   }
   if (!entry.black) entry.black = getImageTextureWithBlendMode(entry.image)
+  if (!entry.black || !getTextureWidth(entry.black) || !getTextureHeight(entry.black)) {
+    releaseTemps('explosion-invalid')
+    removeFailedSheet(entry)
+    throw new Error('Explosion preparation returned invalid dimensions')
+  }
+  let owner
+  try {
+    owner = explosionStore.registerResource({
+      resourceId,
+      value: { close: () => entry.black?.close?.() },
+      allocations: [{ byteClass: 'resident', bytes: bytes * 2 }]
+    })
+  } catch (error) {
+    releaseTemps('explosion-registration-failed')
+    removeFailedSheet(entry)
+    throw error
+  }
+  owner.release()
+  explosionStore.registerView(resourceId, resourceId, { image: entry.black })
+  explosionStore.publish(resourceId, { resourceId, revision: explosionRevision, generations: explosionGenerations })
+  entry.resourceId = resourceId
+  entry.residentBytes = bytes * 2
+  reservedBytes += bytes * 2
+  // Temporary overlap remains accounted until the resident publication exists.
+  releaseTemps('explosion-published')
   return entry.black
+}
+
+function removeFailedSheet(entry) {
+  for (const [key, candidate] of textureCache) if (candidate === entry) textureCache.delete(key)
+  for (const [key, candidate] of sheetAliases) if (candidate === entry) sheetAliases.delete(key)
+  entry.image.src = ''
+}
+
+export function disposeSpriteSheetTextures() {
+  for (const entry of textureCache.values()) {
+    if (entry.resourceId) explosionStore.remove(entry.resourceId)
+    entry.image.src = ''
+  }
+  explosionStore.dispose()
+  textureCache.clear()
+  sheetAliases.clear()
+  reservedBytes = 0
+  explosionStore = new SpriteResourceStore({ budgets: {
+    staging: MAX_CACHE_BYTES, transfer: MAX_CACHE_BYTES, resident: MAX_CACHE_BYTES
+  } })
+  explosionStore.setCurrentGenerations(explosionGenerations)
 }
 
 export function prewarmSpriteSheetTexture(assetPath) {

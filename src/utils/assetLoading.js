@@ -22,3 +22,17 @@ export async function fetchAssetJson(url, { fetchImpl = globalThis.fetch, signal
     signal?.removeEventListener('abort', abort)
   }
 }
+
+/** Run bitmap-producing work under the shared lifecycle owner. The operation
+ * receives an AbortSignal so fetch/worker adapters can provide a real stop
+ * hook. SpriteResourceStore closes results which arrive after cancellation. */
+export function runAssetJob(store, key, { generations, timeoutMs = 10000, operation }) {
+  if (!store?.runJob || typeof operation !== 'function') throw new TypeError('A sprite resource store and operation are required')
+  const controller = new AbortController()
+  return store.runJob(key, {
+    generations,
+    timeoutMs,
+    operation: () => operation(controller.signal),
+    stop: reason => controller.abort(reason)
+  })
+}

@@ -142,4 +142,23 @@ describe('SpriteResourceStore', () => {
     expect(late.close).toHaveBeenCalledOnce()
     expect(store.snapshot()).toMatchObject({ nativeBytes: 0, resources: 0, publications: 0, jobs: 0 })
   })
+
+  it('[U06208] evicts by resident bytes while retaining visible publications', () => {
+    const store = new SpriteResourceStore({ budgets: { resident: 70 } })
+    store.setCurrentGenerations(generations)
+    const visible = store.registerResource({ resourceId: 'visible', value: bitmap(), allocations: [{ byteClass: 'resident', bytes: 40 }] })
+    visible.release()
+    store.publish('tank', { resourceId: 'visible', revision: 1, generations })
+    store.setVisible(['tank'])
+    const spareImage = bitmap()
+    const spare = store.registerResource({ resourceId: 'spare', value: spareImage, allocations: [{ byteClass: 'resident', bytes: 30 }] })
+    spare.release()
+
+    const replacement = store.registerResource({ resourceId: 'replacement', value: bitmap(), allocations: [{ byteClass: 'resident', bytes: 30 }] })
+    replacement.release()
+
+    expect(spareImage.close).toHaveBeenCalledOnce()
+    expect(store.lookup('tank')?.resourceId).toBe('visible')
+    expect(store.snapshot().totals.resident).toBe(70)
+  })
 })

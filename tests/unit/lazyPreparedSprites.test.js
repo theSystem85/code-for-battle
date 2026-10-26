@@ -55,6 +55,25 @@ describe('deferred prepared sprite loading', () => {
     expect(requested.every(url => url.endsWith('@2x.webp'))).toBe(true)
   })
 
+  it('[U06210] re-requesting an already prepared entry is idempotent without duplicate-register warnings', async() => {
+    const { options, requested } = fixture()
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      const prepared = await prepareSpriteRegistry({ ...options, initialUnitTypes: ['harvester'] })
+      publishPreparedSpriteRegistry(prepared)
+      const first = getPreparedSprite('unit:harvester:base')
+      expect(first).not.toBeNull()
+      await prepared.request('unit:harvester:base')
+      await Promise.all([prepared.request('unit:ambulance:base'), prepared.request('unit:ambulance:base')])
+      await prepared.request('unit:ambulance:base')
+      expect(getPreparedSprite('unit:harvester:base')).toBe(first)
+      expect(requested.filter(url => url === '/harvester@2x.webp')).toHaveLength(1)
+      expect(warn.mock.calls.filter(([message]) => String(message).includes('Prepared sprite'))).toHaveLength(0)
+    } finally {
+      warn.mockRestore()
+    }
+  })
+
   it('[U02346] includes units already present in the initial state', async() => {
     const { options, requested } = fixture()
     const prepared = await prepareSpriteRegistry({ ...options, initialUnitTypes: ['harvester'] })
