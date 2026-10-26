@@ -657,7 +657,7 @@ export class Renderer {
     this.effectsRenderer.renderDepthCharges?.(gameCtx, gameState, scrollOffset)
     this.wreckRenderer.render(gameCtx, gameState.unitWrecks || [], scrollOffset, frameEntityIndex)
     this.unitRenderer.renderBases(gameCtx, visibleGroundedUnits, scrollOffset, true)
-    if (this.textureManager.integratedSpriteSheetMode && this.mapRenderer.isDecorativeWorkDeferred?.() !== true) {
+    if (this.textureManager.integratedSpriteSheetMode) {
       renderCityOverhangs(gameCtx, mapGrid, scrollOffset, logicalCanvasWidth, logicalCanvasHeight, gameState)
     }
     gameCtx.restore()

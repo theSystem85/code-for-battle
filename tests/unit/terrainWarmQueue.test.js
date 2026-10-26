@@ -72,16 +72,49 @@ describe('TerrainWarmQueue', () => {
 })
 
 describe('MapRenderer bounded terrain residency', () => {
-  it('[U06490] keeps decorative work suppressed throughout camera motion and its settle window', () => {
+  it('[U06490] keeps a published decorative page visible while scrolling', () => {
     const renderer = new MapRenderer(makeTextureManager())
-    renderer.hasLastScrollOffset = true
-    renderer.lastScrollOffset.x = 10
-    renderer.lastScrollOffset.y = 10
+    const context = { drawImage: vi.fn(), save: vi.fn(), restore: vi.fn(), globalAlpha: 1 }
+    const chunk = {
+      decorativeKey: 'published',
+      decorativeCanvas: {},
+      decorativeReadyAt: 0
+    }
+    renderer.getDecorativeKey = vi.fn(() => 'published')
+    renderer.queueDecorativeChunk = vi.fn()
 
-    expect(renderer.noteDecorativeScrollPressure({ x: 20, y: 10 }, 100)).toBe(true)
-    expect(renderer.isDecorativeWorkDeferred(279)).toBe(true)
-    renderer.lastScrollOffset.x = 20
-    expect(renderer.noteDecorativeScrollPressure({ x: 20, y: 10 }, 280)).toBe(false)
+    expect(renderer.drawPreparedDecorations(context, chunk, makeMap(1), true, 5, 7, 500, true)).toBe(true)
+    expect(context.drawImage).toHaveBeenCalledWith(chunk.decorativeCanvas, 5, 7)
+  })
+
+  it('[U06494] advances visible decoration work only inside reported idle capacity', () => {
+    const renderer = new MapRenderer(makeTextureManager())
+    const chunk = {
+      key: '0,0', startX: 0, startY: 0, endX: 2, endY: 1,
+      offsetX: 0, offsetY: 0, padding: 0,
+      revisionSnapshot: { layout: 0, surface: 0, asset: 0 },
+      decorativeCanvas: null,
+      decorativeCtx: null
+    }
+    renderer.chunkCache.set(chunk.key, chunk)
+    renderer.getDecorativeKey = vi.fn(() => 'current')
+    renderer.reserveDecorativeRaster = vi.fn(() => ({ release: vi.fn() }))
+    renderer.drawDecorativeLayer = vi.fn()
+    const context = {}
+    const canvas = { getContext: vi.fn(() => context) }
+    const createElement = vi.spyOn(document, 'createElement').mockReturnValue(canvas)
+    renderer.decorativeWarmQueue.set(chunk.key, { chunk, mapGrid: makeMap(2), useTexture: true, key: 'current' })
+    const remaining = [3, 1]
+
+    expect(renderer.processDecorativeWarmQueue({ timeRemaining: () => remaining.shift() })).toBe(false)
+    expect(renderer.drawDecorativeLayer).toHaveBeenCalledTimes(1)
+    expect(renderer.decorativeWarmQueue.has(chunk.key)).toBe(true)
+
+    expect(renderer.processDecorativeWarmQueue({ timeRemaining: () => 3 })).toBe(true)
+    expect(renderer.drawDecorativeLayer).toHaveBeenCalledTimes(2)
+    expect(chunk.decorativeKey).toBe('current')
+    expect(chunk.decorativeCanvas).toBe(canvas)
+    createElement.mockRestore()
   })
 
   it('[U06491] never mixes deferred decoration pixels into the synchronous base pass', () => {

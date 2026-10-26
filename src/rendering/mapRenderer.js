@@ -300,12 +300,13 @@ export class MapRenderer {
     this.lastScrollOffset = { x: 0, y: 0 }
     this.hasLastScrollOffset = false
     // Decorative art is deliberately kept out of the synchronous terrain page.
-    // Visible pages are prepared one at a time only after camera motion settles.
+    // Visible pages advance only inside browser-reported idle capacity. Completed
+    // pages remain drawable while the camera moves; scroll pressure must never
+    // turn already-published artwork off again.
     this.decorativeWarmQueue = new Map()
     this.maxDecorativeWarmQueue = 12
     this.decorativeWarmScheduled = false
-    this.decorativeSuppressedUntil = 0
-    this.decorativeSettleMs = 180
+    this.decorativeIdleHeadroomMs = 2
     this.decorativeFadeMs = 180
     this.warmDiscoveryState = {
       startChunkX: -1,
@@ -913,6 +914,7 @@ export class MapRenderer {
     chunk.decorativeResidentToken?.release()
     chunk.decorativeResidentToken = null
     chunk.decorativeResidentBytes = 0
+    this.decorativeWarmQueue.get(chunk.key)?.stagingToken?.release()
     this.decorativeWarmQueue.delete(chunk.key)
   }
 
@@ -1154,25 +1156,15 @@ export class MapRenderer {
       `${this.textureManager.integratedRenderSignature}`
   }
 
-  noteDecorativeScrollPressure(scrollOffset, now) {
-    const moving = this.hasLastScrollOffset && (
-      scrollOffset.x !== this.lastScrollOffset.x || scrollOffset.y !== this.lastScrollOffset.y
-    )
-    if (moving) this.decorativeSuppressedUntil = now + this.decorativeSettleMs
-    return now < this.decorativeSuppressedUntil
-  }
-
-  isDecorativeWorkDeferred(now = (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now())) {
-    return now < this.decorativeSuppressedUntil
-  }
-
   queueDecorativeChunk(chunk, mapGrid, useTexture) {
     if (!this.canUseOffscreen || !this.useOrganicTerrain(useTexture)) return
     const key = this.getDecorativeKey(chunk)
     if (chunk.decorativeKey === key || this.decorativeWarmQueue.has(chunk.key)) return
     this.decorativeWarmQueue.set(chunk.key, { chunk, mapGrid, useTexture, key })
     while (this.decorativeWarmQueue.size > this.maxDecorativeWarmQueue) {
-      this.decorativeWarmQueue.delete(this.decorativeWarmQueue.keys().next().value)
+      const oldestKey = this.decorativeWarmQueue.keys().next().value
+      this.decorativeWarmQueue.get(oldestKey)?.stagingToken?.release()
+      this.decorativeWarmQueue.delete(oldestKey)
     }
     this.scheduleDecorativeWarmProcessing()
   }
@@ -1182,53 +1174,67 @@ export class MapRenderer {
     this.decorativeWarmScheduled = true
     const callback = deadline => {
       this.decorativeWarmScheduled = false
-      const now = typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now()
-      if (now >= this.decorativeSuppressedUntil && (!deadline?.timeRemaining || deadline.timeRemaining() >= 6)) {
-        this.processDecorativeWarmQueue(now)
+      // A timer is not evidence of spare main-thread capacity. On browsers
+      // without requestIdleCallback decorations remain absent rather than risk
+      // delaying a scroll frame.
+      if (deadline?.timeRemaining && deadline.timeRemaining() > this.decorativeIdleHeadroomMs) {
+        this.processDecorativeWarmQueue(deadline)
       }
       if (this.decorativeWarmQueue.size) {
-        const delay = Math.max(16, this.decorativeSuppressedUntil - now)
-        window.setTimeout(() => this.scheduleDecorativeWarmProcessing(), delay)
+        window.setTimeout(() => this.scheduleDecorativeWarmProcessing(), 16)
       }
     }
     if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(callback)
     else window.setTimeout(() => callback(null), 16)
   }
 
-  processDecorativeWarmQueue(now = (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now())) {
+  processDecorativeWarmQueue(deadline) {
     const entry = this.decorativeWarmQueue.values().next().value
     if (!entry) return false
-    this.decorativeWarmQueue.delete(entry.chunk.key)
     const { chunk, mapGrid, useTexture, key } = entry
-    if (!this.chunkCache.has(chunk.key) || key !== this.getDecorativeKey(chunk)) return false
+    if (!this.chunkCache.has(chunk.key) || key !== this.getDecorativeKey(chunk)) {
+      entry.stagingToken?.release()
+      this.decorativeWarmQueue.delete(chunk.key)
+      return false
+    }
     const width = (chunk.endX - chunk.startX) * TILE_SIZE + chunk.padding * 2 + 1
     const height = (chunk.endY - chunk.startY) * TILE_SIZE + chunk.padding * 2 + 1
-    const stagingToken = this.reserveDecorativeRaster(chunk, getTerrainRasterBytes(width, height))
-    try {
-      if (!chunk.decorativeCanvas) chunk.decorativeCanvas = document.createElement('canvas')
-      if (chunk.decorativeCanvas.width !== width || chunk.decorativeCanvas.height !== height) {
-        chunk.decorativeCanvas.width = width
-        chunk.decorativeCanvas.height = height
-        chunk.decorativeCtx = chunk.decorativeCanvas.getContext('2d')
-      } else {
-        chunk.decorativeCtx.clearRect(0, 0, width, height)
-      }
-      chunk.decorativeCtx.imageSmoothingEnabled = false
+    if (!entry.canvas) {
+      entry.stagingToken = this.reserveDecorativeRaster(chunk, getTerrainRasterBytes(width, height))
+      entry.canvas = document.createElement('canvas')
+      entry.canvas.width = width
+      entry.canvas.height = height
+      entry.ctx = entry.canvas.getContext('2d')
+      entry.ctx.imageSmoothingEnabled = false
+      entry.nextTile = 0
+    }
+    const columns = chunk.endX - chunk.startX
+    const tileCount = columns * (chunk.endY - chunk.startY)
+    while (entry.nextTile < tileCount && deadline.timeRemaining() > this.decorativeIdleHeadroomMs) {
+      const x = chunk.startX + entry.nextTile % columns
+      const y = chunk.startY + Math.floor(entry.nextTile / columns)
       this.drawDecorativeLayer(
-        chunk.decorativeCtx, mapGrid, chunk.startX, chunk.startY, chunk.endX, chunk.endY,
+        entry.ctx, mapGrid, x, y, x + 1, y + 1,
         chunk.offsetX, chunk.offsetY, useTexture
       )
-    } finally {
-      stagingToken.release()
+      entry.nextTile++
     }
+    if (entry.nextTile < tileCount) return false
+    entry.stagingToken.release()
+    this.decorativeWarmQueue.delete(chunk.key)
+    chunk.decorativeCanvas = entry.canvas
+    chunk.decorativeCtx = entry.ctx
     chunk.decorativeKey = key
-    chunk.decorativeReadyAt = now
+    chunk.decorativeReadyAt = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()
     return true
   }
 
-  drawPreparedDecorations(ctx, chunk, mapGrid, useTexture, drawX, drawY, now, underPressure, fadeEnabled) {
+  drawPreparedDecorations(ctx, chunk, mapGrid, useTexture, drawX, drawY, now, fadeEnabled) {
     this.queueDecorativeChunk(chunk, mapGrid, useTexture)
-    if (underPressure || chunk.decorativeKey !== this.getDecorativeKey(chunk) || !chunk.decorativeCanvas) return false
+    // Keep the last atomically published page visible while a replacement is
+    // prepared. Capacity pressure may delay freshness, but never removes art
+    // that the player can still see.
+    if (!chunk.decorativeCanvas) return false
     const alpha = fadeEnabled
       ? Math.min(1, Math.max(0, (now - chunk.decorativeReadyAt) / this.decorativeFadeMs))
       : 1
@@ -1621,10 +1627,6 @@ export class MapRenderer {
         currentWaterFrame,
         { skipWaterBase, skipWaterSot }
       )
-      const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()
-      if (!this.noteDecorativeScrollPressure(scrollOffset, now)) {
-        this.drawDecorativeLayer(ctx, mapGrid, startTileX, startTileY, endTileX, endTileY, scrollOffset.x, scrollOffset.y, useTexture)
-      }
       ctx.imageSmoothingEnabled = true
       return
     }
@@ -1636,7 +1638,6 @@ export class MapRenderer {
     scrollDelta.y = this.hasLastScrollOffset ? scrollOffset.y - this.lastScrollOffset.y : 0
     const isScrolling = Math.abs(scrollDelta.x) > 0.5 || Math.abs(scrollDelta.y) > 0.5
     const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()
-    const decorativePressure = this.noteDecorativeScrollPressure(scrollOffset, now)
     const fadeDecorations = gameState?.decorativeFadeEnabled !== false
     if (isScrolling && this.mobileMemoryProfile) {
       this.deferChunkWarmUntil = now + 90
@@ -1714,7 +1715,7 @@ export class MapRenderer {
           const drawY = chunkStartY * TILE_SIZE - scrollOffset.y - chunk.padding
           this.frameChunkStats.chunksDrawn++
           ctx.drawImage(chunk.canvas, drawX, drawY)
-          this.drawPreparedDecorations(ctx, chunk, mapGrid, useTexture, drawX, drawY, now, decorativePressure, fadeDecorations)
+          this.drawPreparedDecorations(ctx, chunk, mapGrid, useTexture, drawX, drawY, now, fadeDecorations)
           continue
         }
         const updateOptions = this.chunkUpdateOptions
@@ -1729,11 +1730,20 @@ export class MapRenderer {
         const drawY = chunkStartY * TILE_SIZE - scrollOffset.y - chunk.padding
         this.frameChunkStats.chunksDrawn++
         ctx.drawImage(chunk.canvas, drawX, drawY)
-        this.drawPreparedDecorations(ctx, chunk, mapGrid, useTexture, drawX, drawY, now, decorativePressure, fadeDecorations)
+        this.drawPreparedDecorations(ctx, chunk, mapGrid, useTexture, drawX, drawY, now, fadeDecorations)
       }
     }
 
     this.evictOldChunks(activeChunkKeys)
+
+    // Work that left the viewport is no longer eligible for scarce idle time.
+    // Completed canvases stay resident in the normal chunk cache, so returning
+    // before eviction can display them without another bake.
+    for (const [key, entry] of this.decorativeWarmQueue) {
+      if (activeChunkKeys.has(key)) continue
+      entry.stagingToken?.release()
+      this.decorativeWarmQueue.delete(key)
+    }
 
     // Re-enable image smoothing for other rendering
     ctx.imageSmoothingEnabled = true
