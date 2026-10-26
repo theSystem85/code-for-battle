@@ -412,8 +412,8 @@ The integration-owner-only paths are exactly: `src/rendering/textureManager.js`,
 ### S08 — preparation-only layout and catalog rebuilding
 
 - [ ] Make `getDecorationLayout()` lookups consume prepared immutable layout state; move cache-miss construction to startup/edit/config lifecycle. Preserve existing prewarming in `publishPreparedRuntimeMap()` and test all invalidation producers.
-- [ ] Compute deterministic placement from stable metadata independent of visual tier; publish once. Keep `prepareCityBuildings()`/collision effects authoritative on main simulation side, outside rendering and visual worker results.
-- [ ] Cache immutable tag/group selectors and signatures per revision; avoid per-tile filtering allocations proportional to the expanded sheet catalog where traces show a cost. Do not change candidate order/hash selection.
+- [x] Compute deterministic placement from stable metadata independent of visual tier; publish once. Keep `prepareCityBuildings()`/collision effects authoritative on main simulation side, outside rendering and visual worker results.
+- [x] Cache immutable tag/group selectors and signatures per revision; avoid per-tile filtering allocations proportional to the expanded sheet catalog where traces show a cost. Do not change candidate order/hash selection.
 
 **Exclusive component paths:** `src/rendering/decorationLayout.js`, new preparation adapter and layout fixture tests. Integration owner applies `TextureManager`, `src/rendering.js` and city-state wiring after S08 lands.
 

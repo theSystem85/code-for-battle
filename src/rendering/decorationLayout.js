@@ -31,6 +31,7 @@ const SEASON_TAGS = new Set(['spring', 'summer', 'autumn', 'winter'])
 // universal rocks, ruins, landmarks and other non-vegetation props still are.
 export const VEGETATION_TAGS = Object.freeze(['trees', 'tree', 'shrubs', 'shrub', 'bushes', 'bush', 'vegetation', 'plants', 'flowers', 'reeds', 'farm'])
 const VEGETATION_TAG_SET = new Set(VEGETATION_TAGS)
+const decorationPoolSelectorCache = new WeakMap()
 
 export function isVegetationGroup(tagSet) {
   for (const tag of tagSet) if (VEGETATION_TAG_SET.has(tag)) return true
@@ -129,6 +130,52 @@ export function buildDecorationPools(groups) {
   return pools
 }
 
+function stableGroupPlacementMetadata(group) {
+  return [
+    group?.groupLabel || '',
+    Number(group?.width) || 0,
+    Number(group?.height) || 0,
+    Number.isFinite(group?.coverage) ? group.coverage : '',
+    [...(group?.tagSet || [])].sort().join(',')
+  ].join('|')
+}
+
+/**
+ * Immutable catalog selectors prepared once for a pool revision. The signature
+ * deliberately excludes raster handles, source rectangles and density tiers:
+ * those may refine independently without changing deterministic placement.
+ */
+export function getDecorationPoolSelectors(pools) {
+  if (!pools || typeof pools !== 'object') return null
+  const cached = decorationPoolSelectorCache.get(pools)
+  if (cached) return cached
+  const biomes = {}
+  const signatureParts = []
+  let usesPlacementRules = false
+  let hasRuins = false
+  for (const biome of DECORATION_BIOMES) {
+    const source = pools[biome] || {}
+    const multi = Object.freeze([...(source.multi || [])])
+    const single = Object.freeze([...(source.single || [])])
+    const groundDetail = Object.freeze([...(source.groundDetail || [])])
+    const all = Object.freeze([...multi, ...single, ...groundDetail])
+    const ruins = Object.freeze([...multi, ...single].filter(group => group.tagSet.has('ruins')))
+    if (ruins.length) hasRuins = true
+    if (all.some(group => ['trees', 'rocks', 'farm', 'landmark', 'roadside', 'rare', 'stones', 'shore', 'ground_detail', 'city'].some(tag => group.tagSet.has(tag)))) usesPlacementRules = true
+    all.forEach(group => signatureParts.push(`${biome}:${stableGroupPlacementMetadata(group)}`))
+    biomes[biome] = Object.freeze({ multi, single, groundDetail, all, ruins })
+  }
+  const selectors = Object.freeze({
+    biomes: Object.freeze(biomes),
+    hasRuins,
+    ruinBiomes: Object.freeze(DECORATION_BIOMES.filter(biome => biomes[biome].ruins.length > 0)),
+    usesPlacementRules,
+    placementSignature: signatureParts.join(';')
+  })
+  decorationPoolSelectorCache.set(pools, selectors)
+  return selectors
+}
+
 /** Seeded land centers and minimum-distance anchors, prepared once per layout. */
 export function buildRuinClusters(mapGrid, { defaultBiome = 'grass', salt = 0, radius = 8, minDistance = 4, biomes = DECORATION_BIOMES, count: requestedCount } = {}) {
   const height = mapGrid.length
@@ -162,7 +209,8 @@ export function buildRuinClusters(mapGrid, { defaultBiome = 'grass', salt = 0, r
  * @returns {{ width:number, height:number, cells:Array<null|{group:Object,offsetX:number,offsetY:number,anchorX:number,anchorY:number,biome:string}>, placements:Array }}
  */
 export function buildDecorationLayout(mapGrid, pools, { defaultBiome = 'grass', salt = 0, ruinSeed = salt, startPositions = [], placementRules = false, ...settings } = {}) {
-  if (placementRules || DECORATION_BIOMES.some(biome => [...(pools?.[biome]?.multi || []), ...(pools?.[biome]?.single || []), ...(pools?.[biome]?.groundDetail || [])].some(group => ['trees', 'rocks', 'farm', 'landmark', 'roadside', 'rare', 'stones', 'shore', 'ground_detail', 'city'].some(tag => group.tagSet.has(tag))))) {
+  const selectors = getDecorationPoolSelectors(pools)
+  if (placementRules || selectors?.usesPlacementRules) {
     return buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome, salt, startPositions, ...settings })
   }
   const height = Array.isArray(mapGrid) ? mapGrid.length : 0
@@ -172,10 +220,10 @@ export function buildDecorationLayout(mapGrid, pools, { defaultBiome = 'grass', 
   if (!width || !height || !pools) return { width, height, cells, placements }
   const fallbackBiome = DECORATION_BIOMES.includes(defaultBiome) ? defaultBiome : 'grass'
 
-  const hasRuins = DECORATION_BIOMES.some(biome => [...(pools[biome]?.multi || []), ...(pools[biome]?.single || [])].some(group => group.tagSet.has('ruins')))
+  const hasRuins = selectors.hasRuins
   let ruinSalt = 0
   for (const character of String(ruinSeed)) ruinSalt = (Math.imul(ruinSalt, 31) + character.charCodeAt(0)) | 0
-  const ruinBiomes = DECORATION_BIOMES.filter(biome => [...(pools[biome]?.multi || []), ...(pools[biome]?.single || [])].some(group => group.tagSet.has('ruins')))
+  const ruinBiomes = selectors.ruinBiomes
   const ruins = hasRuins ? buildRuinClusters(mapGrid, { defaultBiome: fallbackBiome, salt: ruinSeed === salt ? salt : ruinSalt, biomes: ruinBiomes, count: normalizeDecorationSettings(settings).ruinSeeds, radius: normalizeDecorationSettings(settings).ruinClusterSize }) : null
   const ruinAllowed = (group, x, y) => !group.tagSet.has('ruins') || ruins.anchorKeys.has(`${x},${y}`)
 
@@ -232,7 +280,7 @@ export function buildDecorationLayout(mapGrid, pools, { defaultBiome = 'grass', 
       const biome = resolveBiome(tile, fallbackBiome)
       const candidates = pools[biome]?.single
       if (!candidates?.length) continue
-      const eligible = ruins?.anchorKeys.has(`${x},${y}`) ? candidates.filter(group => group.tagSet.has('ruins')) : candidates
+      const eligible = ruins?.anchorKeys.has(`${x},${y}`) ? selectors.biomes[biome].ruins : candidates
       if (!eligible.length) continue
       const group = eligible[(hash >>> 8) % eligible.length]
       if (!group.tagSet.has('ruins') && hash % SINGLE_DECORATION_INTERVAL !== 0) continue
