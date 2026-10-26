@@ -11,6 +11,12 @@ export const OFFLINE_ASSET_CONCURRENCY = 5
 export const OFFLINE_ASSET_MAX_ATTEMPTS = 4
 export const OFFLINE_ASSET_RETRY_BASE_MS = 400
 export const NAVIGATION_NETWORK_TIMEOUT_MS = 3000
+export const SPRITE_DERIVATIVE_REVISION_PARAM = 'cfb-content'
+export const SPRITE_DERIVATIVE_CACHE = 'cfb-sprite-derivatives-v1'
+export const SPRITE_DERIVATIVE_CACHE_MAX_ENTRIES = 96
+export const SPRITE_SHEET_LOAD_CONCURRENCY = 2
+export const OFFLINE_SPRITE_MINIMUM_TIER = 'coarse'
+export const OFFLINE_SPRITE_STORAGE_QUOTA_BYTES = 128 * 1024 * 1024
 
 const BOOT_EXTENSIONS = new Set(['js', 'css', 'html', 'svg', 'ico', 'webmanifest', 'xml', 'woff', 'woff2'])
 const BULK_EXTENSIONS = new Set(['png', 'webp', 'gif', 'json', 'mp3', 'ogg', 'wav'])
@@ -41,6 +47,93 @@ export function toPublicAssetUrl(relativePath) {
   // encodeURI keeps path separators and "@" (body-atlas@2x.webp). Encoding "@"
   // as %40 makes Vite preview 404 and misses the URL the game actually requests.
   return encodeURI(normalized)
+}
+
+function urlFrom(value) {
+  try {
+    return new URL(String(value), 'https://code-for-battle.local')
+  } catch {
+    return null
+  }
+}
+
+export function createImmutableSpriteDerivativeUrl(path, contentIdentity) {
+  const identity = String(contentIdentity || '')
+  if (!/^[a-z0-9][a-z0-9._-]{7,127}$/i.test(identity)) throw new TypeError('Invalid sprite derivative content identity')
+  const url = urlFrom(path)
+  if (!url || !url.pathname.startsWith('/images/prepared/')) throw new TypeError('Invalid sprite derivative path')
+  url.searchParams.set(SPRITE_DERIVATIVE_REVISION_PARAM, identity)
+  return `${url.pathname}${url.search}${url.hash}`
+}
+
+export function isImmutableSpriteDerivativeUrl(value) {
+  const url = urlFrom(value)
+  if (!url || !url.pathname.startsWith('/images/prepared/')) return false
+  return /^[a-z0-9][a-z0-9._-]{7,127}$/i.test(url.searchParams.get(SPRITE_DERIVATIVE_REVISION_PARAM) || '')
+}
+
+// The caller supplies one entry per representation. Only the minimum usable
+// tier and the selected final tier at one density are retained for offline use.
+export function selectOfflineSpriteRepresentations(entries, {
+  selectedTier = 'final',
+  selectedDensity = 1,
+  quotaBytes = OFFLINE_SPRITE_STORAGE_QUOTA_BYTES
+} = {}) {
+  const allowedTiers = new Set([OFFLINE_SPRITE_MINIMUM_TIER, selectedTier])
+  const candidates = (entries || []).filter(entry => allowedTiers.has(entry.tier)
+    && Number(entry.density) === Number(selectedDensity)
+    && isImmutableSpriteDerivativeUrl(entry.url))
+    .sort((left, right) => {
+      const tierOrder = Number(left.tier !== OFFLINE_SPRITE_MINIMUM_TIER) - Number(right.tier !== OFFLINE_SPRITE_MINIMUM_TIER)
+      return tierOrder || String(left.url).localeCompare(String(right.url))
+    })
+  const coarse = candidates.filter(entry => entry.tier === OFFLINE_SPRITE_MINIMUM_TIER)
+  const final = candidates.filter(entry => entry.tier !== OFFLINE_SPRITE_MINIMUM_TIER)
+  const bytesOf = list => list.reduce((sum, entry) => sum + Math.max(0, Number(entry.size) || 0), 0)
+  const coarseBytes = bytesOf(coarse)
+  if (coarseBytes > quotaBytes) {
+    return Object.freeze({ assets: Object.freeze([]), bytes: 0, quotaBytes, usable: false, finalIncluded: false })
+  }
+  const finalBytes = bytesOf(final)
+  const finalIncluded = coarseBytes + finalBytes <= quotaBytes
+  const selected = finalIncluded ? coarse.concat(final) : coarse
+  return Object.freeze({
+    assets: Object.freeze(selected),
+    bytes: coarseBytes + (finalIncluded ? finalBytes : 0),
+    quotaBytes,
+    usable: coarse.length > 0,
+    finalIncluded
+  })
+}
+
+export function offlineSpritePolicyManifest() {
+  return Object.freeze({
+    minimumTier: OFFLINE_SPRITE_MINIMUM_TIER,
+    selectedFinalTierOnly: true,
+    selectedDensityOnly: true,
+    automaticDerivativeDownload: false,
+    quotaBytes: OFFLINE_SPRITE_STORAGE_QUOTA_BYTES
+  })
+}
+
+export async function loadSpriteSheetsWithOverlap(items, load, {
+  concurrency = SPRITE_SHEET_LOAD_CONCURRENCY,
+  shouldLoad = () => true
+} = {}) {
+  if (typeof load !== 'function') throw new TypeError('Sprite sheet loader is required')
+  const queue = (items || []).filter(shouldLoad)
+  const results = new Array(queue.length)
+  let cursor = 0
+  const workerCount = Math.max(1, Math.min(Math.floor(concurrency) || 1, queue.length || 1))
+  async function worker() {
+    while (cursor < queue.length) {
+      const index = cursor
+      cursor += 1
+      results[index] = await load(queue[index], index)
+    }
+  }
+  await Promise.all(Array.from({ length: workerCount }, () => worker()))
+  return results
 }
 
 function extensionOf(path) {

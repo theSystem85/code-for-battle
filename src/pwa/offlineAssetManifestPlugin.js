@@ -5,6 +5,7 @@ import {
   OFFLINE_ASSETS_CACHE,
   OFFLINE_ASSETS_MANIFEST_FILE,
   classifyOfflinePath,
+  offlineSpritePolicyManifest,
   toPublicAssetUrl
 } from './offlineAssetPlan.js'
 
@@ -60,6 +61,7 @@ export function buildOfflineAssetManifest(distDir) {
   assets.sort((a, b) => (a.url < b.url ? -1 : a.url > b.url ? 1 : 0))
   return {
     cache: OFFLINE_ASSETS_CACHE,
+    spritePolicy: offlineSpritePolicyManifest(),
     boot,
     assets
   }

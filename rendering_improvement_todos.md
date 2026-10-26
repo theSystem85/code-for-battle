@@ -421,9 +421,9 @@ The integration-owner-only paths are exactly: `src/rendering/textureManager.js`,
 
 ### S09 — versioned tiers, load overlap and offline policy
 
-- [ ] Inspect NetworkFirst sheet routes and offline downloader activity alongside streaming traces. Use immutable content/version identity for derivative manifests/images; avoid mixed metadata/art revisions. Retain correct updates/offline fallback for original mutable editor assets.
+- [x] Inspect NetworkFirst sheet routes and offline downloader activity alongside streaming traces. Use immutable content/version identity for derivative manifests/images; avoid mixed metadata/art revisions. Retain correct updates/offline fallback for original mutable editor assets.
 - [ ] Use bounded overlapping sheet loads instead of serial network latency where useful, constrained by S04/S05 budgets. Avoid loading source plus derivative or every DPR/tier unnecessarily.
-- [ ] Define offline tier policy explicitly (minimum usable representation and selected final tier, storage quotas, upgrades/cleanup); yield offline fills to visible requests. Prepared imagery is currently excluded from bulk download, so verify offline rendering rather than assuming new derivative routes are covered.
+- [x] Define offline tier policy explicitly (minimum usable representation and selected final tier, storage quotas, upgrades/cleanup); yield offline fills to visible requests. Prepared imagery is currently excluded from bulk download, so verify offline rendering rather than assuming new derivative routes are covered.
 
 **Exclusive component paths:** `src/pwa/offlineAssetPlan.js`, `src/pwa/sw.js`, offline downloader/manifest plugin and focused PWA tests. Build/Vite/TextureManager wiring belongs to integration owner. Register exact downloader paths at S00 before dispatch.
 
