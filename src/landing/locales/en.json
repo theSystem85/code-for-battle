@@ -150,7 +150,7 @@
     "tech": {
       "title": "Tech tree",
       "lead": "Buildings and units unlock as the prerequisites are constructed. The diagram follows the in-game unlock rules and the player guide, including the naval branch.",
-      "note": "A replacement Construction Yard requires a Vehicle Workshop. The Shipyard must be placed on a shoreline.",
+      "note": "A replacement Construction Yard requires a Vehicle Workshop. A Shipyard must be entirely in water, touching coastal land, and within four tiles of your base.",
       "arrow": "unlocks",
       "plus": "and",
       "or": "or",

@@ -11,12 +11,47 @@ import { MAX_BUILDING_GAP_TILES, TILE_SIZE } from '../config.js'
 import { buildingData } from '../data/buildingData.js'
 import { gameState } from '../gameState.js'
 import { hasMovableOccupancy } from '../game/occupancyTags.js'
-import { getShipyardWaterLocalTiles, isWaterTile } from '../utils/navalUtils.js'
 
 const NON_EXPANDING_BUILD_AREA_TYPES = new Set(['street', 'concreteWall'])
+export const SHIPYARD_BUILD_RANGE_TILES = 4
+
+export function shouldShowPlacementTileAsValid(buildingType, tileValid, placementValid) {
+  return Boolean(tileValid && (buildingType === 'shipyard' || placementValid))
+}
 
 function hasMovablePlacementBlocker(mapGrid, x, y) {
   return gameState.mapGrid === mapGrid && hasMovableOccupancy(gameState.occupancyMap?.[y]?.[x])
+}
+
+function hasUnitAtTile(units, tileX, tileY) {
+  return units.some(unit =>
+    Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE) === tileX &&
+    Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE) === tileY
+  )
+}
+
+/** Shared Shipyard footprint rule used by placement validation and its overlay. */
+export function isShipyardPlacementTileValid(tileX, tileY, mapGrid, units = []) {
+  const tile = mapGrid?.[tileY]?.[tileX]
+  return Boolean(
+    tile?.type === 'water' &&
+    !tile.building &&
+    !tile.buildOnlyOccupied &&
+    !tile.seedCrystal &&
+    !tile.noBuild &&
+    !hasMovablePlacementBlocker(mapGrid, tileX, tileY) &&
+    !hasUnitAtTile(units, tileX, tileY)
+  )
+}
+
+export function doesShipyardFootprintTouchCoast(tileX, tileY, width, height, mapGrid) {
+  for (let y = tileY - 1; y <= tileY + height; y++) {
+    for (let x = tileX - 1; x <= tileX + width; x++) {
+      const inside = x >= tileX && x < tileX + width && y >= tileY && y < tileY + height
+      if (!inside && mapGrid?.[y]?.[x] && mapGrid[y][x].type !== 'water') return true
+    }
+  }
+  return false
 }
 
 function canBuildingTypeExtendBuildArea(type) {
@@ -125,13 +160,6 @@ export function canPlaceBuilding(type, tileX, tileY, mapGrid, units, buildings, 
 
   const isFactoryOrRefinery = type === 'vehicleFactory' || type === 'oreRefinery' || type === 'vehicleWorkshop'
   const isShipyard = type === 'shipyard'
-  const shipyardWaterTilesByShore = isShipyard
-    ? ['south', 'north', 'west', 'east'].map(shore => ({ shore, tiles: getShipyardWaterLocalTiles(width, height, shore) }))
-    : []
-  const getMatchingShipyardShore = () => shipyardWaterTilesByShore.find(({ tiles }) => tiles.every(({ x, y }) => isWaterTile(mapGrid, tileX + x, tileY + y)))
-  const matchingShipyardShore = isShipyard ? getMatchingShipyardShore() : null
-  const shipyardWaterTiles = matchingShipyardShore?.tiles || []
-  const isShipyardWaterLocalTile = (x, y) => shipyardWaterTiles.some(tile => tile.x === x && tile.y === y)
 
   // Check map boundaries
   if (tileX < 0 || tileY < 0 ||
@@ -147,7 +175,8 @@ export function canPlaceBuilding(type, tileX, tileY, mapGrid, units, buildings, 
     let isAnyTileInRange = false
     for (let y = tileY; y < tileY + height; y++) {
       for (let x = tileX; x < tileX + width; x++) {
-        if (isNearExistingBuilding(x, y, buildings, factories, MAX_BUILDING_GAP_TILES, owner, type)) {
+        const buildRange = isShipyard ? SHIPYARD_BUILD_RANGE_TILES : MAX_BUILDING_GAP_TILES
+        if (isNearExistingBuilding(x, y, buildings, factories, buildRange, owner, type)) {
           isAnyTileInRange = true
           break
         }
@@ -165,10 +194,8 @@ export function canPlaceBuilding(type, tileX, tileY, mapGrid, units, buildings, 
   for (let y = tileY; y < tileY + height; y++) {
     for (let x = tileX; x < tileX + width; x++) {
       // Check map terrain
-      const localX = x - tileX
-      const localY = y - tileY
-      const requiresWater = isShipyardWaterLocalTile(localX, localY)
-      if ((requiresWater ? !isWaterTile(mapGrid, x, y) : mapGrid[y][x].type === 'water') ||
+      if (isShipyard && !isShipyardPlacementTileValid(x, y, mapGrid, units)) return false
+      if ((!isShipyard && mapGrid[y][x].type === 'water') ||
           mapGrid[y][x].type === 'rock' ||
           mapGrid[y][x].seedCrystal ||
           mapGrid[y][x].building ||
@@ -179,31 +206,14 @@ export function canPlaceBuilding(type, tileX, tileY, mapGrid, units, buildings, 
       }
 
       // Check for units at this position
-      const unitsAtTile = units.filter(unit =>
-        Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE) === x &&
-        Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE) === y
-      )
-
-      if (unitsAtTile.length > 0) {
+      if (!isShipyard && hasUnitAtTile(units, x, y)) {
         return false
       }
     }
   }
 
   if (isShipyard) {
-    if (!matchingShipyardShore) return false
-    const launchCandidates = []
-    if (matchingShipyardShore.shore === 'north') {
-      for (let x = tileX; x < tileX + width; x++) launchCandidates.push({ x, y: tileY - 1 })
-    } else if (matchingShipyardShore.shore === 'west') {
-      for (let y = tileY; y < tileY + height; y++) launchCandidates.push({ x: tileX - 1, y })
-    } else if (matchingShipyardShore.shore === 'east') {
-      for (let y = tileY; y < tileY + height; y++) launchCandidates.push({ x: tileX + width, y })
-    } else {
-      for (let x = tileX; x < tileX + width; x++) launchCandidates.push({ x, y: tileY + height })
-    }
-    const hasLaunchWater = launchCandidates.some(({ x, y }) => isWaterTile(mapGrid, x, y) && !mapGrid[y]?.[x]?.building)
-    if (!hasLaunchWater) return false
+    if (!doesShipyardFootprintTouchCoast(tileX, tileY, width, height, mapGrid)) return false
   }
 
   // Additional protection area checks for factories and refineries
@@ -270,15 +280,9 @@ export function isTileValid(tileX, tileY, mapGrid, _units, _buildings, _factorie
   const isFactoryOrRefinery =
     buildingType === 'vehicleFactory' || buildingType === 'oreRefinery' || buildingType === 'vehicleWorkshop'
   const isShipyard = buildingType === 'shipyard' && placementOrigin
-  const shipyardInfo = isShipyard ? buildingData.shipyard : null
-  const requiresWater = Boolean(
-    shipyardInfo &&
-    getShipyardWaterLocalTiles(shipyardInfo.width, shipyardInfo.height).some(tile =>
-      tile.x === tileX - placementOrigin.x && tile.y === tileY - placementOrigin.y
-    )
-  )
+  if (isShipyard) return isShipyardPlacementTileValid(tileX, tileY, mapGrid, _units)
 
-  if ((requiresWater ? !isWaterTile(mapGrid, tileX, tileY) : mapGrid[tileY][tileX].type === 'water') ||
+  if (mapGrid[tileY][tileX].type === 'water' ||
       mapGrid[tileY][tileX].type === 'rock' ||
       mapGrid[tileY][tileX].seedCrystal ||
       mapGrid[tileY][tileX].building ||

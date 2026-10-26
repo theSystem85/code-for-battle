@@ -3,7 +3,7 @@
 ## Requirements
 - Add a Shipyard production building using `public/images/map/buildings/shipyard_map.webp` and `public/images/sidebar/shipyard_sidebar.webp`.
 - Shipyard must require Radar Station and Vehicle Factory tech, cost more than core factories, consume power, be repairable like other buildings, and support rally points.
-- Shipyard placement must be shoreline-only: its 5x5 footprint uses the closest whole-row split that preserves at least half water (upper two rows land, lower three rows water), the placement preview reflects that split, and a water launch row exists immediately below the building.
+- Shipyard placement follows the current all-water coastal rule in [Shipyard Coastal Placement](../101-shipyard-coastal-placement.md), replacing the original split land/water footprint.
 - Add a Destroyer as the first naval unit, produced from Shipyards and using a derived image from the ship shown in the Shipyard art.
 - Add reusable naval groundwork for water passability, naval production classification, and Shipyard launch tile resolution.
 - Destroyer must use water-only pathfinding across player commands, global/attack repathing, cache, smoothing, collision and stuck recovery; carry fuel/ammunition; have crew/armor/health/cost; and attack ground/naval targets with guns plus airborne targets with missiles.

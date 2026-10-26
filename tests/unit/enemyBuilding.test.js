@@ -122,15 +122,22 @@ describe('enemyBuilding.findBuildingPosition', () => {
     expect(result).toBeNull()
   })
 
-  it('[U01362] uses a shoreline-specific validated position for Shipyards', () => {
+  it.each([
+    ['north', [5, 4]],
+    ['south', [5, 10]],
+    ['west', [4, 5]],
+    ['east', [10, 5]],
+    ['corner', [4, 4]]
+  ])('[U01362] finds an all-water Shipyard footprint on a %s coast', (_coast, [landX, landY]) => {
     const mapGrid = createGrid(20, 20)
-    for (let y = 10; y < mapGrid.length; y++) {
-      mapGrid[y].forEach(tile => { tile.type = 'water' })
+    for (let y = 5; y < 10; y++) {
+      for (let x = 5; x < 10; x++) mapGrid[y][x].type = 'water'
     }
+    mapGrid[landY][landX].type = 'land'
 
     const result = findBuildingPosition('shipyard', mapGrid, [], [], [baseFactory], 'enemy')
 
-    expect(result).not.toBeNull()
+    expect(result).toEqual({ x: 5, y: 5 })
     expect(canPlaceBuilding).toHaveBeenCalledWith(
       'shipyard',
       result.x,
@@ -141,7 +148,9 @@ describe('enemyBuilding.findBuildingPosition', () => {
       [baseFactory],
       'enemy'
     )
-    expect(mapGrid[result.y + 5][result.x + 2].type).toBe('water')
+    for (let y = result.y; y < result.y + 5; y++) {
+      for (let x = result.x; x < result.x + 5; x++) expect(mapGrid[y][x].type).toBe('water')
+    }
   })
 
   it('[U01363] places defensive buildings toward nearby ore', () => {

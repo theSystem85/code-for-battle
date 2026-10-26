@@ -123,7 +123,7 @@ export function buildTutorialSteps() {
     {
       id: 'tech-tree', title: 'Unlocking the Tech Tree',
       text: 'Open the Tech Tree in the User Manual using the link below. It shows building requirements and the land, air, and naval units they unlock. Radar and a Vehicle Factory unlock the Shipyard. Build the Shipyard on the coast to produce your fleet. Supply Ships also need a support building.',
-      hint: 'Open the Tech Tree link to continue.',
+      hint: 'Shipyards must be entirely in water, touch coastal land, and remain within their four-tile build range. Open the Tech Tree link to continue.',
       demo: ctx => ctx.guideElement(ctx.techTreeLink),
       completion: ctx => Boolean(ctx.stepState.techTreeOpened)
     },

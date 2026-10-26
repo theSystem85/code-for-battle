@@ -99,11 +99,18 @@ function findShipyardPosition(mapGrid, units, buildings, factories, aiPlayerId) 
 
   for (let y = 0; y <= mapGrid.length - shipyard.height; y++) {
     for (let x = 0; x <= mapGrid[0].length - shipyard.width; x++) {
-      // Cheap shoreline pre-filter: Shipyards face south, so their upper-left
-      // corner must be land and their launch row must be water.
-      const topTile = mapGrid[y]?.[x]
-      const launchTile = mapGrid[y + shipyard.height]?.[x + Math.floor(shipyard.width / 2)]
-      if (!topTile || topTile.type === 'water' || launchTile?.type !== 'water') continue
+      // Cheap terrain pre-filter. The shared validator below owns blockers,
+      // coast adjacency (including corners), and the Shipyard-only build range.
+      let allWater = true
+      for (let localY = 0; localY < shipyard.height && allWater; localY++) {
+        for (let localX = 0; localX < shipyard.width; localX++) {
+          if (mapGrid[y + localY]?.[x + localX]?.type !== 'water') {
+            allWater = false
+            break
+          }
+        }
+      }
+      if (!allWater) continue
 
       candidates.push({
         x,

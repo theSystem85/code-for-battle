@@ -2,7 +2,7 @@
 
 ## Implemented in this pass
 - Ferry/hovercraft cargo HUD tooltip lists each loaded unit type/count on its own line.
-- Shipyards may be placed against north, south, west, or east shorelines when the water half of the footprint overlaps water and the land half overlaps land.
+- Shipyards use an all-water footprint touching coastal land in any orientation, including diagonal corners, lakes, and islands; see [Shipyard Coastal Placement](../101-shipyard-coastal-placement.md).
 - Map settings expose a start-money input; new games apply the sanitized value to the human money pool and each construction yard budget.
 - Non-submarine ship sprites render 50% larger, while submarines keep their previous stealth/readability size.
 - F22 and F35 sprites render at 75% scale while landed on a carrier or Airstrip, interpolating to full size with altitude during landing and takeoff.
