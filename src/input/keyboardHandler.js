@@ -927,7 +927,7 @@ export class KeyboardHandler {
         unit && // unit exists
         typeof unit === 'object' && // is an object
         units.includes(unit) && // is in the game units array
-        !unit.factoryExit && unit.health > 0 && // is alive
+        unit.health > 0 && // is alive (factory exits remain selectable)
         unit.owner === gameState.humanPlayer // belongs to player (safety check)
       )
 

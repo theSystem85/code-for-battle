@@ -114,14 +114,16 @@ describe('UnitCommandsHandler utility queues', () => {
     gameState.humanPlayer = 'player'
   })
 
-  it('[U04678] rejects movement and attack orders for vehicles leaving the garage', () => {
+  it('[U04678] queues movement and attack orders for vehicles leaving the garage', () => {
     const unit = { id: 'garage-tank', type: 'tank', owner: 'player', health: 100,
       x: 32, y: 32, path: [], moveTarget: null, target: null, factoryExit: { phase: 'moving' } }
     handler.handleMovementCommand([unit], 160, 160, mapGrid)
+    expect(unit.commandQueue).toEqual([{ type: 'move', x: 160, y: 160 }])
     handler.handleAttackCommand([unit], { id: 'enemy', owner: 'enemy', x: 160, y: 160, health: 100 }, mapGrid)
     expect(unit.path).toEqual([])
     expect(unit.moveTarget).toBeNull()
     expect(unit.target).toBeNull()
+    expect(unit.commandQueue).toEqual([{ type: 'attack', target: expect.objectContaining({ id: 'enemy' }) }])
   })
 
   it('[U04679] initializes and resets utility queue state when mode changes', () => {

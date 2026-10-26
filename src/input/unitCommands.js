@@ -28,6 +28,7 @@ import {
   issueTankerKamikazeCommand
 } from './unitCommands/utilityQueue.js'
 import { noteDirectOrder } from '../policies/policyEngine.js'
+import { applyCommandsToUnit } from './multiUnitInputHandler.js'
 import { handleMovementCommand } from './unitCommands/movementCommands.js'
 import {
   handleAttackCommand,
@@ -120,13 +121,32 @@ proto.calculateSemicircleFormation = function(...args) { return calculateSemicir
 proto.getTargetPoint = function(...args) { return getTargetPointImpl(...args) }
 proto.isEnemyTargetForUnit = function(...args) { return isEnemyTargetForUnitImpl(...args) }
 
-// Reject direct orders during the garage exit, including stale control-group references.
+// Garage vehicles use the ordinary command queue so orders issued while they are
+// emerging start only after processCommandQueues sees that factoryExit is over.
+function queueFactoryExitOrder(name, unit, args) {
+  if (name === 'handleMovementCommand') {
+    applyCommandsToUnit(unit, [{ type: 'move', x: args[1], y: args[2] }])
+    return true
+  }
+  if (name === 'handleAttackCommand') {
+    applyCommandsToUnit(unit, [{ type: 'attack', target: args[1] }])
+    return true
+  }
+  return false
+}
+
+// Keep unsupported direct interactions dormant during the garage exit, including
+// stale control-group references, rather than letting them interrupt the animation.
 for (const name of Object.keys(proto)) {
   if (!name.startsWith('handle')) continue
   const handler = proto[name]
   proto[name] = function(...args) {
     const index = name === 'handleServiceProviderRequest' ? 1 : 0
-    if (Array.isArray(args[index])) args[index] = args[index].filter(unit => !unit.factoryExit)
+    if (Array.isArray(args[index])) {
+      const exitingUnits = args[index].filter(unit => unit.factoryExit)
+      exitingUnits.forEach(unit => queueFactoryExitOrder(name, unit, args))
+      args[index] = args[index].filter(unit => !unit.factoryExit)
+    }
     else if (args[index]?.factoryExit) return false
     return handler.apply(this, args)
   }

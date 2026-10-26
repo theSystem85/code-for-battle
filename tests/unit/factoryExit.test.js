@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { beginFactoryExit, updateFactoryExits, factoryExitEase, canInteractWithUnit, factoryExitVisibility, FACTORY_EXIT_DURATION, FACTORY_EXIT_STAGGER, FACTORY_EXIT_BLOCKED_WAIT } from '../../src/game/factoryExit.js'
+import { beginFactoryExit, updateFactoryExits, factoryExitEase, canInteractWithUnit, factoryExitVisibility, FACTORY_EXIT_DURATION, FACTORY_EXIT_END_Y_OFFSET, FACTORY_EXIT_STAGGER, FACTORY_EXIT_BLOCKED_WAIT } from '../../src/game/factoryExit.js'
 import { TILE_SIZE } from '../../src/config.js'
 import { fixedOccupancyCount, movableOccupancyCount } from '../../src/game/occupancyTags.js'
 
@@ -23,6 +23,10 @@ describe('vehicle factory exit', () => {
     expect(unit.tileX).toBe(Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE))
     expect(unit.path).toEqual([])
     expect(canInteractWithUnit(unit)).toBe(false)
+    expect(unit.factoryExit.endY).toBe((factory.y + FACTORY_EXIT_END_Y_OFFSET) * TILE_SIZE)
+    const oldBearing = Math.atan2(2.3, -1.3)
+    const alignedBearing = Math.atan2(FACTORY_EXIT_END_Y_OFFSET - 0.7, -1.3)
+    expect(alignedBearing).toBeLessThan(oldBearing)
   })
 
   it('[U01540] eases through the midpoint, completes after the slow crawl duration, then issues rally movement', () => {

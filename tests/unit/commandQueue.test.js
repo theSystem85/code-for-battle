@@ -79,6 +79,26 @@ describe('commandQueue', () => {
       expect(mockUnitCommands.handleMovementCommand).not.toHaveBeenCalled()
     })
 
+    it('[U06493] keeps an exiting vehicle order pending until the exit finishes', () => {
+      const unit = {
+        id: 'factory-unit',
+        type: 'tank',
+        factoryExit: { phase: 'moving' },
+        commandQueue: [{ type: 'move', x: 100, y: 100 }]
+      }
+
+      processCommandQueues([unit], mapGrid, mockUnitCommands)
+      expect(unit.commandQueue).toHaveLength(1)
+      expect(mockUnitCommands.handleMovementCommand).not.toHaveBeenCalled()
+
+      delete unit.factoryExit
+      processCommandQueues([unit], mapGrid, mockUnitCommands)
+      expect(unit.commandQueue).toHaveLength(0)
+      expect(mockUnitCommands.handleMovementCommand).toHaveBeenCalledWith(
+        [unit], 100, 100, mapGrid, true
+      )
+    })
+
     it('[U00900] dequeues and executes move command', () => {
       const units = [
         {
