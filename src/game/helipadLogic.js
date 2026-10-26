@@ -365,12 +365,12 @@ export const updateHelipadLogic = logPerformance(function(units, buildings, _gam
       } // end if helipad.type === 'helipad'
 
       if (helipad.type === 'airstrip') {
-        const stripUnits = units.filter(u => (u.type === 'f22Raptor' || u.type === 'f35') && u.health > 0)
+        const stripUnits = units.filter(u => (u.type === 'f22Raptor' || u.type === 'f35' || u.type === 'apache') && u.health > 0)
         stripUnits.forEach(f22 => {
           const assignedParking = Number.isInteger(f22.airstripParkingSlotIndex)
             ? helipad.f22ParkingSpots?.[f22.airstripParkingSlotIndex]
             : null
-          if (f22.type === 'f35' && assignedParking) {
+          if ((f22.type === 'f35' || f22.type === 'apache') && assignedParking) {
             const landingDistance = Math.hypot((f22.x + TILE_SIZE / 2) - assignedParking.worldX, (f22.y + TILE_SIZE / 2) - assignedParking.worldY)
             const landingRequested = f22.helipadLandingRequested && f22.helipadTargetId === helipadId
             if (landingRequested && landingDistance <= TILE_SIZE * 0.9) {

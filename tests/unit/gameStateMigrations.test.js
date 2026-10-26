@@ -73,6 +73,31 @@ describe('live game-state migrations', () => {
     expect(gameState).toEqual({ money: 4, stoneCount: 40 })
   })
 
+  it('[U06552] copies air-wing homes onto schema 5 without mutating the save', () => {
+    const f22 = Object.freeze({ id: 'f22', type: 'f22Raptor', airstripId: 'strip-1' })
+    const carried = Object.freeze({ id: 'f35', type: 'f35', homeCarrierId: 'carrier', airstripId: 'strip-1' })
+    const carrier = Object.freeze({ id: 'carrier', type: 'aircraftCarrier' })
+    const original = { gameState: { money: 1 }, units: [f22, carried, carrier] }
+
+    const result = migrations[5](original)
+
+    expect(result).not.toBe(original)
+    expect(result.units).not.toBe(original.units)
+    expect(result.units[0]).toMatchObject({
+      homeAirstripId: 'strip-1',
+      homeCarrierId: null,
+      carrierStrikeActive: false,
+      carrierResumeAttack: false,
+      airGuardInterceptId: null
+    })
+    expect(result.units[1].homeAirstripId).toBeNull()
+    expect(result.units[1].homeCarrierId).toBe('carrier')
+    expect(result.units[2].carrierStrikeTargetIds).toEqual([])
+    expect(f22).toEqual({ id: 'f22', type: 'f22Raptor', airstripId: 'strip-1' })
+    expect(carrier).toEqual({ id: 'carrier', type: 'aircraftCarrier' })
+    expect(original.units[0]).toBe(f22)
+  })
+
   it('[U05363] normalizes legacy version-one saves without changing their nested state', () => {
     const legacy = { gameState: { money: 25 }, units: [] }
     const result = migrateLiveState(legacy, 1, 1)

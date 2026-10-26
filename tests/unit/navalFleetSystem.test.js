@@ -21,6 +21,7 @@ import { movableOccupancyCount } from '../../src/game/occupancyTags.js'
 import {
   cancelTransportOperations,
   commandCarrierStrike,
+  recallCarrierAircraft,
   requestCarrierLanding,
   requestCarrierLaunch,
   requestTransportLoad,
@@ -773,7 +774,7 @@ describe('six-ship naval fleet systems', () => {
     })
   })
 
-  it('[U03148] keeps a carrier stopped while its aircraft cycle through strike, recovery, and relaunch', () => {
+  it('[U03148] keeps a carrier on its move order while its aircraft cycle through strike, recovery, and relaunch', () => {
     const carrier = {
       ...createShip('aircraftCarrier', 'carrier', 'player1'),
       deckSlotCapacity: 4,
@@ -806,9 +807,10 @@ describe('six-ship naval fleet systems', () => {
     expect(commandCarrierStrike(carrier, targetA, units, false, 100)).toBe(true)
     expect(commandCarrierStrike(carrier, targetB, units, true, 100)).toBe(true)
     expect(carrier.carrierStrikeTargetIds).toEqual(['target-a', 'target-b'])
-    expect(carrier.moveTarget).toBeNull()
-    expect(carrier.path).toEqual([])
-    expect(carrier.navalAngularVelocity).toBe(0)
+    expect(carrier.moveTarget).toEqual({ x: 20, y: 8 })
+    expect(carrier.path).toEqual([{ x: 20, y: 8 }])
+    expect(carrier.navalAngularVelocity).toBe(0.02)
+    expect(carrier.isRotating).toBe(true)
     expect(f22.carrierOperation.state).toBe('launch_taxi')
     expect(f35.carrierOperation.state).toBe('launch')
 
@@ -824,6 +826,178 @@ describe('six-ship naval fleet systems', () => {
     f35.rocketAmmo = f35.maxRocketAmmo
     updateNavalFleet(units, [], createMap(), { occupancyMap: [] }, 300, 16)
     expect(f35.carrierOperation.state).toBe('launch')
+  })
+
+  it('[U06556] recalls every aircraft assigned to the carrier when the carrier stops attacking', () => {
+    const carrier = {
+      ...createShip('aircraftCarrier', 'carrier', 'player1'),
+      deckSlotCapacity: 4,
+      carrierAircraftIds: ['parked'],
+      carrierFuel: 500,
+      carrierAmmo: 50,
+      moveTarget: { x: 12, y: 8 },
+      path: [{ x: 12, y: 8 }],
+      carrierStrikeTargetIds: ['strike-target']
+    }
+    const parked = {
+      id: 'parked', type: 'f22Raptor', owner: 'player1', health: 100,
+      x: carrier.x, y: carrier.y, altitude: 0,
+      carrierId: carrier.id, homeCarrierId: carrier.id, carrierDeckSlotIndex: 0,
+      carrierOperation: { state: 'parked', carrierId: carrier.id },
+      flightState: 'grounded', rocketAmmo: 4, maxRocketAmmo: 4,
+      carrierStrikeActive: true, target: { id: 'strike-target', health: 100 }, guardMode: true
+    }
+    const airborne = {
+      id: 'airborne', type: 'apache', owner: 'player1', health: 100,
+      x: carrier.x + TILE_SIZE * 6, y: carrier.y, altitude: TILE_SIZE * 4,
+      homeCarrierId: carrier.id, carrierId: null, carrierOperation: null,
+      flightState: 'airborne', rocketAmmo: 2, maxRocketAmmo: 4,
+      carrierStrikeActive: true, target: { id: 'strike-target', health: 50 }
+    }
+    const units = [carrier, parked, airborne]
+
+    expect(recallCarrierAircraft(carrier, units, 400)).toBe(2)
+    expect(carrier.carrierStrikeTargetIds).toEqual([])
+    expect(carrier.moveTarget).toEqual({ x: 12, y: 8 })
+    expect(parked.carrierOperation.state).toBe('parked')
+    expect(parked.target).toBeNull()
+    expect(parked.guardMode).toBe(false)
+    expect(parked.homeCarrierId).toBe(carrier.id)
+    expect(airborne.carrierOperation).toMatchObject({ state: 'carrier_rendezvous', carrierId: carrier.id })
+    expect(airborne.carrierStrikeActive).toBe(false)
+    expect(airborne.homeCarrierId).toBe(carrier.id)
+    expect(airborne.target).toBeNull()
+  })
+
+  it('[U06557] returns a low-fuel strike aircraft to its carrier and relaunches only after refuel', () => {
+    const carrier = {
+      ...createShip('aircraftCarrier', 'carrier', 'player1'),
+      deckSlotCapacity: 4,
+      carrierAircraftIds: [],
+      carrierFuel: 500,
+      carrierAmmo: 50,
+      carrierStrikeTargetIds: ['fuel-target'],
+      moveTarget: { x: 14, y: 9 },
+      path: [{ x: 14, y: 9 }]
+    }
+    const target = createShip('destroyer', 'fuel-target', 'player2', 18, 8)
+    const f35 = {
+      id: 'f35', type: 'f35', owner: 'player1', health: 100,
+      x: 0, y: 0, altitude: TILE_SIZE * 4,
+      homeCarrierId: carrier.id, carrierId: null, carrierOperation: null,
+      flightState: 'airborne', rocketAmmo: 4, maxRocketAmmo: 4,
+      gas: 0, maxGas: 100, gasConsumption: 40,
+      carrierStrikeActive: true, pendingCarrierStrikeTargetId: target.id
+    }
+    const units = [carrier, f35, target]
+
+    updateNavalFleet(units, [], createMap(), { occupancyMap: [] }, 200, 16)
+    expect(f35.carrierOperation).toMatchObject({ state: 'carrier_rendezvous', carrierId: carrier.id })
+    expect(f35.carrierStrikeNeedsFullService).toBe(true)
+    expect(f35.homeCarrierId).toBe(carrier.id)
+    expect(carrier.moveTarget).toEqual({ x: 14, y: 9 })
+    expect(carrier.path).toEqual([{ x: 14, y: 9 }])
+
+    f35.carrierOperation = { state: 'parked', carrierId: carrier.id }
+    f35.carrierId = carrier.id
+    f35.flightState = 'grounded'
+    f35.gas = 0
+    updateNavalFleet(units, [], createMap(), { occupancyMap: [] }, 300, 16)
+    expect(f35.carrierOperation.state).toBe('parked')
+    expect(f35.gas).toBeGreaterThan(0)
+    expect(f35.gas).toBeLessThan(f35.maxGas * 0.98)
+
+    f35.gas = f35.maxGas
+    f35.rocketAmmo = f35.maxRocketAmmo
+    updateNavalFleet(units, [], createMap(), { occupancyMap: [] }, 400, 16)
+    expect(f35.carrierOperation.state).toBe('launch')
+    expect(f35.carrierStrikeNeedsFullService).toBe(false)
+  })
+
+  it('[U06558] adopts an individual carrier attack, refills, and lands when that target is destroyed', () => {
+    const carrier = {
+      ...createShip('aircraftCarrier', 'carrier', 'player1'),
+      deckSlotCapacity: 4,
+      carrierAircraftIds: [],
+      carrierFuel: 500,
+      carrierAmmo: 50
+    }
+    const target = createShip('destroyer', 'solo-target', 'player2', 18, 8)
+    const apache = {
+      id: 'apache', type: 'apache', owner: 'player1', health: 100,
+      x: carrier.x + TILE_SIZE * 8, y: carrier.y, altitude: TILE_SIZE * 4,
+      homeCarrierId: carrier.id, carrierId: null, carrierOperation: null,
+      flightState: 'airborne', rocketAmmo: 0, maxRocketAmmo: 6,
+      target
+    }
+    const units = [carrier, apache, target]
+
+    updateNavalFleet(units, [], createMap(), { occupancyMap: [] }, 200, 16)
+    expect(apache.carrierResumeAttack).toBe(true)
+    expect(apache.carrierResumeAttackTargetId).toBe(target.id)
+    expect(apache.carrierOperation).toMatchObject({ state: 'carrier_rendezvous', carrierId: carrier.id })
+    expect(apache.homeCarrierId).toBe(carrier.id)
+    expect(apache.carrierStrikeActive).toBeFalsy()
+
+    apache.carrierOperation = { state: 'parked', carrierId: carrier.id }
+    apache.carrierId = carrier.id
+    apache.flightState = 'grounded'
+    apache.rocketAmmo = apache.maxRocketAmmo
+    updateNavalFleet(units, [], createMap(), { occupancyMap: [] }, 300, 16)
+    expect(apache.carrierOperation.state).toBe('launch')
+
+    apache.carrierOperation = null
+    apache.carrierId = null
+    apache.flightState = 'airborne'
+    apache.target = target
+    target.health = 0
+    updateNavalFleet(units, [], createMap(), { occupancyMap: [] }, 400, 16)
+    expect(apache.carrierResumeAttack).toBe(false)
+    expect(apache.carrierOperation).toMatchObject({ state: 'carrier_rendezvous', carrierId: carrier.id })
+  })
+
+  it('[U06559] keeps a carrier association until the aircraft is explicitly rebased', () => {
+    const carrier = {
+      ...createShip('aircraftCarrier', 'carrier', 'player1'),
+      deckSlotCapacity: 4,
+      carrierAircraftIds: ['home', 'visitor'],
+      carrierFuel: 500,
+      carrierAmmo: 50
+    }
+    const other = createShip('aircraftCarrier', 'other-carrier', 'player1', 4, 8)
+    const target = createShip('destroyer', 'assoc-target', 'player2', 18, 8)
+    const decked = {
+      id: 'home', type: 'f22Raptor', owner: 'player1', health: 100,
+      x: carrier.x, y: carrier.y,
+      carrierId: carrier.id, homeCarrierId: null, carrierDeckSlotIndex: 0,
+      carrierOperation: { state: 'parked', carrierId: carrier.id },
+      flightState: 'grounded', rocketAmmo: 4, maxRocketAmmo: 4
+    }
+    const visitor = {
+      id: 'visitor', type: 'f35', owner: 'player1', health: 100,
+      x: carrier.x, y: carrier.y,
+      carrierId: carrier.id, homeCarrierId: other.id, carrierDeckSlotIndex: 1,
+      carrierOperation: { state: 'parked', carrierId: carrier.id },
+      flightState: 'grounded', rocketAmmo: 4, maxRocketAmmo: 4
+    }
+    const away = {
+      id: 'away', type: 'apache', owner: 'player1', health: 100,
+      x: carrier.x + TILE_SIZE * 10, y: carrier.y,
+      homeCarrierId: carrier.id, carrierId: null, carrierOperation: null,
+      flightState: 'airborne', rocketAmmo: 4, maxRocketAmmo: 4, target: null
+    }
+    const units = [carrier, other, decked, visitor, away, target]
+
+    expect(commandCarrierStrike(carrier, target, units, false, 100)).toBe(true)
+    expect(decked.homeCarrierId).toBe(carrier.id)
+    expect(decked.carrierStrikeActive).toBe(true)
+    expect(decked.carrierOperation.state).toBe('launch_taxi')
+    expect(visitor.homeCarrierId).toBe(other.id)
+    expect(visitor.carrierStrikeActive).toBeFalsy()
+    expect(visitor.carrierOperation.state).toBe('parked')
+    expect(away.carrierStrikeActive).toBeFalsy()
+    expect(away.target).toBeNull()
+    expect(away.homeCarrierId).toBe(carrier.id)
   })
 
   it('[U03149] places bow wakes ahead of the hull and suppresses all submerged-submarine wakes', () => {

@@ -11,6 +11,8 @@ import { findPathForOwner, removeUnitOccupancy } from '../units.js'
 import { addMovableOccupancy } from './occupancyTags.js'
 export { cancelTransportOperations } from './transportOperationCancellation.js'
 import { getBuildingIdentifier } from '../utils.js'
+import { shouldAircraftReturnForFuel } from './jetFuel.js'
+import { clearAirstripSlotOccupant, releaseAirstripParkingSlotReservation } from '../utils/airstripUtils.js'
 import { gameRandom } from '../utils/gameRandom.js'
 import { addShipWake, getNavalHullDimensions, getNavalRenderLengthTiles, isWaterPassableTile } from '../utils/navalUtils.js'
 import {
@@ -151,6 +153,24 @@ function clearGuardState(unit) {
   unit.guardMode = false
   unit.guardTarget = null
   unit.guardTargets = null
+  unit.airGuardInterceptId = null
+  unit.airGuardActive = false
+}
+
+function clearAirstripAssociation(aircraft) {
+  if (!aircraft) return
+  if (aircraft.airstripId && Array.isArray(gameState.buildings)) {
+    const strip = gameState.buildings.find(building => getBuildingIdentifier(building) === aircraft.airstripId)
+    if (strip) {
+      clearAirstripSlotOccupant(strip, aircraft.id)
+      releaseAirstripParkingSlotReservation(strip, aircraft.id)
+      if (strip.landedUnitId === aircraft.id) strip.landedUnitId = null
+    }
+  }
+  aircraft.homeAirstripId = null
+  aircraft.airstripId = null
+  aircraft.airstripParkingSlotIndex = null
+  aircraft.runwayPoints = null
 }
 
 function findUnloadTiles(targetTile, count, mapGrid, occupancyMap, ignoredOccupiedTiles = null) {
@@ -799,18 +819,30 @@ function carrierUsedSlots(carrier, units, ignoredAircraftId = null) {
   }, 0)
 }
 
-export function requestCarrierLanding(aircraft, carrier, units, now = gameState.simulationTime || 0) {
+export function clearCarrierMissionOrders(aircraft) {
+  if (!aircraft) return
+  aircraft.carrierStrikeActive = false
+  aircraft.pendingCarrierStrikeTargetId = null
+  aircraft.carrierStrikeNeedsFullService = false
+  aircraft.carrierResumeAttack = false
+  aircraft.carrierResumeAttackTargetId = null
+  aircraft.carrierResumeNeedsService = false
+  aircraft.carrierRecallRequested = false
+}
+
+export function requestCarrierLanding(aircraft, carrier, units, now = gameState.simulationTime || 0, options = {}) {
   const weight = AIRCRAFT_SLOT_WEIGHT[aircraft?.type]
   if (!weight || carrier?.type !== 'aircraftCarrier' || aircraft.owner !== carrier.owner) return false
   if (aircraft.carrierId || aircraft.carrierOperation) return false
   if (carrierUsedSlots(carrier, units, aircraft.id) + weight > carrier.deckSlotCapacity) return false
   assignCarrierSlot(aircraft, carrier, units)
-  clearGuardState(aircraft)
+  if (!options.preserveMission) clearGuardState(aircraft)
   aircraft.target = null
   aircraft.flightPlan = null
   aircraft.f22AssignedDestination = null
   aircraft.helipadLandingRequested = false
   setStopped(aircraft)
+  clearAirstripAssociation(aircraft)
   aircraft.homeCarrierId = carrier.id
   aircraft.carrierOperation = {
     state: 'carrier_rendezvous',
@@ -829,9 +861,8 @@ export function requestCarrierLanding(aircraft, carrier, units, now = gameState.
 
 export function requestCarrierLaunch(aircraft, destination = null, now = gameState.simulationTime || 0) {
   if (!aircraft?.carrierId || !AIRCRAFT_SLOT_WEIGHT[aircraft.type]) return false
-  const isCarrierStrikeLaunch = Boolean(aircraft.pendingCarrierStrikeTargetId)
-  aircraft.carrierStrikeActive = isCarrierStrikeLaunch
-  if (!isCarrierStrikeLaunch) {
+  if (!aircraft.carrierStrikeActive) {
+    aircraft.carrierStrikeActive = false
     aircraft.pendingCarrierStrikeTargetId = null
     aircraft.carrierStrikeNeedsFullService = false
   }
@@ -1048,10 +1079,30 @@ function carrierTargetKey(target) {
   return target.id || null
 }
 
-function resolveCarrierStrikeTarget(targetId, units) {
+function resolveCarrierStrikeTarget(targetId, units, carrier = null) {
+  if (!targetId) return null
   return (units || []).find(unit => unit.id === targetId && unit.health > 0) ||
     (gameState.buildings || []).find(building => getBuildingIdentifier(building) === targetId && building.health > 0) ||
+    (carrier?.carrierStrikeTargetRefs || []).find(target => carrierTargetKey(target) === targetId && target.health > 0) ||
     null
+}
+
+function aircraftNeedsCarrierRefill(aircraft, carrier) {
+  const ammo = typeof aircraft.rocketAmmo === 'number' ? aircraft.rocketAmmo : 0
+  const hasAmmoLimit = typeof aircraft.maxRocketAmmo === 'number' && aircraft.maxRocketAmmo > 0
+  if (hasAmmoLimit && ammo <= 0) return true
+  return shouldAircraftReturnForFuel(aircraft, centerOf(carrier))
+}
+
+function carrierServiceReady(aircraft, carrier) {
+  const ammo = typeof aircraft.rocketAmmo === 'number' ? aircraft.rocketAmmo : 0
+  const maxAmmo = typeof aircraft.maxRocketAmmo === 'number' ? aircraft.maxRocketAmmo : ammo
+  if (!aircraft.carrierStrikeNeedsFullService && !aircraft.carrierResumeNeedsService) return ammo > 0
+  const ammoReady = !(maxAmmo > 0) || ammo >= maxAmmo - 0.05
+  const hasFuelTank = typeof aircraft.maxGas === 'number' && aircraft.maxGas > 0
+  const carrierHasFuel = (carrier.carrierFuel || 0) > 0
+  const fuelReady = !hasFuelTank || !carrierHasFuel || aircraft.gas >= aircraft.maxGas * 0.98
+  return ammoReady && fuelReady
 }
 
 function carrierTargetCenter(target) {
@@ -1097,57 +1148,114 @@ function assignCarrierStrikeAircraft(aircraft, target) {
   }
 }
 
-function updateCarrierStrikeMission(carrier, units, now) {
-  const targetIds = (carrier.carrierStrikeTargetIds || [])
-    .filter(targetId => resolveCarrierStrikeTarget(targetId, units))
-  carrier.carrierStrikeTargetIds = targetIds
-  const target = targetIds.length > 0 ? resolveCarrierStrikeTarget(targetIds[0], units) : null
+function rememberCarrierStrikeTarget(carrier, target, append) {
+  const targetId = carrierTargetKey(target)
+  const persistent = (carrier.carrierStrikeTargetRefs || []).find(candidate => carrierTargetKey(candidate) === targetId)
+  const refs = append ? [...(carrier.carrierStrikeTargetRefs || [])] : []
+  if (!persistent && !refs.some(candidate => carrierTargetKey(candidate) === targetId)) refs.push(target)
+  carrier.carrierStrikeTargetRefs = refs
+}
 
-  if (target) {
-    setStopped(carrier)
-    carrier.target = null
-    carrier.navalAngularVelocity = 0
-    carrier.isRotating = false
+function recoverCarrierAircraft(aircraft, carrier, units, now, keepTargetId) {
+  aircraft.target = null
+  aircraft.flightPlan = null
+  aircraft.f22AssignedDestination = null
+  aircraft.attackQueue = null
+  if (keepTargetId) aircraft.pendingCarrierStrikeTargetId = keepTargetId
+  else aircraft.pendingCarrierStrikeTargetId = null
+  requestCarrierLanding(aircraft, carrier, units, now, { preserveMission: Boolean(aircraft.guardMode) })
+}
+
+function updateCarrierResumeMission(carrier, aircraft, units, now) {
+  const selfTarget = aircraft.target && aircraft.target.health > 0 ? aircraft.target : null
+  if (selfTarget) aircraft.carrierResumeAttackTargetId = carrierTargetKey(selfTarget)
+  if (!aircraft.carrierResumeAttack && !aircraft.carrierResumeAttackTargetId) return
+  aircraft.carrierResumeAttack = true
+  if (aircraft.carrierOperation && aircraft.carrierOperation.state !== 'parked') return
+
+  const missionTarget = resolveCarrierStrikeTarget(aircraft.carrierResumeAttackTargetId, units, carrier)
+  const needsRefill = aircraftNeedsCarrierRefill(aircraft, carrier)
+  const isParked = aircraft.carrierId === carrier.id && aircraft.carrierOperation?.state === 'parked'
+  const ammo = typeof aircraft.rocketAmmo === 'number' ? aircraft.rocketAmmo : 0
+
+  if (isParked) {
+    if (ammo > 0) {
+      aircraft.apacheAmmoEmpty = false
+      aircraft.canFire = true
+    }
+    if (missionTarget && !needsRefill && carrierServiceReady(aircraft, carrier)) {
+      aircraft.carrierResumeNeedsService = false
+      requestCarrierLaunch(aircraft, null, now)
+    } else if (!missionTarget) {
+      aircraft.carrierResumeAttack = false
+      aircraft.carrierResumeAttackTargetId = null
+      aircraft.carrierResumeNeedsService = false
+    }
+    return
   }
 
+  if (aircraft.carrierId || aircraft.carrierOperation) return
+  if (!missionTarget || needsRefill) {
+    if (needsRefill && missionTarget) aircraft.carrierResumeNeedsService = true
+    recoverCarrierAircraft(aircraft, carrier, units, now, needsRefill ? aircraft.carrierResumeAttackTargetId : null)
+    if (!needsRefill) {
+      aircraft.carrierResumeAttack = false
+      aircraft.carrierResumeAttackTargetId = null
+    }
+    return
+  }
+
+  assignCarrierStrikeAircraft(aircraft, missionTarget)
+}
+
+function updateCarrierStrikeMission(carrier, units, now) {
+  const targetIds = (carrier.carrierStrikeTargetIds || [])
+    .filter(targetId => resolveCarrierStrikeTarget(targetId, units, carrier))
+  carrier.carrierStrikeTargetIds = targetIds
+  if (Array.isArray(carrier.carrierStrikeTargetRefs)) {
+    carrier.carrierStrikeTargetRefs = carrier.carrierStrikeTargetRefs.filter(target => targetIds.includes(carrierTargetKey(target)))
+  }
+  const target = targetIds.length > 0 ? resolveCarrierStrikeTarget(targetIds[0], units, carrier) : null
+
   units.forEach(aircraft => {
-    if (aircraft.homeCarrierId !== carrier.id || aircraft.health <= 0 || !aircraft.carrierStrikeActive) return
-    if (aircraft.carrierOperation && aircraft.carrierOperation.state !== 'parked') return
+    if (!aircraft || aircraft.homeCarrierId !== carrier.id || aircraft.health <= 0) return
+    if (!AIRCRAFT_SLOT_WEIGHT[aircraft.type] || aircraft.guardMode || aircraft.carrierRecallRequested) return
+    if (aircraft.carrierStrikeActive) {
+      if (aircraft.carrierOperation && aircraft.carrierOperation.state !== 'parked') return
+      const needsRefill = aircraftNeedsCarrierRefill(aircraft, carrier)
+      const isParked = aircraft.carrierId === carrier.id && aircraft.carrierOperation?.state === 'parked'
+      const ammo = typeof aircraft.rocketAmmo === 'number' ? aircraft.rocketAmmo : 0
 
-    const ammo = typeof aircraft.rocketAmmo === 'number' ? aircraft.rocketAmmo : 0
-    const maxAmmo = typeof aircraft.maxRocketAmmo === 'number' ? aircraft.maxRocketAmmo : ammo
-    const isParked = aircraft.carrierId === carrier.id && aircraft.carrierOperation?.state === 'parked'
+      if (isParked) {
+        if (ammo > 0) {
+          aircraft.apacheAmmoEmpty = false
+          aircraft.canFire = true
+        }
+        if (target && !needsRefill && carrierServiceReady(aircraft, carrier)) {
+          aircraft.pendingCarrierStrikeTargetId = carrierTargetKey(target)
+          aircraft.carrierStrikeNeedsFullService = false
+          requestCarrierLaunch(aircraft, null, now)
+        } else if (!target) {
+          aircraft.carrierStrikeActive = false
+          aircraft.pendingCarrierStrikeTargetId = null
+          aircraft.carrierStrikeNeedsFullService = false
+        }
+        return
+      }
 
-    if (isParked) {
-      if (ammo > 0) {
-        aircraft.apacheAmmoEmpty = false
-        aircraft.canFire = true
+      if (aircraft.carrierId || aircraft.carrierOperation) return
+      if (!target || needsRefill) {
+        if (needsRefill) aircraft.carrierStrikeNeedsFullService = true
+        recoverCarrierAircraft(aircraft, carrier, units, now, needsRefill ? carrierTargetKey(target) : null)
+        return
       }
-      const readyAfterService = !aircraft.carrierStrikeNeedsFullService || ammo >= maxAmmo
-      if (target && ammo > 0 && readyAfterService) {
-        aircraft.pendingCarrierStrikeTargetId = carrierTargetKey(target)
-        aircraft.carrierStrikeNeedsFullService = false
-        requestCarrierLaunch(aircraft, null, now)
-      } else if (!target) {
-        aircraft.carrierStrikeActive = false
-        aircraft.pendingCarrierStrikeTargetId = null
-      }
+
+      const assignedTarget = resolveCarrierStrikeTarget(aircraft.pendingCarrierStrikeTargetId, units, carrier) || target
+      assignCarrierStrikeAircraft(aircraft, assignedTarget)
       return
     }
 
-    if (aircraft.carrierId || aircraft.carrierOperation) return
-    if (!target || ammo <= 0) {
-      aircraft.target = null
-      aircraft.flightPlan = null
-      aircraft.f22AssignedDestination = null
-      aircraft.pendingCarrierStrikeTargetId = null
-      if (ammo <= 0) aircraft.carrierStrikeNeedsFullService = true
-      requestCarrierLanding(aircraft, carrier, units, now)
-      return
-    }
-
-    const assignedTarget = resolveCarrierStrikeTarget(aircraft.pendingCarrierStrikeTargetId, units) || target
-    assignCarrierStrikeAircraft(aircraft, assignedTarget)
+    updateCarrierResumeMission(carrier, aircraft, units, now)
   })
 }
 
@@ -1157,18 +1265,83 @@ export function commandCarrierStrike(carrier, target, units, append = false, now
   const targetIds = append ? [...(carrier.carrierStrikeTargetIds || [])] : []
   if (!targetIds.includes(targetId)) targetIds.push(targetId)
   carrier.carrierStrikeTargetIds = targetIds
-  setStopped(carrier)
+  rememberCarrierStrikeTarget(carrier, target, append)
   carrier.target = null
-  carrier.navalAngularVelocity = 0
-  carrier.isRotating = false
   ;(units || []).forEach(aircraft => {
     const assignedCarrierId = aircraft.carrierOperation?.carrierId || aircraft.carrierId
-    if (assignedCarrierId === carrier.id) {
-      aircraft.homeCarrierId = carrier.id
-      aircraft.carrierStrikeActive = true
-    }
+    if (assignedCarrierId !== carrier.id || !AIRCRAFT_SLOT_WEIGHT[aircraft.type]) return
+    if (!aircraft.homeCarrierId) aircraft.homeCarrierId = carrier.id
+    if (aircraft.homeCarrierId !== carrier.id) return
+    aircraft.carrierStrikeActive = true
+    aircraft.carrierResumeAttack = false
+    aircraft.carrierResumeAttackTargetId = null
+    aircraft.carrierResumeNeedsService = false
+    aircraft.pendingCarrierStrikeTargetId = targetIds[0]
+    clearGuardState(aircraft)
   })
   updateCarrierStrikeMission(carrier, units, now)
+  return true
+}
+
+export function recallCarrierAircraft(carrier, units, now = gameState.simulationTime || 0) {
+  if (carrier?.type !== 'aircraftCarrier') return 0
+  carrier.carrierStrikeTargetIds = []
+  carrier.carrierStrikeTargetRefs = []
+  let recalled = 0
+  ;(units || []).forEach(aircraft => {
+    if (!aircraft || aircraft.health <= 0 || aircraft.homeCarrierId !== carrier.id) return
+    if (!AIRCRAFT_SLOT_WEIGHT[aircraft.type]) return
+    aircraft.carrierStrikeActive = false
+    aircraft.pendingCarrierStrikeTargetId = null
+    aircraft.carrierStrikeNeedsFullService = false
+    aircraft.carrierResumeAttack = false
+    aircraft.carrierResumeAttackTargetId = null
+    aircraft.carrierResumeNeedsService = false
+    aircraft.target = null
+    aircraft.attackQueue = null
+    aircraft.forcedAttack = false
+    aircraft.flightPlan = null
+    aircraft.f22AssignedDestination = null
+    clearGuardState(aircraft)
+    const parked = aircraft.carrierId === carrier.id && aircraft.carrierOperation?.state === 'parked'
+    if (parked) {
+      aircraft.carrierRecallRequested = false
+      recalled += 1
+      return
+    }
+    aircraft.carrierRecallRequested = true
+    if (requestCarrierLanding(aircraft, carrier, units, now)) recalled += 1
+  })
+  return recalled
+}
+
+export function releaseAircraftForRebase(aircraft, units = gameState.units, now = gameState.simulationTime || 0) {
+  if (!aircraft) return false
+  aircraft.homeCarrierId = null
+  aircraft.carrierStrikeActive = false
+  aircraft.pendingCarrierStrikeTargetId = null
+  aircraft.carrierStrikeNeedsFullService = false
+  aircraft.carrierResumeAttack = false
+  aircraft.carrierResumeAttackTargetId = null
+  aircraft.carrierResumeNeedsService = false
+  aircraft.carrierRecallRequested = false
+  const carrierId = aircraft.carrierOperation?.carrierId || aircraft.carrierId
+  if (!carrierId) return false
+  const carrier = (units || []).find(unit => unit && unit.id === carrierId)
+  const state = aircraft.carrierOperation?.state
+  if (state === 'parked' || (aircraft.carrierId && !state)) {
+    return requestCarrierLaunch(aircraft, null, now)
+  }
+  if (carrier?.carrierAircraftIds) {
+    carrier.carrierAircraftIds = carrier.carrierAircraftIds.filter(id => id !== aircraft.id)
+  }
+  aircraft.carrierOperation = null
+  aircraft.carrierId = null
+  aircraft.carrierDeckSlotIndex = null
+  if (aircraft.flightState === 'grounded') {
+    aircraft.flightState = 'airborne'
+    aircraft.f22State = aircraft.type === 'f22Raptor' ? 'airborne' : aircraft.f22State
+  }
   return true
 }
 
@@ -1184,6 +1357,14 @@ function updateCarrier(carrier, units, now, delta) {
   units.forEach(aircraft => {
     const operationCarrierId = aircraft.carrierOperation?.carrierId || aircraft.carrierId
     if (operationCarrierId === carrier.id) updateCarrierAircraft(aircraft, carrier, units, now, delta)
+    if (aircraft.carrierRecallRequested && aircraft.homeCarrierId === carrier.id) {
+      const parked = aircraft.carrierId === carrier.id && aircraft.carrierOperation?.state === 'parked'
+      if (parked || aircraft.carrierOperation) {
+        if (parked) aircraft.carrierRecallRequested = false
+        return
+      }
+      requestCarrierLanding(aircraft, carrier, units, now)
+    }
   })
   updateCarrierStrikeMission(carrier, units, now)
 }

@@ -42,6 +42,33 @@ migrations[4] = state => ({
   }
 })
 
+const AIR_WING_TYPES = new Set(['f22Raptor', 'f35', 'apache'])
+
+migrations[5] = state => ({
+  ...state,
+  units: Array.isArray(state.units)
+    ? state.units.map(unit => {
+      if (!unit || typeof unit !== 'object') return unit
+      if (unit.type === 'aircraftCarrier') {
+        return {
+          ...unit,
+          carrierStrikeTargetIds: Array.isArray(unit.carrierStrikeTargetIds) ? [...unit.carrierStrikeTargetIds] : []
+        }
+      }
+      if (!AIR_WING_TYPES.has(unit.type)) return unit
+      return {
+        ...unit,
+        homeCarrierId: unit.homeCarrierId ?? null,
+        homeAirstripId: unit.homeAirstripId ?? (unit.homeCarrierId ? null : (unit.airstripId || null)),
+        carrierStrikeActive: unit.carrierStrikeActive ?? false,
+        carrierResumeAttack: unit.carrierResumeAttack ?? false,
+        carrierResumeAttackTargetId: unit.carrierResumeAttackTargetId ?? null,
+        airGuardInterceptId: unit.airGuardInterceptId ?? null
+      }
+    })
+    : state.units
+})
+
 function assertSchemaVersion(version, label) {
   if (!Number.isSafeInteger(version) || version < 1) {
     throw new TypeError(`Live state migration ${label} must be a positive integer; received ${String(version)}`)
