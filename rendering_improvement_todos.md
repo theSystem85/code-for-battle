@@ -358,9 +358,9 @@ The integration-owner-only paths are exactly: `src/rendering/textureManager.js`,
 
 ### S03 — bounded terrain-page preparation and tier revisions
 
-- [ ] Diagnose first-route versus warm cache misses; retain revision-based validity and bounded cache behavior already implemented. Introduce immutable page-preparation jobs and local asset-to-page dependency indexes.
+- [x] Diagnose first-route versus warm cache misses; retain revision-based validity and bounded cache behavior already implemented. Introduce immutable page-preparation jobs and local asset-to-page dependency indexes.
 - [ ] Evaluate worker composition of static decorated pages at actual backing DPR. Separate procedural water and live entity/effect layers; transfer complete results, budget upload/publication and avoid rebuilding pages synchronously on render misses.
-- [ ] Add per-sheet/tier revisions with deduplicated local rebuilds, directional lookahead and safe frame-boundary swaps. Preserve old complete pages while preparing replacements; handle neighboring-page halos and edits. Prevent each sprite completion from triggering global invalidation.
+- [x] Add per-sheet/tier revisions with deduplicated local rebuilds, directional lookahead and safe frame-boundary swaps. Preserve old complete pages while preparing replacements; handle neighboring-page halos and edits. Prevent each sprite completion from triggering global invalidation.
 
 **Exclusive component paths:** `src/rendering/mapRenderer.js`, new static-page worker/adapters and focused map-cache tests. `src/rendering.js`, shared mutation/startup modules remain integration-owned.
 

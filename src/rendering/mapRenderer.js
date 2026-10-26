@@ -32,6 +32,11 @@ import {
   RENDER_COUNTER_IDS,
   renderDiagnostics
 } from '../performance/renderDiagnostics.js'
+import {
+  createStaticPagePreparationJob,
+  StaticPageDependencyIndex
+} from './staticPagePreparation.js'
+import { SPRITE_TIER_IDS } from './spriteStreamingGeometry.js'
 
 const UNDISCOVERED_COLOR = '#111111'
 const FOG_OVERLAY_STYLE = 'rgba(30, 30, 30, 0.6)'
@@ -257,6 +262,10 @@ export class MapRenderer {
     this.chunkWarmGeneration = 0
     this.chunkUseCounter = 0
     this.chunkWarmQueueCounter = 0
+    this.pageDependencies = new StaticPageDependencyIndex()
+    this.collectingPageAssets = null
+    this.terrainSpriteTier = SPRITE_TIER_IDS.FINAL
+    this.densityGeneration = 0
     this.idleChunksWarmedSinceLastFrame = 0
     this.pendingTopologyReconstructions = 0
     this.deferChunkWarmUntil = 0
@@ -621,6 +630,26 @@ export class MapRenderer {
     }
   }
 
+  notifySpriteTierPublication(publication) {
+    if (!publication?.spriteId) return 0
+    const pageKeys = this.pageDependencies.publishAssetTier(
+      publication.spriteId,
+      publication.tier,
+      publication.revision
+    )
+    const mapGrid = this.terrainRevisions.mapGrid
+    if (!mapGrid) return 0
+    let invalidated = 0
+    for (const pageKey of pageKeys) {
+      const chunk = this.chunkCache.get(pageKey)
+      if (!chunk) continue
+      const bounds = { left: chunk.startX, top: chunk.startY, right: chunk.endX, bottom: chunk.endY }
+      this.terrainRevisions.invalidate(mapGrid, RENDER_REVISION_DOMAINS.ASSET, bounds, bounds, 0)
+      invalidated++
+    }
+    return invalidated
+  }
+
   attachMutationStore(mapGrid) {
     const shared = getMapMutationRevisionStore()
     if (!shared) {
@@ -646,6 +675,7 @@ export class MapRenderer {
   invalidateAllChunks() {
     for (const chunk of this.chunkCache.values()) this.releaseChunkResources(chunk)
     this.chunkCache.clear()
+    this.pageDependencies.clear()
     this.chunkWarmQueue.clear()
     this.chunkWarmGeneration++
     this.prewarmedState.mapGeneration = -1
@@ -854,6 +884,7 @@ export class MapRenderer {
   }
 
   releaseChunkResources(chunk) {
+    this.pageDependencies.removePage(chunk.key)
     chunk.residentToken?.release()
     chunk.residentToken = null
     chunk.residentBytes = 0
@@ -966,6 +997,23 @@ export class MapRenderer {
     state.revisionsChanged = revisionsChanged
     renderProfiler.endSpan(profilerToken)
     return state
+  }
+
+  canDeferAssetOnlyRefresh(chunk, state, useTexture, options) {
+    return chunk.everRendered && state.revisionsChanged &&
+      chunk.lastAssetRevision !== chunk.revisionSnapshot.asset &&
+      chunk.lastMapGeneration === this.terrainRevisions.mapGeneration &&
+      chunk.lastTopologyRevision === chunk.revisionSnapshot.topology &&
+      chunk.lastSurfaceRevision === chunk.revisionSnapshot.surface &&
+      chunk.lastWaterRevision === chunk.revisionSnapshot.water &&
+      chunk.lastResourceRevision === chunk.revisionSnapshot.resource &&
+      chunk.lastDecalRevision === chunk.revisionSnapshot.decal &&
+      chunk.lastLayoutRevision === chunk.revisionSnapshot.layout &&
+      chunk.lastUseTexture === useTexture &&
+      chunk.lastIntegratedSignature === this.textureManager.integratedRenderSignature &&
+      chunk.lastSotMaskVersion === this.sotMaskVersion &&
+      chunk.lastSkipWaterBase === Boolean(options.skipWaterBase) &&
+      chunk.lastSkipWaterSot === Boolean(options.skipWaterSot)
   }
 
   queueChunkForWarm(mapGrid, chunkX, chunkY, chunkStartX, chunkStartY, chunkEndX, chunkEndY, useTexture, currentWaterFrame, options = {}, priority = 1) {
@@ -1254,6 +1302,8 @@ export class MapRenderer {
       }
 
       chunk.ctx.imageSmoothingEnabled = false
+      const pageAssets = new Set()
+      this.collectingPageAssets = pageAssets
       this.drawBaseLayer(
         chunk.ctx,
         mapGrid,
@@ -1267,7 +1317,18 @@ export class MapRenderer {
         currentWaterFrame,
         { skipWaterBase, skipWaterSot }
       )
+      this.pageDependencies.replacePage(chunk.key, pageAssets)
+      chunk.lastPreparationJob = createStaticPagePreparationJob({
+        pageKey: chunk.key,
+        mapGeneration: this.terrainRevisions.mapGeneration,
+        densityGeneration: this.densityGeneration,
+        tier: this.terrainSpriteTier,
+        pageRevision: chunk.revisionSnapshot.asset,
+        bounds: { startX: chunk.startX, startY: chunk.startY, endX: chunk.endX, endY: chunk.endY },
+        assetRevisions: this.pageDependencies.snapshotForPage(chunk.key, this.terrainSpriteTier)
+      })
     } finally {
+      this.collectingPageAssets = null
       stagingToken.release()
       renderProfiler.endSpan(profilerToken)
     }
@@ -1501,6 +1562,19 @@ export class MapRenderer {
         }
 
         const state = this.getChunkRenderState(chunk, mapGrid, useTexture, currentWaterFrame, chunkOptions)
+        if (this.canDeferAssetOnlyRefresh(chunk, state, useTexture, chunkOptions)) {
+          // Keep the last complete page visible. The high-priority bounded warm
+          // job replaces it atomically after a complete cooperative bake.
+          this.queueChunkForWarm(
+            mapGrid, chunkX, chunkY, chunkStartX, chunkStartY, chunkEndX, chunkEndY,
+            useTexture, currentWaterFrame, chunkOptions, 3
+          )
+          const drawX = chunkStartX * TILE_SIZE - scrollOffset.x - chunk.padding
+          const drawY = chunkStartY * TILE_SIZE - scrollOffset.y - chunk.padding
+          this.frameChunkStats.chunksDrawn++
+          ctx.drawImage(chunk.canvas, drawX, drawY)
+          continue
+        }
         const updateOptions = this.chunkUpdateOptions
         updateOptions.skipWaterBase = skipWaterBase
         updateOptions.skipWaterSot = skipWaterSot
@@ -1737,6 +1811,7 @@ export class MapRenderer {
   drawIntegratedTileImage(ctx, integratedTile, screenX, screenY) {
     if (!integratedTile?.image || !integratedTile?.rect || integratedTile.cityOverlayOnly) return false
     const { image, rect } = integratedTile
+    if (integratedTile.sheetPath) this.collectingPageAssets?.add(integratedTile.sheetPath)
     const rotation = integratedTile.rotation || 0
     if (rotation) {
       // Rotated source offsets were prepared with the footprint. Each cell
