@@ -42,7 +42,7 @@ export function updateGuardBehavior(unit, mapGrid, occupancyMap, now) {
     const distance = Math.hypot(targetCenterX - unitCenterX, targetCenterY - unitCenterY)
     const desiredTile = { x: unit.guardTarget.tileX, y: unit.guardTarget.tileY }
     const supplyFollowDistance = unit.type === 'supplyShip'
-      ? Math.max(TILE_SIZE, ((unit.supplyRadiusTiles || 2) - SUPPLY_SHIP_RANGE_MARGIN_TILES) * TILE_SIZE)
+      ? Math.max(TILE_SIZE, ((unit.supplyRadiusTiles || 2.66) - SUPPLY_SHIP_RANGE_MARGIN_TILES) * TILE_SIZE)
       : null
     const fireRange = getEffectiveFireRange(unit)
     const rerouteThreshold = supplyFollowDistance ?? (

@@ -1306,7 +1306,7 @@ export const UNIT_PROPERTIES = {
     armor: 1,
     movementType: 'water',
     isNaval: true,
-    supplyRadiusTiles: 2,
+    supplyRadiusTiles: 2.66,
     maxSupplyCrew: 4,
     maxSupplyFuel: 3000,
     maxSupplyAmmo: 120,
