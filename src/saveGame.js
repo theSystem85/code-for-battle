@@ -2079,6 +2079,7 @@ function loadGameFromSaveObject(saveObj, key) {
     showNotification('Game loaded: ' + (saveObj.label || key) + (topologyMismatch
       ? '. This save uses a different sheet/tag configuration; its saved topology is preserved.'
       : ''))
+    return true
   }
 }
 
@@ -2134,7 +2135,7 @@ export function loadGame(key) {
     }
   }
 
-  loadGameFromSaveObject(saveObj, key)
+  return loadGameFromSaveObject(saveObj, key)
 }
 
 export function deleteGame(key) {
@@ -2569,6 +2570,10 @@ export function initLastGameRecovery() {
   setupLifecycleSaves()
 }
 
+export function finishLiveUpdateRecovery() {
+  clearLastGameResumePending()
+}
+
 export function maybeResumeLastPausedGame() {
   if (!isGameStorageAvailable()) return false
 
@@ -2609,8 +2614,8 @@ export function maybeResumeLastPausedGame() {
       window.logger.warn('Failed to check saved game state:', err)
     }
 
-    loadGame(LAST_GAME_STORAGE_KEY)
-    clearLastGameResumePending()
+    if (loadGame(LAST_GAME_STORAGE_KEY) !== true) return false
+    if (!window.__cfbUpdateHandoff) clearLastGameResumePending()
     showNotification('Resumed your last paused game automatically')
     return true
   }

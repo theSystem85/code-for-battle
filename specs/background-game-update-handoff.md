@@ -1,5 +1,15 @@
 # Background game update handoff
 
+## Experimental opt-in and restart repair
+
+Seamless updates are off by default. Settings exposes a persistent **Seamless updates (experimental)** checkbox. When disabled, the update action saves and uses the ordinary loading screen. When enabled, accepting the update immediately dismisses its notice/actions and displays a thin top download bar; polling is suspended until the attempt finishes. The bar remains above the frozen battlefield during restart and follows boot progress.
+
+Navigation cache mode does not determine user intent. The worker serves an explicit staged update even when the browser marks its request `no-cache` or `reload`. The one-use preserved frame is bound to the target commit, so an installed browser reporting the new navigation as a reload still keeps the battlefield visible. A subsequent manual reload has no preserved frame and clears the staged URL.
+
+Save loading reports success explicitly. The durable resume flag stays set during seamless startup and is cleared only when the restored battle finishes boot. If startup fails, keep the preserved battlefield visible and offer **Reload normally**, which clears transient update markers, removes the pinned URL, and restores the durable checkpoint through ordinary startup. Do not replace that view with a broken loading screen.
+
+Regression coverage includes all three navigation cache modes, stable asset lookup for the restarted client, rejected save restoration, delayed recovery-flag clearing, and two browser scenarios: a reload-classified handoff and a failed startup followed by successful ordinary recovery. Hardware GPU and installed Safari acceptance remain pending; the checkbox stays off by default.
+
 The update action stages the selected deploy in an isolated Cache Storage snapshot while the current single-player battle continues. A build-specific manifest includes the boot shell, bulk assets, prepared sprites, and unit source imagery; streamed videos and external services remain outside the game snapshot. Previously downloaded assets are reused only when their revisions match. The manifest and the final build pointer must identify the requested commit. Failed or interrupted staging never pauses or reloads the battle.
 
 After staging, recheck multiplayer, activate the waiting worker, pause simulation, save `lastGame`, and verify both the checkpoint and auto-resume flag against durable storage. Render once without scheduling another loop, capture the visible canvas layers as WebP, and place a blocking paused overlay over the battlefield. Navigate to the same game URL with the selected commit. The service worker serves this client's navigation and all game asset requests from the complete staged snapshot, including stable-name imagery. Other clients continue using the ordinary Workbox routes.

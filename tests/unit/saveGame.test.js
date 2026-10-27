@@ -1113,6 +1113,33 @@ describe('saveGame.js', () => {
     })
   })
 
+  describe('seamless startup recovery', () => {
+    it('[U07016] keeps the durable resume flag until the restored battle finishes startup', async() => {
+      const { gameState } = await import('../../src/gameState.js')
+      const wasPaused = gameState.gamePaused
+      const saved = { gameState: { money: 5000, gameStarted: true, gameOver: false }, units: [], buildings: [], orePositions: [], mapGridTypes: [] }
+      localStorage.setItem('rts_save_lastGame', JSON.stringify({ label: 'lastGame', state: JSON.stringify(saved) }))
+      localStorage.setItem('rts_lastGame_resume_pending', 'true')
+      window.__cfbUpdateHandoff = true
+      try {
+        expect(saveGameModule.maybeResumeLastPausedGame()).toBe(true)
+        expect(localStorage.getItem('rts_lastGame_resume_pending')).toBe('true')
+        saveGameModule.finishLiveUpdateRecovery()
+        expect(localStorage.getItem('rts_lastGame_resume_pending')).toBeNull()
+      } finally {
+        window.__cfbUpdateHandoff = false
+        gameState.gamePaused = wasPaused
+      }
+    })
+
+    it('[U07017] reports failed restoration without consuming the saved recovery flag', () => {
+      localStorage.setItem('rts_save_lastGame', JSON.stringify({ label: 'lastGame', state: 'invalid JSON' }))
+      localStorage.setItem('rts_lastGame_resume_pending', 'true')
+      expect(saveGameModule.maybeResumeLastPausedGame()).toBe(false)
+      expect(localStorage.getItem('rts_lastGame_resume_pending')).toBe('true')
+    })
+  })
+
   describe('initLastGameRecovery', () => {
     it('[U03879] should start auto-save loop and pause watcher', () => {
       expect(() => {

@@ -49,18 +49,20 @@ export function showUpdateFrame(frame, { doc = document } = {}) {
     image.style.cssText = `position:absolute;left:${layer.x}px;top:${layer.y}px;width:${layer.width}px;height:${layer.height}px;`
     root.appendChild(image)
   }
-  const label = doc.createElement('div')
-  label.textContent = 'Paused · Applying update'
-  label.setAttribute('role', 'status')
-  label.style.cssText = 'position:absolute;top:20px;left:50%;transform:translateX(-50%);padding:12px 20px;background:#182126;color:white;font:18px sans-serif;border-radius:8px;'
-  root.appendChild(label)
+  doc.getElementById('liveUpdateProgress')?.remove()
+  const bar = doc.createElement('progress')
+  bar.id = 'liveUpdateProgress'
+  bar.max = 1
+  bar.setAttribute('aria-label', 'Restoring updated game')
+  bar.style.cssText = 'position:absolute;top:env(safe-area-inset-top,0px);left:0;width:100%;height:5px;margin:0;accent-color:#e9b44c;'
+  root.appendChild(bar)
   doc.body.appendChild(root)
   return root
 }
 
 // Called once, while paused, immediately after a fresh render so GPU canvas
 // buffers have not been discarded. No capture work is added to the frame loop.
-export function captureUpdateFrame({ win = window, doc = document } = {}) {
+export function captureUpdateFrame({ win = window, doc = document, commit } = {}) {
   const layers = []
   for (const id of ['gameCanvasGL', 'gameCanvasGPU', 'gameCanvas', 'minimap']) {
     const canvas = doc.getElementById(id)
@@ -70,7 +72,7 @@ export function captureUpdateFrame({ win = window, doc = document } = {}) {
     layers.push({ src: canvas.toDataURL('image/webp', 0.85), x: rect.x, y: rect.y, width: rect.width, height: rect.height })
   }
   if (!layers.length) throw new Error('Could not preserve the battlefield view')
-  const frame = { layers, createdAt: Date.now() }
+  const frame = { layers, commit, createdAt: Date.now() }
   win.sessionStorage.setItem(UPDATE_FRAME_KEY, JSON.stringify(frame))
   showUpdateFrame(frame, { doc })
 }
@@ -80,7 +82,7 @@ export function clearUpdateFrame({ win = window, doc = document } = {}) {
   doc.getElementById('gameUpdateFrame')?.remove()
 }
 
-export async function prepareRunningGameUpdate() {
+export async function prepareRunningGameUpdate(info) {
   const [{ gameState }, { prepareForLiveUpdateReload }] = await Promise.all([
     import('../gameState.js'), import('../saveGame.js')
   ])
@@ -89,6 +91,6 @@ export async function prepareRunningGameUpdate() {
   if (saved && isSeamlessUpdateEnabled()) {
     const { getCurrentGame } = await import('../game/gameOrchestrator.js')
     getCurrentGame()?.gameLoop?.renderUpdateSnapshot()
-    captureUpdateFrame()
+    captureUpdateFrame({ commit: info?.commit })
   }
 }

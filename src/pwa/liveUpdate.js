@@ -363,7 +363,7 @@ export function createLiveUpdater({
       }
       await activateServiceWorker()
       if (state?.gameStarted && !state.gameOver) state.gamePaused = true
-      await prepareReload()
+      await prepareReload(info)
 
       try {
         win.sessionStorage?.setItem(LIVE_UPDATE_ATTEMPT_KEY, info.commit)
@@ -403,7 +403,7 @@ export function createLiveUpdater({
   swapScheduler.setFallback?.(info => announceBreaking(info))
 
   async function check() {
-    if (busy) return 'busy'
+    if (busy || applying) return 'busy'
     busy = true
     try {
       const info = await fetchInfo().catch(() => null)

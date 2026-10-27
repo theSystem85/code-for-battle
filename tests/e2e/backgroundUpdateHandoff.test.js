@@ -4,6 +4,13 @@ test('[E00238] downloads while playing, preserves the paused battlefield across 
   await page.goto('/?seed=41&size=64&players=2&oreFields=8')
   await page.waitForFunction(() => window.gameState?.gameStarted && window.gameInstance?.gameLoop)
   await expect(page.locator('#loadingScreen')).toHaveClass(/loading-screen--hidden/)
+  // Installed browsers may classify an app-triggered update navigation as a
+  // reload. A valid one-use frame must still preserve the battlefield.
+  await page.addInitScript(() => {
+    if (!sessionStorage.getItem('cfb-update-frame')) return
+    const entries = performance.getEntriesByType.bind(performance)
+    performance.getEntriesByType = type => type === 'navigation' ? [{ type: 'reload' }] : entries(type)
+  })
   await page.evaluate(async() => {
     const [{ createLiveUpdater }, { prepareRunningGameUpdate }] = await Promise.all([
       import('/src/pwa/liveUpdate.js'), import('/src/pwa/updateHandoff.js')
@@ -16,8 +23,8 @@ test('[E00238] downloads while playing, preserves the paused battlefield across 
       getGameState: () => window.gameState,
       stageUpdate: () => download,
       activateServiceWorker: async() => {},
-      prepareReload: async() => {
-        await prepareRunningGameUpdate()
+      prepareReload: async info => {
+        await prepareRunningGameUpdate(info)
         window.__updateSaved = true
       }
     })
@@ -55,4 +62,36 @@ test('[E00238] downloads while playing, preserves the paused battlefield across 
   await expect(page.locator('#gameUpdateFrame')).toHaveCount(0)
   await expect(page.locator('#loadingScreen')).toBeVisible()
   releaseManualBoot()
+})
+
+test('[E00239] preserves the paused view after a startup error and recovers the saved battle through ordinary reload', async({ page }) => {
+  await page.goto('/?seed=41&size=64&players=2&oreFields=8')
+  await page.waitForFunction(() => window.gameState?.gameStarted && window.gameInstance?.gameLoop)
+  await expect(page.locator('#loadingScreen')).toHaveClass(/loading-screen--hidden/)
+  await page.route('**/src/main.js', route => route.fulfill({
+    contentType: 'application/javascript',
+    body: 'export async function initializeApp() { throw new Error("Simulated updated startup failure") }'
+  }))
+  await page.evaluate(async() => {
+    const [{ createLiveUpdater }, { prepareRunningGameUpdate }, { setSeamlessUpdateEnabled }] = await Promise.all([
+      import('/src/pwa/liveUpdate.js'), import('/src/pwa/updateHandoff.js'), import('/src/pwa/seamlessUpdateSettings.js')
+    ])
+    setSeamlessUpdateEnabled(true)
+    window.gameState.money = 7654321
+    const updater = createLiveUpdater({
+      getGameState: () => window.gameState,
+      stageUpdate: async() => {}, activateServiceWorker: async() => {},
+      prepareReload: prepareRunningGameUpdate
+    })
+    void updater.applyBreakingUpdate({ commit: 'ccccccc', version: '0.65.1' })
+  })
+  await page.waitForURL(/cfb-update=ccccccc/)
+  await expect(page.locator('#gameUpdateRecovery')).toBeVisible()
+  await expect(page.locator('#gameUpdateFrame img').first()).toBeVisible()
+  await page.unroute('**/src/main.js')
+  await page.getByRole('button', { name: 'Reload normally', exact: true }).click()
+  await page.waitForFunction(() => window.gameState?.gameStarted && !window.gameState.gamePaused && !document.getElementById('gameUpdateFrame'))
+  await expect(page.locator('#loadingScreen')).toHaveClass(/loading-screen--hidden/)
+  expect(new URL(page.url()).searchParams.has('cfb-update')).toBe(false)
+  expect(await page.evaluate(() => window.gameState.money)).toBeGreaterThanOrEqual(7654321)
 })

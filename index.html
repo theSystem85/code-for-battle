@@ -91,13 +91,14 @@
       sessionStorage.removeItem('cfb-update-frame')
       const frame = JSON.parse(raw || 'null')
       const navigation = performance.getEntriesByType('navigation')[0]
-      if (navigation?.type === 'reload') {
+      const handoff = frame && Date.now() - frame.createdAt < 120000
+        && frame.commit === new URL(location.href).searchParams.get('cfb-update')
+      if (navigation?.type === 'reload' && !handoff) {
         const clean = new URL(location.href)
         clean.searchParams.delete('cfb-update')
         history.replaceState(history.state, '', clean.href)
       }
-      if (frame && Date.now() - frame.createdAt < 120000 && navigation?.type !== 'reload'
-        && new URL(location.href).searchParams.has('cfb-update')) {
+      if (handoff) {
         const root = document.createElement('div')
         root.id = 'gameUpdateFrame'
         root.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:#182126;'
@@ -112,11 +113,12 @@
           }
           root.appendChild(image)
         }
-        const label = document.createElement('div')
-        label.textContent = 'Paused · Applying update'
-        label.setAttribute('role', 'status')
-        label.style.cssText = 'position:absolute;top:20px;left:50%;transform:translateX(-50%);padding:12px 20px;background:#182126;color:white;font:18px sans-serif;border-radius:8px;'
-        root.appendChild(label)
+        const bar = document.createElement('progress')
+        bar.id = 'liveUpdateProgress'
+        bar.max = 1
+        bar.setAttribute('aria-label', 'Restoring updated game')
+        bar.style.cssText = 'position:absolute;top:env(safe-area-inset-top,0px);left:0;width:100%;height:5px;margin:0;accent-color:#e9b44c;'
+        root.appendChild(bar)
         document.body.appendChild(root)
         window.__cfbUpdateHandoff = true
       }

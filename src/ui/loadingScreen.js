@@ -76,6 +76,8 @@ function ensureRoot() {
 
 function render() {
   const root = ensureRoot()
+  const updateBar = document.getElementById('liveUpdateProgress')
+  if (updateBar && state.progress != null) updateBar.value = clampProgress(state.progress)
   const kicker = document.getElementById('loadingScreenKicker')
   const detail = document.getElementById('loadingScreenDetail')
   const track = document.getElementById('loadingScreenTrack')
