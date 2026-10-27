@@ -1,3 +1,4 @@
+import { isSeamlessUpdateEnabled, setSeamlessUpdateEnabled } from '../pwa/seamlessUpdateSettings.js'
 import { getProductionPlacementSettings, setProductionPlacementSetting } from './productionPlacementSettings.js'
 // settingsModal.js
 // Tabbed settings modal that hosts runtime config shortcuts and the keybindings editor
@@ -240,6 +241,8 @@ function bindTabs(modal) {
 
 function openModal(modal, defaultTab = 'keybindings') {
   setActiveTab(modal, defaultTab)
+  const seamless = modal.querySelector('#settingsSeamlessUpdates')
+  if (seamless) seamless.checked = isSeamlessUpdateEnabled()
   for (const [name, id] of [['autoActivate', 'settingsAutoActivatePlacement'], ['autoAdvance', 'settingsAutoAdvancePlacement']]) {
     const input = modal.querySelector(`#${id}`)
     if (input) input.checked = getProductionPlacementSettings()[name]
@@ -365,6 +368,11 @@ export function initSettingsModal() {
 
   if (!modal || initializedSettingsModals.has(modal)) return
   initializedSettingsModals.add(modal)
+  const seamless = modal.querySelector('#settingsSeamlessUpdates')
+  if (seamless) {
+    seamless.checked = isSeamlessUpdateEnabled()
+    seamless.addEventListener('change', () => setSeamlessUpdateEnabled(seamless.checked))
+  }
 
   const gamepadTab = modal.querySelector('[data-config-tab="gamepads"]')
   if (gamepadTab) gamepadTab.textContent = uiText('settings.gamepad.tab')
