@@ -111,6 +111,7 @@ describe('dev live update', () => {
       fetchImpl: fakeFetch([base, next]),
       getGameState: () => ({ multiplayerSession: { isRemote: false, status: 'idle' }, partyStates: [] }),
       ui,
+      stageUpdate: async() => { order.push('download') },
       prepareReload: async() => { order.push('save') },
       activateServiceWorker: async() => { order.push('sw') },
       reload: () => order.push('reload'),
@@ -124,7 +125,7 @@ describe('dev live update', () => {
     const [, options] = ui.showBreaking.mock.calls[0]
     expect(options.multiplayer).toBe(false)
     options.onReload()
-    await vi.waitFor(() => expect(order).toEqual(['save', 'sw', 'reload']))
+    await vi.waitFor(() => expect(order).toEqual(['download', 'sw', 'save', 'reload']))
     expect(storage.getItem(UPDATE_RELOAD_GUARD)).toBe('1')
     expect(JSON.parse(storage.getItem(LIVE_UPDATE_APPLIED_KEY)).commit).toBe('bbbbbbb')
     // The same commit never triggers a second reload.

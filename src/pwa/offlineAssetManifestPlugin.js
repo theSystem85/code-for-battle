@@ -46,8 +46,13 @@ export function buildOfflineAssetManifest(distDir) {
   walkFiles(distDir, distDir, files)
   const boot = []
   const assets = []
+  const updateAssets = []
   for (const file of files) {
+    if (file.rel === 'game-update-manifest.json') continue
     const role = classifyOfflinePath(file.rel)
+    if (role === 'boot' || role === 'bulk' || /^(?:images\/prepared(?:-map-sprites)?\/|images\/map\/units\/)/.test(file.rel)) {
+      updateAssets.push({ url: toPublicAssetUrl(file.rel), revision: revisionOf(file.fullPath), size: file.size })
+    }
     if (role !== 'boot' && role !== 'bulk') continue
     const entry = {
       url: toPublicAssetUrl(file.rel),
@@ -60,6 +65,7 @@ export function buildOfflineAssetManifest(distDir) {
   boot.sort((a, b) => (a.url < b.url ? -1 : a.url > b.url ? 1 : 0))
   assets.sort((a, b) => (a.url < b.url ? -1 : a.url > b.url ? 1 : 0))
   return {
+    updateAssets,
     cache: OFFLINE_ASSETS_CACHE,
     spritePolicy: offlineSpritePolicyManifest(),
     boot,
@@ -78,6 +84,9 @@ export function offlineAssetManifestPlugin() {
     async closeBundle() {
       if (!outDir) return
       const manifest = buildOfflineAssetManifest(outDir)
+      const build = JSON.parse(readFileSync(resolve(outDir, 'build-info.json'), 'utf8'))
+      writeFileSync(resolve(outDir, 'game-update-manifest.json'), JSON.stringify({ commit: build.commit, assets: manifest.updateAssets }))
+      delete manifest.updateAssets
       const target = resolve(outDir, OFFLINE_ASSETS_MANIFEST_FILE)
       writeFileSync(target, JSON.stringify(manifest))
     }

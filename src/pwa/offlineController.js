@@ -761,8 +761,35 @@ export function startOfflineMode(options = {}) {
     publish()
   }
 
-  function reloadForUpdate() {
+  async function reloadForUpdate() {
     if (stopped || applyingUpdate) return
+    if (battleInProgress()) {
+      applyingUpdate = true
+      try {
+        if (options.applyGameUpdate) {
+          await options.applyGameUpdate()
+          return
+        }
+        const [{ createLiveUpdater }, { prepareRunningGameUpdate }] = await Promise.all([
+          import('./liveUpdate.js'), import('./updateHandoff.js')
+        ])
+        const response = await fetchImpl('/build-info.json', { cache: 'no-store' })
+        if (!response.ok) throw new Error('Could not check the update')
+        const updater = createLiveUpdater({
+          win,
+          fetchImpl,
+          getGameState: () => win.gameState,
+          prepareReload: prepareRunningGameUpdate
+        })
+        await updater.applyBreakingUpdate(await response.json())
+      } catch (error) {
+        bootError = { url: '/build-info.json', message: error.message }
+      } finally {
+        applyingUpdate = false
+        publish()
+      }
+      return
+    }
     if (updateRegistration?.waiting) applyWaitingWorker(updateRegistration, { userAccepted: true })
     else win.location.reload()
   }

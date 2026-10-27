@@ -728,6 +728,7 @@ class Game {
         try {
           this.setupAutoSaveResume()
         } catch (error) {
+          if (window.__cfbUpdateHandoff) throw error
           window.logger.warn('Failed to restore the saved battle during startup', error)
         }
         bootMark('systems-end')
@@ -749,6 +750,14 @@ class Game {
         bootMark('loading-screen-ready')
       })
       hideLoadingScreen(session)
+      if (window.__cfbUpdateHandoff) {
+        // The restored battle has rendered while paused; reveal it and resume
+        // only after boot has prepared its assets and GPU resources.
+        window.__cfbUpdateHandoff = false
+        document.getElementById('gameUpdateFrame')?.remove()
+        gameState.gamePaused = false
+        this.gameLoop?.resumeFromPause()
+      }
       scheduleIdleTask('startup:offline-assets', () => window.dispatchEvent(new CustomEvent('game-playable')))
       preloadRemainingPreparedSprites([...gameState.availableUnitTypes, 'harvester', 'lightTank', 'tankV1'])
       import('../story/storyIntroBoot.js').then(({ mountStoryIntroReplay, maybeAutoPlayStoryIntro }) => {
@@ -757,6 +766,8 @@ class Game {
       }).catch(error => window.logger?.warn?.('Story intro unavailable', error))
       this.setupDeferredStartupTasks()
     } catch (error) {
+      document.getElementById('gameUpdateFrame')?.remove()
+      window.__cfbUpdateHandoff = false
       stopBootProgressPaint()
       updateLoadingScreen({
         phase: 'error',
@@ -968,7 +979,8 @@ class Game {
 
   setupAutoSaveResume() {
     initLastGameRecovery()
-    maybeResumeLastPausedGame()
+    const resumed = maybeResumeLastPausedGame()
+    if (window.__cfbUpdateHandoff && !resumed) throw new Error('The update could not restore the saved game')
   }
 
   setupSpeedControl() {

@@ -47,7 +47,8 @@ test('[E00200] a CSS-only deploy swaps styles without reloading or losing game s
     window.__liveUpdater = createLiveUpdater({
       getGameState: () => window.__liveUpdateGameState,
       reload: () => { window.__liveUpdateReloaded = true },
-      running: { version: old.version, commit: old.commit }
+      running: { version: old.version, commit: old.commit },
+      runningSchema: old.stateSchemaVersion
     })
     await window.__liveUpdater.check()
   }, oldBuild)

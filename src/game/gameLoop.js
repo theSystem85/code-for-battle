@@ -235,6 +235,17 @@ export class GameLoop {
     return Math.max(0, performance.now() - minimapStart)
   }
 
+  // One synchronous render used only by the update handoff, without starting
+  // another animation loop or advancing simulation/camera state.
+  renderUpdateSnapshot() {
+    const manager = this.canvasManager
+    renderGame(manager.getGameContext(), manager.getGameCanvas(), this.mapGrid,
+      this.factories, this.units, this.bullets, gameState.buildings,
+      gameState.scrollOffset, gameState.selectionActive, gameState.selectionStart,
+      gameState.selectionEnd, gameState, manager.getGameGlContext(),
+      manager.getGameGlCanvas(), manager.getGameGpuCanvas?.())
+  }
+
   handlePausedFrame(now, gameCtx, gameCanvas, pauseStateChanged) {
     const frameStart = performance.now()
     this.lastFrameTime = null
@@ -288,6 +299,7 @@ export class GameLoop {
         gameGpuCanvas
       )
 
+      finishBootFrame()
       framePhases.begin(FRAME_PHASE.minimap)
       minimapMs = this.renderMinimapIfDue(now, minimapCtx, minimapCanvas, gameCanvas, this.forceRender || pauseStateChanged)
       framePhases.end(FRAME_PHASE.minimap)

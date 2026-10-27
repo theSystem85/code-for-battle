@@ -262,6 +262,16 @@ export function getStoredEntries(prefix = '') {
   return getStoredKeys(prefix).map(key => [key, getStoredItem(key)])
 }
 
+// Live update reloads must verify durable data rather than only the memory cache.
+export async function verifyStoredItemPersisted(key) {
+  await flushGameStorageWrites()
+  const expected = cache.get(key)
+  if (expected == null) return false
+  if (!supportsIndexedDb()) return getLegacyStorageValue(key) === expected
+  const request = await runStoreOperation('readonly', store => store.get(key))
+  return request?.result?.value === expected
+}
+
 export async function flushGameStorageWrites() {
   await Promise.allSettled(Array.from(pendingWrites))
 }
