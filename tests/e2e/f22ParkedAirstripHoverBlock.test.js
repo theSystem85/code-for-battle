@@ -3,28 +3,30 @@ import { test, expect } from '@playwright/test'
 test.describe('F22 parked airstrip command guard', () => {
   /** @type {string[]} */
   let consoleErrors = []
+  let checkingCommands = false
 
   test.beforeEach(async({ page }) => {
     consoleErrors = []
+    checkingCommands = false
 
     page.on('console', msg => {
-      if (msg.type() === 'error') {
-        consoleErrors.push(msg.text())
+      if (checkingCommands && msg.type() === 'error') {
+        consoleErrors.push(`${msg.text()} (${msg.location().url})`)
       }
     })
 
     page.on('pageerror', error => {
-      consoleErrors.push(`Page error: ${error.message}`)
+      if (checkingCommands) consoleErrors.push(`Page error: ${error.message}`)
     })
 
     await page.addInitScript(() => {
-      localStorage.setItem('tutorial-settings', JSON.stringify({ showTutorial: false, speechEnabled: false }))
-      localStorage.setItem('tutorial-progress', JSON.stringify({ completed: true, stepIndex: 0 }))
+      localStorage.setItem('rts_tutorial_settings', JSON.stringify({ showTutorial: false, speechEnabled: false }))
+      localStorage.setItem('rts_tutorial_progress', JSON.stringify({ completed: true, stepIndex: 0 }))
     })
   })
 
   test('[E00038] parked F22 shows blocked cursor on its own airstrip, move-into on another, and does not relaunch on right click', async({ page }) => {
-    await page.goto('/?seed=11')
+    await page.goto('/?seed=11&size=64&players=2&oreFields=8')
 
     await page.waitForSelector('#gameCanvas', { state: 'visible', timeout: 30000 })
     await page.waitForFunction(() => {
@@ -36,6 +38,8 @@ test.describe('F22 parked airstrip command guard', () => {
       return gs.gameStarted && !gs.gamePaused && window.cheatSystem && window.gameInstance?.units
     }, { timeout: 30000 })
 
+    await expect(page.locator('#loadingScreen')).toHaveClass(/loading-screen--hidden/)
+
     const scenario = await page.evaluate(() => {
       const gs = window.gameState
       const units = window.gameInstance.units
@@ -46,11 +50,22 @@ test.describe('F22 parked airstrip command guard', () => {
       const knownUnitIds = new Set(units.map(unit => unit.id))
 
       const spawnPositions = [
-        { x: 14 * 32, y: 14 * 32 },
-        { x: 28 * 32, y: 14 * 32 }
+        { x: 8 * 32, y: 26 * 32 },
+        { x: 24 * 32, y: 26 * 32 }
       ]
 
+      // Provide two clear land footprints on the small fixture map. Airstrip
+      // placement must not depend on which coast the seeded terrain generated.
       for (const pos of spawnPositions) {
+        for (let y = pos.y / 32; y < pos.y / 32 + 6; y++) {
+          for (let x = pos.x / 32; x < pos.x / 32 + 12; x++) {
+            const tile = gs.mapGrid[y][x]
+            if (tile.building) return { error: 'Fixture land overlaps an existing building' }
+            tile.type = 'land'
+            tile.seedCrystal = false
+            gs.occupancyMap[y][x] = 0
+          }
+        }
         gs.cursorX = pos.x
         gs.cursorY = pos.y
         window.cheatSystem.processCheatCode(`build airstrip ${humanPlayer}`)
@@ -107,6 +122,23 @@ test.describe('F22 parked airstrip command guard', () => {
       }
       homeAirstrip.f22OccupiedSlotUnitIds[0] = f22.id
 
+      // Keep both fixture airstrips inside the playable viewport. The startup
+      // camera follows the generated base, which need not be near these tiles.
+      const canvas = document.getElementById('gameCanvas').getBoundingClientRect()
+      const homeCenterX = (homeAirstrip.x + homeAirstrip.width / 2) * 32
+      const otherCenterX = (otherAirstrip.x + otherAirstrip.width / 2) * 32
+      const centerY = (homeAirstrip.y + homeAirstrip.height / 2) * 32
+      gs.scrollOffset.x = Math.max(0, (homeCenterX + otherCenterX) / 2 - canvas.width / 2)
+      gs.scrollOffset.y = Math.max(0, centerY - canvas.height / 2)
+      gs.dragVelocity.x = 0
+      gs.dragVelocity.y = 0
+      gs.smoothScroll.active = false
+      // Inspect input command guards without allowing flight simulation to
+      // advance the manually configured parked and approach states.
+      gs.gamePaused = true
+      window.gameInstance.gameLoop.requestRender()
+
+
       const selected = window.debugGetSelectedUnits?.() || []
       selected.length = 0
       selected.push(f22)
@@ -128,6 +160,11 @@ test.describe('F22 parked airstrip command guard', () => {
     })
 
     expect(scenario.error || null).toBeNull()
+    // Camera relocation and cheat spawning load optional assets and cancel
+    // obsolete preparation requests. Observe errors from the command exercise
+    // after that fixture setup settles, rather than unrelated startup traffic.
+    await page.waitForLoadState('networkidle')
+    checkingCommands = true
 
     const canvas = await page.locator('#gameCanvas').boundingBox()
     expect(canvas).not.toBeNull()
@@ -143,20 +180,12 @@ test.describe('F22 parked airstrip command guard', () => {
     const homeCursorPoint = await toScreen(scenario.homeCenter)
     await page.mouse.move(homeCursorPoint.x, homeCursorPoint.y)
 
-    const homeCursorClass = await page.evaluate(() => {
-      const gameCanvas = document.getElementById('gameCanvas')
-      return Array.from(gameCanvas?.classList || [])
-    })
-    expect(homeCursorClass).toContain('move-blocked-mode')
+    await expect(page.locator('#gameCanvas')).toHaveClass(/move-blocked-mode/)
 
     const otherCursorPoint = await toScreen(scenario.otherCenter)
     await page.mouse.move(otherCursorPoint.x, otherCursorPoint.y)
 
-    const otherCursorClass = await page.evaluate(() => {
-      const gameCanvas = document.getElementById('gameCanvas')
-      return Array.from(gameCanvas?.classList || [])
-    })
-    expect(otherCursorClass).toContain('move-into-mode')
+    await expect(page.locator('#gameCanvas')).toHaveClass(/move-into-mode/)
 
     await page.mouse.move(homeCursorPoint.x, homeCursorPoint.y)
     await page.mouse.click(homeCursorPoint.x, homeCursorPoint.y, { button: 'right' })
@@ -187,6 +216,12 @@ test.describe('F22 parked airstrip command guard', () => {
       if (!f22) {
         return
       }
+      // Right-click deselects units. Select the aircraft again before checking
+      // whether a new landing command is blocked during its active approach.
+      const selected = window.debugGetSelectedUnits()
+      selected.length = 0
+      selected.push(f22)
+      f22.selected = true
       f22.flightState = 'airborne'
       f22.f22State = 'approach_runway'
       f22.helipadLandingRequested = true
@@ -195,12 +230,9 @@ test.describe('F22 parked airstrip command guard', () => {
       f22.f22PendingTakeoff = false
     }, { f22Id: scenario.f22Id })
 
+    await page.mouse.move(homeCursorPoint.x + 1, homeCursorPoint.y)
     await page.mouse.move(homeCursorPoint.x, homeCursorPoint.y)
-    const inProgressCursorClass = await page.evaluate(() => {
-      const gameCanvas = document.getElementById('gameCanvas')
-      return Array.from(gameCanvas?.classList || [])
-    })
-    expect(inProgressCursorClass).toContain('move-blocked-mode')
+    await expect(page.locator('#gameCanvas')).toHaveClass(/move-blocked-mode/)
 
     await page.mouse.click(homeCursorPoint.x, homeCursorPoint.y, { button: 'right' })
     await page.waitForTimeout(600)

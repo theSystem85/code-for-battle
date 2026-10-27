@@ -35,6 +35,29 @@ function makeDeps(overrides = {}) {
   return deps
 }
 
+// These scripts were extended after the checked-in recordings were made.
+// Keep their current instructions audible through TTS, and reject the stale
+// recordings. Every other default step must still use an exact local clip.
+const TTS_STEP_IDS = new Set(['welcome', 'tech-tree', 'advanced-chain-planning'])
+
+function expectCurrentStepNarration(step, text, context) {
+  const clip = findTutorialNarrationClip(step.id, text)
+  const deps = makeDeps()
+  const narrator = createTutorialNarrator(deps)
+  if (TTS_STEP_IDS.has(step.id)) {
+    expect(clip, context).toBeNull()
+    expect(narrator.speak(step.id, text), context).toBe('tts')
+    expect(deps.tts, context).toEqual([text])
+    expect(deps.clips, context).toEqual([])
+  } else {
+    expect(clip, context).not.toBeNull()
+    expect(narrator.speak(step.id, text), context).toBe('clip')
+    expect(deps.clips[0].src).toBe(clip.file)
+    expect(deps.clips[0].paused).toBe(false)
+    expect(deps.tts).toEqual([])
+  }
+}
+
 describe('tutorial narration manifest', () => {
   it('[U04499] has a normalized file on disk for every clip', () => {
     for (const clip of TUTORIAL_NARRATION_CLIPS) {
@@ -51,21 +74,14 @@ describe('tutorial narration manifest', () => {
     }
   })
 
-  it('[U04500] narrates every default mouse, trackpad and touch step with an exact local recording', () => {
+  it('[U04500] narrates every default step using an exact recording or the current text through TTS', () => {
     for (const touchLayout of [false, true]) {
       document.body.classList.toggle('is-touch', touchLayout)
       for (const method of ['mouse-keyboard', 'touch', 'trackpad']) {
         for (const step of buildTutorialSteps()) {
           if (step.id === 'mobile-sidebar-gestures' && !touchLayout) continue
           const text = getSpokenTextForStep(step, method)
-          const clip = findTutorialNarrationClip(step.id, text)
-          const deps = makeDeps()
-          const narrator = createTutorialNarrator(deps)
-          expect(clip, `${method}: ${step.id}: ${text}`).not.toBeNull()
-          expect(narrator.speak(step.id, text)).toBe('clip')
-          expect(deps.clips[0].src).toBe(clip.file)
-          expect(deps.clips[0].paused).toBe(false)
-          expect(deps.tts).toEqual([])
+          expectCurrentStepNarration(step, text, `${method}: ${step.id}: ${text}`)
         }
       }
     }
@@ -73,7 +89,7 @@ describe('tutorial narration manifest', () => {
   })
 
 
-  it('[U05490] selects the exact guided file for each replaced script and input variant', () => {
+  it('[U05490] selects exact guided recordings and rejects stale scripts for every input variant', () => {
     const names = ['welcome', 'build-power', 'build-refinery', 'build-vehicle-factory', 'build-harvester', 'select-group', 'tank-rally', 'tank-control', 'crew-system', 'tech-tree', 'settings-help']
     for (const method of ['mouse-keyboard', 'trackpad', 'touch']) {
       for (const [index, id] of names.entries()) {
@@ -82,7 +98,14 @@ describe('tutorial narration manifest', () => {
         const clip = findTutorialNarrationClip(id, text)
         const variant = method === 'touch' && index === 5 ? 11 : method === 'touch' && index === 6 ? 12 : index
         const filename = method === 'touch' && id === 'tank-control' ? 'tank-control-2.mp3' : `${id}-guided-${variant}.mp3`
-        expect(clip?.file, `${method}: ${id}`).toBe(`/sound/tutorial/${filename}`)
+        if (TTS_STEP_IDS.has(id)) {
+          const recorded = TUTORIAL_NARRATION_CLIPS.find(candidate => candidate.file === `/sound/tutorial/${filename}`)
+          expect(recorded, `${method}: ${id}`).toBeDefined()
+          expect(normalizeNarrationText(recorded.text)).not.toBe(normalizeNarrationText(text))
+          expectCurrentStepNarration(step, text, `${method}: ${id}`)
+        } else {
+          expect(clip?.file, `${method}: ${id}`).toBe(`/sound/tutorial/${filename}`)
+        }
       }
     }
   })
@@ -103,7 +126,7 @@ describe('tutorial narration manifest', () => {
 
   // Regression: a player who skipped the input-method step has no preference.
   // Steps 7+ used the legacy copy then and fell back to browser TTS.
-  it('[U04501] resolves recorded narration when no input method was chosen', () => {
+  it('[U04501] resolves the matching recording or current TTS when no input method was chosen', () => {
     for (const touchLayout of [false, true]) {
       document.body.classList.toggle('is-touch', touchLayout)
       const method = resolveTutorialInputMethod(null)
@@ -111,11 +134,7 @@ describe('tutorial narration manifest', () => {
       for (const step of buildTutorialSteps()) {
         if (step.id === 'mobile-sidebar-gestures' && !touchLayout) continue
         const text = getSpokenTextForStep(step, method)
-        const clip = findTutorialNarrationClip(step.id, text)
-        const deps = makeDeps()
-        expect(clip, `${method}: ${step.id}`).not.toBeNull()
-        expect(createTutorialNarrator(deps).speak(step.id, text)).toBe('clip')
-        expect(deps.tts).toEqual([])
+        expectCurrentStepNarration(step, text, `${method}: ${step.id}`)
       }
     }
     document.body.classList.remove('is-touch')
