@@ -1016,6 +1016,9 @@
             <a id="sidebarGithubLink" href="https://github.com/theSystem85/code-for-battle" target="_blank" rel="noopener noreferrer">GitHub</a>
           </div>
           <button id="storyIntroReplay" type="button" class="sidebar-landing-link sidebar-story-replay">Replay war briefing</button>
+          <button id="releaseNotesBtn" type="button" class="sidebar-release-notes">
+            <span aria-hidden="true">✦</span> Release notes
+          </button>
           <a id="sidebarLandingLink" class="sidebar-landing-link" href="/landing" target="_blank" rel="noopener noreferrer"></a>
         </div>
       </div>
@@ -1874,6 +1877,20 @@
       </div>
       <iframe id="userDocsFrame" class="user-docs-modal__frame" title="User documentation" loading="lazy"></iframe>
     </div>
+  </div>
+  <div id="releaseNotesModal" class="release-notes hidden" aria-hidden="true">
+    <section class="release-notes__dialog" role="dialog" aria-modal="true" aria-labelledby="releaseNotesTitle">
+      <header class="release-notes__header">
+        <div><span class="release-notes__eyebrow">Code for Battle archive</span><h2 id="releaseNotesTitle">Release notes</h2></div>
+        <button class="release-notes__close" type="button" aria-label="Close release notes" data-release-notes-close>×</button>
+      </header>
+      <div class="release-notes__tabs" role="tablist" aria-label="Release notes views">
+        <button id="releaseNotesIndexTab" type="button" role="tab" aria-selected="true" aria-controls="releaseNotesIndexPanel" data-release-tab="index">Index</button>
+        <button id="releaseNotesReleasesTab" type="button" role="tab" aria-selected="false" aria-controls="releaseNotesReleasesPanel" data-release-tab="releases" tabindex="-1">Releases</button>
+      </div>
+      <div id="releaseNotesIndexPanel" class="release-notes__panel" role="tabpanel" aria-labelledby="releaseNotesIndexTab" data-release-panel="index"></div>
+      <div id="releaseNotesReleasesPanel" class="release-notes__panel" role="tabpanel" aria-labelledby="releaseNotesReleasesTab" data-release-panel="releases" hidden></div>
+    </section>
   </div>
 
 </body>

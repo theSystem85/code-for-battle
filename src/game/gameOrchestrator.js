@@ -112,6 +112,7 @@ function initializeDeterministicGameSession(seed, state = gameState) {
 import { sanitizeSeed } from '../utils/seedUtils.js'
 import { initTutorialSystem } from '../ui/tutorialSystem.js'
 import { initUserDocs } from '../ui/userDocs.js'
+import { initReleaseNotes } from '../ui/releaseNotes.js'
 import { CanvasManager } from '../rendering/canvasManager.js'
 import { ProductionController } from '../ui/productionController.js'
 import { EventHandlers } from '../ui/eventHandlers.js'
@@ -952,6 +953,7 @@ class Game {
     scheduleAfterNextPaint('startup:after-paint-ui', () => {
       initTutorialSystem()
       initUserDocs()
+      initReleaseNotes()
       initSidebarMultiplayer()
       initAiPartySync()
     })
