@@ -32,6 +32,7 @@ vi.mock('../../src/utils/helipadUtils.js', () => ({
 }))
 
 import { updateHelipadLogic } from '../../src/game/helipadLogic.js'
+import { getAirstripParkingSpots } from '../../src/utils/airstripUtils.js'
 
 const createAirstrip = (overrides = {}) => ({
   id: 'as1',
@@ -138,7 +139,7 @@ describe('airstripLogic', () => {
     expect(tanker.supplyGas).toBeGreaterThanOrEqual(0)
   })
 
-  it('[U00113] does not allow apaches to land on the airstrip', () => {
+  it('[U06991] lands an Apache on its reserved airstrip parking spot', () => {
     const airstrip = createAirstrip({
       ammo: 10,
       maxAmmo: 50,
@@ -146,11 +147,24 @@ describe('airstripLogic', () => {
       maxFuel: 100,
       fuelReloadTime: 100000
     })
-    const apache = createApache()
+    const spot = getAirstripParkingSpots(airstrip)[2]
+    const apache = createApache({
+      x: spot.worldX - 16,
+      y: spot.worldY - 16,
+      altitude: 20,
+      flightState: 'airborne',
+      helipadTargetId: 'airstrip-as1',
+      airstripParkingSlotIndex: 2
+    })
 
     updateHelipadLogic([apache], [airstrip], {}, 1000)
 
-    expect(apache.landedHelipadId).toBeNull()
-    expect(airstrip.landedUnitId).toBeUndefined() // or null, but updateHelipadLogic won't set it for airstrip
+    expect(apache).toMatchObject({
+      flightState: 'grounded',
+      altitude: 0,
+      landedHelipadId: 'airstrip-as1',
+      airstripParkingSlotIndex: 2
+    })
+    expect(airstrip.f22OccupiedSlotUnitIds[2]).toBe('a1')
   })
 })

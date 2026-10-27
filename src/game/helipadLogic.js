@@ -2,6 +2,7 @@ import { HELIPAD_FUEL_CAPACITY, HELIPAD_RELOAD_TIME, TILE_SIZE, TANKER_SUPPLY_CA
 import { logPerformance } from '../performanceUtils.js'
 import { getBuildingIdentifier } from '../utils.js'
 import { getHelipadLandingCenter, isHelipadAvailableForUnit } from '../utils/helipadUtils.js'
+import { ensureAirstripOperations, setAirstripSlotOccupant } from '../utils/airstripUtils.js'
 
 const SERVICE_SETTLE_TIME_MS = 250
 
@@ -117,6 +118,7 @@ export const updateHelipadLogic = logPerformance(function(units, buildings, _gam
 
   helipads.forEach(helipad => {
     const helipadId = getBuildingIdentifier(helipad)
+    if (helipad.type === 'airstrip') ensureAirstripOperations(helipad)
     if (typeof helipad.maxFuel !== 'number' || helipad.maxFuel <= 0) {
       helipad.maxFuel = HELIPAD_FUEL_CAPACITY
     }
@@ -379,6 +381,9 @@ export const updateHelipadLogic = logPerformance(function(units, buildings, _gam
               f22.tileX = assignedParking.x
               f22.tileY = assignedParking.y
               f22.flightState = 'grounded'
+              f22.altitude = 0
+              f22.targetAltitude = 0
+              f22.autoHoldAltitude = false
               f22.manualFlightState = 'land'
               f22.path = []
               f22.flightPlan = null
@@ -388,6 +393,7 @@ export const updateHelipadLogic = logPerformance(function(units, buildings, _gam
               f22.groundLandingTarget = null
               f22.landedOnGround = false
               helipad.landedUnitId = f22.id
+              setAirstripSlotOccupant(helipad, f22.airstripParkingSlotIndex, f22.id)
             }
           }
           const parkingDistance = assignedParking

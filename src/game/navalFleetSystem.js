@@ -14,6 +14,7 @@ import { getBuildingIdentifier } from '../utils.js'
 import { shouldAircraftReturnForFuel } from './jetFuel.js'
 import { clearAirstripSlotOccupant, releaseAirstripParkingSlotReservation } from '../utils/airstripUtils.js'
 import { gameRandom } from '../utils/gameRandom.js'
+import { CARRIER_AIRCRAFT_SLOT_WEIGHT, getCarrierDeckSlotPoint, getOccupiedCarrierDeckSlots } from '../utils/airLandingSpots.js'
 import { addShipWake, getNavalHullDimensions, getNavalRenderLengthTiles, isWaterPassableTile } from '../utils/navalUtils.js'
 import {
   BATTLESHIP_TURRET_NAMES,
@@ -37,7 +38,7 @@ import {
 } from './waterMineSystem.js'
 
 const TRANSPORT_TYPES = new Set(['hovercraft', 'vehicleFerry'])
-const AIRCRAFT_SLOT_WEIGHT = Object.freeze({ f22Raptor: 1, f35: 2, apache: 2 })
+const AIRCRAFT_SLOT_WEIGHT = CARRIER_AIRCRAFT_SLOT_WEIGHT
 const CARRIER_APPROACH_MS = 1800
 const CARRIER_ROLL_MS = 1800
 const CARRIER_LAUNCH_MS = 1700
@@ -758,14 +759,8 @@ function carrierPoint(carrier, forwardTiles, rightTiles = 0) {
 }
 
 function carrierSlotPoint(carrier, index) {
-  const slots = [
-    { forward: -1.25, right: 0.55 },
-    { forward: -0.25, right: 0.55 },
-    { forward: 0.75, right: 0.55 },
-    { forward: 1.7, right: 0.55 }
-  ]
-  const slot = slots[index] || slots[0]
-  return carrierPoint(carrier, slot.forward, slot.right)
+  const point = getCarrierDeckSlotPoint(carrier, index)
+  return { x: point.x - TILE_SIZE / 2, y: point.y - TILE_SIZE / 2 }
 }
 
 function syncAircraftTile(aircraft) {
@@ -835,7 +830,7 @@ export function requestCarrierLanding(aircraft, carrier, units, now = gameState.
   if (!weight || carrier?.type !== 'aircraftCarrier' || aircraft.owner !== carrier.owner) return false
   if (aircraft.carrierId || aircraft.carrierOperation) return false
   if (carrierUsedSlots(carrier, units, aircraft.id) + weight > carrier.deckSlotCapacity) return false
-  assignCarrierSlot(aircraft, carrier, units)
+  assignCarrierSlot(aircraft, carrier, units, options.slotIndex)
   if (!options.preserveMission) clearGuardState(aircraft)
   aircraft.target = null
   aircraft.flightPlan = null
@@ -878,16 +873,13 @@ export function requestCarrierLaunch(aircraft, destination = null, now = gameSta
   return true
 }
 
-function assignCarrierSlot(aircraft, carrier, units) {
+function assignCarrierSlot(aircraft, carrier, units, preferredIndex = null) {
   if (Number.isInteger(aircraft.carrierDeckSlotIndex)) return aircraft.carrierDeckSlotIndex
-  const occupiedSlots = new Set()
-  units.forEach(unit => {
-    if (unit.id === aircraft.id || unit.carrierId !== carrier.id || !Number.isInteger(unit.carrierDeckSlotIndex)) return
-    const weight = AIRCRAFT_SLOT_WEIGHT[unit.type] || 1
-    for (let offset = 0; offset < weight; offset++) occupiedSlots.add(unit.carrierDeckSlotIndex + offset)
-  })
+  const occupiedSlots = getOccupiedCarrierDeckSlots(carrier, units, aircraft.id)
   const aircraftWeight = AIRCRAFT_SLOT_WEIGHT[aircraft.type] || 1
-  let slotIndex = 0
+  const fits = index => Array.from({ length: aircraftWeight }, (_, offset) => index + offset)
+    .every(slot => slot < carrier.deckSlotCapacity && !occupiedSlots.has(slot))
+  let slotIndex = Number.isInteger(preferredIndex) && fits(preferredIndex) ? preferredIndex : 0
   while (
     slotIndex < carrier.deckSlotCapacity &&
     Array.from({ length: aircraftWeight }, (_, offset) => slotIndex + offset)

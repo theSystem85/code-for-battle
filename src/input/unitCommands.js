@@ -36,7 +36,7 @@ import {
   getTargetPoint as getTargetPointImpl,
   isEnemyTargetForUnit as isEnemyTargetForUnitImpl
 } from './unitCommands/attackCommands.js'
-import { assignApacheFlight, handleApacheHelipadCommand } from './unitCommands/airCommands.js'
+import { assignApacheFlight, handleApacheHelipadCommand, handleLandingSpotCommand } from './unitCommands/airCommands.js'
 import {
   handleRefineryUnloadCommand,
   handleHarvesterCommand,
@@ -101,6 +101,7 @@ proto.handleMovementCommand = function(...args) { return recordDirectOrder(args[
 proto.handleAttackCommand = function(...args) { return recordDirectOrder(args[0], handleAttackCommand(this, ...args)) }
 proto.assignApacheFlight = function(...args) { return assignApacheFlight(...args) }
 proto.handleApacheHelipadCommand = function(...args) { return recordDirectOrder(args[0], handleApacheHelipadCommand(this, ...args)) }
+proto.handleLandingSpotCommand = function(...args) { return recordDirectOrder(args[0], handleLandingSpotCommand(this, ...args)) }
 proto.handleRefineryUnloadCommand = function(...args) { return recordDirectOrder(args[0], handleRefineryUnloadCommand(this, ...args)) }
 proto.handleHarvesterCommand = function(...args) { return recordDirectOrder(args[0], handleHarvesterCommand(this, ...args)) }
 proto.handleRepairWorkshopCommand = function(...args) { return recordDirectOrder(args[0], handleRepairWorkshopCommand(this, ...args)) }
