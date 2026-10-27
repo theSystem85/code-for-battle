@@ -58,7 +58,10 @@ describe('air unit selection over pads', () => {
     gameState.altKeyDown = false
     gameState.shiftKeyDown = false
     selectionManager = new SelectionManager()
-    unitCommands = { handleApacheHelipadCommand: vi.fn() }
+    unitCommands = {
+      handleApacheHelipadCommand: vi.fn(),
+      handleLandingSpotCommand: vi.fn(() => true)
+    }
     handler = {
       wasDragging: false,
       forceAttackClick: false,
@@ -321,6 +324,7 @@ describe('air unit selection over pads', () => {
     clickUnit(parked, [flying, parked], selectedUnits)
 
     expect(unitCommands.handleApacheHelipadCommand).not.toHaveBeenCalled()
+    expect(unitCommands.handleLandingSpotCommand).not.toHaveBeenCalled()
     expect(selectedUnits).toEqual([parked])
     expect(parked.selected).toBe(true)
     expect(flying.selected).toBe(false)
@@ -329,7 +333,10 @@ describe('air unit selection over pads', () => {
     const landingSelection = [flying]
     flying.selected = true
     click(8 * TILE_SIZE + 28, 8 * TILE_SIZE + 28, [flying], landingSelection)
-    expect(unitCommands.handleApacheHelipadCommand).toHaveBeenCalledTimes(1)
+    expect(unitCommands.handleLandingSpotCommand).toHaveBeenCalledExactlyOnceWith(
+      [flying], expect.objectContaining({ structure: helipad, index: 0 }), [flying]
+    )
+    expect(unitCommands.handleApacheHelipadCommand).not.toHaveBeenCalled()
     expect(landingSelection).toEqual([flying])
     expect(helipad.selected).toBe(false)
   })
