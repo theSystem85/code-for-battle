@@ -83,6 +83,45 @@
 </head>
 
 <body class="production-buttons-loading game-loading">
+  <!-- Restore only an update-triggered handoff, before the loading screen can paint.
+       Consume it now so a manual reload always uses the normal loading screen. -->
+  <script>
+    try {
+      const raw = sessionStorage.getItem('cfb-update-frame')
+      sessionStorage.removeItem('cfb-update-frame')
+      const frame = JSON.parse(raw || 'null')
+      const navigation = performance.getEntriesByType('navigation')[0]
+      if (navigation?.type === 'reload') {
+        const clean = new URL(location.href)
+        clean.searchParams.delete('cfb-update')
+        history.replaceState(history.state, '', clean.href)
+      }
+      if (frame && Date.now() - frame.createdAt < 120000 && navigation?.type !== 'reload'
+        && new URL(location.href).searchParams.has('cfb-update')) {
+        const root = document.createElement('div')
+        root.id = 'gameUpdateFrame'
+        root.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:#182126;'
+        for (const layer of frame.layers) {
+          if (!layer.src.startsWith('data:image/webp')) continue
+          const image = document.createElement('img')
+          image.src = layer.src
+          image.alt = ''
+          image.style.position = 'absolute'
+          for (const [key, value] of Object.entries({ left: layer.x, top: layer.y, width: layer.width, height: layer.height })) {
+            if (Number.isFinite(value)) image.style[key] = `${value}px`
+          }
+          root.appendChild(image)
+        }
+        const label = document.createElement('div')
+        label.textContent = 'Paused · Applying update'
+        label.setAttribute('role', 'status')
+        label.style.cssText = 'position:absolute;top:20px;left:50%;transform:translateX(-50%);padding:12px 20px;background:#182126;color:white;font:18px sans-serif;border-radius:8px;'
+        root.appendChild(label)
+        document.body.appendChild(root)
+        window.__cfbUpdateHandoff = true
+      }
+    } catch { /* Storage is optional for ordinary loading. */ }
+  </script>
   <div id="loadingScreen" class="loading-screen" role="status" aria-live="off" aria-busy="true" aria-label="Loading Code for Battle" data-phase="boot">
     <div class="loading-screen__backdrop" aria-hidden="true">
       <picture>

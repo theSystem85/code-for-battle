@@ -1,7 +1,7 @@
 /* global self */
 import { APP_VERSION } from '../version.js'
-import { cleanupOutdatedCaches, createHandlerBoundToURL, precacheAndRoute } from 'workbox-precaching'
-import { registerRoute } from 'workbox-routing'
+import { cleanupOutdatedCaches, createHandlerBoundToURL, precache, getCacheKeyForURL, matchPrecache } from 'workbox-precaching'
+import { Route, Router } from 'workbox-routing'
 import { CacheFirst, NetworkFirst, NetworkOnly, StaleWhileRevalidate } from 'workbox-strategies'
 import { CacheableResponsePlugin } from 'workbox-cacheable-response'
 import { ExpirationPlugin } from 'workbox-expiration'
@@ -26,6 +26,32 @@ import {
   shouldBypassServiceWorkerCache
 } from './serviceWorkerCachePolicy.js'
 
+// Resolve a complete update snapshot per browsing client. Ordinary requests
+// continue through the same Workbox routes below.
+const router = new Router()
+const registerRoute = (match, handler) => router.registerRoute(new Route(match, handler))
+self.addEventListener('fetch', event => {
+  event.respondWith((async() => {
+    const request = event.request
+    const url = new URL(request.url)
+    const navigation = request.mode === 'navigate'
+    const client = !navigation && event.clientId ? await self.clients.get(event.clientId) : null
+    const commit = (navigation ? url : new URL(client?.url || self.location.origin)).searchParams.get('cfb-update')
+    if (url.origin === self.location.origin && request.method === 'GET'
+      && !isOfflineAssetFillRequest(request) && !shouldBypassServiceWorkerCache(url, request.method)
+      && commit && /^[a-f0-9]{7,40}$/.test(commit)) {
+      if (navigation && (request.cache === 'reload' || request.cache === 'no-cache')) {
+        url.searchParams.delete('cfb-update')
+        return Response.redirect(url.href)
+      }
+      const cache = await caches.open(`cfb-update-${commit}`)
+      const staged = await cache.match(url.pathname === '/' ? '/index.html' : url.pathname)
+      if (staged) return staged
+    }
+    return router.handleRequest({ request, event }) || fetch(request)
+  })())
+})
+
 // Injected by vite-plugin-pwa. Hashed revisions mean an update fetches only changed files.
 // This list is the boot shell only. Bulk assets are downloaded after activation.
 const PRECACHE_MANIFEST = self.__WB_MANIFEST
@@ -33,10 +59,11 @@ const PRECACHE_MANIFEST = self.__WB_MANIFEST
 // directoryIndex and cleanURLs would serve precached index.html for "/".
 // Leaving them off lets a navigation hit the network first, so a deploy
 // preview can still inject the Netlify Drawer. Offline falls back below.
-precacheAndRoute(PRECACHE_MANIFEST, {
-  directoryIndex: null,
-  cleanURLs: false
-})
+precache(PRECACHE_MANIFEST)
+registerRoute(
+  ({ url }) => Boolean(getCacheKeyForURL(url.href)),
+  ({ request }) => matchPrecache(request)
+)
 cleanupOutdatedCaches()
 
 const appShell = createHandlerBoundToURL('/index.html')
@@ -92,6 +119,13 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil((async() => {
     const names = await caches.keys()
+    const clients = await self.clients.matchAll({ includeUncontrolled: true, type: 'window' })
+    const protectedUpdates = new Set(clients.map(client => new URL(client.url).searchParams.get('cfb-update')))
+    // Keep the newest staged snapshot and snapshots still used by open tabs.
+    const updates = names.filter(name => name.startsWith('cfb-update-'))
+    const newestUpdate = updates[updates.length - 1]
+    await Promise.all(updates.filter(name => name !== newestUpdate
+      && !protectedUpdates.has(name.slice('cfb-update-'.length))).map(name => caches.delete(name)))
     await Promise.all(names
       .filter(name => name.startsWith('code-for-battle-cache-')
         || (name.startsWith('cfb-offline-assets-') && name !== OFFLINE_ASSETS_CACHE)

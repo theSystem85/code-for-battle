@@ -25,6 +25,7 @@ export function shouldBypassServiceWorkerCache(url, method = 'GET') {
   if (pathname.startsWith('/api/') || pathname.startsWith('/.netlify/')) return true
   if (pathname === OFFLINE_PROBE_PATH) return true
   // Polled by the dev live update (src/pwa/liveUpdate.js); must never be cached.
+  if (pathname === '/game-update-manifest.json') return true
   if (pathname === BUILD_INFO_PATH) return true
   if (VIDEO_EXTENSION.test(pathname)) return true
   return false

@@ -69,6 +69,7 @@ import { getRNGState } from './utils/gameRandom.js'
 import { deterministicRNG, initializeSessionRNG } from './network/deterministicRandom.js'
 import {
   flushGameStorageWrites,
+  verifyStoredItemPersisted,
   getStoredEntries,
   getStoredItem,
   hasStoredItem,
@@ -174,10 +175,15 @@ export function persistLastGameCheckpoint(reason = '') {
 export async function prepareForLiveUpdateReload() {
   const saved = canPersistLastGame()
   if (saved) {
-    saveLastGameCheckpoint('live update')
+    // Propagate serialization/storage errors so an update cannot discard the game.
+    saveGame(LAST_GAME_LABEL)
     markLastGameResumePending()
   }
   await flushGameStorageWrites()
+  if (saved && (!await verifyStoredItemPersisted(LAST_GAME_STORAGE_KEY)
+    || !await verifyStoredItemPersisted(LAST_GAME_RESUME_FLAG_KEY))) {
+    throw new Error('Could not persist the game for the update')
+  }
   return saved
 }
 
@@ -2011,11 +2017,11 @@ function loadGameFromSaveObject(saveObj, key) {
     productionQueue.restoreFromSerializableState(loaded.productionQueueState || null)
 
     // Auto-start the game after loading
-    gameState.gamePaused = false
+    gameState.gamePaused = Boolean(window.__cfbUpdateHandoff)
     gameState.gameStarted = true
 
     if (gameInstance && gameInstance.gameLoop && typeof gameInstance.gameLoop.resumeFromPause === 'function') {
-      gameInstance.gameLoop.resumeFromPause()
+      if (!gameState.gamePaused) gameInstance.gameLoop.resumeFromPause()
     }
 
     // Update pause button to show pause icon since game is now running

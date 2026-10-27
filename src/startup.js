@@ -44,6 +44,8 @@ async function start() {
 }
 
 start().catch(error => {
+  document.getElementById('gameUpdateFrame')?.remove()
+  window.__cfbUpdateHandoff = false
   updateLoadingScreen({ phase: 'error', detail: 'Startup failed. Reload the page to try again.', progress: null })
   console.error('Game startup failed', error)
 })

@@ -8,6 +8,7 @@
 //   boot path (maybeResumeLastPausedGame) restores the save.
 // Enabled only when the build sets __LIVE_UPDATE__ (dev branch deploy or
 // CFB_LIVE_UPDATE=1); production builds never start it. See AGENTS.md, Deployment.
+import { stageGameUpdate, clearUpdateFrame, prepareRunningGameUpdate, UPDATE_QUERY } from './updateHandoff.js'
 import { APP_VERSION } from '../version.js'
 import versionInfo from '../version.json' with { type: 'json' }
 import { GAME_STATE_SCHEMA_VERSION } from '../gameStateSchema.js'
@@ -122,32 +123,40 @@ export function updateVersionLabels(doc, info) {
 
 async function activateWaitingServiceWorker(win, timeoutMs = 8000) {
   const serviceWorker = win.navigator?.serviceWorker
-  if (!serviceWorker?.getRegistration) return
-  const registration = await serviceWorker.getRegistration().catch(() => null)
-  if (!registration) return
-  await Promise.race([registration.update().catch(() => {}), new Promise(resolve => setTimeout(resolve, timeoutMs))])
+  if (!serviceWorker?.getRegistration) throw new Error('Service worker unavailable')
+  const registration = await serviceWorker.getRegistration()
+  if (!registration) throw new Error('Service worker unavailable')
+  const bounded = promise => new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('Timed out preparing the update worker')), timeoutMs)
+    Promise.resolve(promise).then(resolve, reject).finally(() => clearTimeout(timer))
+  })
+  await bounded(registration.update())
   const installing = registration.installing
   if (installing) {
-    await new Promise(resolve => {
-      const timer = setTimeout(resolve, timeoutMs)
-      installing.addEventListener('statechange', () => {
+    await bounded(new Promise((resolve, reject) => {
+      const changed = () => {
         if (installing.state === 'installed' || installing.state === 'redundant') {
-          clearTimeout(timer)
-          resolve()
+          installing.removeEventListener('statechange', changed)
+          if (installing.state === 'installed') resolve()
+          else reject(new Error('Update worker installation failed'))
         }
-      })
-    })
+      }
+      installing.addEventListener('statechange', changed)
+      changed()
+    }))
   }
   const waiting = registration.waiting
   if (!waiting || !serviceWorker.controller) return
-  await new Promise(resolve => {
-    const timer = setTimeout(resolve, timeoutMs)
-    serviceWorker.addEventListener('controllerchange', () => {
-      clearTimeout(timer)
-      resolve()
-    }, { once: true })
-    waiting.postMessage({ type: 'SKIP_WAITING' })
-  })
+  let changed
+  try {
+    await bounded(new Promise(resolve => {
+      changed = resolve
+      serviceWorker.addEventListener('controllerchange', changed, { once: true })
+      waiting.postMessage({ type: 'SKIP_WAITING' })
+    }))
+  } finally {
+    serviceWorker.removeEventListener('controllerchange', changed)
+  }
 }
 
 function makeButton(doc, label, onClick, className) {
@@ -274,12 +283,18 @@ export function createLiveUpdater({
   getGameState = () => null,
   ui = createUpdateNoticeUi(doc),
   prepareReload = async() => {},
-  reload = () => win.location.reload(),
+  reload = info => {
+    const target = new URL(win.location.href)
+    target.searchParams.set(UPDATE_QUERY, info.commit)
+    win.location.assign(target.href)
+  },
+  stageUpdate = info => stageGameUpdate(info, { win, fetchImpl, onProgress: progress => ui.showDownloading?.(info, progress) }),
   activateServiceWorker = () => activateWaitingServiceWorker(win),
   running = { version: APP_VERSION, commit: versionInfo?.commit || 'unknown', releases: releaseEntries },
   runningSchema = GAME_STATE_SCHEMA_VERSION,
   swapScheduler = createLiveSwapScheduler()
 } = {}) {
+  let applying = false
   let baseline = null
   let busy = false
   let announcedBreaking = null
@@ -302,27 +317,48 @@ export function createLiveUpdater({
 
   // Runs only after the player chose "Reload now" / "Load".
   async function applyBreakingUpdate(info = pendingBreaking) {
+    if (applying) return 'busy'
     if (!info) return 'none'
     if (isMultiplayerActive(getGameState())) return 'deferred'
     let attempt = null
     try { attempt = win.sessionStorage?.getItem(LIVE_UPDATE_ATTEMPT_KEY) } catch { /* optional */ }
     // A reload for this commit already happened and the old code came back: stop.
     if (attempt === info.commit) return 'stuck'
-    await prepareReload()
-    await activateServiceWorker()
+    applying = true
+    const state = getGameState()
+    const wasPaused = state?.gamePaused
     try {
-      win.sessionStorage?.setItem(LIVE_UPDATE_ATTEMPT_KEY, info.commit)
-      win.sessionStorage?.setItem(LIVE_UPDATE_APPLIED_KEY, JSON.stringify({
-        version: info.version,
-        commit: info.commit,
-        previousVersion: baseline?.version || running.version,
-        previousReleases: baseline?.releases || running.releases || []
-      }))
-      // The new worker is already active; the startup check must not reload again.
-      win.sessionStorage?.setItem(UPDATE_RELOAD_GUARD, '1')
-    } catch { /* optional */ }
-    reload()
-    return 'reload'
+      await stageUpdate(info)
+      // A peer may have joined while files were downloading.
+      if (isMultiplayerActive(getGameState())) {
+        ui.showDeferred?.(info, 'breaking')
+        return 'deferred'
+      }
+      await activateServiceWorker()
+      if (state?.gameStarted && !state.gameOver) state.gamePaused = true
+      await prepareReload()
+
+      try {
+        win.sessionStorage?.setItem(LIVE_UPDATE_ATTEMPT_KEY, info.commit)
+        win.sessionStorage?.setItem(LIVE_UPDATE_APPLIED_KEY, JSON.stringify({
+          version: info.version,
+          commit: info.commit,
+          previousVersion: baseline?.version || running.version,
+          previousReleases: baseline?.releases || running.releases || []
+        }))
+        // The new worker is already active; the startup check must not reload again.
+        win.sessionStorage?.setItem(UPDATE_RELOAD_GUARD, '1')
+      } catch { /* optional */ }
+      reload(info)
+      return 'reload'
+    } catch (error) {
+      if (state) state.gamePaused = wasPaused
+      clearUpdateFrame({ win, doc })
+      ui.showError?.(info, error, () => { void applyBreakingUpdate(info) })
+      return 'failed'
+    } finally {
+      applying = false
+    }
   }
 
   function announceBreaking(info) {
@@ -430,7 +466,7 @@ export async function startLiveUpdate({ intervalMs = LIVE_UPDATE_INTERVAL_MS } =
   const updater = createLiveUpdater({
     getGameState: () => gameState,
     ui,
-    prepareReload: () => prepareForLiveUpdateReload()
+    prepareReload: prepareRunningGameUpdate
   })
   setActiveLiveSwapScheduler(updater.swapScheduler)
   void updater.check()

@@ -49,7 +49,7 @@ describe('available update notification', () => {
   })
 
   for (const target of ['sidebar', 'notification', 'history']) {
-    it(`[U03196] applies the waiting worker and reloads once from the ${target} action`, async() => {
+    it(`[U03196] starts one background battle update from the ${target} action`, async() => {
       vi.resetModules()
       vi.stubEnv('PROD', true)
       vi.useFakeTimers()
@@ -75,7 +75,10 @@ describe('available update notification', () => {
         removeEventListener: events.removeEventListener.bind(events)
       }
       const { startOfflineMode } = await import('../../src/pwa/offlineController.js')
-      controller = startOfflineMode({ window: win, fetchImpl: async() => ({ ok: false }) })
+      let completeUpdate
+      const pendingUpdate = new Promise(resolve => { completeUpdate = resolve })
+      const applyGameUpdate = vi.fn(() => pendingUpdate)
+      controller = startOfflineMode({ window: win, fetchImpl: async() => ({ ok: false }), applyGameUpdate })
       await vi.waitFor(() => expect(document.getElementById('offlineUpdatePrompt').hidden).toBe(false))
       registration.dispatchEvent(new Event('updatefound'))
       await controller.refreshProbe()
@@ -94,12 +97,13 @@ describe('available update notification', () => {
       }
       action.click()
       action.click()
-      expect(worker.postMessage).toHaveBeenCalledExactlyOnceWith({ type: 'SKIP_WAITING' })
+      expect(applyGameUpdate).toHaveBeenCalledOnce()
+      expect(worker.postMessage).not.toHaveBeenCalled()
       expect(reload).not.toHaveBeenCalled()
-      serviceWorker.dispatchEvent(new Event('controllerchange'))
-      serviceWorker.dispatchEvent(new Event('controllerchange'))
-      expect(reload).toHaveBeenCalledOnce()
-      expect(document.getElementById('offlineUpdatePrompt').hidden).toBe(true)
+      completeUpdate()
+      await vi.advanceTimersByTimeAsync(0)
+      expect(reload).not.toHaveBeenCalled()
+      expect(document.getElementById('offlineUpdatePrompt').hidden).toBe(false)
     })
   }
 })
