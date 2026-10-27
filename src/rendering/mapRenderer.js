@@ -864,6 +864,7 @@ export class MapRenderer {
         containsAnimatedWaterSot: false,
         containsWaterAnimation: false,
         everRendered: false,
+        contextLost: false,
         lastUsedAt: 0,
         residentBytes: 0,
         residentToken: null,
@@ -871,6 +872,17 @@ export class MapRenderer {
         offsetX: startX * TILE_SIZE - this.chunkPadding,
         offsetY: startY * TILE_SIZE - this.chunkPadding
       }
+      // Restored 2D contexts have empty backing stores, even when revisions
+      // and canvas dimensions still match the previously prepared terrain.
+      canvas?.addEventListener?.('contextlost', () => {
+        chunk.contextLost = true
+        chunk.everRendered = false
+      })
+      canvas?.addEventListener?.('contextrestored', () => {
+        chunk.contextLost = false
+        chunk.everRendered = false
+        chunk.ctx = canvas.getContext('2d')
+      })
       this.chunkCache.set(key, chunk)
     } else {
       chunk.startX = startX
@@ -911,6 +923,7 @@ export class MapRenderer {
   }
 
   releaseChunkResources(chunk) {
+    chunk.everRendered = false
     this.pageDependencies.removePage(chunk.key)
     this.decorativePageDependencies.removePage(chunk.key)
     chunk.residentToken?.release()
@@ -1429,7 +1442,10 @@ export class MapRenderer {
   }
 
   updateChunkCache(chunk, mapGrid, useTexture, currentWaterFrame, options = {}) {
-    if (!chunk.canvas || !chunk.ctx) return
+    if (!chunk.canvas || !chunk.ctx || chunk.contextLost || chunk.ctx.isContextLost?.()) {
+      chunk.everRendered = false
+      return false
+    }
     const {
       skipWaterBase = false,
       skipWaterSot = false,
@@ -1689,6 +1705,12 @@ export class MapRenderer {
     const endChunkY = Math.ceil(endTileY / this.chunkSize)
     const activeChunkKeys = this.activeChunkKeys
     activeChunkKeys.clear()
+    // Pin the entire viewport before any allocation can evict a cached page.
+    for (let y = startChunkY; y < endChunkY && y * this.chunkSize < mapHeight; y++) {
+      for (let x = startChunkX; x < endChunkX && x * this.chunkSize < mapWidth; x++) {
+        activeChunkKeys.add(this.getChunkKey(x, y))
+      }
+    }
     const chunkOptions = this.chunkOptions
     chunkOptions.skipWaterBase = skipWaterBase
     chunkOptions.skipWaterSot = skipWaterSot
@@ -1722,10 +1744,10 @@ export class MapRenderer {
         const chunkEndX = Math.min(mapWidth, chunkStartX + this.chunkSize)
 
         const chunk = this.getOrCreateChunk(chunkX, chunkY, chunkStartX, chunkStartY, chunkEndX, chunkEndY)
-        activeChunkKeys.add(chunk.key)
         this.chunkWarmQueue.delete(chunk.key)
 
-        if (!chunk.canvas || !chunk.ctx) {
+        if (!chunk.canvas || !chunk.ctx || chunk.contextLost || chunk.ctx.isContextLost?.()) {
+          chunk.everRendered = false
           this.frameChunkStats.directTilePasses++
           this.drawBaseLayer(
             ctx,

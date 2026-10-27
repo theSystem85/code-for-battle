@@ -1,4 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { TILE_SIZE } from '../../src/config.js'
+import { createTerrainByteBudget, getTerrainRasterBytes } from '../../src/rendering/prepared/terrainCacheState.js'
 import { MapRenderer } from '../../src/rendering/mapRenderer.js'
 import { RENDER_REVISION_DOMAINS } from '../../src/rendering/prepared/renderRevisionStore.js'
 
@@ -79,7 +81,13 @@ function installTraceCanvases() {
   const originalCreateElement = document.createElement.bind(document)
   return vi.spyOn(document, 'createElement').mockImplementation((tagName, options) => {
     if (String(tagName).toLowerCase() !== 'canvas') return originalCreateElement(tagName, options)
-    const canvas = { width: 300, height: 150 }
+    const events = new globalThis.EventTarget()
+    const canvas = {
+      width: 300,
+      height: 150,
+      addEventListener: events.addEventListener.bind(events),
+      dispatchEvent: events.dispatchEvent.bind(events)
+    }
     const context = makeTraceContext(canvas)
     canvas.getContext = () => context
     return canvas
@@ -273,4 +281,73 @@ describe('MapRenderer revisioned terrain cache', () => {
     expect(chunk.decorativeCanvas).not.toEqual({ id: 'published' })
     expect(chunk.decorativeReadyAt).toBe(1234)
   })
+
+  it('[U07003] rebuilds a previously loaded terrain page after its context is restored', () => {
+    installTraceCanvases()
+    const renderer = new MapRenderer(makeTextureManager())
+    const mapGrid = makeMap(16, 16)
+    const render = () => renderer.renderTiles(makeOutputContext(), mapGrid, { x: 0, y: 0 }, 0, 0, 16, 16, {}, {})
+    render()
+    const chunk = renderer.chunkCache.get('0,0')
+    const originalRaster = [...chunk.ctx.operations]
+    chunk.ctx.operations.length = 0
+    chunk.canvas.dispatchEvent(new Event('contextlost'))
+    expect(chunk.contextLost).toBe(true)
+    expect(chunk.everRendered).toBe(false)
+    chunk.canvas.dispatchEvent(new Event('contextrestored'))
+    renderer.resetFrameChunkStats()
+    render()
+
+    expect(chunk.contextLost).toBe(false)
+    expect(chunk.ctx.operations).toEqual(originalRaster)
+    expect(chunk.everRendered).toBe(true)
+    expect(renderer.frameChunkStats.chunkMisses).toBe(1)
+    expect(renderer.frameChunkStats.chunkHits).toBe(0)
+  })
+
+  it.each(['event', 'poll'])('[U07004] draws full terrain directly while a cached context is lost (%s)', (lossSignal) => {
+    installTraceCanvases()
+    const renderer = new MapRenderer(makeTextureManager())
+    const mapGrid = makeMap(16, 16)
+    const output = makeOutputContext()
+    renderer.renderTiles(output, mapGrid, { x: 0, y: 0 }, 0, 0, 16, 16, {}, {})
+    const chunk = renderer.chunkCache.get('0,0')
+    if (lossSignal === 'event') chunk.canvas.dispatchEvent(new Event('contextlost'))
+    else chunk.ctx.isContextLost = () => true
+    const drawBase = vi.spyOn(renderer, 'drawBaseLayer').mockImplementation(() => {})
+    output.drawImage.mockClear()
+    renderer.renderTiles(output, mapGrid, { x: 0, y: 0 }, 0, 0, 16, 16, {}, {})
+
+    expect(output.drawImage).not.toHaveBeenCalled()
+    expect(drawBase).toHaveBeenCalledWith(output, mapGrid, 0, 0, 16, 16, 0, 0, false, null, renderer.chunkOptions)
+    expect(chunk.everRendered).toBe(false)
+    expect(renderer.updateChunkCache(chunk, mapGrid, false, null)).toBe(false)
+    chunk.ctx.isContextLost = () => false
+    chunk.canvas.dispatchEvent(new Event('contextrestored'))
+    drawBase.mockRestore()
+    renderer.renderTiles(output, mapGrid, { x: 0, y: 0 }, 0, 0, 16, 16, {}, {})
+    expect(chunk.everRendered).toBe(true)
+    expect(output.drawImage).toHaveBeenCalled()
+  })
+
+  it('[U07005] pins cached pages ahead of the camera before allocating newly visible terrain', () => {
+    installTraceCanvases()
+    const renderer = new MapRenderer(makeTextureManager())
+    const mapGrid = makeMap(48, 16)
+    const render = (start, end) => renderer.renderTiles(makeOutputContext(), mapGrid, { x: start * TILE_SIZE, y: 0 }, start, 0, end, 16, {}, {})
+    const bytes = getTerrainRasterBytes(renderer.chunkSize * TILE_SIZE + renderer.chunkPadding * 2 + 1, renderer.chunkSize * TILE_SIZE + renderer.chunkPadding * 2 + 1)
+    renderer.terrainByteBudget = createTerrainByteBudget({ residentBytes: bytes * 2, stagingBytes: bytes })
+    render(16, 48)
+    const visibleAhead = renderer.chunkCache.get('1,0')
+    const offscreen = renderer.chunkCache.get('2,0')
+    renderer.maxCachedChunks = 2
+    render(0, 32)
+
+    expect(renderer.chunkCache.get('1,0')).toBe(visibleAhead)
+    expect(visibleAhead.everRendered).toBe(true)
+    expect(renderer.chunkCache.has(offscreen.key)).toBe(false)
+    expect(offscreen.everRendered).toBe(false)
+    expect(renderer.chunkCache.get('0,0').everRendered).toBe(true)
+  })
+
 })
