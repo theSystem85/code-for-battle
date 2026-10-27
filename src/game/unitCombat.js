@@ -5,7 +5,10 @@ import { handleTeslaEffects, processAttackQueue, updateGuardTargeting } from './
 import { updateTankCombat, updateTankV2Combat, updateTankV3Combat, updateRocketTankCombat } from './unitCombat/tankCombat.js'
 import { updateApacheCombat, updateF35Combat } from './unitCombat/apacheCombat.js'
 import { updateHowitzerCombat } from './unitCombat/howitzerCombat.js'
+import { updateDestroyerAirDefence, isAirDefenceTarget } from './unitCombat/destroyerCombat.js'
 import { rebuildOwnerUnitIndex } from './unitOwnerIndex.js'
+
+const airborneTargets = []
 
 /**
  * Clean up attack group targets that have been destroyed
@@ -24,6 +27,12 @@ export function cleanupAttackGroupTargets() {
 export const updateUnitCombat = logPerformance(function updateUnitCombat(units, bullets, mapGrid, gameState, now) {
   rebuildOwnerUnitIndex(units)
   const occupancyMap = gameState.occupancyMap
+
+  // One shared list per combat pass; never scan all units per destroyer.
+  airborneTargets.length = 0
+  for (const candidate of units) {
+    if (isAirDefenceTarget(candidate)) airborneTargets.push(candidate)
+  }
 
   units.forEach(unit => {
     if (!unit || unit.health <= 0) return
@@ -56,6 +65,9 @@ export const updateUnitCombat = logPerformance(function updateUnitCombat(units, 
     } else if (unit.type === 'f35') {
       updateF35Combat(unit, units, bullets, mapGrid, now, occupancyMap)
     } else if (unit.type === 'destroyer') {
+      updateDestroyerAirDefence(unit, airborneTargets, bullets, now)
+      // Air targets belong to the independent missile battery, not the cannon.
+      if (isAirDefenceTarget(unit.target)) unit.target = null
       updateTankCombat(unit, units, bullets, mapGrid, now, occupancyMap)
     } else if (unit.type === 'howitzer') {
       updateHowitzerCombat(unit, units, bullets, mapGrid, now, occupancyMap)
