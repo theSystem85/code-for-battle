@@ -1,3 +1,4 @@
+import { matchStagedUpdate } from './stagedUpdateRequest.js'
 /* global self */
 import { APP_VERSION } from '../version.js'
 import { cleanupOutdatedCaches, createHandlerBoundToURL, precache, getCacheKeyForURL, matchPrecache } from 'workbox-precaching'
@@ -33,21 +34,10 @@ const registerRoute = (match, handler) => router.registerRoute(new Route(match, 
 self.addEventListener('fetch', event => {
   event.respondWith((async() => {
     const request = event.request
-    const url = new URL(request.url)
-    const navigation = request.mode === 'navigate'
-    const client = !navigation && event.clientId ? await self.clients.get(event.clientId) : null
-    const commit = (navigation ? url : new URL(client?.url || self.location.origin)).searchParams.get('cfb-update')
-    if (url.origin === self.location.origin && request.method === 'GET'
-      && !isOfflineAssetFillRequest(request) && !shouldBypassServiceWorkerCache(url, request.method)
-      && commit && /^[a-f0-9]{7,40}$/.test(commit)) {
-      if (navigation && (request.cache === 'reload' || request.cache === 'no-cache')) {
-        url.searchParams.delete('cfb-update')
-        return Response.redirect(url.href)
-      }
-      const cache = await caches.open(`cfb-update-${commit}`)
-      const staged = await cache.match(url.pathname === '/' ? '/index.html' : url.pathname)
-      if (staged) return staged
-    }
+    const staged = await matchStagedUpdate(request, {
+      clientId: event.clientId, clients: self.clients, cacheStorage: caches, origin: self.location.origin
+    })
+    if (staged) return staged
     return router.handleRequest({ request, event }) || fetch(request)
   })())
 })

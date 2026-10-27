@@ -20,6 +20,7 @@ describe('background game update handoff', () => {
     const pending = updater.applyBreakingUpdate(info)
     expect(state.gamePaused).toBe(false)
     expect(saved).not.toHaveBeenCalled()
+    expect(await updater.check()).toBe('busy')
     expect(await updater.applyBreakingUpdate(info)).toBe('busy')
     finishDownload()
     expect(await pending).toBe('reload')
@@ -76,7 +77,7 @@ describe('background game update handoff', () => {
 })
 
 describe('seamless update opt-in and feedback', () => {
-  it('[U07003] defaults to an ordinary saved reload without staging experimental assets', async() => {
+  it('[U07014] defaults to an ordinary saved reload without staging experimental assets', async() => {
     const { setSeamlessUpdateEnabled, isSeamlessUpdateEnabled } = await import('../../src/pwa/seamlessUpdateSettings.js')
     setSeamlessUpdateEnabled(false)
     expect(isSeamlessUpdateEnabled()).toBe(false)
@@ -94,7 +95,7 @@ describe('seamless update opt-in and feedback', () => {
     setSeamlessUpdateEnabled(false)
   })
 
-  it('[U07004] hides the update actions immediately and reports download progress in a top bar', async() => {
+  it('[U07015] hides the update actions immediately and reports download progress in a top bar', async() => {
     const { createUpdateNoticeUi } = await import('../../src/pwa/liveUpdate.js')
     document.body.innerHTML = '<div id="sidebarFooterVersion"></div>'
     const ui = createUpdateNoticeUi(document)

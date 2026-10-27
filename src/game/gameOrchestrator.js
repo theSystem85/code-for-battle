@@ -1,3 +1,4 @@
+import { showUpdateRecovery } from '../pwa/updateRecovery.js'
 import { preloadRemainingPreparedSprites } from '../rendering/prepared/preparedSpritePipeline.js'
 import { clearPathCache } from './pathCache.js'
 import { clearFlowFields } from './flowField.js'
@@ -32,7 +33,7 @@ import { initAiPartySync } from '../network/aiPartySync.js'
 import { setProductionControllerRef } from '../network/gameCommandSync.js'
 import { initFactories } from '../factories.js'
 import { initializeGameAssets, generateMap as generateMapFromSetup, cleanupOreFromBuildings } from '../gameSetup.js'
-import { initSaveGameSystem, initLastGameRecovery, maybeResumeLastPausedGame, persistLastGameCheckpoint } from '../saveGame.js'
+import { initSaveGameSystem, initLastGameRecovery, maybeResumeLastPausedGame, finishLiveUpdateRecovery, persistLastGameCheckpoint } from '../saveGame.js'
 import { initReplaySystem } from '../replaySystem.js'
 import { showNotification } from '../ui/notifications.js'
 import { resetAttackDirections } from '../ai/enemyStrategies.js'
@@ -753,6 +754,7 @@ class Game {
       if (window.__cfbUpdateHandoff) {
         // The restored battle has rendered while paused; reveal it and resume
         // only after boot has prepared its assets and GPU resources.
+        finishLiveUpdateRecovery()
         window.__cfbUpdateHandoff = false
         document.getElementById('gameUpdateFrame')?.remove()
         gameState.gamePaused = false
@@ -766,8 +768,7 @@ class Game {
       }).catch(error => window.logger?.warn?.('Story intro unavailable', error))
       this.setupDeferredStartupTasks()
     } catch (error) {
-      document.getElementById('gameUpdateFrame')?.remove()
-      window.__cfbUpdateHandoff = false
+      if (!showUpdateRecovery(error)) window.__cfbUpdateHandoff = false
       stopBootProgressPaint()
       updateLoadingScreen({
         phase: 'error',
