@@ -735,6 +735,31 @@ body.is-touch .money-tooltip__meta {
   border-top: 1px solid #444;
 }
 
+.sidebar-release-notes {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  margin: 10px 0 2px;
+  padding: 8px 10px;
+  border: 1px solid rgba(113, 226, 160, 0.45);
+  border-radius: 8px;
+  color: #dfffea;
+  background: linear-gradient(135deg, rgba(24, 93, 62, 0.72), rgba(12, 48, 52, 0.82));
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.sidebar-release-notes:hover,
+.sidebar-release-notes:focus-visible {
+  border-color: #78efaa;
+  background: linear-gradient(135deg, rgba(35, 126, 82, 0.9), rgba(15, 67, 70, 0.95));
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(120, 239, 170, 0.18);
+}
+
 /* Expanded left sidebar spacing. Scoped so the collapsed rail, portrait HUD,
    right-side overlays, and settings modal keep their own layout. */
 .sprite-sheet-editor__sidebar.expanded-left-sidebar #sidebarScroll,

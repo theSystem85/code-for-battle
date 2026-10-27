@@ -64,11 +64,11 @@ export function getHighlightIndex(elapsed, duration, count) {
 }
 
 // Both surfaces use this component. Compact mode shows one line at a time.
-export function createReleaseDigest(digest, { compact = false } = {}) {
+export function createReleaseDigest(digest, { compact = false, headingText = '' } = {}) {
   const root = document.createElement('section')
   root.className = compact ? 'release-digest release-digest--compact' : 'release-digest'
   const heading = document.createElement('h3')
-  heading.textContent = digest.fromVersion ? `Update v${digest.fromVersion} → v${digest.toVersion}` : `What’s new through v${digest.toVersion}`
+  heading.textContent = headingText || (digest.fromVersion ? `Update v${digest.fromVersion} → v${digest.toVersion}` : `What’s new through v${digest.toVersion}`)
   root.appendChild(heading)
   const summary = document.createElement('p')
   summary.textContent = `${digest.features.length} new features · ${digest.improvements.length} improvements · ${digest.bugfixes.length} bugfixes`
