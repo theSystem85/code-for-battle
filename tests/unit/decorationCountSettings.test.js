@@ -11,6 +11,7 @@ import {
 import { bindDecorationCountInputs } from '../../src/ui/decorationCountSync.js'
 
 const sheet = { sheetPath: 'a.webp', metadata: { tiles: { '0,0': { tags: ['decorative', 'grass'] } } } }
+const soilDecorSheet = JSON.parse(readFileSync('public/images/map/sprite_sheets/dtv6_decor_soil.json', 'utf8'))
 
 function grid(size, paint) {
   return Array.from({ length: size }, (_, y) => Array.from({ length: size }, (_, x) => paint ? paint(x, y) : ({ type: 'land', biome: 'grass' })))
@@ -121,5 +122,20 @@ describe('decoration count settings', () => {
     const treesAndShrubs = placed.filter(cell => isSingleTreeSprite(cell.group) || isWoodSprite(cell.group) || isOtherVegetationSprite(cell.group))
     const mean = treesAndShrubs.reduce((sum, cell) => sum + shoreDistance(cell), 0) / treesAndShrubs.length
     expect(mean).toBeLessThan(18)
+  })
+
+  it('[U06571] routes the soil muddy pond through the lake budget', () => {
+    const pondTags = soilDecorSheet.propLayout.find(prop => prop.id === 'soil_muddy_pond').tags
+    const pond = sprite('soil_muddy_pond', pondTags, 3, 2)
+    const pools = buildDecorationPools([pond])
+    const settings = {
+      salt: 17, citySeeds: 0, ruinSeeds: 0, stoneCount: 0, woodClusterCount: 0,
+      singleTreeCount: 0, woodsCount: 0, otherVegetationCount: 0, groundDetailCount: 0
+    }
+
+    expect([...pond.tagSet]).toEqual(expect.arrayContaining(['water', 'lake', 'impassable']))
+    expect(isLakeSprite(pond)).toBe(true)
+    expect(anchors(buildDecorationLayout(grid(24, () => ({ type: 'land', biome: 'soil' })), pools, { ...settings, lakeCount: 0, placementRules: true }))).toHaveLength(0)
+    expect(anchors(buildDecorationLayout(grid(24, () => ({ type: 'land', biome: 'soil' })), pools, { ...settings, lakeCount: 1, placementRules: true }))).toHaveLength(1)
   })
 })

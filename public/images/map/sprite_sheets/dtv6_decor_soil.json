@@ -15,6 +15,7 @@
     "landmark",
     "trees",
     "water",
+    "lake",
     "farm",
     "passable",
     "roadside",
@@ -293,6 +294,7 @@
         "soil",
         "decorative",
         "water",
+        "lake",
         "impassable",
         "group_4"
       ],
@@ -310,6 +312,7 @@
         "soil",
         "decorative",
         "water",
+        "lake",
         "impassable",
         "group_4"
       ],
@@ -327,6 +330,7 @@
         "soil",
         "decorative",
         "water",
+        "lake",
         "impassable",
         "group_4"
       ],
@@ -344,6 +348,7 @@
         "soil",
         "decorative",
         "water",
+        "lake",
         "impassable",
         "group_4"
       ],
@@ -361,6 +366,7 @@
         "soil",
         "decorative",
         "water",
+        "lake",
         "impassable",
         "group_4"
       ],
@@ -378,6 +384,7 @@
         "soil",
         "decorative",
         "water",
+        "lake",
         "impassable",
         "group_4"
       ],
@@ -1128,6 +1135,7 @@
         "soil",
         "decorative",
         "water",
+        "lake",
         "impassable",
         "group_4"
       ],
@@ -1722,6 +1730,7 @@
           "soil",
           "decorative",
           "water",
+          "lake",
           "impassable",
           "group_4"
         ],
@@ -2911,6 +2920,7 @@
         "soil",
         "decorative",
         "water",
+        "lake",
         "impassable",
         "group_4"
       ]
@@ -2932,6 +2942,7 @@
         "soil",
         "decorative",
         "water",
+        "lake",
         "impassable",
         "group_4"
       ]
@@ -2953,6 +2964,7 @@
         "soil",
         "decorative",
         "water",
+        "lake",
         "impassable",
         "group_4"
       ]
@@ -2974,6 +2986,7 @@
         "soil",
         "decorative",
         "water",
+        "lake",
         "impassable",
         "group_4"
       ]
@@ -2995,6 +3008,7 @@
         "soil",
         "decorative",
         "water",
+        "lake",
         "impassable",
         "group_4"
       ]
@@ -3016,6 +3030,7 @@
         "soil",
         "decorative",
         "water",
+        "lake",
         "impassable",
         "group_4"
       ]
@@ -3928,6 +3943,7 @@
         "soil",
         "decorative",
         "water",
+        "lake",
         "impassable",
         "group_4"
       ]
