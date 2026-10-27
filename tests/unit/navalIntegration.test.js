@@ -10,7 +10,7 @@ import {
   DESTROYER_HULL_LENGTH_RATIO,
   SHIP_BOW_WAKE_FORWARD_OFFSET
 } from '../../src/utils/navalUtils.js'
-import { TILE_SIZE } from '../../src/config.js'
+import { TILE_SIZE, UNIT_PROPERTIES } from '../../src/config.js'
 import { updateShipyardServiceLogic } from '../../src/game/shipyardServiceLogic.js'
 import { BOW_WAKE_INNER_ANGLE_RADIANS } from '../../src/rendering/effectsRenderer.js'
 
@@ -21,6 +21,27 @@ function createMap(width, height, type = 'land') {
 }
 
 describe('naval integration', () => {
+  it.each([true, false])('[U07018] services ships within the expanded radius and excludes ships just outside it (configured: %s)', configured => {
+    const supplier = {
+      id: 'supplier', type: 'supplyShip', owner: 'player1', isNaval: true,
+      x: 5 * TILE_SIZE, y: 5 * TILE_SIZE, health: 260, supplyFuel: 3000,
+      ...(configured ? { supplyRadiusTiles: UNIT_PROPERTIES.supplyShip.supplyRadiusTiles } : {})
+    }
+    const createTarget = (id, distance) => ({
+      id, type: 'destroyer', owner: 'player1', isNaval: true,
+      x: supplier.x + distance * TILE_SIZE, y: supplier.y,
+      health: 250, gas: 0, maxGas: 1000
+    })
+    const inside = createTarget('inside', 2.65)
+    const outside = createTarget('outside', 2.67)
+    const buildings = [{ type: 'gasStation', owner: 'player1', health: 100 }]
+
+    updateShipyardServiceLogic([supplier, inside, outside], buildings, createMap(20, 20, 'water'), 1000)
+
+    expect(inside.gas).toBeGreaterThan(0)
+    expect(outside.gas).toBe(0)
+  })
+
   it.each(['aircraftCarrier', 'battleship', 'hovercraft'])('[U05482] keeps %s movement and removal out of the land occupancy map', type => {
     const mapGrid = createMap(30, 30, 'water')
     const unit = {

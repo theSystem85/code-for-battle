@@ -195,8 +195,8 @@ function updateAISupplyShip(unit, units, gameState, mapGrid, now, aiPlayerId, sh
     unit.moveTarget = null
     return
   }
-  const tileDistance = Math.max(Math.abs(unit.tileX - serviceTarget.tileX), Math.abs(unit.tileY - serviceTarget.tileY))
-  if (tileDistance <= (unit.supplyRadiusTiles || 2)) {
+  const tileDistance = Math.max(Math.abs(unit.x - serviceTarget.x), Math.abs(unit.y - serviceTarget.y)) / TILE_SIZE
+  if (tileDistance <= (unit.supplyRadiusTiles || 2.66)) {
     unit.path = []
     unit.moveTarget = null
     return
@@ -268,8 +268,8 @@ export function updateNavalAIUnit(unit, units, gameState, mapGrid, now, aiPlayer
         unit.returningToShipyard = true
         unit.path = []
       } else {
-        const distance = Math.max(Math.abs(unit.tileX - supplier.tileX), Math.abs(unit.tileY - supplier.tileY))
-        if (distance <= (supplier.supplyRadiusTiles || 2)) {
+        const distance = Math.max(Math.abs(unit.x - supplier.x), Math.abs(unit.y - supplier.y)) / TILE_SIZE
+        if (distance <= (supplier.supplyRadiusTiles || 2.66)) {
           unit.path = []
           unit.moveTarget = null
           return
