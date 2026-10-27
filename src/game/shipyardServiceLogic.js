@@ -8,7 +8,7 @@ import {
 const HEALTH_REFILL_TIME = 10000
 const CREW_REFILL_INTERVAL = 10000
 const CREW_REFILL_ORDER = ['driver', 'commander', 'loader', 'gunner']
-const SUPPLY_SHIP_RADIUS_TILES = 2
+const SUPPLY_SHIP_RADIUS_TILES = 2.66
 const SUPPLY_SHIP_SERVICE_REQUIREMENTS = Object.freeze({
   fuel: 'gasStation',
   ammunition: 'ammunitionFactory',
@@ -87,21 +87,12 @@ function hasOwnedServiceBuilding(buildings, owner, service) {
   )
 }
 
-function getUnitTile(unit) {
-  return {
-    x: Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE),
-    y: Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
-  }
-}
-
 function isInSupplyShipRadius(target, supplier) {
   if (!target?.isNaval || !supplier?.isNaval || target === supplier) return false
   if (target.health <= 0 || supplier.health <= 0) return false
   if (normalizeOwner(target.owner) !== normalizeOwner(supplier.owner)) return false
-  const targetTile = getUnitTile(target)
-  const supplierTile = getUnitTile(supplier)
   const radius = supplier.supplyRadiusTiles || SUPPLY_SHIP_RADIUS_TILES
-  return Math.max(Math.abs(targetTile.x - supplierTile.x), Math.abs(targetTile.y - supplierTile.y)) <= radius
+  return Math.max(Math.abs(target.x - supplier.x), Math.abs(target.y - supplier.y)) <= radius * TILE_SIZE
 }
 
 function refillSupplyShipCargo(unit, delta, buildings, mapGrid) {

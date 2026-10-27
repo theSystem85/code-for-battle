@@ -907,7 +907,7 @@ export class UnitRenderer {
     if (!unit?.selected) return
 
     const rangeInTiles = unit.type === 'supplyShip'
-      ? (unit.supplyRadiusTiles || 2)
+      ? (unit.supplyRadiusTiles || 2.66)
       : (unit?.isUtilityUnit ? SERVICE_SERVING_RANGE : undefined)
     if (!rangeInTiles) return
 

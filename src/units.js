@@ -1175,7 +1175,7 @@ export function createUnit(factory, unitType, x, y, options = {}) {
     unit.maxSupplyAmmo = unitProps.maxSupplyAmmo || 120
     unit.supplyRepairTools = unitProps.maxSupplyRepairTools || 260
     unit.maxSupplyRepairTools = unitProps.maxSupplyRepairTools || 260
-    unit.supplyRadiusTiles = unitProps.supplyRadiusTiles || 2
+    unit.supplyRadiusTiles = unitProps.supplyRadiusTiles || 2.66
   }
 
   if (actualType === 'hovercraft' || actualType === 'vehicleFerry') {
