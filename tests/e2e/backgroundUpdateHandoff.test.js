@@ -9,8 +9,10 @@ test('[E00238] downloads while playing, preserves the paused battlefield across 
       import('/src/pwa/liveUpdate.js'), import('/src/pwa/updateHandoff.js')
     ])
     const download = new Promise(resolve => { window.__finishUpdateDownload = resolve })
+    const { setSeamlessUpdateEnabled } = await import('/src/pwa/seamlessUpdateSettings.js')
+    setSeamlessUpdateEnabled(true)
     window.__updateSaved = false
-    window.__updater = createLiveUpdater({
+    window.__updater = createLiveUpdater({ seamlessEnabled: () => true,
       getGameState: () => window.gameState,
       stageUpdate: () => download,
       activateServiceWorker: async() => {},

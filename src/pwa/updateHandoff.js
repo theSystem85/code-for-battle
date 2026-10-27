@@ -1,3 +1,4 @@
+import { isSeamlessUpdateEnabled } from './seamlessUpdateSettings.js'
 import { downloadOfflineAssets, readCachedAsset } from './offlineAssetDownload.js'
 import { OFFLINE_ASSET_FILL_HEADER } from './offlineAssetPlan.js'
 
@@ -85,7 +86,7 @@ export async function prepareRunningGameUpdate() {
   ])
   const saved = await prepareForLiveUpdateReload()
   if (gameState.gameStarted && !gameState.gameOver && !saved) throw new Error('Could not save the running game')
-  if (saved) {
+  if (saved && isSeamlessUpdateEnabled()) {
     const { getCurrentGame } = await import('../game/gameOrchestrator.js')
     getCurrentGame()?.gameLoop?.renderUpdateSnapshot()
     captureUpdateFrame()

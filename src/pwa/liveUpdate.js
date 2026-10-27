@@ -1,3 +1,4 @@
+import { isSeamlessUpdateEnabled } from './seamlessUpdateSettings.js'
 // Live updates for the dev branch deploy (and `npm run dev`).
 //
 // The page polls /build-info.json (written by scripts/liveUpdateBuildInfo.mjs).
@@ -270,6 +271,26 @@ export function createUpdateNoticeUi(doc = document) {
       ], { kind: 'breaking', digest })
       sidebarStatus(`Update ${info.commit} ready, needs a reload `, makeButton(doc, 'Load', onReload, 'live-update-status__button'))
     },
+    showDownloading(info, progress = {}) {
+      if (bubble) bubble.hidden = true
+      clearTimeout(hideTimer)
+      doc.getElementById('liveUpdateStatus')?.remove()
+      let bar = doc.getElementById('liveUpdateProgress')
+      if (!bar) {
+        bar = doc.createElement('progress')
+        bar.id = 'liveUpdateProgress'
+        bar.max = 1
+        bar.setAttribute('aria-label', 'Downloading game update')
+        bar.style.cssText = 'position:fixed;top:env(safe-area-inset-top,0px);left:0;width:100%;height:5px;margin:0;z-index:2147483647;accent-color:#e9b44c;'
+        doc.body.appendChild(bar)
+      }
+      if (progress.total > 0) bar.value = progress.done / progress.total
+      else bar.removeAttribute('value')
+    },
+    showError(info, error, onRetry) {
+      doc.getElementById('liveUpdateProgress')?.remove()
+      render(`Update failed: ${error.message}`, [makeButton(doc, 'Try again', onRetry, 'live-update-bubble__button')], { kind: 'error' })
+    },
     showApplied(applied, digest) {
       render(`Updated to v${applied.version} (${applied.commit}). Your game was restored.`, [], { kind: 'safe', digest, autoHideMs: 12000 })
     }
@@ -283,9 +304,11 @@ export function createLiveUpdater({
   getGameState = () => null,
   ui = createUpdateNoticeUi(doc),
   prepareReload = async() => {},
+  seamlessEnabled = isSeamlessUpdateEnabled,
   reload = info => {
     const target = new URL(win.location.href)
-    target.searchParams.set(UPDATE_QUERY, info.commit)
+    if (seamlessEnabled()) target.searchParams.set(UPDATE_QUERY, info.commit)
+    else target.searchParams.delete(UPDATE_QUERY)
     win.location.assign(target.href)
   },
   stageUpdate = info => stageGameUpdate(info, { win, fetchImpl, onProgress: progress => ui.showDownloading?.(info, progress) }),
@@ -328,9 +351,13 @@ export function createLiveUpdater({
     const state = getGameState()
     const wasPaused = state?.gamePaused
     try {
-      await stageUpdate(info)
+      if (seamlessEnabled()) {
+        ui.showDownloading?.(info)
+        await stageUpdate(info)
+      }
       // A peer may have joined while files were downloading.
       if (isMultiplayerActive(getGameState())) {
+        doc.getElementById('liveUpdateProgress')?.remove()
         ui.showDeferred?.(info, 'breaking')
         return 'deferred'
       }

@@ -157,3 +157,7 @@ Every PR description (by any agent, into `main` or `dev`) contains a **manual te
 ### Marking JavaScript changes safe for live module swap
 
 Use `Live-Update: safe` only when all behavior-changing JavaScript files in the commit belong to modules registered in both `LIVE_MODULES` (`scripts/liveUpdateBuildInfo.mjs`) and the runtime registry (`src/pwa/liveModuleRegistry.js`). A registered module must export `hotSwappable = true`; it may export synchronous `hotDispose()` and `hotAccept(previousState)` hooks. The build publishes each registered module's URL and signature plus a signature for all non-swappable JavaScript. The client downloads changed registered modules first and installs them at the safe point at the start of an animation frame, before any simulation tick, after `migrateLiveState(state, fromVersion, toVersion)` runs. Imports, validation, migration, or hooks that fail fall back to the consent-based saved reload. Use `Live-Update: breaking (<reason>)` whenever a changed JavaScript file is outside the registry, a state migration is unavailable, a hook cannot safely preserve internal state, or compatibility is uncertain. CSS-only and release-note-only commits may still use `Live-Update: safe`.
+
+## Patrick's current workflow preference (2026-10-27)
+
+For subsequent requests, commit and push directly to `dev`, without a feature branch or PR, unless Patrick explicitly requests a different workflow. Keep the required validation checks.

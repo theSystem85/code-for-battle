@@ -15,7 +15,7 @@ describe('background game update handoff', () => {
     const download = new Promise(resolve => { finishDownload = resolve })
     const saved = vi.fn(async() => { expect(state.gamePaused).toBe(true) })
     const reload = vi.fn()
-    const updater = createLiveUpdater({ win: { sessionStorage: storage() }, getGameState: () => state,
+    const updater = createLiveUpdater({ seamlessEnabled: () => true, win: { sessionStorage: storage() }, getGameState: () => state,
       stageUpdate: () => download, prepareReload: saved, reload, activateServiceWorker: async() => {} })
     const pending = updater.applyBreakingUpdate(info)
     expect(state.gamePaused).toBe(false)
@@ -32,7 +32,7 @@ describe('background game update handoff', () => {
     const reload = vi.fn()
     const fail = vi.fn().mockRejectedValueOnce(new Error('disk full')).mockResolvedValue(undefined)
     const ui = { showError: vi.fn() }
-    const updater = createLiveUpdater({ win: { sessionStorage: storage() }, getGameState: () => state, ui,
+    const updater = createLiveUpdater({ seamlessEnabled: () => true, win: { sessionStorage: storage() }, getGameState: () => state, ui,
       stageUpdate: phase === 'download' ? fail : async() => {},
       prepareReload: phase === 'save' ? fail : async() => {}, reload, activateServiceWorker: async() => {} })
     expect(await updater.applyBreakingUpdate(info)).toBe('failed')
@@ -45,7 +45,7 @@ describe('background game update handoff', () => {
   it('[U07000] defers if a human joins during download without pausing or saving', async() => {
     const state = { gameStarted: true, gamePaused: false }
     const saved = vi.fn()
-    const updater = createLiveUpdater({ win: { sessionStorage: storage() }, getGameState: () => state,
+    const updater = createLiveUpdater({ seamlessEnabled: () => true, win: { sessionStorage: storage() }, getGameState: () => state,
       stageUpdate: async() => { state.multiplayerSession = { status: 'connected' } }, prepareReload: saved })
     expect(await updater.applyBreakingUpdate(info)).toBe('deferred')
     expect(state.gamePaused).toBe(false)
@@ -72,5 +72,43 @@ describe('background game update handoff', () => {
     await expect(stageGameUpdate(info, { win: { caches: { open, keys: async() => [] }, navigator: { serviceWorker: { controller: {} } } },
       fetchImpl: async() => ({ ok: true, json: async() => ({ commit: 'ccccccc', assets: [{}] }) }) })).rejects.toThrow('deploy changed')
     expect(open).not.toHaveBeenCalled()
+  })
+})
+
+describe('seamless update opt-in and feedback', () => {
+  it('[U07003] defaults to an ordinary saved reload without staging experimental assets', async() => {
+    const { setSeamlessUpdateEnabled, isSeamlessUpdateEnabled } = await import('../../src/pwa/seamlessUpdateSettings.js')
+    setSeamlessUpdateEnabled(false)
+    expect(isSeamlessUpdateEnabled()).toBe(false)
+    const stageUpdate = vi.fn()
+    const prepareReload = vi.fn()
+    const reload = vi.fn()
+    const updater = createLiveUpdater({ win: { sessionStorage: storage() }, stageUpdate, prepareReload, reload,
+      activateServiceWorker: async() => {} })
+    expect(await updater.applyBreakingUpdate(info)).toBe('reload')
+    expect(stageUpdate).not.toHaveBeenCalled()
+    expect(prepareReload).toHaveBeenCalledOnce()
+    expect(reload).toHaveBeenCalledOnce()
+    setSeamlessUpdateEnabled(true)
+    expect(isSeamlessUpdateEnabled()).toBe(true)
+    setSeamlessUpdateEnabled(false)
+  })
+
+  it('[U07004] hides the update actions immediately and reports download progress in a top bar', async() => {
+    const { createUpdateNoticeUi } = await import('../../src/pwa/liveUpdate.js')
+    document.body.innerHTML = '<div id="sidebarFooterVersion"></div>'
+    const ui = createUpdateNoticeUi(document)
+    ui.showBreaking(info, { multiplayer: false, onReload: vi.fn() })
+    expect(document.getElementById('liveUpdateBubble').hidden).toBe(false)
+    ui.showDownloading(info)
+    expect(document.getElementById('liveUpdateBubble').hidden).toBe(true)
+    expect(document.getElementById('liveUpdateStatus')).toBeNull()
+    const bar = document.getElementById('liveUpdateProgress')
+    expect(bar.hasAttribute('value')).toBe(false)
+    ui.showDownloading(info, { done: 2, total: 4 })
+    expect(bar.value).toBe(0.5)
+    ui.showError(info, new Error('offline'), vi.fn())
+    expect(document.getElementById('liveUpdateProgress')).toBeNull()
+    expect(document.getElementById('liveUpdateBubble').hidden).toBe(false)
   })
 })

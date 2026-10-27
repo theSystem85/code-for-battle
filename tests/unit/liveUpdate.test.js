@@ -87,7 +87,7 @@ describe('dev live update', () => {
     const reload = vi.fn()
     const prepareReload = vi.fn()
     const ui = fakeUi()
-    const updater = createLiveUpdater({ win: { sessionStorage: memoryStorage() }, doc: document, fetchImpl: fakeFetch([base, next]), reload, prepareReload, ui, running: { version: '0.62.2', commit: 'aaaaaaa' } })
+    const updater = createLiveUpdater({ seamlessEnabled: () => true, win: { sessionStorage: memoryStorage() }, doc: document, fetchImpl: fakeFetch([base, next]), reload, prepareReload, ui, running: { version: '0.62.2', commit: 'aaaaaaa' } })
     expect(await updater.check()).toBe('baseline')
     const result = updater.check()
     await vi.waitFor(() => expect(document.head.querySelector('link[data-live-update]')).toBeTruthy())
@@ -105,7 +105,7 @@ describe('dev live update', () => {
     const order = []
     const ui = fakeUi()
     const next = { ...base, commit: 'bbbbbbb', jsSignature: 'js-2' }
-    const updater = createLiveUpdater({
+    const updater = createLiveUpdater({ seamlessEnabled: () => true,
       win: { sessionStorage: storage },
       doc: document,
       fetchImpl: fakeFetch([base, next]),
@@ -135,7 +135,7 @@ describe('dev live update', () => {
   it('[U05215] holds every update while other humans are connected over the network and offers one when the first poll already sees a new deploy', async() => {
     const reload = vi.fn()
     const ui = fakeUi()
-    const mp = createLiveUpdater({
+    const mp = createLiveUpdater({ seamlessEnabled: () => true,
       win: { sessionStorage: memoryStorage() },
       fetchImpl: fakeFetch([base, { ...base, commit: 'bbbbbbb', jsSignature: 'js-2' }]),
       getGameState: () => ({ multiplayerSession: { isRemote: true } }),
@@ -154,7 +154,7 @@ describe('dev live update', () => {
     expect(reload).not.toHaveBeenCalled()
 
     const earlyUi = fakeUi()
-    const early = createLiveUpdater({ win: { sessionStorage: memoryStorage() }, fetchImpl: fakeFetch([{ ...base, commit: 'ccccccc' }]), ui: earlyUi, reload, activateServiceWorker: async() => {}, running: { commit: 'aaaaaaa' } })
+    const early = createLiveUpdater({ seamlessEnabled: () => true, win: { sessionStorage: memoryStorage() }, fetchImpl: fakeFetch([{ ...base, commit: 'ccccccc' }]), ui: earlyUi, reload, activateServiceWorker: async() => {}, running: { commit: 'aaaaaaa' } })
     expect(await early.check()).toBe('breaking')
     expect(reload).not.toHaveBeenCalled()
     expect(earlyUi.showBreaking).toHaveBeenCalledTimes(1)
