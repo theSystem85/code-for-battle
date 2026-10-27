@@ -11,6 +11,7 @@ import { clearAttackGroupState, cancelRecoveryTask } from './utilityQueue.js'
 import { hasBlockingBuilding } from '../../utils/buildingPassability.js'
 import { getBuildingIdentifier } from '../../utils.js'
 import { interruptHarvesterAutomation } from '../../game/harvesterLogic.js'
+import { createCommandPathOptions } from './commandPathOptions.js'
 
 export function handleMovementCommand(handler, selectedUnits, targetX, targetY, mapGrid, skipQueueClear = false) {
   const now = performance.now()
@@ -50,6 +51,7 @@ export function handleMovementCommand(handler, selectedUnits, targetX, targetY, 
   let unreachableHumanCount = 0
   const mapHeight = mapGrid.length
   const mapWidth = mapGrid[0]?.length || 0
+  const commandPathOptions = createCommandPathOptions(gameState.units, mapGrid)
   unitsToCommand.forEach((unit, index) => {
     unit.guardTarget = null
     unit.guardTargets = null
@@ -240,6 +242,7 @@ export function handleMovementCommand(handler, selectedUnits, targetX, targetY, 
           gameState.occupancyMap,
           unit.owner,
           {
+            ...commandPathOptions,
             strictDestination: true,
             movementType: unit.type === 'hovercraft' ? 'amphibious' : unit.isNaval ? 'water' : undefined
           }

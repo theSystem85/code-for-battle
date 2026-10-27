@@ -372,7 +372,14 @@ export const findPath = logPerformance(function findPath(start, end, mapGrid, oc
   const ignoreFriendlyMines = Boolean(contextOptions.ignoreFriendlyMines)
   const strictDestination = Boolean(contextOptions.strictDestination)
   const streetOnly = Boolean(contextOptions.streetOnly)
-  const pathContext = { unitOwner, ignoreFriendlyMines, streetOnly, movementType: contextOptions.movementType }
+  const pathContext = {
+    unitOwner, ignoreFriendlyMines, streetOnly, movementType: contextOptions.movementType,
+    includeMovableOccupancy: Boolean(contextOptions.includeMovableOccupancy),
+    navalOccupancy: contextOptions.navalOccupancy,
+    mapWidth: mapGrid[0].length,
+    startX: start.x,
+    startY: start.y
+  }
 
   // Begin destination adjustment if blocked or occupied
   let adjustedEnd = { ...end }
@@ -618,14 +625,21 @@ function isTilePassableForMode(mapGrid, x, y, options = {}) {
 
 function isTileBlockedForUnit(occupancyMap, x, y, options = {}) {
   // Fixed occupancy (buildings, water, rock, impassable tags) blocks land paths.
-  // Movable occupancy (units, wrecks) does not: the unit keeps the short path
-  // and contact physics pushes those occupants aside.
+  // Movable occupancy is consulted only by explicit new-order path requests.
+  // Automatic movement/recovery paths keep using contact physics instead.
   // Naval and amphibious paths ignore this layer because it also marks water.
   if (
     options.movementType !== 'water' &&
     options.movementType !== 'amphibious' &&
     hasFixedOccupancy(occupancyMap?.[y]?.[x])
   ) {
+    return true
+  }
+
+  if (options.includeMovableOccupancy &&
+      !(x === options.startX && y === options.startY) &&
+      (hasMovableOccupancy(occupancyMap?.[y]?.[x]) ||
+        options.navalOccupancy?.has(y * options.mapWidth + x))) {
     return true
   }
 

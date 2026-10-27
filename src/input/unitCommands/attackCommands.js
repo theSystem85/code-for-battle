@@ -7,6 +7,7 @@ import { broadcastUnitAttack } from '../../network/gameCommandSync.js'
 import { clearTankerKamikazeState } from '../../game/tankerTruckUtils.js'
 import { issueTankerKamikazeCommand, clearAttackGroupState } from './utilityQueue.js'
 import { setBattleshipTarget } from '../../game/navalFleetSystem.js'
+import { createCommandPathOptions } from './commandPathOptions.js'
 
 function canCommandUnitAttackTarget(unit, target) {
   return unit.type !== 'submarine' || Boolean(
@@ -47,6 +48,7 @@ export function handleAttackCommand(handler, selectedUnits, target, mapGrid, isF
     unit.type !== 'tankerTruck' && unit.type !== 'battleship' && canCommandUnitAttackTarget(unit, target))
 
   const formationPositions = calculateSemicircleFormation(combatUnits, target, safeAttackDistance)
+  const commandPathOptions = createCommandPathOptions(gameState.units, mapGrid)
 
   battleshipUnits.forEach(unit => {
     unit.canFire = true
@@ -116,7 +118,10 @@ export function handleAttackCommand(handler, selectedUnits, target, mapGrid, isF
     }
 
     const occupancyMap = gameState.occupancyMap
-    const path = findPathForOwner({ x: unit.tileX, y: unit.tileY }, desiredTile, mapGrid, occupancyMap, unit.owner)
+    const path = findPathForOwner({ x: unit.tileX, y: unit.tileY }, desiredTile, mapGrid, occupancyMap, unit.owner, {
+      ...commandPathOptions,
+      movementType: unit.type === 'hovercraft' ? 'amphibious' : unit.isNaval ? 'water' : undefined
+    })
 
     if (path && path.length > 0 && (unit.tileX !== desiredTile.x || unit.tileY !== desiredTile.y)) {
       unit.path = path.slice(1)

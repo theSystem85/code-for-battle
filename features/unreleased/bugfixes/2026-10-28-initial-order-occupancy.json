@@ -1,0 +1,1 @@
+{ "description": "Ground and sea units avoid movable occupants when given a new move or attack order, then ignore movable occupancy during automatic path updates." }

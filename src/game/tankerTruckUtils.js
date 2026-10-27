@@ -9,7 +9,7 @@ const KAMIKAZE_APPROACH_OFFSETS = [
   { x: 1, y: 1 }, { x: 1, y: -1 }, { x: -1, y: 1 }, { x: -1, y: -1 }
 ]
 
-export function computeTankerKamikazeApproach(tanker, target, mapGrid, occupancyMap) {
+export function computeTankerKamikazeApproach(tanker, target, mapGrid, occupancyMap, options = null) {
   if (!tanker || !target || !mapGrid || mapGrid.length === 0) {
     return null
   }
@@ -27,6 +27,7 @@ export function computeTankerKamikazeApproach(tanker, target, mapGrid, occupancy
 
   const width = mapGrid[0].length
   const height = mapGrid.length
+  const pathOptions = { ...options, unitOwner: tanker.owner }
 
   const buildResult = (path, destinationTile) => ({
     path,
@@ -40,13 +41,14 @@ export function computeTankerKamikazeApproach(tanker, target, mapGrid, occupancy
       continue
     }
 
-    const path = findPath(startTile, dest, mapGrid, occupancyMap, undefined, { unitOwner: tanker.owner })
+    const path = findPath(startTile, dest, mapGrid, occupancyMap, undefined, pathOptions)
     if (path && path.length > 0) {
       return buildResult(path, dest)
     }
   }
 
-  const fallbackPath = findPath(startTile, targetTile, mapGrid, null, undefined, { unitOwner: tanker.owner })
+  const fallbackPath = findPath(startTile, targetTile, mapGrid,
+    options?.includeMovableOccupancy ? occupancyMap : null, undefined, pathOptions)
   if (fallbackPath && fallbackPath.length > 0) {
     return buildResult(fallbackPath, targetTile)
   }
