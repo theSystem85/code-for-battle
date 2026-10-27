@@ -139,6 +139,7 @@
             "soil",
             "decorative",
             "water",
+            "lake",
             "impassable",
             "group_4"
           ],
@@ -715,6 +716,7 @@
               "soil",
               "decorative",
               "water",
+              "lake",
               "impassable",
               "group_4"
             ],
@@ -1789,7 +1791,8 @@
         "group_4",
         "impassable",
         "soil",
-        "water"
+        "water",
+        "lake"
       ],
       "coverage": null,
       "sources": [

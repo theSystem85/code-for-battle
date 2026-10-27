@@ -82,7 +82,7 @@ function publish(map, layout) {
 }
 
 describe('placement overlay and decorative blockers', () => {
-  it('[U06526] colors open tiles green inside base range and orange outside it', () => {
+  it('[U06572] colors open tiles green inside base range and orange outside it', () => {
     const map = grid(20, 20)
     const near = isBuildingFootprintInBuildRange('powerPlant', 4, 4, [], [factory], 'player1')
     const far = isBuildingFootprintInBuildRange('powerPlant', 12, 12, [], [factory], 'player1')
@@ -96,7 +96,7 @@ describe('placement overlay and decorative blockers', () => {
     expect(isBuildingFootprintInBuildRange('powerPlant', 12, 12, [], [factory], 'player1', { mapEditMode: true })).toBe(true)
   })
 
-  it('[U06527] keeps a blocked tile red when the rest of an in-range footprint is green', () => {
+  it('[U06573] keeps a blocked tile red when the rest of an in-range footprint is green', () => {
     const map = grid(20, 20)
     const layout = emptyLayout(20, 20)
     stamp(layout, 6, 4, ['stones', 'passable'])
@@ -112,7 +112,7 @@ describe('placement overlay and decorative blockers', () => {
     expect(canPlaceBuilding('concreteWall', 4, 4, map, [], [], [factory], 'player1')).toBe(true)
   })
 
-  it('[U06528] rejects player placement on living city buildings and stones, including non-anchor tiles', () => {
+  it('[U06574] rejects player placement on living city buildings and stones, including non-anchor tiles', () => {
     const map = grid(20, 20)
     const layout = emptyLayout(20, 20)
     stamp(layout, 5, 4, ['city', 'impassable'], 2, 2)
@@ -133,7 +133,7 @@ describe('placement overlay and decorative blockers', () => {
     expect(isDecorativeBuildBlocker(map, 4, 5)).toBe(true)
   })
 
-  it('[U06529] rejects an offshore stone on water for a shipyard and colors out-of-range water orange', () => {
+  it('[U06575] rejects an offshore stone on water for a shipyard and colors out-of-range water orange', () => {
     const map = grid(20, 20, 'water')
     map[7][4].type = 'land'
     const layout = emptyLayout(20, 20)
@@ -158,7 +158,7 @@ describe('placement overlay and decorative blockers', () => {
     expect(canPlaceBuilding('shipyard', 5, 5, map, [], [], [distant], 'player1')).toBe(false)
   })
 
-  it('[U06530] makes enemy placement search skip city buildings and stones', () => {
+  it('[U06576] makes enemy placement search skip city buildings and stones', () => {
     const blocked = grid(24, 24)
     const blockedLayout = emptyLayout(24, 24)
     for (let y = 0; y < 24; y++) {
