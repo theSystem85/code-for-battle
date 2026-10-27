@@ -844,6 +844,56 @@ function handleSingleClick(handler, worldX, worldY, e, units, factories, selecte
   handleUnitSelection(handler, worldX, worldY, e, units, factories, selectedUnits, selectionManager, unitCommands, mapGrid)
 }
 
+const AIR_PAD_BUILDING_TYPES = new Set(['helipad', 'airstrip'])
+
+function isPickableAirUnit(unit) {
+  return unit?.isAirUnit === true || unit?.type === 'apache' || unit?.type === 'f22Raptor' || unit?.type === 'f35'
+}
+
+function isStrikeJet(unit) {
+  return unit?.type === 'f22Raptor' || unit?.type === 'f35'
+}
+
+function unitContainsSelectionPoint(unit, worldX, worldY) {
+  const { centerX, centerY } = getUnitSelectionCenter(unit)
+  const selectionRadius = unit.isNaval
+    ? TILE_SIZE * Math.max(0.65, getNavalRenderLengthTiles(unit.type) / 2)
+    : TILE_SIZE / 2
+  return Math.hypot(worldX - centerX, worldY - centerY) < selectionRadius
+}
+
+function findSelectableUnitAt(units, worldX, worldY, selectionManager, predicate) {
+  if (!Array.isArray(units)) return null
+  for (const unit of units) {
+    if (!predicate(unit) || !selectionManager.isSelectableUnit(unit)) continue
+    if (unitContainsSelectionPoint(unit, worldX, worldY)) return unit
+  }
+  return null
+}
+
+function selectPickedUnit(handler, unit, event, units, factories, selectedUnits, selectionManager) {
+  selectionManager.handleUnitSelection(unit, event, units, factories, selectedUnits)
+  handler.updateAGFCapability(selectedUnits)
+  event.stopPropagation()
+}
+
+// A carrier's hull circle covers the whole deck, and pad buildings are tested
+// before units. An aircraft whose own selection circle contains the click is
+// the thing the player aimed at.
+function airUnitStackedOnCarrier(clickedUnit, units, worldX, worldY, selectionManager) {
+  if (!clickedUnit) return null
+  const clickedIsCarrier = clickedUnit.type === 'aircraftCarrier'
+  const clickedIsAir = isPickableAirUnit(clickedUnit)
+  if (!clickedIsCarrier && !clickedIsAir) return null
+  const carrier = clickedIsCarrier
+    ? clickedUnit
+    : findSelectableUnitAt(units, worldX, worldY, selectionManager, unit => unit.type === 'aircraftCarrier')
+  if (!carrier) return null
+  return clickedIsAir
+    ? clickedUnit
+    : findSelectableUnitAt(units, worldX, worldY, selectionManager, isPickableAirUnit)
+}
+
 function handleUnitSelection(handler, worldX, worldY, e, units, factories, selectedUnits, selectionManager, unitCommands, mapGrid) {
   selectionManager.clearWreckSelection()
   const appendToUtilityQueue = e.altKey || gameState.altKeyDown
@@ -1123,6 +1173,7 @@ function handleUnitSelection(handler, worldX, worldY, e, units, factories, selec
             building.health > 0 &&
             tileX >= building.x && tileX < building.x + building.width &&
             tileY >= building.y && tileY < building.y + building.height) {
+          if (findSelectableUnitAt(units, worldX, worldY, selectionManager, isPickableAirUnit)) break
           unitCommands.handleApacheHelipadCommand(commandableUnits, building, mapGrid)
           recordHumanUnitCommand(commandableUnits.map(selected => selected.id), {
             command: 'apache_helipad',
@@ -1157,18 +1208,12 @@ function handleUnitSelection(handler, worldX, worldY, e, units, factories, selec
   }
 
   if (clickedBuilding) {
-    const overlappingF22 = units.find(unit => {
-      if (!selectionManager.isSelectableUnit(unit) || (unit.type !== 'f22Raptor' && unit.type !== 'f35')) return false
-      const { centerX, centerY } = getUnitSelectionCenter(unit)
-      const dx = worldX - centerX
-      const dy = worldY - centerY
-      return Math.hypot(dx, dy) < TILE_SIZE / 2
-    })
+    const overlappingAirUnit = AIR_PAD_BUILDING_TYPES.has(clickedBuilding.type)
+      ? findSelectableUnitAt(units, worldX, worldY, selectionManager, isPickableAirUnit)
+      : findSelectableUnitAt(units, worldX, worldY, selectionManager, isStrikeJet)
 
-    if (overlappingF22) {
-      selectionManager.handleUnitSelection(overlappingF22, e, units, factories, selectedUnits)
-      handler.updateAGFCapability(selectedUnits)
-      e.stopPropagation()
+    if (overlappingAirUnit) {
+      selectPickedUnit(handler, overlappingAirUnit, e, units, factories, selectedUnits, selectionManager)
       return
     }
 
@@ -1203,18 +1248,16 @@ function handleUnitSelection(handler, worldX, worldY, e, units, factories, selec
 
   let clickedUnit = null
   for (const unit of units) {
-    if (selectionManager.isSelectableUnit(unit)) {
-      const { centerX, centerY } = getUnitSelectionCenter(unit)
-      const dx = worldX - centerX
-      const dy = worldY - centerY
-      const selectionRadius = unit.isNaval
-        ? TILE_SIZE * Math.max(0.65, getNavalRenderLengthTiles(unit.type) / 2)
-        : TILE_SIZE / 2
-      if (Math.hypot(dx, dy) < selectionRadius) {
-        clickedUnit = unit
-        break
-      }
+    if (selectionManager.isSelectableUnit(unit) && unitContainsSelectionPoint(unit, worldX, worldY)) {
+      clickedUnit = unit
+      break
     }
+  }
+
+  const airUnitOnCarrier = airUnitStackedOnCarrier(clickedUnit, units, worldX, worldY, selectionManager)
+  if (airUnitOnCarrier) {
+    selectPickedUnit(handler, airUnitOnCarrier, e, units, factories, selectedUnits, selectionManager)
+    return
   }
 
   if (clickedUnit?.type === 'battleship') {
