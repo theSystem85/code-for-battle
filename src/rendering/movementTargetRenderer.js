@@ -1,8 +1,14 @@
 // movementTargetRenderer.js - Renders green triangular indicators for movement targets
 import { TILE_SIZE, MOVE_TARGET_INDICATOR_SIZE, MOVE_TARGET_BOUNCE_SPEED } from '../config.js'
 import { gameState } from '../gameState.js'
+import { getAvailableLandingSpots } from '../utils/airLandingSpots.js'
 
 export class MovementTargetRenderer {
+  constructor() {
+    this.landingSpotSelection = []
+    this.landingSpots = []
+    this.landingSpotsRefreshedAt = 0
+  }
   /**
    * Render green triangular indicators at the movement target destinations
    * @param {CanvasRenderingContext2D} ctx
@@ -49,10 +55,45 @@ export class MovementTargetRenderer {
     })
   }
 
+  renderLandingSpots(ctx, units, scrollOffset) {
+    let selectedCount = 0
+    let selectionChanged = false
+    for (const unit of units || []) {
+      if (!unit.selected || unit.owner !== gameState.humanPlayer) continue
+      if (this.landingSpotSelection[selectedCount] !== unit) selectionChanged = true
+      selectedCount++
+    }
+    if (selectedCount !== this.landingSpotSelection.length) selectionChanged = true
+    const now = performance.now()
+    if (selectionChanged || now - this.landingSpotsRefreshedAt >= 250) {
+      this.landingSpotSelection.length = 0
+      for (const unit of units || []) {
+        if (unit.selected && unit.owner === gameState.humanPlayer) this.landingSpotSelection.push(unit)
+      }
+      this.landingSpots = getAvailableLandingSpots(this.landingSpotSelection, gameState.buildings, units)
+      this.landingSpotsRefreshedAt = now
+    }
+    if (this.landingSpotSelection.length === 0) return
+    ctx.save()
+    ctx.fillStyle = 'rgba(40, 255, 90, 0.72)'
+    ctx.strokeStyle = 'rgba(0, 110, 30, 0.95)'
+    ctx.lineWidth = 2
+    this.landingSpots.forEach(spot => {
+      const x = spot.worldX - scrollOffset.x
+      const y = spot.worldY - scrollOffset.y
+      ctx.beginPath()
+      ctx.arc(x, y, TILE_SIZE * 0.22, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.stroke()
+    })
+    ctx.restore()
+  }
+
   /**
    * Main render method
    */
   render(ctx, units, scrollOffset) {
+    this.renderLandingSpots(ctx, units, scrollOffset)
     this.renderMovementTargets(ctx, units, scrollOffset)
   }
 }

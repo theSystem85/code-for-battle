@@ -34,6 +34,7 @@ import { getUnitSelectionCenter } from './selectionManager.js'
 import { createReplayEntityReference, createReplayUnitReferences, recordReplayCommand } from '../replaySystem.js'
 import { getNavalRenderLengthTiles } from '../utils/navalUtils.js'
 import { selectBattleshipBattery, tryHandleFleetCommand } from '../game/navalFleetSystem.js'
+import { findLandingSpotAtWorld } from '../utils/airLandingSpots.js'
 
 export function tryHandleDirectFleetInteraction(selectedUnits, worldX, worldY, units, mapGrid, selectionManager) {
   const commandableUnits = selectedUnits.filter(unit =>
@@ -899,6 +900,15 @@ function handleUnitSelection(handler, worldX, worldY, e, units, factories, selec
   const appendToUtilityQueue = e.altKey || gameState.altKeyDown
   if (selectedUnits.length > 0) {
     const commandableUnits = selectedUnits.filter(u => selectionManager.isCommandableUnit(u))
+    const landingSpot = findLandingSpotAtWorld(commandableUnits, gameState.buildings, units, worldX, worldY)
+    if (landingSpot && unitCommands.handleLandingSpotCommand(commandableUnits, landingSpot, units)) {
+      recordHumanUnitCommand(commandableUnits.map(unit => unit.id), {
+        command: 'land_at_spot',
+        targetRef: createReplayEntityReference(landingSpot.structure),
+        landingSpotIndex: landingSpot.index
+      })
+      return
+    }
     const hasSelectedApaches = commandableUnits.some(unit => unit.type === 'apache' || unit.type === 'f35')
     const hasSelectedHarvesters = commandableUnits.some(unit => unit.type === 'harvester')
 

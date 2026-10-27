@@ -705,6 +705,17 @@ function executeReplayUnitCommand(command) {
       return true
     case 'apache_helipad':
       return Boolean(handler.handleApacheHelipadCommand(selectedUnits, resolveReplayEntityReference(command.targetRef), mapGrid))
+    case 'land_at_spot': { // Reconstruct the transient overlay target from its stable structure reference.
+      const structure = resolveReplayEntityReference(command.targetRef)
+      if (!structure || !Number.isInteger(command.landingSpotIndex)) return false
+      const kind = structure.type === 'aircraftCarrier' ? 'carrier' : structure.type
+      return Boolean(handler.handleLandingSpotCommand(selectedUnits, {
+        kind,
+        structure,
+        structureId: structure.id,
+        index: command.landingSpotIndex
+      }, gameState.units || []))
+    }
     case 'refinery_unload':
       handler.handleRefineryUnloadCommand(selectedUnits, resolveReplayEntityReference(command.targetRef), mapGrid)
       return true

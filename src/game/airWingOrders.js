@@ -118,6 +118,7 @@ export function beginAirstripLanding(unit, airstrip, options = {}) {
   const reserved = reserveAirstripParkingSlot(airstrip, unit.id, preferred)
   const slotIndex = Number.isInteger(reserved) && reserved >= 0 ? reserved : null
   const slot = slotIndex === null ? null : getAirstripParkingSpots(airstrip)[slotIndex] || null
+  if (!slot) return null
   unit.homeAirstripId = airstripId
   unit.airstripId = airstripId
   unit.helipadTargetId = airstripId

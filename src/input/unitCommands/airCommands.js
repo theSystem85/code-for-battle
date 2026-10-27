@@ -9,6 +9,8 @@ import { units } from '../../main.js'
 import { rejectJetMissionIfImpossible } from '../../game/jetFuel.js'
 import { beginAirstripLanding, beginHelipadRebase } from '../../game/airWingOrders.js'
 import { clearCarrierMissionOrders } from '../../game/navalFleetSystem.js'
+import { requestCarrierLanding } from '../../game/navalFleetSystem.js'
+import { CARRIER_AIRCRAFT_SLOT_WEIGHT, getOccupiedCarrierDeckSlots } from '../../utils/airLandingSpots.js'
 
 export function assignApacheFlight(unit, destTile, destCenter, options = {}) {
   if (!unit || (unit.type !== 'apache' && unit.type !== 'f22Raptor' && unit.type !== 'f35') || !destCenter) {
@@ -345,4 +347,61 @@ export function handleApacheHelipadCommand(handler, selectedUnits, helipad, _map
   const avgX = apaches.reduce((sum, u) => sum + u.x, 0) / apaches.length
   const avgY = apaches.reduce((sum, u) => sum + u.y, 0) / apaches.length
   playPositionalSound('movement', avgX, avgY, 0.5)
+}
+
+export function handleLandingSpotCommand(handler, selectedUnits, landingSpot, allUnits = units) {
+  if (!landingSpot) return false
+  const aircraft = (selectedUnits || []).filter(unit => unit && (unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35'))
+  if (aircraft.length === 0) return false
+
+  if (landingSpot.kind === 'carrier') {
+    const occupied = getOccupiedCarrierDeckSlots(landingSpot.structure, allUnits, aircraft.map(unit => unit.id))
+    let nextIndex = landingSpot.index
+    let handled = false
+    aircraft.forEach(unit => {
+      const weight = CARRIER_AIRCRAFT_SLOT_WEIGHT[unit.type] || 1
+      while (nextIndex < landingSpot.structure.deckSlotCapacity) {
+        const fits = Array.from({ length: weight }, (_, offset) => nextIndex + offset)
+          .every(index => index < landingSpot.structure.deckSlotCapacity && !occupied.has(index))
+        if (fits) break
+        nextIndex++
+      }
+      if (nextIndex >= landingSpot.structure.deckSlotCapacity) return
+      if (requestCarrierLanding(unit, landingSpot.structure, allUnits, gameState.simulationTime || 0, { slotIndex: nextIndex })) {
+        for (let offset = 0; offset < weight; offset++) occupied.add(nextIndex + offset)
+        handled = true
+      }
+      nextIndex++
+    })
+    return handled
+  }
+
+  if (landingSpot.kind === 'helipad') {
+    const unit = aircraft.find(candidate => candidate.type === 'apache' || candidate.type === 'f35')
+    if (!unit) return false
+    const center = getHelipadLandingCenter(landingSpot.structure)
+    const tile = getHelipadLandingTile(landingSpot.structure)
+    return Boolean(center && tile && handler.assignApacheFlight(unit, tile, center, {
+      mode: 'helipad', helipadId: landingSpot.structureId, stopRadius: TILE_SIZE * 0.2
+    }))
+  }
+
+  const spots = getAirstripParkingSpots(landingSpot.structure)
+  const claimed = new Set()
+  let handled = false
+  aircraft.forEach((unit, unitIndex) => {
+    const preferred = unitIndex === 0 ? landingSpot.index : spots.findIndex((_, index) =>
+      !claimed.has(index) &&
+      !landingSpot.structure.f22OccupiedSlotUnitIds?.[index] &&
+      !landingSpot.structure.f22ReservedSlotUnitIds?.[index])
+    const slot = spots[preferred]
+    if (!slot) return
+    if (handler.assignApacheFlight(unit, { x: slot.x, y: slot.y }, { x: slot.worldX, y: slot.worldY }, {
+      mode: 'airstrip', airstrip: landingSpot.structure, airstripParkingSlotIndex: preferred, stopRadius: TILE_SIZE * 0.2
+    })) {
+      claimed.add(preferred)
+      handled = true
+    }
+  })
+  return handled
 }
