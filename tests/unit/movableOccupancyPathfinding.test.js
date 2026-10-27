@@ -18,6 +18,9 @@ import {
 } from '../../src/units.js'
 import { MapRenderer } from '../../src/rendering/mapRenderer.js'
 import { createTestMapGrid } from '../testUtils.js'
+import { createCommandPathOptions } from '../../src/input/unitCommands/commandPathOptions.js'
+import { updateGlobalPathfinding } from '../../src/game/pathfinding.js'
+import { pathCache } from '../../src/game/pathCache.js'
 
 function landGrid(width, height) {
   const mapGrid = createTestMapGrid(width, height)
@@ -40,6 +43,46 @@ describe('movable occupancy pathfinding', () => {
 
   afterEach(() => {
     gameState.unitWrecks = []
+    pathCache.clear()
+  })
+
+  it.each(['land', 'water', 'amphibious'])('[U07020] avoids movable occupants only for the initial %s order', movementType => {
+    const mapGrid = landGrid(12, 9)
+    if (movementType === 'water') {
+      for (const row of mapGrid) for (const tile of row) tile.type = 'water'
+    }
+    const unit = { ...unitAt(1, 4), tileX: 1, tileY: 4, owner: 'player1',
+      type: movementType === 'amphibious' ? 'hovercraft' : 'tank',
+      isNaval: movementType === 'water' }
+    const blockers = [3, 4, 5, 6].map(x => ({ ...unitAt(x, 4), isNaval: unit.isNaval }))
+    const occupancy = buildOccupancyMap([unit, ...blockers], mapGrid)
+    const start = { x: 1, y: 4 }
+    const end = { x: 9, y: 4 }
+    const options = { ...createCommandPathOptions([unit, ...blockers], mapGrid), movementType }
+    const initialPath = findPath(start, end, mapGrid, occupancy, undefined, options)
+    expect(initialPath.at(-1)).toEqual(end)
+    expect(initialPath.some(tile => tile.y !== 4)).toBe(true)
+
+    // Exhaust the path to force the actual automatic recovery path request.
+    unit.moveTarget = end
+    unit.path = []
+    unit.lastPathCalcTime = 1
+    updateGlobalPathfinding([unit], mapGrid, occupancy, {
+      humanPlayer: unit.owner, simulationTime: 10000, lastGlobalPathCalc: 0
+    })
+    expect(unit.path.at(-1)).toEqual(end)
+    expect(unit.path.every(tile => tile.y === 4)).toBe(true)
+
+    // A fresh order takes a fresh snapshot and avoids occupants again.
+    expect(findPath(start, end, mapGrid, occupancy, undefined, options)).toEqual(initialPath)
+  })
+
+  it('[U07019] does not let own movable occupancy block a diagonal departure', () => {
+    const mapGrid = landGrid(8, 8)
+    const occupancy = buildOccupancyMap([unitAt(2, 2)], mapGrid)
+    const path = findPath({ x: 2, y: 2 }, { x: 6, y: 6 }, mapGrid, occupancy,
+      undefined, { includeMovableOccupancy: true })
+    expect(path).toEqual([{ x: 2, y: 2 }, { x: 6, y: 6 }])
   })
 
   it('[U05475] tags units and wrecks as movable and buildings as fixed', () => {

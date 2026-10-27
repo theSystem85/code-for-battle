@@ -873,7 +873,9 @@ export function issueTankerKamikazeCommand(tanker, target, mapGrid) {
 
   updateKamikazeTargetPoint(tanker, target)
 
-  const plan = computeTankerKamikazeApproach(tanker, target, mapGrid, gameState.occupancyMap)
+  const plan = computeTankerKamikazeApproach(tanker, target, mapGrid, gameState.occupancyMap, {
+    includeMovableOccupancy: true
+  })
   if (plan) {
     tanker.path = plan.path.slice(1)
     tanker.moveTarget = { ...plan.moveTarget }

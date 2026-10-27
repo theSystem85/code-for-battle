@@ -461,6 +461,10 @@ describe('UnitCommandsHandler handleAttackCommand', () => {
 
     handler.handleAttackCommand(selectedUnits, target, mapGrid, false)
 
+    expect(findPathForOwner).toHaveBeenCalledWith(
+      expect.any(Object), expect.any(Object), mapGrid, gameState.occupancyMap, 'player',
+      expect.objectContaining({ includeMovableOccupancy: true })
+    )
     expect(selectedUnits[0].target).toBe(target)
     expect(selectedUnits[1].target).toBe(target)
   })
@@ -836,6 +840,9 @@ describe('UnitCommandsHandler attack group and movement', () => {
 
     handler.issueTankerKamikazeCommand(tanker, target, mapGrid)
 
+    expect(computeTankerKamikazeApproach).toHaveBeenCalledWith(
+      tanker, target, mapGrid, gameState.occupancyMap, { includeMovableOccupancy: true }
+    )
     expect(tanker.kamikazeMode).toBe(true)
     expect(tanker.kamikazeTargetId).toBe('enemy1')
     expect(tanker.kamikazeTargetType).toBe('unit')
@@ -861,6 +868,10 @@ describe('UnitCommandsHandler attack group and movement', () => {
 
     handler.handleMovementCommand([commandableUnit, noCommanderUnit], 32, 32, mapGrid)
 
+    expect(findPathForOwner).toHaveBeenCalledWith(
+      expect.any(Object), expect.any(Object), mapGrid, gameState.occupancyMap, 'player',
+      expect.objectContaining({ includeMovableOccupancy: true })
+    )
     expect(showNotification).not.toHaveBeenCalled() // At least one commandable unit exists
   })
 
