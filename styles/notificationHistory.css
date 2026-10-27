@@ -265,10 +265,8 @@
 @media (orientation: portrait) and (max-width: 900px) {
   body.mobile-portrait .notification {
     position: fixed !important;
-    /* Clears the notch and the money/energy strip on the minimap.
-       The online/offline toggle sits under the action buttons, so this
-       offset no longer has to clear that control. */
-    top: calc(var(--safe-area-top) * 2 + 72px) !important;
+    /* Keep notices at the viewport top, below the device safe area. */
+    top: calc(var(--safe-area-top, 0px) + 10px) !important;
     left: 0 !important;
     right: 0 !important;
     width: 100vw !important;

@@ -432,7 +432,7 @@ describe('offline cache clear', () => {
 
   it('[U03183] places portrait toasts below the offline pill', () => {
     const css = readFileSync(path.join(process.cwd(), 'styles/notificationHistory.css'), 'utf8')
-    expect(css).toMatch(/body\.mobile-portrait \.notification\s*\{[^}]*top:\s*calc\(var\(--safe-area-top\)\s*\*\s*2\s*\+\s*72px\)/)
+    expect(css).toMatch(/body\.mobile-portrait \.notification\s*\{[^}]*top:\s*calc\(var\(--safe-area-top,\s*0px\)\s*\+\s*10px\)/)
   })
 })
 
