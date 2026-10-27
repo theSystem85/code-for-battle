@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "signature": "7c1a9fd041bf335ae8e378468d1c494bf6ac16e452b9e759814583f3cd66b782",
+  "signature": "3b5997f8f201154b4ffc052d2011477e16f0463247dafd0ca5dba621aa7afa8f",
   "sheets": [
     {
       "name": "crystals_q90_1024x1024",
@@ -117,8 +117,8 @@
     {
       "name": "dtv6_decor_soil",
       "manifest": "dtv6_decor_soil.json",
-      "signature": "7e9a8ee245e1b8745ff2c58d7bfe3bf5e4cdac656eb45757e12ae27566cab495",
-      "metadataSignature": "8fd5ca5e9fb83d02e8269576472378a6cefe032870577106cf8f65d232ae20a9",
+      "signature": "5c63c279fd164ff8ca1732f38c530209dc73ba4517a33395e3148346ba677d02",
+      "metadataSignature": "f107e918e8e0e7c1d5a38c6678489c04024dff57df2e535bf8e559096c54fcca",
       "decodedBytes": 3123200,
       "compressedBytes": 143592
     },
