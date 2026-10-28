@@ -1,4 +1,5 @@
 // apacheImageRenderer.js - rendering for Apache helicopter unit
+import apacheImageConfig from '../apacheImageConfig.json'
 import { TILE_SIZE } from '../config.js'
 import { angleDiff } from '../logic.js'
 import {
@@ -15,7 +16,10 @@ let loading = false
 
 const BODY_TARGET_WIDTH = TILE_SIZE * 0.7 * 1.5 // 50% larger
 const ROTOR_TARGET_WIDTH = TILE_SIZE * 1.5 // 50% larger
-const ROTOR_ANCHOR = { x: 31, y: 30 }
+const ROTOR_ANCHOR = apacheImageConfig.rotorAnchor
+// Source-space mast coordinates become logical offsets once, outside the render loop.
+const BODY_MAST_X = (apacheImageConfig.rotorMountPoint.x / apacheImageConfig.bodySourceSize - 0.5) * BODY_TARGET_WIDTH
+const BODY_MAST_Y = (apacheImageConfig.rotorMountPoint.y / apacheImageConfig.bodySourceSize - 0.5) * BODY_TARGET_WIDTH
 const SPRITE_CACHE = new Map()
 const ROTATION_BUCKET_SIZE = 7.5
 const ROTATION_BUCKET_COUNT = 48
@@ -119,13 +123,13 @@ function getBodySprite(rotationBucket, tiltState) {
   const targetHeight = sourceHeight * scale
 
   const canvas = document.createElement('canvas')
-  const maxDimension = TILE_SIZE
+  const maxDimension = TILE_SIZE * 1.5
   canvas.width = Math.ceil(maxDimension)
   canvas.height = Math.ceil(maxDimension)
   const ctx = canvas.getContext('2d')
 
   ctx.translate(canvas.width / 2, canvas.height / 2)
-  ctx.rotate((rotationBucket * Math.PI) / 180 + Math.PI / 2)
+  ctx.rotate((rotationBucket * Math.PI) / 180 - Math.PI / 2)
 
   let tiltX = 1
   let tiltY = 1
@@ -199,7 +203,7 @@ function renderBody(ctx, unit, centerX, centerY, preparedBody) {
   return true
 }
 
-function renderRotor(ctx, unit, centerX, centerY, preparedRotor) {
+function renderRotor(ctx, unit, centerX, centerY, preparedRotor, tiltState) {
   if (!preparedRotor && !isApacheImageLoaded()) return
   const altitudeLift = (unit.altitude || 0) * 0.4
   const sourceWidth = preparedRotor?.sourceWidth || rotorImage?.naturalWidth || rotorImage?.width || TILE_SIZE
@@ -209,12 +213,17 @@ function renderRotor(ctx, unit, centerX, centerY, preparedRotor) {
     : ROTOR_TARGET_WIDTH / Math.max(sourceWidth, 1)
   const targetWidth = preparedRotor?.logicalWidth || sourceWidth * scale
   const targetHeight = preparedRotor?.logicalHeight || sourceHeight * scale
-  const anchorX = preparedRotor?.anchors.rotor.x || ROTOR_ANCHOR.x * scale
-  const anchorY = preparedRotor?.anchors.rotor.y || ROTOR_ANCHOR.y * scale
+  const anchorX = preparedRotor?.anchors.rotor.x ?? ROTOR_ANCHOR.x * scale
+  const anchorY = preparedRotor?.anchors.rotor.y ?? ROTOR_ANCHOR.y * scale
 
   ctx.save()
   ctx.translate(centerX, centerY - altitudeLift)
-  ctx.rotate((unit.direction || 0) + Math.PI / 2)
+  ctx.rotate((unit.direction || 0) - Math.PI / 2)
+  const tiltX = tiltState === 'left' || tiltState === 'right' ? 0.9 : 1
+  const tiltY = tiltState === 'forward' || tiltState === 'backward' ? 0.9 : 1
+  const tiltOffset = tiltState === 'forward' ? TILE_SIZE * 0.08
+    : tiltState === 'backward' ? -TILE_SIZE * 0.08 : 0
+  ctx.translate(BODY_MAST_X * tiltX, (BODY_MAST_Y + tiltOffset) * tiltY)
   ctx.rotate(unit.rotor?.angle || 0)
   if (preparedRotor) {
     drawPreparedSpriteTopLeft(ctx, preparedRotor, -anchorX, -anchorY)
@@ -236,7 +245,7 @@ export function renderApacheWithImage(ctx, unit, centerX, centerY) {
 
   renderShadow(ctx, unit, centerX, centerY)
   const rendered = renderBody(ctx, unit, centerX, centerY, preparedBody)
-  renderRotor(ctx, unit, centerX, centerY, preparedRotor)
+  renderRotor(ctx, unit, centerX, centerY, preparedRotor, tiltState)
   return rendered
 }
 
@@ -265,16 +274,19 @@ export function getApacheRocketSpawnPoints(unit, centerX, centerY) {
   const bodyWidth = preparedBody?.sourceWidth || bodyImage?.naturalWidth || bodyImage?.width || TILE_SIZE
   const bodyHeight = preparedBody?.sourceHeight || bodyImage?.naturalHeight || bodyImage?.height || TILE_SIZE
   const scale = BODY_TARGET_WIDTH / Math.max(bodyWidth, 1)
-  const hardpoints = {
-    left: { x: 21, y: 25 },
-    right: { x: 42, y: 25 }
-  }
+  const hardpoints = apacheImageConfig.rocketHardpoints
+  const coordinateScale = bodyWidth / apacheImageConfig.bodySourceSize
+  const tiltState = getTiltState(unit)
+  const tiltX = tiltState === 'left' || tiltState === 'right' ? 0.9 : 1
+  const tiltY = tiltState === 'forward' || tiltState === 'backward' ? 0.9 : 1
+  const tiltOffset = tiltState === 'forward' ? TILE_SIZE * 0.08
+    : tiltState === 'backward' ? -TILE_SIZE * 0.08 : 0
 
   const results = {}
-  const rotation = (unit.direction || 0) + Math.PI / 2
+  const rotation = (unit.direction || 0) - Math.PI / 2
   Object.entries(hardpoints).forEach(([key, point]) => {
-    const localX = (point.x - bodyWidth / 2) * scale
-    const localY = (point.y - bodyHeight / 2) * scale
+    const localX = (point.x * coordinateScale - bodyWidth / 2) * scale * tiltX
+    const localY = ((point.y * coordinateScale - bodyHeight / 2) * scale + tiltOffset) * tiltY
     const rotatedX = localX * Math.cos(rotation) - localY * Math.sin(rotation)
     const rotatedY = localX * Math.sin(rotation) + localY * Math.cos(rotation)
     const altitudeLift = (unit.altitude || 0) * 0.4

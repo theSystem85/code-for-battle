@@ -1,0 +1,9 @@
+{
+  "bodySourceSize": 256,
+  "rotorMountPoint": { "x": 128, "y": 128 },
+  "rotorAnchor": { "x": 128, "y": 128 },
+  "rocketHardpoints": {
+    "left": { "x": 82, "y": 170 },
+    "right": { "x": 174, "y": 170 }
+  }
+}

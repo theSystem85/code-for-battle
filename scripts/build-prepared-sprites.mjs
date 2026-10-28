@@ -4,6 +4,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
 import tankImageConfigData from '../src/tankImageConfig.json' with { type: 'json' }
+import apacheImageConfig from '../src/apacheImageConfig.json' with { type: 'json' }
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const OUTPUT_ROOT = path.join(ROOT, 'public/images/prepared')
@@ -140,7 +141,7 @@ const definitions = [
     id: 'aircraft:apache:rotor',
     source: unitSource('apache_rotor_map.webp'),
     target: { width: TILE_SIZE * 1.5, preserveAspect: true },
-    anchors: { rotorSource: [31, 30] },
+    anchors: { rotorSource: [apacheImageConfig.rotorAnchor.x, apacheImageConfig.rotorAnchor.y] },
     states: ['rotating']
   },
   ...[
@@ -319,7 +320,7 @@ function apacheTilt(tiltState) {
 }
 
 async function buildApacheAtlas(density) {
-  const cell = roundBacking(TILE_SIZE, density)
+  const cell = roundBacking(TILE_SIZE * 1.5, density)
   const atlasWidth = cell * APACHE_BUCKET_DEGREES.length
   const atlasHeight = cell * APACHE_TILT_STATES.length
   const composites = []
@@ -339,7 +340,7 @@ async function buildApacheAtlas(density) {
       .toBuffer()
     const localSize = Math.max(cell * 3, Math.ceil(Math.hypot(bodyWidth, bodyHeight)) + cell)
     const bodyLeft = Math.round((localSize - tiltedWidth) / 2)
-    const bodyTop = Math.round((localSize - tiltedHeight) / 2 + tilt.offsetY * density)
+    const bodyTop = Math.round((localSize - tiltedHeight) / 2 + tilt.offsetY * tilt.scaleY * density)
     const local = await sharp({
       create: { width: localSize, height: localSize, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } }
     })
@@ -348,7 +349,7 @@ async function buildApacheAtlas(density) {
       .toBuffer()
 
     for (let column = 0; column < APACHE_BUCKET_DEGREES.length; column++) {
-      const angle = APACHE_BUCKET_DEGREES[column] + 90
+      const angle = APACHE_BUCKET_DEGREES[column] - 90
       const rotated = await sharp(local)
         .rotate(angle, { background: { r: 0, g: 0, b: 0, alpha: 0 } })
         .png()
@@ -422,6 +423,7 @@ async function main() {
     })
   }
 
+  const apacheSource = sourceInventory.get(unitSource('apache_body_map.webp'))
   const apacheAtlases = []
   for (const density of DENSITIES) apacheAtlases.push(await buildApacheAtlas(density))
   for (let row = 0; row < APACHE_TILT_STATES.length; row++) {
@@ -430,14 +432,14 @@ async function main() {
         id: `aircraft:apache:body:${APACHE_BUCKET_DEGREES[column]}:${APACHE_TILT_STATES[row]}`,
         category: 'aircraft',
         source: `/${unitSource('apache_body_map.webp')}`,
-        sourceWidth: 64,
-        sourceHeight: 64,
-        logicalWidth: TILE_SIZE,
-        logicalHeight: TILE_SIZE,
+        sourceWidth: apacheSource.width,
+        sourceHeight: apacheSource.height,
+        logicalWidth: TILE_SIZE * 1.5,
+        logicalHeight: TILE_SIZE * 1.5,
         hasAlpha: true,
         alphaMode: 'straight',
         anchorSpace: 'logical-pixels',
-        anchors: { center: { x: TILE_SIZE / 2, y: TILE_SIZE / 2 } },
+        anchors: { center: { x: TILE_SIZE * 0.75, y: TILE_SIZE * 0.75 } },
         states: [APACHE_TILT_STATES[row]],
         variants: apacheAtlases.map(atlas => ({
           density: atlas.density,

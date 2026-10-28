@@ -1,0 +1,15 @@
+- [x] **Sharper recovery tank and Apache map art** — Regenerated the recovery vehicle, Apache body and main rotor in the existing desert style, with stronger recovery camouflage that remains subtler than tank camouflage. Sources are 256×256; prepared DPR 1/2/3 imagery only downsamples. Apache art now faces south, rotor and weapon anchors use the new source coordinates, and tilt moves attachments with the body. Atlas cells grow from 32 to 48 logical pixels to avoid clipping during rotation and tilt (bounded extra decoded atlas storage: 10.55 MiB at DPR 3). No new per-entity scans, filters or sprite preparation enter gameplay; the rotor adds one constant-time translation per Apache per frame.
+
+Spec: none
+
+Generation: image_gen, using the current recovery tank, Apache body/rotor, Tank V1 and howitzer as references. Raw generated sheet: `docs/asset-sources/recovery-apache-retina-source.webp`; crop/alpha cleanup build: `docs/asset-sources/recovery-apache-build.py`. All committed binary files are WebP; source art q85 and prepared unit sprites retain the existing q95 sharp-YUV pipeline. The Apache mast and rotor hub are centered at source (128,128); rocket mounts are (82,170)/(174,170).
+
+Hardware GPU / 75 FPS acceptance remains pending on Patrick's hardware; no software-GPU benchmarks were run.
+
+Visual verification uses production renderers in Chromium at DPR 1 and DPR 3, all four cardinal headings on grass-green and road-grey swatches, beside Tank V1 and the howitzer. Screenshots: [DPR 1](../asset-sources/recovery-apache-review/dpr1.webp), [DPR 3](../asset-sources/recovery-apache-review/dpr3.webp). Red dots mark Apache rocket origins. These are controlled renderer comparisons, not full-game movement captures. Unchanged sidebar artwork was outside this map-art request.
+
+Opaque-pixel palette measurements (RGB means / mean saturation / luminance standard deviation): recovery 117.6,96.3,61.6 / 0.497 / 0.212; Apache 112.8,95.3,65.5 / 0.430 / 0.177; Tank V1 130.2,107.2,69.2 / 0.440 / 0.215. The recovery has comparable tonal separation to Tank V1 while its camouflage patches have lower contrast and coverage.
+
+For comparison, original recovery saturation/luminance spread was 0.345/0.091, and original Apache 0.323/0.101. The regenerated sprites increase separation rather than simply increasing overall brightness.
+
+Validation: `npm run lint:fix:changed` and `npm run lint` pass. `npm run test:unit` completed with 5685 passes and four release-script failures caused by sandbox `spawnSync git EPERM`; `npm run test` completed with 5771 passes and the same four failures. All five release-script tests pass when rerun with subprocess/network access, without code changes. The focused renderer/facing/anchor suite passes all 14 tests. New Playwright E00241 passes both DPR cases. Existing E00004 (touchdown refill) and E00005 (rocket combat) time out on both this branch and unchanged `dev` at ba4cc36a. E00003 (landing occupancy) passed once on unchanged `dev` but times out on this branch; a diagnostic run reports an unrelated `terrainStaging byte budget exceeded` page error. This E2E issue remains unresolved; the PR stays open for review.
