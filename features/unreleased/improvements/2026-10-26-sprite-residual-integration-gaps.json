@@ -1,1 +1,0 @@
-{ "description": "Sprite memory is tracked in one shared budget, offline play keeps only the needed map sprite tiers, and idle frames no longer re-request sprite demand." }

@@ -1,1 +1,0 @@
-{ "description": "Visible map decorations now use spare main-thread capacity and stay stable while the camera scrolls." }

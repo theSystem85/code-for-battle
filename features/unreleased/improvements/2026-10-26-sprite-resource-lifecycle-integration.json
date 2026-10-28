@@ -1,1 +1,0 @@
-{ "description": "Sprite preparation now safely retries failed work and bounds shared atlas, tier, and explosion resource lifetimes." }
