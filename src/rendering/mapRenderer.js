@@ -900,7 +900,7 @@ export class MapRenderer {
     return chunk
   }
 
-  evictOldChunks(activeChunkKeys = this.emptyActiveChunkKeys) {
+  evictOldChunks(activeChunkKeys = this.activeChunkKeys) {
     while (this.chunkCache.size > this.maxCachedChunks) {
       if (!this.evictOneOldestChunk(activeChunkKeys)) break
     }
@@ -940,50 +940,59 @@ export class MapRenderer {
     chunk.decorativeResidentToken?.release()
     chunk.decorativeResidentToken = null
     chunk.decorativeResidentBytes = 0
-    this.decorativeWarmQueue.get(chunk.key)?.stagingToken?.release()
-    this.decorativeWarmQueue.delete(chunk.key)
+    this.discardDecorativePreparation(this.decorativeWarmQueue.get(chunk.key))
+  }
+
+  discardDecorativePreparation(entry) {
+    if (!entry) return
+    entry.stagingToken?.release()
+    if (entry.canvas) {
+      entry.canvas.width = 1
+      entry.canvas.height = 1
+    }
+    this.decorativeWarmQueue.delete(entry.chunk.key)
+  }
+
+  reserveResidentRaster(chunk, bytes, decorative = false) {
+    const budget = this.terrainByteBudget
+    const previousBytes = decorative ? chunk.decorativeResidentBytes || 0 : chunk.residentBytes
+    if (bytes > budget.limits.terrainResident) return false
+    while (budget.usage.terrainResident - previousBytes + bytes > budget.limits.terrainResident) {
+      if (!this.evictOneOldestChunk(this.activeChunkKeys, chunk.key)) return false
+    }
+    if (decorative) {
+      chunk.decorativeResidentToken?.release()
+      chunk.decorativeResidentToken = budget.reserve('terrainResident', bytes)
+      chunk.decorativeResidentBytes = bytes
+    } else {
+      chunk.residentToken?.release()
+      chunk.residentToken = budget.reserve('terrainResident', bytes)
+      chunk.residentBytes = bytes
+    }
+    return true
   }
 
   reserveChunkRaster(chunk, bytes) {
-    const stagingToken = this.terrainByteBudget.reserve('terrainStaging', bytes)
-    chunk.residentToken?.release()
-    chunk.residentToken = null
-    chunk.residentBytes = 0
-    let residentToken = null
-    while (!residentToken) {
-      try {
-        residentToken = this.terrainByteBudget.reserve('terrainResident', bytes)
-      } catch (error) {
-        if (!this.evictOneOldestChunk(this.activeChunkKeys, chunk.key)) {
-          stagingToken.release()
-          throw error
-        }
+    const budget = this.terrainByteBudget
+    if (bytes > budget.limits.terrainStaging) return null
+    // A cooperative decoration bake can retain staging across frames. Terrain
+    // must reclaim that slot before the next visible page is rasterized.
+    if (bytes + budget.usage.terrainStaging > budget.limits.terrainStaging) {
+      for (const entry of this.decorativeWarmQueue.values()) {
+        if (entry.stagingToken) this.discardDecorativePreparation(entry)
       }
     }
-    chunk.residentToken = residentToken
-    chunk.residentBytes = bytes
-    return stagingToken
+    if (bytes + budget.usage.terrainStaging > budget.limits.terrainStaging ||
+        !this.reserveResidentRaster(chunk, bytes)) return null
+    return budget.reserve('terrainStaging', bytes)
   }
 
-  reserveDecorativeRaster(chunk, bytes) {
-    const stagingToken = this.terrainByteBudget.reserve('terrainStaging', bytes)
-    chunk.decorativeResidentToken?.release()
-    chunk.decorativeResidentToken = null
-    chunk.decorativeResidentBytes = 0
-    let residentToken = null
-    while (!residentToken) {
-      try {
-        residentToken = this.terrainByteBudget.reserve('terrainResident', bytes)
-      } catch (error) {
-        if (!this.evictOneOldestChunk(this.activeChunkKeys, chunk.key)) {
-          stagingToken.release()
-          throw error
-        }
-      }
-    }
-    chunk.decorativeResidentToken = residentToken
-    chunk.decorativeResidentBytes = bytes
-    return stagingToken
+  reserveDecorativeRaster(_chunk, bytes) {
+    const budget = this.terrainByteBudget
+    if (bytes + budget.usage.terrainStaging > budget.limits.terrainStaging) return null
+    // Unpublished work belongs exclusively to staging. Keep the old published
+    // canvas and its resident reservation until the replacement is complete.
+    return budget.reserve('terrainStaging', bytes)
   }
 
   updateTerrainByteTelemetry() {
@@ -1189,8 +1198,7 @@ export class MapRenderer {
     this.decorativeWarmQueue.set(chunk.key, { chunk, mapGrid, useTexture, key })
     while (this.decorativeWarmQueue.size > this.maxDecorativeWarmQueue) {
       const oldestKey = this.decorativeWarmQueue.keys().next().value
-      this.decorativeWarmQueue.get(oldestKey)?.stagingToken?.release()
-      this.decorativeWarmQueue.delete(oldestKey)
+      this.discardDecorativePreparation(this.decorativeWarmQueue.get(oldestKey))
     }
     this.scheduleDecorativeWarmProcessing()
   }
@@ -1228,14 +1236,14 @@ export class MapRenderer {
     if (!entry) return false
     const { chunk, mapGrid, useTexture, key } = entry
     if (!this.chunkCache.has(chunk.key) || key !== this.getDecorativeKey(chunk)) {
-      entry.stagingToken?.release()
-      this.decorativeWarmQueue.delete(chunk.key)
+      this.discardDecorativePreparation(entry)
       return false
     }
     const width = (chunk.endX - chunk.startX) * TILE_SIZE + chunk.padding * 2 + 1
     const height = (chunk.endY - chunk.startY) * TILE_SIZE + chunk.padding * 2 + 1
     if (!entry.canvas) {
       entry.stagingToken = this.reserveDecorativeRaster(chunk, getTerrainRasterBytes(width, height))
+      if (!entry.stagingToken) return false
       entry.canvas = document.createElement('canvas')
       entry.canvas.width = width
       entry.canvas.height = height
@@ -1268,8 +1276,13 @@ export class MapRenderer {
       entry.nextTile++
     }
     if (entry.nextTile < tileCount) return false
+    if (!this.reserveResidentRaster(chunk, getTerrainRasterBytes(width, height), true)) return false
     entry.stagingToken.release()
     this.decorativeWarmQueue.delete(chunk.key)
+    if (chunk.decorativeCanvas) {
+      chunk.decorativeCanvas.width = 1
+      chunk.decorativeCanvas.height = 1
+    }
     const firstPublication = !chunk.decorativeCanvas
     chunk.decorativeCanvas = entry.canvas
     chunk.decorativeCtx = entry.ctx
@@ -1315,6 +1328,7 @@ export class MapRenderer {
       return
     }
     let warmed = 0
+    let processed = 0
 
     while (this.chunkWarmQueue.size) {
       const idleRemaining = typeof deadline?.timeRemaining === 'function' ? deadline.timeRemaining() : null
@@ -1324,6 +1338,7 @@ export class MapRenderer {
 
       const task = this.chunkWarmQueue.take(startTime, this.chunkWarmGeneration)
       if (!task) break
+      processed++
 
       const chunk = this.getOrCreateChunk(
         task.chunkX,
@@ -1340,12 +1355,17 @@ export class MapRenderer {
       const state = this.getChunkRenderState(chunk, task.mapGrid, task.useTexture, task.currentWaterFrame, options)
       if (state.needsRedraw) {
         options.precomputedState = state
-        this.updateChunkCache(chunk, task.mapGrid, task.useTexture, task.currentWaterFrame, options)
-        warmed++
+        const rendered = this.updateChunkCache(chunk, task.mapGrid, task.useTexture, task.currentWaterFrame, options)
+        if (rendered === null && !chunk.everRendered) {
+          this.releaseChunkResources(chunk)
+          this.chunkCache.delete(chunk.key)
+        }
+        if (rendered === true) warmed++
       }
 
       const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()
-      if (warmed >= 1 || (idleRemaining === null && now - startTime > 3)) {
+      // Bound attempts even when a pinned viewport leaves no space to warm.
+      if (processed >= 1 || (idleRemaining === null && now - startTime > 3)) {
         break
       }
     }
@@ -1481,6 +1501,7 @@ export class MapRenderer {
     const width = tileWidth * TILE_SIZE + chunk.padding * 2 + 1
     const height = tileHeight * TILE_SIZE + chunk.padding * 2 + 1
     const stagingToken = this.reserveChunkRaster(chunk, getTerrainRasterBytes(width, height))
+    if (!stagingToken) return null
     const profilerToken = renderProfiler.startSpan(PROFILER_SPAN_IDS.CHUNK_REBUILD)
     try {
       const topologyChanged =
@@ -1784,7 +1805,17 @@ export class MapRenderer {
         updateOptions.skipWaterBase = skipWaterBase
         updateOptions.skipWaterSot = skipWaterSot
         updateOptions.precomputedState = state
-        this.updateChunkCache(chunk, mapGrid, useTexture, currentWaterFrame, updateOptions)
+        const rendered = this.updateChunkCache(chunk, mapGrid, useTexture, currentWaterFrame, updateOptions)
+        if (rendered === null) {
+          // Draw the complete current terrain at the selected quality instead
+          // of a stale/empty canvas, without exceeding the resident byte cap.
+          this.drawChunkFallback(ctx, mapGrid, scrollOffset, chunkStartX, chunkStartY, chunkEndX, chunkEndY, chunkOptions)
+          if (!chunk.everRendered) {
+            this.releaseChunkResources(chunk)
+            this.chunkCache.delete(chunk.key)
+          }
+          continue
+        }
 
         // Share the exact camera translation with entities and GPU water.
         // Rounding terrain alone introduces a relative one-pixel scroll jiggle.
@@ -1803,8 +1834,7 @@ export class MapRenderer {
     // before eviction can display them without another bake.
     for (const [key, entry] of this.decorativeWarmQueue) {
       if (activeChunkKeys.has(key)) continue
-      entry.stagingToken?.release()
-      this.decorativeWarmQueue.delete(key)
+      this.discardDecorativePreparation(entry)
     }
 
     // Re-enable image smoothing for other rendering
