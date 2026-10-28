@@ -19,8 +19,8 @@ describe('map long press controller', () => {
     const controller = createMapLongPressController({ duration: () => DEFAULT_MAP_ACTION_LONG_PRESS_MS, open, progress })
     return { controller, open, progress }
   }
-  it('[U02494] defaults to a 1000 ms hold', () => {
-    expect(DEFAULT_MAP_ACTION_LONG_PRESS_MS).toBe(1000)
+  it('[U02494] defaults to a 500 ms hold', () => {
+    expect(DEFAULT_MAP_ACTION_LONG_PRESS_MS).toBe(500)
   })
   it('[U02495] delays feedback and opens once at the configured duration, consuming release', () => {
     const { controller, open, progress } = setup()
@@ -29,8 +29,8 @@ describe('map long press controller', () => {
     vi.advanceTimersByTime(199)
     expect(progress).not.toHaveBeenCalled()
     vi.advanceTimersByTime(1)
-    expect(progress).toHaveBeenCalledWith({ x: 100, y: 100 }, 800)
-    vi.advanceTimersByTime(799)
+    expect(progress).toHaveBeenCalledWith({ x: 100, y: 100 }, 300)
+    vi.advanceTimersByTime(299)
     expect(open).not.toHaveBeenCalled()
     vi.advanceTimersByTime(1)
     expect(open).toHaveBeenCalledTimes(1)
@@ -40,7 +40,7 @@ describe('map long press controller', () => {
   it('[U02496] short release never opens or consumes the click', () => {
     const { controller, open } = setup()
     controller.down({ x: 0, y: 0 })
-    vi.advanceTimersByTime(999)
+    vi.advanceTimersByTime(499)
     expect(controller.up()).toBe(false)
     vi.advanceTimersByTime(2000)
     expect(open).not.toHaveBeenCalled()

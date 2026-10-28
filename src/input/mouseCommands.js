@@ -1,3 +1,8 @@
+import { applyMapAction } from '../ui/mapActions/mapActionCommands.js'
+import { broadcastGameCommand } from '../network/commandBroadcast.js'
+import { COMMAND_TYPES } from '../network/commandTypes.js'
+import { canSupplyShipServe } from '../game/shipyardServiceLogic.js'
+import { unitContainsPoint } from './unitHitTest.js'
 import { queueDefenseBuildingTarget } from './unitCommands/defenceCommands.js'
 import { TILE_SIZE } from '../config.js'
 import { gameState } from '../gameState.js'
@@ -7,7 +12,6 @@ import { playSound } from '../sound.js'
 import { findEnemyTarget } from './mouseHelpers.js'
 import { isForceAttackModifierActive } from '../utils/inputUtils.js'
 import { initiateRetreat } from '../behaviours/retreat.js'
-import { getUnitSelectionCenter } from './selectionManager.js'
 import { isLocalPartyAutomationLocked } from '../network/multiplayerStore.js'
 import { createReplayEntityReference, createReplayUnitReferences, isReplayInteractionLocked, recordReplayCommand } from '../replaySystem.js'
 import {
@@ -110,8 +114,7 @@ export function handleForceAttackCommand(handler, worldX, worldY, units, selecte
       if (!forceAttackTarget) {
         for (const unit of units) {
           if (selectionManager.isHumanPlayerUnit(unit) && !unit.selected) {
-            const { centerX, centerY } = getUnitSelectionCenter(unit)
-            if (Math.hypot(worldX - centerX, worldY - centerY) < TILE_SIZE / 2) {
+            if (unitContainsPoint(unit, worldX, worldY)) {
               forceAttackTarget = unit
               break
             }
@@ -204,6 +207,7 @@ function applyGuardTargets(commandableUnits, guardTargets) {
   commandableUnits.forEach(u => {
     u.guardTargets = uniqueTargets.slice()
     u.guardTarget = u.guardTargets[0]
+    u.guardOrderMode = null
     u.guardMode = true
     u.target = null
     u.moveTarget = null
@@ -215,8 +219,7 @@ export function handleGuardCommand(_handler, worldX, worldY, units, selectedUnit
   let guardTarget = null
   for (const unit of units) {
     if (selectionManager.isHumanPlayerUnit(unit) && !unit.selected) {
-      const { centerX, centerY } = getUnitSelectionCenter(unit)
-      if (Math.hypot(worldX - centerX, worldY - centerY) < TILE_SIZE / 2) {
+      if (unitContainsPoint(unit, worldX, worldY)) {
         guardTarget = unit
         break
       }
@@ -630,4 +633,18 @@ export function handleFallbackCommand(handler, worldX, worldY, selectedUnits, un
   } else if (!isForceAttackModifierActive(e)) {
     handleStandardCommands(handler, worldX, worldY, commandableUnits, unitCommands, mapGrid, false)
   }
+}
+
+export function handleSupplyShipServiceCommand(selectedUnits, target, selectionManager, unitCommands, mapGrid) {
+  if (isReplayInteractionLocked() || isLocalPartyAutomationLocked()) return false
+  const suppliers = selectedUnits.filter(unit => selectionManager.isCommandableUnit(unit) &&
+    canSupplyShipServe(unit, target, gameState.buildings))
+  if (!suppliers.length) return false
+  const payload = { action: 'serveUnit', targetId: target.id, entityIds: suppliers.map(unit => unit.id) }
+  const remote = gameState.multiplayerSession?.isRemote && gameState.multiplayerSession.localRole !== 'host'
+  if (!remote && !applyMapAction(payload, gameState.humanPlayer || 'player1', {
+    units: [target, ...suppliers], buildings: gameState.buildings, commands: unitCommands, mapGrid
+  })) return false
+  broadcastGameCommand(COMMAND_TYPES.MAP_ACTION, payload)
+  return true
 }

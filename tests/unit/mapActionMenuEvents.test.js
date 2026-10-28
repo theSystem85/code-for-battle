@@ -5,9 +5,9 @@ import { setMapActionLongPressMs, loadMapActionLongPressSetting, MAP_ACTION_LONG
 import { getStoredItem } from '../../src/storage/indexedDbStorage.js'
 import { broadcastGameCommand } from '../../src/network/commandBroadcast.js'
 
-vi.mock('../../src/network/remoteConnection.js', () => ({ getActiveRemoteConnection: vi.fn() }))
+vi.mock('../../src/network/remoteConnection.js', async importOriginal => ({ ...await importOriginal(), getActiveRemoteConnection: vi.fn() }))
 vi.mock('../../src/replaySystem.js', () => ({
-  createReplayUnitReferences: vi.fn(() => []), recordReplayCommand: vi.fn(),
+  createReplayEntityReference: vi.fn(unit => ({ id: unit.id })), createReplayUnitReferences: vi.fn(() => []), recordReplayCommand: vi.fn(),
   isReplayInteractionLocked: vi.fn(() => false)
 }))
 
@@ -18,14 +18,15 @@ vi.mock('../../src/network/multiplayerStore.js', () => ({ isLocalPartyAutomation
 describe('map action DOM integration', () => {
   const unit = { id: 'u', owner: 'player1', health: 100, type: 'tank', x: 32, y: 32, tileX: 1, tileY: 1 }
   const selected = [unit]
+  const allUnits = [unit]
   const commands = { handleAttackCommand: vi.fn(), handleMovementCommand: vi.fn() }
   const handler = { activeTouchPointers: new Map(), attackGroupHandler: {} }
   const canvas = document.createElement('canvas')
   canvas.getBoundingClientRect = () => ({ left: 0, top: 0, width: 800, height: 600 })
   document.body.appendChild(canvas)
-  const api = installMapActionMenu(canvas, { selection: selected, units: [unit], commands, handler })
-  function pointer(type, x = 100, id = 1, touch = false) {
-    const event = new MouseEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: 100, button: 0 })
+  const api = installMapActionMenu(canvas, { selection: selected, units: allUnits, commands, handler })
+  function pointer(type, x = 100, id = 1, touch = false, y = 100) {
+    const event = new MouseEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, button: 0 })
     Object.defineProperties(event, { pointerId: { value: id }, pointerType: { value: touch ? 'touch' : 'mouse' } })
     canvas.dispatchEvent(event)
     return event
@@ -34,6 +35,7 @@ describe('map action DOM integration', () => {
     vi.useFakeTimers()
     vi.clearAllMocks()
     Object.assign(gameState, { humanPlayer: 'player1', paused: false, replayMode: false, mapEditMode: false, buildingPlacementMode: false, isSpectator: false, multiplayerSession: null, scrollOffset: { x: 0, y: 0 }, buildings: [], mapGrid: Array.from({ length: 30 }, () => Array.from({ length: 30 }, () => ({ type: 'grass' }))) })
+    allUnits.splice(1)
     handler.wasDragging = false
     selected.splice(0, selected.length, unit)
     setMapActionLongPressMs(300)
@@ -81,6 +83,34 @@ describe('map action DOM integration', () => {
     expect(broadcastGameCommand).toHaveBeenCalledWith('map-action', expect.objectContaining({ action: 'forceAttackAt', entityIds: ['u'] }))
     expect(commands.handleAttackCommand).not.toHaveBeenCalled()
     gameState.multiplayerSession = null
+  })
+  it('[U07028] executes a hovered unit command on the original mouse or touch release', () => {
+    for (const touch of [false, true]) {
+      const target = { id: 'enemy', owner: 'player2', type: 'tank_v1', health: 100, x: 84, y: 84 }
+      allUnits.push(target)
+      pointer('pointerdown', 100, 1, touch)
+      vi.advanceTimersByTime(300)
+      expect(api.isOpen()).toBe(true)
+      const follow = document.querySelector('[data-map-action-menu] [data-id="followUnit"]')
+      expect(follow).not.toBeNull()
+      const x = parseFloat(follow.style.getPropertyValue('--tx'))
+      const y = parseFloat(follow.style.getPropertyValue('--ty'))
+      pointer('pointermove', x, 1, touch, y)
+      pointer('pointerup', x, 1, touch, y)
+      expect(unit.guardTarget).toBe(target)
+      expect(unit.guardOrderMode).toBe('follow')
+      expect(api.isOpen()).toBe(false)
+      expect(broadcastGameCommand).toHaveBeenCalledWith('map-action', expect.objectContaining({ action: 'followUnit', targetId: 'enemy' }))
+      vi.advanceTimersByTime(700)
+      allUnits.splice(1)
+    }
+  })
+  it('[U07029] cancels the gesture without running a command on pointer cancellation', () => {
+    pointer('pointerdown')
+    vi.advanceTimersByTime(300)
+    pointer('pointercancel')
+    expect(api.isOpen()).toBe(false)
+    expect(broadcastGameCommand).not.toHaveBeenCalled()
   })
   it('[U02555] persists duration using the game storage and reloads it', () => {
     api.setLongPressDuration(850)

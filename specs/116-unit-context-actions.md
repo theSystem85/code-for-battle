@@ -1,0 +1,15 @@
+# Unit image targeting and context actions
+
+- Naval pointer selection, hover, force attack and fleet boarding must use offline source-alpha masks at the rendered asset center, logical size and continuous rotation. Transparent source pixels must not receive clicks. Aircraft retain altitude-adjusted targeting.
+- Default hold duration is 500 ms. Hold on another unit, drag to an action, then release the same mouse/touch pointer to execute it. A release without a hovered action keeps the menu available. Cancel, movement before the hold, camera movement, multitouch and interaction locks must prevent accidental orders.
+- Enemy unit options: Attack and Follow. Friendly unit options: Force attack, Guard, Serve and Follow. Serve is disabled when the selection cannot provide service. Land on appears for selected aircraft over a friendly carrier; Embark appears for eligible ground cargo over a friendly ferry/hovercraft.
+- A selected supply ship hovering a friendly naval recipient that needs available service shows the move-into cursor. Clicking issues Serve, approaches within supply range, and uses existing stationary supply transfer and infrastructure requirements.
+- Follow accepts friendly or enemy units, tracks their position using the follower's movement domain, stops at a following distance, and suppresses combat while following. Aircraft use existing air-wing flight handling. A dead target ends Follow; a new direct order cancels it. Orders persist in saves and replay; multiplayer uses the authoritative map-action path.
+
+## Performance and verification
+
+Hit masks are generated offline with `node scripts/build-naval-hit-masks.mjs`. No gameplay image readback, source resizing, per-unit mask construction, or DPR-scaled raster work is introduced. Each pointer hit query performs an inverse rotation and checks a single source-alpha row, plus at most 12 part checks for a battleship. At 100 candidate hulls and DPR 3 this is 100 hull queries (up to 1,200 extra part queries if all candidates are battleships), independent of DPR, per pointer event. Battleship turrets and barrels share drawing geometry and use their independent rotation and recoil. Existing simulation guard updates run once per unit per tick; Follow adds constant-time checks for idle units and reuses guard path throttling (250 ms for active following). At 100 following units, at most 400 path requests/second can occur; qualifying hardware acceptance is required for that worst case. Guard target arrays retain identity unless a target dies; in-range Follow clears an existing path in place.
+
+Functional commands: `npm run test:unit`, `npm run test`, and `npm run test:e2e -- tests/e2e/unitContextActions.test.js tests/e2e/longPressMapActionMenu.test.js --project=chromium`.
+
+Hardware acceptance remains pending: Patrick should verify fast full-map scrolling and a large active following fleet on dev with a hardware GPU at the unchanged visual settings and real DPR. Measure the repository's 75 FPS deadline, frame-time p95/p99/max, missed deadlines, CPU update/render time, backend/DPR, GPU timing and memory/GC. This cloud environment does not certify GPU performance.

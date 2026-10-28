@@ -44,6 +44,11 @@ export const updateUnitCombat = logPerformance(function updateUnitCombat(units, 
     // Handle status effects
     handleTeslaEffects(unit, now)
 
+    if (unit.guardTarget && unit.guardOrderMode === 'follow') {
+      unit.target = null
+      return
+    }
+
     // Process attack queue for units with queued targets
     processAttackQueue(unit, units, mapGrid)
 

@@ -1,3 +1,5 @@
+import { unitContainsPoint } from './unitHitTest.js'
+import { canSupplyShipServe } from '../game/shipyardServiceLogic.js'
 // cursorManager.js
 import { TILE_SIZE, CURSOR_METERS_PER_TILE } from '../config.js'
 import { gameState } from '../gameState.js'
@@ -473,7 +475,7 @@ export class CursorManager {
           : TILE_SIZE * 0.8
         return { unit, score: Math.hypot(worldX - centerX, worldY - centerY) / radius }
       })
-      .filter(({ score }) => score <= 1)
+      .filter(({ unit, score }) => score <= 1 && unitContainsPoint(unit, worldX, worldY, TILE_SIZE * 0.8))
       .sort((a, b) => a.score - b.score)
       .map(({ unit }) => unit)
     const hoveredUnit = hoveredUnits[0]
@@ -1090,7 +1092,7 @@ export class CursorManager {
                           !gameState.sellMode &&
                           !gameState.attackGroupMode
 
-      const hasImmediateMoveIntoTarget = this.isOverWreck ||
+      const hasImmediateMoveIntoTarget = selectedUnits.some(unit => canSupplyShipServe(unit, hoveredUnit, gameState.buildings)) || this.isOverWreck ||
           this.isOverTowableUnit ||
           this.isOverRepairableUnit ||
           this.isOverRecoveryTank ||
