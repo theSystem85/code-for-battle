@@ -1,3 +1,0 @@
-{
-  "description": "Prepare complete tank rotation sets in a bounded worker job without competing with gameplay on the main thread."
-}

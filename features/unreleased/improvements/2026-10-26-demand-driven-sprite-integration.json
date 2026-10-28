@@ -1,1 +1,0 @@
-{ "description": "Deferred sprite loading now follows camera demand and keeps offline derivative downloads bounded." }
