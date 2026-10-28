@@ -302,3 +302,45 @@ describe('MapRenderer bounded terrain residency', () => {
     expect(renderer.frameChunkStats.terrainStagingBytes).toBe(0)
   })
 })
+
+
+describe('terrain cache pressure recovery', () => {
+  it('[U07038] renders every visible chunk when the viewport exceeds the resident budget', () => {
+    const renderer = new MapRenderer(makeTextureManager())
+    const map = makeMap()
+    const pixels = renderer.chunkSize * 32 + renderer.chunkPadding * 2 + 1
+    renderer.terrainByteBudget = createTerrainByteBudget({
+      residentBytes: pixels * pixels * 4,
+      stagingBytes: pixels * pixels * 4
+    })
+    vi.spyOn(renderer, 'drawBaseLayer').mockImplementation(() => {})
+    vi.spyOn(renderer, 'scheduleChunkWarmProcessing').mockImplementation(() => {})
+    const ctx = { drawImage: vi.fn() }
+    for (const start of [0, 16, 32, 16, 0]) {
+      expect(() => renderer.renderTiles(ctx, map, { x: start * 32, y: 0 }, start, 0, start + 32, 32, {})).not.toThrow()
+      expect(renderer.frameChunkStats.chunksDrawn + renderer.frameChunkStats.chunkFallbacks).toBeGreaterThanOrEqual(4)
+      expect(renderer.terrainByteBudget.usage.terrainResident).toBeLessThanOrEqual(pixels * pixels * 4)
+      expect(renderer.terrainByteBudget.usage.terrainStaging).toBe(0)
+      renderer.resetFrameChunkStats()
+    }
+  })
+
+  it('[U07039] does not evict the visible viewport when background warming fills the cache', () => {
+    const renderer = new MapRenderer(makeTextureManager())
+    renderer.maxCachedChunks = 1
+    const visible = renderer.getOrCreateChunk(0, 0, 0, 0, 16, 16)
+    renderer.activeChunkKeys.add(visible.key)
+    const warmed = renderer.getOrCreateChunk(1, 0, 16, 0, 32, 16)
+    renderer.evictOldChunks()
+    expect(renderer.chunkCache.get(visible.key)).toBe(visible)
+    expect(renderer.chunkCache.has(warmed.key)).toBe(false)
+  })
+
+  it('[U07040] invalidates raster readiness when a canvas backing store is released', () => {
+    const renderer = new MapRenderer(makeTextureManager())
+    const chunk = renderer.getOrCreateChunk(0, 0, 0, 0, 16, 16)
+    chunk.everRendered = true
+    renderer.releaseChunkResources(chunk)
+    expect(chunk.everRendered).toBe(false)
+  })
+})
