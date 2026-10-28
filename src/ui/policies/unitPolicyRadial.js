@@ -1,3 +1,4 @@
+import { unitContainsPoint } from '../../input/unitHitTest.js'
 // Radial context menu for per-unit policies. Right-click or long-press on one
 // of your units opens it, in the same radial family as the factory build menu.
 // Choosing a policy applies it to that unit mid-battle; the simulation keeps
@@ -141,8 +142,7 @@ export function installUnitPolicyRadial(canvas, getUnits) {
       const unit = units[i]
       if (!(unit.health > 0) || !isProgrammableUnit(unit)) continue
       if (unit.owner !== owner && !(owner === 'player1' && unit.owner === 'player')) continue
-      const { centerX, centerY } = getUnitSelectionCenter(unit)
-      if (Math.hypot(worldX - centerX, worldY - centerY) < TILE_SIZE / 2) return unit
+      if (unitContainsPoint(unit, worldX, worldY)) return unit
     }
     for (const building of gameState.buildings || []) {
       if (!isDefenceReady(building) || !canCommandPolicy(owner, building.owner)) continue

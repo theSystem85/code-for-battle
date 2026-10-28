@@ -182,3 +182,16 @@ export const updateShipyardServiceLogic = logPerformance(function updateShipyard
   })
   updateSupplyShipService(units, buildings, delta)
 }, false)
+
+// Shared by hover, direct clicks and the unit context menu.
+export function canSupplyShipServe(supplier, target, buildings = []) {
+  if (supplier?.type !== 'supplyShip' || supplier.health <= 0 || !target?.isNaval || target.health <= 0 ||
+    supplier === target || normalizeOwner(supplier.owner) !== normalizeOwner(target.owner)) return false
+  return (hasOwnedServiceBuilding(buildings, supplier.owner, 'fuel') && supplier.supplyFuel > 0 &&
+      (target.gas < target.maxGas || target.carrierFuel < target.maxCarrierFuel)) ||
+    (hasOwnedServiceBuilding(buildings, supplier.owner, 'ammunition') && supplier.supplyAmmo > 0 &&
+      (target.ammunition < target.maxAmmunition || target.carrierAmmo < target.maxCarrierAmmo)) ||
+    (hasOwnedServiceBuilding(buildings, supplier.owner, 'health') && supplier.supplyRepairTools > 0 && target.health < target.maxHealth) ||
+    (hasOwnedServiceBuilding(buildings, supplier.owner, 'crew') && supplier.supplyCrew > 0 &&
+      target.crew && Object.values(target.crew).some(alive => alive === false)) || false
+}

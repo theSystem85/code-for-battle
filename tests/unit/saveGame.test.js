@@ -497,6 +497,29 @@ describe('saveGame.js', () => {
       expect(state.units[0].factoryExit).toEqual(units[0].factoryExit)
     })
 
+    it('[U07033] round trips Follow target references without serializing circular unit objects', async() => {
+      const { units, factories } = await import('../../src/main.js')
+      const { gameState } = await import('../../src/gameState.js')
+      const yard = { id: 'player1', type: 'constructionYard', owner: 'player1', isBuilding: true, x: 1, y: 1, width: 3, height: 3, health: 350, maxHealth: 350 }
+      factories.push(yard)
+      gameState.buildings.push(yard)
+      const follower = { id: 'follower', type: 'tank', owner: 'player1', x: 160, y: 160, tileX: 5, tileY: 5, health: 100, maxHealth: 100, path: [], guardOrderMode: 'follow', guardMode: true }
+      const target = { id: 'target', type: 'tank', owner: 'player1', x: 224, y: 160, tileX: 7, tileY: 5, health: 100, maxHealth: 100, path: [] }
+      follower.guardTarget = target
+      follower.guardTargets = [target]
+      target.target = follower
+      units.push(follower, target)
+      saveGameModule.saveGame('FollowRoundTrip')
+      const saved = JSON.parse(decodeSaveObject(localStorage.getItem('rts_save_FollowRoundTrip')).state)
+      expect(saved.units.find(unit => unit.id === 'follower').guardTargetIds).toEqual(['target'])
+      expect(saved.units.find(unit => unit.id === 'follower').guardTarget).toBeUndefined()
+      saveGameModule.loadGame('rts_save_FollowRoundTrip')
+      const restored = units.find(unit => unit.id === 'follower')
+      expect(restored.guardOrderMode).toBe('follow')
+      expect(restored.guardTarget).toBe(units.find(unit => unit.id === 'target'))
+      expect(restored.guardTargets).toEqual([restored.guardTarget])
+    })
+
     it('[U03852] should save per-unit crew state for later load restoration', async() => {
       const { units } = await import('../../src/main.js')
       units.push({

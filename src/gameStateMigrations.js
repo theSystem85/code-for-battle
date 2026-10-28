@@ -69,6 +69,15 @@ migrations[5] = state => ({
     : state.units
 })
 
+migrations[6] = state => ({
+  ...state,
+  units: Array.isArray(state.units)
+    ? state.units.map(unit => unit && typeof unit === 'object'
+      ? { ...unit, guardOrderMode: unit.guardOrderMode ?? null, guardTargetIds: unit.guardTargetIds ?? [] }
+      : unit)
+    : state.units
+})
+
 function assertSchemaVersion(version, label) {
   if (!Number.isSafeInteger(version) || version < 1) {
     throw new TypeError(`Live state migration ${label} must be a positive integer; received ${String(version)}`)

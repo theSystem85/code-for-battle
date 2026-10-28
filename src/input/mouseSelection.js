@@ -27,12 +27,13 @@ import {
   handleForceAttackCommand,
   handleGuardCommand,
   handleGuardTargetCommand,
+  handleSupplyShipServiceCommand,
   handleServiceProviderClick,
   handleFallbackCommand
 } from './mouseCommands.js'
 import { getUnitSelectionCenter } from './selectionManager.js'
 import { createReplayEntityReference, createReplayUnitReferences, recordReplayCommand } from '../replaySystem.js'
-import { getNavalRenderLengthTiles } from '../utils/navalUtils.js'
+import { unitContainsPoint } from './unitHitTest.js'
 import { selectBattleshipBattery, tryHandleFleetCommand } from '../game/navalFleetSystem.js'
 import { findLandingSpotAtWorld } from '../utils/airLandingSpots.js'
 
@@ -66,6 +67,7 @@ export function tryHandleFriendlyUnitInteraction(
   if (tryHandleDirectFleetInteraction(selectedUnits, worldX, worldY, units, mapGrid, selectionManager)) {
     return true
   }
+  if (handleSupplyShipServiceCommand(selectedUnits, clickedUnit, selectionManager, unitCommands, mapGrid)) return true
   if (handleServiceProviderClick(handler, clickedUnit, selectedUnits, unitCommands, mapGrid)) {
     return true
   }
@@ -311,8 +313,7 @@ export function updateEnemyHover(handler, worldX, worldY, units, factories, sele
       const humanPlayer = gameState.humanPlayer || 'player1'
       for (const unit of units) {
         if (unit.owner === humanPlayer || (humanPlayer === 'player1' && unit.owner === 'player')) {
-          const { centerX, centerY } = getUnitSelectionCenter(unit)
-          if (Math.hypot(worldX - centerX, worldY - centerY) < TILE_SIZE / 2) {
+          if (unitContainsPoint(unit, worldX, worldY)) {
             isOverFriendlyUnit = true
             break
           }
@@ -350,10 +351,9 @@ export function updateEnemyHover(handler, worldX, worldY, units, factories, sele
       for (const unit of units) {
         if (unit.factoryExit || unit.embarkedOnId || (unit.type === 'submarine' && unit.depthState !== 'surfaced')) continue
         if (unit.owner !== humanPlayer && !(humanPlayer === 'player1' && unit.owner === 'player')) {
-          const { centerX, centerY } = getUnitSelectionCenter(unit)
-          if (Math.hypot(worldX - centerX, worldY - centerY) < TILE_SIZE / 2) {
+          if (unitContainsPoint(unit, worldX, worldY)) {
             isOverEnemy = true
-            hoveredEnemyCenter = { x: centerX, y: centerY }
+            hoveredEnemyCenter = { x: getUnitSelectionCenter(unit).centerX, y: getUnitSelectionCenter(unit).centerY }
             break
           }
         }
@@ -856,11 +856,7 @@ function isStrikeJet(unit) {
 }
 
 function unitContainsSelectionPoint(unit, worldX, worldY) {
-  const { centerX, centerY } = getUnitSelectionCenter(unit)
-  const selectionRadius = unit.isNaval
-    ? TILE_SIZE * Math.max(0.65, getNavalRenderLengthTiles(unit.type) / 2)
-    : TILE_SIZE / 2
-  return Math.hypot(worldX - centerX, worldY - centerY) < selectionRadius
+  return unitContainsPoint(unit, worldX, worldY)
 }
 
 function findSelectableUnitAt(units, worldX, worldY, selectionManager, predicate) {
