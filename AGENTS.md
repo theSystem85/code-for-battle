@@ -36,7 +36,7 @@ Never merge `main` (or `dev`) into a feature branch, and never create merge comm
 
 ### Modes
 
-The repository has two long-lived branches: `main` (production, https://code-for-battle.netlify.app) and `dev` (branch deploy, https://dev--code-for-battle.netlify.app). Default to `dev`: create a feature branch from current `origin/dev`, open a PR against `dev`, run the required checks, and rebase-merge it once conflict-free. A docs-only change is the exception (rule 21): push it straight to `dev` with no pull request and do not run tests. Always return the PR link and the verified dev deployment URL (`https://dev--code-for-battle.netlify.app`); dev PRs do not get separate Netlify deploy previews. Persist this default until Patrick explicitly changes it. Do not stop after local changes.
+The repository has two long-lived branches: `main` (production, https://code-for-battle.netlify.app) and `dev` (branch deploy, https://dev--code-for-battle.netlify.app). Default to `dev`: create a feature branch from current `origin/dev`, open a PR against `dev`, run the required checks, and rebase-merge it once conflict-free. A docs-only change is the exception (rule 21): push it straight to `dev` with no pull request and do not run tests. Always return the PR link and the verified dev deployment URL (`https://dev--code-for-battle.netlify.app`); PRs into both `dev` and `main` get separate Netlify deploy previews. Persist this default until Patrick explicitly changes it. Do not stop after local changes.
 
 Patrick switches between the two modes in chat ("work on dev now", "back to main"). Agents keep using the current mode until he says otherwise. Codex is only prompted through Grok Bot, so Grok Bot must tell Codex which mode is active and which base branch to use.
 
@@ -72,8 +72,8 @@ For a docs-only change:
 
 - `main` deploys to production.
 - `dev` is the only branch deploy. Netlify builds it right after each merge into `dev`.
-- Deploy previews are built for PRs into `main` only. PRs into `dev` get no preview; test them on the dev deploy after the merge.
-- Netlify cannot filter by PR base on its own, so `netlify.toml` runs `node scripts/netlify-ignore.mjs` as its `ignore` command. It builds production, builds the `dev` branch deploy, skips any other branch deploy, and skips deploy previews whose PR base is `dev` (looked up on the public GitHub API; if the lookup fails it builds).
+- Deploy previews are built for PRs into both `main` and `dev`, at `https://deploy-preview-<PR-number>--code-for-battle.netlify.app`. Use the preview to verify a change before merging.
+- `netlify.toml` runs `node scripts/netlify-ignore.mjs` as its `ignore` command. It builds production, the `dev` branch deploy, and all PR deploy previews, including PRs into `dev`. Other branch deploys are skipped. Preview decisions do not require a GitHub API lookup.
 - **Backend separation:** the dev branch deploy uses the same Upstash Redis database and Netlify Blobs stores as production, but Netlify sets `REDIS_KEY_PREFIX=dev:` for the branch-deploy context only. Every Redis key (multiplayer stats Lua scripts) and every Blobs key (signalling, invite codes, Blobs stats fallback) is then written under `dev:` (`src/network/storageKeyPrefix.js`). Production has no prefix, and neither do deploy previews of PRs into `main`: they share production's keys. Any new server or edge code that touches Redis or Blobs must go through that prefix (`readStorageKeyPrefix` / `prefixBlobStore`) and needs a test for it.
 
 ### Live updates on the dev deploy

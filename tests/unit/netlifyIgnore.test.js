@@ -1,7 +1,7 @@
+import { spawnSync } from 'node:child_process'
+import { resolve } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
 import { decideNetlifyBuild } from '../../scripts/netlify-ignore.mjs'
-
-const pull = base => vi.fn(async() => new Response(JSON.stringify({ base: { ref: base } }), { status: 200 }))
 
 describe('netlify ignore command', () => {
   it('[U05181] always builds production', async() => {
@@ -13,18 +13,32 @@ describe('netlify ignore command', () => {
     expect((await decideNetlifyBuild({ CONTEXT: 'branch-deploy', BRANCH: 'feat/x' })).build).toBe(false)
   })
 
-  it('[U05183] skips deploy previews for PRs into dev and builds PRs into main', async() => {
-    const intoDev = pull('dev')
-    expect((await decideNetlifyBuild({ CONTEXT: 'deploy-preview', REVIEW_ID: '760' }, { fetchImpl: intoDev })).build).toBe(false)
-    expect(intoDev.mock.calls[0][0]).toBe('https://api.github.com/repos/theSystem85/code-for-battle/pulls/760')
-    expect((await decideNetlifyBuild({ CONTEXT: 'deploy-preview', REVIEW_ID: '761' }, { fetchImpl: pull('main') })).build).toBe(true)
+  it('[U05183] always builds PR previews without depending on a GitHub lookup', async() => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('offline'))
+    try {
+      for (const reviewId of ['789', '790', '', 'unknown']) {
+        expect((await decideNetlifyBuild({ CONTEXT: 'deploy-preview', REVIEW_ID: reviewId, BRANCH: 'fix/recovery-apache-retina' })).build).toBe(true)
+      }
+      expect(fetchSpy).not.toHaveBeenCalled()
+    } finally {
+      fetchSpy.mockRestore()
+    }
   })
 
-  it('[U05184] builds when the PR base cannot be determined', async() => {
-    const down = vi.fn(async() => new Response('rate limited', { status: 403 }))
-    expect((await decideNetlifyBuild({ CONTEXT: 'deploy-preview', REVIEW_ID: '762' }, { fetchImpl: down })).build).toBe(true)
-    const offline = vi.fn(async() => { throw new Error('offline') })
-    expect((await decideNetlifyBuild({ CONTEXT: 'deploy-preview', REVIEW_ID: '763' }, { fetchImpl: offline })).build).toBe(true)
-    expect((await decideNetlifyBuild({ CONTEXT: 'deploy-preview' }, { fetchImpl: offline })).build).toBe(true)
+  it('[U05184] exits with Netlify build or skip codes for previews, dev and production', () => {
+    for (const [context, branch, expectedStatus] of [
+      ['deploy-preview', 'fix/recovery-apache-retina', 1],
+      ['branch-deploy', 'dev', 1],
+      ['branch-deploy', 'feat/x', 0],
+      ['production', 'main', 1]
+    ]) {
+      const result = spawnSync(process.execPath, [resolve('scripts/netlify-ignore.mjs')], {
+        env: { ...process.env, CONTEXT: context, BRANCH: branch, REVIEW_ID: '789' },
+        encoding: 'utf8'
+      })
+      expect(result.error).toBeUndefined()
+      expect(result.status).toBe(expectedStatus)
+      expect(result.stdout).toContain(`netlify-ignore: ${expectedStatus === 1 ? 'build' : 'skip'}`)
+    }
   })
 })
