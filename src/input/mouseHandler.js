@@ -50,7 +50,7 @@ export class MouseHandler {
     this.requestRenderFrame = null
     this.activeTouchPointers = new Map()
     this.twoFingerPan = null
-    this.longPressDuration = 450
+    this.longPressDuration = 500
     this.utilityQueueCandidate = false
     this.gameUnits = []
     this.selectionManager = null

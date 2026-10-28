@@ -678,6 +678,11 @@ function executeReplayUnitCommand(command) {
         unit.guardTargets = uniqueGuardTargets.length > 0 ? uniqueGuardTargets.slice() : [target]
         unit.guardTarget = target
         unit.guardMode = true
+        unit.guardOrderMode = command.guardOrderMode || null
+        if (unit.guardOrderMode) {
+          unit.path = []
+          unit.lastGuardPathCalcTime = 0
+        }
         unit.target = null
         unit.moveTarget = null
       })

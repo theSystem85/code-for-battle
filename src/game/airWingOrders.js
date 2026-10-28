@@ -250,6 +250,23 @@ function followGuardedUnit(unit, guarded, units, now) {
   if (!center) return
   const followX = center.x - TILE_SIZE * 2.2
   const followY = center.y - TILE_SIZE * 0.6
+  if (unit.type === 'f22Raptor') {
+    const destination = unit.f22AssignedDestination
+    if (destination?.mode === 'guard') {
+      destination.x = followX
+      destination.y = followY
+    } else {
+      unit.f22AssignedDestination = { x: followX, y: followY, stopRadius: TILE_SIZE * 1.4, mode: 'guard', destinationTile: null, followTargetId: null }
+    }
+    if (isParkedOnCarrier(unit)) requestCarrierLaunch(unit, null, now)
+    else if (unit.flightState === 'grounded' && (!unit.f22State || unit.f22State === 'parked')) {
+      unit.f22PendingTakeoff = true
+      unit.f22State = 'parked'
+    }
+    unit.helipadLandingRequested = false
+    unit.commandIntent = 'guard'
+    return
+  }
   if (isParkedOnCarrier(unit)) {
     requestCarrierLaunch(unit, null, now)
     return
@@ -302,6 +319,12 @@ export function updateAirGuard(unit, units, now) {
 
   unit.airGuardActive = true
   unit.carrierStrikeActive = false
+  if (unit.guardOrderMode === 'follow') {
+    unit.target = null
+    unit.airGuardInterceptId = null
+    followGuardedUnit(unit, unit.guardTarget, units, now)
+    return
+  }
   const intercept = resolveGuardIntercept(unit, unit.guardTarget, units)
   const parked = isParkedOnCarrier(unit) || isParkedAtAirstrip(unit)
   if (intercept && parked && !serviceReady(unit)) return

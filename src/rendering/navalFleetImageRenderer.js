@@ -1,3 +1,5 @@
+import { BATTLESHIP_TURRET_RENDER_SCALE, BATTLESHIP_BARREL_LATERAL_OFFSET, BATTLESHIP_BARREL_ROOT_Y } from '../utils/navalSpriteGeometry.js'
+export { BATTLESHIP_TURRET_RENDER_SCALE } from '../utils/navalSpriteGeometry.js'
 import { TILE_SIZE } from '../config.js'
 import {
   BATTLESHIP_TURRET_NAMES,
@@ -38,11 +40,8 @@ const PREPARED_HULL_IDS = Object.freeze({
 const PREPARED_BATTLESHIP_TURRET_ID = 'naval:battleship:turret'
 const PREPARED_BATTLESHIP_BARREL_ID = 'naval:battleship:barrel'
 const BATTLESHIP_IMAGE_KEYS = Object.freeze(['battleship', 'battleshipTurret', 'battleshipBarrel'])
-export const BATTLESHIP_TURRET_RENDER_SCALE = 0.7
 // Barrel mounting points measured on the two gun ports of battleship_turret.webp (CSS px,
 // turret-local, + y = muzzle direction); see docs/asset-sources/ship-build-assets.py.
-const BATTLESHIP_BARREL_LATERAL_OFFSET = 1.31
-const BATTLESHIP_BARREL_ROOT_Y = 4.5
 export const BATTLESHIP_TURRET_RENDER_ORDER = Object.freeze([
   'foreOuter',
   'aftOuter',

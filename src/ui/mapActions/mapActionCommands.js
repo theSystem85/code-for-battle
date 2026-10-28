@@ -1,3 +1,4 @@
+import { applyUnitAction } from './unitActions.js'
 import { withoutUnitCommandBroadcast } from '../../network/commandBroadcastScope.js'
 import { TILE_SIZE } from '../../config.js'
 import { canCommandPolicy, listPolicies } from '../../policies/policyStore.js'
@@ -35,6 +36,9 @@ export function mapActionOptions(selection, owner) {
 // Called both locally and by the authoritative multiplayer command processor.
 export function applyMapAction(payload, owner, context) {
   const { action, x, y, policyId, entityIds } = payload || {}
+  if (typeof action === 'string' && action.endsWith('Unit') && Array.isArray(entityIds)) {
+    return withoutUnitCommandBroadcast(() => applyUnitAction(payload, owner, context))
+  }
   if (!['forceAttackAt', 'defendHoldAt', 'applyAutomationOnArrival', 'holdFire', 'clearTarget'].includes(action) ||
     !Number.isFinite(x) || !Number.isFinite(y) || !Array.isArray(entityIds)) return false
   const grid = context.mapGrid

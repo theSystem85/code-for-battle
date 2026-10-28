@@ -233,4 +233,20 @@ describe('air wing orders', () => {
     expect(f22.guardMode).toBe(true)
     expect(f22.homeAirstripId).toBe(strip.id)
   })
+  it('[U07031] launches an F22 to follow without intercepting the target or its attacker', () => {
+    const target = { id: 'enemy', owner: 'player2', health: 100, x: 320, y: 320, tileX: 10, tileY: 10, lastAttacker: { id: 'attacker', owner: 'player2', health: 100 } }
+    const f22 = { id: 'follower', type: 'f22Raptor', owner: 'player1', health: 100, x: 32, y: 32,
+      flightState: 'grounded', f22State: 'parked', guardMode: true, guardTarget: target, guardOrderMode: 'follow' }
+    updateAirGuard(f22, [f22, target], 100)
+    expect(f22.f22PendingTakeoff).toBe(true)
+    expect(f22.f22AssignedDestination.mode).toBe('guard')
+    expect(f22.target).toBeNull()
+    expect(f22.airGuardInterceptId).toBeNull()
+    const destination = f22.f22AssignedDestination
+    target.x += 64
+    updateAirGuard(f22, [f22, target], 200)
+    expect(f22.f22AssignedDestination).toBe(destination)
+    expect(destination.x).toBeCloseTo(target.x + TILE_SIZE / 2 - TILE_SIZE * 2.2)
+  })
+
 })

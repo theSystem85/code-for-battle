@@ -1,3 +1,4 @@
+import { unitContainsPoint } from '../input/unitHitTest.js'
 import { recordMusicAttack } from '../audio/musicDirector.js'
 import {
   BATTLESHIP_FIRE_RANGE,
@@ -38,7 +39,7 @@ import {
 } from './waterMineSystem.js'
 
 const TRANSPORT_TYPES = new Set(['hovercraft', 'vehicleFerry'])
-const AIRCRAFT_SLOT_WEIGHT = CARRIER_AIRCRAFT_SLOT_WEIGHT
+export const AIRCRAFT_SLOT_WEIGHT = CARRIER_AIRCRAFT_SLOT_WEIGHT
 const CARRIER_APPROACH_MS = 1800
 const CARRIER_ROLL_MS = 1800
 const CARRIER_LAUNCH_MS = 1700
@@ -337,7 +338,7 @@ function assignTransportRoute(unit, destination, mapGrid, occupancyMap, movement
   if (path?.length > 1) unit.path = path.slice(1)
 }
 
-function isTransportableGroundUnit(target, owner, pendingTransportId = null) {
+export function isTransportableGroundUnit(target, owner, pendingTransportId = null) {
   return Boolean(
     target &&
     !target.isBuilding &&
@@ -1785,7 +1786,7 @@ export function tryHandleFleetCommand(commandableUnits, worldX, worldY, units, m
         score: Math.hypot(worldX - centerOf(unit).x, worldY - centerOf(unit).y) / interactionRadius
       }
     })
-    .filter(({ unit, score }) => unit.health > 0 && !unit.embarkedOnId && score <= 1)
+    .filter(({ unit, score }) => unit.health > 0 && !unit.embarkedOnId && score <= 1 && unitContainsPoint(unit, worldX, worldY, TILE_SIZE * 0.8))
     .sort((a, b) => a.score - b.score)
     .map(({ unit }) => unit)
   const clickedTransport = hitCandidates.find(unit => TRANSPORT_TYPES.has(unit.type))

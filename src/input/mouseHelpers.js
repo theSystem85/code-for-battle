@@ -1,8 +1,8 @@
+import { unitContainsPoint } from './unitHitTest.js'
 import { TILE_SIZE } from '../config.js'
 import { gameState } from '../gameState.js'
 import { showNotification } from '../ui/notifications.js'
 import { GAME_DEFAULT_CURSOR } from './cursorStyles.js'
-import { getUnitSelectionCenter } from './selectionManager.js'
 import { getAttackableCityAtWorld } from '../game/cityBuildings.js'
 
 function normalizeOwner(owner) {
@@ -168,9 +168,7 @@ export function findEnemyTarget(worldX, worldY, gameFactories, units) {
   for (const unit of units) {
     if (unit.factoryExit || unit.embarkedOnId || (unit.type === 'submarine' && unit.depthState !== 'surfaced')) continue
     if (isEnemyRelativeToHuman(unit.owner)) {
-      const { centerX, centerY } = getUnitSelectionCenter(unit)
-      const distance = Math.hypot(worldX - centerX, worldY - centerY)
-      if (distance < TILE_SIZE / 2) {
+      if (unitContainsPoint(unit, worldX, worldY)) {
         return unit
       }
     }

@@ -115,7 +115,7 @@ export function processAttackQueue(unit, units, mapGrid) {
 }
 
 export function updateGuardTargeting(unit, units) {
-  if (!unit.guardTarget || unit.isRetreating) return
+  if (!unit.guardTarget || unit.isRetreating || unit.guardOrderMode === 'follow' || unit.guardOrderMode === 'serve') return
 
   if (unit.target && !canUnitTargetEntity(unit, unit.target)) {
     unit.target = null

@@ -1,3 +1,5 @@
+import { unitContainsPoint } from '../../input/unitHitTest.js'
+import { unitActionOptions, canServeUnit } from './unitActions.js'
 import { TILE_SIZE, MAP_ACTION_LONG_PRESS_MS, setMapActionLongPressMs } from '../../config.js'
 import { gameState } from '../../gameState.js'
 import { createRadialMenu } from '../radialMenu/radialMenu.js'
@@ -12,6 +14,7 @@ import './mapActionMenu.css'
 const installedMenus = new WeakMap()
 
 const labels = {
+  attackUnit: 'Attack', forceAttackUnit: 'Force attack', guardUnit: 'Guard', serveUnit: 'Serve', followUnit: 'Follow', landOnUnit: 'Land on', embarkUnit: 'Embark',
   forceAttackAt: 'Force attack here', defendHoldAt: 'Defend and hold here',
   applyAutomationOnArrival: 'Automation on arrival', holdFire: 'Hold fire', clearTarget: 'Clear target'
 }
@@ -25,6 +28,8 @@ export function installMapActionMenu(canvas, { selection, units, commands, handl
   ring.hidden = true
   document.body.appendChild(ring)
   let origin = null
+  let targetUnit = null
+  let heldPointer = null
   let pressCamera = null
   let cameraTimer = 0
   let swallowUntil = 0
@@ -52,26 +57,31 @@ export function installMapActionMenu(canvas, { selection, units, commands, handl
   }
   function dispatch(action, point = origin) {
     if (locked() || !point) return false
-    const payload = { action, ...point, entityIds: commandableSelection(selection, owner()).map(entity => entity.id) }
-    if (!payload.entityIds.length || !mapActionOptions(selection, owner()).includes(action) ||
+    const payload = { action, ...point, ...(targetUnit ? { targetId: targetUnit.id } : {}), entityIds: commandableSelection(selection, owner()).map(entity => entity.id) }
+    if (!payload.entityIds.length || !optionsForTarget().includes(action) ||
       !Number.isFinite(point.x) || !Number.isFinite(point.y) || point.x < 0 || point.y < 0 ||
       point.x >= (gameState.mapGrid?.[0]?.length || 0) * TILE_SIZE || point.y >= (gameState.mapGrid?.length || 0) * TILE_SIZE) return false
     if (action === 'applyAutomationOnArrival' && !applicableAutomations(selection, owner()).some(entry => entry.policy.id === point.policyId)) return false
     const remote = gameState.multiplayerSession?.isRemote && gameState.multiplayerSession.localRole !== 'host'
-    if (!remote && !applyMapAction(payload, owner(), { units, buildings: gameState.buildings, commands, mapGrid: gameState.mapGrid })) return false
+    if (!remote && !applyMapAction(payload, owner(), { units, buildings: gameState.buildings, commands, mapGrid: gameState.mapGrid, occupancyMap: gameState.occupancyMap })) return false
     broadcastGameCommand(COMMAND_TYPES.MAP_ACTION, payload)
     return true
   }
-  function close() { menu.close() }
+  function close() { menu.close(); targetUnit = null }
+  function optionsForTarget() {
+    return targetUnit ? unitActionOptions(selection, targetUnit, owner(), gameState.buildings) : mapActionOptions(selection, owner())
+  }
   function open(point) {
     if (locked() || !Number.isFinite(point?.x) || !Number.isFinite(point?.y)) return false
-    const options = mapActionOptions(selection, owner())
+    targetUnit = units.find(unit => !selection.includes(unit) && unitContainsPoint(unit, point.x, point.y)) || null
+    const options = optionsForTarget()
     if (!options.length) return false
     origin = { x: point.x, y: point.y }
     const rect = canvas.getBoundingClientRect()
     const anchor = { x: rect.left + point.x - gameState.scrollOffset.x, y: rect.top + point.y - gameState.scrollOffset.y }
     const items = options.map(id => ({
       id, label: labels[id], text: labels[id], customTooltip: true,
+      disabled: id === 'serveUnit' && !selection.some(unit => canServeUnit(unit, targetUnit, gameState.buildings, commands)),
       onSelect() {
         if (id === 'applyAutomationOnArrival') {
           menu.open(anchor, applicableAutomations(selection, owner()).map(entry => ({
@@ -118,6 +128,7 @@ export function installMapActionMenu(canvas, { selection, units, commands, handl
       return
     }
     if (event.target !== canvas || (event.pointerType !== 'touch' && event.button !== 0) || locked() || !mapActionOptions(selection, owner()).length) return
+    heldPointer = event.pointerId
     pressCamera = { ...gameState.scrollOffset }
     canvas.dataset.mapActionTracking = 'true'
     controller.down({ x: event.clientX, y: event.clientY, touch: event.pointerType === 'touch' })
@@ -133,6 +144,11 @@ export function installMapActionMenu(canvas, { selection, units, commands, handl
   const end = event => {
     pointers.delete(event.pointerId)
     const consumed = controller.up()
+    if (event.type !== 'pointercancel' && heldPointer === event.pointerId && menu.isOpen()) {
+      const item = menu.updatePointer(event.clientX, event.clientY)
+      if (item && !item.disabled) item.onSelect?.()
+    }
+    heldPointer = null
     cancel()
     if (consumed || menu.isOpen()) {
       stop(event)

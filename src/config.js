@@ -802,7 +802,7 @@ export function setDesktopEdgeAutoscrollEnabled(value) {
   DESKTOP_EDGE_AUTOSCROLL_ENABLED = Boolean(value)
 }
 
-export const DEFAULT_MAP_ACTION_LONG_PRESS_MS = 1000
+export const DEFAULT_MAP_ACTION_LONG_PRESS_MS = 500
 export let MAP_ACTION_LONG_PRESS_MS = DEFAULT_MAP_ACTION_LONG_PRESS_MS
 export function setMapActionLongPressMs(value) {
   const ms = Number(value)

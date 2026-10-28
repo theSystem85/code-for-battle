@@ -668,6 +668,8 @@ function buildSaveObject(label) {
       currentCommand: serializeUnitCommand(u.currentCommand),
       // Save target as ID only to avoid circular references
       targetId: u.target?.id || null,
+      guardTargetIds: u.guardTargets?.map(target => target.id) || (u.guardTarget ? [u.guardTarget.id] : []),
+      guardOrderMode: u.guardOrderMode || null,
       targetType: u.target ? (u.target.type || 'unknown') : null,
       attackTargetId: u.attackTarget?.id || null,
       groupNumber: u.groupNumber,
@@ -1629,6 +1631,15 @@ function loadGameFromSaveObject(saveObj, key) {
           wreck.towedBy = null
         }
       })
+    }
+
+    const restoredUnitsById = new Map(units.map(unit => [unit.id, unit]))
+    for (const unit of units) {
+      if (!unit.guardTargetIds?.length) continue
+      unit.guardTargets = unit.guardTargetIds.map(id => restoredUnitsById.get(id)).filter(target => target?.health > 0)
+      unit.guardTarget = unit.guardTargets[0] || null
+      unit.guardMode = Boolean(unit.guardTarget)
+      delete unit.guardTargetIds
     }
 
     // Restore target references after all units and buildings are loaded
