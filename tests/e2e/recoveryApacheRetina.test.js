@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test'
 for (const density of [1, 3]) {
   test.describe(`recovery and Apache sprites at DPR ${density}`, () => {
     test.use({ deviceScaleFactor: density })
-    test('[E00241] renders regenerated sources at the requested density with centered rotor and forward rocket mounts', async({ page }) => {
+    test('[E00243] renders regenerated sources at the requested density with centered rotor and forward rocket mounts', async({ page }) => {
       // Exercise production rendering in isolation from simulation timing and AI.
       await page.route('**/sprite-review', route => route.fulfill({ contentType: 'text/html', body: '<html><body></body></html>' }))
       await page.goto('/sprite-review')
