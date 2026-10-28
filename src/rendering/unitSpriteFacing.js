@@ -14,7 +14,7 @@ export const UNIT_SPRITE_FACING = Object.freeze({
   'aircraft_carrier_map.webp': 'south',
   'ambulance.webp': 'south',
   'ammunition_truck_map.webp': 'south',
-  'apache_body_map.webp': 'north',
+  'apache_body_map.webp': 'south',
   'apache_map.webp': 'north',
   'apache_rotor_map.webp': 'symmetric',
   'battleship_barrel.webp': 'south',
@@ -53,7 +53,6 @@ export const UNIT_SPRITE_FACING = Object.freeze({
 
 // Legacy exceptions frozen at their current set; shrinking it is welcome, growing it is not.
 export const LEGACY_NON_SOUTH_UNIT_SPRITES = Object.freeze([
-  'apache_body_map.webp',
   'apache_map.webp',
   'f22_raptor_map.webp',
   'f35_map.webp'
