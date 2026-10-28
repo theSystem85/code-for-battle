@@ -15,7 +15,7 @@ vi.mock('../../src/rendering/prepared/preparedSpritePipeline.js', () => ({
 
 afterEach(() => vi.clearAllMocks())
 
-it('[U07021] keeps regenerated Apache rocket hardpoints on the stub wings at every heading', () => {
+it('[U07034] keeps regenerated Apache rocket hardpoints on the stub wings at every heading', () => {
   for (const direction of [0, Math.PI / 2, Math.PI, Math.PI * 1.5]) {
     const points = getApacheRocketSpawnPoints({ direction, altitude: 0 }, 100, 100)
     const forward = { x: Math.cos(direction), y: Math.sin(direction) }
@@ -26,7 +26,7 @@ it('[U07021] keeps regenerated Apache rocket hardpoints on the stub wings at eve
   }
 })
 
-it('[U07022] moves rocket mounts and the rotor with the body during forward tilt and altitude lift', () => {
+it('[U07035] moves rocket mounts and the rotor with the body during forward tilt and altitude lift', () => {
   const unit = { direction: Math.PI / 2, altitude: 20, speed: 1, movement: { currentSpeed: 1, velocity: { x: 0, y: 1 } } }
   const points = getApacheRocketSpawnPoints(unit, 100, 100)
   expect(points.left.y).toBeCloseTo(100 - 8 + (42 * 33.6 / 256 + 32 * 0.08) * 0.9)
@@ -40,7 +40,7 @@ it('[U07022] moves rocket mounts and the rotor with the body during forward tilt
   expect(ctx.rotate).toHaveBeenCalledWith(0)
 })
 
-it('[U07023] ships native-resolution recovery and Apache sources with density-correct rotor anchors', async() => {
+it('[U07036] ships native-resolution recovery and Apache sources with density-correct rotor anchors', async() => {
   const { readFile } = await import('node:fs/promises')
   const { resolve } = await import('node:path')
   const manifest = JSON.parse(await readFile(resolve(import.meta.dirname, '../../public/images/prepared/sprite-manifest.json'), 'utf8'))
