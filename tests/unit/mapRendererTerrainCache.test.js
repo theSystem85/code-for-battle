@@ -351,3 +351,56 @@ describe('MapRenderer revisioned terrain cache', () => {
   })
 
 })
+
+
+describe('terrain staging contention', () => {
+  afterEach(() => vi.restoreAllMocks())
+
+  it('[U07037] preempts a partially prepared decoration page when a cold terrain chunk needs staging', () => {
+    installTraceCanvases()
+    const renderer = new MapRenderer(makeTextureManager())
+    const map = makeMap(48, 16)
+    renderer.renderTiles(makeOutputContext(), map, { x: 0, y: 0 }, 0, 0, 16, 16, {})
+    const chunk = renderer.chunkCache.get('0,0')
+    vi.spyOn(renderer, 'drawDecorativeLayer').mockImplementation(() => {})
+    renderer.decorativeWarmQueue.set(chunk.key, { chunk, mapGrid: map, useTexture: false, key: renderer.getDecorativeKey(chunk) })
+    const remaining = [10, 0]
+    renderer.processDecorativeWarmQueue({ timeRemaining: () => remaining.shift() || 0 })
+    expect(renderer.terrainByteBudget.usage.terrainStaging).toBeGreaterThan(0)
+    renderer.resetFrameChunkStats()
+    expect(() => renderer.renderTiles(makeOutputContext(), map, { x: 0, y: 0 }, 0, 0, 32, 16, {})).not.toThrow()
+    expect(renderer.chunkCache.get('1,0').everRendered).toBe(true)
+    expect(renderer.frameChunkStats.chunkFallbacks).toBe(0)
+    expect(renderer.terrainByteBudget.usage.terrainStaging).toBe(0)
+  })
+
+
+  it('[U07041] keeps published decoration bytes resident while a replacement is staged and cancelled', () => {
+    installTraceCanvases()
+    const renderer = new MapRenderer(makeTextureManager())
+    const map = makeMap(16, 16)
+    renderer.terrainRevisions.ensureMap(map)
+    const chunk = renderer.getOrCreateChunk(0, 0, 0, 0, 16, 16)
+    const bytes = getTerrainRasterBytes(517, 517)
+    renderer.reserveResidentRaster(chunk, bytes, true)
+    chunk.decorativeCanvas = document.createElement('canvas')
+    chunk.decorativeCanvas.width = chunk.decorativeCanvas.height = 517
+    const published = chunk.decorativeCanvas
+    const token = chunk.decorativeResidentToken
+    vi.spyOn(renderer, 'drawDecorativeLayer').mockImplementation(() => {})
+    const entry = { chunk, mapGrid: map, useTexture: false, key: renderer.getDecorativeKey(chunk) }
+    renderer.decorativeWarmQueue.set(chunk.key, entry)
+    const remaining = [10, 0]
+    renderer.processDecorativeWarmQueue({ timeRemaining: () => remaining.shift() || 0 })
+    expect(renderer.terrainByteBudget.usage.terrainResident).toBe(bytes)
+    expect(renderer.terrainByteBudget.usage.terrainStaging).toBe(bytes)
+    expect(chunk.decorativeResidentToken).toBe(token)
+    const staged = entry.canvas
+    renderer.discardDecorativePreparation(entry)
+    expect(staged.width).toBe(1)
+    expect(chunk.decorativeCanvas).toBe(published)
+    expect(published.width).toBe(517)
+    expect(renderer.terrainByteBudget.usage.terrainResident).toBe(bytes)
+    expect(renderer.terrainByteBudget.usage.terrainStaging).toBe(0)
+  })
+})
