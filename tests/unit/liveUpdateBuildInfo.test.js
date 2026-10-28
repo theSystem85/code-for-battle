@@ -24,12 +24,12 @@ describe('live update build info', () => {
   it('[U06524] emits the merged release entries in build-info without including them in JS signatures', () => {
     const bundle = bundleWith({ code: 'run()' })
     const emitted = []
-    const plugin = liveUpdateBuildInfoPlugin({ root: process.cwd(), version: '0.64.1', enabled: false, stateSchemaVersion: 1 })
+    const plugin = liveUpdateBuildInfoPlugin({ root: process.cwd(), version: '0.65.0', enabled: false, stateSchemaVersion: 1 })
     plugin.generateBundle.call({ emitFile: file => emitted.push(file) }, {}, bundle)
     const manifest = JSON.parse(emitted.find(file => file.fileName === 'build-info.json').source)
     expect(manifest.releases.length).toBeGreaterThan(0)
-    expect(manifest.releases.find(entry => entry.version === '0.64.1')).toBeTruthy()
-    expect(manifest.jsSignature).toBe(computeJsSignature(bundle, { version: '0.64.1', root: process.cwd() }))
+    expect(manifest.releases.find(entry => entry.version === '0.65.0')).toBeTruthy()
+    expect(manifest.jsSignature).toBe(computeJsSignature(bundle, { version: '0.65.0', root: process.cwd() }))
   })
 
   it('[U05218] keeps the JS signature for stylesheet, release-note and version-only changes', () => {
