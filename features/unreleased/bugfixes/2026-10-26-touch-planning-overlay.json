@@ -1,1 +1,0 @@
-{ "description": "Touch building placement now previews validity under a held finger, places on a valid release, cancels on an invalid release, and starts chain planning only after a deliberate hold-and-drag." }

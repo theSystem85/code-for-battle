@@ -1,1 +1,0 @@
-{ "description": "Recover cached terrain after canvas context loss and protect visible terrain during fast scrolling." }
