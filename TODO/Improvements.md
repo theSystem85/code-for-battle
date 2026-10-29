@@ -57,7 +57,7 @@ When a spec exists, replace `Spec: none` with a relative link such as `[Title](.
 - [x] **Show numbered movement waypoints for active unit paths using the PPF marker** — style, with a W-key toggle to show/hide them.
   - Spec: none
 
-- [ ] **Show out-of-range attack cursor only for combat units, switch to in-range attack** — cursor appropriately, and include distance/max-range labels on the out-of-range cursor.
+- [x] **Show out-of-range attack cursor only for combat units, switch to in-range attack** — cursor appropriately, and include distance/max-range labels on the out-of-range cursor.
   - Spec: [Combat System Enhancements](../specs/006-combat-system-enhancements/spec.md)
 
 - [ ] **remove "tank" in favour of "tankV1" from codebase (redundant?)**
@@ -71,7 +71,7 @@ When a spec exists, replace `Spec: none` with a relative link such as `[Title](.
 - [ ] **Speed up Apache helicopter production based on vehicle factory count using the same multiplier as ground vehicles.**
   - Spec: none
 
-- [ ] **Enforce one-Apache-per-helipad when issuing group landing commands by assigning each heli to** — a distinct available pad near the clicked target.
+- [x] **Enforce one-Apache-per-helipad when issuing group landing commands by assigning each heli to** — a distinct available pad near the clicked target.
   - Spec: [Advanced Unit Control](../specs/004-advanced-unit-control/spec.md)
 
 ## Economy and Buildings
@@ -111,7 +111,7 @@ When a spec exists, replace `Spec: none` with a relative link such as `[Title](.
 - [x] **Refactor main.js via code-splitting (<1k LOC per file) into orchestrator, device lifecycle,** — and mobile layout modules while keeping tests passing.
   - Spec: none
 
-- [ ] **Show the money/energy status bar in portrait condensed mode within the safe-area** — gap beneath the build buttons without shifting the build bar upward.
+- [x] **Show the money/energy status bar in portrait condensed mode within the safe-area** — gap beneath the build buttons without shifting the build bar upward.
   - Spec: none
 
 - [ ] **In non-PWA portrait condensed mode, dock the money/energy bars to the right** — of the build bar after the toggle, with vertical fill and rotated labels that do not increase sidebar height.
