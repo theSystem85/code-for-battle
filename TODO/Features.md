@@ -23,7 +23,7 @@ When a spec exists, replace `Spec: none` with a relative link such as `[Title](.
 
 ## Units and Combat
 
-- [ ] **Add a cheat code `recover [party]` to instantly restore the selected wreck** — and assign it to the specified party (defaults to the player).
+- [x] **Add a cheat code `recover [party]` to instantly restore the selected wreck** — and assign it to the specified party (defaults to the player).
   - Spec: [Cheat Code: Recover Selected Wreck](../specs/025-cheat-recover-wreck.md)
 
 - [ ] **Spec 011 Land mine system planning:**
@@ -56,14 +56,14 @@ When a spec exists, replace `Spec: none` with a relative link such as `[Title](.
   - [ ] when player attacks -> defend or retreat into base if the unit under attack is too weak (havesters or combat units that are outnumbered) to regroup in the protection of the base defence. When attack was defended strike back.
   - Spec: [Production Button Input Architecture](../docs/production-button-input-architecture.md)
 
-- [ ] **Light Tank (M2 Bradley-style IFV)** — Cheap, fast, lightly armored tracked unit with a rapid-fire 25 mm autocannon, built in the Vehicle Factory from the start, with Grok Imagine art in retina quality, AI usage, track marks and factory roll-out support.
+- [x] **Light Tank (M2 Bradley-style IFV)** — Cheap, fast, lightly armored tracked unit with a rapid-fire 25 mm autocannon, built in the Vehicle Factory from the start, with Grok Imagine art in retina quality, AI usage, track marks and factory roll-out support.
   - Spec: [Light Tank (M2 Bradley-style IFV)](../specs/light-tank-bradley.md)
 
 - [ ] **Wrecks and recovery/recycling** — Ensure the units when destroyed do not just vanish from the map but their left overs keep lying on the map. The left overs should look totally color desaturated and slightly noisy to indicated dirt and damage (cache those desaturated images and reuse them). Any (also the ones from the enemy) left over unit can be pulled by a recovery tank to the base when player has the recovery tank selected and clicks on the tank. The the recovery tank will drive to the target then mount (indicated by a 2px black string that connects both units) and then automatically drive to the workshop where it unmounts and the unit gets fully restored but without crew.
   - 2nd option is that the user has the recovery tank selected and clicks on the left over unit while holding shift key. Then the leftover unit get recycled completely (vanishes from the map) but the owner of the recovery tank gets 33% of the value of the unit added to his budget (like a harvesting of resources). This process takes about as long as it took the unit to build. Show blue progress bar on the recovery tank while this mode is active.
   - Spec: none
 
-- [ ] **Add permanent per-tile decals for combat events:**
+- [x] **Add permanent per-tile decals for combat events:**
   - `impact` decal when unit-fired shots impact a tile/target tile.
   - `crater` decal when a unit explodes.
   - `debris` decals across full building/factory footprints on destruction.
@@ -82,7 +82,7 @@ When a spec exists, replace `Spec: none` with a relative link such as `[Title](.
 
 ## Economy and Buildings
 
-- [ ] **Add long-press production tooltips that show unit/building stats, damage totals, and clickable** — focus rows aligned to the money bar tooltip style.
+- [x] **Add long-press production tooltips that show unit/building stats, damage totals, and clickable** — focus rows aligned to the money bar tooltip style.
   - Spec: none
 
 ## AI
@@ -150,12 +150,12 @@ When a spec exists, replace `Spec: none` with a relative link such as `[Title](.
 
 ## Missions and Campaign
 
-- [ ] **Add an interactive tutorial system that demonstrates UI/UX actions with a tutorial** — cursor, speech narration, skip controls, restart control, and persistent settings (show tutorial + voice). Include steps for building the starter economy, unit selection/movement, tank production/rally points, remote control, combat goals, and tech tree explanations for tanker/gas station, ambulance/hospital/crew, ammo factory/ammo truck, and workshop/recovery tank.
+- [x] **Add an interactive tutorial system that demonstrates UI/UX actions with a tutorial** — cursor, speech narration, skip controls, restart control, and persistent settings (show tutorial + voice). Include steps for building the starter economy, unit selection/movement, tank production/rally points, remote control, combat goals, and tech tree explanations for tanker/gas station, ambulance/hospital/crew, ammo factory/ammo truck, and workshop/recovery tank.
   - Spec: [Tutorial System](../specs/021-tutorial-system.md)
 
 ## Tooling and CI
 
-- [ ] **Add `skills.md` OpenAI image generator setup for Codex workflows, including 4 prompt** — templates (unit sidebar/map + building sidebar/map).
+- [x] **Add `skills.md` OpenAI image generator setup for Codex workflows, including 4 prompt** — templates (unit sidebar/map + building sidebar/map).
   - Spec: [OpenAI Image Generator Skills File](../specs/043-openai-image-generator-skills.md)
 
 - [ ] **Integrate E2E tests into CI/Netlify pipelines for merge gating**

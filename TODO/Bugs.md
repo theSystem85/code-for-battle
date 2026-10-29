@@ -45,7 +45,7 @@ When a spec exists, replace `Spec: none` with a relative link such as `[Title](.
 - [ ] **F22 validation follow-up** — user-confirmed regressions remain on runway sequencing (`A4`), takeoff/landing motion profile (`A7`/`A8`/`A9`/`A10`), post-takeoff approach continuity (`A11`), ground push behavior (`B3`), and combat wave orbit behavior (`B4`); additionally unclear pending checks for `A5`/`A6`/`B1`/`B2`/`C2`/`C3`/`C4`.
   - Spec: [F22 runway robustness and combat command reliability](../specs/048-f22-runway-robustness-and-combat-command.md)
 
-- [ ] **Prevent multiple Apaches from landing on the same helipad; show blocked cursor when hovering over occupied helipads.**
+- [x] **Prevent multiple Apaches from landing on the same helipad; show blocked cursor when hovering over occupied helipads.**
   - Spec: [Advanced Unit Control](../specs/004-advanced-unit-control/spec.md)
 
 - [ ] **Rocket tank rockets should detonate on airborne targets and stop firing at** — move destinations (range and impact behavior regression).
@@ -67,7 +67,7 @@ When a spec exists, replace `Spec: none` with a relative link such as `[Title](.
 - [ ] **Local AI host-party enemy ownership (2026-03-25)** — when the host opts to let its own party run under local AI or LLM control, all AI subsystems must treat that party as friendly, treat every other party as hostile, and avoid legacy two-side assumptions that make the host AI attack its own units/buildings or skip support logic.
   - Spec: [LLM Strategic AI & Commentary Integration](../specs/032-llm-strategic-ai.md)
 
-- [ ] **7) Ensure that the enemy AI will move the tanks with missing crew members back to hospital before continuing the battle.**
+- [x] **7) Ensure that the enemy AI will move the tanks with missing crew members back to hospital before continuing the battle.**
   - Spec: [Hospital & Crew System](../specs/003-hospital-crew-system/spec.md)
 
 ## UI, Sidebar, and Settings
@@ -75,7 +75,7 @@ When a spec exists, replace `Spec: none` with a relative link such as `[Title](.
 - [ ] **Prevent iOS long-press text selection from appearing on production build buttons so tooltips stay visible.**
   - Spec: none
 
-- [ ] **Fix attack cursor to toggle between in-range and out-of-range states on hover** — based on distance, and ensure range labels render in red.
+- [x] **Fix attack cursor to toggle between in-range and out-of-range states on hover** — based on distance, and ensure range labels render in red.
   - Spec: [Combat System Enhancements](../specs/006-combat-system-enhancements/spec.md)
 
 - [ ] **On mobile PWA portrait mode, stretch the sidebar to the very bottom so no unused black bar remains.**
@@ -86,7 +86,7 @@ When a spec exists, replace `Spec: none` with a relative link such as `[Title](.
 
 ## Missions and Campaign
 
-- [ ] **Tutorial window should be allowed to overlap the sidebar; on portrait mode** — it should mount at the top-left corner over the sidebar and span the full width when expanded.
+- [x] **Tutorial window should be allowed to overlap the sidebar; on portrait mode** — it should mount at the top-left corner over the sidebar and span the full width when expanded.
   - Spec: [Tutorial System](../specs/021-tutorial-system.md)
 
 ## Saves and Replay
@@ -100,7 +100,7 @@ When a spec exists, replace `Spec: none` with a relative link such as `[Title](.
 - [x] **Replay determinism mismatch-only diffing (2026-03-25)** — the replay determinism E2E should canonicalize compared save payloads by stripping UI/analytics-only branches, sorting comparable collections, and reporting only grouped mismatch branches so remaining overlap failures point at real simulation drift instead of save noise.
   - Spec: [Replay Feature](../specs/056-replay-feature.md)
 
-- [ ] **Replay determinism wall-clock timestamp drift (2026-03-25)** — saved mine arming/deploy timers and wreck creation/recycling timestamps must use simulation time, not `performance.now()`, otherwise live-match and replay saves drift even when the underlying gameplay sequence is deterministic.
+- [x] **Replay determinism wall-clock timestamp drift (2026-03-25)** — saved mine arming/deploy timers and wreck creation/recycling timestamps must use simulation time, not `performance.now()`, otherwise live-match and replay saves drift even when the underlying gameplay sequence is deterministic.
   - Spec: [Replay Feature](../specs/056-replay-feature.md)
 
 - [x] **Replay determinism stop-marker boundary (2026-03-25)** — replay playback must include an explicit terminal marker at the paused stop-recording timestamp, otherwise playback can end at the last gameplay command one fixed step early and miss the final ore spread/economy changes present in the live-match save.
