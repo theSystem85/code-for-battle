@@ -59,6 +59,15 @@ GitHub Actions (`.github/workflows/ci.yml`) only runs for PRs into `main` and pu
 
 A change is docs-only when **every** file it adds or edits is a documentation Markdown file (`.md`) and **none** of those files is code or a configuration file. Documentation Markdown includes `AGENTS.md` (agent rules are documentation, not configuration), README files, `docs/`, `specs/`, `prompt-history/`, `TODO/`, skill notes, and other prose `.md` files. Source code, tests, styles, scripts, JSON, YAML, TOML, and any other code or configuration file are outside this exception, whatever the extension. A `.md` file is also outside this exception when the repository treats that file itself as code or configuration (for example a file the build executes, or generated configuration stored as Markdown). Ordinary prose stays inside the exception. If the change also touches anything outside it, the change is not docs-only: run the normal checks and use the normal pull-request workflow. Change notes and prompt history that accompany a code or configuration edit do not make that edit docs-only.
 
+
+### Brainstorm list (`docs/brainstorm.md`)
+
+`docs/brainstorm.md` is the shared open-ideas brainstorm for code-for-battle (B-001, B-002, …). **Grok Bot alone** creates and edits this file. Other agents (including Codex) must not touch it.
+
+1. When the **only** change needed is to `docs/brainstorm.md`, Grok Bot commits and pushes that change **directly to `dev`**. No prompt-history entry, no `docs/changes/` note, no features/unreleased entry, and no other file in the same commit.
+2. After the initial bootstrap commit that introduced `docs/brainstorm.md` together with this AGENTS.md rule, every later edit to `docs/brainstorm.md` **must** be committed **alone** — never in the same commit as any other file.
+3. Do not implement brainstorm ideas from this file until Patrick asks for implementation; the file is the living idea list, not a work queue by itself.
+
 For a docs-only change:
 
 - Do not run any tests. Skip `npm run test:unit`, `npm run test`, `npm run test:e2e`, Playwright, and every other test command. Rule 1, rule 10, and test items 2 and 3 under "Checks before every push" do not apply.
