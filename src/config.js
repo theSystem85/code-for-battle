@@ -374,6 +374,9 @@ function saveGraphicsSettingsToIndexedDb() {
         coastalShallowsEnabled: COASTAL_SHALLOWS_ENABLED,
         coastalShallowsLength: COASTAL_SHALLOWS_LENGTH,
         waterWaveDirection: WATER_WAVE_DIRECTION,
+        unitShadowsEnabled: UNIT_SHADOWS_ENABLED,
+        unitShadowLength: UNIT_SHADOW_LENGTH,
+        unitShadowDirection: UNIT_SHADOW_DIRECTION,
         mobileCanvasPixelRatioCap: MOBILE_CANVAS_PIXEL_RATIO_CAP,
         rendererBackend: persistedRendererBackend(),
         rendererBackendChoice: RENDERER_BACKEND_CHOICE
@@ -414,6 +417,9 @@ export function loadGraphicsSettingsFromIndexedDb() {
     COASTAL_SHALLOWS_ENABLED = typeof parsed?.coastalShallowsEnabled === 'boolean' ? parsed.coastalShallowsEnabled : COASTAL_SHALLOWS_ENABLED
     COASTAL_SHALLOWS_LENGTH = clampNumber(parsed?.coastalShallowsLength, 10, 100, COASTAL_SHALLOWS_LENGTH)
     WATER_WAVE_DIRECTION = clampNumber(parsed?.waterWaveDirection, 0, 360, WATER_WAVE_DIRECTION)
+    UNIT_SHADOWS_ENABLED = typeof parsed?.unitShadowsEnabled === 'boolean' ? parsed.unitShadowsEnabled : UNIT_SHADOWS_ENABLED
+    UNIT_SHADOW_LENGTH = clampNumber(parsed?.unitShadowLength, 0, 1.5, UNIT_SHADOW_LENGTH)
+    UNIT_SHADOW_DIRECTION = clampNumber(parsed?.unitShadowDirection, 0, 360, UNIT_SHADOW_DIRECTION)
     applyStoredRendererBackendChoice(parsed)
   } catch (error) {
     window.logger?.warn('Failed to load graphics settings from IndexedDB:', error)
@@ -668,6 +674,9 @@ export function setWaterEffectSpeed(value) {
 export let COASTAL_SHALLOWS_ENABLED = true
 export let COASTAL_SHALLOWS_LENGTH = 15
 export let WATER_WAVE_DIRECTION = 0
+export let UNIT_SHADOWS_ENABLED = true
+export let UNIT_SHADOW_LENGTH = 0.22
+export let UNIT_SHADOW_DIRECTION = 45
 export function setCoastalShallowsEnabled(value) {
   COASTAL_SHALLOWS_ENABLED = Boolean(value)
   saveGraphicsSettingsToIndexedDb()
@@ -685,6 +694,24 @@ export function setWaterWaveDirection(value) {
   saveGraphicsSettingsToIndexedDb()
   requestGraphicsSettingsRender()
   return WATER_WAVE_DIRECTION
+}
+export function setUnitShadowsEnabled(value) {
+  UNIT_SHADOWS_ENABLED = Boolean(value)
+  saveGraphicsSettingsToIndexedDb()
+  requestGraphicsSettingsRender()
+  return UNIT_SHADOWS_ENABLED
+}
+export function setUnitShadowLength(value) {
+  UNIT_SHADOW_LENGTH = clampNumber(value, 0, 1.5, UNIT_SHADOW_LENGTH)
+  saveGraphicsSettingsToIndexedDb()
+  requestGraphicsSettingsRender()
+  return UNIT_SHADOW_LENGTH
+}
+export function setUnitShadowDirection(value) {
+  UNIT_SHADOW_DIRECTION = clampNumber(value, 0, 360, UNIT_SHADOW_DIRECTION)
+  saveGraphicsSettingsToIndexedDb()
+  requestGraphicsSettingsRender()
+  return UNIT_SHADOW_DIRECTION
 }
 
 loadGraphicsSettingsFromIndexedDb()

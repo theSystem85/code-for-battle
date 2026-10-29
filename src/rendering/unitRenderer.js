@@ -1,5 +1,5 @@
 // rendering/unitRenderer.js
-import { TILE_SIZE, HARVESTER_CAPPACITY, HARVESTER_UNLOAD_TIME, RECOIL_DISTANCE, RECOIL_DURATION, MUZZLE_FLASH_DURATION, MUZZLE_FLASH_SIZE, TANK_FIRE_RANGE, ATTACK_TARGET_INDICATOR_SIZE, ATTACK_TARGET_BOUNCE_SPEED, UNIT_TYPE_COLORS, PARTY_COLORS, TANKER_SUPPLY_CAPACITY, UTILITY_SERVICE_INDICATOR_SIZE, UTILITY_SERVICE_INDICATOR_BOUNCE_SPEED, SERVICE_DISCOVERY_RANGE, SERVICE_SERVING_RANGE, MINE_DEPLOY_STOP_TIME, VIEW_FRUSTUM_MARGIN, CURSOR_METERS_PER_TILE, BATTLESHIP_FIRE_RANGE, SUBMARINE_TORPEDO_RANGE } from '../config.js'
+import { TILE_SIZE, HARVESTER_CAPPACITY, HARVESTER_UNLOAD_TIME, RECOIL_DISTANCE, RECOIL_DURATION, MUZZLE_FLASH_DURATION, MUZZLE_FLASH_SIZE, TANK_FIRE_RANGE, ATTACK_TARGET_INDICATOR_SIZE, ATTACK_TARGET_BOUNCE_SPEED, UNIT_TYPE_COLORS, PARTY_COLORS, TANKER_SUPPLY_CAPACITY, UTILITY_SERVICE_INDICATOR_SIZE, UTILITY_SERVICE_INDICATOR_BOUNCE_SPEED, SERVICE_DISCOVERY_RANGE, SERVICE_SERVING_RANGE, MINE_DEPLOY_STOP_TIME, VIEW_FRUSTUM_MARGIN, CURSOR_METERS_PER_TILE, BATTLESHIP_FIRE_RANGE, SUBMARINE_TORPEDO_RANGE, UNIT_SHADOWS_ENABLED, UNIT_SHADOW_LENGTH, UNIT_SHADOW_DIRECTION } from '../config.js'
 import { isCityOccludedAtTile } from './cityOcclusionIndex.js'
 import { gameState } from '../gameState.js'
 import { selectedUnits } from '../inputHandler.js'
@@ -25,6 +25,7 @@ import { getSimulationTime } from '../game/time.js'
 import { getCanvasLogicalSize } from './renderingUtils.js'
 import { describeActivePolicies, shouldShowPolicyIndicator } from '../policies/policyActivity.js'
 import { drawStatusBar, fillStatusBar, paintStatusBarOutline, paintStatusBarTrack, strokeStatusArc, strokeStatusRailArc } from '../utils/statusBarGradient.js'
+import { drawUnitShadow } from './unitShadow.js'
 
 const POLICY_ICON_SIZE = 10
 
@@ -1863,6 +1864,11 @@ export class UnitRenderer {
 
     const centerX = unit.x + TILE_SIZE / 2 - scrollOffset.x
     const centerY = unit.y + TILE_SIZE / 2 - scrollOffset.y
+
+    if (UNIT_SHADOWS_ENABLED) {
+      const airborne = unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35'
+      drawUnitShadow(ctx, centerX, centerY, TILE_SIZE, UNIT_SHADOW_LENGTH, UNIT_SHADOW_DIRECTION, airborne)
+    }
 
     // Check if this is a tank type and if image rendering is enabled
     const isTank = ['tank_v1', 'tank-v2', 'tank-v3', 'tank_v2', 'tank_v3', 'lightTank'].includes(unit.type)
