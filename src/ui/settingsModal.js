@@ -44,6 +44,7 @@ const WATER_SETTINGS_CONFIG_IDS = {
   pixelDensity: 'mobileCanvasPixelRatioCap',
   rendererBackend: 'rendererBackend'
 }
+const UNIT_SHADOW_CONFIG_IDS = ['unitShadowsEnabled', 'unitShadowLength', 'unitShadowDirection']
 
 function formatWaterTone(value) {
   const percentage = Math.round(Number(value) * 100)
@@ -88,7 +89,7 @@ function bindGraphicsEffects(modal) {
   if (!container) return
   const dedicated = new Set(['waterEffectTone', 'waterEffectSaturation', 'waterEffectZoom',
     'coastalShallowsEnabled', 'coastalShallowsLength', 'waterWaveDirection', 'waterEffectSpeed', 'waterEffectStrength', 'useOceanWaterRendering',
-    'mobileCanvasPixelRatioCap', 'rendererBackend'])
+    'mobileCanvasPixelRatioCap', 'rendererBackend', ...UNIT_SHADOW_CONFIG_IDS])
   for (const [id, config] of Object.entries(configRegistry)) {
     if (config.category !== 'Graphics' || dedicated.has(id)) continue
     const label = document.createElement('label')
@@ -180,6 +181,19 @@ function syncWaterGraphicsControls(modal) {
   if (rendererStatus) {
     rendererStatus.textContent = getRendererBackendStatusText()
   }
+}
+
+function syncUnitShadowControls(modal) {
+  const enabled = modal.querySelector('#settingsUnitShadowsToggle')
+  const length = modal.querySelector('#settingsUnitShadowLengthRange')
+  const direction = modal.querySelector('#settingsUnitShadowDirectionRange')
+  if (enabled) enabled.checked = Boolean(getConfigValue('unitShadowsEnabled'))
+  if (length) length.value = String(getConfigValue('unitShadowLength'))
+  if (direction) direction.value = String(getConfigValue('unitShadowDirection'))
+  const lengthValue = modal.querySelector('#settingsUnitShadowLengthValue')
+  const directionValue = modal.querySelector('#settingsUnitShadowDirectionValue')
+  if (lengthValue) lengthValue.textContent = `${Math.round(Number(length?.value || 0) * 100)}%`
+  if (directionValue) directionValue.textContent = `${direction?.value || 0}°`
 }
 
 function refreshRendererBackendControls(modal) {
@@ -407,6 +421,20 @@ export function initSettingsModal() {
   }
   bindTabs(modal)
   bindGraphicsEffects(modal)
+  syncUnitShadowControls(modal)
+  modal.querySelector('#settingsUnitShadowsToggle')?.addEventListener('change', event => {
+    setConfigValue('unitShadowsEnabled', event.target.checked)
+    syncUnitShadowControls(modal)
+  })
+  for (const [inputId, configId] of [
+    ['settingsUnitShadowLengthRange', 'unitShadowLength'],
+    ['settingsUnitShadowDirectionRange', 'unitShadowDirection']
+  ]) {
+    modal.querySelector(`#${inputId}`)?.addEventListener('input', event => {
+      setConfigValue(configId, Number(event.target.value))
+      syncUnitShadowControls(modal)
+    })
+  }
   for (const [name, id] of EXTRA_WATER_CONTROLS) {
     modal.querySelector(`#settingsWater${name}Range`)?.addEventListener('input', event => {
       setConfigValue(id, Number(event.target.value))

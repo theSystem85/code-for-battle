@@ -118,6 +118,12 @@ import {
   setCoastalShallowsLength,
   WATER_WAVE_DIRECTION,
   setWaterWaveDirection,
+  UNIT_SHADOWS_ENABLED,
+  setUnitShadowsEnabled,
+  UNIT_SHADOW_LENGTH,
+  setUnitShadowLength,
+  UNIT_SHADOW_DIRECTION,
+  setUnitShadowDirection,
   WATER_EFFECT_TONE,
   setWaterEffectTone,
   WATER_EFFECT_SATURATION,
@@ -315,6 +321,20 @@ export const configRegistry = {
   waterWaveDirection: {
     name: 'Wave direction', description: 'Rotate waves clockwise in degrees', type: 'number',
     get: () => WATER_WAVE_DIRECTION, set: setWaterWaveDirection,
+    min: 0, max: 360, step: 1, category: 'Graphics'
+  },
+  unitShadowsEnabled: {
+    name: 'Unit shadows', description: 'Draw subtle ground shadows below units', type: 'boolean',
+    get: () => UNIT_SHADOWS_ENABLED, set: setUnitShadowsEnabled, category: 'Graphics'
+  },
+  unitShadowLength: {
+    name: 'Shadow length', description: 'Unit shadow offset as a fraction of a unit footprint', type: 'number',
+    get: () => UNIT_SHADOW_LENGTH, set: setUnitShadowLength,
+    min: 0, max: 1.5, step: 0.05, category: 'Graphics'
+  },
+  unitShadowDirection: {
+    name: 'Shadow direction', description: 'Direction unit shadows are cast, clockwise from east', type: 'number',
+    get: () => UNIT_SHADOW_DIRECTION, set: setUnitShadowDirection,
     min: 0, max: 360, step: 1, category: 'Graphics'
   },
   waterEffectTone: {

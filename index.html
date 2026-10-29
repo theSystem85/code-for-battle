@@ -1609,6 +1609,18 @@
           </div>
           <div class="config-modal__section">
             <h3 class="config-modal__section-title">Effects</h3>
+            <label class="config-modal__field config-modal__field--toggle">
+              <input type="checkbox" id="settingsUnitShadowsToggle" checked>
+              <span>Unit shadows</span>
+            </label>
+            <label class="config-modal__field" for="settingsUnitShadowLengthRange">
+              <span class="config-modal__range-label-row"><span>Shadow length</span><span id="settingsUnitShadowLengthValue" class="config-modal__range-value">22%</span></span>
+              <input type="range" id="settingsUnitShadowLengthRange" min="0" max="1.5" step="0.05" value="0.22">
+            </label>
+            <label class="config-modal__field" for="settingsUnitShadowDirectionRange">
+              <span class="config-modal__range-label-row"><span>Shadow direction</span><span id="settingsUnitShadowDirectionValue" class="config-modal__range-value">45°</span></span>
+              <input type="range" id="settingsUnitShadowDirectionRange" min="0" max="360" step="1" value="45">
+            </label>
             <div id="settingsGraphicsEffects"></div>
           </div>
         </div>
