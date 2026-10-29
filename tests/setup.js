@@ -133,6 +133,7 @@ class MockCanvasRenderingContext2D {
   moveTo() {}
   lineTo() {}
   arc() {}
+  ellipse() {}
   arcTo() {}
   rect() {}
   fill() {}
