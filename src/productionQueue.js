@@ -20,7 +20,7 @@ import { getSimulationTime } from './game/time.js'
 import { isLocalPartyAutomationLocked } from './network/multiplayerStore.js'
 import { isReplayInteractionLocked, isReplayModeActive, recordReplayCommand } from './replaySystem.js'
 import { claimFirstProductionNarration, preloadMilestoneForProduction } from './ui/milestoneMediaCache.js'
-import { resolveExplicitSpawnFactory } from './production/spawnFactorySelection.js'
+import { resolveSpawnFactory } from './production/spawnFactorySelection.js'
 import { applyUnitBuildDelivery } from './policies/unitBuildDelivery.js'
 
 function playUnitReadySound(unitType) {
@@ -53,6 +53,56 @@ export const productionQueue = {
 
   // Reference to production controller for updating button states
   productionController: null,
+  productionProgressBuilding: null,
+
+  clearMapProductionProgress: function() {
+    if (this.productionProgressBuilding) this.productionProgressBuilding.productionProgress = null
+    this.productionProgressBuilding = null
+  },
+
+  resolveCurrentUnitSpawnBuilding: function() {
+    const current = this.currentUnit
+    if (!current) return null
+    const buildings = gameState.buildings || []
+    let candidates = []
+    let available = null
+    let nextIndex = 0
+    if (current.type === 'f22Raptor') {
+      candidates = buildings.filter(b => b.type === 'airstrip' && b.owner === gameState.humanPlayer && b.health > 0)
+      available = candidates.filter(building => {
+        ensureAirstripOperations(building)
+        return claimAirstripParkingSlot(building) >= 0
+      })
+      nextIndex = gameState.nextAirstripIndex ?? 0
+    } else if (current.type === 'apache') {
+      candidates = buildings.filter(b => b.type === 'helipad' && b.owner === gameState.humanPlayer && b.health > 0)
+      const empty = candidates.filter(b => !b.landedUnitId)
+      available = empty.length ? empty : candidates
+      nextIndex = gameState.nextHelipadIndex ?? 0
+    } else if (current.type === 'f35') {
+      candidates = buildings.filter(b => (b.type === 'helipad' || b.type === 'airstrip') && b.owner === gameState.humanPlayer && b.health > 0)
+      available = candidates.filter(building => {
+        if (building.type === 'helipad') return !building.landedUnitId
+        ensureAirstripOperations(building)
+        return claimAirstripParkingSlot(building) >= 0
+      })
+      nextIndex = gameState.nextF35PadIndex ?? 0
+    } else if (navalUnitTypes.includes(current.type)) {
+      candidates = buildings.filter(b => b.type === 'shipyard' && b.owner === gameState.humanPlayer && b.health > 0)
+      nextIndex = gameState.nextShipyardIndex ?? 0
+    } else if (vehicleUnitTypes.includes(current.type)) {
+      candidates = buildings.filter(b => b.type === 'vehicleFactory' && b.owner === gameState.humanPlayer)
+      nextIndex = gameState.nextVehicleFactoryIndex ?? 0
+    }
+    return resolveSpawnFactory(candidates, available || candidates, current.factoryId, nextIndex).factory
+  },
+
+  updateMapProductionProgress: function(progress) {
+    const spawnBuilding = this.resolveCurrentUnitSpawnBuilding()
+    if (this.productionProgressBuilding !== spawnBuilding) this.clearMapProductionProgress()
+    this.productionProgressBuilding = spawnBuilding
+    if (spawnBuilding) spawnBuilding.productionProgress = progress
+  },
 
   // Set production controller reference
   setProductionController: function(pc) {
@@ -461,6 +511,8 @@ export const productionQueue = {
       automationDelivery: item.automationDelivery || null
     }
 
+    this.updateMapProductionProgress(0)
+
     this.restoreSuspendedProduction(item, this.currentUnit, 'unitPaid')
 
     // Warm the milestone clip before the unit exists. Playback waits for the milestone.
@@ -618,12 +670,14 @@ export const productionQueue = {
         } else {
           // Not enough money, pause progress here
           this.pausedUnit = true
+          this.clearMapProductionProgress()
           showNotification('Unit production paused: not enough money.')
           return
         }
       }
 
       this.currentUnit.progress = progress
+      this.updateMapProductionProgress(progress)
       const progressBar = this.currentUnit.button.querySelector('.production-progress')
       if (progressBar) {
         progressBar.style.width = `${progress * 100}%`
@@ -678,6 +732,7 @@ export const productionQueue = {
 
   completeCurrentUnitProduction: function() {
     if (!this.currentUnit) return
+    this.clearMapProductionProgress()
     const completionReceiptId = this.currentUnit.completionReceiptId
     let itemSpawned = false
 
@@ -699,6 +754,7 @@ export const productionQueue = {
         showNotification('Production cancelled: F22 Raptor requires an operational Airstrip.')
         this.currentUnit.button.classList.remove('active', 'paused')
         if (!itemSpawned) failCompletionReceipt(completionReceiptId, 'the unit could not be spawned')
+        this.clearMapProductionProgress()
         this.currentUnit = null
         this.startNextUnitProduction()
         return
@@ -715,22 +771,20 @@ export const productionQueue = {
         return
       }
 
-      const requestedAirstrip = resolveExplicitSpawnFactory(
+      const requestedAirstrip = resolveSpawnFactory(
         allAirstrips,
         availableAirstrips,
-        this.currentUnit.factoryId
+        this.currentUnit.factoryId,
+        gameState.nextAirstripIndex ?? 0
       )
       if (requestedAirstrip.status === 'unavailable') {
         showNotification('Airstrip parking is full. F22 production is waiting for a free slot.')
         this.pausedUnit = true
         return
       }
-      if (requestedAirstrip.status === 'chosen') {
-        spawnFactory = requestedAirstrip.factory
-      } else {
+      spawnFactory = requestedAirstrip.factory
+      if (requestedAirstrip.selection === 'round-robin') {
         gameState.nextAirstripIndex = gameState.nextAirstripIndex ?? 0
-        const chosenIndex = gameState.nextAirstripIndex % availableAirstrips.length
-        spawnFactory = availableAirstrips[chosenIndex]
         gameState.nextAirstripIndex = (gameState.nextAirstripIndex + 1) % availableAirstrips.length
       }
 
@@ -747,6 +801,7 @@ export const productionQueue = {
         showNotification('Production cancelled: Apache requires an operational Helipad.')
         this.currentUnit.button.classList.remove('active', 'paused')
         if (!itemSpawned) failCompletionReceipt(completionReceiptId, 'the unit could not be spawned')
+        this.clearMapProductionProgress()
         this.currentUnit = null
         this.startNextUnitProduction()
         return
@@ -754,17 +809,15 @@ export const productionQueue = {
 
       const availableHelipads = allHelipads.filter(h => !h.landedUnitId)
       const selectionPool = availableHelipads.length > 0 ? availableHelipads : allHelipads
-      const requestedHelipad = resolveExplicitSpawnFactory(
+      const requestedHelipad = resolveSpawnFactory(
         allHelipads,
-        allHelipads,
-        this.currentUnit.factoryId
+        selectionPool,
+        this.currentUnit.factoryId,
+        gameState.nextHelipadIndex ?? 0
       )
-      if (requestedHelipad.status === 'chosen') {
-        spawnFactory = requestedHelipad.factory
-      } else {
+      spawnFactory = requestedHelipad.factory
+      if (requestedHelipad.selection === 'round-robin') {
         gameState.nextHelipadIndex = gameState.nextHelipadIndex ?? 0
-        const chosenIndex = gameState.nextHelipadIndex % selectionPool.length
-        spawnFactory = selectionPool[chosenIndex]
         gameState.nextHelipadIndex = (gameState.nextHelipadIndex + 1) % selectionPool.length
       }
 
@@ -792,6 +845,7 @@ export const productionQueue = {
         showNotification('Production cancelled: F35 requires an operational Helipad or Airstrip.')
         this.currentUnit.button.classList.remove('active', 'paused')
         if (!itemSpawned) failCompletionReceipt(completionReceiptId, 'the unit could not be spawned')
+        this.clearMapProductionProgress()
         this.currentUnit = null
         this.startNextUnitProduction()
         return
@@ -811,18 +865,15 @@ export const productionQueue = {
         return
       }
 
-      const requestedPad = resolveExplicitSpawnFactory(allPads, availablePads, this.currentUnit.factoryId)
+      const requestedPad = resolveSpawnFactory(allPads, availablePads, this.currentUnit.factoryId, gameState.nextF35PadIndex ?? 0)
       if (requestedPad.status === 'unavailable') {
         showNotification('The selected pad is full. F35 production is waiting for a free slot.')
         this.pausedUnit = true
         return
       }
-      if (requestedPad.status === 'chosen') {
-        spawnFactory = requestedPad.factory
-      } else {
+      spawnFactory = requestedPad.factory
+      if (requestedPad.selection === 'round-robin') {
         gameState.nextF35PadIndex = gameState.nextF35PadIndex ?? 0
-        const chosenIndex = gameState.nextF35PadIndex % availablePads.length
-        spawnFactory = availablePads[chosenIndex]
         gameState.nextF35PadIndex = (gameState.nextF35PadIndex + 1) % availablePads.length
       }
 
@@ -834,16 +885,15 @@ export const productionQueue = {
         b => b.type === 'shipyard' && b.owner === gameState.humanPlayer && b.health > 0
       )
       if (shipyards.length > 0) {
-        const requestedShipyard = resolveExplicitSpawnFactory(
+        const requestedShipyard = resolveSpawnFactory(
           shipyards,
           shipyards,
-          this.currentUnit.factoryId
+          this.currentUnit.factoryId,
+          gameState.nextShipyardIndex ?? 0
         )
-        if (requestedShipyard.status === 'chosen') {
-          spawnFactory = requestedShipyard.factory
-        } else {
+        spawnFactory = requestedShipyard.factory
+        if (requestedShipyard.selection === 'round-robin') {
           gameState.nextShipyardIndex = gameState.nextShipyardIndex ?? 0
-          spawnFactory = shipyards[gameState.nextShipyardIndex % shipyards.length]
           gameState.nextShipyardIndex++
         }
         if (!rallyPointTarget && spawnFactory.rallyPoint) {
@@ -858,16 +908,15 @@ export const productionQueue = {
       )
 
       if (vehicleFactories.length > 0) {
-        const requestedFactory = resolveExplicitSpawnFactory(
+        const requestedFactory = resolveSpawnFactory(
           vehicleFactories,
           vehicleFactories,
-          this.currentUnit.factoryId
+          this.currentUnit.factoryId,
+          gameState.nextVehicleFactoryIndex ?? 0
         )
-        if (requestedFactory.status === 'chosen') {
-          spawnFactory = requestedFactory.factory
-        } else {
+        spawnFactory = requestedFactory.factory
+        if (requestedFactory.selection === 'round-robin') {
           gameState.nextVehicleFactoryIndex = gameState.nextVehicleFactoryIndex ?? 0
-          spawnFactory = vehicleFactories[gameState.nextVehicleFactoryIndex % vehicleFactories.length]
           gameState.nextVehicleFactoryIndex++
         }
 
@@ -882,6 +931,7 @@ export const productionQueue = {
         // Reset and try next production
         this.currentUnit.button.classList.remove('active', 'paused')
         if (!itemSpawned) failCompletionReceipt(completionReceiptId, 'the unit could not be spawned')
+        this.clearMapProductionProgress()
         this.currentUnit = null
         this.startNextUnitProduction() // Try next in queue
         return
@@ -983,6 +1033,7 @@ export const productionQueue = {
     }
 
     if (!itemSpawned) failCompletionReceipt(completionReceiptId, 'the unit could not be spawned')
+    this.clearMapProductionProgress()
     this.currentUnit = null
     this.pausedUnit = false  // Clear pause state when unit completes
 
@@ -1158,6 +1209,7 @@ export const productionQueue = {
     }
 
     // Clear current production
+    this.clearMapProductionProgress()
     this.currentUnit = null
     this.pausedUnit = false
 
@@ -1558,6 +1610,7 @@ export const productionQueue = {
     this.buildingItems = []
     this.completedBuildings = []
     this.stackedPlacementActive = Boolean(state?.stackedPlacementActive)
+    this.clearMapProductionProgress()
     this.currentUnit = null
     this.currentBuilding = null
     this.unitPaid = 0
