@@ -474,6 +474,13 @@ export function initSettingsModal() {
     setConfigValue('unitShadowsEnabled', event.target.checked)
     syncUnitShadowControls(modal)
   })
+  const crystalGlowToggle = modal.querySelector('#settingsCrystalGlowToggle')
+  if (crystalGlowToggle) {
+    crystalGlowToggle.checked = Boolean(getConfigValue('crystalGlowEnabled'))
+    crystalGlowToggle.addEventListener('change', event => {
+      setConfigValue('crystalGlowEnabled', event.target.checked)
+    })
+  }
   for (const [inputId, configId] of [
     ...UNIT_SHADOW_CONTROLS.map(([name, configId]) => [`settingsUnitShadow${name}Range`, configId])
   ]) {
