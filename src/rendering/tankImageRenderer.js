@@ -65,6 +65,8 @@ const PREPARED_TANK_IDS = Object.freeze({
 })
 
 const TANK_VARIANTS = Object.freeze(['tankV1', 'tankV2', 'tankV3', 'lightTank'])
+const LIGHT_TANK_MUZZLE_FLASH_DURATION = 225
+const LIGHT_TANK_MUZZLE_FLASH_SIZE_MULTIPLIER = 1.35
 
 function getPreparedTankAssets(variant) {
   const ids = PREPARED_TANK_IDS[variant]
@@ -398,14 +400,20 @@ function drawRotationFrame(ctx, frame, x, y) {
 }
 
 function hasActiveMuzzleFlash(unit, now, options) {
-  return !options.disableMuzzleFlash && unit.muzzleFlashStartTime && now - unit.muzzleFlashStartTime <= MUZZLE_FLASH_DURATION
+  const duration = getMuzzleFlashDuration(unit)
+  return !options.disableMuzzleFlash &&
+    Number.isFinite(unit.muzzleFlashStartTime) &&
+    now >= unit.muzzleFlashStartTime &&
+    now - unit.muzzleFlashStartTime <= duration
 }
 
 // Draws the muzzle flash in turret-local coordinates (caller sets up the turret transform).
 function drawMuzzleFlash(ctx, unit, now, variantConfig, barrelLocalX, barrelLocalY, barrelSourceWidth, barrelSourceHeight, barrelScale) {
-  const flashProgress = (now - unit.muzzleFlashStartTime) / MUZZLE_FLASH_DURATION
+  const flashDuration = getMuzzleFlashDuration(unit)
+  const flashProgress = (now - unit.muzzleFlashStartTime) / flashDuration
   const flashAlpha = 1 - flashProgress
-  const flashSize = MUZZLE_FLASH_SIZE * (1 - flashProgress * 0.5)
+  const sizeMultiplier = unit.type === 'lightTank' ? LIGHT_TANK_MUZZLE_FLASH_SIZE_MULTIPLIER : 1
+  const flashSize = MUZZLE_FLASH_SIZE * sizeMultiplier * (1 - flashProgress * 0.5)
 
   ctx.save()
   ctx.globalAlpha = flashAlpha
@@ -420,6 +428,10 @@ function drawMuzzleFlash(ctx, unit, now, variantConfig, barrelLocalX, barrelLoca
   ctx.arc(flashX, flashY, flashSize, 0, Math.PI * 2)
   ctx.fill()
   ctx.restore()
+}
+
+function getMuzzleFlashDuration(unit) {
+  return unit.type === 'lightTank' ? LIGHT_TANK_MUZZLE_FLASH_DURATION : MUZZLE_FLASH_DURATION
 }
 
 /**
