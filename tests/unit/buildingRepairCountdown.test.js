@@ -19,6 +19,25 @@ beforeEach(() => {
 })
 
 describe('building repair countdown HUD', () => {
+  it('[U07044] draws only an active production building progress bar in blue', async() => {
+    globalThis.Image = class Image {}
+    const { BuildingRenderer } = await import('../../src/rendering/buildingRenderer.js')
+    const fillRect = vi.fn()
+    const ctx = {
+      fillRect,
+      restore: vi.fn(),
+      save: vi.fn(),
+      set fillStyle(_value) {}
+    }
+
+    const renderer = new BuildingRenderer()
+    renderer.renderFactoryProductionProgress(ctx, { productionProgress: 0.4 }, 20, 30, 100, 64)
+    renderer.renderFactoryProductionProgress(ctx, {}, 20, 30, 100, 64)
+
+    expect(fillRect).toHaveBeenCalledTimes(2)
+    expect(fillRect).toHaveBeenNthCalledWith(2, 20, 14, 40, 3)
+  })
+
   it('[U00549] never draws the timeout fill wider than the building', async() => {
     globalThis.Image = class Image {}
     const { gameState } = await import('../../src/gameState.js')

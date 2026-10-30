@@ -1033,6 +1033,14 @@ export class BuildingRenderer {
     let buildStartTime = null
     let buildDuration = null
 
+    if (Number.isFinite(building.productionProgress)) {
+      const progress = Math.max(0, Math.min(building.productionProgress, 1))
+      if (progress < 1) {
+        drawStatusBar(ctx, screenX, screenY - 16, width, 3, progress, '#2196F3', 'horizontal')
+      }
+      return
+    }
+
     // Check if it's a construction yard factory
     if (building.type === 'constructionYard' && building.id && gameState.factories) {
       factory = entityIndex?.get(`factory:${building.owner}`) ||

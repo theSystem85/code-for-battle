@@ -19,3 +19,11 @@ export function resolveExplicitSpawnFactory(allCandidates, availableCandidates, 
   }
   return { status: 'chosen', factory: preferred }
 }
+
+export function resolveSpawnFactory(allCandidates, availableCandidates, factoryId, nextIndex = 0) {
+  const explicit = resolveExplicitSpawnFactory(allCandidates, availableCandidates, factoryId)
+  if (explicit.status !== 'fallback') return { ...explicit, selection: 'explicit' }
+  const pool = availableCandidates || allCandidates
+  if (!Array.isArray(pool) || pool.length === 0) return { status: 'unavailable', factory: null }
+  return { status: 'chosen', factory: pool[nextIndex % pool.length], selection: 'round-robin' }
+}
