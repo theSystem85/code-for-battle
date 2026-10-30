@@ -1,3 +1,5 @@
+import { UNIT_PROPERTIES } from '../config.js'
+
 const DEG_TO_RADIANS = Math.PI / 180
 const CACHE_PADDING = 36
 const MASK_SIZE = 96
@@ -5,6 +7,10 @@ const MASK_SIZE = 96
 const shadowCache = new Map()
 const shadowSources = new Map()
 let cacheRevision = 0
+
+export function usesUnitGroundShadow(unit) {
+  return unit?.isAirUnit !== true && UNIT_PROPERTIES[unit?.type]?.isAirUnit !== true
+}
 
 export function getUnitShadowOffset(offset, directionDegrees, footprint) {
   const distance = Math.max(0, Number(offset) || 0) * Math.max(0, Number(footprint) || 0)

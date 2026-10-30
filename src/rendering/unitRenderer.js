@@ -25,7 +25,7 @@ import { getSimulationTime } from '../game/time.js'
 import { getCanvasLogicalSize } from './renderingUtils.js'
 import { describeActivePolicies, shouldShowPolicyIndicator } from '../policies/policyActivity.js'
 import { drawStatusBar, fillStatusBar, paintStatusBarOutline, paintStatusBarTrack, strokeStatusArc, strokeStatusRailArc } from '../utils/statusBarGradient.js'
-import { drawCachedUnitShadow } from './unitShadow.js'
+import { drawCachedUnitShadow, usesUnitGroundShadow } from './unitShadow.js'
 
 const POLICY_ICON_SIZE = 10
 
@@ -1874,7 +1874,7 @@ export class UnitRenderer {
     const centerX = unit.x + TILE_SIZE / 2 - scrollOffset.x
     const centerY = unit.y + TILE_SIZE / 2 - scrollOffset.y
 
-    if (UNIT_SHADOWS_ENABLED) {
+    if (UNIT_SHADOWS_ENABLED && usesUnitGroundShadow(unit)) {
       let drawMask = this.shadowMaskDrawers.get(unit.type)
       if (!drawMask) {
         const maskUnit = { ...unit, selected: false, showSelection: false }

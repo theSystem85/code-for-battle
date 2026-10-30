@@ -1333,6 +1333,7 @@ export const UNIT_PROPERTIES = {
     turretRotationSpeed: 0
   },
   apache: {
+    isAirUnit: true,
     health: 40,
     maxHealth: 40,
     speed: 4, // 25% slower than previous value (6.75 -> 5.0625)
@@ -1341,6 +1342,7 @@ export const UNIT_PROPERTIES = {
     accelerationMultiplier: 1.25
   },
   f22Raptor: {
+    isAirUnit: true,
     health: 80,
     maxHealth: 80,
     speed: 6.075,
@@ -1349,6 +1351,7 @@ export const UNIT_PROPERTIES = {
     accelerationMultiplier: 1.5
   },
   f35: {
+    isAirUnit: true,
     health: 70,
     maxHealth: 70,
     speed: 5,

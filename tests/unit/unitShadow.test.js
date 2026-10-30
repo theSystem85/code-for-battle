@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { clearUnitShadowCaches, drawCachedUnitShadow, getUnitShadowCacheStats, getUnitShadowOffset, rebuildUnitShadowCaches } from '../../src/rendering/unitShadow.js'
+import { clearUnitShadowCaches, drawCachedUnitShadow, getUnitShadowCacheStats, getUnitShadowOffset, rebuildUnitShadowCaches, usesUnitGroundShadow } from '../../src/rendering/unitShadow.js'
 
 describe('unit shadow geometry', () => {
   it('[U07042] casts the default 45 degree shadow toward the north-east', () => {
@@ -26,5 +26,14 @@ describe('unit shadow geometry', () => {
     rebuildUnitShadowCaches(settings())
     expect(maskDraws).toBe(2)
     expect(getUnitShadowCacheStats().entries).toBe(1)
+  })
+
+  it('[U07052] excludes configured and runtime air units from ground shadows', () => {
+    expect(usesUnitGroundShadow({ type: 'apache' })).toBe(false)
+    expect(usesUnitGroundShadow({ type: 'f22Raptor' })).toBe(false)
+    expect(usesUnitGroundShadow({ type: 'f35', carrierId: 'carrier-1' })).toBe(false)
+    expect(usesUnitGroundShadow({ type: 'futureAircraft', isAirUnit: true })).toBe(false)
+    expect(usesUnitGroundShadow({ type: 'tank_v1' })).toBe(true)
+    expect(usesUnitGroundShadow({ type: 'aircraftCarrier', isNaval: true })).toBe(true)
   })
 })
