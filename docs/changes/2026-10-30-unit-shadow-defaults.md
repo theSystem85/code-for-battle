@@ -1,0 +1,1 @@
+- [x] **Unit shadow Graphics defaults** — Align fresh-install and reset defaults with Patrick’s tuned Effects values (enabled, 60% offset, 2×/2.65× stretch, 180% size, 20% opacity, 6.5 px blur, 69° cast). Spec: [Unit ground shadows](../specs/unit-shadows.md)

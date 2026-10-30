@@ -6,7 +6,7 @@ Ground units use their rendered sprite silhouette for a darker, soft north-east 
 
 ## Behaviour
 
-- Shadows default to enabled and cast north-east at 45 degrees.
+- Shadows default to enabled and cast toward the north-east at 69 degrees, with offset 60%, start stretch 2×, end stretch 2.65×, overall size 180%, opacity 20%, and blur 6.5 px.
 - Graphics settings expose offset, start and end stretch, overall size, opacity, blur, and cast direction. Values persist in the existing IndexedDB graphics record; the former length value migrates to offset.
 - The Graphics dialog shows a tank and its shadow. Only this preview is regenerated while a slider moves.
 - Gameplay keeps one bounded offscreen shadow canvas per unit type. All instances of that type use the same canvas through one `drawImage` call.
