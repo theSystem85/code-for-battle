@@ -685,13 +685,13 @@ export let COASTAL_SHALLOWS_ENABLED = true
 export let COASTAL_SHALLOWS_LENGTH = 15
 export let WATER_WAVE_DIRECTION = 0
 export let UNIT_SHADOWS_ENABLED = true
-export let UNIT_SHADOW_OFFSET = 0.28
-export let UNIT_SHADOW_DIRECTION = 45
-export let UNIT_SHADOW_START_STRETCH = 1
-export let UNIT_SHADOW_END_STRETCH = 1.4
-export let UNIT_SHADOW_SIZE = 1.15
-export let UNIT_SHADOW_OPACITY = 0.38
-export let UNIT_SHADOW_BLUR = 3
+export let UNIT_SHADOW_OFFSET = 0.6
+export let UNIT_SHADOW_DIRECTION = 69
+export let UNIT_SHADOW_START_STRETCH = 2
+export let UNIT_SHADOW_END_STRETCH = 2.65
+export let UNIT_SHADOW_SIZE = 1.8
+export let UNIT_SHADOW_OPACITY = 0.2
+export let UNIT_SHADOW_BLUR = 6.5
 export function setCoastalShallowsEnabled(value) {
   COASTAL_SHALLOWS_ENABLED = Boolean(value)
   saveGraphicsSettingsToIndexedDb()
