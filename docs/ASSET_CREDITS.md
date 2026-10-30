@@ -45,8 +45,13 @@ The three situational tracks were generated on the owner's ElevenLabs Starter pl
 ## Air and naval milestone videos
 
 - Files: `public/video/{first_f35,first_f22,first_apache,first_destroyer,first_battleship,first_submarine,shipyard,helipad}.mp4`
-- Source: AI-generated on 2026-10-15 with Grok Imagine (xAI), 15 s 720p, using the matching sidebar build icon as reference image. Prompts in `docs/asset-sources/milestone-videos-air-naval-prompts.md`. Re-encoded and center-cropped to 960×576 by the project.
+- Source: AI-generated on 2026-10-15 with Grok Imagine (xAI), 15 s 720p, using the matching sidebar build icon as reference image. Prompts in `docs/asset-sources/milestone-videos-air-naval-prompts.md`. Center-cropped to 960×576 by the project.
+- Shipped picture: HEVC Main in an MP4 tagged `hvc1` (libx265 CRF 28, yuv420p), silent. There is no H.264 fallback. Safari on macOS and iOS plays these files; some Chrome builds on Windows and Android do not.
 - Narration: the matching `.mp3` files were generated with ElevenLabs (eleven_v4, voice "Dave") on the owner's ElevenLabs Starter plan, which includes a commercial license. Trimmed and loudness-normalized by the project.
+
+## Milestone video encodes
+
+Every current clip directly under `public/video/*.mp4` (16 files; `public/video/old/` is unchanged) is HEVC Main, tagged `hvc1`, libx265 CRF 28, yuv420p, at the same pixel size as the previous H.264 file. Most are 960×576. `tank_over_crystals.mp4` and `tesla_coil_hits_tank.mp4` are 1280×720. `air_strip.mp4` and `first_tank.mp4` still carry a stereo AAC soundtrack at about 128 kbps. The other fourteen picture files have no audio track. Companion `.mp3` narration files are unchanged. Playback still requests `video/${base}.mp4`.
 
 ## Destroyer, battleship and aircraft carrier map sprites
 

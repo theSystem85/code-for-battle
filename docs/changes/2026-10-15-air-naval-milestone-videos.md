@@ -13,7 +13,7 @@ Eight new first-build milestone videos with narration, wired through the existin
 | `firstShipyard` | building `shipyard` | `shipyard` |
 | `firstHelipad` | building `helipad` | `helipad` |
 
-- Videos: Grok Imagine, 15 s, 720p 16:9, sidebar build icon as reference image. Center-cropped to 960×576 (5:3), H.264 High, 24 fps, yuv420p, ~1.8 Mbit/s, no audio, faststart. Full-frame crop entries in `milestoneVideoCrop.js`.
+- Videos: Grok Imagine, 15 s, 720p 16:9, sidebar build icon as reference image. Originally center-cropped to 960×576 (5:3), H.264 High, 24 fps, yuv420p, ~1.8 Mbit/s, no audio, faststart. On 2026-10-31 those shipped mp4s were replaced with HEVC Main tagged `hvc1` (same filenames, still silent pictures). See `docs/changes/2026-10-31-milestone-hevc.md`. Full-frame crop entries in `milestoneVideoCrop.js`.
 - Narration: ElevenLabs eleven_v4, voice "Dave" (same as existing milestone VO), 12.8–14.6 s, mono 44.1 kHz 128 kbps, -23 LUFS like the existing clips.
 - Units also replace the first unit-ready sting with the narration, and production start preloads the clip, like the existing first-unit milestones.
 - Prompts: `docs/asset-sources/milestone-videos-air-naval-prompts.md`.

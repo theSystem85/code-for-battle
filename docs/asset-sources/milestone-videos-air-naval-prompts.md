@@ -1,4 +1,4 @@
-# Grok Imagine prompts (duration 15, 720p, 16:9; encode center-cropped to 960x576 5:3 H.264 High 24fps, silent, like existing clips)
+# Grok Imagine prompts (duration 15, 720p, 16:9). Shipped files are center-cropped to 960×576 (5:3) HEVC Main (`hvc1`), silent pictures. Companion narration is a separate mp3.
 Reference image = public/images/sidebar/<x>_sidebar.webp (PNG copies in refs/), cited as <IMAGE_0>.
 Common suffix: "Photorealistic cinematic military footage, golden-hour light, dramatic smoke and dust, smooth camera motion, no text, no logos, no watermark."
 
