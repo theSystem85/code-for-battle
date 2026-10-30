@@ -120,8 +120,18 @@ import {
   setWaterWaveDirection,
   UNIT_SHADOWS_ENABLED,
   setUnitShadowsEnabled,
-  UNIT_SHADOW_LENGTH,
-  setUnitShadowLength,
+  UNIT_SHADOW_OFFSET,
+  setUnitShadowOffset,
+  UNIT_SHADOW_START_STRETCH,
+  setUnitShadowStartStretch,
+  UNIT_SHADOW_END_STRETCH,
+  setUnitShadowEndStretch,
+  UNIT_SHADOW_SIZE,
+  setUnitShadowSize,
+  UNIT_SHADOW_OPACITY,
+  setUnitShadowOpacity,
+  UNIT_SHADOW_BLUR,
+  setUnitShadowBlur,
   UNIT_SHADOW_DIRECTION,
   setUnitShadowDirection,
   WATER_EFFECT_TONE,
@@ -327,10 +337,29 @@ export const configRegistry = {
     name: 'Unit shadows', description: 'Draw subtle ground shadows below units', type: 'boolean',
     get: () => UNIT_SHADOWS_ENABLED, set: setUnitShadowsEnabled, category: 'Graphics'
   },
-  unitShadowLength: {
-    name: 'Shadow length', description: 'Unit shadow offset as a fraction of a unit footprint', type: 'number',
-    get: () => UNIT_SHADOW_LENGTH, set: setUnitShadowLength,
-    min: 0, max: 1.5, step: 0.05, category: 'Graphics'
+  unitShadowOffset: {
+    name: 'Shadow offset', description: 'Cast distance as a fraction of a unit footprint', type: 'number',
+    get: () => UNIT_SHADOW_OFFSET, set: setUnitShadowOffset, min: 0, max: 1.5, step: 0.05, category: 'Graphics'
+  },
+  unitShadowStartStretch: {
+    name: 'Shadow start stretch', description: 'Width multiplier at the unit', type: 'number',
+    get: () => UNIT_SHADOW_START_STRETCH, set: setUnitShadowStartStretch, min: 0.5, max: 2, step: 0.05, category: 'Graphics'
+  },
+  unitShadowEndStretch: {
+    name: 'Shadow end stretch', description: 'Width multiplier at the cast end', type: 'number',
+    get: () => UNIT_SHADOW_END_STRETCH, set: setUnitShadowEndStretch, min: 0.5, max: 3, step: 0.05, category: 'Graphics'
+  },
+  unitShadowSize: {
+    name: 'Shadow overall size', description: 'Overall unit-mask shadow scale', type: 'number',
+    get: () => UNIT_SHADOW_SIZE, set: setUnitShadowSize, min: 0.5, max: 2, step: 0.05, category: 'Graphics'
+  },
+  unitShadowOpacity: {
+    name: 'Shadow opacity', description: 'Darkness of unit shadows', type: 'number',
+    get: () => UNIT_SHADOW_OPACITY, set: setUnitShadowOpacity, min: 0, max: 1, step: 0.05, category: 'Graphics'
+  },
+  unitShadowBlur: {
+    name: 'Shadow blur', description: 'Softness in pixels', type: 'number',
+    get: () => UNIT_SHADOW_BLUR, set: setUnitShadowBlur, min: 0, max: 12, step: 0.5, category: 'Graphics'
   },
   unitShadowDirection: {
     name: 'Shadow direction', description: 'Direction unit shadows are cast, clockwise from east', type: 'number',
