@@ -10,7 +10,8 @@ import {
   WATER_EFFECT_SPEED,
   WATER_EFFECT_STRENGTH,
   WATER_EFFECT_SATURATION,
-  WATER_EFFECT_ZOOM
+  WATER_EFFECT_ZOOM,
+  CRYSTAL_GLOW_ENABLED
 } from '../config.js'
 import { PROFILER_SPAN_IDS
 } from '../performance/profilerIds.js'
@@ -785,9 +786,9 @@ export class GameWebGLRenderer {
           }
         }
 
-        if (tile.seedCrystal) {
+        if (tile.seedCrystal && !CRYSTAL_GLOW_ENABLED) {
           resourceInstances.push(this.createInstance('seedCrystal', x, y, mapGrid, canUseTextures, sotMask))
-        } else if (tile.ore) {
+        } else if (tile.ore && !CRYSTAL_GLOW_ENABLED) {
           resourceInstances.push(this.createInstance('ore', x, y, mapGrid, canUseTextures, sotMask))
         }
       }

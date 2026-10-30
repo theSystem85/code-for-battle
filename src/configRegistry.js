@@ -120,6 +120,8 @@ import {
   setWaterWaveDirection,
   UNIT_SHADOWS_ENABLED,
   setUnitShadowsEnabled,
+  CRYSTAL_GLOW_ENABLED,
+  setCrystalGlowEnabled,
   UNIT_SHADOW_OFFSET,
   setUnitShadowOffset,
   UNIT_SHADOW_START_STRETCH,
@@ -336,6 +338,10 @@ export const configRegistry = {
   unitShadowsEnabled: {
     name: 'Unit shadows', description: 'Draw subtle ground shadows below units', type: 'boolean',
     get: () => UNIT_SHADOWS_ENABLED, set: setUnitShadowsEnabled, category: 'Graphics'
+  },
+  crystalGlowEnabled: {
+    name: 'Crystal glow', description: 'Draw animated color-matched light beneath crystals', type: 'boolean',
+    get: () => CRYSTAL_GLOW_ENABLED, set: setCrystalGlowEnabled, category: 'Graphics'
   },
   unitShadowOffset: {
     name: 'Shadow offset', description: 'Cast distance as a fraction of a unit footprint', type: 'number',

@@ -8,7 +8,8 @@ import {
   WATER_EFFECT_SATURATION,
   WATER_EFFECT_ZOOM,
   WATER_EFFECT_STRENGTH,
-  WATER_EFFECT_SPEED
+  WATER_EFFECT_SPEED,
+  CRYSTAL_GLOW_ENABLED
 } from '../config.js'
 import { getSotDrawOffset, OrganicTerrain, shorelineCornerMask } from './organicTerrain.js'
 import { getTileDecalSignature, isDecalBlockedTile } from '../game/tileDecals.js'
@@ -37,6 +38,7 @@ import {
   StaticPageDependencyIndex
 } from './staticPagePreparation.js'
 import { SPRITE_TIER_IDS } from './spriteStreamingGeometry.js'
+import { CrystalGlowRenderer } from './crystalGlow.js'
 
 const UNDISCOVERED_COLOR = '#111111'
 const FOG_OVERLAY_STYLE = 'rgba(30, 30, 30, 0.6)'
@@ -238,6 +240,14 @@ export class MapRenderer {
   constructor(textureManager) {
     this.textureManager = textureManager
     this.trackMarksRenderer = new TrackMarksRenderer()
+    this.crystalGlowRenderer = new CrystalGlowRenderer()
+    this.crystalGlowTime = 0
+    this.createGlowCanvas = (width, height) => {
+      const canvas = document.createElement('canvas')
+      canvas.width = width
+      canvas.height = height
+      return canvas
+    }
     this.mobileMemoryProfile = Boolean(
       (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0) ||
       (typeof document !== 'undefined' && document.body?.classList.contains('is-touch'))
@@ -2014,8 +2024,10 @@ export class MapRenderer {
         this.drawTileDecalOverlay(ctx, tile, x, y, screenX, screenY, mapGrid)
 
         if (tile.seedCrystal) {
+          this.drawCrystalGlow(ctx, 'seedCrystal', tile.seedCrystalDensity || tile.oreDensity || 1, x, y, screenX, screenY)
           this.drawSeedOverlay(ctx, x, y, screenX, screenY, useTexture, tile.seedCrystalDensity || tile.oreDensity || 1)
         } else if (tile.ore) {
+          this.drawCrystalGlow(ctx, 'ore', tile.oreDensity || 1, x, y, screenX, screenY)
           this.drawOreOverlay(ctx, x, y, screenX, screenY, useTexture, tile.oreDensity || 1)
         }
       }
@@ -2730,11 +2742,13 @@ export class MapRenderer {
         this.drawTileDecalOverlay(ctx, tile, x, y, screenX, screenY, mapGrid)
 
         if (tile.seedCrystal) {
+          this.drawCrystalGlow(ctx, 'seedCrystal', tile.seedCrystalDensity || tile.oreDensity || 1, x, y, screenX, screenY)
           if (gpuRenderedResources && !this.shouldRenderCrystalOverlayOnCpu(tile, x, y)) {
             continue
           }
           this.drawSeedOverlay(ctx, x, y, screenX, screenY, useTexture, tile.seedCrystalDensity || tile.oreDensity || 1)
         } else if (tile.ore) {
+          this.drawCrystalGlow(ctx, 'ore', tile.oreDensity || 1, x, y, screenX, screenY)
           if (gpuRenderedResources && !this.shouldRenderCrystalOverlayOnCpu(tile, x, y)) {
             continue
           }
@@ -2747,6 +2761,7 @@ export class MapRenderer {
 
   shouldRenderCrystalOverlayOnCpu(tile, tileX, tileY) {
     if (!tile || (!tile.ore && !tile.seedCrystal)) return false
+    if (CRYSTAL_GLOW_ENABLED) return true
     const density = Math.max(
       1,
       Math.min(
@@ -2772,6 +2787,11 @@ export class MapRenderer {
     return integratedTile.image !== this.textureManager.primarySpriteSheetImage
   }
 
+  drawCrystalGlow(ctx, type, density, tileX, tileY, screenX, screenY) {
+    if (!CRYSTAL_GLOW_ENABLED || !this.canUseOffscreen) return
+    this.crystalGlowRenderer.draw(ctx, type, density, tileX, tileY, screenX, screenY, this.crystalGlowTime, this.createGlowCanvas)
+  }
+
   render(ctx, mapGrid, scrollOffset, gameCanvas, gameState, occupancyMap = null, options = {}) {
     const { skipBaseLayer = false, skipWaterSot = false, skipWaterBase = false, separateWaterLayer = false } = options || {}
     // Guard against empty or invalid mapGrid
@@ -2779,6 +2799,7 @@ export class MapRenderer {
       return
     }
     this.resetFrameChunkStats()
+    this.crystalGlowTime = typeof performance !== 'undefined' ? performance.now() : Date.now()
     this.dynamicWaterLandBlendEnabled = gameState?.dynamicWaterLandBlendEnabled !== false
     // Calculate visible tile range - improved for better performance
     const startTileX = Math.max(0, Math.floor(scrollOffset.x / TILE_SIZE))
