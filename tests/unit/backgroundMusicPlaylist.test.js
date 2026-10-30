@@ -78,7 +78,14 @@ describe('background music playlist', () => {
     expect(first.src).toBe('sound/music/music01.mp3')
     expect(first.loop).toBe(false)
     expect(first.paused).toBe(false)
-    // The next track is preloaded and cached while the first one plays
+    expect(sound.backgroundMusicFiles).toEqual([
+      'music01.mp3',
+      'music02.mp3',
+      'music03.mp3',
+      'music04.mp3',
+      'music05.mp3'
+    ])
+    // Five-file playlist: only the current track and the chosen next one are preloaded.
     expect(FakeAudio.instances.map(audio => audio.src)).toEqual([
       'sound/music/music01.mp3',
       'sound/music/music02.mp3'

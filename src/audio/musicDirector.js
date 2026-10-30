@@ -8,6 +8,9 @@ export const MUSIC_TRACKS = {
 export const MUSIC_SKIP_ORDER = [
   'music01.mp3',
   'music02.mp3',
+  'music03.mp3',
+  'music04.mp3',
+  'music05.mp3',
   MUSIC_TRACKS.firstAttack,
   MUSIC_TRACKS.underAttackOutnumbered,
   MUSIC_TRACKS.nearDefeat
@@ -16,6 +19,9 @@ export const MUSIC_SKIP_ORDER = [
 export const MUSIC_TRACK_TITLES = {
   'music01.mp3': 'Veil of Shadows (Remix)',
   'music02.mp3': 'Battle Track 02',
+  'music03.mp3': 'Iron Veil (Industrial Theme)',
+  'music04.mp3': 'Marching Orders (Advance Theme)',
+  'music05.mp3': 'Heavy Barrage (Combat Theme)',
   [MUSIC_TRACKS.firstAttack]: 'First Strike (Attack Theme)',
   [MUSIC_TRACKS.underAttackOutnumbered]: 'Outnumbered (Danger Theme)',
   [MUSIC_TRACKS.nearDefeat]: 'Last Stand (Defeat Theme)'

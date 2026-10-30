@@ -20,14 +20,15 @@ FakeAudio.instances = []
 const flush = () => new Promise(resolve => setTimeout(resolve, 0))
 
 describe('music skip order', () => {
-  it('[U03122] walks all five tracks in a fixed order and wraps around', () => {
+  it('[U03122] walks playlist tracks then situational themes in a fixed order and wraps around', () => {
     expect(MUSIC_SKIP_ORDER).toEqual([
-      'music01.mp3', 'music02.mp3', 'music_attack_motivational.mp3',
+      'music01.mp3', 'music02.mp3', 'music03.mp3', 'music04.mp3', 'music05.mp3',
+      'music_attack_motivational.mp3',
       'music_under_attack_danger.mp3', 'music_defeat_sad.mp3'
     ])
     let file = null
     const visited = []
-    for (let i = 0; i < 6; i++) { file = getNextSkipTrack(file); visited.push(file) }
+    for (let i = 0; i < MUSIC_SKIP_ORDER.length + 1; i++) { file = getNextSkipTrack(file); visited.push(file) }
     expect(visited).toEqual([...MUSIC_SKIP_ORDER, 'music01.mp3'])
   })
 })
@@ -86,16 +87,17 @@ describe('music skip, tooltip and fade', () => {
     await sound.skipToNextMusic()
     await vi.advanceTimersByTimeAsync(sound.MUSIC_FADE_OUT_MS + 100)
     expect(sound.bgMusicAudio.src).toBe('sound/music/music02.mp3')
+    expect(sound.getMusicTooltipText('next')).toBe('Now playing: Battle Track 02 · Next: Iron Veil (Industrial Theme)')
     await sound.skipToNextMusic()
     await vi.advanceTimersByTimeAsync(sound.MUSIC_FADE_OUT_MS + 100)
-    const attack = sound.bgMusicAudio
-    expect(attack.src).toBe('sound/music/music_attack_motivational.mp3')
-    expect(attack.loop).toBe(false)
-    expect(sound.getMusicTooltipText('toggle')).toBe('Now playing: First Strike (Attack Theme)')
+    const manual = sound.bgMusicAudio
+    expect(manual.src).toBe('sound/music/music03.mp3')
+    expect(manual.loop).toBe(false)
+    expect(sound.getMusicTooltipText('toggle')).toBe('Now playing: Iron Veil (Industrial Theme)')
     // Mood is still normal: when the manual pick ends, a playlist track follows.
-    attack.finish()
+    manual.finish()
     await vi.advanceTimersByTimeAsync(50)
-    expect(sound.bgMusicAudio.src).toMatch(/music0[12]\.mp3$/)
+    expect(sound.bgMusicAudio.src).toMatch(/music0[1-5]\.mp3$/)
     expect(sound.bgMusicAudio.paused).toBe(false)
   })
 

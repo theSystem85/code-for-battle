@@ -215,7 +215,13 @@ const activeAudioElements = new Map()
 const soundThrottleTimestamps = new Map() // Track last play time for throttled sounds
 
 // Background music files (played as a random playlist; add more files as needed)
-const backgroundMusicFiles = ['music01.mp3', 'music02.mp3']
+export const backgroundMusicFiles = [
+  'music01.mp3',
+  'music02.mp3',
+  'music03.mp3',
+  'music04.mp3',
+  'music05.mp3'
+]
 
 // Cache audio buffers using Web Audio API for true zero-network caching
 const audioBufferCache = new Map()

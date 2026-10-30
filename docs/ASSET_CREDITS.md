@@ -14,11 +14,14 @@ Background tracks in `public/sound/music/`:
 | --- | --- | --- |
 | `music01.mp3` | Generated with Udio (license per the owner's Udio plan) | Normal playlist |
 | `music02.mp3` | Generated with ElevenLabs Music v2.5 | Normal playlist |
+| `music03.mp3` | Generated with ElevenLabs Music v2.5 | Normal playlist (Iron Veil) |
+| `music04.mp3` | Generated with ElevenLabs Music v2.5 | Normal playlist (Marching Orders) |
+| `music05.mp3` | Generated with ElevenLabs Music v2.5 | Normal playlist (Heavy Barrage) |
 | `music_attack_motivational.mp3` | Generated with ElevenLabs Music v2.5 | First attack |
 | `music_under_attack_danger.mp3` | Generated with ElevenLabs Music v2.5 | Under attack while outnumbered |
 | `music_defeat_sad.mp3` | Generated with ElevenLabs Music v2.5 | Near defeat |
 
-The three situational tracks were generated on the owner's ElevenLabs Starter plan, which includes a commercial music license. Every ElevenLabs track carries the MP3 comment tag "Generated with ElevenLabs Music v2.5". All tracks are instrumental, 160 kbps / 48 kHz and loudness-matched to about -12 LUFS.
+The three situational tracks were generated on the owner's ElevenLabs Starter plan, which includes a commercial music license. `music03.mp3`, `music04.mp3` and `music05.mp3` were generated on 2026-10-30 with ElevenLabs Music v2.5 (about 150 seconds each) and added to the normal playlist. Every ElevenLabs track carries the MP3 comment tag "Generated with ElevenLabs Music v2.5". All tracks are instrumental, 160 kbps / 48 kHz and loudness-matched to about -12 LUFS.
 
 ## App icons
 
