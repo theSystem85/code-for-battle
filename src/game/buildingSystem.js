@@ -1,6 +1,6 @@
 import { noteCompletionTargetDestroyed } from '../policies/unitCompletion.js'
 // Building System Module - Handles building updates, defensive buildings, and Tesla coils
-import { TILE_SIZE, TANK_TURRET_ROT, BUILDING_SELL_DURATION } from '../config.js'
+import { TILE_SIZE, TANK_TURRET_ROT, BUILDING_SELL_DURATION, LARGE_EXPLOSION_VISUAL_RADIUS } from '../config.js'
 import { playSound, playPositionalSound } from '../sound.js'
 import { selectedUnits } from '../inputHandler.js'
 import { angleDiff, hasLineOfSightToTarget, smoothRotateTowardsAngle, triggerExplosion } from '../logic.js'
@@ -17,6 +17,7 @@ import { recordDestroyed } from '../ai-api/transitionCollector.js'
 import { gameState as globalGameState } from '../gameState.js'
 import { ROCKET_TURRET_IMAGE_COORDS_SIZE, ROCKET_TURRET_MUZZLE_OFFSETS } from './turretMuzzleConfig.js'
 import { spawnDestructionExplosion } from './spriteSheetEffects.js'
+import { createImpactVisual } from '../rendering/vfx/impactVfx.js'
 import { setBuildingDebrisDecals } from './tileDecals.js'
 import { getAircraftAltitudeLift } from './aircraftTargeting.js'
 import { teardownDefenceAutomation } from '../policies/defencePolicyEngine.js'
@@ -128,7 +129,13 @@ export const updateBuildings = logPerformance(function updateBuildings(gameState
         playPositionalSound('explosion', buildingCenterX, buildingCenterY, 0.5)
 
         if (!building.destructionExplosionSpawned) {
-          spawnDestructionExplosion(gameState, buildingCenterX, buildingCenterY)
+          if (building.type === 'gasStation' || building.type === 'ammunitionFactory') {
+            gameState.explosions.push(createImpactVisual(
+              buildingCenterX, buildingCenterY, now, LARGE_EXPLOSION_VISUAL_RADIUS, null, null, 'building'
+            ))
+          } else {
+            spawnDestructionExplosion(gameState, buildingCenterX, buildingCenterY)
+          }
           building.destructionExplosionSpawned = true
         }
 

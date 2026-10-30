@@ -1,12 +1,20 @@
-import { UNIT_PROPERTIES } from '../../src/config.js'
+import { LARGE_EXPLOSION_VISUAL_RADIUS, UNIT_PROPERTIES } from '../../src/config.js'
 import { deterministicRNG } from '../../src/network/deterministicRandom.js'
 import { describe, expect, it, vi } from 'vitest'
-import { ImpactVfx, createImpactVisual, selectImpactProfile, MAX_IMPACT_PARTICLES, MOBILE_IMPACT_PARTICLES, isLowImpactQuality } from '../../src/rendering/vfx/impactVfx.js'
+import { ImpactVfx, createImpactVisual, resolveExplosionVisualRadius, selectImpactProfile, MAX_IMPACT_PARTICLES, MOBILE_IMPACT_PARTICLES, isLowImpactQuality } from '../../src/rendering/vfx/impactVfx.js'
 
 const explosion = (profile = 'blasty', seed = 123) => ({ x: 100, y: 100, startTime: 0, maxRadius: 40, impactProfile: profile, impactAngle: Math.PI, impactSurface: 'unit', visualSeed: seed })
 const context = () => ({ globalAlpha: 0.7, globalCompositeOperation: 'source-over', fillStyle: 'red', strokeStyle: 'blue', lineWidth: 3, drawImage: vi.fn(), beginPath: vi.fn(), arc: vi.fn(), ellipse: vi.fn(), fill: vi.fn(), moveTo: vi.fn(), lineTo: vi.fn(), stroke: vi.fn() })
 
 describe('impact visuals', () => {
+  it('[U07050] separates tank-impact visual radius from gameplay splash radius', () => {
+    expect(resolveExplosionVisualRadius(256, { type: 'tank-v2' }, { projectileType: 'shell' }))
+      .toBe(LARGE_EXPLOSION_VISUAL_RADIUS * 0.5)
+    expect(resolveExplosionVisualRadius(256, { type: 'rocketTank' }, { projectileType: 'rocket' }))
+      .toBe(256)
+    expect(resolveExplosionVisualRadius(256, { type: 'tank-v2' }, { projectileType: 'shell' }, { visualRadius: 72 }))
+      .toBe(72)
+  })
   it.each(['tank', 'tank_v1', 'tank-v2', 'tank-v3'])('[U02043] selects blasty for %s', type => {
     expect(selectImpactProfile(type)).toBe('blasty')
   })

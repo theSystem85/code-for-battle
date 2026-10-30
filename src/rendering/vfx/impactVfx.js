@@ -1,10 +1,18 @@
 // Cosmetic PRNG: never consumes the deterministic simulation random stream.
-import { TILE_SIZE, UNIT_PROPERTIES } from '../../config.js'
+import { LARGE_EXPLOSION_VISUAL_RADIUS, TILE_SIZE, UNIT_PROPERTIES } from '../../config.js'
 
 export const MAX_IMPACT_PARTICLES = 384
 export const MOBILE_IMPACT_PARTICLES = 128
 const COLORS = ['#ffe3a0', '#8b7053', '#ff8d27', '#65605a', '#ffad43']
 let rendererSerial = 0
+const TANK_IMPACT_TYPES = new Set(['tank', 'tank_v1', 'tank_v2', 'tank_v3', 'tank-v2', 'tank-v3'])
+
+export function resolveExplosionVisualRadius(radius, shooter, projectile, options = {}) {
+  if (Number.isFinite(options?.visualRadius) && options.visualRadius > 0) return options.visualRadius
+  const isTankImpact = TANK_IMPACT_TYPES.has(shooter?.type) &&
+    projectile?.projectileType !== 'rocket' && projectile?.originType !== 'rocketTank'
+  return isTankImpact ? LARGE_EXPLOSION_VISUAL_RADIUS * 0.5 : radius
+}
 
 export function selectImpactProfile(type) {
   const configured = UNIT_PROPERTIES[type]?.impactVfxProfile

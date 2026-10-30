@@ -1,6 +1,6 @@
 import { getCityBuildings, applyCityDamage } from './game/cityBuildings.js'
 // logic.js
-import { createImpactVisual } from './rendering/vfx/impactVfx.js'
+import { createImpactVisual, resolveExplosionVisualRadius } from './rendering/vfx/impactVfx.js'
 import {
   TILE_SIZE,
   HOWITZER_BUILDING_DAMAGE_MULTIPLIER
@@ -28,7 +28,6 @@ const clearShotProbe = {
   owner: null
 }
 const lineOfSightProbe = { x: 0, y: 0 }
-
 const CLEAR_SHOT_OFFSETS = [
   { x: 0, y: -1 },
   { x: 1, y: 0 },
@@ -107,7 +106,8 @@ export function triggerExplosion(
 
   if (spawnVisual) {
     // Add explosion visual effect
-    explosions.push(createImpactVisual(x, y, now, explosionRadius, shooter, visualProjectile, visualSurface))
+    const visualRadius = resolveExplosionVisualRadius(explosionRadius, shooter, visualProjectile, options)
+    explosions.push(createImpactVisual(x, y, now, visualRadius, shooter, visualProjectile, visualSurface))
   }
   // Visual-only impacts (direct-fire rounds without splash) never damage the area around them.
   if (visualOnly) return

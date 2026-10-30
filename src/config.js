@@ -376,6 +376,7 @@ function saveGraphicsSettingsToIndexedDb() {
         waterWaveDirection: WATER_WAVE_DIRECTION,
         unitShadowsEnabled: UNIT_SHADOWS_ENABLED,
         crystalGlowEnabled: CRYSTAL_GLOW_ENABLED,
+        largeExplosionVisualRadius: LARGE_EXPLOSION_VISUAL_RADIUS,
         unitShadowOffset: UNIT_SHADOW_OFFSET,
         unitShadowDirection: UNIT_SHADOW_DIRECTION,
         unitShadowStartStretch: UNIT_SHADOW_START_STRETCH,
@@ -425,6 +426,7 @@ export function loadGraphicsSettingsFromIndexedDb() {
     WATER_WAVE_DIRECTION = clampNumber(parsed?.waterWaveDirection, 0, 360, WATER_WAVE_DIRECTION)
     UNIT_SHADOWS_ENABLED = typeof parsed?.unitShadowsEnabled === 'boolean' ? parsed.unitShadowsEnabled : UNIT_SHADOWS_ENABLED
     CRYSTAL_GLOW_ENABLED = typeof parsed?.crystalGlowEnabled === 'boolean' ? parsed.crystalGlowEnabled : CRYSTAL_GLOW_ENABLED
+    LARGE_EXPLOSION_VISUAL_RADIUS = clampNumber(parsed?.largeExplosionVisualRadius, 16, 160, LARGE_EXPLOSION_VISUAL_RADIUS)
     UNIT_SHADOW_OFFSET = clampNumber(parsed?.unitShadowOffset ?? parsed?.unitShadowLength, 0, 1.5, UNIT_SHADOW_OFFSET)
     UNIT_SHADOW_DIRECTION = clampNumber(parsed?.unitShadowDirection, 0, 360, UNIT_SHADOW_DIRECTION)
     UNIT_SHADOW_START_STRETCH = clampNumber(parsed?.unitShadowStartStretch, 0.5, 2, UNIT_SHADOW_START_STRETCH)
@@ -688,6 +690,8 @@ export let COASTAL_SHALLOWS_LENGTH = 15
 export let WATER_WAVE_DIRECTION = 0
 export let UNIT_SHADOWS_ENABLED = true
 export let CRYSTAL_GLOW_ENABLED = true
+// Cosmetic only: tank shell impacts render at half this large-blast baseline.
+export let LARGE_EXPLOSION_VISUAL_RADIUS = TILE_SIZE * 2
 export let UNIT_SHADOW_OFFSET = 0.6
 export let UNIT_SHADOW_DIRECTION = 69
 export let UNIT_SHADOW_START_STRETCH = 2
@@ -724,6 +728,12 @@ export function setCrystalGlowEnabled(value) {
   saveGraphicsSettingsToIndexedDb()
   requestGraphicsSettingsRender()
   return CRYSTAL_GLOW_ENABLED
+}
+export function setLargeExplosionVisualRadius(value) {
+  LARGE_EXPLOSION_VISUAL_RADIUS = clampNumber(value, 16, 160, LARGE_EXPLOSION_VISUAL_RADIUS)
+  saveGraphicsSettingsToIndexedDb()
+  requestGraphicsSettingsRender()
+  return LARGE_EXPLOSION_VISUAL_RADIUS
 }
 export function setUnitShadowOffset(value) {
   UNIT_SHADOW_OFFSET = clampNumber(value, 0, 1.5, UNIT_SHADOW_OFFSET)

@@ -787,6 +787,11 @@ describe('Building System', () => {
         expect.any(Number),
         0.5
       )
+      expect(gameState.explosions).toHaveLength(1)
+      expect(gameState.explosions[0]).toMatchObject({
+        maxRadius: 64,
+        impactSurface: 'building'
+      })
     })
 
     it('[U00651] spawns ammunition factory scatter particles on destruction', () => {
@@ -809,6 +814,11 @@ describe('Building System', () => {
         expect.any(Number),
         0.7
       )
+      expect(gameState.explosions).toHaveLength(1)
+      expect(gameState.explosions[0]).toMatchObject({
+        maxRadius: 64,
+        impactSurface: 'building'
+      })
     })
 
     it('[U00652] fires turret projectiles when aligned with a target in range', () => {

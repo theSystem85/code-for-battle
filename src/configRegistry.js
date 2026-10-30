@@ -122,6 +122,8 @@ import {
   setUnitShadowsEnabled,
   CRYSTAL_GLOW_ENABLED,
   setCrystalGlowEnabled,
+  LARGE_EXPLOSION_VISUAL_RADIUS,
+  setLargeExplosionVisualRadius,
   UNIT_SHADOW_OFFSET,
   setUnitShadowOffset,
   UNIT_SHADOW_START_STRETCH,
@@ -342,6 +344,14 @@ export const configRegistry = {
   crystalGlowEnabled: {
     name: 'Crystal glow', description: 'Draw animated color-matched light beneath crystals', type: 'boolean',
     get: () => CRYSTAL_GLOW_ENABLED, set: setCrystalGlowEnabled, category: 'Graphics'
+  },
+  largeExplosionVisualRadius: {
+    name: 'Large explosion visual radius',
+    description: 'Visual radius in pixels for fuel and ammo building blasts; normal tank impacts use 50%',
+    type: 'number',
+    get: () => LARGE_EXPLOSION_VISUAL_RADIUS,
+    set: setLargeExplosionVisualRadius,
+    min: 16, max: 160, step: 4, category: 'Graphics'
   },
   unitShadowOffset: {
     name: 'Shadow offset', description: 'Cast distance as a fraction of a unit footprint', type: 'number',
