@@ -1613,12 +1613,35 @@
               <input type="checkbox" id="settingsUnitShadowsToggle" checked>
               <span>Unit shadows</span>
             </label>
-            <label class="config-modal__field" for="settingsUnitShadowLengthRange">
-              <span class="config-modal__range-label-row"><span>Shadow length</span><span id="settingsUnitShadowLengthValue" class="config-modal__range-value">22%</span></span>
-              <input type="range" id="settingsUnitShadowLengthRange" min="0" max="1.5" step="0.05" value="0.22">
+            <div class="config-modal__hud-preview-wrap" aria-label="Tank shadow preview">
+              <canvas id="settingsUnitShadowPreviewCanvas" width="180" height="120"></canvas>
+            </div>
+            <label class="config-modal__field" for="settingsUnitShadowOffsetRange">
+              <span class="config-modal__range-label-row"><span>Offset</span><span id="settingsUnitShadowOffsetValue" class="config-modal__range-value">28%</span></span>
+              <input type="range" id="settingsUnitShadowOffsetRange" min="0" max="1.5" step="0.05" value="0.28">
+            </label>
+            <label class="config-modal__field" for="settingsUnitShadowStartStretchRange">
+              <span class="config-modal__range-label-row"><span>Start stretch factor</span><span id="settingsUnitShadowStartStretchValue" class="config-modal__range-value">1×</span></span>
+              <input type="range" id="settingsUnitShadowStartStretchRange" min="0.5" max="2" step="0.05" value="1">
+            </label>
+            <label class="config-modal__field" for="settingsUnitShadowEndStretchRange">
+              <span class="config-modal__range-label-row"><span>End stretch factor</span><span id="settingsUnitShadowEndStretchValue" class="config-modal__range-value">1.4×</span></span>
+              <input type="range" id="settingsUnitShadowEndStretchRange" min="0.5" max="3" step="0.05" value="1.4">
+            </label>
+            <label class="config-modal__field" for="settingsUnitShadowSizeRange">
+              <span class="config-modal__range-label-row"><span>Overall size</span><span id="settingsUnitShadowSizeValue" class="config-modal__range-value">115%</span></span>
+              <input type="range" id="settingsUnitShadowSizeRange" min="0.5" max="2" step="0.05" value="1.15">
+            </label>
+            <label class="config-modal__field" for="settingsUnitShadowOpacityRange">
+              <span class="config-modal__range-label-row"><span>Opacity</span><span id="settingsUnitShadowOpacityValue" class="config-modal__range-value">38%</span></span>
+              <input type="range" id="settingsUnitShadowOpacityRange" min="0" max="1" step="0.05" value="0.38">
+            </label>
+            <label class="config-modal__field" for="settingsUnitShadowBlurRange">
+              <span class="config-modal__range-label-row"><span>Blur</span><span id="settingsUnitShadowBlurValue" class="config-modal__range-value">3 px</span></span>
+              <input type="range" id="settingsUnitShadowBlurRange" min="0" max="12" step="0.5" value="3">
             </label>
             <label class="config-modal__field" for="settingsUnitShadowDirectionRange">
-              <span class="config-modal__range-label-row"><span>Shadow direction</span><span id="settingsUnitShadowDirectionValue" class="config-modal__range-value">45°</span></span>
+              <span class="config-modal__range-label-row"><span>Cast direction</span><span id="settingsUnitShadowDirectionValue" class="config-modal__range-value">45°</span></span>
               <input type="range" id="settingsUnitShadowDirectionRange" min="0" max="360" step="1" value="45">
             </label>
             <div id="settingsGraphicsEffects"></div>

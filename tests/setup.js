@@ -117,6 +117,9 @@ class MockCanvasRenderingContext2D {
     this.textAlign = 'start'
     this.textBaseline = 'alphabetic'
     this.globalAlpha = 1
+    this.globalCompositeOperation = 'source-over'
+    this.filter = 'none'
+    this.imageSmoothingEnabled = true
   }
 
   // Drawing methods

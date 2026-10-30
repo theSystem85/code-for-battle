@@ -375,8 +375,13 @@ function saveGraphicsSettingsToIndexedDb() {
         coastalShallowsLength: COASTAL_SHALLOWS_LENGTH,
         waterWaveDirection: WATER_WAVE_DIRECTION,
         unitShadowsEnabled: UNIT_SHADOWS_ENABLED,
-        unitShadowLength: UNIT_SHADOW_LENGTH,
+        unitShadowOffset: UNIT_SHADOW_OFFSET,
         unitShadowDirection: UNIT_SHADOW_DIRECTION,
+        unitShadowStartStretch: UNIT_SHADOW_START_STRETCH,
+        unitShadowEndStretch: UNIT_SHADOW_END_STRETCH,
+        unitShadowSize: UNIT_SHADOW_SIZE,
+        unitShadowOpacity: UNIT_SHADOW_OPACITY,
+        unitShadowBlur: UNIT_SHADOW_BLUR,
         mobileCanvasPixelRatioCap: MOBILE_CANVAS_PIXEL_RATIO_CAP,
         rendererBackend: persistedRendererBackend(),
         rendererBackendChoice: RENDERER_BACKEND_CHOICE
@@ -418,8 +423,13 @@ export function loadGraphicsSettingsFromIndexedDb() {
     COASTAL_SHALLOWS_LENGTH = clampNumber(parsed?.coastalShallowsLength, 10, 100, COASTAL_SHALLOWS_LENGTH)
     WATER_WAVE_DIRECTION = clampNumber(parsed?.waterWaveDirection, 0, 360, WATER_WAVE_DIRECTION)
     UNIT_SHADOWS_ENABLED = typeof parsed?.unitShadowsEnabled === 'boolean' ? parsed.unitShadowsEnabled : UNIT_SHADOWS_ENABLED
-    UNIT_SHADOW_LENGTH = clampNumber(parsed?.unitShadowLength, 0, 1.5, UNIT_SHADOW_LENGTH)
+    UNIT_SHADOW_OFFSET = clampNumber(parsed?.unitShadowOffset ?? parsed?.unitShadowLength, 0, 1.5, UNIT_SHADOW_OFFSET)
     UNIT_SHADOW_DIRECTION = clampNumber(parsed?.unitShadowDirection, 0, 360, UNIT_SHADOW_DIRECTION)
+    UNIT_SHADOW_START_STRETCH = clampNumber(parsed?.unitShadowStartStretch, 0.5, 2, UNIT_SHADOW_START_STRETCH)
+    UNIT_SHADOW_END_STRETCH = clampNumber(parsed?.unitShadowEndStretch, 0.5, 3, UNIT_SHADOW_END_STRETCH)
+    UNIT_SHADOW_SIZE = clampNumber(parsed?.unitShadowSize, 0.5, 2, UNIT_SHADOW_SIZE)
+    UNIT_SHADOW_OPACITY = clampNumber(parsed?.unitShadowOpacity, 0, 1, UNIT_SHADOW_OPACITY)
+    UNIT_SHADOW_BLUR = clampNumber(parsed?.unitShadowBlur, 0, 12, UNIT_SHADOW_BLUR)
     applyStoredRendererBackendChoice(parsed)
   } catch (error) {
     window.logger?.warn('Failed to load graphics settings from IndexedDB:', error)
@@ -675,8 +685,13 @@ export let COASTAL_SHALLOWS_ENABLED = true
 export let COASTAL_SHALLOWS_LENGTH = 15
 export let WATER_WAVE_DIRECTION = 0
 export let UNIT_SHADOWS_ENABLED = true
-export let UNIT_SHADOW_LENGTH = 0.22
+export let UNIT_SHADOW_OFFSET = 0.28
 export let UNIT_SHADOW_DIRECTION = 45
+export let UNIT_SHADOW_START_STRETCH = 1
+export let UNIT_SHADOW_END_STRETCH = 1.4
+export let UNIT_SHADOW_SIZE = 1.15
+export let UNIT_SHADOW_OPACITY = 0.38
+export let UNIT_SHADOW_BLUR = 3
 export function setCoastalShallowsEnabled(value) {
   COASTAL_SHALLOWS_ENABLED = Boolean(value)
   saveGraphicsSettingsToIndexedDb()
@@ -701,11 +716,28 @@ export function setUnitShadowsEnabled(value) {
   requestGraphicsSettingsRender()
   return UNIT_SHADOWS_ENABLED
 }
-export function setUnitShadowLength(value) {
-  UNIT_SHADOW_LENGTH = clampNumber(value, 0, 1.5, UNIT_SHADOW_LENGTH)
+export function setUnitShadowOffset(value) {
+  UNIT_SHADOW_OFFSET = clampNumber(value, 0, 1.5, UNIT_SHADOW_OFFSET)
   saveGraphicsSettingsToIndexedDb()
   requestGraphicsSettingsRender()
-  return UNIT_SHADOW_LENGTH
+  return UNIT_SHADOW_OFFSET
+}
+export function setUnitShadowStartStretch(value) { return setShadowNumber('start', value, 0.5, 2) }
+export function setUnitShadowEndStretch(value) { return setShadowNumber('end', value, 0.5, 3) }
+export function setUnitShadowSize(value) { return setShadowNumber('size', value, 0.5, 2) }
+export function setUnitShadowOpacity(value) { return setShadowNumber('opacity', value, 0, 1) }
+export function setUnitShadowBlur(value) { return setShadowNumber('blur', value, 0, 12) }
+function setShadowNumber(name, value, min, max) {
+  const variables = { start: UNIT_SHADOW_START_STRETCH, end: UNIT_SHADOW_END_STRETCH, size: UNIT_SHADOW_SIZE, opacity: UNIT_SHADOW_OPACITY, blur: UNIT_SHADOW_BLUR }
+  const next = clampNumber(value, min, max, variables[name])
+  if (name === 'start') UNIT_SHADOW_START_STRETCH = next
+  if (name === 'end') UNIT_SHADOW_END_STRETCH = next
+  if (name === 'size') UNIT_SHADOW_SIZE = next
+  if (name === 'opacity') UNIT_SHADOW_OPACITY = next
+  if (name === 'blur') UNIT_SHADOW_BLUR = next
+  saveGraphicsSettingsToIndexedDb()
+  requestGraphicsSettingsRender()
+  return next
 }
 export function setUnitShadowDirection(value) {
   UNIT_SHADOW_DIRECTION = clampNumber(value, 0, 360, UNIT_SHADOW_DIRECTION)

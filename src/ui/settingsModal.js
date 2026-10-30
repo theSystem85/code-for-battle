@@ -1,4 +1,6 @@
 import { isSeamlessUpdateEnabled, setSeamlessUpdateEnabled } from '../pwa/seamlessUpdateSettings.js'
+import { createUnitShadowCanvas, rebuildUnitShadowCaches } from '../rendering/unitShadow.js'
+import { getRocketTankBaseImage, preloadRocketTankImage } from '../rendering/rocketTankImageRenderer.js'
 import { getProductionPlacementSettings, setProductionPlacementSetting } from './productionPlacementSettings.js'
 // settingsModal.js
 // Tabbed settings modal that hosts runtime config shortcuts and the keybindings editor
@@ -44,7 +46,17 @@ const WATER_SETTINGS_CONFIG_IDS = {
   pixelDensity: 'mobileCanvasPixelRatioCap',
   rendererBackend: 'rendererBackend'
 }
-const UNIT_SHADOW_CONFIG_IDS = ['unitShadowsEnabled', 'unitShadowLength', 'unitShadowDirection']
+const UNIT_SHADOW_CONTROLS = [
+  ['Offset', 'unitShadowOffset', value => `${Math.round(value * 100)}%`],
+  ['StartStretch', 'unitShadowStartStretch', value => `${Number(value).toFixed(2)}×`],
+  ['EndStretch', 'unitShadowEndStretch', value => `${Number(value).toFixed(2)}×`],
+  ['Size', 'unitShadowSize', value => `${Math.round(value * 100)}%`],
+  ['Opacity', 'unitShadowOpacity', value => `${Math.round(value * 100)}%`],
+  ['Blur', 'unitShadowBlur', value => `${value} px`],
+  ['Direction', 'unitShadowDirection', value => `${value}°`]
+]
+let unitShadowSettingsDirty = false
+const UNIT_SHADOW_CONFIG_IDS = ['unitShadowsEnabled', ...UNIT_SHADOW_CONTROLS.map(([, id]) => id)]
 
 function formatWaterTone(value) {
   const percentage = Math.round(Number(value) * 100)
@@ -183,17 +195,48 @@ function syncWaterGraphicsControls(modal) {
   }
 }
 
+function currentUnitShadowSettings() {
+  return {
+    offset: getConfigValue('unitShadowOffset'), direction: getConfigValue('unitShadowDirection'),
+    startStretch: getConfigValue('unitShadowStartStretch'), endStretch: getConfigValue('unitShadowEndStretch'),
+    size: getConfigValue('unitShadowSize'), opacity: getConfigValue('unitShadowOpacity'),
+    blur: getConfigValue('unitShadowBlur')
+  }
+}
+
+function renderUnitShadowPreview(modal) {
+  const canvas = modal.querySelector('#settingsUnitShadowPreviewCanvas')
+  const ctx = canvas?.getContext('2d')
+  if (!ctx) return
+  ctx.clearRect(0, 0, canvas.width, canvas.height)
+  ctx.fillStyle = '#273322'
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+  const image = getRocketTankBaseImage()
+  const drawMask = (maskCtx, x, y) => {
+    if (image) maskCtx.drawImage(image, x - 22, y - 18, 44, 36)
+    else {
+      maskCtx.fillStyle = '#777'
+      maskCtx.fillRect(x - 20, y - 12, 40, 24)
+    }
+  }
+  if (getConfigValue('unitShadowsEnabled')) {
+    const shadow = createUnitShadowCanvas(drawMask, 40, currentUnitShadowSettings())
+    ctx.drawImage(shadow, 90 - shadow.width / 2, 68 - shadow.height / 2)
+  }
+  drawMask(ctx, 90, 68)
+}
+
 function syncUnitShadowControls(modal) {
   const enabled = modal.querySelector('#settingsUnitShadowsToggle')
-  const length = modal.querySelector('#settingsUnitShadowLengthRange')
-  const direction = modal.querySelector('#settingsUnitShadowDirectionRange')
   if (enabled) enabled.checked = Boolean(getConfigValue('unitShadowsEnabled'))
-  if (length) length.value = String(getConfigValue('unitShadowLength'))
-  if (direction) direction.value = String(getConfigValue('unitShadowDirection'))
-  const lengthValue = modal.querySelector('#settingsUnitShadowLengthValue')
-  const directionValue = modal.querySelector('#settingsUnitShadowDirectionValue')
-  if (lengthValue) lengthValue.textContent = `${Math.round(Number(length?.value || 0) * 100)}%`
-  if (directionValue) directionValue.textContent = `${direction?.value || 0}°`
+  for (const [name, configId, format] of UNIT_SHADOW_CONTROLS) {
+    const value = getConfigValue(configId)
+    const input = modal.querySelector(`#settingsUnitShadow${name}Range`)
+    const output = modal.querySelector(`#settingsUnitShadow${name}Value`)
+    if (input) input.value = String(value)
+    if (output) output.textContent = format(value)
+  }
+  renderUnitShadowPreview(modal)
 }
 
 function refreshRendererBackendControls(modal) {
@@ -288,6 +331,10 @@ function openModal(modal, defaultTab = 'keybindings') {
 }
 
 function closeModal(modal) {
+  if (unitShadowSettingsDirty) {
+    rebuildUnitShadowCaches(currentUnitShadowSettings())
+    unitShadowSettingsDirty = false
+  }
   stopGamepadMenu()
   modal.classList.remove('config-modal--open')
   modal.setAttribute('aria-hidden', 'true')
@@ -422,16 +469,17 @@ export function initSettingsModal() {
   bindTabs(modal)
   bindGraphicsEffects(modal)
   syncUnitShadowControls(modal)
+  preloadRocketTankImage(() => renderUnitShadowPreview(modal))
   modal.querySelector('#settingsUnitShadowsToggle')?.addEventListener('change', event => {
     setConfigValue('unitShadowsEnabled', event.target.checked)
     syncUnitShadowControls(modal)
   })
   for (const [inputId, configId] of [
-    ['settingsUnitShadowLengthRange', 'unitShadowLength'],
-    ['settingsUnitShadowDirectionRange', 'unitShadowDirection']
+    ...UNIT_SHADOW_CONTROLS.map(([name, configId]) => [`settingsUnitShadow${name}Range`, configId])
   ]) {
     modal.querySelector(`#${inputId}`)?.addEventListener('input', event => {
       setConfigValue(configId, Number(event.target.value))
+      unitShadowSettingsDirty = true
       syncUnitShadowControls(modal)
     })
   }

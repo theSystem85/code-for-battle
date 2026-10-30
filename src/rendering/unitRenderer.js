@@ -1,5 +1,5 @@
 // rendering/unitRenderer.js
-import { TILE_SIZE, HARVESTER_CAPPACITY, HARVESTER_UNLOAD_TIME, RECOIL_DISTANCE, RECOIL_DURATION, MUZZLE_FLASH_DURATION, MUZZLE_FLASH_SIZE, TANK_FIRE_RANGE, ATTACK_TARGET_INDICATOR_SIZE, ATTACK_TARGET_BOUNCE_SPEED, UNIT_TYPE_COLORS, PARTY_COLORS, TANKER_SUPPLY_CAPACITY, UTILITY_SERVICE_INDICATOR_SIZE, UTILITY_SERVICE_INDICATOR_BOUNCE_SPEED, SERVICE_DISCOVERY_RANGE, SERVICE_SERVING_RANGE, MINE_DEPLOY_STOP_TIME, VIEW_FRUSTUM_MARGIN, CURSOR_METERS_PER_TILE, BATTLESHIP_FIRE_RANGE, SUBMARINE_TORPEDO_RANGE, UNIT_SHADOWS_ENABLED, UNIT_SHADOW_LENGTH, UNIT_SHADOW_DIRECTION } from '../config.js'
+import { TILE_SIZE, HARVESTER_CAPPACITY, HARVESTER_UNLOAD_TIME, RECOIL_DISTANCE, RECOIL_DURATION, MUZZLE_FLASH_DURATION, MUZZLE_FLASH_SIZE, TANK_FIRE_RANGE, ATTACK_TARGET_INDICATOR_SIZE, ATTACK_TARGET_BOUNCE_SPEED, UNIT_TYPE_COLORS, PARTY_COLORS, TANKER_SUPPLY_CAPACITY, UTILITY_SERVICE_INDICATOR_SIZE, UTILITY_SERVICE_INDICATOR_BOUNCE_SPEED, SERVICE_DISCOVERY_RANGE, SERVICE_SERVING_RANGE, MINE_DEPLOY_STOP_TIME, VIEW_FRUSTUM_MARGIN, CURSOR_METERS_PER_TILE, BATTLESHIP_FIRE_RANGE, SUBMARINE_TORPEDO_RANGE, UNIT_SHADOWS_ENABLED, UNIT_SHADOW_OFFSET, UNIT_SHADOW_DIRECTION, UNIT_SHADOW_START_STRETCH, UNIT_SHADOW_END_STRETCH, UNIT_SHADOW_SIZE, UNIT_SHADOW_OPACITY, UNIT_SHADOW_BLUR } from '../config.js'
 import { isCityOccludedAtTile } from './cityOcclusionIndex.js'
 import { gameState } from '../gameState.js'
 import { selectedUnits } from '../inputHandler.js'
@@ -25,9 +25,17 @@ import { getSimulationTime } from '../game/time.js'
 import { getCanvasLogicalSize } from './renderingUtils.js'
 import { describeActivePolicies, shouldShowPolicyIndicator } from '../policies/policyActivity.js'
 import { drawStatusBar, fillStatusBar, paintStatusBarOutline, paintStatusBarTrack, strokeStatusArc, strokeStatusRailArc } from '../utils/statusBarGradient.js'
-import { drawUnitShadow } from './unitShadow.js'
+import { drawCachedUnitShadow } from './unitShadow.js'
 
 const POLICY_ICON_SIZE = 10
+
+function getCurrentUnitShadowSettings() {
+  return {
+    offset: UNIT_SHADOW_OFFSET, direction: UNIT_SHADOW_DIRECTION,
+    startStretch: UNIT_SHADOW_START_STRETCH, endStretch: UNIT_SHADOW_END_STRETCH,
+    size: UNIT_SHADOW_SIZE, opacity: UNIT_SHADOW_OPACITY, blur: UNIT_SHADOW_BLUR
+  }
+}
 
 export class UnitRenderer {
   constructor() {
@@ -35,6 +43,7 @@ export class UnitRenderer {
     this.aliveCrewRoles = []
     this.policyIconRect = { x: 0, y: 0, width: POLICY_ICON_SIZE, height: POLICY_ICON_SIZE }
     this.donutGlowColorStops = new Map()
+    this.shadowMaskDrawers = new Map()
     this.loadRepairIcon()
   }
 
@@ -1866,8 +1875,13 @@ export class UnitRenderer {
     const centerY = unit.y + TILE_SIZE / 2 - scrollOffset.y
 
     if (UNIT_SHADOWS_ENABLED) {
-      const airborne = unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35'
-      drawUnitShadow(ctx, centerX, centerY, TILE_SIZE, UNIT_SHADOW_LENGTH, UNIT_SHADOW_DIRECTION, airborne)
+      let drawMask = this.shadowMaskDrawers.get(unit.type)
+      if (!drawMask) {
+        const maskUnit = { ...unit, selected: false, showSelection: false }
+        drawMask = (maskCtx, maskX, maskY) => this.renderUnitBody(maskCtx, maskUnit, maskX, maskY)
+        this.shadowMaskDrawers.set(unit.type, drawMask)
+      }
+      drawCachedUnitShadow(ctx, unit.type, centerX, centerY, TILE_SIZE, drawMask, getCurrentUnitShadowSettings)
     }
 
     // Check if this is a tank type and if image rendering is enabled
