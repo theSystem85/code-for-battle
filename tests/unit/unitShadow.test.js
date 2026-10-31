@@ -16,15 +16,21 @@ describe('unit shadow geometry', () => {
     clearUnitShadowCaches()
     const target = document.createElement('canvas').getContext('2d')
     let maskDraws = 0
+    let settingsReads = 0
     const drawMask = ctx => { maskDraws++; ctx.fillRect(20, 20, 30, 20) }
-    const settings = () => ({ offset: 0.3, direction: 45, startStretch: 1, endStretch: 1.4, size: 1.1, opacity: 0.4, blur: 3 })
+    const settings = () => {
+      settingsReads++
+      return { offset: 0.3, direction: 45, startStretch: 1, endStretch: 1.4, size: 1.1, opacity: 0.4, blur: 3 }
+    }
     drawCachedUnitShadow(target, 'tank_v1', 50, 50, 40, drawMask, settings)
-    drawCachedUnitShadow(target, 'tank_v1', 90, 50, 40, drawMask, settings)
+    drawCachedUnitShadow(target, 'tank_v1', 90, 50, 40, () => { throw new Error('second instance rebuilt the type shadow') }, settings)
     expect(maskDraws).toBe(1)
+    expect(settingsReads).toBe(1)
     expect(getUnitShadowCacheStats().entries).toBe(1)
 
     rebuildUnitShadowCaches(settings())
     expect(maskDraws).toBe(2)
+    expect(settingsReads).toBe(2)
     expect(getUnitShadowCacheStats().entries).toBe(1)
   })
 

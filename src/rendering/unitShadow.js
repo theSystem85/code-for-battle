@@ -71,21 +71,28 @@ export function createUnitShadowCanvas(drawMask, footprint, rawSettings) {
 }
 
 function buildEntry(type, drawMask, footprint, settings) {
+  const image = createUnitShadowCanvas(drawMask, footprint, settings)
   return {
-    image: createUnitShadowCanvas(drawMask, footprint, settings),
+    image,
+    drawOffsetX: -image.width / 2,
+    drawOffsetY: -image.height / 2,
     revision: cacheRevision,
     footprint
   }
 }
 
 export function drawCachedUnitShadow(ctx, type, centerX, centerY, footprint, drawMask, getSettings) {
-  if (!shadowSources.has(type)) shadowSources.set(type, { drawMask, footprint })
   let entry = shadowCache.get(type)
-  if (!entry || entry.revision !== cacheRevision) {
-    entry = buildEntry(type, drawMask, footprint, getSettings())
+  if (entry?.revision !== cacheRevision) {
+    let source = shadowSources.get(type)
+    if (!source) {
+      source = { drawMask, footprint }
+      shadowSources.set(type, source)
+    }
+    entry = buildEntry(type, source.drawMask, source.footprint, getSettings())
     shadowCache.set(type, entry)
   }
-  ctx.drawImage(entry.image, centerX - entry.image.width / 2, centerY - entry.image.height / 2)
+  ctx.drawImage(entry.image, centerX + entry.drawOffsetX, centerY + entry.drawOffsetY)
 }
 
 export function rebuildUnitShadowCaches(settings) {

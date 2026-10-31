@@ -1,0 +1,1 @@
+{ "description": "Ground shadows now reuse one baked image per unit type for smoother large battles." }
