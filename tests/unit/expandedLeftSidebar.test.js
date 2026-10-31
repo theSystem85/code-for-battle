@@ -19,7 +19,8 @@ describe('expanded left sidebar markup', () => {
     for (const [toggleId, contentId] of [
       ['mapSettingsToggle', 'mapSettingsContent'],
       ['multiplayerToggle', 'multiplayerContent'],
-      ['saveLoadToggle', 'saveLoadContent']
+      ['saveLoadToggle', 'saveLoadContent'],
+      ['automationFilesToggle', 'automationFilesContent']
     ]) {
       const toggle = document.getElementById(toggleId)
       const content = document.getElementById(contentId)
@@ -32,14 +33,16 @@ describe('expanded left sidebar markup', () => {
     }
   })
 
-  it('[U01490] orders Save, Multiplayer, then Map Settings as adjacent sections', () => {
+  it('[U01490] orders Save, Automations, Multiplayer, then Map Settings as adjacent sections', () => {
     const children = [...document.getElementById('sidebarScroll').children]
     const indexOf = (id) => children.findIndex((element) => element.id === id)
     const saveIndex = indexOf('saveLoadMenu')
+    const automationIndex = indexOf('automationFilesMenu')
     const multiplayerIndex = indexOf('multiplayerSettings')
     const mapIndex = indexOf('mapSettingsAccordion')
 
-    expect(multiplayerIndex).toBe(saveIndex + 1)
+    expect(automationIndex).toBe(saveIndex + 1)
+    expect(multiplayerIndex).toBe(automationIndex + 1)
     expect(mapIndex).toBe(multiplayerIndex + 1)
     expect(document.getElementById('stats').contains(document.getElementById('mapSettingsAccordion'))).toBe(false)
   })
