@@ -842,6 +842,17 @@ body.is-touch .money-tooltip__meta {
   overflow: hidden;
 }
 
+.automation-sidebar__actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.automation-sidebar__actions .action-button { min-width: 0; padding: 7px 5px; font-size: 12px; }
+.automation-sidebar__actions #importAutomationBtn { grid-column: 1 / -1; }
+.automation-sidebar__legend, .automation-sidebar__item { display: grid; grid-template-columns: 48px minmax(0, 1fr) 34px; align-items: center; gap: 5px; }
+.automation-sidebar__legend { margin-top: 9px; color: #9fa9b7; font-size: 10px; text-transform: uppercase; }
+.automation-sidebar__list { list-style: none; padding: 0; margin: 3px 0 0; max-height: 220px; overflow-y: auto; }
+.automation-sidebar__item { min-height: 38px; border-top: 1px solid rgb(255 255 255 / 10%); }
+.automation-sidebar__item input { justify-self: center; width: 18px; height: 18px; }
+.automation-sidebar__name { overflow-wrap: anywhere; font-size: 12px; }
+.automation-sidebar__empty { padding: 10px 2px; color: #aab3c0; font-size: 12px; }
+
 @media (prefers-reduced-motion: reduce) {
   .sprite-sheet-editor__sidebar.expanded-left-sidebar .sidebar-accordion__content,
   #sidebar.expanded-left-sidebar .sidebar-accordion__content {
