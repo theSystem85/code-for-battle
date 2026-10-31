@@ -762,6 +762,26 @@
         </div>
       </div>
 
+      <div id="automationFilesMenu" class="sidebar-accordion">
+        <button id="automationFilesToggle" class="action-button sidebar-accordion__toggle" type="button"
+          data-sidebar-accordion-toggle aria-expanded="false" aria-controls="automationFilesContent">
+          <span>Automations</span>
+          <span class="sidebar-accordion__icon" data-sidebar-accordion-icon>▼</span>
+        </button>
+        <div id="automationFilesContent" class="sidebar-accordion__content">
+          <div class="sidebar-accordion__body automation-sidebar">
+            <div class="automation-sidebar__actions">
+              <button id="exportAllAutomationsBtn" class="action-button" type="button">Export all</button>
+              <button id="exportSelectedAutomationsBtn" class="action-button" type="button">Export checked</button>
+              <button id="importAutomationBtn" class="action-button" type="button">Import .cfbl</button>
+              <input id="importAutomationInput" type="file" accept=".cfbl,application/json" multiple hidden aria-label="Import automation files">
+            </div>
+            <div class="automation-sidebar__legend"><span>Export</span><span>Automation</span><span>On</span></div>
+            <ul id="automationSidebarList" class="automation-sidebar__list" aria-live="polite"></ul>
+          </div>
+        </div>
+      </div>
+
       <div id="multiplayerSettings" class="sidebar-accordion">
         <div id="multiplayerOfflineShield" class="multiplayer-offline-shield" hidden tabindex="0" role="note" aria-describedby="multiplayerOfflineTip"></div>
         <button id="multiplayerToggle" class="action-button sidebar-accordion__toggle" type="button"
