@@ -95,3 +95,44 @@ test('[E00239] preserves the paused view after a startup error and recovers the 
   expect(new URL(page.url()).searchParams.has('cfb-update')).toBe(false)
   expect(await page.evaluate(() => window.gameState.money)).toBeGreaterThanOrEqual(7654321)
 })
+
+test('[E00245] restores a running match seamlessly when full-resolution snapshots exceed the session-storage budget', async({ page }) => {
+  await page.goto('/?seed=43&size=64&players=2&oreFields=8')
+  await page.waitForFunction(() => window.gameState?.gameStarted && window.gameInstance?.gameLoop)
+  await page.evaluate(() => {
+    const original = window.Storage.prototype.setItem
+    window.Storage.prototype.setItem = function(key, value) {
+      if (key === 'cfb-update-frame') {
+        const meta = JSON.parse(this.getItem('cfb-update-frame-test-meta') || '{"attempts":0,"bytes":0}')
+        meta.attempts += 1
+        meta.bytes = value.length
+        original.call(this, 'cfb-update-frame-test-meta', JSON.stringify(meta))
+        if (value.length > 60_000) throw new DOMException('Snapshot quota exceeded', 'QuotaExceededError')
+      }
+      return original.call(this, key, value)
+    }
+  })
+  await page.evaluate(async() => {
+    const [{ createLiveUpdater }, { prepareRunningGameUpdate }, { setSeamlessUpdateEnabled }] = await Promise.all([
+      import('/src/pwa/liveUpdate.js'), import('/src/pwa/updateHandoff.js'), import('/src/pwa/seamlessUpdateSettings.js')
+    ])
+    // prepareRunningGameUpdate reads the stored setting, not the updater option.
+    setSeamlessUpdateEnabled(true)
+    window.gameState.money = 2468135
+    const updater = createLiveUpdater({
+      seamlessEnabled: () => true,
+      getGameState: () => window.gameState,
+      stageUpdate: async() => {},
+      activateServiceWorker: async() => {},
+      prepareReload: prepareRunningGameUpdate
+    })
+    await updater.applyBreakingUpdate({ commit: 'ddddddd', version: '0.65.2' })
+  })
+  await page.waitForURL(/cfb-update=ddddddd/)
+  const meta = await page.evaluate(() => JSON.parse(sessionStorage.getItem('cfb-update-frame-test-meta') || 'null'))
+  expect(meta?.attempts).toBeGreaterThan(1)
+  expect(meta?.bytes).toBeLessThanOrEqual(60_000)
+  await page.waitForFunction(() => window.gameState?.gameStarted && !window.gameState.gamePaused && !document.getElementById('gameUpdateFrame'))
+  expect(await page.evaluate(() => window.gameState.money)).toBeGreaterThanOrEqual(2468135)
+  await expect(page.locator('#loadingScreen')).toHaveClass(/loading-screen--hidden/)
+})

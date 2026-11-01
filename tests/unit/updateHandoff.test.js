@@ -1,6 +1,6 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createLiveUpdater } from '../../src/pwa/liveUpdate.js'
-import { stageGameUpdate } from '../../src/pwa/updateHandoff.js'
+import { captureUpdateFrame, stageGameUpdate } from '../../src/pwa/updateHandoff.js'
 
 const info = { commit: 'bbbbbbb', version: '1.0.1' }
 const storage = () => {
@@ -111,5 +111,67 @@ describe('seamless update opt-in and feedback', () => {
     ui.showError(info, new Error('offline'), vi.fn())
     expect(document.getElementById('liveUpdateProgress')).toBeNull()
     expect(document.getElementById('liveUpdateBubble').hidden).toBe(false)
+  })
+})
+
+describe('update snapshot storage quota', () => {
+  const originalToDataURL = globalThis.HTMLCanvasElement.prototype.toDataURL
+  const originalGetContext = globalThis.HTMLCanvasElement.prototype.getContext
+
+  afterEach(() => {
+    globalThis.HTMLCanvasElement.prototype.toDataURL = originalToDataURL
+    globalThis.HTMLCanvasElement.prototype.getContext = originalGetContext
+    document.getElementById('gameCanvas')?.remove()
+    document.getElementById('gameUpdateFrame')?.remove()
+  })
+
+  function installCanvas() {
+    globalThis.HTMLCanvasElement.prototype.getContext = () => ({ drawImage() {} })
+    globalThis.HTMLCanvasElement.prototype.toDataURL = function() {
+      return `data:image/webp;base64,${'A'.repeat(this.width * 40)}`
+    }
+    const canvas = document.createElement('canvas')
+    canvas.id = 'gameCanvas'
+    canvas.width = 30
+    canvas.height = 10
+    canvas.getBoundingClientRect = () => ({ x: 0, y: 0, width: 320, height: 180, top: 0, left: 0, right: 320, bottom: 180 })
+    document.body.appendChild(canvas)
+  }
+
+  it('[U07056] stores a smaller battlefield snapshot when session storage rejects the full capture', () => {
+    installCanvas()
+    const stored = []
+    const removed = []
+    const win = {
+      getComputedStyle: () => ({ display: 'block' }),
+      sessionStorage: {
+        setItem(_key, value) {
+          if (value.length > 900) throw new DOMException('quota', 'QuotaExceededError')
+          stored.push(value)
+        },
+        removeItem(key) { removed.push(key) }
+      }
+    }
+    const frame = captureUpdateFrame({ win, doc: document, commit: 'ddddddd' })
+    expect(stored).toHaveLength(1)
+    expect(removed.length).toBeGreaterThan(0)
+    expect(frame.commit).toBe('ddddddd')
+    expect(frame.layers[0].width).toBe(320)
+    expect(frame.layers[0].height).toBe(180)
+    expect(JSON.parse(stored[0]).layers[0].src.length).toBeLessThanOrEqual(900)
+    expect(document.getElementById('gameUpdateFrame')).not.toBeNull()
+  })
+
+  it('[U07057] rethrows storage failures that are not a quota limit', () => {
+    installCanvas()
+    const win = {
+      getComputedStyle: () => ({ display: 'block' }),
+      sessionStorage: {
+        setItem() { throw new Error('storage blocked') },
+        removeItem() {}
+      }
+    }
+    expect(() => captureUpdateFrame({ win, doc: document, commit: 'ddddddd' })).toThrow('storage blocked')
+    expect(document.getElementById('gameUpdateFrame')).toBeNull()
   })
 })
