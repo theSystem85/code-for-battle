@@ -5,6 +5,7 @@ import { OFFLINE_ASSET_FILL_HEADER } from './offlineAssetPlan.js'
 export const UPDATE_CACHE_PREFIX = 'cfb-update-'
 export const UPDATE_QUERY = 'cfb-update'
 export const UPDATE_FRAME_KEY = 'cfb-update-frame'
+const UPDATE_FRAME_SCALES = [1, 0.75, 0.5, 0.35, 0.25, 0.18, 0.125, 0.08, 0.05]
 
 // A separate cache prevents staging from replacing imagery used by the live game.
 export async function stageGameUpdate(info, { win = window, fetchImpl = (...args) => win.fetch(...args), onProgress } = {}) {
@@ -62,19 +63,48 @@ export function showUpdateFrame(frame, { doc = document } = {}) {
 
 // Called once, while paused, immediately after a fresh render so GPU canvas
 // buffers have not been discarded. No capture work is added to the frame loop.
-export function captureUpdateFrame({ win = window, doc = document, commit } = {}) {
+function captureCanvasLayer(canvas, scale, doc) {
+  if (scale === 1) return canvas.toDataURL('image/webp', 0.85)
+  const snapshot = doc.createElement('canvas')
+  snapshot.width = Math.max(1, Math.round(canvas.width * scale))
+  snapshot.height = Math.max(1, Math.round(canvas.height * scale))
+  const context = snapshot.getContext('2d')
+  if (!context) throw new Error('Could not create the update snapshot')
+  context.drawImage(canvas, 0, 0, snapshot.width, snapshot.height)
+  return snapshot.toDataURL('image/webp', 0.8)
+}
+
+function collectUpdateFrame({ win, doc, commit, scale }) {
   const layers = []
   for (const id of ['gameCanvasGL', 'gameCanvasGPU', 'gameCanvas', 'minimap']) {
     const canvas = doc.getElementById(id)
     if (!canvas || !canvas.width || !canvas.height || win.getComputedStyle(canvas).display === 'none') continue
     const rect = canvas.getBoundingClientRect()
     if (!rect.width || !rect.height) continue
-    layers.push({ src: canvas.toDataURL('image/webp', 0.85), x: rect.x, y: rect.y, width: rect.width, height: rect.height })
+    layers.push({ src: captureCanvasLayer(canvas, scale, doc), x: rect.x, y: rect.y, width: rect.width, height: rect.height })
   }
   if (!layers.length) throw new Error('Could not preserve the battlefield view')
-  const frame = { layers, commit, createdAt: Date.now() }
-  win.sessionStorage.setItem(UPDATE_FRAME_KEY, JSON.stringify(frame))
-  showUpdateFrame(frame, { doc })
+  return { layers, commit, createdAt: Date.now() }
+}
+
+export function captureUpdateFrame({ win = window, doc = document, commit } = {}) {
+  let quotaError
+  for (const scale of UPDATE_FRAME_SCALES) {
+    const frame = collectUpdateFrame({ win, doc, commit, scale })
+    try {
+      // Canvas snapshots can exceed Safari's small per-value storage limit on
+      // Retina displays. Retry at bounded resolutions rather than abandoning
+      // the already-saved match and falling back to the loading screen.
+      win.sessionStorage.setItem(UPDATE_FRAME_KEY, JSON.stringify(frame))
+      showUpdateFrame(frame, { doc })
+      return frame
+    } catch (error) {
+      quotaError = error
+      try { win.sessionStorage.removeItem(UPDATE_FRAME_KEY) } catch { /* Retry with a smaller snapshot. */ }
+      if (error?.name !== 'QuotaExceededError') throw error
+    }
+  }
+  throw quotaError || new Error('Could not persist the update snapshot')
 }
 
 export function clearUpdateFrame({ win = window, doc = document } = {}) {
