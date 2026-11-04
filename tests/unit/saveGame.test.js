@@ -285,6 +285,9 @@ describe('saveGame.js', () => {
     vi.clearAllMocks()
     localStorage.clear()
     vi.resetModules()
+    const { mapGrid, units, factories, bullets } = await import('../../src/main.js')
+    mapGrid.splice(0, mapGrid.length, ...Array.from({ length: 10 }, () => Array.from({ length: 10 }, () => ({ type: 'land', ore: false, seedCrystal: false, noBuild: 0 }))))
+    units.length = factories.length = bullets.length = 0
     saveGameModule = await import('../../src/saveGame.js')
   })
 
@@ -1178,7 +1181,7 @@ describe('saveGame.js', () => {
       saveGameModule.initLastGameRecovery()
 
       // Advance time to trigger auto-save interval
-      vi.advanceTimersByTime(60_000)
+      await vi.advanceTimersByTimeAsync(60_100)
 
       // Verify save was created in localStorage (can't spy on internal saveGame calls)
       const savedData = localStorage.getItem('rts_save_lastGame')

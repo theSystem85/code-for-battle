@@ -108,6 +108,60 @@ function snapshotChunks(renderer) {
     .sort((left, right) => left.key.localeCompare(right.key))
 }
 
+describe('prepared terrain residency', () => {
+  afterEach(() => vi.restoreAllMocks())
+
+  function readyRenderer() {
+    installTraceCanvases()
+    const renderer = new MapRenderer(makeTextureManager())
+    renderer.textureManager.allTexturesLoaded = true
+    vi.spyOn(renderer, 'useOrganicTerrain').mockReturnValue(true)
+    vi.spyOn(renderer.crystalGlowRenderer, 'getSprite').mockReturnValue(null)
+    vi.spyOn(renderer.crystalGlowRenderer, 'getSparkle').mockReturnValue(null)
+    vi.spyOn(renderer, 'drawResourceOverlays').mockImplementation(() => {})
+    vi.spyOn(renderer, 'drawBaseLayer').mockImplementation(ctx => ctx.fillRect(0, 0, 16 * TILE_SIZE, 16 * TILE_SIZE))
+    return renderer
+  }
+
+  it('[U07063] retains prepared ground across overlay eviction, camera jumps and resource edits', async() => {
+    const renderer = readyRenderer(), grid = makeMap(32, 32)
+    const budget = createTerrainByteBudget({ residentBytes: 16 * 1024 * 1024, stagingBytes: 2 * 1024 * 1024 })
+    const pages = await renderer.prepareStaticTerrain(grid, { budget, yieldTask: async() => {} })
+    renderer.publishStaticTerrain(pages)
+    expect(pages.pages.size).toBe(4)
+    expect(renderer.drawBaseLayer).toHaveBeenCalledTimes(4)
+    renderer.maxCachedChunks = 1
+    for (const x of [0, 16, 0]) renderer.renderTiles(makeOutputContext(), grid, { x: x * TILE_SIZE, y: 0 }, x, 0, x + 16, 16, {}, { skipWaterBase: true, skipWaterSot: true })
+    expect(renderer.drawBaseLayer).toHaveBeenCalledTimes(4)
+    expect(pages.pages.get('0,0').everRendered).toBe(true)
+    grid[0][0].ore = true
+    renderer.terrainRevisions.invalidate(grid, RENDER_REVISION_DOMAINS.RESOURCE, { left: 0, top: 0, right: 1, bottom: 1 })
+    renderer.renderTiles(makeOutputContext(), grid, { x: 0, y: 0 }, 0, 0, 16, 16, {}, { skipWaterBase: true, skipWaterSot: true })
+    expect(renderer.drawResourceOverlays).toHaveBeenCalled()
+    expect(renderer.drawBaseLayer).toHaveBeenCalledTimes(4)
+    renderer.terrainRevisions.invalidate(grid, RENDER_REVISION_DOMAINS.TOPOLOGY, { left: 0, top: 0, right: 1, bottom: 1 }, undefined, 0)
+    renderer.renderTiles(makeOutputContext(), grid, { x: 0, y: 0 }, 0, 0, 16, 16, {}, { skipWaterBase: true, skipWaterSot: true })
+    expect(renderer.drawBaseLayer).toHaveBeenCalledTimes(5)
+    renderer.invalidateAllChunks()
+    expect(budget.usage.terrainResident).toBe(0)
+    expect(budget.usage.terrainStaging).toBe(0)
+  })
+
+  it('[U07064] rejects an oversized raster generation before baking and releases cancelled preparation', async() => {
+    const renderer = readyRenderer()
+    const budget = createTerrainByteBudget({ residentBytes: 16 * 1024 * 1024, stagingBytes: 2 * 1024 * 1024 })
+    expect(await renderer.prepareStaticTerrain(makeMap(256, 256), { budget })).toBeNull()
+    expect(renderer.drawBaseLayer).not.toHaveBeenCalled()
+    const controller = new AbortController()
+    await expect(renderer.prepareStaticTerrain(makeMap(32, 32), {
+      budget, signal: controller.signal, yieldTask: async() => controller.abort()
+    })).rejects.toMatchObject({ name: 'AbortError' })
+    expect(budget.usage.terrainResident).toBe(0)
+    expect(budget.usage.terrainStaging).toBe(0)
+    expect(renderer.preparedPages).toBeNull()
+  })
+})
+
 describe('MapRenderer revisioned terrain cache', () => {
   afterEach(() => {
     vi.restoreAllMocks()
@@ -255,7 +309,9 @@ describe('MapRenderer revisioned terrain cache', () => {
     const unaffectedRevision = {}
     renderer.terrainRevisions.getChunkRevisions(affected.chunkX, affected.chunkY, affectedRevision)
     renderer.terrainRevisions.getChunkRevisions(unaffected.chunkX, unaffected.chunkY, unaffectedRevision)
-    expect(affectedRevision.asset).toBe(1)
+    expect(affectedRevision.asset).toBe(0)
+    expect(affected.decorativeAssetRevision).toBe(1)
+    expect(unaffected.decorativeAssetRevision || 0).toBe(0)
     expect(unaffectedRevision.asset).toBe(0)
   })
 

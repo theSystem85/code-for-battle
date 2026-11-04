@@ -1,5 +1,6 @@
 // rendering.js - Refactored to use modular components
 import { Renderer } from './rendering/renderer.js'
+import { getCanvasLogicalSize } from './rendering/renderingUtils.js'
 import { RENDER_REVISION_DOMAINS } from './rendering/prepared/renderRevisionStore.js'
 import {
   bindRenderingDensityPreparation,
@@ -12,6 +13,10 @@ export { RENDER_REVISION_DOMAINS }
 // Create a single renderer instance
 const gameRenderer = new Renderer()
 if (typeof document !== 'undefined') {
+  document.addEventListener('canvas-density-changed', () => {
+    const grid = gameRenderer.mapRenderer.terrainRevisions.mapGrid
+    if (grid?.length) void publishPreparedRuntimeMap(grid)
+  })
   document.addEventListener('water-graphics-preparation', () => {
     const mapGrid = gameRenderer.mapRenderer.cpuWaterPass.mapGrid
     if (mapGrid?.length) gameRenderer.prepareWaterResources(mapGrid)
@@ -84,7 +89,16 @@ export function publishPreparedRuntimeMap(mapGrid) {
   if (!mapGrid?.length) return Promise.resolve(null)
   if (gameRenderer.textureManager.integratedSpriteSheetMode) gameRenderer.textureManager.prepareDecorationLayout(mapGrid)
   if (mapRenderer && !mapRenderer.sotMask) mapRenderer.computeSOTMask(mapGrid)
-  return prepareRuntimeMap({ grid: mapGrid, sotMask: mapRenderer?.sotMask }).then(prepared => {
+  const canvas = typeof document !== 'undefined' ? document.getElementById('gameCanvas') : null
+  const density = canvas ? getCanvasLogicalSize(canvas).pixelRatio || 1 : 1
+  return Promise.all([
+    gameRenderer.textureManager.preloadAllTextures(),
+    mapRenderer.organicTerrain.readiness
+  ]).then(() => prepareRuntimeMap({
+    grid: mapGrid, sotMask: mapRenderer?.sotMask, density,
+    runtimePageFactory: ({ budget, signal }) => mapRenderer.prepareStaticTerrain(mapGrid, { budget, density, signal })
+  })).then(prepared => {
+    mapRenderer.publishStaticTerrain(prepared?.resources?.runtimeStaticPages || null)
     gameRenderer.prepareWaterResources(mapGrid)
     return prepared
   }).catch(error => {

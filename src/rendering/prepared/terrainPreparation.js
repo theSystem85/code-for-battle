@@ -245,6 +245,7 @@ export class TerrainPreparationPipeline {
       assets = TERRAIN_ASSET_MANIFEST,
       signal,
       rasterPageFactory = null,
+      runtimePageFactory = null,
       gpuStagingBytes = 0,
       transferBytes = 0
     } = options || {}
@@ -443,14 +444,19 @@ export class TerrainPreparationPipeline {
         gpuStaging: gpuStagingBytes
       }))
 
+      const runtimeStaticPages = await runtimePageFactory?.({ signal: preparation.signal, budget: this.byteBudget }) || null
+      if (runtimeStaticPages) stagedResources.push(runtimeStaticPages)
+      preparation.assertCurrent(this.sequence)
+      const runtimeRasterBytes = runtimeStaticPages?.bytes || 0
+      if (runtimeStaticPages) rasterMode = 'all-resident-raster'
       const byteUsage = Object.freeze({
         decodedSourceBytes,
         descriptorBytes,
-        preparedRasterBytes: preparedRasterBytes + allResidentRasterBytes,
+        preparedRasterBytes: preparedRasterBytes + allResidentRasterBytes + runtimeRasterBytes,
         transferBytes,
         gpuStagingBytes,
         allResidentRasterEstimate,
-        terrainResidentBytes: descriptorBytes + preparedRasterBytes + allResidentRasterBytes,
+        terrainResidentBytes: descriptorBytes + preparedRasterBytes + allResidentRasterBytes + runtimeRasterBytes,
         terrainStagingPeakBytes: rasterMode === 'all-resident-raster' ? allResidentRasterEstimate : 0
       })
       const assetResources = imageEntriesToResources(decodedEntries)
@@ -459,6 +465,7 @@ export class TerrainPreparationPipeline {
         descriptors,
         preparedMasks,
         rasterPages,
+        runtimeStaticPages,
         rasterMode,
         reservations
       }
@@ -481,6 +488,7 @@ export class TerrainPreparationPipeline {
           } else {
             owned.rasterPages?.close?.()
           }
+          owned.runtimeStaticPages?.close?.()
           releaseTokens(owned.reservations)
         }
       })

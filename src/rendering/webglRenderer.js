@@ -1150,7 +1150,10 @@ export class GameWebGLRenderer {
     gl.bindTexture(gl.TEXTURE_2D, null)
     gl.activeTexture(gl.TEXTURE0)
     gl.useProgram(null)
-    return drawCalls > 0
+    // An initialized water pass owns the layer even when this viewport has no
+    // water. Treating zero draws as failure flips static-page composition at
+    // every coast/inland boundary and invalidates otherwise clean terrain.
+    return true
   }
 
   render(mapGrid, scrollOffset, canvas, options = {}) {

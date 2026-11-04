@@ -21,6 +21,53 @@ export function encodeCompactSave(saveObject) {
   return lines.join('\n')
 }
 
+// Worker-less browsers keep automatic saves, but spread the map/palette work
+// over tasks. Manual export retains the synchronous API and identical format.
+export async function encodeCompactSaveCooperatively(saveObject, {
+  yieldTask = () => new Promise(resolve => setTimeout(resolve, 0)),
+  clock = () => performance.now(), budgetMs = 2
+} = {}) {
+  const state = parseState(saveObject?.state)
+  const lines = [COMPACT_SAVE_FORMAT, `M|${cell(saveObject?.label || 'Unnamed')}|${cell(Number.isFinite(saveObject?.time) ? saveObject.time : Date.now())}`]
+  appendObjectTable(lines, 'gameState', [state.gameState || {}])
+  for (const [name, value] of Object.entries(state)) {
+    if (name === 'gameState' || MAP_KEYS.has(name)) continue
+    if (Array.isArray(value)) appendEntityTables(lines, name, value)
+    else appendObjectTable(lines, name, [value])
+    await yieldTask()
+  }
+  const rows = state.mapTileState
+  if (Array.isArray(rows) && rows.length) {
+    const width = rows.reduce((maximum, row) => Math.max(maximum, row?.length || 0), 0)
+    const palette = [], indexes = new Map(), runs = []
+    let start = clock(), work = 0
+    for (let y = 0; y < rows.length; y++) for (let x = 0; x < width; x++) {
+      const tile = rows[y]?.[x] || { type: 'land', ore: false, seedCrystal: false }
+      const signature = JSON.stringify(tile)
+      let index = indexes.get(signature)
+      if (index === undefined) { index = palette.length; indexes.set(signature, index); palette.push(tile) }
+      if (runs.at(-1)?.[0] === index) runs.at(-1)[1]++
+      else runs.push([index, 1])
+      if (++work % 64 === 0 && clock() - start >= budgetMs) { await yieldTask(); start = clock() }
+    }
+    // Palette rows use exactly the same column order and cell encoding as the
+    // synchronous format. Avoid one large palette map/flatMap in the fallback.
+    const columns = new Set()
+    for (let i = 0; i < palette.length; i++) {
+      for (const key of Object.keys(palette[i])) columns.add(key)
+      if (i % 64 === 0 && clock() - start >= budgetMs) { await yieldTask(); start = clock() }
+    }
+    const keys = [...columns]
+    lines.push(`S|${escapeText('@mapPalette')}|${keys.map(escapeText).join('|')}`)
+    for (let i = 0; i < palette.length; i++) {
+      lines.push(`R|${keys.map(key => cell(palette[i][key])).join('|')}`)
+      if (i % 64 === 0 && clock() - start >= budgetMs) { await yieldTask(); start = clock() }
+    }
+    lines.push(`G|${width}|${rows.length}|${runs.map(([index, count]) => `${index}*${count}`).join(',')}`)
+  }
+  return lines.join('\n')
+}
+
 export function decodeSaveObject(saveObject) {
   if (typeof saveObject === 'string' && saveObject.startsWith(`${COMPACT_SAVE_FORMAT}\n`)) return decodeCfb(saveObject)
   if (typeof saveObject === 'string') return decodeSaveObject(JSON.parse(saveObject))

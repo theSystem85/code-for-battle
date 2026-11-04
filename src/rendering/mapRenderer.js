@@ -39,6 +39,7 @@ import {
 } from './staticPagePreparation.js'
 import { SPRITE_TIER_IDS } from './spriteStreamingGeometry.js'
 import { CrystalGlowRenderer } from './crystalGlow.js'
+import { StaticTerrainPages, staticTerrainPageBytes, STATIC_TERRAIN_PAGE_LIMIT } from './prepared/staticTerrainPages.js'
 
 const UNDISCOVERED_COLOR = '#111111'
 const FOG_OVERLAY_STYLE = 'rgba(30, 30, 30, 0.6)'
@@ -241,6 +242,7 @@ export class MapRenderer {
     this.textureManager = textureManager
     this.trackMarksRenderer = new TrackMarksRenderer()
     this.crystalGlowRenderer = new CrystalGlowRenderer()
+    this.resourceSpriteCache = new WeakMap()
     this.crystalGlowTime = 0
     this.createGlowCanvas = (width, height) => {
       const canvas = document.createElement('canvas')
@@ -259,6 +261,8 @@ export class MapRenderer {
     const maximumChunkPixels = this.chunkSize * TILE_SIZE + this.chunkPadding * 2 + 1
     const maximumChunkBytes = getTerrainRasterBytes(maximumChunkPixels, maximumChunkPixels)
     this.chunkCache = new Map()
+    this.preparedPages = null
+    this.preparationSequence = 0
     this.chunkWarmQueue = new TerrainWarmQueue({
       maxEntries: this.maxChunkWarmQueue,
       maxJobAgeMs: 500
@@ -374,6 +378,8 @@ export class MapRenderer {
       warmMaxJobAgeMs: 0,
       warmExpiredJobs: 0,
       warmCancelledJobs: 0,
+      preparedTerrainBytes: 0,
+      preparedTerrainPages: 0,
       terrainResidentBytes: 0,
       terrainStagingBytes: 0
     }
@@ -670,11 +676,18 @@ export class MapRenderer {
     const mapGrid = this.terrainRevisions.mapGrid
     if (!mapGrid) return 0
     let invalidated = 0
-    for (const pageKey of new Set([...basePageKeys, ...decorativePageKeys])) {
-      const chunk = this.chunkCache.get(pageKey)
+    for (const pageKey of basePageKeys) {
+      const chunk = this.chunkCache.get(pageKey) || this.preparedPages?.pages.get(pageKey)
       if (!chunk) continue
       const bounds = { left: chunk.startX, top: chunk.startY, right: chunk.endX, bottom: chunk.endY }
       this.terrainRevisions.invalidate(mapGrid, RENDER_REVISION_DOMAINS.ASSET, bounds, bounds, 0)
+      invalidated++
+    }
+    for (const pageKey of decorativePageKeys) {
+      const chunk = this.chunkCache.get(pageKey)
+      if (!chunk) continue
+      chunk.decorativeAssetRevision = (chunk.decorativeAssetRevision || 0) + 1
+      this.discardDecorativePreparation(this.decorativeWarmQueue.get(pageKey))
       invalidated++
     }
     return invalidated
@@ -703,6 +716,9 @@ export class MapRenderer {
   }
 
   invalidateAllChunks() {
+    this.preparationSequence++
+    this.preparedPages?.close()
+    this.preparedPages = null
     for (const chunk of this.chunkCache.values()) this.releaseChunkResources(chunk)
     this.chunkCache.clear()
     this.pageDependencies.clear()
@@ -810,104 +826,162 @@ export class MapRenderer {
     prewarmed.skipWaterSot = skipWaterSot
   }
 
+  createChunk(chunkX, chunkY, startX, startY, endX, endY) {
+    const key = this.getChunkKey(chunkX, chunkY)
+    const canvas = this.canUseOffscreen && typeof document !== 'undefined'
+      ? document.createElement('canvas')
+      : null
+    const ctx = canvas ? canvas.getContext('2d') : null
+    const chunk = {
+      key,
+      chunkX,
+      chunkY,
+      canvas,
+      ctx,
+      decorativeCanvas: null,
+      decorativeCtx: null,
+      decorativeKey: null,
+      decorativeReadyAt: 0,
+      decorativeResidentBytes: 0,
+      decorativeResidentToken: null,
+      startX,
+      startY,
+      endX,
+      endY,
+      lastUseTexture: null,
+      lastIntegratedSignature: null,
+      lastWaterFrameIndex: null,
+      lastProceduralWaterEnabled: null,
+      lastWaterEffectTone: null,
+      lastWaterEffectSaturation: null,
+      lastWaterEffectZoom: null,
+      lastSotMaskVersion: null,
+      lastSkipWaterBase: null,
+      lastSkipWaterSot: null,
+      lastMapGeneration: -1,
+      lastTopologyRevision: -1,
+      lastSurfaceRevision: -1,
+      lastWaterRevision: -1,
+      lastResourceRevision: -1,
+      lastDecalRevision: -1,
+      lastAssetRevision: -1,
+      lastLayoutRevision: -1,
+      revisionSnapshot: {
+        topology: 0,
+        surface: 0,
+        water: 0,
+        resource: 0,
+        decal: 0,
+        asset: 0,
+        layout: 0
+      },
+      renderState: {
+        containsWater: false,
+        containsAnimatedWaterSot: false,
+        hasWaterAnimation: false,
+        waterFrameIndex: null,
+        needsRedraw: true,
+        revisionsChanged: true
+      },
+      invariantsValid: false,
+      containsWater: false,
+      containsAnimatedWaterSot: false,
+      containsWaterAnimation: false,
+      everRendered: false,
+      contextLost: false,
+      lastUsedAt: 0,
+      residentBytes: 0,
+      residentToken: null,
+      padding: this.chunkPadding,
+      offsetX: startX * TILE_SIZE - this.chunkPadding,
+      offsetY: startY * TILE_SIZE - this.chunkPadding
+    }
+    // Restored 2D contexts have empty backing stores, even when revisions
+    // and canvas dimensions still match the previously prepared terrain.
+    canvas?.addEventListener?.('contextlost', () => {
+      chunk.contextLost = true
+      chunk.everRendered = false
+    })
+    canvas?.addEventListener?.('contextrestored', () => {
+      chunk.contextLost = false
+      chunk.everRendered = false
+      chunk.ctx = canvas.getContext('2d')
+    })
+    return chunk
+  }
+
   getOrCreateChunk(chunkX, chunkY, startX, startY, endX, endY) {
     const key = this.getChunkKey(chunkX, chunkY)
     let chunk = this.chunkCache.get(key)
     if (!chunk) {
-      const canvas = this.canUseOffscreen && typeof document !== 'undefined'
-        ? document.createElement('canvas')
-        : null
-      const ctx = canvas ? canvas.getContext('2d') : null
-      chunk = {
-        key,
-        chunkX,
-        chunkY,
-        canvas,
-        ctx,
-        decorativeCanvas: null,
-        decorativeCtx: null,
-        decorativeKey: null,
-        decorativeReadyAt: 0,
-        decorativeResidentBytes: 0,
-        decorativeResidentToken: null,
-        startX,
-        startY,
-        endX,
-        endY,
-        lastUseTexture: null,
-        lastIntegratedSignature: null,
-        lastWaterFrameIndex: null,
-        lastProceduralWaterEnabled: null,
-        lastWaterEffectTone: null,
-        lastWaterEffectSaturation: null,
-        lastWaterEffectZoom: null,
-        lastSotMaskVersion: null,
-        lastSkipWaterBase: null,
-        lastSkipWaterSot: null,
-        lastMapGeneration: -1,
-        lastTopologyRevision: -1,
-        lastSurfaceRevision: -1,
-        lastWaterRevision: -1,
-        lastResourceRevision: -1,
-        lastDecalRevision: -1,
-        lastAssetRevision: -1,
-        lastLayoutRevision: -1,
-        revisionSnapshot: {
-          topology: 0,
-          surface: 0,
-          water: 0,
-          resource: 0,
-          decal: 0,
-          asset: 0,
-          layout: 0
-        },
-        renderState: {
-          containsWater: false,
-          containsAnimatedWaterSot: false,
-          hasWaterAnimation: false,
-          waterFrameIndex: null,
-          needsRedraw: true,
-          revisionsChanged: true
-        },
-        invariantsValid: false,
-        containsWater: false,
-        containsAnimatedWaterSot: false,
-        containsWaterAnimation: false,
-        everRendered: false,
-        contextLost: false,
-        lastUsedAt: 0,
-        residentBytes: 0,
-        residentToken: null,
-        padding: this.chunkPadding,
-        offsetX: startX * TILE_SIZE - this.chunkPadding,
-        offsetY: startY * TILE_SIZE - this.chunkPadding
-      }
-      // Restored 2D contexts have empty backing stores, even when revisions
-      // and canvas dimensions still match the previously prepared terrain.
-      canvas?.addEventListener?.('contextlost', () => {
-        chunk.contextLost = true
-        chunk.everRendered = false
-      })
-      canvas?.addEventListener?.('contextrestored', () => {
-        chunk.contextLost = false
-        chunk.everRendered = false
-        chunk.ctx = canvas.getContext('2d')
-      })
+      chunk = this.preparedPages?.pages.get(key) || this.createChunk(chunkX, chunkY, startX, startY, endX, endY)
       this.chunkCache.set(key, chunk)
-    } else {
-      chunk.startX = startX
-      chunk.startY = startY
-      chunk.endX = endX
-      chunk.endY = endY
-      chunk.padding = this.chunkPadding
-      chunk.chunkX = chunkX
-      chunk.chunkY = chunkY
     }
-
-    chunk.offsetX = startX * TILE_SIZE - chunk.padding
-    chunk.offsetY = startY * TILE_SIZE - chunk.padding
     chunk.lastUsedAt = ++this.chunkUseCounter
     return chunk
+  }
+
+  async prepareStaticTerrain(mapGrid, { budget, density = 1, signal, yieldTask = () => new Promise(resolve => setTimeout(resolve, 0)) } = {}) {
+    const useTexture = USE_TEXTURES && this.textureManager.allTexturesLoaded
+    if (!budget || !this.canUseOffscreen || !this.useOrganicTerrain(useTexture)) return null
+    const bytes = staticTerrainPageBytes(mapGrid[0].length, mapGrid.length, { tileSize: TILE_SIZE, chunkSize: this.chunkSize, padding: this.chunkPadding, density })
+    if (bytes > STATIC_TERRAIN_PAGE_LIMIT || bytes > budget.limits.terrainResident - budget.usage.terrainResident) return null
+    this.ensureCacheValidity(mapGrid, useTexture)
+    if (!this.sotMask) this.computeSOTMask(mapGrid)
+    for (const type of ['ore', 'seedCrystal']) {
+      for (let level = 1; level <= 5; level++) this.crystalGlowRenderer.getSprite(type, level, this.createGlowCanvas)
+      this.crystalGlowRenderer.getSparkle(type, this.createGlowCanvas)
+    }
+    const sequence = ++this.preparationSequence
+    const stagingBytes = Math.ceil((Math.min(this.chunkSize, mapGrid[0].length) * TILE_SIZE + this.chunkPadding * 2 + 1) * density) * Math.ceil((Math.min(this.chunkSize, mapGrid.length) * TILE_SIZE + this.chunkPadding * 2 + 1) * density) * 4
+    const pages = new StaticTerrainPages({ grid: mapGrid, density, bytes, budget, stagingBytes })
+    try {
+      for (let y = 0; y < mapGrid.length; y += this.chunkSize) for (let x = 0; x < mapGrid[0].length; x += this.chunkSize) {
+        signal?.throwIfAborted()
+        if (sequence !== this.preparationSequence) throw new DOMException('Terrain preparation superseded', 'AbortError')
+        const chunk = this.createChunk(x / this.chunkSize, y / this.chunkSize, x, y, Math.min(x + this.chunkSize, mapGrid[0].length), Math.min(y + this.chunkSize, mapGrid.length))
+        chunk.preparedRaster = { owner: pages, image: null, density }
+        pages.pages.set(chunk.key, chunk)
+        this.updateChunkCache(chunk, mapGrid, useTexture, null, { skipWaterBase: true, skipWaterSot: true, countHit: false, countMiss: false })
+        for (let ry = chunk.startY; ry < chunk.endY; ry++) for (let rx = chunk.startX; rx < chunk.endX; rx++) {
+          const tile = mapGrid[ry][rx]
+          if (tile.seedCrystal || tile.ore) this.getResourceSprite(tile.seedCrystal ? 'seedCrystal' : 'ore', rx, ry, tile.seedCrystal ? tile.seedCrystalDensity || tile.oreDensity || 1 : tile.oreDensity || 1)
+        }
+        // Convert while loading, not on first camera entry. ImageBitmap owns the
+        // completed raster without keeping hundreds of live 2D contexts around.
+        const image = typeof globalThis.createImageBitmap === 'function' ? await globalThis.createImageBitmap(chunk.canvas) : chunk.canvas
+        chunk.preparedRaster.image = image
+        if (image !== chunk.canvas) {
+          chunk.canvas.width = chunk.canvas.height = 1
+          chunk.canvas = null
+          chunk.ctx = null
+        }
+        await yieldTask()
+      }
+      signal?.throwIfAborted()
+      if (sequence !== this.preparationSequence) throw new DOMException('Terrain preparation superseded', 'AbortError')
+      pages.finish()
+      return pages
+    } catch (error) {
+      pages.close()
+      throw error
+    }
+  }
+
+  publishStaticTerrain(pages) {
+    if (this.preparedPages !== pages) this.preparedPages?.close()
+    this.preparedPages = pages
+    for (const chunk of this.chunkCache.values()) this.releaseChunkResources(chunk)
+    this.chunkCache.clear()
+    this.cancelChunkWarmQueue()
+  }
+
+  drawChunkRaster(ctx, chunk, x, y) {
+    const raster = chunk.preparedRaster
+    const image = raster?.image || chunk.canvas
+    if (!image) return
+    if (!raster || raster.density === 1) ctx.drawImage(image, x, y)
+    else ctx.drawImage(image, x, y, (chunk.endX - chunk.startX) * TILE_SIZE + chunk.padding * 2 + 1, (chunk.endY - chunk.startY) * TILE_SIZE + chunk.padding * 2 + 1)
   }
 
   evictOldChunks(activeChunkKeys = this.activeChunkKeys) {
@@ -933,13 +1007,13 @@ export class MapRenderer {
   }
 
   releaseChunkResources(chunk) {
-    chunk.everRendered = false
-    this.pageDependencies.removePage(chunk.key)
+    if (!chunk.preparedRaster) chunk.everRendered = false
+    if (!chunk.preparedRaster) this.pageDependencies.removePage(chunk.key)
     this.decorativePageDependencies.removePage(chunk.key)
     chunk.residentToken?.release()
     chunk.residentToken = null
     chunk.residentBytes = 0
-    if (chunk.canvas) {
+    if (chunk.canvas && !chunk.preparedRaster) {
       chunk.canvas.width = 1
       chunk.canvas.height = 1
     }
@@ -984,7 +1058,11 @@ export class MapRenderer {
 
   reserveChunkRaster(chunk, bytes) {
     const budget = this.terrainByteBudget
-    if (bytes > budget.limits.terrainStaging) return null
+    if (bytes > budget.limits.terrainStaging && !chunk.preparedRaster) return null
+    if (chunk.preparedRaster) {
+      const owner = chunk.preparedRaster.owner
+      return owner.preparing ? { release() {} } : owner.budget.reserve('terrainStaging', bytes)
+    }
     // A cooperative decoration bake can retain staging across frames. Terrain
     // must reclaim that slot before the next visible page is rasterized.
     if (bytes + budget.usage.terrainStaging > budget.limits.terrainStaging) {
@@ -1007,7 +1085,9 @@ export class MapRenderer {
 
   updateTerrainByteTelemetry() {
     const usage = this.terrainByteBudget.usage
-    this.frameChunkStats.terrainResidentBytes = usage.terrainResident
+    this.frameChunkStats.terrainResidentBytes = usage.terrainResident + (this.preparedPages?.closed ? 0 : this.preparedPages?.bytes || 0)
+    this.frameChunkStats.preparedTerrainBytes = this.preparedPages?.closed ? 0 : this.preparedPages?.bytes || 0
+    this.frameChunkStats.preparedTerrainPages = this.preparedPages?.pages.size || 0
     this.frameChunkStats.terrainStagingBytes = usage.terrainStaging
     renderDiagnostics.setByteUsage(RENDER_BYTE_BUDGET_OWNERS.TERRAIN, usage.terrainResident)
   }
@@ -1052,8 +1132,8 @@ export class MapRenderer {
       chunk.lastTopologyRevision !== revisions.topology ||
       chunk.lastSurfaceRevision !== revisions.surface ||
       chunk.lastWaterRevision !== revisions.water ||
-      chunk.lastResourceRevision !== revisions.resource ||
-      chunk.lastDecalRevision !== revisions.decal ||
+      (!chunk.preparedRaster && chunk.lastResourceRevision !== revisions.resource) ||
+      (!chunk.preparedRaster && chunk.lastDecalRevision !== revisions.decal) ||
       chunk.lastAssetRevision !== revisions.asset ||
       chunk.lastLayoutRevision !== revisions.layout
     const waterAnimationEnabled = USE_PROCEDURAL_WATER_RENDERING || this.textureManager.waterFrames.length > 0
@@ -1198,7 +1278,7 @@ export class MapRenderer {
   getDecorativeKey(chunk) {
     return `${this.terrainRevisions.mapGeneration}|${chunk.revisionSnapshot.layout}|` +
       `${chunk.revisionSnapshot.surface}|${chunk.revisionSnapshot.asset}|` +
-      `${this.textureManager.integratedRenderSignature}`
+      `${this.textureManager.integratedRenderSignature}|${chunk.decorativeAssetRevision || 0}`
   }
 
   queueDecorativeChunk(chunk, mapGrid, useTexture) {
@@ -1472,10 +1552,6 @@ export class MapRenderer {
   }
 
   updateChunkCache(chunk, mapGrid, useTexture, currentWaterFrame, options = {}) {
-    if (!chunk.canvas || !chunk.ctx || chunk.contextLost || chunk.ctx.isContextLost?.()) {
-      chunk.everRendered = false
-      return false
-    }
     const {
       skipWaterBase = false,
       skipWaterSot = false,
@@ -1498,6 +1574,13 @@ export class MapRenderer {
       return false
     }
 
+    if (!chunk.canvas || !chunk.ctx) {
+      if (!chunk.preparedRaster) return false
+      chunk.canvas = document.createElement('canvas')
+      chunk.ctx = chunk.canvas.getContext('2d')
+    }
+    if (chunk.contextLost || chunk.ctx.isContextLost?.()) { chunk.everRendered = false; return false }
+
     if (countMiss) {
       if (!chunk.everRendered) {
         this.frameChunkStats.chunkMisses++
@@ -1508,8 +1591,9 @@ export class MapRenderer {
 
     const tileWidth = chunk.endX - chunk.startX
     const tileHeight = chunk.endY - chunk.startY
-    const width = tileWidth * TILE_SIZE + chunk.padding * 2 + 1
-    const height = tileHeight * TILE_SIZE + chunk.padding * 2 + 1
+    const density = chunk.preparedRaster?.density || 1
+    const width = Math.ceil((tileWidth * TILE_SIZE + chunk.padding * 2 + 1) * density)
+    const height = Math.ceil((tileHeight * TILE_SIZE + chunk.padding * 2 + 1) * density)
     const stagingToken = this.reserveChunkRaster(chunk, getTerrainRasterBytes(width, height))
     if (!stagingToken) return null
     const profilerToken = renderProfiler.startSpan(PROFILER_SPAN_IDS.CHUNK_REBUILD)
@@ -1528,6 +1612,7 @@ export class MapRenderer {
         chunk.ctx.clearRect(0, 0, width, height)
       }
 
+      chunk.ctx.setTransform?.(density, 0, 0, density, 0, 0)
       chunk.ctx.imageSmoothingEnabled = false
       const pageAssets = new Set()
       this.collectingPageAssets = pageAssets
@@ -1542,8 +1627,13 @@ export class MapRenderer {
         chunk.offsetY,
         useTexture,
         currentWaterFrame,
-        { skipWaterBase, skipWaterSot }
+        { skipWaterBase, skipWaterSot, skipResourceOverlays: Boolean(chunk.preparedRaster) }
       )
+      if (chunk.preparedRaster) {
+        const previous = chunk.preparedRaster.image
+        if (previous && previous !== chunk.canvas) previous.close?.()
+        chunk.preparedRaster.image = chunk.canvas
+      }
       this.pageDependencies.replacePage(chunk.key, pageAssets)
       chunk.lastPreparationJob = createStaticPagePreparationJob({
         pageKey: chunk.key,
@@ -1629,6 +1719,10 @@ export class MapRenderer {
     ) {
       return
     }
+    // Jobs from an obsolete viewport must not consume a page reservation or
+    // displace terrain needed by the current camera. Discovery is boundary-
+    // gated, so this does not allocate or clear queues on ordinary hit frames.
+    this.chunkWarmQueue.clear()
     discovery.startChunkX = startChunkX
     discovery.startChunkY = startChunkY
     discovery.endChunkX = endChunkX
@@ -1777,7 +1871,7 @@ export class MapRenderer {
         const chunk = this.getOrCreateChunk(chunkX, chunkY, chunkStartX, chunkStartY, chunkEndX, chunkEndY)
         this.chunkWarmQueue.delete(chunk.key)
 
-        if (!chunk.canvas || !chunk.ctx || chunk.contextLost || chunk.ctx.isContextLost?.()) {
+        if ((!chunk.preparedRaster && (!chunk.canvas || !chunk.ctx)) || chunk.contextLost || chunk.ctx?.isContextLost?.()) {
           chunk.everRendered = false
           this.frameChunkStats.directTilePasses++
           this.drawBaseLayer(
@@ -1807,7 +1901,8 @@ export class MapRenderer {
           const drawX = chunkStartX * TILE_SIZE - scrollOffset.x - chunk.padding
           const drawY = chunkStartY * TILE_SIZE - scrollOffset.y - chunk.padding
           this.frameChunkStats.chunksDrawn++
-          ctx.drawImage(chunk.canvas, drawX, drawY)
+          this.drawChunkRaster(ctx, chunk, drawX, drawY)
+          if (chunk.preparedRaster) this.drawResourceOverlays(ctx, mapGrid, chunkStartX, chunkStartY, chunkEndX, chunkEndY, scrollOffset.x, scrollOffset.y, useTexture, true)
           this.drawPreparedDecorations(ctx, chunk, mapGrid, useTexture, drawX, drawY, now, fadeDecorations)
           continue
         }
@@ -1832,7 +1927,8 @@ export class MapRenderer {
         const drawX = chunkStartX * TILE_SIZE - scrollOffset.x - chunk.padding
         const drawY = chunkStartY * TILE_SIZE - scrollOffset.y - chunk.padding
         this.frameChunkStats.chunksDrawn++
-        ctx.drawImage(chunk.canvas, drawX, drawY)
+        this.drawChunkRaster(ctx, chunk, drawX, drawY)
+        if (chunk.preparedRaster) this.drawResourceOverlays(ctx, mapGrid, chunkStartX, chunkStartY, chunkEndX, chunkEndY, scrollOffset.x, scrollOffset.y, useTexture, true)
         this.drawPreparedDecorations(ctx, chunk, mapGrid, useTexture, drawX, drawY, now, fadeDecorations)
       }
     }
@@ -1941,7 +2037,7 @@ export class MapRenderer {
   }
 
   drawBaseLayer(ctx, mapGrid, startTileX, startTileY, endTileX, endTileY, offsetX, offsetY, useTexture, currentWaterFrame, options = {}) {
-    const { skipWaterBase = false, skipWaterSot = false } = options
+    const { skipWaterBase = false, skipWaterSot = false, skipResourceOverlays = false } = options
     if (!mapGrid.length || !mapGrid[0]?.length) return
 
     // Ensure SOT mask is computed
@@ -2016,13 +2112,29 @@ export class MapRenderer {
         }
       }
     }
-    for (let y = startTileY; y < endTileY; y++) {
-      for (let x = startTileX; x < endTileX; x++) {
-        const tile = mapGrid[y][x]
-        const screenX = x * TILE_SIZE - offsetX
-        const screenY = y * TILE_SIZE - offsetY
-        this.drawTileDecalOverlay(ctx, tile, x, y, screenX, screenY, mapGrid)
+    if (!skipResourceOverlays) this.drawResourceOverlays(ctx, mapGrid, startTileX, startTileY, endTileX, endTileY, offsetX, offsetY, useTexture)
+    this.drawingDecorations = previousDrawingDecorations
+    this.groupingMapGrid = previousGroupingMap
+  }
 
+  drawResourceOverlays(ctx, mapGrid, startTileX, startTileY, endTileX, endTileY, offsetX, offsetY, useTexture, clipToPage = false) {
+    let clipped = false
+    try {
+      for (let y = startTileY; y < endTileY; y++) for (let x = startTileX; x < endTileX; x++) {
+        const tile = mapGrid[y][x]
+        if (!tile.ore && !tile.seedCrystal && !tile.decal) continue
+        if (clipToPage && !clipped) {
+          // Match the original page's fixed padded raster boundary. Empty
+          // resource pages do no clipping or drawing at all.
+          ctx.save()
+          ctx.beginPath()
+          ctx.rect(startTileX * TILE_SIZE - offsetX - this.chunkPadding, startTileY * TILE_SIZE - offsetY - this.chunkPadding,
+            (endTileX - startTileX) * TILE_SIZE + this.chunkPadding * 2 + 1, (endTileY - startTileY) * TILE_SIZE + this.chunkPadding * 2 + 1)
+          ctx.clip()
+          clipped = true
+        }
+        const screenX = x * TILE_SIZE - offsetX, screenY = y * TILE_SIZE - offsetY
+        this.drawTileDecalOverlay(ctx, tile, x, y, screenX, screenY, mapGrid)
         if (tile.seedCrystal) {
           this.drawCrystalGlow(ctx, 'seedCrystal', tile.seedCrystalDensity || tile.oreDensity || 1, x, y, screenX, screenY)
           this.drawSeedOverlay(ctx, x, y, screenX, screenY, useTexture, tile.seedCrystalDensity || tile.oreDensity || 1)
@@ -2031,9 +2143,9 @@ export class MapRenderer {
           this.drawOreOverlay(ctx, x, y, screenX, screenY, useTexture, tile.oreDensity || 1)
         }
       }
+    } finally {
+      if (clipped) ctx.restore()
     }
-    this.drawingDecorations = previousDrawingDecorations
-    this.groupingMapGrid = previousGroupingMap
   }
 
   drawDecorativeLayer(ctx, mapGrid, startTileX, startTileY, endTileX, endTileY, offsetX, offsetY, useTexture) {
@@ -2301,13 +2413,25 @@ export class MapRenderer {
     ctx.fillRect(screenX, screenY, size, size)
   }
 
+  getResourceSprite(type, tileX, tileY, density) {
+    const level = Math.max(1, Math.min(5, Number.isFinite(density) ? Math.floor(density) : 1))
+    const tile = (this.groupingMapGrid || this.terrainRevisions.mapGrid)?.[tileY]?.[tileX]
+    const version = this.textureManager.integratedConfigVersion
+    const defaults = this.textureManager.defaultCrystalTagBuckets
+    const cached = tile && this.resourceSpriteCache.get(tile)
+    if (cached && cached.type === type && cached.level === level && cached.version === version && cached.defaults === defaults) return cached.sprite
+    const tags = 'density_' + level
+    const sprite = type === 'seedCrystal'
+      ? this.textureManager.selectCrystalTileByTags(['red', tags], tileX, tileY) ||
+        this.textureManager.selectCrystalTileByTags(['ore', 'red', tags], tileX, tileY) ||
+        this.textureManager.selectCrystalTileByTags(['ore', tags], tileX, tileY)
+      : this.textureManager.selectCrystalTileByTags(['ore', tags], tileX, tileY)
+    if (tile) this.resourceSpriteCache.set(tile, { type, level, version, defaults, sprite })
+    return sprite
+  }
+
   drawOreOverlay(ctx, tileX, tileY, screenX, screenY, useTexture, density = 1) {
-    const normalizedDensity = Math.max(1, Math.min(5, Number.isFinite(density) ? Math.floor(density) : 1))
-    const integratedTile = this.textureManager.selectCrystalTileByTags(
-      ['ore', 'density_' + normalizedDensity],
-      tileX,
-      tileY
-    )
+    const integratedTile = this.getResourceSprite('ore', tileX, tileY, density)
     if (integratedTile?.rect && integratedTile?.image) {
       this.drawIntegratedTileImage(ctx, integratedTile, screenX, screenY)
       return
@@ -2318,20 +2442,7 @@ export class MapRenderer {
   }
 
   drawSeedOverlay(ctx, tileX, tileY, screenX, screenY, useTexture, density = 1) {
-    const normalizedDensity = Math.max(1, Math.min(5, Number.isFinite(density) ? Math.floor(density) : 1))
-    const integratedTile = this.textureManager.selectCrystalTileByTags(
-      ['red', 'density_' + normalizedDensity],
-      tileX,
-      tileY
-    ) || this.textureManager.selectCrystalTileByTags(
-      ['ore', 'red', 'density_' + normalizedDensity],
-      tileX,
-      tileY
-    ) || this.textureManager.selectCrystalTileByTags(
-      ['ore', 'density_' + normalizedDensity],
-      tileX,
-      tileY
-    )
+    const integratedTile = this.getResourceSprite('seedCrystal', tileX, tileY, density)
     if (integratedTile?.rect && integratedTile?.image) {
       this.drawIntegratedTileImage(ctx, integratedTile, screenX, screenY)
       return
