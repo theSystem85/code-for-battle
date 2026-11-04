@@ -1,0 +1,1 @@
+{ "description": "Reuse prepared decoration settings instead of rebuilding them during rendering." }

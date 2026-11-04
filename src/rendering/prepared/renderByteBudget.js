@@ -1,6 +1,6 @@
 export const RENDER_BYTE_OWNERS = Object.freeze([
   'terrainResident', 'terrainStaging', 'decodedSources', 'sprites',
-  'transfer', 'gpuStaging', 'minimap', 'effects'
+  'transfer', 'gpuStaging', 'minimap', 'effects', 'gpuTerrain'
 ])
 
 export class RenderByteBudget {

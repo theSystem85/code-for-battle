@@ -1,6 +1,7 @@
 import { buildCliffDepth, cliffContourMask, cliffHeightClass, cliffMacroRect, cliffTallRect, isPlateauTile, CLIFF_LEVELS, CLIFF_CELL, CLIFF_PADDING, CLIFF_TILE, CLIFF_TALL_CELL, CLIFF_TALL_PADDING, CLIFF_VARIANTS } from './cliffTerrain.js'
 import { loadPreparedImage } from './prepared/imagePreparation.js'
 import { TERRAIN_ASSET_MANIFEST } from './prepared/terrainAssetManifest.js'
+import { TerrainCanvasCache } from './terrainCanvasCache.js'
 
 // These functions run during chunk baking, never per entity or simulation tick.
 export function terrainHash(x, y, seed = 0) {
@@ -247,9 +248,13 @@ export class OrganicTerrain {
     this.ready = false
     this.textureManager = textureManager
     this.biomeImages = {}
-    this.biomeBlendMasks = new Map()
-    this.biomeTransitionTileCache = new Map()
-    this.biomeSotTileCache = new Map()
+    this.biomeBlendMasks = new TerrainCanvasCache()
+    this.biomeTransitionTileCache = new TerrainCanvasCache()
+    this.biomeSotTileCache = new TerrainCanvasCache()
+    this.maskPixels = null
+    this.rasterBudgetToken = null
+    this.rasterBudget = null
+    this.rasterBudgetSize = 0
     this.image = null
     this.details = null
     this.cliffs = null
@@ -351,6 +356,51 @@ export class OrganicTerrain {
     this.image = null
     this.details = null
     this.cliffs = null
+    this.maskPixels = null
+    this.rasterBudgetToken?.release()
+    this.rasterBudgetToken = null
+    this.rasterBudget = null
+  }
+
+  async prepareRasterCaches(size, yieldTask, budget) {
+    if (budget && (this.rasterBudget !== budget || this.rasterBudgetSize !== size)) {
+      this.biomeBlendMasks.clear()
+      this.biomeTransitionTileCache.clear()
+      this.biomeSotTileCache.clear()
+      this.rasterBudgetToken?.release()
+      this.rasterBudgetToken = null
+      const bytesPerCanvas = size * size * 4
+      const bytes = [this.biomeBlendMasks, this.biomeTransitionTileCache, this.biomeSotTileCache]
+        .reduce((total, cache) => total + Math.min(cache.maxEntries, Math.floor(cache.maxBytes / bytesPerCanvas)) * bytesPerCanvas, 0)
+      this.rasterBudgetToken = budget.reserve('terrainResident', bytes + bytesPerCanvas)
+      this.rasterBudget = budget
+      this.rasterBudgetSize = size
+    }
+    await this.biomeBlendMasks.prepare(size, yieldTask)
+    await this.biomeTransitionTileCache.prepare(size, yieldTask)
+    await this.biomeSotTileCache.prepare(size, yieldTask)
+    this.getMaskPixels(this.biomeBlendMasks.spares[0]?.getContext('2d'), size)
+  }
+
+  acquireRaster(cache, key, size) {
+    if (cache.acquire) return cache.acquire(key, size)
+    // Compatibility for isolated renderer fixtures using plain Maps.
+    if (cache.size >= TERRAIN_TRANSITION_CACHE_LIMIT) {
+      const oldest = cache.keys().next().value
+      const canvas = cache.get(oldest)
+      cache.delete(oldest)
+      if (canvas) canvas.width = canvas.height = 0
+    }
+    const canvas = document.createElement('canvas')
+    canvas.width = canvas.height = size
+    return canvas
+  }
+
+  getMaskPixels(context, size) {
+    if (!this.maskPixels || this.maskPixels.width !== size || this.maskPixels.height !== size) {
+      this.maskPixels = context.createImageData(size, size)
+    }
+    return this.maskPixels
   }
 
   drawBiome(ctx, x, y, sx, sy, size, biome) {
@@ -377,13 +427,12 @@ export class OrganicTerrain {
     const tangentX = -normalY, tangentY = normalX
     const worldTangent = (x * size) * tangentX + (y * size) * tangentY
     const phase = ((Math.round((worldTangent / size) * 2) % 8) + 8) % 8
-    const key = `${size}|${direction}|${coverage}|${phase}`
-    if (this.biomeBlendMasks.has(key)) return this.biomeBlendMasks.get(key)
-    const canvas = document.createElement('canvas')
-    canvas.width = canvas.height = size
-    const context = canvas.getContext('2d')
-    const pixels = context.createImageData(size, size)
     const featherPixels = Math.max(1, Math.min(size, Number(blend.featherPixels) || size * 0.2))
+    const key = `${size}|${direction}|${coverage}|${phase}|${featherPixels}`
+    if (this.biomeBlendMasks.has(key)) return this.biomeBlendMasks.get(key)
+    const canvas = this.acquireRaster(this.biomeBlendMasks, key, size)
+    const context = canvas.getContext('2d')
+    const pixels = this.getMaskPixels(context, size)
     const threshold = (coverage / 8 - 0.5) * size * 1.35
     for (let py = 0; py < size; py++) for (let px = 0; px < size; px++) {
       const localX = px + 0.5 - size / 2
@@ -404,10 +453,9 @@ export class OrganicTerrain {
     const key = `biome|${size}|${cornerWeights.join(':')}|${underlayWeights?.join(':') || 'legacy'}`
     let alphaMask = this.biomeBlendMasks.get(key)
     if (alphaMask) return alphaMask
-    alphaMask = document.createElement('canvas')
-    alphaMask.width = alphaMask.height = size
+    alphaMask = this.acquireRaster(this.biomeBlendMasks, key, size)
     const context = alphaMask.getContext('2d')
-    const pixels = context.createImageData(size, size)
+    const pixels = this.getMaskPixels(context, size)
     for (let py = 0; py < size; py++) for (let px = 0; px < size; px++) {
       pixels.data[(py * size + px) * 4 + 3] = Math.round(255 * biomeTransitionCoverage(
         cornerWeights,
@@ -426,8 +474,7 @@ export class OrganicTerrain {
     const key = `${size}|${x}|${y}|${blend.biome}|${blend.alpha}|${blend.angle}|${blend.featherPixels || 0}|${cornerWeights?.join(':') || 'directional'}|${blend.underlayWeights?.join(':') || 'legacy'}`
     let canvas = this.biomeTransitionTileCache.get(key)
     if (!canvas) {
-      canvas = document.createElement('canvas')
-      canvas.width = canvas.height = size
+      canvas = this.acquireRaster(this.biomeTransitionTileCache, key, size)
       const blendContext = canvas.getContext('2d')
       this.drawBiome(blendContext, x, y, 0, 0, size, blend.biome)
       blendContext.globalCompositeOperation = 'destination-in'
@@ -435,22 +482,19 @@ export class OrganicTerrain {
         ? this.getBiomeBlendMask(size, x, y, blend)
         : this.getBiomeTransitionMask(size, cornerWeights, blend.underlayWeights), 0, 0)
       blendContext.globalCompositeOperation = 'source-over'
-      if (this.biomeTransitionTileCache.size >= TERRAIN_TRANSITION_CACHE_LIMIT) {
-        this.biomeTransitionTileCache.delete(this.biomeTransitionTileCache.keys().next().value)
-      }
       this.biomeTransitionTileCache.set(key, canvas)
     }
     ctx.drawImage(canvas, sx, sy)
   }
 
   getShorelineMask(size, mask, featherWidth = 0.2, beachPattern = false) {
-    const key = `shore|${size}|${mask}|${featherWidth}|${beachPattern ? 'beach' : 'smooth'}`
+    const variant = Number.isInteger(beachPattern) ? beachPattern : beachPattern ? 0 : -1
+    const key = `shore|${size}|${mask}|${featherWidth}|${variant >= 0 ? variant % SHORELINE_PATTERN_VARIATIONS.length : -1}`
     let alphaMask = this.biomeBlendMasks.get(key)
     if (alphaMask) return alphaMask
-    alphaMask = document.createElement('canvas')
-    alphaMask.width = alphaMask.height = size
+    alphaMask = this.acquireRaster(this.biomeBlendMasks, key, size)
     const context = alphaMask.getContext('2d')
-    const pixels = context.createImageData(size, size)
+    const pixels = this.getMaskPixels(context, size)
     for (let py = 0; py < size; py++) for (let px = 0; px < size; px++) {
       pixels.data[(py * size + px) * 4 + 3] = Math.round(255 * shorelineCoverage(
         mask,
@@ -471,15 +515,11 @@ export class OrganicTerrain {
     if (!canvas) {
       const patternVariant = biome === 'sand' ? terrainHash(x, y, 157) % SHORELINE_PATTERN_VARIATIONS.length : false
       const alphaMask = this.getShorelineMask(size, mask, 0.2, patternVariant)
-      canvas = document.createElement('canvas')
-      canvas.width = canvas.height = size
+      canvas = this.acquireRaster(this.biomeTransitionTileCache, key, size)
       const context = canvas.getContext('2d')
       this.drawBiome(context, x, y, 0, 0, size, biome)
       context.globalCompositeOperation = 'destination-in'
       context.drawImage(alphaMask, 0, 0)
-      if (this.biomeTransitionTileCache.size >= TERRAIN_TRANSITION_CACHE_LIMIT) {
-        this.biomeTransitionTileCache.delete(this.biomeTransitionTileCache.keys().next().value)
-      }
       this.biomeTransitionTileCache.set(key, canvas)
     }
     ctx.drawImage(canvas, sx, sy)
@@ -491,17 +531,13 @@ export class OrganicTerrain {
     const key = `${size}|${x}|${y}|${orientation}|${biome}`
     let canvas = this.biomeSotTileCache.get(key)
     if (!canvas) {
-      canvas = document.createElement('canvas')
-      canvas.width = canvas.height = size
+      canvas = this.acquireRaster(this.biomeSotTileCache, key, size)
       const sotContext = canvas.getContext('2d')
       this.drawBiome(sotContext, x, y, 0, 0, size, biome)
       sotContext.globalCompositeOperation = 'destination-in'
       const variant = terrainHash(x, y) % 4
       sotContext.drawImage(this.details, (corner * 4 + variant) * 32, 0, 32, 32, 0, 0, size, size)
       sotContext.globalCompositeOperation = 'source-over'
-      if (this.biomeSotTileCache.size >= TERRAIN_TRANSITION_CACHE_LIMIT) {
-        this.biomeSotTileCache.delete(this.biomeSotTileCache.keys().next().value)
-      }
       this.biomeSotTileCache.set(key, canvas)
     }
     const offset = getSotDrawOffset(orientation)

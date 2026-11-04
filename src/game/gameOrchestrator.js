@@ -715,10 +715,9 @@ class Game {
         await waitForLoadingPaint()
         bootMark('map-start')
         const terrainPromise = this.setupGameWorld()
-        await Promise.race([
-          Promise.resolve(terrainPromise),
-          new Promise(resolve => setTimeout(resolve, 10000))
-        ])
+        // Rendering before the prepared generation finishes can invalidate its
+        // in-flight pages and silently leave the streaming path active.
+        await terrainPromise
         bootMark('map-end')
         boot?.finish('map')
 

@@ -4,12 +4,26 @@ import fs from 'node:fs';
 const browser=await chromium.launch({channel:'chrome',headless:false,ignoreDefaultArgs:['--enable-unsafe-swiftshader']});
 const out=process.env.BENCHMARK_OUTPUT || 'tmp/scrolling-analysis/fixed';
 fs.mkdirSync(out.slice(0,out.lastIndexOf('/')) || '.', { recursive:true });
-const minutes=Number(process.env.BENCHMARK_MINUTES || 5), density=Number(process.env.BENCHMARK_DPR || 1), size=Number(process.env.BENCHMARK_MAP_SIZE || 200);
+const minutes=Number(process.env.BENCHMARK_MINUTES || 5), density=process.env.BENCHMARK_DPR ? Number(process.env.BENCHMARK_DPR) : null, size=Number(process.env.BENCHMARK_MAP_SIZE || 200);
 try {
  const bc=await browser.newBrowserCDPSession();const system=await bc.send('SystemInfo.getInfo');
  if(!/Apple|NVIDIA|AMD|Intel|Adreno|Mali|Radeon/i.test(JSON.stringify(system.gpu.devices)) || /swiftshader|llvmpipe|software|basic render|lavapipe/i.test(system.gpu.devices[0].deviceString)||system.gpu.featureStatus.rasterization!=='enabled')throw Error('Hardware gate failed');
- const context=await browser.newContext({viewport:{width:1280,height:720},deviceScaleFactor:density});
+ const context=await browser.newContext(density ? {viewport:{width:1280,height:720},deviceScaleFactor:density} : {viewport:null});
+ if(process.env.BENCHMARK_BACKEND) await context.addInitScript(backend=>localStorage.setItem('rts_graphics_settings',JSON.stringify({rendererBackendChoice:backend})),process.env.BENCHMARK_BACKEND);
  await context.addInitScript(()=>{localStorage.setItem('tutorial-settings',JSON.stringify({showTutorial:false,speechEnabled:false}));localStorage.setItem('tutorial-progress',JSON.stringify({completed:true,stepIndex:0}));});
+ await context.addInitScript(() => {
+  window.__CFB_TERRAIN_GPU_TIMING__ = true;
+  window.rasterProbe = { canvases: 0, contexts: 0, dimensionWrites: 0, imageData: 0 };
+  const create = Document.prototype.createElement, get = HTMLCanvasElement.prototype.getContext;
+  const imageData = CanvasRenderingContext2D.prototype.createImageData, seen = new WeakSet();
+  Document.prototype.createElement = function(tag, ...rest) { if (String(tag).toLowerCase() === 'canvas') rasterProbe.canvases++; return create.call(this, tag, ...rest); };
+  HTMLCanvasElement.prototype.getContext = function(...args) { if (!seen.has(this)) { seen.add(this); rasterProbe.contexts++; } return get.apply(this, args); };
+  CanvasRenderingContext2D.prototype.createImageData = function(...args) { rasterProbe.imageData++; return imageData.apply(this, args); };
+  for (const key of ['width', 'height']) {
+   const descriptor = Object.getOwnPropertyDescriptor(HTMLCanvasElement.prototype, key);
+   Object.defineProperty(HTMLCanvasElement.prototype, key, { ...descriptor, set(value) { rasterProbe.dimensionWrites++; descriptor.set.call(this, value); } });
+  }
+ });
  await context.addInitScript(() => {
   const post = Worker.prototype.postMessage;
   const observed = new WeakSet(), started = new Map();
@@ -42,12 +56,13 @@ try {
  await page.waitForFunction(()=>['ready','failed'].includes(window.gameInstance.renderer.webgpuRenderer?.status),null,{timeout:30000}).catch(()=>{});
  await page.waitForFunction(()=>document.getElementById('loadingScreen')?.classList.contains('loading-screen--hidden'));
  const preparationMs=Date.now()-preparationStart;
+ const readyResources=await page.evaluate(()=>({...rasterProbe}));
  const checkpointWorker=page.workers().find(worker=>/checkpointEncoding/.test(worker.url()));
  if(!checkpointWorker) throw Error('Production checkpoint worker did not start');
  await checkpointWorker.evaluate(()=>true);
  const workers=page.workers().map(worker=>worker.url());
  await page.mouse.move(780,350);
- await page.evaluate(()=>{window.probe={longTasks:[],frames:[],phase:'idle',phaseStart:performance.now(),desiredX:gameState.scrollOffset.x,desiredY:gameState.scrollOffset.y,counts:[],lastCount:0,lastHeap:null};new PerformanceObserver(list=>probe.longTasks.push(...list.getEntries().map(e=>({start:e.startTime,duration:e.duration})))).observe({type:'longtask'});const original=gameInstance.renderer.renderGame;gameInstance.renderer.renderGame=function(...args){gameState.scrollOffset.x=probe.desiredX;gameState.scrollOffset.y=probe.desiredY;return original.apply(this,args)};const l=gameInstance.gameLoop;const f=l.fpsDisplay.reportFrameBreakdown;l.fpsDisplay.reportFrameBreakdown=function(b){const now=performance.now();if(now-probe.lastCount>1000){probe.lastCount=now;probe.lastHeap=performance.memory?.usedJSHeapSize;probe.counts.push({t:now,units:gameInstance.units.length,buildings:gameState.buildings.length,bullets:gameInstance.gameLoop.bullets.length,effects:Object.fromEntries(Object.entries(gameState).filter(([key,v])=>Array.isArray(v)&&/smoke|particle|explosion|wreck|effect|fire/i.test(key)).map(([key,v])=>[key,v.length])),visibility:document.visibilityState,focused:document.hasFocus(),shadow:gameState.shadowOfWarEnabled,gameTime:gameState.gameTime,backend:gameState.renderStats?.gpuTerrain?.backend,heap:probe.lastHeap})}probe.frames.push({t:now,phase:probe.phase,x:gameState.scrollOffset.x,y:gameState.scrollOffset.y,...b,chunk:{...gameState.renderStats?.mapChunks},heap:probe.lastHeap,gpu:gameState.renderStats?.gpuTiming?.milliseconds});return f.call(this,b)};});
+ await page.evaluate(()=>{window.probe={longTasks:[],frames:[],phase:'idle',phaseStart:performance.now(),desiredX:gameState.scrollOffset.x,desiredY:gameState.scrollOffset.y,counts:[],lastCount:0,lastHeap:null};new PerformanceObserver(list=>probe.longTasks.push(...list.getEntries().map(e=>({start:e.startTime,duration:e.duration})))).observe({type:'longtask'});const original=gameInstance.renderer.renderGame;gameInstance.renderer.renderGame=function(...args){gameState.scrollOffset.x=probe.desiredX;gameState.scrollOffset.y=probe.desiredY;return original.apply(this,args)};const l=gameInstance.gameLoop;const f=l.fpsDisplay.reportFrameBreakdown;l.fpsDisplay.reportFrameBreakdown=function(b){const now=performance.now();if(now-probe.lastCount>1000){probe.lastCount=now;probe.lastHeap=performance.memory?.usedJSHeapSize;probe.counts.push({t:now,units:gameInstance.units.length,buildings:gameState.buildings.length,bullets:gameInstance.gameLoop.bullets.length,effects:Object.fromEntries(Object.entries(gameState).filter(([key,v])=>Array.isArray(v)&&/smoke|particle|explosion|wreck|effect|fire/i.test(key)).map(([key,v])=>[key,v.length])),rasters:{...rasterProbe},terrainCanvases:{...gameInstance.renderer.mapRenderer.chunkCanvasStats},gpuGround:{...gameState.renderStats?.gpuStaticGround},organic:[gameInstance.renderer.mapRenderer.organicTerrain.biomeBlendMasks,gameInstance.renderer.mapRenderer.organicTerrain.biomeTransitionTileCache,gameInstance.renderer.mapRenderer.organicTerrain.biomeSotTileCache].map(cache=>({entries:cache.size,...cache.stats})),visibility:document.visibilityState,focused:document.hasFocus(),shadow:gameState.shadowOfWarEnabled,gameTime:gameState.gameTime,backend:gameState.renderStats?.gpuTerrain?.backend,heap:probe.lastHeap})}probe.frames.push({t:now,phase:probe.phase,x:gameState.scrollOffset.x,y:gameState.scrollOffset.y,...b,chunk:{...gameState.renderStats?.mapChunks},heap:probe.lastHeap,gpu:gameState.renderStats?.gpuTiming?.milliseconds,staticGpu:gameState.renderStats?.gpuStaticGround?.gpuMilliseconds,gpuGround:{...gameState.renderStats?.gpuStaticGround}});return f.call(this,b)};});
  async function phase(name,duration,scroll=false){
   console.log('START',name);
   const metricsStart=await cdp.send('Performance.getMetrics');
@@ -57,7 +72,7 @@ try {
    const lengths=route.slice(1).map((p,i)=>Math.hypot(p.x-route[i].x,p.y-route[i].y));const total=lengths.reduce((a,b)=>a+b,0);let count=0;const intervals=[];const start=performance.now();let last;
    probe.phase=name;probe.phaseStart=start;
    await new Promise(resolve=>{function frame(now){if(last!==undefined)intervals.push(now-last);last=now;const elapsed=now-start;if(scroll){let d=(elapsed*3.6)%total;let i=0;while(i<lengths.length-1&&d>lengths[i])d-=lengths[i++];const p=route[i],q=route[i+1],f=d/lengths[i];probe.desiredX=p.x+(q.x-p.x)*f;probe.desiredY=p.y+(q.y-p.y)*f;gameInstance.gameLoop.requestRender()}count++;if(elapsed<duration)requestAnimationFrame(frame);else resolve()};requestAnimationFrame(frame)});
-   return {name,intervals,checkpoint:{posts:checkpointProbe.posts.filter(p=>p.t>=start),completions:checkpointProbe.completions.filter(p=>p.t>=start),errors:checkpointProbe.errors},longTasks:probe.longTasks,counts:probe.counts,settings:{shadow:s.shadowOfWarEnabled,glow:s.crystalGlowEnabled},duration:performance.now()-start,count,totalRouteDistance:total,travelled:scroll?duration*3.6:0,backend:JSON.parse(JSON.stringify(s.renderStats?.gpuTerrain)),dpr:devicePixelRatio,canvas:{w:c.width,h:c.height,cw:c.clientWidth,ch:c.clientHeight},units:gameInstance.units.length,buildings:s.buildings.length,limiter:s.frameLimiterEnabled,textureMode:gameInstance.renderer.textureManager.integratedSpriteSheetMode};
+   return {name,intervals,resources:{...rasterProbe},checkpoint:{posts:checkpointProbe.posts.filter(p=>p.t>=start),completions:checkpointProbe.completions.filter(p=>p.t>=start),errors:checkpointProbe.errors},longTasks:probe.longTasks,counts:probe.counts,settings:{shadow:s.shadowOfWarEnabled,glow:s.crystalGlowEnabled},duration:performance.now()-start,count,totalRouteDistance:total,travelled:scroll?duration*3.6:0,backend:JSON.parse(JSON.stringify(s.renderStats?.gpuTerrain)),dpr:devicePixelRatio,canvas:{w:c.width,h:c.height,cw:c.clientWidth,ch:c.clientHeight},units:gameInstance.units.length,buildings:s.buildings.length,limiter:s.frameLimiterEnabled,textureMode:gameInstance.renderer.textureManager.integratedSpriteSheetMode};
   },{name,duration,scroll});
   await checkpointWorker.evaluate(()=>true);
   const metricsEnd=await cdp.send('Performance.getMetrics');result.metricsDelta=Object.fromEntries(metricsEnd.metrics.map(({name,value})=>[name,value-(metricsStart.metrics.find(m=>m.name===name)?.value||0)]));
@@ -74,7 +89,7 @@ try {
   }
  }
 
- fs.writeFileSync(out+'-metadata.json',JSON.stringify({initialCadence,preparationMs,workers,gpu:system.gpu,version:await browser.version(),errors,results:results.map(({intervals,...r})=>r)},null,2));
+ fs.writeFileSync(out+'-metadata.json',JSON.stringify({initialCadence,preparationMs,readyResources,workers,gpu:system.gpu,version:await browser.version(),errors,results:results.map(({intervals,...r})=>r)},null,2));
  console.log('Hardware:',system.gpu.devices[0].deviceString);
  const measureCadence=()=>page.evaluate(async()=>{
   const intervals=[];let last;const start=performance.now();

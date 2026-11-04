@@ -57,7 +57,7 @@ export const DECORATION_SETTINGS = Object.freeze({
   groundDetailCount: { default: PART_DEFAULTS.groundDetailCount, min: 0, max: 4000 }
 })
 
-function clampSetting(key, value) {
+export function clampDecorationSetting(key, value) {
   const rule = DECORATION_SETTINGS[key]
   const numeric = value == null || value === '' ? rule.default : Number(value)
   if (!Number.isFinite(numeric)) return rule.default
@@ -65,11 +65,11 @@ function clampSetting(key, value) {
 }
 
 export function decorativeTileTotal(settings = {}) {
-  return DECORATION_PART_KEYS.reduce((sum, key) => sum + clampSetting(key, settings[key]), 0)
+  return DECORATION_PART_KEYS.reduce((sum, key) => sum + clampDecorationSetting(key, settings[key]), 0)
 }
 
 export function normalizeDecorationSettings(settings = {}) {
-  const normalized = Object.fromEntries(Object.keys(DECORATION_SETTINGS).map(key => [key, clampSetting(key, settings[key])]))
+  const normalized = Object.fromEntries(Object.keys(DECORATION_SETTINGS).map(key => [key, clampDecorationSetting(key, settings[key])]))
   normalized.decorativeTileCount = decorativeTileTotal(normalized)
   return normalized
 }
@@ -80,7 +80,7 @@ export function normalizeDecorationSettings(settings = {}) {
  */
 export function distributeDecorativeTiles(total, current = {}) {
   const normalized = normalizeDecorationSettings(current)
-  const target = clampSetting('decorativeTileCount', total)
+  const target = clampDecorationSetting('decorativeTileCount', total)
   const currentParts = DECORATION_PART_KEYS.map(key => normalized[key])
   const currentSum = currentParts.reduce((sum, value) => sum + value, 0)
   const weights = currentSum > 0 ? currentParts : DECORATION_PART_KEYS.map(key => DECORATION_FULL_REFERENCE[key])

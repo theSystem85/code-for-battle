@@ -19,6 +19,7 @@ export class StaticTerrainPages {
     try { this.staging = budget.reserve('terrainStaging', stagingBytes) } catch (error) { this.reservation.release(); throw error }
     this.budget = budget
     this.preparing = true
+    this.stagingPeakBytes = stagingBytes
     this.grid = grid
     this.density = density
     this.bytes = bytes
@@ -36,6 +37,7 @@ export class StaticTerrainPages {
     if (this.closed) return
     this.closed = true
     this.finish()
+    this.gpuRasterPass?.close()
     for (const chunk of this.pages.values()) {
       const image = chunk.preparedRaster?.image
       image?.close?.()

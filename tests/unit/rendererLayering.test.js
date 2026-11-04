@@ -347,7 +347,7 @@ describe('Renderer airborne layering', () => {
       gameCanvas,
       expect.objectContaining({ useIntegratedSpriteSheetMode: true, unitWrecks: [] }),
       null,
-      { skipBaseLayer: false, skipWaterSot: true, skipWaterBase: true, gpuRenderedResources: false, separateWaterLayer: false, gpuRenderedStreetTerrain: false }
+      { gpuStaticGround: false, skipBaseLayer: false, skipWaterSot: true, skipWaterBase: true, gpuRenderedResources: false, separateWaterLayer: false, gpuRenderedStreetTerrain: false }
     )
   })
 
@@ -414,7 +414,7 @@ describe('Renderer airborne layering', () => {
       gameCanvas,
       expect.objectContaining({ useIntegratedSpriteSheetMode: customCheckbox, unitWrecks: [] }),
       null,
-      { skipBaseLayer: false, skipWaterSot: true, skipWaterBase: true, gpuRenderedResources: false, separateWaterLayer: false, gpuRenderedStreetTerrain: false }
+      { gpuStaticGround: false, skipBaseLayer: false, skipWaterSot: true, skipWaterBase: true, gpuRenderedResources: false, separateWaterLayer: false, gpuRenderedStreetTerrain: false }
     )
     expect(gameState.renderStats.gpuTerrain).toEqual(expect.objectContaining({
       waterOnly: true,
@@ -483,7 +483,7 @@ describe('Renderer airborne layering', () => {
       gameCanvas,
       expect.objectContaining({ useIntegratedSpriteSheetMode: true, unitWrecks: [] }),
       null,
-      { skipBaseLayer: false, skipWaterSot: false, skipWaterBase: false, gpuRenderedResources: false, separateWaterLayer: false, gpuRenderedStreetTerrain: false }
+      { gpuStaticGround: false, skipBaseLayer: false, skipWaterSot: false, skipWaterBase: false, gpuRenderedResources: false, separateWaterLayer: false, gpuRenderedStreetTerrain: false }
     )
     expect(gpuContext.clear).toHaveBeenCalledWith(gpuContext.COLOR_BUFFER_BIT)
   })

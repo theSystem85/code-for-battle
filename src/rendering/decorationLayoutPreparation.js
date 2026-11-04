@@ -45,6 +45,10 @@ export class DecorationLayoutPreparation {
   }
 
   read({ mapGrid, mapRevision, catalogRevision, configRevision }) {
+    return this.readCurrent(mapGrid, mapRevision, catalogRevision, configRevision)
+  }
+
+  readCurrent(mapGrid, mapRevision, catalogRevision, configRevision) {
     const state = this.#published
     if (!state || state.mapGrid !== mapGrid || state.mapRevision !== mapRevision ||
       state.catalogRevision !== catalogRevision || state.configRevision !== configRevision) return null
