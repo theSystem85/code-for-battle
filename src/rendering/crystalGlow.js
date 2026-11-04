@@ -5,15 +5,17 @@ export const CRYSTAL_GLOW_COLORS = Object.freeze({
   seedCrystal: '#ff5555'
 })
 
+const GLOW_STYLES = Object.fromEntries(Object.entries(CRYSTAL_GLOW_COLORS).map(([type, color]) => [type,
+  Array.from({ length: 5 }, (_, index) => {
+    const density = index + 1
+    return Object.freeze({ color, width: TILE_SIZE * (1.02 + density * 0.12),
+      height: TILE_SIZE * (0.38 + density * 0.045), alpha: 0.48 + density * 0.03,
+      density, cacheKey: `${type}:${density}` })
+  })]))
+
 export function getCrystalGlowStyle(type, density = 1) {
-  const normalizedDensity = Math.max(1, Math.min(5, Number.isFinite(density) ? Math.floor(density) : 1))
-  return {
-    color: CRYSTAL_GLOW_COLORS[type] || CRYSTAL_GLOW_COLORS.ore,
-    width: TILE_SIZE * (1.02 + normalizedDensity * 0.12),
-    height: TILE_SIZE * (0.38 + normalizedDensity * 0.045),
-    alpha: 0.48 + normalizedDensity * 0.03,
-    density: normalizedDensity
-  }
+  const normalized = Math.max(1, Math.min(5, Number.isFinite(density) ? Math.floor(density) : 1))
+  return (GLOW_STYLES[type] || GLOW_STYLES.ore)[normalized - 1]
 }
 
 export function getCrystalSparkleAlpha(tileX, tileY, timeMs) {
@@ -32,7 +34,7 @@ export class CrystalGlowRenderer {
 
   getSprite(type, density, createCanvas) {
     const style = getCrystalGlowStyle(type, density)
-    const key = `${type}:${style.density}`
+    const key = style.cacheKey
     if (this.spriteCache.has(key)) return this.spriteCache.get(key)
     const canvas = createCanvas(Math.ceil(style.width), Math.ceil(style.height))
     const ctx = canvas.getContext('2d')

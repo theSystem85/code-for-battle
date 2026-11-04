@@ -1,3 +1,6 @@
+import { CheckpointMapMirror } from './storage/checkpointMapMirror.js'
+import { CheckpointEncoder } from './storage/checkpointEncoder.js'
+import { addMapReplacedListener, getMapMutationRevisionStore } from './rendering/prepared/mapMutationNotifier.js'
 import { BIOMES, biomeLayersSignature, upgradeBiomeTransitions } from './game/mapBiomes.js'
 import { findCityBuildingById } from './game/cityBuildings.js'
 import { normalizeDecorationSettings } from './game/decorationSettings.js'
@@ -191,7 +194,7 @@ function startLastGameAutoSaveLoop() {
   if (lastGameAutoSaveInterval !== null) return
 
   lastGameAutoSaveInterval = setInterval(() => {
-    saveLastGameCheckpoint('interval')
+    void persistPeriodicCheckpoint()
   }, AUTO_SAVE_INTERVAL_MS)
 }
 
@@ -608,7 +611,7 @@ async function refreshStorageEstimateCache() {
   return storageEstimateCache
 }
 
-function buildSaveObject(label) {
+function buildSaveObject(label, { includeMap = true, includeStaticConfiguration = true, serialize = true } = {}) {
   const normalizedLabel = label || 'Unnamed'
   const simulationNow = getSimulationTime(gameState)
   // Gather AI player money (budget) from all AI factories
@@ -857,16 +860,11 @@ function buildSaveObject(label) {
   }))
 
   const orePositions = []
-  for (let y = 0; y < mapGrid.length; y++) {
-    for (let x = 0; x < mapGrid[y].length; x++) {
-      if (mapGrid[y][x].ore) {
-        orePositions.push({ x, y })
-      }
-    }
+  if (includeMap) for (let y = 0; y < mapGrid.length; y++) for (let x = 0; x < mapGrid[y].length; x++) {
+    if (mapGrid[y][x].ore) orePositions.push({ x, y })
   }
-
-  const mapGridTypes = mapGrid.map(row => row.map(tile => tile.type))
-  const mapTileState = createMapTileStateSnapshot(mapGrid)
+  const mapGridTypes = includeMap ? mapGrid.map(row => row.map(tile => tile.type)) : undefined
+  const mapTileState = includeMap ? createMapTileStateSnapshot(mapGrid) : undefined
 
   const saveData = {
     schemaVersion: GAME_STATE_SCHEMA_VERSION,
@@ -896,7 +894,7 @@ function buildSaveObject(label) {
       mapTilesY: gameState.mapTilesY,
       mapSeed: gameState.mapSeed,
       mapTopologyFingerprint: gameState.mapTopologyFingerprint,
-      mapTopologySheets: (getTextureManager()?.integratedSpriteSheets || []).map(({ sheetPath, metadata }) => ({ sheetPath, metadata })),
+      ...(includeStaticConfiguration ? getCheckpointConfiguration() : {}),
       ...normalizeDecorationSettings(gameState),
       mapOreFieldCount: gameState.mapOreFieldCount,
       mapOreTotalValue: gameState.mapOreTotalValue,
@@ -905,7 +903,6 @@ function buildSaveObject(label) {
       useIntegratedSpriteSheetMode: Boolean(gameState.useIntegratedSpriteSheetMode),
       activeSpriteSheetSelections: gameState.activeSpriteSheetSelections,
       activeSpriteSheetPath: gameState.activeSpriteSheetPath || null,
-      activeSpriteSheetMetadata: gameState.activeSpriteSheetMetadata || null,
       activeSpriteSheetBiomeTag: gameState.activeSpriteSheetBiomeTag || 'grass',
       mapBiomeRegionCount: gameState.mapBiomeRegionCount,
       mapBiomeDistribution: gameState.mapBiomeDistribution,
@@ -1033,11 +1030,107 @@ function buildSaveObject(label) {
   return {
     label: normalizedLabel,
     time: Date.now(),
-    state: JSON.stringify(saveData)
+    state: serialize ? JSON.stringify(saveData) : saveData
   }
 }
 
+let checkpointContext = null
+let periodicCheckpoint = null
+let checkpointWriteEpoch = 0
+let checkpointConfiguration = null
+let checkpointConfigurationVersion = -1
+let checkpointConfigurationMetadata = null
+
+function getCheckpointConfiguration() {
+  return {
+    mapTopologySheets: (getTextureManager()?.integratedSpriteSheets || []).map(({ sheetPath, metadata }) => ({ sheetPath, metadata })),
+    activeSpriteSheetMetadata: gameState.activeSpriteSheetMetadata || null
+  }
+}
+
+function getCheckpointContext() {
+  if (!checkpointContext) {
+    const encoder = new CheckpointEncoder()
+    const mirror = new CheckpointMapMirror({
+      serializeTile: createSerializableMapTile,
+      onReset: data => encoder.send({ type: 'reset', ...data }),
+      onChunk: data => encoder.send({ type: 'chunk', ...data })
+    })
+    checkpointContext = { encoder, mirror, preparing: null }
+  }
+  const version = getTextureManager()?.integratedConfigVersion || 0
+  if (!checkpointConfiguration || version !== checkpointConfigurationVersion || checkpointConfigurationMetadata !== gameState.activeSpriteSheetMetadata) {
+    checkpointConfiguration = globalThis.structuredClone(getCheckpointConfiguration())
+    checkpointConfigurationVersion = version
+    checkpointConfigurationMetadata = gameState.activeSpriteSheetMetadata
+    checkpointContext.encoder.send({ type: 'configuration', configuration: checkpointConfiguration })
+  }
+  return checkpointContext
+}
+
+function preparePeriodicCheckpointMap() {
+  if (!mapGrid.length) return Promise.resolve()
+  const context = getCheckpointContext()
+  if (!context.preparing) {
+    context.preparing = context.mirror.synchronize(mapGrid, getMapMutationRevisionStore)
+      .catch(error => { if (error.name !== 'AbortError') window.logger?.warn?.('Checkpoint map preparation failed:', error) })
+      .finally(() => { context.preparing = null })
+  }
+  return context.preparing
+}
+
+addMapReplacedListener(() => {
+  checkpointWriteEpoch++
+  checkpointContext?.mirror.reset()
+  checkpointContext?.encoder.dispose()
+  checkpointContext = null
+  periodicCheckpoint = null
+  checkpointConfiguration = null
+})
+
+export function persistPeriodicCheckpoint() {
+  if (!canPersistLastGame()) return Promise.resolve(false)
+  if (periodicCheckpoint) return periodicCheckpoint
+  const epoch = ++checkpointWriteEpoch
+  const context = getCheckpointContext()
+  const job = (async() => {
+    await context.preparing
+    if (epoch !== checkpointWriteEpoch) return false
+    const encoded = await context.mirror.synchronizeAndCapture(mapGrid, getMapMutationRevisionStore, generation => {
+      if (epoch !== checkpointWriteEpoch) throw new DOMException('Checkpoint superseded', 'AbortError')
+      getCheckpointContext()
+      const configuration = checkpointConfiguration
+      ensurePlayerBuildHistoryLoaded()
+      // Only dynamic state is cloned here. Map chunks and large sheet metadata
+      // have already been mirrored; postMessage therefore stays bounded by the
+      // entity count, not by all 40,000 map tiles.
+      const save = globalThis.structuredClone(buildSaveObject(LAST_GAME_LABEL, { includeMap: false, includeStaticConfiguration: false, serialize: false }))
+      const chunks = context.mirror.chunks.slice()
+      const width = context.mirror.width, height = context.mirror.height
+      const snapshot = { snapshotRows: () => {
+        const rows = Array.from({ length: height }, () => new Array(width))
+        for (const chunk of chunks) for (let y = 0; y < chunk.rows.length; y++) for (let x = 0; x < chunk.rows[y].length; x++) {
+          rows[chunk.y + y][chunk.x + x] = chunk.rows[y][x]
+        }
+        return rows
+      } }
+      return context.encoder.encode(save, generation, snapshot, configuration)
+    })
+    if (epoch !== checkpointWriteEpoch || !canPersistLastGame()) return false
+    setStoredItem(LAST_GAME_STORAGE_KEY, encoded)
+    saveQuotaExceeded = false
+    window.logger?.('Auto-saved lastGame checkpoint (interval)')
+    return true
+  })().catch(error => {
+    if (error.name !== 'AbortError') window.logger?.warn?.('Failed to auto-save last game checkpoint:', error)
+    return false
+  }).finally(() => { if (periodicCheckpoint === job) periodicCheckpoint = null })
+  periodicCheckpoint = job
+  return job
+}
+
 export function saveGame(label) {
+  checkpointWriteEpoch++
   ensurePlayerBuildHistoryLoaded()
   const saveObj = buildSaveObject(label)
   setStoredItem(SAVE_STORAGE_KEY_PREFIX + saveObj.label, encodeCompactSave(saveObj))
@@ -2576,6 +2669,7 @@ export function initSaveGameSystem() {
 }
 
 export function initLastGameRecovery() {
+  void preparePeriodicCheckpointMap()
   startLastGameAutoSaveLoop()
   startPauseWatcher()
   setupLifecycleSaves()

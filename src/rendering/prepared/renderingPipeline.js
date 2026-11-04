@@ -151,6 +151,7 @@ async function prepareAndPublishSprites({ density, signal, onProgress }) {
 export async function prepareRuntimeMap({
   grid,
   sotMask = null,
+  runtimePageFactory = null,
   density = lastPreparedDensity || (typeof window !== 'undefined' && window.devicePixelRatio) || 1,
   signal
 } = {}) {
@@ -163,6 +164,7 @@ export async function prepareRuntimeMap({
   const prepared = await getTerrainPreparationPipeline().prepare({
     grid,
     sotMask,
+    runtimePageFactory,
     generation: ++mapGeneration,
     assetGeneration: spriteAssetGeneration,
     density,

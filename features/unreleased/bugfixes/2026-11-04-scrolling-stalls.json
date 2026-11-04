@@ -1,0 +1,3 @@
+{
+  "description": "Avoid repeated terrain baking, inland water cache resets and blocking periodic autosaves."
+}
