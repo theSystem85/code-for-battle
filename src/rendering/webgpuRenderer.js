@@ -148,7 +148,7 @@ fn applySaturation(color: vec3f, saturation: f32) -> vec3f {
       let maxDepth = max(uniforms.waterControls.z, 0.001);
       if (depth < maxDepth) {
         let opacity = clamp(depth / maxDepth, 0.0, 1.0);
-        let grainBits = u32(floor(input.worldPos.x)) * 1664525u ^ u32(floor(input.worldPos.y)) * 1013904223u;
+        let grainBits = (u32(floor(input.worldPos.x)) * 1664525u) ^ (u32(floor(input.worldPos.y)) * 1013904223u);
         let grain = f32(grainBits & 255u) / 255.0;
         let sand = vec3f(0.76, 0.67, 0.46) + (grain - 0.5) * 0.045;
         color = mix(sand, color, opacity);
@@ -234,12 +234,13 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
   }
 
   beginInitialize(canvas) {
-    if (this.status !== 'idle') return
+    if (this.status !== 'idle') return this.initializationPromise
     this.status = 'initializing'
-    this.initialize(canvas).catch(error => {
+    this.initializationPromise = this.initialize(canvas).catch(error => {
       this.fail(error?.message || String(error))
       finishBootGpu()
     })
+    return this.initializationPromise
   }
 
   async initialize(canvas) {

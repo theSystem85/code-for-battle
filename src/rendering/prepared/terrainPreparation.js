@@ -457,7 +457,7 @@ export class TerrainPreparationPipeline {
         gpuStagingBytes,
         allResidentRasterEstimate,
         terrainResidentBytes: descriptorBytes + preparedRasterBytes + allResidentRasterBytes + runtimeRasterBytes,
-        terrainStagingPeakBytes: rasterMode === 'all-resident-raster' ? allResidentRasterEstimate : 0
+        terrainStagingPeakBytes: Math.max(allResidentRasterBytes ? allResidentRasterEstimate : 0, runtimeStaticPages?.stagingPeakBytes || 0)
       })
       const assetResources = imageEntriesToResources(decodedEntries)
       const resources = {

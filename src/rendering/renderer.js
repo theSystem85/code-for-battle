@@ -23,6 +23,7 @@ import { WreckRenderer } from './wreckRenderer.js'
 import { renderMineIndicators, renderMineDeploymentPreview, renderSweepAreaPreview, renderFreeformSweepPreview } from './mineRenderer.js'
 import { GameWebGLRenderer } from './webglRenderer.js'
 import { GameWebGPURenderer } from './webgpuRenderer.js'
+import { StaticTerrainGpuPages } from './prepared/staticTerrainGpuPages.js'
 import { prewarmDestructionExplosionTexture } from '../game/spriteSheetEffects.js'
 import { updatePreparedSpriteDemand } from './prepared/preparedSpritePipeline.js'
 import { gameState } from '../gameState.js'
@@ -129,6 +130,57 @@ export class Renderer {
     if (!this.gpuRenderer) this.gpuRenderer = new GameWebGLRenderer(null, this.textureManager, this.mapRenderer)
     this.gpuRenderer.prepareRetainedWaterTopology(mapGrid)
     this.webgpuRenderer?.prepareRetainedWaterTopology(mapGrid)
+  }
+
+  async prepareTerrainGpuBackend() {
+    if (!USE_PROCEDURAL_WATER_RENDERING ||
+        (this.textureManager.integratedSpriteSheetMode && this.textureManager.integratedTagBuckets?.water?.length)) return false
+    const gl = document.getElementById('gameCanvasGL')?.getContext('webgl2')
+    if (!this.gpuRenderer) this.gpuRenderer = new GameWebGLRenderer(gl, this.textureManager, this.mapRenderer)
+    else this.gpuRenderer.setContext(gl)
+    const hardwareGl = this.gpuRenderer.ensureInitialized() && this.gpuRenderer.hardwareGpuAvailable
+    if (RENDERER_BACKEND === 'webgpu' && navigator.gpu) {
+      if (!this.webgpuRenderer) this.webgpuRenderer = new GameWebGPURenderer(this.textureManager, this.mapRenderer)
+      await this.webgpuRenderer.beginInitialize(document.getElementById('gameCanvasGPU'))
+    }
+    return Boolean(hardwareGl)
+  }
+
+  async validateTerrainGpuPages(pass) {
+    const device = this.webgpuRenderer.device
+    device.pushErrorScope('validation')
+    let failure = null
+    try { pass.prepareGpu(this.webgpuRenderer) } catch (error) { failure = error }
+    const validation = await device.popErrorScope()
+    if (failure || validation) throw failure || new Error(validation.message)
+    await withTimeout(device.queue.onSubmittedWorkDone(), 10000, 'Terrain GPU upload')
+  }
+
+  async prepareTerrainGpuPages(pages, budget) {
+    const old = this.mapRenderer.preparedPages?.gpuRasterPass
+    if (old && pages.bytes + pages.pages.size * 256 + 48 > budget.limits.gpuTerrain - budget.usage.gpuTerrain) {
+      if (this.webgpuRenderer?.status === 'ready' && RENDERER_BACKEND === 'webgpu') old.releaseGl()
+      else old.releaseGpu()
+    }
+    const pass = new StaticTerrainGpuPages(pages, budget)
+    pages.gpuRasterPass = pass
+    if (this.webgpuRenderer?.status === 'ready' && RENDERER_BACKEND === 'webgpu') await this.validateTerrainGpuPages(pass)
+    else {
+      pass.prepareGl(this.gpuRenderer.gl)
+      await pass.waitGlReady()
+    }
+  }
+
+  async prepareTerrainGpuStandby(pages) {
+    const pass = pages?.gpuRasterPass
+    if (!pass) return
+    pass.prepareGl(this.gpuRenderer.gl)
+    this.gpuRenderer.uploadRetainedWaterTopology(this.gpuRenderer.prepareRetainedWaterTopology(pages.grid))
+    await pass.waitGlReady()
+    if (this.webgpuRenderer?.status === 'ready') {
+      this.webgpuRenderer.uploadRetainedWaterTopology(this.webgpuRenderer.prepareRetainedWaterTopology(pages.grid))
+      await this.validateTerrainGpuPages(pass)
+    }
   }
 
   publishTerrainFrame(drawing, phase, reasonCode = null, failureSummary = null) {
@@ -446,6 +498,7 @@ export class Renderer {
     }
 
     const { width: logicalCanvasWidth, height: logicalCanvasHeight } = getCanvasLogicalSize(gameCanvas)
+    if (mapGrid?.length && this.mapRenderer.preparedPages?.gpuRasterPass) this.mapRenderer.attachMutationStore(mapGrid)
     gameCtx.clearRect(0, 0, logicalCanvasWidth, logicalCanvasHeight)
 
     // Check for game over first
@@ -522,6 +575,23 @@ export class Renderer {
       gpuContext.clear(gpuContext.COLOR_BUFFER_BIT)
     }
 
+    const groundPass = this.mapRenderer.preparedPages?.grid === mapGrid ? this.mapRenderer.preparedPages.gpuRasterPass : null
+    if (groundPass && gpuRendered) {
+      try {
+        if (gpuBackend === 'webgpu' && groundPass.gpuState?.device !== this.webgpuRenderer.device && groundPass.failedDevice !== this.webgpuRenderer.device) {
+          try { groundPass.prepareGpu(this.webgpuRenderer) } catch (error) { groundPass.failedDevice = this.webgpuRenderer.device; throw error }
+        }
+        if (gpuBackend === 'webgl' && !groundPass.glState && !groundPass.failedGl) {
+          try { groundPass.prepareGl(this.gpuRenderer.gl) } catch (error) { groundPass.failedGl = true; throw error }
+        }
+      } catch (error) { window.logger?.warn?.('Retained terrain recovery failed; using CPU pages', error) }
+    }
+    const gpuStaticGround = Boolean(groundPass && gpuRendered && groundPass.render(gpuBackend,
+      gpuBackend === 'webgpu' ? this.webgpuRenderer : this.gpuRenderer,
+      gpuBackend === 'webgpu' ? webgpuCanvas : gpuCanvas, scrollOffset,
+      logicalCanvasWidth, logicalCanvasHeight, this.mapRenderer, mapGrid))
+    if (gpuStaticGround) frameDrawCalls += groundPass.stats.drawCalls
+    if (groundPass) groundPass.stats.active = gpuStaticGround
     const showWebGPUCanvas = gpuBackend === 'webgpu' || (
       wantsWebGPU &&
       this.webgpuRenderer &&
@@ -562,6 +632,7 @@ export class Renderer {
       gameState,
       occupancyMap,
       {
+        gpuStaticGround,
         skipBaseLayer: gpuRendered && !gpuWaterOnly,
         skipWaterSot: gpuRendered && (gpuBackend === 'webgpu' ? this.webgpuRenderer?.rendersWaterSot : this.gpuRenderer?.rendersWaterSot),
         skipWaterBase: gpuRendered && gpuWaterOnly,
@@ -579,6 +650,7 @@ export class Renderer {
       mapChunks: this.mapRenderer.getLastFrameChunkStats?.() || null,
       gpuTiming: activeGpuRenderer?.gpuTiming || null,
       gpuOverlay: this.gpuOverlay,
+      gpuStaticGround: groundPass?.stats || null,
       gpuTerrain: {
         rendered: gpuRendered,
         backend: gpuBackend,

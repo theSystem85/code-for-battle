@@ -86,6 +86,7 @@ function installTraceCanvases() {
       width: 300,
       height: 150,
       addEventListener: events.addEventListener.bind(events),
+      removeEventListener: events.removeEventListener.bind(events),
       dispatchEvent: events.dispatchEvent.bind(events)
     }
     const context = makeTraceContext(canvas)
@@ -145,6 +146,30 @@ describe('prepared terrain residency', () => {
     renderer.invalidateAllChunks()
     expect(budget.usage.terrainResident).toBe(0)
     expect(budget.usage.terrainStaging).toBe(0)
+  })
+
+  it('[U07069] transfers an offscreen raster and its reservation without resizing or stealing a visible page', () => {
+    installTraceCanvases()
+    const renderer = new MapRenderer(makeTextureManager()), grid = makeMap(64, 16)
+    renderer.maxCachedChunks = 2
+    renderer.terrainByteBudget = createTerrainByteBudget({ residentBytes: 3 * 517 * 517 * 4, stagingBytes: 517 * 517 * 4 })
+    const first = renderer.getOrCreateChunk(0, 0, 0, 0, 16, 16)
+    renderer.updateChunkCache(first, grid, false, null)
+    const visible = renderer.getOrCreateChunk(1, 0, 16, 0, 32, 16)
+    renderer.updateChunkCache(visible, grid, false, null)
+    renderer.activeChunkKeys.add(visible.key)
+    const canvas = first.canvas, bytes = renderer.terrainByteBudget.usage.terrainResident
+    const next = renderer.getOrCreateChunk(2, 0, 32, 0, 48, 16)
+    expect(next.canvas).toBe(canvas)
+    expect(next.canvas.width).toBe(517)
+    expect(renderer.chunkCache.has(visible.key)).toBe(true)
+    expect(renderer.chunkCanvasStats.reused).toBe(1)
+    expect(renderer.terrainByteBudget.usage.terrainResident).toBe(bytes)
+    next.canvas.dispatchEvent(new Event('contextlost'))
+    expect(next.contextLost).toBe(true)
+    expect(first.contextLost).toBe(false)
+    renderer.invalidateAllChunks()
+    expect(renderer.terrainByteBudget.usage.terrainResident).toBe(0)
   })
 
   it('[U07064] rejects an oversized raster generation before baking and releases cancelled preparation', async() => {

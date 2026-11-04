@@ -13,6 +13,7 @@ const limits = (value = 1024 * 1024 * 1024) => ({
   sprites: value,
   transfer: value,
   gpuStaging: value,
+  gpuTerrain: value,
   minimap: value,
   effects: value
 })

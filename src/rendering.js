@@ -1,6 +1,8 @@
 // rendering.js - Refactored to use modular components
 import { Renderer } from './rendering/renderer.js'
+import { TILE_SIZE } from './config.js'
 import { getCanvasLogicalSize } from './rendering/renderingUtils.js'
+import { STATIC_TERRAIN_PAGE_LIMIT, staticTerrainPageBytes } from './rendering/prepared/staticTerrainPages.js'
 import { RENDER_REVISION_DOMAINS } from './rendering/prepared/renderRevisionStore.js'
 import {
   bindRenderingDensityPreparation,
@@ -96,10 +98,22 @@ export function publishPreparedRuntimeMap(mapGrid) {
     mapRenderer.organicTerrain.readiness
   ]).then(() => prepareRuntimeMap({
     grid: mapGrid, sotMask: mapRenderer?.sotMask, density,
-    runtimePageFactory: ({ budget, signal }) => mapRenderer.prepareStaticTerrain(mapGrid, { budget, density, signal })
-  })).then(prepared => {
+    runtimePageFactory: async({ budget, signal }) => {
+      await mapRenderer.organicTerrain.prepareRasterCaches(TILE_SIZE, undefined, budget)
+      signal?.throwIfAborted()
+      const nativeBytes = staticTerrainPageBytes(mapGrid[0].length, mapGrid.length, { density })
+      const gpuWorldRaster = nativeBytes > STATIC_TERRAIN_PAGE_LIMIT && await gameRenderer.prepareTerrainGpuBackend()
+      const pages = await mapRenderer.prepareStaticTerrain(mapGrid, { budget, density: gpuWorldRaster ? 1 : density, signal,
+        bitmapOptions: gpuWorldRaster ? { premultiplyAlpha: 'none' } : undefined })
+      if (pages && gpuWorldRaster) {
+        try { await gameRenderer.prepareTerrainGpuPages(pages, budget) } catch (error) { pages.close(); throw error }
+      }
+      return pages
+    }
+  })).then(async prepared => {
     mapRenderer.publishStaticTerrain(prepared?.resources?.runtimeStaticPages || null)
     gameRenderer.prepareWaterResources(mapGrid)
+    await gameRenderer.prepareTerrainGpuStandby(prepared?.resources?.runtimeStaticPages)
     return prepared
   }).catch(error => {
     if (typeof window !== 'undefined') window.logger?.warn?.('Prepared map generation failed', error)

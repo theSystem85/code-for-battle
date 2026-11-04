@@ -2,6 +2,7 @@ import { fetchAssetJson } from '../utils/assetLoading.js'
 import { computeMapTopologyFingerprint } from '../game/mapTopology.js'
 import { prepareCityBuildings } from '../game/cityBuildings.js'
 import { normalizeDecorationSettings } from '../game/decorationSettings.js'
+import { observeDecorationConfiguration } from '../game/decorationConfigurationRevision.js'
 // rendering/textureManager.js
 import { TILE_SIZE, PLAYER_POSITIONS } from '../config.js'
 import { gameState } from '../gameState.js'
@@ -105,6 +106,7 @@ export class TextureManager {
     this.naturalDecorationRules = false
     this.decorationLayoutCache = null
     this.decorationLayoutPreparation = new DecorationLayoutPreparation()
+    this.decorationConfiguration = observeDecorationConfiguration(gameState)
     this.decorationMapRevision = 0
     this.defaultCombatDecalGroupedTagCatalog = {}
     this.streetSelectionPoolCache = new Map()
@@ -798,7 +800,8 @@ export class TextureManager {
   }
 
   getDefaultDecorationBiome() {
-    return ['soil', 'sand', 'grass', 'snow'].includes(this.integratedBiomeTag) ? this.integratedBiomeTag : 'grass'
+    const biome = this.integratedBiomeTag
+    return biome === 'soil' || biome === 'sand' || biome === 'grass' || biome === 'snow' ? biome : 'grass'
   }
 
   /**
@@ -807,27 +810,20 @@ export class TextureManager {
    */
   getDecorationLayout(mapGrid) {
     if (!Array.isArray(mapGrid) || !mapGrid.length) return null
-    const decorationSettings = normalizeDecorationSettings(gameState)
-    const decorationKey = JSON.stringify(decorationSettings)
-    return this.decorationLayoutPreparation.read({
-      mapGrid,
-      mapRevision: this.decorationMapRevision,
-      catalogRevision: this.integratedConfigVersion,
-      configRevision: `${gameState.mapSeed}:${decorationKey}`
-    })
+    return this.decorationLayoutPreparation.readCurrent(mapGrid, this.decorationMapRevision,
+      this.integratedConfigVersion, this.decorationConfiguration.revision)
   }
 
   prepareDecorationLayout(mapGrid) {
     if (!Array.isArray(mapGrid) || !mapGrid.length) return null
     const width = mapGrid[0]?.length || 0
     const decorationSettings = normalizeDecorationSettings(gameState)
-    const decorationKey = JSON.stringify(decorationSettings)
     return this.decorationLayoutPreparation.prepare({
       mapGrid,
       pools: this.integratedDecorationPools,
       mapRevision: this.decorationMapRevision,
       catalogRevision: this.integratedConfigVersion,
-      configRevision: `${gameState.mapSeed}:${decorationKey}`,
+      configRevision: this.decorationConfiguration.revision,
       options: {
         defaultBiome: this.getDefaultDecorationBiome(),
         ruinSeed: gameState.mapSeed,
