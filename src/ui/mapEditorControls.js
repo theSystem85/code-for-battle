@@ -3,7 +3,8 @@ import { computeMapTopologyFingerprint, topologyChangesAllowed } from '../game/m
 import { showNotification } from './notifications.js'
 import { gameState } from '../gameState.js'
 import { AnimationSheetPreparation } from '../rendering/animationSheetPreparation.js'
-import { getMapRenderer, getTextureManager } from '../rendering.js'
+import { getMapRenderer, getTextureManager, publishPreparedRuntimeMap } from '../rendering.js'
+import { withPreparedRendering } from '../rendering/prepared/runtimeGraphicsPreparation.js'
 import { initializeOccupancyMap } from '../units.js'
 import { observeMultiplayerSession } from '../network/multiplayerSessionEvents.js'
 import {
@@ -519,14 +520,18 @@ async function loadDefaultAnimationMetadata() {
   }
 }
 
-export async function applyIntegratedSpriteSheetRuntime(metadata = null, { preserveTopology = false, authoritative = false, sheetsOverride = null } = {}) {
+export function applyIntegratedSpriteSheetRuntime(metadata = null, options = {}) {
+  return withPreparedRendering(() => applyIntegratedSpriteSheetConfiguration(metadata, options))
+}
+
+async function applyIntegratedSpriteSheetConfiguration(metadata, { preserveTopology = false, authoritative = false, sheetsOverride = null }) {
   if (!preserveTopology && !topologyChangesAllowed(gameState, authoritative)) {
     showNotification('Map sheet changes are controlled by the host before the match starts.')
     return
   }
   const previousFingerprint = gameState.mapTopologyFingerprint
   const updateTopology = async() => {
-    if (preserveTopology) return
+    if (preserveTopology) return false
     const fingerprint = computeMapTopologyFingerprint({
       ...gameState,
       enabled: textureManager.integratedSpriteSheetMode,
@@ -536,7 +541,9 @@ export async function applyIntegratedSpriteSheetRuntime(metadata = null, { prese
     gameState.mapTopologyFingerprint = fingerprint
     if (previousFingerprint != null && previousFingerprint !== fingerprint) {
       await regenerateTopology?.()
+      return Boolean(regenerateTopology)
     }
+    return false
   }
   const textureManager = getTextureManager()
   if (!textureManager?.setIntegratedSpriteSheetConfig) return
@@ -550,16 +557,17 @@ export async function applyIntegratedSpriteSheetRuntime(metadata = null, { prese
     })
     const mapRenderer = getMapRenderer()
     if (mapRenderer) {
+      mapRenderer.invalidateAllChunks()
       if (Array.isArray(gameState.mapGrid)) {
         mapRenderer.computeSOTMask(gameState.mapGrid)
       }
-      mapRenderer.invalidateAllChunks()
     }
 
     if (Array.isArray(gameState.units) && Array.isArray(gameState.mapGrid)) {
       gameState.occupancyMap = initializeOccupancyMap(gameState.units, gameState.mapGrid, textureManager)
     }
-    await updateTopology()
+    const regenerated = await updateTopology()
+    if (!regenerated && gameState.mapGrid?.length) await publishPreparedRuntimeMap(gameState.mapGrid)
     return
   }
 
@@ -592,6 +600,7 @@ export async function applyIntegratedSpriteSheetRuntime(metadata = null, { prese
 
   await textureManager.setIntegratedSpriteSheetConfig({
     enabled: Boolean(gameState.useIntegratedSpriteSheetMode),
+    preparedTier: 'final',
     sheetPath: primarySheet?.sheetPath || null,
     metadata: primarySheet?.metadata || null,
     sheets: resolvedSheets,
@@ -605,16 +614,17 @@ export async function applyIntegratedSpriteSheetRuntime(metadata = null, { prese
 
   const mapRenderer = getMapRenderer()
   if (mapRenderer) {
+    mapRenderer.invalidateAllChunks()
     if (Array.isArray(gameState.mapGrid)) {
       mapRenderer.computeSOTMask(gameState.mapGrid)
     }
-    mapRenderer.invalidateAllChunks()
   }
 
   if (Array.isArray(gameState.units) && Array.isArray(gameState.mapGrid)) {
     gameState.occupancyMap = initializeOccupancyMap(gameState.units, gameState.mapGrid, textureManager)
   }
-  await updateTopology()
+  const regenerated = await updateTopology()
+  if (!regenerated && gameState.mapGrid?.length) await publishPreparedRuntimeMap(gameState.mapGrid)
 }
 
 let regenerateTopology = null

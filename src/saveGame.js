@@ -38,6 +38,7 @@ import { runWithLoadingScreen } from './ui/loadingScreen.js'
 import { milestoneSystem } from './game/milestoneSystem.js'
 import { initializeOccupancyMap } from './units.js'
 import { getTextureManager, getMapRenderer, publishPreparedRuntimeMap } from './rendering.js'
+import { withPreparedRendering } from './rendering/prepared/runtimeGraphicsPreparation.js'
 import {
   assignHarvesterToOptimalRefinery,
   getHarvestedTiles,
@@ -1988,11 +1989,10 @@ function loadGameFromSaveObject(saveObj, key) {
     if (mapRenderer) {
       mapRenderer.invalidateAllChunks()
     }
-    publishPreparedRuntimeMap(mapGrid)
-
     const textureManager = getTextureManager()
     if (textureManager?.setIntegratedSpriteSheetConfig) {
-      const restoreSheets = Array.isArray(gameState.activeSpriteSheetSelections) && gameState.activeSpriteSheetSelections.length
+      const preparedSheetLifecycle = Array.isArray(gameState.activeSpriteSheetSelections) && gameState.activeSpriteSheetSelections.length > 0
+      const restoreSheets = preparedSheetLifecycle
         ? import('./ui/mapEditorControls.js').then(module => module.applyIntegratedSpriteSheetRuntime(null, { preserveTopology: true, sheetsOverride: loaded.gameState.mapTopologySheets }))
         : textureManager.setIntegratedSpriteSheetConfig({
           enabled: Boolean(gameState.useIntegratedSpriteSheetMode),
@@ -2001,16 +2001,21 @@ function loadGameFromSaveObject(saveObj, key) {
           metadata: gameState.activeSpriteSheetMetadata,
           biomeTag: gameState.activeSpriteSheetBiomeTag
         })
-      restoreSheets.then(() => {
+      restoreSheets.then(async() => {
         // Restoring the sheet catalog retires the layout published above.
         textureManager.ensureDecorationLayout?.(mapGrid)
-        if (mapRenderer) {
-          mapRenderer.invalidateAllChunks()
+        if (mapRenderer && !preparedSheetLifecycle) {
+          await withPreparedRendering(() => {
+            mapRenderer.invalidateAllChunks()
+            return publishPreparedRuntimeMap(mapGrid)
+          })
         }
         gameState.occupancyMap = initializeOccupancyMap(units, mapGrid, textureManager)
       }).catch((err) => {
         window.logger.warn('Failed to apply integrated sprite sheet config after load:', err)
       })
+    } else {
+      publishPreparedRuntimeMap(mapGrid)
     }
 
     gameState.occupancyMap = initializeOccupancyMap(units, mapGrid, textureManager)

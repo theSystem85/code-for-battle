@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const mockSetIntegratedSpriteSheetConfig = vi.fn(async() => {})
 const mockInvalidateAllChunks = vi.fn()
 const mockComputeSotMask = vi.fn()
+const mockPublishPreparedRuntimeMap = vi.fn(async() => null)
 const mockInitSpriteSheetEditor = vi.fn(async(options = {}) => {
   globalThis.__capturedSseOptions = options
   return { refreshRuntimeSheetData: vi.fn() }
@@ -23,6 +24,7 @@ vi.mock('../../src/gameState.js', () => ({
 }))
 
 vi.mock('../../src/rendering.js', () => ({
+  publishPreparedRuntimeMap: mockPublishPreparedRuntimeMap,
   getTextureManager: () => ({
     setIntegratedSpriteSheetConfig: mockSetIntegratedSpriteSheetConfig
   }),
@@ -74,6 +76,7 @@ describe('mapEditorControls integrated sheet selection list', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.restoreAllMocks()
+    mockPublishPreparedRuntimeMap.mockResolvedValue(null)
     globalThis.__capturedSseOptions = null
     localStorage.clear()
     document.body.innerHTML = `
@@ -123,6 +126,30 @@ describe('mapEditorControls integrated sheet selection list', () => {
     expect(regenerate).toHaveBeenCalledTimes(1)
     setTopologyRegenerator(null)
     gameState.useIntegratedSpriteSheetMode = true
+  })
+
+  it('[U07073] awaits replacement terrain after a sheet-only invalidation even when topology is unchanged', async() => {
+    const { gameState } = await import('../../src/gameState.js')
+    const { applyIntegratedSpriteSheetRuntime } = await import('../../src/ui/mapEditorControls.js')
+    const previousGrid = gameState.mapGrid
+    gameState.mapGrid = [[{ type: 'land' }]]
+    gameState.useIntegratedSpriteSheetMode = false
+    gameState.mapTopologyFingerprint = 'default'
+    let finish
+    mockPublishPreparedRuntimeMap.mockImplementationOnce(() => new Promise(resolve => { finish = resolve }))
+    let settled = false
+    const preparation = applyIntegratedSpriteSheetRuntime().then(() => { settled = true })
+    try {
+      await vi.waitFor(() => expect(mockPublishPreparedRuntimeMap).toHaveBeenCalledWith(gameState.mapGrid))
+      expect(mockInvalidateAllChunks.mock.invocationCallOrder[0]).toBeLessThan(mockComputeSotMask.mock.invocationCallOrder[0])
+      expect(settled).toBe(false)
+      finish()
+      await preparation
+      expect(settled).toBe(true)
+    } finally {
+      gameState.mapGrid = previousGrid
+      gameState.useIntegratedSpriteSheetMode = true
+    }
   })
 
   it('[U02644] awaits persisted startup sheets without regenerating or applying the editor selection', async() => {

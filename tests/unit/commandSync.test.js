@@ -958,6 +958,26 @@ describe('multiplayer client snapshot sync', () => {
     gameState.multiplayerSession = { localRole: 'client', isRemote: true }
   }
 
+  it('[U07077] retains runtime pages after applying a host sheet catalog instead of replacing them with descriptor-only terrain', async() => {
+    const apply = vi.fn(async() => {})
+    // This protocol fixture mocks config/audio; keep browser-only sheet loading
+    // at its public async boundary rather than importing the editor UI graph.
+    vi.doMock('../../src/ui/mapEditorControls.js', () => ({ applyIntegratedSpriteSheetRuntime: apply }))
+    const pipeline = await import('../../src/rendering/prepared/renderingPipeline.js')
+    const prepare = vi.spyOn(pipeline, 'prepareRuntimeMap').mockResolvedValue(null)
+    try {
+      commandSync.resetClientState()
+      asClient()
+      gameState.mapGrid = [[{ type: 'land' }]]
+      commandSync.applyGameStateSnapshot({ mapSeed: 'prepared-sheets', mapTilesX: 1, mapTilesY: 1,
+        playerCount: 2, useIntegratedSpriteSheetMode: true, activeSpriteSheetSelections: [] })
+      await vi.waitFor(() => expect(apply).toHaveBeenCalledTimes(1))
+      await apply.mock.results[0].value
+      await Promise.resolve()
+      expect(prepare).not.toHaveBeenCalled()
+    } finally { vi.doUnmock('../../src/ui/mapEditorControls.js'); prepare.mockRestore() }
+  })
+
   it('[U00965] serializes host topology and selection with cluster settings', () => {
     gameState.mapTopologyFingerprint = '688abcde'
     gameState.activeSpriteSheetSelections = ['optional.webp']

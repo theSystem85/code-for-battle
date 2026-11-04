@@ -1039,12 +1039,14 @@ class Game {
   setupMapShuffle() {
     setTopologyRegenerator(async() => {
       const wasStarted = gameState.gameStarted
-      await runWithLoadingScreen(() => this.resetGameWithNewMap(gameState.mapSeed, { preserveCamera: true }), {
-        phase: 'map', detail: 'Generating the map', progress: null
-      })
+      const wasPaused = gameState.gamePaused
+      // The sheet-change lifecycle owns the loading screen and loop suspension.
+      await this.resetGameWithNewMap(gameState.mapSeed, { preserveCamera: true })
       if (!wasStarted) {
         gameState.gameStarted = false
         gameState.gamePaused = true
+      } else {
+        gameState.gamePaused = wasPaused
       }
       refreshSidebarMultiplayer()
     })
@@ -1622,7 +1624,7 @@ class Game {
     } finally {
       commitMapMutationTransaction(mapLifecycleTransaction)
     }
-    publishPreparedRuntimeMap(mapGrid)
+    const terrainPreparation = publishPreparedRuntimeMap(mapGrid)
     updatePowerSupply(gameState.buildings, gameState)
 
     units.length = 0
@@ -1672,6 +1674,7 @@ class Game {
 
     gameState.occupancyMap = initializeOccupancyMap(units, mapGrid, getTextureManager())
     updateDangerZoneMaps(gameState)
+    return terrainPreparation
   }
 
   async resetGame() {

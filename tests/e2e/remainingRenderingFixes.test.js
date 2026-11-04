@@ -76,6 +76,49 @@ test.describe('default high-DPI rendering lifecycle', () => {
       window.gameInstance.renderer.webgpuRenderer.device !== window.destroyedTestDevice)
   })
 
+  test('[E00254] prepares replacement terrain before resuming after custom sprites are enabled and disabled', async({ page }) => {
+    await page.addInitScript(() => localStorage.setItem('rts-integrated-spritesheet-mode', 'false'))
+    await loadFreshGame(page)
+    // Keep rendering active, but isolate camera work from AI terrain edits.
+    // The configuration lifecycle must preserve the player's pause choice.
+    await page.evaluate(() => { window.gameState.gamePaused = true })
+    await page.locator('#mapSettingsToggle').click()
+    const checkbox = page.locator('#integratedSpriteSheetModeCheckbox')
+    for (const enabled of [true, false]) {
+      await checkbox.setChecked(enabled)
+      await page.waitForFunction(enabled => window.gameState.useIntegratedSpriteSheetMode === enabled &&
+        window.gameInstance.renderer.mapRenderer.preparedPages?.pages.size === 169 &&
+        window.gameInstance.renderer.mapRenderer.preparedPages?.gpuRasterPass &&
+        window.gameInstance.gameLoop.running &&
+        document.getElementById('loadingScreen')?.classList.contains('loading-screen--hidden'), enabled, { timeout: 120000 })
+      // Final sheet publication used to retire the pages after the UI returned.
+      await page.waitForTimeout(12000)
+      const state = await page.evaluate(() => {
+        const game = window.gameInstance, r = game.renderer, map = game.gameLoop.mapGrid, cm = game.canvasManager, renderState = window.gameState
+        game.gameLoop.stop()
+        const canvas = cm.getGameCanvas(), before = r.mapRenderer.rasterBakeCount
+        for (let lap = 0; lap < 2; lap++) for (const [x, y] of [[0, 0], [2500, 2500], [5000, 5000], [500, 4000], [3000, 1000]]) {
+          renderState.scrollOffset.x = x; renderState.scrollOffset.y = y
+          r.renderGame(canvas.getContext('2d'), canvas, map, game.gameLoop.factories, game.units, game.gameLoop.bullets,
+            renderState.buildings, renderState.scrollOffset, false, null, null, renderState,
+            cm.getGameGlContext(), cm.getGameGlCanvas(), cm.getGameGpuCanvas())
+        }
+        const result = { pages: r.mapRenderer.preparedPages?.pages.size,
+          active: renderState.renderStats.gpuStaticGround?.active, bakes: r.mapRenderer.rasterBakeCount - before,
+          paused: renderState.gamePaused,
+          gpuBytes: r.mapRenderer.preparedPages?.budget.usage.gpuTerrain }
+        game.gameLoop.start()
+        return result
+      })
+      expect(state.pages).toBe(169)
+      expect(state.active).toBe(true)
+      expect(state.paused).toBe(true)
+      expect(state.bakes).toBe(0)
+      expect(state.gpuBytes).toBeGreaterThan(0)
+      expect(state.gpuBytes).toBeLessThanOrEqual(512 * 1024 * 1024)
+    }
+  })
+
   test('[E00250] recycled terrain masks and composites match fresh rasterization across evictions', async({ page }) => {
     await loadFreshGame(page)
     const result = await page.evaluate(async() => {

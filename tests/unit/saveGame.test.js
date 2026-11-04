@@ -712,6 +712,37 @@ describe('saveGame.js', () => {
   })
 
   describe('loadGame', () => {
+    it('[U07078] keeps the runtime pages published by a restored custom sheet catalog', async() => {
+      const rendering = await import('../../src/rendering.js')
+      const sheets = await import('../../src/ui/mapEditorControls.js')
+      const { DEFAULT_SSE_SHEETS } = await import('../../src/ui/spriteSheetRegistry.js')
+      const oldTexture = rendering.getTextureManager.getMockImplementation()
+      const oldMap = rendering.getMapRenderer.getMockImplementation()
+      const map = { invalidateAllChunks: vi.fn() }
+      const textures = { setIntegratedSpriteSheetConfig: vi.fn(), ensureDecorationLayout: vi.fn() }
+      rendering.getTextureManager.mockReturnValue(textures)
+      rendering.getMapRenderer.mockReturnValue(map)
+      let invalidationsAtPublication
+      const apply = vi.spyOn(sheets, 'applyIntegratedSpriteSheetRuntime').mockImplementation(async() => {
+        invalidationsAtPublication = map.invalidateAllChunks.mock.calls.length
+      })
+      localStorage.setItem('rts_save_PreparedSheets', JSON.stringify({ label: 'PreparedSheets', state: JSON.stringify({
+        gameState: { money: 5000, gameStarted: true, useIntegratedSpriteSheetMode: true,
+          activeSpriteSheetSelections: [DEFAULT_SSE_SHEETS[0]] }, units: [], buildings: [], orePositions: []
+      }) }))
+      try {
+        saveGameModule.loadGame('rts_save_PreparedSheets')
+        await vi.waitFor(() => expect(textures.ensureDecorationLayout).toHaveBeenCalled())
+        expect(apply).toHaveBeenCalledTimes(1)
+        expect(map.invalidateAllChunks).toHaveBeenCalledTimes(invalidationsAtPublication)
+        expect(rendering.publishPreparedRuntimeMap).not.toHaveBeenCalled()
+      } finally {
+        apply.mockRestore()
+        rendering.getTextureManager.mockImplementation(oldTexture)
+        rendering.getMapRenderer.mockImplementation(oldMap)
+      }
+    })
+
     it('[U03858] should load builtin mission by key', async() => {
       const { showNotification } = await import('../../src/ui/notifications.js')
 
