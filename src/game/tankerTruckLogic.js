@@ -1,3 +1,4 @@
+import { serviceUnitDistanceTiles } from '../utils/serviceUnitDistance.js'
 import { GAS_REFILL_TIME, TANKER_SUPPLY_CAPACITY, SERVICE_DISCOVERY_RANGE, SERVICE_SERVING_RANGE, TILE_SIZE } from '../config.js'
 import { logPerformance } from '../performanceUtils.js'
 import { findPath } from '../units.js'
@@ -102,7 +103,7 @@ export const updateTankerTruckLogic = logPerformance(function(units, gameState, 
         tanker.emergencyStartTime = null
       } else {
         // Check if we're close enough to start refueling (any surrounding tile)
-        const distance = Math.hypot(emergencyUnit.tileX - tanker.tileX, emergencyUnit.tileY - tanker.tileY)
+        const distance = serviceUnitDistanceTiles(tanker, emergencyUnit)
         if (distance <= SERVICE_SERVING_RANGE && !(emergencyUnit.movement && emergencyUnit.movement.isMoving)) {
           // Start emergency refueling
           tanker.refuelTarget = emergencyUnit
@@ -137,7 +138,7 @@ export const updateTankerTruckLogic = logPerformance(function(units, gameState, 
           )
           .map(u => ({
             unit: u,
-            distance: Math.hypot(u.tileX - tanker.tileX, u.tileY - tanker.tileY),
+            distance: serviceUnitDistanceTiles(tanker, u),
             fuelRatio: u.gas / u.maxGas
           }))
           .filter(entry => entry.distance <= SERVICE_DISCOVERY_RANGE)
@@ -174,7 +175,7 @@ export const updateTankerTruckLogic = logPerformance(function(units, gameState, 
           typeof u.maxGas === 'number' &&
           u.gas < (u.maxGas * 0.5) && // Only refuel if unit has less than 50% gas
           u.health > 0 && // Ensure target is alive
-          Math.hypot(u.tileX - tanker.tileX, u.tileY - tanker.tileY) <= SERVICE_SERVING_RANGE &&
+          serviceUnitDistanceTiles(tanker, u) <= SERVICE_SERVING_RANGE &&
           !(u.movement && u.movement.isMoving)
         )
         .reduce((best, current) => {
@@ -212,7 +213,7 @@ export const updateTankerTruckLogic = logPerformance(function(units, gameState, 
         tanker.lastRefuelDebug = performance.now()
       }
 
-      const distanceToTarget = target ? Math.hypot(target.tileX - tanker.tileX, target.tileY - tanker.tileY) : Infinity
+      const distanceToTarget = target ? serviceUnitDistanceTiles(tanker, target) : Infinity
       if (!target ||
           target.health <= 0 ||
           !isEligibleFriendlyGroundServiceTarget(tanker, target) ||

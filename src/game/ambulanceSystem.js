@@ -1,9 +1,10 @@
+import { serviceUnitDistanceTiles } from '../utils/serviceUnitDistance.js'
 // ambulanceSystem.js - Handle ambulance healing functionality
 import { SERVICE_DISCOVERY_RANGE, SERVICE_SERVING_RANGE, TILE_SIZE } from '../config.js'
 import { logPerformance } from '../performanceUtils.js'
 import { getUnitCommandsHandler } from '../inputHandler.js'
 import { getServiceRadiusPixels } from '../utils/serviceRadius.js'
-import { findPath } from '../units.js'
+import { computeUtilityApproachPath, UTILITY_QUEUE_MODES } from '../input/unitCommands/utilityHelpers.js'
 function normalizeServiceOwner(owner) {
   return owner === 'player' ? 'player1' : owner
 }
@@ -107,7 +108,7 @@ export const updateAmbulanceLogic = logPerformance(function(units, gameState, de
           )
           .map(u => ({
             unit: u,
-            distance: Math.hypot(u.tileX - ambulance.tileX, u.tileY - ambulance.tileY)
+            distance: serviceUnitDistanceTiles(ambulance, u)
           }))
           .filter(entry => entry.distance <= SERVICE_DISCOVERY_RANGE)
           .sort((a, b) => a.distance - b.distance)
@@ -137,7 +138,7 @@ export const updateAmbulanceLogic = logPerformance(function(units, gameState, de
         isEligibleFriendlyGroundServiceTarget(ambulance, u) &&
         u.crew && typeof u.crew === 'object' &&
         Object.values(u.crew).some(alive => !alive) &&
-        Math.hypot(u.tileX - ambulance.tileX, u.tileY - ambulance.tileY) <= SERVICE_SERVING_RANGE &&
+        serviceUnitDistanceTiles(ambulance, u) <= SERVICE_SERVING_RANGE &&
         !(u.movement && u.movement.isMoving)
       )
       if (potential && ambulance.medics > 0) {
@@ -156,8 +157,8 @@ export const updateAmbulanceLogic = logPerformance(function(units, gameState, de
         return
       }
 
-      // Check distance (within 1 tile)
-      const distanceInTiles = Math.hypot(ambulance.tileX - target.tileX, ambulance.tileY - target.tileY)
+      // Check the actual world distance, rather than rounded tile positions.
+      const distanceInTiles = serviceUnitDistanceTiles(ambulance, target)
       const withinRange = distanceInTiles <= SERVICE_SERVING_RANGE
 
       if (!withinRange) {
@@ -315,35 +316,9 @@ export function assignAmbulanceToHealUnit(ambulance, targetUnit, mapGrid) {
   ambulance.healingTimer = 0
   ambulance.target = null
 
-  if (mapGrid) {
-    const targetTileX = Number.isFinite(targetUnit.tileX)
-      ? targetUnit.tileX
-      : Math.floor(((targetUnit.x ?? 0) + TILE_SIZE / 2) / TILE_SIZE)
-    const targetTileY = Number.isFinite(targetUnit.tileY)
-      ? targetUnit.tileY
-      : Math.floor(((targetUnit.y ?? 0) + TILE_SIZE / 2) / TILE_SIZE)
-
-    if (Number.isFinite(targetTileX) && Number.isFinite(targetTileY)) {
-      const path = findPath(ambulance, targetTileX, targetTileY, mapGrid)
-      if (Array.isArray(path) && path.length > 1) {
-        ambulance.path = path.slice(1)
-      } else if (Array.isArray(path)) {
-        ambulance.path = path.slice()
-      } else {
-        ambulance.path = []
-      }
-      ambulance.moveTarget = {
-        x: (targetTileX + 0.5) * TILE_SIZE,
-        y: (targetTileY + 0.5) * TILE_SIZE
-      }
-    } else {
-      ambulance.path = []
-      ambulance.moveTarget = null
-    }
-  } else {
-    ambulance.path = []
-    ambulance.moveTarget = null
-  }
+  const plan = computeUtilityApproachPath(ambulance, targetUnit, UTILITY_QUEUE_MODES.HEAL, mapGrid)
+  ambulance.path = plan ? plan.path.slice(1) : []
+  ambulance.moveTarget = plan ? { ...plan.moveTarget } : null
 
   return true
 }

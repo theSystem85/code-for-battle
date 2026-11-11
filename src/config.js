@@ -942,7 +942,7 @@ export function setServiceDiscoveryRange(value) {
 }
 
 // Effective service range for utility vehicles (defaults to close support distance)
-export let SERVICE_SERVING_RANGE = Math.SQRT2
+export let SERVICE_SERVING_RANGE = 1.75
 
 export function setServiceServingRange(value) {
   SERVICE_SERVING_RANGE = value
@@ -1684,7 +1684,7 @@ export function setAmmoFactoryRange(value) {
   AMMO_FACTORY_RANGE = value
 }
 
-export let AMMO_TRUCK_RANGE = 1.5 // tiles for ammunition supply truck resupply range (50% increase)
+export let AMMO_TRUCK_RANGE = 1.75 // tiles for ammunition supply truck resupply range
 
 export function setAmmoTruckRange(value) {
   AMMO_TRUCK_RANGE = value

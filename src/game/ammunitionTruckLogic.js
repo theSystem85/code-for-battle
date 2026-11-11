@@ -1,3 +1,4 @@
+import { serviceUnitDistanceTiles } from '../utils/serviceUnitDistance.js'
 // ammunitionTruckLogic.js
 import { AMMO_RESUPPLY_TIME, AMMO_TRUCK_RANGE, TILE_SIZE } from '../config.js'
 import { logPerformance } from '../performanceUtils.js'
@@ -94,7 +95,7 @@ export const updateAmmunitionTruckLogic = logPerformance(function(units, gameSta
         let inRange = false
         if (isUnit) {
           // For units: simple tile distance check
-          const distance = Math.hypot(target.tileX - ammoTruck.tileX, target.tileY - ammoTruck.tileY)
+          const distance = serviceUnitDistanceTiles(ammoTruck, target)
           inRange = distance <= AMMO_TRUCK_RANGE
         } else {
           // For buildings: check adjacency to any building tile

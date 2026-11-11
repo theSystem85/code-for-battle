@@ -1,0 +1,17 @@
+# 2026-11-11T23:01:12Z
+
+Harness: Codex desktop. Model: GPT-6 (exact version and reasoning level unavailable). Token usage and exact duration unavailable.
+
+Request: ensure that a serving unit A do not bump into some served unit B (currently happens at least with ambulance) when commanded to serve so that when serving range is reached but B already starts to make room for A because it bumped into it. increase the serving range a little more and ensure A stops right before bumping into B.
+
+Implementation: Increase mobile service ranges to 1.75 tiles, use physical separation for serving checks, choose adjacent approach tiles, and bound/stop service movement before collision handling. The movement check runs once per unit per simulation tick: O(1) arithmetic per active provider with a constant-time endpoint check, O(N) overall (e.g. 1,000 checks for 1,000 units), no new per-tick allocations or scans; DPR does not affect simulation work. Existing center-based occupancy updates and self-exclusion are retained. Hardware GPU performance acceptance remains pending.
+
+Validation: focused movement/service unit regressions pass, including fast and diagonal ambulance stopping. E00256 passes in system Chromium using a temporary config that only sets executablePath to /usr/bin/chromium (the Playwright browser download is blocked with HTTP 403). E00106 fails during fixture spawning with "Failed to spawn all required units" on both this change and an isolated unchanged origin/dev checkout (3a01317e), confirming a pre-existing test fixture failure. The full Playwright suite was not run: scope was the service tests, and GPU/performance cases require qualifying hardware. No permanent runner configuration was changed.
+
+A follow-up regression ensures a later move-away order is honored even if an unfinished service target reference remains. The final ambulance browser regression passes after this guard was added. Lint passes with 5,757 unique test declarations.
+
+The mandatory full unit run exposed an unrelated pre-existing U05433 failure: 98 alpha pixels in dtv7_nature_soil_large.webp disagreed with the unchanged source extraction. The same failure reproduces on clean origin/dev. Regenerating only that sheet with `node scripts/build-map-sprite-sheets.mjs --name=dtv7_nature_soil_large` fixes it without changing source imagery, metadata, test assertions or compression quality (85). Include the corrected generated WebP to satisfy the repository's requirement to fix validation failures.
+
+Final verification: the complete unit suite passes after rebuilding the stale sheet; the integration suite (including browser-console smoke) passes, and E00256 passes in Chromium. Full unit/integration coverage was exercised with `npm run test`, followed by the corrected full `npm run test:unit -- --maxWorkers=4` run. E00106's pre-existing fixture failure remains documented above. Hardware performance acceptance remains pending.
+
+Before publication, origin/dev advanced to ed68acc9 with naval movement work and the identical soil sprite regeneration. Rebased cleanly onto it, removed duplicate asset change notes, and assigned fresh unused IDs to this task's unpublished tests to resolve parallel reservations. The final service commit contains no binary asset changes. Revalidated the combined movement code with the complete unit/integration suite, lint, and the ambulance browser regression.

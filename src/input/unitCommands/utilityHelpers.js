@@ -10,7 +10,6 @@ export const UTILITY_QUEUE_MODES = {
 }
 
 export const AMBULANCE_APPROACH_OFFSETS = [
-  { x: 0, y: 0 },
   { x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 },
   { x: 1, y: 1 }, { x: 1, y: -1 }, { x: -1, y: 1 }, { x: -1, y: -1 }
 ]
@@ -72,15 +71,15 @@ export function computeUtilityApproachPath(serviceUnit, target, mode, mapGrid, s
     const offsets = AMBULANCE_APPROACH_OFFSETS
     let bestPlan = null
     offsets.forEach(offset => {
-      if (bestPlan) return
       const destX = targetTileX + offset.x
       const destY = targetTileY + offset.y
       if (destX < 0 || destY < 0 || destY >= mapGrid.length || destX >= mapGrid[0].length) {
         return
       }
-      const path = findPathForOwner(startTile, { x: destX, y: destY }, mapGrid, null, serviceUnit.owner)
+      const path = findPathForOwner(startTile, { x: destX, y: destY }, mapGrid, gameState.occupancyMap, serviceUnit.owner)
       if (path && path.length > 0) {
-        bestPlan = buildResult(path, { x: destX, y: destY }, { x: destX, y: destY })
+        const plan = buildResult(path, { x: destX, y: destY }, { x: destX, y: destY })
+        if (!bestPlan || plan.cost < bestPlan.cost) bestPlan = plan
       }
     })
     return bestPlan

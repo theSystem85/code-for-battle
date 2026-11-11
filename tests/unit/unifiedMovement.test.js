@@ -104,6 +104,77 @@ function createMovementLoopHandle() {
 }
 
 describe('unifiedMovement.js', () => {
+  it.each([
+    ['ambulance', 'healingTarget'],
+    ['tankerTruck', 'refuelTarget'],
+    ['recoveryTank', 'repairTargetUnit'],
+    ['ammunitionTruck', 'ammoResupplyTarget']
+  ])('[U07089] stops %s in physical service range without moving its target', (type, targetField) => {
+    const map = Array.from({ length: 20 }, () => Array.from({ length: 20 }, () => ({ type: 'grass' })))
+    // Tile separation is two, but actual separation is only 1.6 tiles.
+    const target = { id: 'patient', type: 'tank_v1', owner: 'player1', x: 320, y: 320, tileX: 10, tileY: 10 }
+    const unit = {
+      id: 'provider', type, owner: 'player1', x: 320 - 1.6 * 32, y: 320,
+      tileX: 8, tileY: 10, path: [{ x: 10, y: 10 }], moveTarget: { x: 10, y: 10 },
+      [targetField]: target
+    }
+    initializeUnitMovement(unit)
+    unit.movement.velocity.x = 8
+    unit.movement.targetVelocity.x = 8
+    unit.movement.isMoving = true
+    const originalX = unit.x
+    for (let tick = 0; tick < 10; tick++) {
+      updateUnitPosition(unit, map, null, tick * 16, [unit, target], { buildings: [], unitWrecks: [] })
+    }
+    expect(unit.x).toBe(originalX)
+    expect(unit.path).toEqual([])
+    expect(unit.moveTarget).toBeNull()
+    expect(unit.movement.velocity.x).toBe(0)
+    expect(unit.movement.isMoving).toBe(false)
+    expect(unit[targetField]).toBe(target)
+    expect(target.x).toBe(320)
+    expect(target.moveTarget).toBeUndefined()
+  })
+
+  it.each([0, Math.PI / 4])('[U07090] bounds a fast ambulance step before it reaches its patient at angle %s', angle => {
+    const map = Array.from({ length: 20 }, () => Array.from({ length: 20 }, () => ({ type: 'street' })))
+    const target = { id: 'patient', type: 'tank_v1', owner: 'player1', x: 320, y: 320, tileX: 10, tileY: 10 }
+    const unit = {
+      id: 'provider', type: 'ambulance', owner: 'player1', health: 100,
+      x: 320 - 70 * Math.cos(angle), y: 320 - 70 * Math.sin(angle), tileX: 8, tileY: 10, direction: angle,
+      path: [{ x: 10, y: 10 }], moveTarget: { x: 10, y: 10 }, healingTarget: target
+    }
+    initializeUnitMovement(unit)
+    unit.movement.velocity.x = 40 * Math.cos(angle)
+    unit.movement.velocity.y = 40 * Math.sin(angle)
+    unit.movement.isMoving = true
+    for (let tick = 0; tick < 10; tick++) {
+      updateUnitPosition(unit, map, null, tick * 16, [unit, target], { buildings: [], unitWrecks: [] })
+      expect(Math.hypot(unit.x - target.x, unit.y - target.y)).toBeGreaterThanOrEqual(56 - 0.002)
+      expect(target.x).toBe(320)
+      expect(target.moveTarget).toBeUndefined()
+    }
+    expect(Math.hypot(unit.x - target.x, unit.y - target.y)).toBeLessThanOrEqual(56)
+    expect(unit.movement.isMoving).toBe(false)
+    expect(unit.moveTarget).toBeNull()
+  })
+
+  it('[U07091] allows a later move away from an unfinished service target', () => {
+    const map = Array.from({ length: 20 }, () => Array.from({ length: 20 }, () => ({ type: 'grass' })))
+    const target = { id: 'patient', type: 'tank_v1', owner: 'player1', x: 320, y: 320, tileX: 10, tileY: 10 }
+    const unit = {
+      id: 'provider', type: 'ambulance', owner: 'player1', health: 100,
+      x: 270, y: 320, tileX: 8, tileY: 10, direction: Math.PI,
+      path: [{ x: 2, y: 10 }], moveTarget: { x: 2, y: 10 }, healingTarget: target
+    }
+    initializeUnitMovement(unit)
+    unit.movement.velocity.x = -1
+    updateUnitPosition(unit, map, null, 1000, [unit, target], { buildings: [], unitWrecks: [] })
+    expect(unit.x).toBeLessThan(270)
+    expect(unit.moveTarget).toEqual({ x: 2, y: 10 })
+    expect(unit.path).toHaveLength(1)
+  })
+
   it('[U05484] stops a carrier when a nearby final target is already between its center and bow', () => {
     const mapGrid = Array.from({ length: 30 }, () =>
       Array.from({ length: 30 }, () => ({ type: 'water' })))

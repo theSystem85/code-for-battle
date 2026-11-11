@@ -254,13 +254,13 @@ describe('UnitCommandsHandler utility queues', () => {
     const ambulance = { id: 'amb1', type: 'ambulance', owner: 'player', tileX: 0, tileY: 0, medics: 1, health: 10 }
     const target = { id: 'tank1', type: 'tank', owner: 'player', tileX: 1, tileY: 0, crew: { driver: false, gunner: true } }
 
-    findPathForOwner.mockReturnValue([{ x: 0, y: 0 }, { x: 1, y: 0 }])
+    findPathForOwner.mockImplementation((start, destination) => [start, destination])
 
     const result = handler.assignAmbulanceToTarget(ambulance, target, mapGrid, { suppressNotifications: true })
 
     expect(result).toBe(true)
-    expect(ambulance.path).toEqual([{ x: 1, y: 0 }])
-    expect(ambulance.moveTarget).toEqual({ x: 1, y: 0 })
+    expect(ambulance.path).toEqual([{ x: 2, y: 0 }])
+    expect(ambulance.moveTarget).toEqual({ x: 2, y: 0 })
     expect(ambulance.healingTarget).toBe(target)
     expect(ambulance.healingTimer).toBe(0)
   })
@@ -279,13 +279,13 @@ describe('UnitCommandsHandler utility queues', () => {
     const tanker = { id: 'tank1', type: 'tankerTruck', owner: 'player', tileX: 0, tileY: 0, health: 5 }
     const target = { id: 'unit1', type: 'tank', owner: 'player', tileX: 1, tileY: 0, gas: 0, maxGas: 10 }
 
-    findPathForOwner.mockReturnValue([{ x: 0, y: 0 }, { x: 1, y: 0 }])
+    findPathForOwner.mockImplementation((start, destination) => [start, destination])
 
     const result = handler.assignTankerToTarget(tanker, target, mapGrid, { suppressNotifications: true })
 
     expect(result).toBe(true)
-    expect(tanker.path).toEqual([{ x: 1, y: 0 }])
-    expect(tanker.moveTarget).toEqual({ x: 1, y: 0 })
+    expect(tanker.path).toEqual([{ x: 2, y: 0 }])
+    expect(tanker.moveTarget).toEqual({ x: 2, y: 0 })
     expect(tanker.refuelTarget).toBe(target)
   })
 
@@ -1139,7 +1139,8 @@ describe('Exported utility functions', () => {
 
       expect(result).toBeTruthy()
       expect(result.path).toEqual([{ x: 0, y: 0 }, { x: 1, y: 1 }, { x: 2, y: 2 }])
-      expect(result.destinationTile).toEqual({ x: 2, y: 2 })
+      expect(result.destinationTile).toEqual({ x: 3, y: 2 })
+      expect(findPathForOwner.mock.calls.every(([, destination]) => destination.x !== 2 || destination.y !== 2)).toBe(true)
       expect(findPathForOwner).toHaveBeenCalled()
     })
 

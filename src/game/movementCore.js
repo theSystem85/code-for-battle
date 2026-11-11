@@ -1,9 +1,12 @@
 import {
   TILE_SIZE,
+  SERVICE_SERVING_RANGE,
+  AMMO_TRUCK_RANGE,
   MINE_TRIGGER_RADIUS,
   STREET_SPEED_MULTIPLIER,
   TILE_LENGTH_METERS
 } from '../config.js'
+import { serviceUnitDistanceTiles } from '../utils/serviceUnitDistance.js'
 import { getMineAtTile, detonateMine } from './mineSystem.js'
 import { unitCrossesOwnMineSafely } from './ownMineSafety.js'
 import { detonateTankerTruck } from './tankerTruckUtils.js'
@@ -298,6 +301,27 @@ function clearBlockedMovement(unit) {
 
 export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [], gameState = globalGameState, factories = null) {
   initializeUnitMovement(unit)
+
+  // Runs once per unit per simulation tick: direct references, no entity scans.
+  const serviceTarget = unit.type === 'ambulance' ? unit.healingTarget
+    : unit.type === 'tankerTruck' ? unit.refuelTarget
+      : unit.type === 'recoveryTank' ? (unit.repairTargetUnit || unit.repairTarget)
+        : unit.type === 'ammunitionTruck' ? unit.ammoResupplyTarget : null
+  const serviceRange = unit.type === 'ammunitionTruck' ? AMMO_TRUCK_RANGE : SERVICE_SERVING_RANGE
+  const serviceWaypoint = serviceTarget && unit.path?.[unit.path.length - 1]
+  // A later move order can leave an old service reference behind. Only stop
+  // an approach ending beside that target, or an already idle provider.
+  const hasServiceDestination = !unit.moveTarget || (serviceWaypoint &&
+    Math.abs(serviceWaypoint.x - serviceTarget.tileX) <= 1 &&
+    Math.abs(serviceWaypoint.y - serviceTarget.tileY) <= 1)
+  const approachingServiceTarget = serviceTarget && Number.isFinite(serviceTarget.tileX) &&
+    hasServiceDestination && !(serviceTarget.movement && serviceTarget.movement.isMoving)
+  const serviceDistance = approachingServiceTarget ? serviceUnitDistanceTiles(unit, serviceTarget) * TILE_SIZE : Infinity
+  if (approachingServiceTarget && serviceDistance <= serviceRange * TILE_SIZE) {
+    clearBlockedMovement(unit)
+    stopTankEngineLoop(unit)
+    return
+  }
 
   const isAirborne = isAirborneUnit(unit)
   const hasRestorationOverride = Boolean(unit.restorationMoveOverride)
@@ -670,6 +694,16 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
   const prevY = unit.y
   const prevTileX = Math.floor((prevX + TILE_SIZE / 2) / TILE_SIZE)
   const prevTileY = Math.floor((prevY + TILE_SIZE / 2) / TILE_SIZE)
+
+  // Bound even a fast ambulance's last step before collision/yield processing.
+  // A subpixel margin lets diagonal approaches enter serving range despite rounding.
+  const serviceStep = serviceDistance - serviceRange * TILE_SIZE + 0.001
+  if (approachingServiceTarget && currentSpeed > serviceStep && currentSpeed > 0) {
+    const scale = Math.max(0, serviceStep) / currentSpeed
+    movement.velocity.x *= scale
+    movement.velocity.y *= scale
+    movement.currentSpeed = Math.hypot(movement.velocity.x, movement.velocity.y)
+  }
 
   unit.x += movement.velocity.x
   unit.y += movement.velocity.y

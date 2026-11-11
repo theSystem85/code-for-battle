@@ -1,3 +1,4 @@
+import { serviceUnitDistanceTiles } from '../utils/serviceUnitDistance.js'
 import { TILE_SIZE, SERVICE_DISCOVERY_RANGE, SERVICE_SERVING_RANGE } from '../config.js'
 import { playSound } from '../sound.js'
 import { getUnitCost } from '../utils.js'
@@ -364,7 +365,7 @@ export const updateRecoveryTankLogic = logPerformance(function(units, gameState,
             id: u.id,
             type: 'unit',
             reference: u,
-            distance: Math.hypot(u.tileX - tank.tileX, u.tileY - tank.tileY)
+            distance: serviceUnitDistanceTiles(tank, u)
           }))
           .filter(entry => entry.distance <= SERVICE_DISCOVERY_RANGE)
 
@@ -425,7 +426,7 @@ export const updateRecoveryTankLogic = logPerformance(function(units, gameState,
       if (tank.repairTargetUnit &&
           tank.repairTargetUnit.health > 0 &&
           tank.repairTargetUnit.health < tank.repairTargetUnit.maxHealth &&
-          Math.hypot(tank.repairTargetUnit.tileX - tank.tileX, tank.repairTargetUnit.tileY - tank.tileY) <= SERVICE_SERVING_RANGE &&
+          serviceUnitDistanceTiles(tank, tank.repairTargetUnit) <= SERVICE_SERVING_RANGE &&
           !(tank.repairTargetUnit.movement && tank.repairTargetUnit.movement.isMoving)) {
         target = tank.repairTargetUnit
       } else {
@@ -436,7 +437,7 @@ export const updateRecoveryTankLogic = logPerformance(function(units, gameState,
           isEligibleFriendlyGroundServiceTarget(tank, u) &&
           u !== tank &&
           u.health < u.maxHealth &&
-          Math.hypot(u.tileX - tank.tileX, u.tileY - tank.tileY) <= SERVICE_SERVING_RANGE &&
+          serviceUnitDistanceTiles(tank, u) <= SERVICE_SERVING_RANGE &&
           !(u.movement && u.movement.isMoving)
         )
       }
@@ -464,7 +465,7 @@ export const updateRecoveryTankLogic = logPerformance(function(units, gameState,
       const target = tank.repairTarget
 
       // Check if target is still valid
-      const targetDistance = Math.hypot(target.tileX - tank.tileX, target.tileY - tank.tileY)
+      const targetDistance = serviceUnitDistanceTiles(tank, target)
       if (target.health <= 0 ||
           targetDistance > SERVICE_SERVING_RANGE ||
           (target.movement && target.movement.isMoving)) {

@@ -6,6 +6,8 @@ import {
 } from '../../src/game/ambulanceSystem.js'
 import { getUnitCommandsHandler } from '../../src/inputHandler.js'
 
+vi.mock('../../src/gameState.js', () => ({ gameState: { occupancyMap: [] } }))
+
 // Mock dependencies
 vi.mock('../../src/config.js', () => ({
   SERVICE_DISCOVERY_RANGE: 10,
@@ -30,11 +32,11 @@ vi.mock('../../src/utils/serviceRadius.js', () => ({
 }))
 
 vi.mock('../../src/units.js', () => ({
-  findPath: vi.fn(() => [{ x: 0, y: 0 }, { x: 1, y: 1 }])
+  findPathForOwner: vi.fn(() => [{ x: 0, y: 0 }, { x: 1, y: 1 }])
 }))
 
 // Import the mock after it's been set up
-import { findPath as mockFindPath } from '../../src/units.js'
+import { findPathForOwner as mockFindPath } from '../../src/units.js'
 
 function createTestAmbulance(id, tileX = 5, tileY = 5, owner = 'player1') {
   return {
@@ -273,13 +275,13 @@ describe('Ambulance System', () => {
 
       getUnitCommandsHandler.mockReturnValueOnce({ assignAmbulanceToTarget: vi.fn(() => false) })
       // When pathfinding fails, path should be set to empty
-      mockFindPath.mockReturnValueOnce([])
+      mockFindPath.mockReturnValue([])
 
       const result = assignAmbulanceToHealUnit(ambulance, target, [{}])
 
       expect(result).toBe(true)
       expect(ambulance.path).toEqual([])
-      expect(ambulance.moveTarget).toBeDefined() // moveTarget is still set even if path is empty
+      expect(ambulance.moveTarget).toBeNull()
     })
   })
 
