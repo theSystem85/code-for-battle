@@ -164,6 +164,19 @@ describe('unitMovement.js', () => {
       expect(unit.localAvoidanceRemainingSteps).toBe(0)
     })
 
+    it('[U07086] discards an expired detour and preserves the original destination route', () => {
+      const mainRoute = [{ x: 6, y: 5 }, { x: 8, y: 5 }]
+      const unit = {
+        health: 100, owner: 'player1', x: 32, y: 32, tileX: 1, tileY: 1,
+        isDodging: true, dodgeEndTime: 10, localAvoidanceRemainingSteps: 2,
+        path: [{ x: 1, y: 2 }, { x: 2, y: 2 }, ...mainRoute]
+      }
+      updateUnitMovement([unit], mockMapGrid, mockOccupancyMap, mockGameState, 20)
+      expect(unit.path).toEqual(mainRoute)
+      expect(unit.isDodging).toBe(false)
+      expect(unit.localAvoidanceRemainingSteps).toBe(0)
+    })
+
     it('[U04761] should clamp tile indices to map bounds', () => {
       const unit = {
         health: 100,

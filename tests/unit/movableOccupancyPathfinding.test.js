@@ -175,7 +175,7 @@ describe('movable occupancy pathfinding', () => {
     expect(movableOccupancyCount(occupancy[5][5])).toBe(0)
   })
 
-  it('[U05481] paints movable occupancy orange and keeps fixed and build-only colors', () => {
+  it('[U05481] paints all movable occupancy orange and keeps fixed and build-only colors', () => {
     const renderer = new MapRenderer({})
     const occupancyMap = [[
       0,
@@ -208,7 +208,7 @@ describe('movable occupancy pathfinding', () => {
     expect(fills).toEqual([
       'rgba(255, 140, 0, 0.55)',
       'rgba(255, 0, 0, 0.3)',
-      'rgba(255, 0, 0, 0.3)',
+      'rgba(255, 140, 0, 0.55)',
       'rgba(255, 255, 0, 0.35)'
     ])
   })

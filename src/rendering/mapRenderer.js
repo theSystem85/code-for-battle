@@ -239,6 +239,7 @@ function getInverseSotInfo(mapGrid, x, y, tileType, top, right, bottom, left, an
 
 export class MapRenderer {
   constructor(textureManager) {
+    this.navalOccupancyOverlay = new Set()
     this.textureManager = textureManager
     this.trackMarksRenderer = new TrackMarksRenderer()
     this.crystalGlowRenderer = new CrystalGlowRenderer()
@@ -2785,11 +2786,22 @@ export class MapRenderer {
     }
   }
 
-  renderOccupancyMap(ctx, occupancyMap, startTileX, startTileY, endTileX, endTileY, scrollOffset, gameState) {
+  renderOccupancyMap(ctx, occupancyMap, startTileX, startTileY, endTileX, endTileY, scrollOffset, gameState, units = gameState.units) {
     if (!gameState.occupancyVisible || !occupancyMap) return
 
     const mode = gameState.occupancyMapViewMode || 'players'
     const mineOverlay = this.buildMineOverlay(mode, gameState.mines)
+    const navalOverlay = this.navalOccupancyOverlay
+    navalOverlay.clear()
+    const width = occupancyMap[0]?.length || 0
+    for (const unit of units || []) {
+      if (!unit?.isNaval || unit.health <= 0 || unit.embarkedOnId) continue
+      const x = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
+      const y = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
+      if (x >= startTileX && x < endTileX && y >= startTileY && y < endTileY) {
+        navalOverlay.add(y * width + x)
+      }
+    }
 
     for (let y = startTileY; y < endTileY; y++) {
       for (let x = startTileX; x < endTileX; x++) {
@@ -2797,17 +2809,18 @@ export class MapRenderer {
 
         const rawOccupancy = occupancyMap[y][x]
         const fixedOccupied = hasFixedOccupancy(rawOccupancy)
-        const movableOccupied = hasMovableOccupancy(rawOccupancy)
+        const movableOccupied = hasMovableOccupancy(rawOccupancy) || navalOverlay.has(y * width + x)
         const tileKey = `${x},${y}`
         const mineBlocked = mineOverlay && mineOverlay.has(tileKey)
         const tile = gameState?.mapGrid?.[y]?.[x]
         const buildOnlyStreet = Boolean(tile?.buildOnlyOccupied) && tile?.type === 'street'
-        if (fixedOccupied || movableOccupied || mineBlocked || buildOnlyStreet) {
+        const water = tile?.type === 'water' && !tile.building && !tile.seedCrystal
+        if (fixedOccupied || movableOccupied || mineBlocked || buildOnlyStreet || water) {
           const tileX = x * TILE_SIZE - scrollOffset.x
           const tileY = y * TILE_SIZE - scrollOffset.y
-          if (movableOccupied && !fixedOccupied && !mineBlocked) {
+          if (movableOccupied) {
             ctx.fillStyle = 'rgba(255, 140, 0, 0.55)'
-          } else if (buildOnlyStreet && !fixedOccupied && !mineBlocked) {
+          } else if ((water || (buildOnlyStreet && !fixedOccupied)) && !mineBlocked) {
             ctx.fillStyle = 'rgba(255, 255, 0, 0.35)'
           } else {
             ctx.fillStyle = 'rgba(255, 0, 0, 0.3)'
@@ -3011,7 +3024,7 @@ export class MapRenderer {
     ctx.restore()
     this.applyVisibilityOverlay(ctx, mapGrid, startTileX, startTileY, endTileX, endTileY, scrollOffset, gameState)
     this.renderGrid(ctx, startTileX, startTileY, endTileX, endTileY, scrollOffset, gameState)
-    this.renderOccupancyMap(ctx, occupancyMap, startTileX, startTileY, endTileX, endTileY, scrollOffset, gameState)
+    this.renderOccupancyMap(ctx, occupancyMap, startTileX, startTileY, endTileX, endTileY, scrollOffset, gameState, options.units)
     this.frameChunkStats.chunkCacheSize = this.chunkCache.size
     this.frameChunkStats.chunkWarmQueueSize = this.chunkWarmQueue.size
     this.frameChunkStats.warmBacklog = this.chunkWarmQueue.size

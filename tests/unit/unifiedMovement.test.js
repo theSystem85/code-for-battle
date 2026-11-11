@@ -150,6 +150,31 @@ describe('unifiedMovement.js', () => {
     expect(unit.movement.stuckDetection.stuckTime).toBe(0)
   })
 
+  it('[U07085] keeps one recovery route while a blocked ship turns toward its detour', () => {
+    const grid = Array.from({ length: 30 }, () => Array.from({ length: 30 }, () => ({ type: 'water' })))
+    const route = [{ x: 10, y: 9 }, { x: 20, y: 10 }]
+    const unit = {
+      id: 'recovering-ship', type: 'battleship', isNaval: true, owner: 'player1', health: 100,
+      x: 10 * 32, y: 10 * 32, direction: 0,
+      path: route, moveTarget: { x: 20, y: 10 }, lastPathCalcTime: 1,
+      isDodging: true, localAvoidanceRemainingSteps: 1
+    }
+    initializeUnitMovement(unit)
+    unit.movement.isMoving = true
+    unit.movement.lastStaticCollisionTime = 9900
+    unit.movement.stuckDetection = {
+      lastPosition: { x: unit.x, y: unit.y }, lastMovementCheck: 0,
+      stuckTime: 5000, rotationAttempts: 0, dodgeAttempts: 0,
+      lastDodgeTime: 0, lastStuckHandling: 0, checkInterval: 1
+    }
+    for (const now of [10000, 11000, 12000]) {
+      handleStuckUnit(unit, grid, null, [unit], { humanPlayer: 'player1', simulationTime: now })
+    }
+    expect(unit.path).toBe(route)
+    expect(unit.path).toHaveLength(2)
+    expect(unit.localAvoidanceRemainingSteps).toBe(1)
+  })
+
   it.each(['terrain', 'collision', 'aligned stall'])('[U05486] still recovers a naval route blocked by %s', blocker => {
     const mapGrid = Array.from({ length: 30 }, () =>
       Array.from({ length: 30 }, () => ({ type: 'water' })))
@@ -173,6 +198,7 @@ describe('unifiedMovement.js', () => {
     handleStuckUnit(unit, mapGrid, null, [unit], { humanPlayer: 'player1', simulationTime: 10000 })
 
     expect(unit.isDodging).toBe(true)
+    expect(unit.dodgeEndTime).toBeGreaterThan(12500)
     expect(unit.path.slice(1)).toEqual(route)
   })
 

@@ -21,6 +21,7 @@ import { gameState } from './gameState.js'
 import { getHelipadLandingCenter, getHelipadLandingTile, getHelipadLandingTopLeft } from './utils/helipadUtils.js'
 import { isFriendlyMineBlocking } from './game/mineSystem.js'
 import { pathOptionsIgnoringOwnMines } from './game/ownMineSafety.js'
+import { createNavalClearanceCheck } from './game/navalClearance.js'
 import { isFriendlyWaterMineBlocking } from './game/waterMineSystem.js'
 import { getSpatialQuadtree } from './game/spatialQuadtree.js'
 import { recordUnitCreated } from './ai-api/transitionCollector.js'
@@ -309,6 +310,8 @@ class MinHeap {
 // Locate the nearest passable and unoccupied tile to the given coordinates.
 // Searches in expanding squares up to a limited radius.
 function findNearestFreeTile(x, y, mapGrid, occupancyMap, maxDistance = 5, options = {}) {
+  let nearest = null
+  let nearestDistance = Infinity
   for (let distance = 0; distance <= maxDistance; distance++) {
     for (let dx = -distance; dx <= distance; dx++) {
       for (let dy = -distance; dy <= distance; dy++) {
@@ -327,13 +330,18 @@ function findNearestFreeTile(x, y, mapGrid, occupancyMap, maxDistance = 5, optio
           const passable = isTilePassableForMode(mapGrid, checkX, checkY, options)
           const occupied = isTileBlockedForUnit(occupancyMap, checkX, checkY, options)
           if (passable && !occupied) {
-            return { x: checkX, y: checkY }
+            if (!options.navalClearance) return { x: checkX, y: checkY }
+            const squaredDistance = dx * dx + dy * dy
+            if (squaredDistance < nearestDistance) {
+              nearest = { x: checkX, y: checkY }
+              nearestDistance = squaredDistance
+            }
           }
         }
       }
     }
   }
-  return null
+  return nearest
 }
 
 // A* pathfinding with diagonal movement and cost advantage for street tiles.
@@ -372,13 +380,17 @@ export const findPath = logPerformance(function findPath(start, end, mapGrid, oc
   const ignoreFriendlyMines = Boolean(contextOptions.ignoreFriendlyMines)
   const strictDestination = Boolean(contextOptions.strictDestination)
   const streetOnly = Boolean(contextOptions.streetOnly)
+  const navalType = contextOptions.navalUnitType || (isNavalUnitType(start.type) ? start.type : null)
   const pathContext = {
     unitOwner, ignoreFriendlyMines, streetOnly, movementType: contextOptions.movementType,
     includeMovableOccupancy: Boolean(contextOptions.includeMovableOccupancy),
     navalOccupancy: contextOptions.navalOccupancy,
     mapWidth: mapGrid[0].length,
     startX: start.x,
-    startY: start.y
+    startY: start.y,
+    navalClearance: contextOptions.movementType === 'water' && navalType
+      ? createNavalClearanceCheck(mapGrid, navalType, start)
+      : null
   }
 
   // Begin destination adjustment if blocked or occupied
@@ -390,7 +402,8 @@ export const findPath = logPerformance(function findPath(start, end, mapGrid, oc
   const destinationIsStart = adjustedEnd.x === start.x && adjustedEnd.y === start.y
   const destOccupied = !destinationIsStart &&
     isTileBlockedForUnit(occupancyMap, adjustedEnd.x, adjustedEnd.y, pathContext)
-  const destModeBlocked = !isTilePassableForMode(mapGrid, adjustedEnd.x, adjustedEnd.y, pathContext)
+  const destModeBlocked = !isTilePassableForMode(mapGrid, adjustedEnd.x, adjustedEnd.y, pathContext) ||
+    (pathContext.navalClearance && !pathContext.navalClearance.isSafeDestination(adjustedEnd.x, adjustedEnd.y))
   if (
     (contextOptions.movementType === 'water' ? destType !== 'water' : contextOptions.movementType === 'amphibious' ? false : destType === 'water') ||
     destType === 'rock' ||
@@ -399,11 +412,17 @@ export const findPath = logPerformance(function findPath(start, end, mapGrid, oc
     destOccupied ||
     destModeBlocked
   ) {
-    if (strictDestination) {
+    // A water order near shore settles at a safe offshore point. Preserve
+    // strict rejection for terrain, mines and other occupied destinations.
+    if (strictDestination && !(contextOptions.allowNavalDestinationAdjustment && pathContext.navalClearance &&
+        isWaterPassableTile(mapGrid, end.x, end.y) && !destOccupied)) {
       return []
     }
 
-    const alt = findNearestFreeTile(adjustedEnd.x, adjustedEnd.y, mapGrid, occupancyMap, 5, pathContext)
+    const destinationContext = pathContext.navalClearance
+      ? { ...pathContext, navalClearance: pathContext.navalClearance.isSafeDestination }
+      : pathContext
+    const alt = findNearestFreeTile(adjustedEnd.x, adjustedEnd.y, mapGrid, occupancyMap, 5, destinationContext)
     if (alt) {
       adjustedEnd = alt
     } else {
@@ -438,6 +457,15 @@ export const findPath = logPerformance(function findPath(start, end, mapGrid, oc
       }
       return []
     }
+  }
+
+  // Open water has uniform travel cost. A clear hull-safe line is already
+  // optimal; avoid searching the grid for an order that needs no detour.
+  if (pathContext.movementType === 'water' &&
+      isDirectPathClear(start, adjustedEnd, mapGrid, occupancyMap, pathContext)) {
+    return start.x === adjustedEnd.x && start.y === adjustedEnd.y
+      ? [{ x: start.x, y: start.y }]
+      : [{ x: start.x, y: start.y }, adjustedEnd]
   }
 
   // Initialize A* search.
@@ -607,7 +635,9 @@ function isTilePassable(mapGrid, x, y) {
 
 function isTilePassableForMode(mapGrid, x, y, options = {}) {
   if (options.movementType === 'water') {
-    return isWaterPassableTile(mapGrid, x, y)
+    return options.navalClearance
+      ? options.navalClearance(x, y)
+      : isWaterPassableTile(mapGrid, x, y)
   }
   if (options.movementType === 'amphibious') {
     const tile = mapGrid?.[y]?.[x]

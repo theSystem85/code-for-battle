@@ -18,7 +18,10 @@ function getCachedPath(start, end, mapGrid, occupancyMap, options = null) {
   const derivedOwner = contextOptions.unitOwner ?? start.owner ?? start.ownerId ?? start.playerId ?? null
   const ownerKey = derivedOwner || 'any'
   const ignoreKey = contextOptions.ignoreFriendlyMines ? 'ignoreFriendly' : 'respectFriendly'
-  const movementKey = contextOptions.movementType || 'land'
+  // Clearance depends on hull length and the departure point (shore escape).
+  const movementKey = contextOptions.movementType === 'water'
+    ? `water-${contextOptions.navalUnitType || start.type || ''}-${Boolean(contextOptions.strictDestination)}-${Boolean(contextOptions.allowNavalDestinationAdjustment)}`
+    : contextOptions.movementType || 'land'
   const endKey = `${end.x},${end.y}-${occupancyMap ? 1 : 0}-${ownerKey}-${ignoreKey}-${movementKey}`
   const now = performance.now()
   let entries = pathCache.get(endKey)
@@ -35,6 +38,8 @@ function getCachedPath(start, end, mapGrid, occupancyMap, options = null) {
 
   if (entries) {
     for (const entry of entries) {
+      if (contextOptions.movementType === 'water' &&
+          (entry.path[0]?.x !== start.x || entry.path[0]?.y !== start.y)) continue
       const idx = entry.path.findIndex(p => p.x === start.x && p.y === start.y)
       if (idx !== -1) {
         return entry.path.slice(idx)

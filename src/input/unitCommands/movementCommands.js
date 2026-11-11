@@ -236,7 +236,7 @@ export function handleMovementCommand(handler, selectedUnits, targetX, targetY, 
       gasDepleted
         ? null
         : findPathForOwner(
-          { x: unit.tileX, y: unit.tileY },
+          { x: Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE), y: Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE), type: unit.type },
           destTile,
           mapGrid,
           gameState.occupancyMap,
@@ -244,6 +244,7 @@ export function handleMovementCommand(handler, selectedUnits, targetX, targetY, 
           {
             ...commandPathOptions,
             strictDestination: true,
+            allowNavalDestinationAdjustment: unit.isNaval,
             movementType: unit.type === 'hovercraft' ? 'amphibious' : unit.isNaval ? 'water' : undefined
           }
         )
@@ -270,7 +271,7 @@ export function handleMovementCommand(handler, selectedUnits, targetX, targetY, 
       unit.burstState = null
       unit.remoteRocketTarget = null
       unit.remoteReticleVisible = false
-      unit.moveTarget = destTile
+      unit.moveTarget = unit.isNaval ? { ...path[path.length - 1] } : destTile
       unit.movePatienceResetRequested = true
       unit.originalTarget = null
 

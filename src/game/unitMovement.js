@@ -90,6 +90,9 @@ export const updateUnitMovement = logPerformance(function updateUnitMovement(uni
       const dodgeExpired = unit.dodgeEndTime && now > unit.dodgeEndTime
       const dodgeFinished = !unit.path || unit.path.length === 0 || (unit.localAvoidanceRemainingSteps || 0) <= 0
       if (dodgeExpired || dodgeFinished) {
+        if (dodgeExpired && unit.path && unit.localAvoidanceRemainingSteps > 0) {
+          unit.path.splice(0, unit.localAvoidanceRemainingSteps)
+        }
         unit.isDodging = false
         unit.dodgeEndTime = null
         unit.localAvoidanceRemainingSteps = 0

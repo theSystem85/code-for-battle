@@ -147,6 +147,7 @@ export function getShipyardLaunchTile(shipyard, mapGrid) {
 export function getNavalPathOptions(unitOrOwner = null) {
   return {
     movementType: typeof unitOrOwner === 'object' && unitOrOwner?.type === 'hovercraft' ? 'amphibious' : WATER_MOVEMENT_TYPE,
+    navalUnitType: typeof unitOrOwner === 'object' ? unitOrOwner?.type : undefined,
     unitOwner: typeof unitOrOwner === 'string' ? unitOrOwner : unitOrOwner?.owner
   }
 }

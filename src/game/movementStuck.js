@@ -104,6 +104,8 @@ function beginLocalAvoidance(unit, detourTiles, now) {
     return false
   }
 
+  if (unit.isDodging) return false
+
   const remainingRoute = Array.isArray(unit.path) ? [...unit.path] : []
   const lastDetourTile = detourTiles[detourTiles.length - 1]
 
@@ -116,7 +118,23 @@ function beginLocalAvoidance(unit, detourTiles, now) {
 
   unit.path = mergedRoute
   unit.isDodging = true
-  unit.dodgeEndTime = now + 2500
+  let dodgeDuration = 2500
+  if (unit.isNaval) {
+    // A large ship can spend several seconds just turning. Give this one
+    // detour time to turn and travel before discarding it as unsuccessful.
+    let distance = 0
+    let x = unit.x / TILE_SIZE
+    let y = unit.y / TILE_SIZE
+    for (const tile of detourTiles) {
+      distance += Math.hypot(tile.x - x, tile.y - y) * TILE_SIZE
+      x = tile.x
+      y = tile.y
+    }
+    const travelFrames = distance / Math.max(0.05, unit.speed || MOVEMENT_CONFIG.MAX_SPEED)
+    const turnFrames = detourTiles.length * Math.PI / Math.max(0.001, unit.rotationSpeed || MOVEMENT_CONFIG.ROTATION_SPEED)
+    dodgeDuration += (travelFrames + turnFrames) * (1000 / 60) * 2
+  }
+  unit.dodgeEndTime = now + dodgeDuration
   unit.localAvoidanceRemainingSteps = detourTiles.length
   unit.localAvoidanceTotalSteps = detourTiles.length
   noteLocalDodge(unit, now)
@@ -193,6 +211,10 @@ export function handleStuckUnit(unit, mapGrid, occupancyMap, units, gameState = 
     reportPlayerStuckCluster(unit, units, gameState, now)
     if (dodged) return
   }
+
+  // One recovery route at a time. Stacking new detours while the ship is still
+  // turning toward the previous one creates an ever-growing zigzag route.
+  if (unit.isDodging) return
 
   if (hasActivePlayerMove && hasRecentPath) {
     return

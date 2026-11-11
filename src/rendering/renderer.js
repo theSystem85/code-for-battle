@@ -632,6 +632,7 @@ export class Renderer {
       gameState,
       occupancyMap,
       {
+        units,
         gpuStaticGround,
         skipBaseLayer: gpuRendered && !gpuWaterOnly,
         skipWaterSot: gpuRendered && (gpuBackend === 'webgpu' ? this.webgpuRenderer?.rendersWaterSot : this.gpuRenderer?.rendersWaterSot),
