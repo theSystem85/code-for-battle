@@ -665,8 +665,13 @@ export class Renderer {
     if (gameState.dzmOverlayIndex !== -1) {
       const ids = Object.keys(gameState.dangerZoneMaps || {})
       const pid = ids[gameState.dzmOverlayIndex]
-      const dzm = pid ? gameState.dangerZoneMaps[pid] : null
-      if (dzm) this.dangerZoneRenderer.render(gameCtx, dzm, scrollOffset, pid)
+      if (gameState.dzmOverlayLayer === 'dynamic') {
+        const dynamic = pid ? gameState.dynamicDangerMaps?.[pid] : null
+        if (dynamic) this.dangerZoneRenderer.renderDynamic(gameCtx, dynamic, scrollOffset, pid)
+      } else {
+        const dzm = pid ? gameState.dangerZoneMaps[pid] : null
+        if (dzm) this.dangerZoneRenderer.render(gameCtx, dzm, scrollOffset, pid)
+      }
     }
     const opacityLevel = Number.isFinite(gameState.entityImageOpacityLevel)
       ? gameState.entityImageOpacityLevel

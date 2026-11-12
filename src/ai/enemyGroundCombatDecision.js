@@ -20,7 +20,7 @@ import {
   checkBaseDefenseNeeded,
   findBaseDefenseTarget
 } from './enemySupportBehavior.js'
-import { assaultMoveTile } from './groundAssaultStrategy.js'
+import { assaultMoveTile, inRangeReturnFire } from './groundAssaultStrategy.js'
 
 export function updateGroundCombatDecision(unit, units, gameState, mapGrid, now, aiPlayerId) {
   const allowDecision = !unit.lastDecisionTime || (now - unit.lastDecisionTime >= AI_DECISION_INTERVAL)
@@ -474,14 +474,30 @@ function assaultOwnsUnit(unit, now) {
   return true
 }
 
+function assignFireTarget(unit, target) {
+  unit.target = target
+  unit.targetId = target.id || null
+  unit.targetType = target.tileX !== undefined ? 'unit' : 'building'
+  unit.allowedToAttack = true
+}
+
 function enforceAssaultOrder(unit) {
   const order = unit.aiAssault
   unit.squadId = order.squadId || null
+  if (order.mode === 'retreat') {
+    const fire = inRangeReturnFire(unit, order.returnFire)
+    if (fire) {
+      assignFireTarget(unit, fire)
+      return
+    }
+    unit.target = null
+    unit.targetId = null
+    unit.targetType = null
+    unit.allowedToAttack = false
+    return
+  }
   if (order.mode === 'attack' && order.target && order.target.health > 0) {
-    unit.target = order.target
-    unit.targetId = order.target.id || null
-    unit.targetType = order.target.tileX !== undefined ? 'unit' : 'building'
-    unit.allowedToAttack = true
+    assignFireTarget(unit, order.target)
     return
   }
   unit.target = null

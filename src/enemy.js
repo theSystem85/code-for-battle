@@ -1,6 +1,7 @@
 // enemy orchestrator
 import { updateAIPlayer } from './ai/enemyAIPlayer.js'
 import { computeLeastDangerAttackPoint } from './ai/enemyStrategies.js'
+import { refreshDynamicDangerMaps } from './game/dynamicDangerZoneMap.js'
 import { logPerformance } from './performanceUtils.js'
 import { isHost } from './network/gameCommandSync.js'
 import { AI_UPDATE_FRAME_SKIP } from './config.js'
@@ -53,6 +54,7 @@ export const updateEnemyAI = logPerformance(function updateEnemyAI(units, factor
   const targetedOreTiles = gameState.targetedOreTiles || {}
 
   if (phase === 0) {
+    refreshDynamicDangerMaps(gameState, units, mapGrid, now)
     updateLlmStrategicAI(units, factories, bullets, mapGrid, gameState, now)
 
     if (!gameState.lastGlobalAttackDecision || now - gameState.lastGlobalAttackDecision > 8000) {

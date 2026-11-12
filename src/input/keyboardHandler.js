@@ -28,6 +28,7 @@ import { hasBlockingBuilding } from '../utils/buildingPassability.js'
 import { isLocalPartyAutomationLocked } from '../network/multiplayerStore.js'
 import { createReplayUnitReferences, isReplayInteractionLocked, recordReplayCommand } from '../replaySystem.js'
 import { clearBattleshipFireControl } from '../game/battleshipTurrets.js'
+import { cycleDangerOverlay } from '../game/dynamicDangerZoneMap.js'
 import { recallCarrierAircraft } from '../game/navalFleetSystem.js'
 import { cancelTransportOperations } from '../game/transportOperationCancellation.js'
 import { releaseMountedCargo } from '../game/jetFuel.js'
@@ -1069,21 +1070,15 @@ export class KeyboardHandler {
   }
 
   handleDzmToggle() {
-    const ids = Object.keys(gameState.dangerZoneMaps || {})
+    const ids = Object.keys({
+      ...(gameState.dangerZoneMaps || {}),
+      ...(gameState.dynamicDangerMaps || {})
+    })
     if (ids.length === 0) return
-    if (gameState.dzmOverlayIndex === -1) {
-      gameState.dzmOverlayIndex = 0
-    } else {
-      gameState.dzmOverlayIndex++
-      if (gameState.dzmOverlayIndex >= ids.length) {
-        gameState.dzmOverlayIndex = -1
-        this.showNotification('Danger zone map: OFF', 2000)
-        playSound('confirmed', 0.5)
-        return
-      }
-    }
-    const pid = ids[gameState.dzmOverlayIndex]
-    this.showNotification(`Danger zone map: ${pid}`, 2000)
+    const next = cycleDangerOverlay(ids, gameState.dzmOverlayIndex, gameState.dzmOverlayLayer)
+    gameState.dzmOverlayIndex = next.index
+    gameState.dzmOverlayLayer = next.layer
+    this.showNotification(`Danger zone map: ${next.label}`, 2000)
     playSound('confirmed', 0.5)
   }
 

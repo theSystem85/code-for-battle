@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('../../src/config.js', () => ({ AI_UPDATE_FRAME_SKIP: 3 }))
+vi.mock('../../src/game/dynamicDangerZoneMap.js', () => ({ refreshDynamicDangerMaps: vi.fn() }))
 vi.mock('../../src/gameState.js', () => ({ gameState: {} }))
 vi.mock('../../src/performanceUtils.js', () => ({ logPerformance: fn => fn }))
 vi.mock('../../src/ai/enemyAIPlayer.js', () => ({ updateAIPlayer: vi.fn() }))

@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import '../setup.js'
 import { generateDangerZoneMapForPlayer } from '../../src/game/dangerZoneMap.js'
+import { createDynamicDangerState, updateDynamicDangerMap } from '../../src/game/dynamicDangerZoneMap.js'
 import { updateGroundCombatDecision } from '../../src/ai/enemyGroundCombatDecision.js'
 import {
   assaultPhaseForTarget,
@@ -344,6 +345,7 @@ describe('ground assault orchestrator', () => {
     globalThis.__cfbFrameHeadroomMs = 0
     updateGroundAssaultStrategy('player2', units, state, mapGrid, 1000 + STRATEGY_EVAL_INTERVAL_MS * 3)
     expect(state.aiGroundAssault.player2.runs).toBe(2)
+    delete globalThis.__cfbFrameHeadroomMs
     expect(shouldRunStrategyEvaluation(0, STRATEGY_EVAL_INTERVAL_MS, 0)).toBe(false)
     expect(shouldRunStrategyEvaluation(0, STRATEGY_EVAL_INTERVAL_MS, STRATEGY_EVAL_INTERVAL_MS)).toBe(true)
   })
@@ -383,5 +385,93 @@ describe('ground assault orders in the unit decision', () => {
     expect(wounded.target).toBe(target)
     expect(healthy.allowedToAttack).toBe(true)
     expect(wounded.moveTarget).toEqual({ x: 3, y: 4 })
+  })
+
+  it('[U07116] keeps firing at an attacker in range while the retreat move continues', () => {
+    const attacker = tank('enemy', 'player1', 5, 4)
+    const unit = tank('a', 'player2', 2, 4, {
+      aiAssault: {
+        mode: 'retreat',
+        retreatTile: { x: 0, y: 4 },
+        rallyTile: { x: 0, y: 4 },
+        returnFire: [attacker],
+        squadId: 'player2-squad-1'
+      }
+    })
+    const mapGrid = grid(12, 10)
+    updateGroundCombatDecision(unit, [unit, attacker], strategyState([]), mapGrid, 5000, 'player2')
+    expect(unit.target).toBe(attacker)
+    expect(unit.allowedToAttack).toBe(true)
+    expect(unit.moveTarget).toEqual({ x: 0, y: 4 })
+  })
+})
+
+describe('combined danger planning', () => {
+  beforeEach(() => {
+    delete globalThis.__cfbFrameHeadroomMs
+  })
+
+  it('[U07117] picks the corridor whose combined static and mobile danger is lower', () => {
+    const mapGrid = grid(24, 16)
+    for (let y = 6; y <= 10; y++) mapGrid[y][10].type = 'rock'
+    const yard = building('yard', 'player1', 'constructionYard', 18, 7, { width: 2, height: 2, health: 800 })
+    const north = building('north', 'player1', 'turretGunV1', 10, 2, {
+      fireRange: 3, damage: 10, fireCooldown: 3000, health: 300
+    })
+    const south = building('south', 'player1', 'turretGunV1', 10, 13, {
+      fireRange: 3, damage: 10, fireCooldown: 3000, health: 300
+    })
+    const gameState = strategyState([yard, north, south])
+    const dangerMap = generateDangerZoneMapForPlayer('player2', mapGrid, [yard, north, south], gameState)
+    const mobile = createDynamicDangerState(24, 16)
+    updateDynamicDangerMap(mobile, [
+      tank('guard', 'player1', 10, 2, { health: 200, maxHealth: 200 })
+    ], 'player2')
+    const plan = planWeakestBreach({
+      mapGrid,
+      dangerMap,
+      buildings: [yard, north, south],
+      origin: { x: 2, y: 8 },
+      goalBuilding: yard,
+      gameState,
+      dynamicState: mobile
+    })
+    expect(plan.breachIds).toEqual(['south'])
+  })
+
+  it('[U07118] fights an in-range attacker before the construction yard and retreats toward lower danger', () => {
+    const mapGrid = grid(22, 12)
+    const own = building('own', 'player2', 'constructionYard', 1, 4, { width: 2, height: 2, health: 800 })
+    const yard = building('yard', 'player1', 'constructionYard', 18, 4, { width: 2, height: 2, health: 800 })
+    const state = strategyState([own, yard])
+    const friends = [tank('a', 'player2', 4, 5), tank('b', 'player2', 5, 5)]
+    const attacker = tank('enemy', 'player1', 7, 5)
+    updateGroundAssaultStrategy('player2', [...friends, attacker], state, mapGrid, 2000)
+    expect(friends[0].aiAssault.mode).toBe('attack')
+    expect(friends[0].aiAssault.target.id).toBe('enemy')
+    expect(friends[1].aiAssault.target).toBe(friends[0].aiAssault.target)
+
+    const bullies = [
+      tank('c', 'player1', 10, 5),
+      tank('d', 'player1', 11, 5),
+      tank('e', 'player1', 10, 6)
+    ]
+    const fallingBack = [tank('a', 'player2', 4, 5), tank('b', 'player2', 5, 5)]
+    updateGroundAssaultStrategy('player2', [...fallingBack, ...bullies], state, mapGrid, 2000 + STRATEGY_EVAL_INTERVAL_MS)
+    expect(fallingBack[0].aiAssault.mode).toBe('retreat')
+    expect(fallingBack[0].aiAssault.retreatTile.x).toBeLessThan(4)
+    expect(fallingBack[0].aiAssault.returnFire.map(unit => unit.id).sort()).toEqual(['c', 'd', 'e'])
+  })
+
+  it('[U07119] shoots a defence building that is already in range before the construction yard', () => {
+    const mapGrid = grid(22, 12)
+    const turret = building('turret', 'player1', 'turretGunV1', 8, 5, {
+      fireRange: 6, damage: 10, fireCooldown: 3000, health: 200
+    })
+    const yard = building('yard', 'player1', 'constructionYard', 18, 4, { width: 2, height: 2, health: 800 })
+    const friends = [tank('a', 'player2', 4, 5), tank('b', 'player2', 5, 5)]
+    updateGroundAssaultStrategy('player2', friends, strategyState([turret, yard]), mapGrid, 3000)
+    expect(friends[0].aiAssault.mode).toBe('attack')
+    expect(friends[0].aiAssault.target.id).toBe('turret')
   })
 })

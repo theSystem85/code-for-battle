@@ -8,9 +8,12 @@ import { COMBAT_CONFIG } from '../game/unitCombat/combatConfig.js'
 import {
   HOWITZER_BUILDING_DAMAGE_MULTIPLIER,
   HOWITZER_FIRE_COOLDOWN,
-  HOWITZER_FIREPOWER
+  HOWITZER_FIREPOWER,
+  HOWITZER_FIRE_RANGE,
+  TANK_FIRE_RANGE
 } from '../config.js'
 import { computeBuildingDps, generateDangerZoneMapForPlayer } from '../game/dangerZoneMap.js'
+import { combinedDangerAt, refreshDynamicDangerMaps } from '../game/dynamicDangerZoneMap.js'
 import { getCachedPath } from '../game/pathfinding.js'
 import { getEnemyPlayers } from './enemyUtils.js'
 import {
@@ -360,10 +363,40 @@ export function defenceCoversTile(building, x, y) {
   return dist <= building.fireRange && dist >= (building.minFireRange || 0)
 }
 
-function dangerAt(dangerMap, x, y) {
-  const row = dangerMap?.[y]
-  const value = row ? row[x] : 0
-  return Number.isFinite(value) ? value : 0
+function dangerAt(dangerMap, x, y, dynamicState = null) {
+  return combinedDangerAt(dangerMap, dynamicState, x, y)
+}
+
+export function weaponRangeTiles(unit) {
+  if (!unit) return TANK_FIRE_RANGE
+  if (unit.type === 'howitzer') return HOWITZER_FIRE_RANGE
+  if (unit.type === 'rocketTank') return Math.ceil(TANK_FIRE_RANGE * 1.5)
+  if (unit.type === 'f22Raptor') return 16
+  if (unit.type === 'f35') return 14
+  if (unit.type === 'apache') return Math.max(6, Math.ceil(TANK_FIRE_RANGE * 0.8))
+  if (unit.type === 'destroyer') return 18
+  return TANK_FIRE_RANGE
+}
+
+export function inRangeReturnFire(unit, threats) {
+  if (!unit) return null
+  const range = weaponRangeTiles(unit)
+  const pool = []
+  if (unit.lastAttacker && unit.lastAttacker.health > 0) pool.push(unit.lastAttacker)
+  if (Array.isArray(threats)) {
+    for (const threat of threats) pool.push(threat)
+  }
+  let best = null
+  let bestDistance = Infinity
+  for (const threat of pool) {
+    if (!threat || threat.health <= 0 || threat.owner === unit.owner) continue
+    const distance = tileDistance(unit, threat)
+    if (distance <= range && distance < bestDistance) {
+      best = threat
+      bestDistance = distance
+    }
+  }
+  return best
 }
 
 function heapLess(a, b) {
@@ -477,7 +510,7 @@ function reconstructPath(parent, index, width) {
   return path
 }
 
-function findMinPeakPath(mapGrid, dangerMap, blocked, origin, goalBuilding) {
+function findMinPeakPath(mapGrid, dangerMap, blocked, origin, goalBuilding, dynamicState = null) {
   const width = mapGrid[0].length
   const height = mapGrid.length
   const cellCount = width * height
@@ -492,7 +525,7 @@ function findMinPeakPath(mapGrid, dangerMap, blocked, origin, goalBuilding) {
   parent.fill(-1)
   const startX = start % width
   const startY = Math.floor(start / width)
-  bestPeak[start] = dangerAt(dangerMap, startX, startY)
+  bestPeak[start] = dangerAt(dangerMap, startX, startY, dynamicState)
   bestDist[start] = 0
   parent[start] = start
   const heap = []
@@ -510,7 +543,7 @@ function findMinPeakPath(mapGrid, dangerMap, blocked, origin, goalBuilding) {
       const ny = y + dy
       if (tileBlocked(mapGrid, blocked, nx, ny)) continue
       const next = ny * width + nx
-      const nextPeak = Math.max(item.peak, dangerAt(dangerMap, nx, ny))
+      const nextPeak = Math.max(item.peak, dangerAt(dangerMap, nx, ny, dynamicState))
       const nextDist = item.dist + 1
       if (nextPeak < bestPeak[next] || (nextPeak === bestPeak[next] && nextDist < bestDist[next])) {
         bestPeak[next] = nextPeak
@@ -572,11 +605,10 @@ function minimumBreach(defences, tiles) {
   return chosen
 }
 
-export function planWeakestBreach({ mapGrid, dangerMap, buildings, origin, goalBuilding, gameState }) {
+export function planWeakestBreach({ mapGrid, dangerMap, buildings, origin, goalBuilding, gameState, dynamicState = null }) {
   const source = buildings || []
   const defences = source.filter(building => defenceIsActive(building, gameState))
-  if (!defences.length) return { breachIds: [], peakDanger: 0, path: [], gateTile: null }
-  if (!goalBuilding || !mapGrid?.length || !mapGrid[0]?.length || !dangerMap?.length) {
+  if (!goalBuilding || !mapGrid?.length || !mapGrid[0]?.length) {
     const weakest = weakestDefence(defences)
     return {
       breachIds: weakest ? [weakest.id] : [],
@@ -589,7 +621,7 @@ export function planWeakestBreach({ mapGrid, dangerMap, buildings, origin, goalB
   for (const building of source) {
     if (building && building.health > 0) buildingFootprint(building, mapGrid[0].length, mapGrid.length, blocked)
   }
-  const path = findMinPeakPath(mapGrid, dangerMap, blocked, origin || { x: 0, y: 0 }, goalBuilding)
+  const path = findMinPeakPath(mapGrid, dangerMap, blocked, origin || { x: 0, y: 0 }, goalBuilding, dynamicState)
   if (!path) {
     const weakest = weakestDefence(defences)
     return {
@@ -602,7 +634,7 @@ export function planWeakestBreach({ mapGrid, dangerMap, buildings, origin, goalB
   let peakDanger = 0
   const dangerous = []
   for (const tile of path) {
-    const danger = dangerAt(dangerMap, tile.x, tile.y)
+    const danger = dangerAt(dangerMap, tile.x, tile.y, dynamicState)
     if (danger > peakDanger) peakDanger = danger
     if (danger > 0) dangerous.push(tile)
   }
@@ -638,6 +670,45 @@ function squadCentroid(members) {
   }
   if (!count) return { x: 0, y: 0 }
   return { x: x / count, y: y / count }
+}
+
+function tileWalkable(mapGrid, x, y) {
+  if (!mapGrid?.length || y < 0 || x < 0 || y >= mapGrid.length || x >= mapGrid[0].length) return false
+  const tile = mapGrid[y][x]
+  if (!tile) return false
+  return tile.type !== 'water' && tile.type !== 'rock' && !tile.seedCrystal && !tile.building
+}
+
+export function chooseRetreatTile({ origin, threat, rally, mapGrid, dangerMap, dynamicState }) {
+  const from = origin || rally || { x: 0, y: 0 }
+  const awayX = from.x - (Number.isFinite(threat?.x) ? threat.x : from.x)
+  const awayY = from.y - (Number.isFinite(threat?.y) ? threat.y : from.y)
+  const length = Math.hypot(awayX, awayY) || 1
+  const ux = awayX / length
+  const uy = awayY / length
+  const candidates = []
+  if (rally) candidates.push(rally)
+  for (const step of [4, 8, 12]) {
+    candidates.push({ x: Math.round(from.x + ux * step), y: Math.round(from.y + uy * step) })
+    candidates.push({
+      x: Math.round(from.x + ux * step - uy * 3),
+      y: Math.round(from.y + uy * step + ux * 3)
+    })
+  }
+  let best = rally || from
+  let bestDanger = Infinity
+  let bestDistance = Infinity
+  for (const tile of candidates) {
+    if (mapGrid && !tileWalkable(mapGrid, tile.x, tile.y)) continue
+    const danger = dangerAt(dangerMap, tile.x, tile.y, dynamicState)
+    const distance = rally ? Math.hypot(tile.x - rally.x, tile.y - rally.y) : 0
+    if (danger < bestDanger - 0.001 || (Math.abs(danger - bestDanger) <= 0.001 && distance < bestDistance)) {
+      best = tile
+      bestDanger = danger
+      bestDistance = distance
+    }
+  }
+  return best
 }
 
 function ownRallyTile(aiPlayerId, gameState) {
@@ -690,6 +761,61 @@ function findEngagingThreats(members, units, buildings, aiPlayerId, gameState) {
   return threats
 }
 
+function threatIsBuilding(threat) {
+  return threat?.combatantKind === 'building' || (PLAYER_DEFENSE_BUILDINGS.has(threat?.type) && threat.tileX === undefined)
+}
+
+function immediateThreat(members, engaging) {
+  let bestUnit = null
+  let bestUnitDistance = Infinity
+  let bestBuilding = null
+  let bestBuildingDistance = Infinity
+  for (const threat of engaging || []) {
+    if (!threat || threat.health <= 0) continue
+    let nearest = Infinity
+    let reachable = false
+    for (const member of members) {
+      const distance = tileDistance(member, threat)
+      const range = threatIsBuilding(threat)
+        ? Math.max(weaponRangeTiles(member), threat.fireRange || 0)
+        : Math.max(weaponRangeTiles(member), weaponRangeTiles(threat))
+      if (distance <= range && distance < nearest) {
+        nearest = distance
+        reachable = true
+      }
+    }
+    if (!reachable) continue
+    if (threatIsBuilding(threat)) {
+      if (nearest < bestBuildingDistance) {
+        bestBuilding = threat
+        bestBuildingDistance = nearest
+      }
+    } else if (nearest < bestUnitDistance) {
+      bestUnit = threat
+      bestUnitDistance = nearest
+    }
+  }
+  return bestUnit || bestBuilding || null
+}
+
+function defendersNearPath(path, units, opponentId) {
+  if (!path?.length) return []
+  const found = []
+  for (const unit of units || []) {
+    if (!unit || unit.owner !== opponentId || unit.health <= 0) continue
+    if (!SQUAD_COMBAT_TYPES.has(unit.type) && unit.type !== 'apache' && unit.type !== 'destroyer' && unit.type !== 'f22Raptor' && unit.type !== 'f35') continue
+    if (!Number.isFinite(unit.tileX) || !Number.isFinite(unit.tileY)) continue
+    const range = weaponRangeTiles(unit) + 1
+    for (const tile of path) {
+      if (Math.hypot(tile.x - unit.tileX, tile.y - unit.tileY) <= range) {
+        found.push(unit)
+        break
+      }
+    }
+  }
+  return found
+}
+
 function threatBuildingsFor(target, breachBuildings) {
   if (!target) return []
   if (breachBuildings.some(building => building.id === target.id)) return breachBuildings
@@ -727,6 +853,7 @@ function writeOrders(members, order) {
       rearTile: order.rearTile || null,
       rallyTile: order.rallyTile,
       retreatTile: order.retreatTile,
+      returnFire: order.returnFire || null,
       squadId: order.squadId,
       opponentId: order.opponentId || null,
       role: support || isWoundedUnit(member) ? 'rear' : 'front'
@@ -779,6 +906,7 @@ export function updateGroundAssaultStrategy(aiPlayerId, units, gameState, mapGri
 
   bucket.evaluatedAt = now
   bucket.runs += 1
+  refreshDynamicDangerMaps(gameState, units, mapGrid, now, headroom)
   const squads = formSquads(units, aiPlayerId)
   const assigned = new Set()
   const rallyTile = ownRallyTile(aiPlayerId, gameState)
@@ -815,20 +943,51 @@ export function updateGroundAssaultStrategy(aiPlayerId, units, gameState, mapGri
       dangerMap = opponentDangerMap(aiPlayerId, mapGrid, opponent.buildings, gameState)
       dangerByOpponent.set(opponent.id, dangerMap)
     }
+    const dynamicState = gameState.dynamicDangerMaps?.[aiPlayerId] || null
     const breach = planWeakestBreach({
       mapGrid,
       dangerMap,
       buildings: opponent.buildings,
       origin,
       goalBuilding: anchor,
-      gameState
+      gameState,
+      dynamicState
     })
     const ordered = orderAssaultTargets(opponent.buildings, breach.breachIds)
     const engaging = findEngagingThreats(squad.members, units, opponent.buildings, aiPlayerId, gameState)
     const outcome = engaging.length ? estimateEngagementOutcome(squad.members, engaging) : null
     if (outcome?.shouldRetreat) {
+      const threat = engaging[0]
+      const threatTile = threat ? {
+        x: Number.isFinite(threat.tileX) ? threat.tileX : threat.x,
+        y: Number.isFinite(threat.tileY) ? threat.tileY : threat.y
+      } : null
       writeOrders(squad.members, {
         mode: 'retreat',
+        rallyTile,
+        retreatTile: chooseRetreatTile({
+          origin,
+          threat: threatTile,
+          rally: rallyTile,
+          mapGrid,
+          dangerMap,
+          dynamicState
+        }),
+        returnFire: engaging,
+        squadId: squad.id,
+        opponentId: opponent.id,
+        now
+      })
+      continue
+    }
+    const pressing = immediateThreat(squad.members, engaging)
+    if (pressing) {
+      const tiles = assaultFormationTiles(origin, pressing) || { frontTile: origin, rearTile: origin }
+      writeOrders(squad.members, {
+        mode: 'attack',
+        target: pressing.combatantKind === 'building' ? (opponent.buildings.find(building => building.id === pressing.id) || pressing) : pressing,
+        frontTile: tiles.frontTile,
+        rearTile: tiles.rearTile,
         rallyTile,
         retreatTile: rallyTile,
         squadId: squad.id,
@@ -857,6 +1016,7 @@ export function updateGroundAssaultStrategy(aiPlayerId, units, gameState, mapGri
     const groundDefenceCount = countGroundDefences(opponent.buildings, opponent.id)
     const airDefenceCount = countAirDefences(opponent.buildings, units, opponent.id)
     const breachBuildings = ordered.filter(building => breach.breachIds.includes(building.id))
+    const pathDefenders = defendersNearPath(breach.path, units, opponent.id)
     let target = null
     if (mayGroundForceAttackBase({
       combatantCount: combatants.length,
@@ -864,7 +1024,7 @@ export function updateGroundAssaultStrategy(aiPlayerId, units, gameState, mapGri
       airDefenceCount
     })) {
       for (const candidate of ordered) {
-        const threats = threatBuildingsFor(candidate, breachBuildings)
+        const threats = [...threatBuildingsFor(candidate, breachBuildings), ...pathDefenders]
         if (!squadHasSufficientFirepower(combatants, threats)) break
         target = candidate
         break

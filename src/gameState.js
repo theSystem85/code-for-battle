@@ -202,7 +202,10 @@ export const gameState = {
   benchmarkActive: false,
 
   dangerZoneMaps: {},
+  dynamicDangerMaps: {},
+  dynamicDangerUpdatedAt: null,
   dzmOverlayIndex: -1,
+  dzmOverlayLayer: 'off',
 
   // FPS display toggle and tracking
   fpsVisible: false,

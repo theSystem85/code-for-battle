@@ -55,4 +55,52 @@ export class DangerZoneRenderer {
     ctx.fillText(label, viewportWidth - 60, 23)
     ctx.restore()
   }
+
+  renderDynamic(ctx, state, scrollOffset, playerId) {
+    if (!state?.values || !playerId) return
+    const cell = state.cellSize || 4
+    const startX = Math.max(0, Math.floor(scrollOffset.x / TILE_SIZE))
+    const startY = Math.max(0, Math.floor(scrollOffset.y / TILE_SIZE))
+    const { width: viewportWidth, height: viewportHeight } = getCanvasLogicalSize(ctx.canvas)
+    const endX = Math.min(state.mapWidth, startX + Math.ceil(viewportWidth / TILE_SIZE) + cell)
+    const endY = Math.min(state.mapHeight, startY + Math.ceil(viewportHeight / TILE_SIZE) + cell)
+    const startCellX = Math.floor(startX / cell)
+    const startCellY = Math.floor(startY / cell)
+    const endCellX = Math.min(state.cellsX, Math.ceil(endX / cell))
+    const endCellY = Math.min(state.cellsY, Math.ceil(endY / cell))
+
+    ctx.save()
+    ctx.strokeStyle = 'rgba(255,140,0,0.85)'
+    ctx.lineWidth = 1
+    for (let cy = startCellY; cy < endCellY; cy++) {
+      for (let cx = startCellX; cx < endCellX; cx++) {
+        const danger = state.values[cy * state.cellsX + cx]
+        if (danger <= 0) continue
+        const x = cx * cell
+        const y = cy * cell
+        const baseX = x * TILE_SIZE - scrollOffset.x
+        const baseY = y * TILE_SIZE - scrollOffset.y
+        const size = cell * TILE_SIZE
+        ctx.strokeRect(baseX + 1, baseY + 1, size - 2, size - 2)
+        ctx.beginPath()
+        ctx.moveTo(baseX, baseY + size * 0.5)
+        ctx.lineTo(baseX + size, baseY + size * 0.5)
+        ctx.stroke()
+      }
+    }
+    ctx.restore()
+
+    ctx.save()
+    ctx.fillStyle = 'rgba(0,0,0,0.7)'
+    ctx.fillRect(viewportWidth - 150, 10, 140, 18)
+    ctx.strokeStyle = PARTY_COLORS[playerId] || '#fff'
+    ctx.strokeRect(viewportWidth - 150, 10, 140, 18)
+    ctx.fillStyle = '#fff'
+    ctx.font = '12px "Rajdhani", "Arial Narrow", sans-serif'
+    ctx.textAlign = 'center'
+    const names = { player1: 'Green', player2: 'Red', player3: 'Blue', player4: 'Yellow' }
+    const label = names[playerId] ? `Dyn ${names[playerId]}` : `Dyn ${playerId}`
+    ctx.fillText(label, viewportWidth - 80, 23)
+    ctx.restore()
+  }
 }
