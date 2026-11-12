@@ -51,6 +51,11 @@ function isTransportCoastApproachActive(unit) {
   )
 }
 
+function isBoardingPastIdle(boarder, idle) {
+  return Boolean(boarder.pendingTransportId && !boarder.isNaval && !idle.isNaval &&
+    boarder.owner === idle.owner && !idle.pendingTransportId && !idle.moveTarget && !idle.path?.length)
+}
+
 function isCarrierAircraftCollisionPair(first, second) {
   const carrier = first?.type === 'aircraftCarrier'
     ? first
@@ -583,10 +588,12 @@ export function checkUnitCollision(unit, mapGrid, occupancyMap, units, wrecks = 
       const separationX = separationDx * separationForce
       const separationY = separationDy * separationForce
 
-      unit.movement.velocity.x += separationX
-      unit.movement.velocity.y += separationY
+      if (!isBoardingPastIdle(otherUnit, unit)) {
+        unit.movement.velocity.x += separationX
+        unit.movement.velocity.y += separationY
+      }
 
-      if (otherUnit.movement) {
+      if (otherUnit.movement && !isBoardingPastIdle(unit, otherUnit)) {
         otherUnit.movement.velocity.x -= separationX * 0.5
         otherUnit.movement.velocity.y -= separationY * 0.5
       }
@@ -887,6 +894,22 @@ export function applyUnitCollisionResponse(unit, movement, collisionResult, unit
   const otherUnit = collisionResult.other && collisionResult.other.movement ? collisionResult.other : null
   const navalCollision = Boolean(unit.isNaval && otherUnit?.isNaval)
 
+  // Boarding commands must not move unrelated idle vehicles (including
+  // selections rejected for capacity). Resolve the overlap on the boarder only,
+  // regardless of which side's movement update detected the contact.
+  if (!airCollision && otherUnit && unit.owner === otherUnit.owner && !unit.isNaval && !otherUnit.isNaval) {
+    const unitBoardsPastIdle = isBoardingPastIdle(unit, otherUnit)
+    const otherBoardsPastIdle = isBoardingPastIdle(otherUnit, unit)
+    if (unitBoardsPastIdle || otherBoardsPastIdle) {
+      const boarder = unitBoardsPastIdle ? unit : otherUnit
+      const idle = unitBoardsPastIdle ? otherUnit : unit
+      const sign = unitBoardsPastIdle ? -1 : 1
+      applySafeSeparation(boarder, sign * normalX * overlap, sign * normalY * overlap,
+        mapGrid, occupancyMap, units, wrecks, [idle.id])
+      return false
+    }
+  }
+
   if (navalCollision) {
     const now = gameState?.simulationTime || performance.now()
     const otherVelocity = otherUnit.movement.velocity || { x: 0, y: 0 }
@@ -1171,6 +1194,9 @@ export function calculateCollisionAvoidance(unit, units, mapGrid, occupancyMap) 
     const otherUnit = nearbyUnits[i]
     if (otherUnit.health <= 0) continue
     if (isCarrierAircraftCollisionPair(unit, otherUnit)) continue
+    // A ship's broad query radius must not repel it from its own boarding
+    // line before it can reach the coast (or repel the line from the ramp).
+    if (unit.pendingTransportId === otherUnit.id || otherUnit.pendingTransportId === unit.id) continue
     // F22s should never push ground units via avoidance
     if (otherUnit.type === 'f22Raptor') continue
     // Skip avoidance if this unit is our attack target
@@ -1188,7 +1214,9 @@ export function calculateCollisionAvoidance(unit, units, mapGrid, occupancyMap) 
     const bothNaval = unit.isNaval && otherUnit.isNaval
     const otherHull = bothNaval ? getNavalHullSegment(otherUnit) : null
     const hullClearance = bothNaval ? navalHullDistance(ownHull, otherHull) - ownHull.radius - otherHull.radius : centerDistance
-    const avoidanceDistance = bothNaval ? TILE_SIZE * 1.25 : forceRadius
+    // The broad hull query finds other ships; ground vehicles keep the normal
+    // local radius so idle vehicles near shore cannot repel a ferry offshore.
+    const avoidanceDistance = bothNaval ? TILE_SIZE * 1.25 : MOVEMENT_CONFIG.FORCE_FIELD_RADIUS
 
     if (hullClearance < avoidanceDistance) {
       const normalizedDist = Math.max(0, hullClearance) / avoidanceDistance

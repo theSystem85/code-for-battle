@@ -31,6 +31,50 @@ function createOccupancyMap(width = 6, height = 6) {
 }
 
 describe('movementCollision environment response', () => {
+  it.each([true, false])('[U07126] keeps idle overflow vehicles stationary when boarding contact is detected by either unit (%s)', boarderUpdates => {
+    const mapGrid = createMapGrid()
+    const occupancyMap = createOccupancyMap()
+    const boarder = {
+      id: 'boarding', type: 'tank_v1', owner: 'player1', health: 100,
+      x: 64, y: 64, pendingTransportId: 'ferry', moveTarget: { x: 4, y: 2 },
+      movement: { velocity: { x: 1, y: 0 }, targetVelocity: { x: 1, y: 0 }, currentSpeed: 1 }
+    }
+    const idle = {
+      id: 'overflow', type: 'tank_v1', owner: 'player1', health: 100,
+      x: 84, y: 64, path: [], moveTarget: null,
+      movement: { velocity: { x: 0, y: 0 }, targetVelocity: { x: 0, y: 0 }, currentSpeed: 0 }
+    }
+    const units = [boarder, idle]
+    initSpatialQuadtree(192, 192)
+    rebuildSpatialQuadtree(units)
+    const updated = boarderUpdates ? boarder : idle
+    const collision = checkUnitCollision(updated, mapGrid, occupancyMap, units)
+    expect(collision.type).toBe('unit')
+    applyUnitCollisionResponse(updated, updated.movement, collision, units, [], null, mapGrid, occupancyMap)
+    expect({ x: idle.x, y: idle.y, path: idle.path, target: idle.moveTarget }).toEqual({ x: 84, y: 64, path: [], target: null })
+    expect(boarder.x).toBeLessThan(64)
+    expect(idle.movement.velocity).toEqual({ x: 0, y: 0 })
+  })
+
+  it('[U07127] lets a ferry approach its own boarding line without being repelled offshore', () => {
+    const mapGrid = Array.from({ length: 20 }, () => Array.from({ length: 20 }, () => ({ type: 'water' })))
+    const ferry = {
+      id: 'ferry', type: 'vehicleFerry', isNaval: true, owner: 'player1', health: 100,
+      x: 320, y: 160, direction: Math.PI,
+      movement: { velocity: { x: -0.3, y: 0 }, targetVelocity: { x: -0.3, y: 0 } }
+    }
+    const cargo = { id: 'cargo', type: 'tank_v1', owner: 'player1', health: 100, x: 256, y: 160 }
+    const units = [ferry, cargo]
+    initSpatialQuadtree(640, 640)
+    rebuildSpatialQuadtree(units)
+    expect(calculateCollisionAvoidance(ferry, units, mapGrid, createOccupancyMap(20, 20))).toEqual({ x: 0, y: 0 })
+    cargo.x = ferry.x - 24
+    rebuildSpatialQuadtree(units)
+    expect(calculateCollisionAvoidance(ferry, units, mapGrid, createOccupancyMap(20, 20)).x).toBeGreaterThan(0)
+    cargo.pendingTransportId = ferry.id
+    expect(calculateCollisionAvoidance(ferry, units, mapGrid, createOccupancyMap(20, 20))).toEqual({ x: 0, y: 0 })
+  })
+
   it('[U03027] detects coincident rotated naval hulls instead of allowing stacked ship images', () => {
     const mapGrid = Array.from({ length: 20 }, () =>
       Array.from({ length: 20 }, () => ({ type: 'water', building: null })))

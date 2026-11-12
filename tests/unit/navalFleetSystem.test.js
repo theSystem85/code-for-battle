@@ -173,6 +173,24 @@ describe('six-ship naval fleet systems', () => {
     const sternOffset = getNavalHullDimensions(ferry.type).length / 2
     expect(ferry.x + TILE_SIZE / 2 - Math.cos(ferry.direction) * sternOffset).toBeCloseTo(rendezvous.contactX, 1)
     expect(ferry.y + TILE_SIZE / 2 - Math.sin(ferry.direction) * sternOffset).toBeCloseTo(rendezvous.contactY, 1)
+    // The fleet updater does not run ground movement. Verify that the ferry
+    // waits for the second vehicle, then simulate its arrival at the ramp.
+    while (!tank.embarkedOnId && animationNow < 6000) {
+      updateNavalFleet(units, [], map, { occupancyMap: [] }, animationNow, 16)
+      animationNow += 16
+    }
+    const dockedPosition = { x: ferry.x, y: ferry.y, direction: ferry.direction }
+    expect(ferry.pendingLoadRendezvous).toBe(rendezvous)
+    expect(ferry.transportOperation?.phase).toBe('transferring')
+    expect(ambulance.moveTarget).toEqual(tankSlot)
+    for (let index = 0; index < 100; index++) {
+      updateNavalFleet(units, [], map, { occupancyMap: [] }, animationNow, 16)
+      animationNow += 16
+    }
+    expect({ x: ferry.x, y: ferry.y, direction: ferry.direction }).toEqual(dockedPosition)
+    expect(ambulance.transportTransfer).toBeUndefined()
+    ambulance.x = tankSlot.x * TILE_SIZE
+    ambulance.y = tankSlot.y * TILE_SIZE
     while (ferry.transportOperation && animationNow < 10000) {
       updateNavalFleet(units, [], map, { occupancyMap: [] }, animationNow, 16)
       animationNow += 16
@@ -181,6 +199,54 @@ describe('six-ship naval fleet systems', () => {
     expect(ferry.embarkedUnitIds).toEqual(['tank', 'ambulance'])
     expect(ferry.embarkedUnitTypes).toEqual(['tank_v1', 'ambulance'])
     expect(ferry.pendingLoadUnitIds).toEqual([])
+  })
+
+  it.each(['vehicleFerry', 'hovercraft'])('[U07128] reserves only remaining capacity and leaves overflow orders untouched for %s', type => {
+    const map = createMap(30, 20, 'land')
+    for (const row of map) for (let x = 15; x < row.length; x++) row[x].type = 'water'
+    const transport = { ...createShip(type, 'transport', 'player1', 17, 8), transportCapacity: 2, embarkedUnitIds: ['loaded'], pendingLoadUnitIds: [] }
+    const loaded = { id: 'loaded', health: 100, embarkedOnId: transport.id }
+    const accepted = { id: 'accepted', type: 'tank_v1', owner: 'player1', health: 100, x: 128, y: 128, path: [] }
+    const rejected = { ...accepted, id: 'rejected', x: 192, path: [], moveTarget: null }
+    const originalPath = rejected.path
+    const units = [transport, loaded, accepted, rejected]
+    expect(requestTransportLoadGroup(transport, [accepted, rejected], map, null, units)).toBe(true)
+    expect(transport.pendingLoadUnitIds).toEqual(['accepted'])
+    expect(accepted.pendingTransportId).toBe(transport.id)
+    expect(rejected.pendingTransportId).toBeUndefined()
+    expect(rejected.path).toBe(originalPath)
+    expect(rejected.moveTarget).toBeNull()
+    expect(requestTransportLoadGroup(transport, [rejected], map, null, units)).toBe(false)
+    expect(rejected.path).toBe(originalPath)
+    expect(rejected.moveTarget).toBeNull()
+  })
+
+  it('[U07129] advances surviving cargo to the same ramp when the queue head is destroyed', () => {
+    const map = createMap(30, 20, 'land')
+    for (const row of map) for (let x = 15; x < row.length; x++) row[x].type = 'water'
+    const transport = { ...createShip('vehicleFerry', 'transport', 'player1', 17, 8), transportCapacity: 10, embarkedUnitIds: [], pendingLoadUnitIds: [] }
+    const first = { id: 'first', type: 'tank_v1', owner: 'player1', health: 100, x: 128, y: 128, path: [] }
+    const second = { ...first, id: 'second', x: 192, path: [] }
+    const units = [transport, first, second]
+    expect(requestTransportLoadGroup(transport, [first, second], map, null, units)).toBe(true)
+    const rendezvous = transport.pendingLoadRendezvous
+    transport.x = rendezvous.desiredCenterX - TILE_SIZE / 2
+    transport.y = rendezvous.desiredCenterY - TILE_SIZE / 2
+    updateNavalFleet(units, [], map, { occupancyMap: [] }, 0, 16)
+    first.health = 0
+    for (let now = 16; now < 4000; now += 16) updateNavalFleet(units, [], map, { occupancyMap: [] }, now, 16)
+    expect(transport.pendingLoadUnitIds).toEqual(['second'])
+    expect(transport.pendingLoadUnitId).toBe(second.id)
+    expect(transport.pendingLoadRendezvous).toBe(rendezvous)
+    expect(transport.transportOperation.phase).toBe('transferring')
+    expect(second.moveTarget).toEqual(rendezvous.shoreTile)
+    expect(first.pendingTransportId).toBeNull()
+    second.x = rendezvous.shoreTile.x * TILE_SIZE
+    second.y = rendezvous.shoreTile.y * TILE_SIZE
+    for (let now = 4000; now < 8000; now += 16) updateNavalFleet(units, [], map, { occupancyMap: [] }, now, 16)
+    expect(transport.embarkedUnitIds).toEqual(['second'])
+    expect(transport.pendingLoadRendezvous).toBeNull()
+    expect(transport.transportOperation).toBeNull()
   })
 
   it('[U03134] supports the inverse transport-selected boarding command even when the hull overlaps the cargo hit area', () => {
