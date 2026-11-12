@@ -24,6 +24,7 @@ import { createReplayEntityReference, createReplayUnitReference, recordReplayCom
 import { getClosestEnemyFactory } from './enemyUtils.js'
 import { beginBaseDefensePass, beginBaseDefenseUnit, finishBaseDefenseUnit, endBaseDefensePass } from './enemySupportBehavior.js'
 import { ensureAdvancedForcePreference } from './advancedForcePreference.js'
+import { chooseNextSquadUnit, updateGroundAssaultStrategy } from './groundAssaultStrategy.js'
 
 const AI_SELL_PRIORITY = [
   'turretGunV1',
@@ -955,7 +956,6 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
       const aiHarvesters = units.filter(u => u.owner === aiPlayerId && u.type === 'harvester')
       const aiAmbulances = units.filter(u => u.owner === aiPlayerId && u.type === 'ambulance')
       const aiTankers = units.filter(u => u.owner === aiPlayerId && u.type === 'tankerTruck')
-      const aiAmmoTrucks = units.filter(u => u.owner === aiPlayerId && u.type === 'ammunitionTruck')
       const aiApaches = units.filter(u => u.owner === aiPlayerId && u.type === 'apache' && u.health > 0)
       const aiDestroyers = units.filter(u => u.owner === aiPlayerId && u.type === 'destroyer' && u.health > 0)
       const aiSupplyShips = units.filter(u => u.owner === aiPlayerId && u.type === 'supplyShip' && u.health > 0)
@@ -993,10 +993,6 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
       const destroyerCountInProduction = aiFactory.currentlyProducingUnit === 'destroyer' ? 1 : 0
       const f22CountInProduction = aiFactory.currentlyProducingUnit === 'f22Raptor' ? 1 : 0
       const f35CountInProduction = aiFactory.currentlyProducingUnit === 'f35' ? 1 : 0
-      const HIGH_BUDGET_THRESHOLD = 12000
-      const VERY_HIGH_BUDGET_THRESHOLD = 20000
-      const isHighBudget = aiFactory.budget >= HIGH_BUDGET_THRESHOLD
-      const isVeryHighBudget = aiFactory.budget >= VERY_HIGH_BUDGET_THRESHOLD
       const apacheCapacity = helipadsForProduction.length
       const needApache = apacheCapacity > 0 && (aiApaches.length + apacheCountInProduction) < apacheCapacity
       const destroyerCapacity = shipyardsForProduction.length * 2
@@ -1019,14 +1015,6 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
       } else if (aiTankers.length === 0 && aiHarvesters.length > 0 && gasStations.length > 0) {
         // Ensure at least one tanker truck exists to refuel units
         unitType = 'tankerTruck'
-      } else if (
-        ammunitionFactoriesForProduction.length > 0 &&
-        aiAmmoTrucks.length < ammunitionFactoriesForProduction.length * 2 &&
-        aiFactory.budget >= getUnitCost('ammunitionTruck')
-      ) {
-        // FR-031, FR-036: Build 1-2 ammunition supply trucks per ammunition factory
-        // This handles both initial production and replacement after destruction
-        unitType = 'ammunitionTruck'
       } else if (currentHarvesterTotal < MAX_HARVESTERS) {
         // Priority: Build up harvesters first, but strict limit of 4 per refinery
         unitType = 'harvester'
@@ -1057,35 +1045,13 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
 
         if (needsRecoveryTank && aiFactory.budget >= getUnitCost('recoveryTank')) {
           unitType = 'recoveryTank'
+        } else if (!specialDefensesReady) {
+          unitType = 'none'
         } else {
-          // We have enough harvesters and ambulance, hospital exists, now focus on diverse combat units
-          const rand = gameRandom()
-          if (forceHarvesterHunter) {
-            // Always produce the harvester hunter tank immediately
-            unitType = 'tank_v1'
-          } else if (!specialDefensesReady) {
-            // Delay other tank production until key defenses are built
-            unitType = 'none' // No combat units until defenses are ready
-          } else if (isVeryHighBudget) {
-            // Very high budget: Focus on elite units
-            if (rand < 0.1) unitType = 'tank_v1'
-            else if (rand < 0.3) unitType = 'tank-v2'
-            else if (rand < 0.6) unitType = 'tank-v3'
-            else unitType = 'rocketTank'
-          } else if (isHighBudget) {
-            // High budget: Balanced advanced units
-            if (rand < 0.12) unitType = 'tank_v1'
-            else if (rand < 0.2) unitType = 'lightTank'
-            else if (rand < 0.5) unitType = 'tank-v2'
-            else if (rand < 0.75) unitType = 'rocketTank'
-            else unitType = 'tank-v3'
-          } else {
-            // Normal budget: Mix of basic and medium units
-            if (rand < 0.35) unitType = 'tank_v1'
-            else if (rand < 0.55) unitType = 'lightTank'
-            else if (rand < 0.8) unitType = 'tank-v2'
-            else unitType = 'rocketTank'
-          }
+          unitType = chooseNextSquadUnit(units, aiPlayerId, {
+            hasHospital,
+            hasAmmunitionFactory: ammunitionFactoriesForProduction.length > 0
+          })
         }
       }
       // Determine cost based on unit type
@@ -1105,7 +1071,9 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
           unitType === 'rocketTank' ||
           unitType === 'ambulance' ||
           unitType === 'tankerTruck' ||
-          unitType === 'ammunitionTruck'
+          unitType === 'ammunitionTruck' ||
+          unitType === 'recoveryTank' ||
+          unitType === 'howitzer'
         ) {
           const aiVehicleFactories = gameState.buildings.filter(
             b => b.type === 'vehicleFactory' && b.owner === aiPlayerId
@@ -1204,6 +1172,10 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
   }
 
   scanAndRecoverStuckEnemyHarvesters(aiPlayerId, units, mapGrid, occupancyMap, gameState, factories, now)
+
+  if (!llmStrategicActive) {
+    updateGroundAssaultStrategy(aiPlayerId, units, gameState, mapGrid, now)
+  }
 
   // --- Update AI Units ---
   beginBaseDefensePass(units, gameState, aiPlayerId)

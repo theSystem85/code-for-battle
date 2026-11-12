@@ -224,6 +224,10 @@ export function applyEnemyStrategies(unit, units, gameState, mapGrid, now) {
 
   // Apply group attack strategies for combat units
   if ((unit.type === 'tank' || unit.type === 'tank_v1' || unit.type === 'tank-v2' || unit.type === 'tank-v3' || unit.type === 'lightTank' || unit.type === 'rocketTank' || unit.type === 'howitzer')) {
+    if (unit.aiAssault) {
+      unit.allowedToAttack = unit.aiAssault.mode === 'attack' && Boolean(unit.aiAssault.target && unit.aiAssault.target.health > 0)
+      return
+    }
     // Only evaluate group-attack gating when the unit already has a target.
     // When target is null, shouldConductGroupAttack returns false which would
     // incorrectly clear allowedToAttack and prevent the unit from ever firing.

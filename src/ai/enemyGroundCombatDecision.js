@@ -20,6 +20,7 @@ import {
   checkBaseDefenseNeeded,
   findBaseDefenseTarget
 } from './enemySupportBehavior.js'
+import { assaultMoveTile } from './groundAssaultStrategy.js'
 
 export function updateGroundCombatDecision(unit, units, gameState, mapGrid, now, aiPlayerId) {
   const allowDecision = !unit.lastDecisionTime || (now - unit.lastDecisionTime >= AI_DECISION_INTERVAL)
@@ -70,6 +71,15 @@ export function updateGroundCombatDecision(unit, units, gameState, mapGrid, now,
       unit.lastDecisionTime = now
       return true // Skip other target selection when defending base
     }
+  }
+
+  if (assaultOwnsUnit(unit, now)) {
+    enforceAssaultOrder(unit)
+    if (allowDecision && !unit.isDodging) {
+      pathAssaultUnit(unit, assaultMoveTile(unit), mapGrid, gameState, now)
+      unit.lastDecisionTime = now
+    }
+    return false
   }
 
   if (allowDecision) {
@@ -455,4 +465,48 @@ export function updateGroundCombatDecision(unit, units, gameState, mapGrid, now,
     unit.lastDecisionTime = now
   }
   return false
+}
+
+function assaultOwnsUnit(unit, now) {
+  if (!unit?.aiAssault) return false
+  if (unit.returningToWorkshop || unit.repairingAtWorkshop || unit.isRetreating) return false
+  if (unit.llmOrderLockUntil && now < unit.llmOrderLockUntil) return false
+  return true
+}
+
+function enforceAssaultOrder(unit) {
+  const order = unit.aiAssault
+  unit.squadId = order.squadId || null
+  if (order.mode === 'attack' && order.target && order.target.health > 0) {
+    unit.target = order.target
+    unit.targetId = order.target.id || null
+    unit.targetType = order.target.tileX !== undefined ? 'unit' : 'building'
+    unit.allowedToAttack = true
+    return
+  }
+  unit.target = null
+  unit.targetId = null
+  unit.targetType = null
+  unit.allowedToAttack = false
+}
+
+function pathAssaultUnit(unit, dest, mapGrid, gameState, now) {
+  if (!dest || !mapGrid?.[0] || !Number.isFinite(unit.tileX) || !Number.isFinite(unit.tileY)) return
+  const width = mapGrid[0].length
+  const height = mapGrid.length
+  const x = Math.max(0, Math.min(width - 1, dest.x))
+  const y = Math.max(0, Math.min(height - 1, dest.y))
+  if (unit.moveTarget && unit.moveTarget.x === x && unit.moveTarget.y === y && unit.path?.length) return
+  const path = getCachedPath(
+    { x: unit.tileX, y: unit.tileY, owner: unit.owner },
+    { x, y },
+    mapGrid,
+    gameState.occupancyMap,
+    { unitOwner: unit.owner }
+  )
+  if (path?.length > 1) {
+    unit.path = path.slice(1)
+    unit.moveTarget = { x, y }
+    unit.lastPathCalcTime = now
+  }
 }
