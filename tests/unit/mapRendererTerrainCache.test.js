@@ -172,6 +172,37 @@ describe('prepared terrain residency', () => {
     expect(renderer.terrainByteBudget.usage.terrainResident).toBe(0)
   })
 
+  it.each(['count', 'bytes'])('[U07130] restores decorations on retained terrain pages after %s eviction', async(pressure) => {
+    const renderer = readyRenderer(), grid = makeMap(32, 16)
+    const pages = await renderer.prepareStaticTerrain(grid, {
+      budget: createTerrainByteBudget({ residentBytes: 8 * 1024 * 1024, stagingBytes: 2 * 1024 * 1024 }),
+      yieldTask: async() => {}
+    })
+    renderer.publishStaticTerrain(pages)
+    const pageBytes = getTerrainRasterBytes(517, 517)
+    renderer.maxCachedChunks = pressure === 'count' ? 1 : 8
+    renderer.terrainByteBudget = createTerrainByteBudget({
+      residentBytes: pressure === 'bytes' ? pageBytes : pageBytes * 2, stagingBytes: pageBytes
+    })
+    vi.spyOn(renderer, 'drawDecorativeLayer').mockImplementation(ctx => ctx.fillRect(0, 0, 32, 32))
+    const ctx = makeTraceContext({})
+    for (const x of [0, 16, 0]) {
+      renderer.renderTiles(ctx, grid, { x: x * TILE_SIZE, y: 0 }, x, 0, x + 16, 16,
+        { decorativeFadeEnabled: false }, { skipWaterBase: true, skipWaterSot: true })
+      expect(renderer.processDecorativeWarmQueue({ timeRemaining: () => 10 })).toBe(true)
+      const chunk = pages.pages.get(`${x / 16},0`)
+      expect(chunk.decorativeCanvas.width).toBe(517)
+      expect(chunk.decorativeCtx.operations.filter(op => op[0] === 'fillRect')).toHaveLength(256)
+      expect(renderer.drawPreparedDecorations(ctx, chunk, grid, true, 0, 0, 0, false)).toBe(true)
+      expect(renderer.terrainByteBudget.usage.terrainResident).toBeLessThanOrEqual(renderer.terrainByteBudget.limits.terrainResident)
+    }
+    expect(renderer.drawBaseLayer).toHaveBeenCalledTimes(2)
+    expect(renderer.drawDecorativeLayer).toHaveBeenCalledTimes(256 * 3)
+    renderer.invalidateAllChunks()
+    expect(renderer.terrainByteBudget.usage.terrainResident).toBe(0)
+    expect(renderer.terrainByteBudget.usage.terrainStaging).toBe(0)
+  })
+
   it('[U07064] rejects an oversized raster generation before baking and releases cancelled preparation', async() => {
     const renderer = readyRenderer()
     const budget = createTerrainByteBudget({ residentBytes: 16 * 1024 * 1024, stagingBytes: 2 * 1024 * 1024 })

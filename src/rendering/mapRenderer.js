@@ -1068,6 +1068,13 @@ export class MapRenderer {
       chunk.decorativeCanvas.width = 1
       chunk.decorativeCanvas.height = 1
     }
+    // Prepared ground retains this chunk after overlay-cache eviction. Clear
+    // publication state with the raster so a return visit queues a fresh page
+    // instead of treating the released 1x1 canvas as a complete decoration.
+    chunk.decorativeCanvas = null
+    chunk.decorativeCtx = null
+    chunk.decorativeKey = null
+    chunk.decorativeReadyAt = 0
     chunk.decorativeResidentToken?.release()
     chunk.decorativeResidentToken = null
     chunk.decorativeResidentBytes = 0
@@ -1958,7 +1965,6 @@ export class MapRenderer {
           this.frameChunkStats.chunksDrawn++
           if (!options.gpuStaticGround) this.drawChunkRaster(ctx, chunk, drawX, drawY)
           if (chunk.preparedRaster) this.drawResourceOverlays(ctx, mapGrid, chunkStartX, chunkStartY, chunkEndX, chunkEndY, scrollOffset.x, scrollOffset.y, useTexture, true)
-          this.drawPreparedDecorations(ctx, chunk, mapGrid, useTexture, drawX, drawY, now, fadeDecorations)
           continue
         }
         const updateOptions = this.chunkUpdateOptions
@@ -1984,8 +1990,18 @@ export class MapRenderer {
         this.frameChunkStats.chunksDrawn++
         if (!options.gpuStaticGround) this.drawChunkRaster(ctx, chunk, drawX, drawY)
         if (chunk.preparedRaster) this.drawResourceOverlays(ctx, mapGrid, chunkStartX, chunkStartY, chunkEndX, chunkEndY, scrollOffset.x, scrollOffset.y, useTexture, true)
-        this.drawPreparedDecorations(ctx, chunk, mapGrid, useTexture, drawX, drawY, now, fadeDecorations)
       }
+    }
+
+    // Ground pages include padding beyond their tile bounds. Composite every
+    // decoration after all ground pages, otherwise the next page's padding
+    // paints over decorations at seams and crops multi-page sprites.
+    for (const key of activeChunkKeys) {
+      const chunk = this.chunkCache.get(key)
+      if (!chunk?.everRendered || chunk.contextLost) continue
+      this.drawPreparedDecorations(ctx, chunk, mapGrid, useTexture,
+        chunk.startX * TILE_SIZE - scrollOffset.x - chunk.padding,
+        chunk.startY * TILE_SIZE - scrollOffset.y - chunk.padding, now, fadeDecorations)
     }
 
     this.evictOldChunks(activeChunkKeys)
