@@ -49,6 +49,31 @@ describe('Ammunition System', () => {
     getServiceRadiusPixels.mockReturnValue(5 * TILE_SIZE)
   })
 
+  it.each(['factory', 'truck'])('[U07120] refills mine storage from a nearby %s and respects capacity and cargo', sourceType => {
+    const layer = { id: 'layer', type: 'mineLayer', owner: 'player', health: 100,
+      x: 11 * TILE_SIZE, y: 11 * TILE_SIZE, tileX: 11, tileY: 11,
+      mineCapacity: 20, remainingMines: 0, movement: { isMoving: false } }
+    const factory = { id: 'factory', type: 'ammunitionFactory', owner: 'player', health: 100,
+      x: 10, y: 10, width: 2, height: 2 }
+    const truck = { id: 'truck', type: 'ammunitionTruck', owner: 'player', health: 100,
+      x: 10 * TILE_SIZE, y: 11 * TILE_SIZE, ammoCargo: 5, maxAmmoCargo: 500 }
+    const sources = sourceType === 'factory' ? [factory] : []
+    const group = sourceType === 'factory' ? [layer] : [layer, truck]
+    updateAmmunitionSystem(group, sources, gameState, 1000)
+    expect(layer.remainingMines).toBe(sourceType === 'factory' ? 20 : 5)
+    expect(layer.ammunition).toBeUndefined()
+    if (sourceType === 'truck') expect(truck.ammoCargo).toBe(0)
+  })
+
+  it.each(['enemy', 'moving', 'out of range'])('[U07121] does not refill a mine layer that is %s', condition => {
+    const layer = { id: 'layer', type: 'mineLayer', owner: condition === 'enemy' ? 'enemy' : 'player',
+      health: 100, x: (condition === 'out of range' ? 90 : 11) * TILE_SIZE, y: 11 * TILE_SIZE,
+      mineCapacity: 20, remainingMines: 0, movement: { isMoving: condition === 'moving' } }
+    const factory = { type: 'ammunitionFactory', owner: 'player', health: 100, x: 10, y: 10, width: 2, height: 2 }
+    updateAmmunitionSystem([layer], [factory], gameState, 1000)
+    expect(layer.remainingMines).toBe(0)
+  })
+
   describe('Resupply from factories', () => {
     it('[U00150] should resupply a stationary unit within range', () => {
       const factory = {

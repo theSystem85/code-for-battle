@@ -1,3 +1,4 @@
+import { getAmmoCapacityKey, getAmmoCurrentKey } from '../utils/ammunition.js'
 // Ammunition System Module - Handles ammunition resupply at factories and by supply trucks
 import { TILE_SIZE, AMMO_RESUPPLY_TIME, AMMO_TRUCK_RANGE } from '../config.js'
 import { logPerformance } from '../performanceUtils.js'
@@ -79,7 +80,7 @@ function processAmmunitionResupply(source, units, delta) {
 
   units.forEach(unit => {
     // Only resupply units with ammunition system
-    if ((typeof unit.maxAmmunition !== 'number' && typeof unit.maxRocketAmmo !== 'number') || unit.health <= 0) return
+    if (typeof unit[getAmmoCapacityKey(unit)] !== 'number' || unit.health <= 0) return
     if (!isEligibleFriendlyGroundServiceTarget(source, unit)) return
 
     const unitCenterX = (unit.x ?? unit.tileX * TILE_SIZE) + TILE_SIZE / 2
@@ -89,9 +90,8 @@ function processAmmunitionResupply(source, units, delta) {
 
     const stationary = !(unit.movement && unit.movement.isMoving)
 
-    const isHelicopter = unit.type === 'apache' || unit.type === 'f35'
-    const maxAmmo = isHelicopter ? unit.maxRocketAmmo : unit.maxAmmunition
-    const currentAmmo = isHelicopter ? unit.rocketAmmo : unit.ammunition
+    const maxAmmo = unit[getAmmoCapacityKey(unit)]
+    const currentAmmo = unit[getAmmoCurrentKey(unit)]
 
     if (inArea && stationary) {
       if (currentAmmo < maxAmmo) {
@@ -102,11 +102,7 @@ function processAmmunitionResupply(source, units, delta) {
         const baseRefillRate = maxAmmo / AMMO_RESUPPLY_TIME
         const refillRate = baseRefillRate / powerMultiplier
         unit.ammoRefillTimer = (unit.ammoRefillTimer || 0) + delta
-        if (isHelicopter) {
-          unit.rocketAmmo = Math.min(maxAmmo, currentAmmo + refillRate * delta)
-        } else {
-          unit.ammunition = Math.min(maxAmmo, currentAmmo + refillRate * delta)
-        }
+        unit[getAmmoCurrentKey(unit)] = Math.min(maxAmmo, currentAmmo + refillRate * delta)
       } else {
         unit.ammoRefillTimer = 0
         unit.resupplyingAmmo = false
@@ -133,7 +129,7 @@ function processAmmunitionTruckResupply(truck, units, delta) {
 
   units.forEach(unit => {
     // Only resupply units with ammunition system (not the truck itself or other supply units)
-    if ((typeof unit.maxAmmunition !== 'number' && typeof unit.maxRocketAmmo !== 'number') || unit.health <= 0 || unit.id === truck.id) return
+    if (typeof unit[getAmmoCapacityKey(unit)] !== 'number' || unit.health <= 0 || unit.id === truck.id) return
     if (unit.type === 'ammunitionTruck') return // Don't resupply other ammo trucks
     if (!isEligibleFriendlyGroundServiceTarget(truck, unit)) return
 
@@ -144,9 +140,8 @@ function processAmmunitionTruckResupply(truck, units, delta) {
 
     const stationary = !(unit.movement && unit.movement.isMoving)
 
-    const isHelicopter = unit.type === 'apache' || unit.type === 'f35'
-    const maxAmmo = isHelicopter ? unit.maxRocketAmmo : unit.maxAmmunition
-    const currentAmmo = isHelicopter ? unit.rocketAmmo : unit.ammunition
+    const maxAmmo = unit[getAmmoCapacityKey(unit)]
+    const currentAmmo = unit[getAmmoCurrentKey(unit)]
 
     if (inRange && stationary && currentAmmo < maxAmmo) {
       if (!unit.resupplyingAmmo) {
@@ -158,11 +153,7 @@ function processAmmunitionTruckResupply(truck, units, delta) {
       const ammoToTransfer = Math.min(ammoNeeded, truck.ammoCargo, maxAmmo - currentAmmo)
 
       unit.ammoRefillTimer = (unit.ammoRefillTimer || 0) + delta
-      if (isHelicopter) {
-        unit.rocketAmmo = Math.min(maxAmmo, currentAmmo + ammoToTransfer)
-      } else {
-        unit.ammunition = Math.min(maxAmmo, currentAmmo + ammoToTransfer)
-      }
+      unit[getAmmoCurrentKey(unit)] = Math.min(maxAmmo, currentAmmo + ammoToTransfer)
       truck.ammoCargo = Math.max(0, truck.ammoCargo - ammoToTransfer)
     } else if (!inRange || !stationary) {
       if (unit.resupplyingAmmo) {

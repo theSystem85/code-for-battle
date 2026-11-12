@@ -1,3 +1,4 @@
+import { needsAmmo as targetNeedsAmmo } from '../../utils/ammunition.js'
 import { TILE_SIZE } from '../../config.js'
 import { gameState } from '../../gameState.js'
 import { playSound } from '../../sound.js'
@@ -203,7 +204,6 @@ export function isUtilityTargetValid(mode, serviceUnit, target) {
     return typeof actualTarget.maxGas === 'number' && actualTarget.gas < actualTarget.maxGas
   }
   if (mode === UTILITY_QUEUE_MODES.AMMO) {
-    const isApache = actualTarget.type === 'apache' || actualTarget.type === 'f35'
     const isBuilding = actualTarget.isBuilding || typeof actualTarget.tileX !== 'number'
 
     if (actualTarget.type === 'ammunitionFactory') {
@@ -214,11 +214,7 @@ export function isUtilityTargetValid(mode, serviceUnit, target) {
       return typeof actualTarget.maxAmmo === 'number' && actualTarget.ammo < actualTarget.maxAmmo
     }
 
-    if (isApache) {
-      return typeof actualTarget.maxRocketAmmo === 'number' && actualTarget.rocketAmmo < actualTarget.maxRocketAmmo
-    }
-
-    return typeof actualTarget.maxAmmunition === 'number' && actualTarget.ammunition < actualTarget.maxAmmunition
+    return targetNeedsAmmo(actualTarget)
   }
   if (mode === UTILITY_QUEUE_MODES.REPAIR) {
     if (actualTarget.restorationProtectedFromRecovery) {
@@ -319,11 +315,7 @@ export function assignAmmunitionTruckToTarget(ammoTruck, target, mapGrid, { supp
   const isUnit = typeof target.tileX === 'number'
 
   if (!isReloadMode) {
-    const needsAmmo = isUnit ?
-      ((target.type === 'apache' || target.type === 'f35') ?
-        (typeof target.maxRocketAmmo === 'number' && target.rocketAmmo < target.maxRocketAmmo) :
-        (typeof target.maxAmmunition === 'number' && target.ammunition < target.maxAmmunition)) :
-      (typeof target.maxAmmo === 'number' && target.ammo < target.maxAmmo)
+    const needsAmmo = targetNeedsAmmo(target)
 
     if (!needsAmmo) {
       if (!suppressNotifications) {

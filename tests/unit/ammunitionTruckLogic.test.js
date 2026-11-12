@@ -57,6 +57,18 @@ describe('ammunitionTruckLogic.js', () => {
   })
 
   describe('updateAmmunitionTruckLogic', () => {
+    it('[U07122] services a mine layer target and clears it when full', () => {
+      const layer = { id: 'layer', type: 'mineLayer', owner: 'player1', health: 100,
+        tileX: 10, tileY: 10, remainingMines: 0, mineCapacity: 20 }
+      const truck = { id: 'truck', type: 'ammunitionTruck', owner: 'player1', health: 100,
+        tileX: 10, tileY: 11, ammoCargo: 50, maxAmmoCargo: 500, ammoResupplyTarget: layer }
+      updateAmmunitionTruckLogic([layer, truck], gameState, 5000)
+      expect(layer.remainingMines).toBe(20)
+      expect(truck.ammoCargo).toBe(30)
+      updateAmmunitionTruckLogic([layer, truck], gameState, 16)
+      expect(truck.ammoResupplyTarget).toBeNull()
+    })
+
     it('[U00161] should do nothing if no ammo trucks exist', () => {
       const units = [
         { id: 'u1', type: 'tank', health: 100 }

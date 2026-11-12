@@ -1,3 +1,4 @@
+import { needsAmmo as targetNeedsAmmo } from '../utils/ammunition.js'
 import {
   APACHE_RANGE_REDUCTION,
   BATTLESHIP_FIRE_RANGE,
@@ -29,6 +30,7 @@ import {
   handleGuardTargetCommand,
   handleSupplyShipServiceCommand,
   handleServiceProviderClick,
+  handleMineLayerFactoryServiceCommand,
   handleFallbackCommand
 } from './mouseCommands.js'
 import { getUnitSelectionCenter } from './selectionManager.js'
@@ -66,6 +68,10 @@ export function tryHandleFriendlyUnitInteraction(
 
   if (tryHandleDirectFleetInteraction(selectedUnits, worldX, worldY, units, mapGrid, selectionManager)) {
     return true
+  }
+  for (const factory of selectedUnits) {
+    if (factory.owner === gameState.humanPlayer &&
+        handleMineLayerFactoryServiceCommand(factory, [clickedUnit], unitCommands, mapGrid)) return true
   }
   if (handleSupplyShipServiceCommand(selectedUnits, clickedUnit, selectionManager, unitCommands, mapGrid)) return true
   if (handleServiceProviderClick(handler, clickedUnit, selectedUnits, unitCommands, mapGrid)) {
@@ -140,9 +146,7 @@ export function processUtilityQueueSelection(handler, units, mapGrid, selectedUn
     if (unit.health < unit.maxHealth) {
       repairTargets.push(unit)
     }
-    const needsAmmo = ((unit.type === 'apache' || unit.type === 'f35')
-      ? typeof unit.maxRocketAmmo === 'number' && unit.rocketAmmo < unit.maxRocketAmmo
-      : typeof unit.maxAmmunition === 'number' && unit.ammunition < unit.maxAmmunition)
+    const needsAmmo = targetNeedsAmmo(unit)
     if (needsAmmo) {
       ammoTargets.push(unit)
     }
@@ -933,6 +937,12 @@ function handleUnitSelection(handler, worldX, worldY, e, units, factories, selec
     const tileX = Math.floor(worldX / TILE_SIZE)
     const tileY = Math.floor(worldY / TILE_SIZE)
 
+    for (const factory of gameState.buildings || []) {
+      if (factory.owner === gameState.humanPlayer && tileX >= factory.x && tileX < factory.x + factory.width &&
+          tileY >= factory.y && tileY < factory.y + factory.height &&
+          handleMineLayerFactoryServiceCommand(factory, commandableUnits, unitCommands, mapGrid)) return
+    }
+
     if (gameState.buildings && Array.isArray(gameState.buildings)) {
       for (const building of gameState.buildings) {
         if (building.type === 'vehicleWorkshop' &&
@@ -972,10 +982,10 @@ function handleUnitSelection(handler, worldX, worldY, e, units, factories, selec
     const hasSelectedAmmoTrucks = commandableUnits.some(unit => unit.type === 'ammunitionTruck')
     if (hasSelectedAmmoTrucks) {
       for (const unit of units) {
-        if (unit.owner === gameState.humanPlayer && typeof unit.maxAmmunition === 'number') {
+        if (unit.owner === gameState.humanPlayer && targetNeedsAmmo(unit)) {
           const uX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
           const uY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
-          if (uX === tileX && uY === tileY && unit.ammunition < unit.maxAmmunition) {
+          if (uX === tileX && uY === tileY) {
             unitCommands.handleAmmunitionTruckResupplyCommand(commandableUnits, unit, mapGrid, { append: appendToUtilityQueue })
             recordHumanUnitCommand(commandableUnits.map(selected => selected.id), {
               command: 'ammo_resupply',

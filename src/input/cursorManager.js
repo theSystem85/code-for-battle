@@ -1,3 +1,4 @@
+import { needsAmmo as targetNeedsAmmo, getAmmoCapacityKey, getAmmoCurrentKey } from '../utils/ammunition.js'
 import { unitContainsPoint } from './unitHitTest.js'
 import { canSupplyShipServe } from '../game/shipyardServiceLogic.js'
 // cursorManager.js
@@ -729,12 +730,12 @@ export class CursorManager {
       if (hasSelectedAmmoTrucks && units && Array.isArray(units)) {
         // Check units that can receive ammo
         for (const unit of units) {
-          const canReceiveAmmo = typeof unit.maxAmmunition === 'number' || typeof unit.maxRocketAmmo === 'number'
+          const canReceiveAmmo = typeof unit[getAmmoCapacityKey(unit)] === 'number'
           if (unit.owner === gameState.humanPlayer && canReceiveAmmo) {
             const unitTileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
             const unitTileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
-            const ammoCurrent = typeof unit.maxRocketAmmo === 'number' ? unit.rocketAmmo : unit.ammunition
-            const ammoMax = typeof unit.maxRocketAmmo === 'number' ? unit.maxRocketAmmo : unit.maxAmmunition
+            const ammoCurrent = unit[getAmmoCurrentKey(unit)]
+            const ammoMax = unit[getAmmoCapacityKey(unit)]
             if (unitTileX === tileX && unitTileY === tileY && ammoCurrent < ammoMax) {
               this.isOverAmmoReceivableTarget = true
               break
@@ -775,13 +776,7 @@ export class CursorManager {
         )
         const needsAmmo = selectedUnits.some(unit => {
           if (unit.owner !== gameState.humanPlayer) return false
-          if (unit.isBuilding) {
-            return typeof unit.maxAmmo === 'number' && unit.ammo < unit.maxAmmo
-          }
-          if (unit.type === 'apache' || unit.type === 'f35') {
-            return typeof unit.maxRocketAmmo === 'number' && unit.rocketAmmo < unit.maxRocketAmmo
-          }
-          return typeof unit.maxAmmunition === 'number' && unit.ammunition < unit.maxAmmunition
+          return targetNeedsAmmo(unit)
         })
 
         for (const unit of units) {
@@ -809,6 +804,26 @@ export class CursorManager {
             this.isOverServiceProvider = true
             break
           }
+        }
+      }
+      // Mine layers can request factory service in either selection direction.
+      if (!this.isOverServiceProvider && selectedUnits.some(unit =>
+        unit.type === 'mineLayer' || unit.type === 'ammunitionFactory'
+      )) {
+        const hoveredFactory = (gameState.buildings || []).some(building =>
+          building.type === 'ammunitionFactory' && building.owner === gameState.humanPlayer && building.health > 0 &&
+          tileX >= building.x && tileX < building.x + building.width &&
+          tileY >= building.y && tileY < building.y + building.height
+        )
+        if (hoveredFactory && selectedUnits.some(unit => unit.type === 'mineLayer' &&
+            unit.owner === gameState.humanPlayer && unit.health > 0 && targetNeedsAmmo(unit))) {
+          this.isOverServiceProvider = true
+        } else if (selectedUnits.some(building => building.type === 'ammunitionFactory' &&
+            building.owner === gameState.humanPlayer && building.health > 0)) {
+          this.isOverServiceProvider = (units || []).some(unit => unit.type === 'mineLayer' &&
+            unit.owner === gameState.humanPlayer && unit.health > 0 && targetNeedsAmmo(unit) &&
+            Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE) === tileX &&
+            Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE) === tileY)
         }
       }
       // Check for repairable units when recovery tanks are selected

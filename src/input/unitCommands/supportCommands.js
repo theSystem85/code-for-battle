@@ -1,3 +1,4 @@
+import { needsAmmo as targetNeedsAmmo } from '../../utils/ammunition.js'
 import { TILE_SIZE } from '../../config.js'
 import { playSound, playPositionalSound } from '../../sound.js'
 import { showNotification } from '../../ui/notifications.js'
@@ -393,11 +394,7 @@ export function handleAmmunitionTruckResupplyCommand(handler, selectedUnits, tar
     return
   }
 
-  const needsAmmo = isUnit ?
-    ((target.type === 'apache' || target.type === 'f35') ?
-      (typeof target.maxRocketAmmo === 'number' && target.rocketAmmo < target.maxRocketAmmo) :
-      (typeof target.maxAmmunition === 'number' && target.ammunition < target.maxAmmunition)) :
-    (typeof target.maxAmmo === 'number' && target.ammo < target.maxAmmo)
+  const needsAmmo = targetNeedsAmmo(target)
 
   if (!needsAmmo) {
     if (!suppressNotifications) {

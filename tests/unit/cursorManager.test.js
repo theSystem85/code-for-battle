@@ -355,6 +355,28 @@ describe('CursorManager', () => {
     expect(canvas.classList.contains('guard-mode')).toBe(true)
   })
 
+  it.each(['truck', 'factory'])('[U07123] shows move-into for mine layer and %s in both selection directions', sourceType => {
+    const manager = new CursorManager()
+    const canvas = createCanvas({ left: 0, top: 0, right: 400, bottom: 400 })
+    const mapGrid = createTestMapGrid(12, 12)
+    const layer = { id: 'layer', type: 'mineLayer', owner: 'player1', health: 100,
+      x: 2 * TILE_SIZE, y: 2 * TILE_SIZE, tileX: 2, tileY: 2, remainingMines: 0, mineCapacity: 20 }
+    const source = sourceType === 'truck'
+      ? { id: 'truck', type: 'ammunitionTruck', owner: 'player1', health: 100,
+        x: 5 * TILE_SIZE, y: 5 * TILE_SIZE, tileX: 5, tileY: 5, ammoCargo: 100 }
+      : { id: 'factory', type: 'ammunitionFactory', owner: 'player1', health: 100,
+        x: 5, y: 5, width: 2, height: 2, isBuilding: true }
+    const units = sourceType === 'truck' ? [layer, source] : [layer]
+    gameState.buildings = sourceType === 'factory' ? [source] : []
+    manager.updateCustomCursor(createMouseEvent(5 * TILE_SIZE + 16, 5 * TILE_SIZE + 16), mapGrid, [], [layer], units)
+    expect(canvas.classList.contains('move-into-mode')).toBe(true)
+    manager.updateCustomCursor(createMouseEvent(layer.x + 16, layer.y + 16), mapGrid, [], [source], units)
+    expect(canvas.classList.contains('move-into-mode')).toBe(true)
+    layer.remainingMines = layer.mineCapacity
+    manager.updateCustomCursor(createMouseEvent(layer.x + 16, layer.y + 16), mapGrid, [], [source], units)
+    expect(canvas.classList.contains('move-into-mode')).toBe(false)
+  })
+
   it('[U01125] uses move-into cursor when hovering a recoverable wreck', () => {
     const manager = new CursorManager()
     const canvas = createCanvas()

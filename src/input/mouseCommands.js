@@ -1,3 +1,5 @@
+import { findPathForOwner } from '../units.js'
+import { needsAmmo as targetNeedsAmmo } from '../utils/ammunition.js'
 import { applyMapAction } from '../ui/mapActions/mapActionCommands.js'
 import { broadcastGameCommand } from '../network/commandBroadcast.js'
 import { COMMAND_TYPES } from '../network/commandTypes.js'
@@ -557,11 +559,7 @@ export function handleServiceProviderClick(handler, provider, selectedUnits, uni
   if (provider.type === 'ammunitionTruck') {
     let handled = false
     requesters.forEach(requester => {
-      const needsAmmo = requester.isBuilding
-        ? (typeof requester.maxAmmo === 'number' && requester.ammo < requester.maxAmmo)
-        : ((requester.type === 'apache' || requester.type === 'f35')
-          ? (typeof requester.maxRocketAmmo === 'number' && requester.rocketAmmo < requester.maxRocketAmmo)
-          : (typeof requester.maxAmmunition === 'number' && requester.ammunition < requester.maxAmmunition))
+      const needsAmmo = targetNeedsAmmo(requester)
       if (needsAmmo) {
         unitCommands.handleAmmunitionTruckResupplyCommand([provider], requester, mapGrid, { suppressNotifications: true })
         handled = true
@@ -647,4 +645,37 @@ export function handleSupplyShipServiceCommand(selectedUnits, target, selectionM
   })) return false
   broadcastGameCommand(COMMAND_TYPES.MAP_ACTION, payload)
   return true
+}
+
+// Use reachable tiles outside the factory footprint; servicing itself is automatic.
+export function handleMineLayerFactoryServiceCommand(factory, requesters, unitCommands, mapGrid) {
+  if (isReplayInteractionLocked() || factory?.type !== 'ammunitionFactory' || factory.health <= 0) return false
+  const layers = requesters.filter(unit => unit.type === 'mineLayer' && unit.health > 0 &&
+    unit.owner === factory.owner && targetNeedsAmmo(unit))
+  let handled = false
+  for (const unit of layers) {
+    let destination = null
+    let shortestPath = Infinity
+    for (let y = factory.y - 1; y <= factory.y + factory.height; y++) {
+      for (let x = factory.x - 1; x <= factory.x + factory.width; x++) {
+        if (x >= factory.x && x < factory.x + factory.width && y >= factory.y && y < factory.y + factory.height) continue
+        if (mapGrid[y]?.[x] == null) continue
+        const path = findPathForOwner(
+          { x: Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE), y: Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE) },
+          { x, y }, mapGrid, gameState.occupancyMap, unit.owner
+        )
+        if (path?.length > 0 && path.length < shortestPath) {
+          shortestPath = path.length
+          destination = { x: x * TILE_SIZE + TILE_SIZE / 2, y: y * TILE_SIZE + TILE_SIZE / 2 }
+        }
+      }
+    }
+    if (destination) {
+      unit.deployingMine = false
+      unitCommands.handleMovementCommand([unit], destination.x, destination.y, mapGrid)
+      recordHumanUnitCommand([unit.id], { command: 'move', targetPos: { space: 'world', ...destination } })
+      handled = true
+    }
+  }
+  return handled
 }

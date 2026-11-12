@@ -1195,7 +1195,7 @@ export function createUnit(factory, unitType, x, y, options = {}) {
 
   // Add unit-specific properties
   const fullCrewTanks = ['tank_v1', 'tank-v2', 'tank-v3', 'lightTank', 'howitzer', 'destroyer', 'battleship', 'submarine', 'aircraftCarrier']
-  const loaderUnits = ['tankerTruck', 'ammunitionTruck', 'ambulance', 'recoveryTank', 'harvester', 'rocketTank', 'hovercraft', 'vehicleFerry', 'navalMineLayer']
+  const loaderUnits = ['mineLayer', 'tankerTruck', 'ammunitionTruck', 'ambulance', 'recoveryTank', 'harvester', 'rocketTank', 'hovercraft', 'vehicleFerry', 'navalMineLayer']
 
   // Apache helicopters and F22 Raptors don't have the crew system
   if (actualType !== 'apache' && actualType !== 'f22Raptor' && actualType !== 'f35') {

@@ -155,6 +155,12 @@ describe('Mine Layer Behavior', () => {
       expect(result).toBe(false)
     })
 
+    it('[U07124] waits for a complete mine when a refill is still partial', () => {
+      mineLayer.remainingMines = 0.5
+      expect(startMineDeployment(mineLayer, 5, 5, 1000)).toBe(false)
+      expect(mineLayer.deployingMine).toBeFalsy()
+    })
+
     it('[U02849] should return false when no mines remaining', () => {
       mineLayer.remainingMines = 0
 

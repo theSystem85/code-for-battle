@@ -590,6 +590,12 @@ describe('units.js', () => {
       height: 3
     }
 
+    it('[U07125] gives mine layers a loader and a full mine magazine', () => {
+      const unit = createUnit(factory, 'mineLayer', 10, 10)
+      expect(unit.crew).toEqual({ driver: true, commander: true, loader: true })
+      expect(unit.remainingMines).toBe(unit.mineCapacity)
+    })
+
     it('[U04924] should create unit with basic properties', () => {
       const unit = createUnit(factory, 'tank_v1', 10, 10)
 

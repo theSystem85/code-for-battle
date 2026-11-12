@@ -40,7 +40,7 @@ export function updateMineLayerBehavior(units, now) {
         const tileCenterX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
         const tileCenterY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
 
-        if (unit.remainingMines > 0) {
+        if (unit.remainingMines >= 1) {
           const mine = deployMine(tileCenterX, tileCenterY, unit.owner)
           if (mine) {
             unit.remainingMines--
@@ -85,7 +85,7 @@ export function startMineDeployment(unit, tileX, tileY, now) {
   if (unit.type !== 'mineLayer') {
     return false
   }
-  if (unit.remainingMines <= 0) {
+  if (unit.remainingMines < 1) {
     initiateAutoRefill(unit)
     return false
   }

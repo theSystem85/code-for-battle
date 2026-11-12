@@ -1,4 +1,5 @@
 import { serviceUnitDistanceTiles } from '../utils/serviceUnitDistance.js'
+import { needsAmmo as targetNeedsAmmo, getAmmoCapacityKey, getAmmoCurrentKey } from '../utils/ammunition.js'
 // ammunitionTruckLogic.js
 import { AMMO_RESUPPLY_TIME, AMMO_TRUCK_RANGE, TILE_SIZE } from '../config.js'
 import { logPerformance } from '../performanceUtils.js'
@@ -107,32 +108,14 @@ export const updateAmmunitionTruckLogic = logPerformance(function(units, gameSta
           ammoTruck.ammoResupplyTimer = (ammoTruck.ammoResupplyTimer || 0) + delta
 
           if (ammoTruck.ammoCargo > 0) {
-            const needsAmmo = isUnit ?
-              ((target.type === 'apache' || target.type === 'f35') ?
-                (target.rocketAmmo < target.maxRocketAmmo) :
-                (target.ammunition < target.maxAmmunition)) :
-              (target.ammo < target.maxAmmo)
+            const needsAmmo = targetNeedsAmmo(target)
 
             if (needsAmmo) {
-              const refillRate = (isUnit ?
-                ((target.type === 'apache' || target.type === 'f35') ? target.maxRocketAmmo : target.maxAmmunition) :
-                target.maxAmmo) / AMMO_RESUPPLY_TIME
-              const ammoNeeded = isUnit ?
-                ((target.type === 'apache' || target.type === 'f35') ?
-                  (target.maxRocketAmmo - target.rocketAmmo) :
-                  (target.maxAmmunition - target.ammunition)) :
-                (target.maxAmmo - target.ammo)
-              const transfer = Math.min(refillRate * delta, ammoNeeded, ammoTruck.ammoCargo)
-
-              if (isUnit) {
-                if (target.type === 'apache' || target.type === 'f35') {
-                  target.rocketAmmo = Math.min(target.maxRocketAmmo, target.rocketAmmo + transfer)
-                } else {
-                  target.ammunition = Math.min(target.maxAmmunition, target.ammunition + transfer)
-                }
-              } else {
-                target.ammo = Math.min(target.maxAmmo, target.ammo + transfer)
-              }
+              const maxAmmo = target[getAmmoCapacityKey(target)]
+              const currentKey = getAmmoCurrentKey(target)
+              const ammoNeeded = maxAmmo - target[currentKey]
+              const transfer = Math.min(maxAmmo / AMMO_RESUPPLY_TIME * delta, ammoNeeded, ammoTruck.ammoCargo)
+              target[currentKey] = Math.min(maxAmmo, target[currentKey] + transfer)
               ammoTruck.ammoCargo = Math.max(0, ammoTruck.ammoCargo - transfer)
             } else {
               // Target is full, stop resupplying
