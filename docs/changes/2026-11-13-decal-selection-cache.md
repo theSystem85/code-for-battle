@@ -1,0 +1,11 @@
+- [x] **Improvement: Cache combat decal sprite selection**
+  Reuse selected sprites per live tile, including grouped debris and missing-asset results; refresh on decal edits or texture catalog publication while retaining live surface blocking and unchanged drawing.
+  Spec: none
+
+Hot-loop audit: selection runs per visible decal per render/rebuild; 400 decals at 75 FPS previously meant up to 30,000 catalog selections/second. The cache removes repeated filtering and selection allocations, with one weakly held record per live tile. It adds no raster passes, resizing, or pixel buffers; existing draw area still scales with DPR squared (4x at DPR 2). This is an operation count, not a measured speedup.
+
+Validation: regression coverage uses 400 decals across three draws, requiring 400 selections and all 1,200 sprite draws; also checks grouped footprints, in-place edits, fallback publication and live blocking. Hardware GPU acceptance remains pending: no /dev/dri in this environment. Patrick should verify dense decals during cold traversal, repeated fast full-map scrolling and active combat at unchanged settings on hardware GPU, recording FPS and p95/p99/max frame times against the 13.333 ms deadline per performance_improvement.md. No software performance benchmarks were run.
+
+Functional validation: `npx vitest run tests/unit/decalSpriteCache.test.js` passes all 5 regressions; `npm run test:integration` passes 86 tests; `npm run lint:fix:changed` and `npm run lint` pass. The existing E00206 browser scenario fails because standard tank hits produce no impact decal; reproduced identically in a detached, unmodified origin/dev worktree using system Chromium via a temporary Playwright config (bundled Chromium absent; its CDN download forbidden). Full E2E suite skipped; this was the targeted decal scenario. U05433's woodland_lakes_stones_soil source-sheet validation also fails on unmodified origin/dev (98 ownership violations expected to be zero); this change does not touch those assets.
+
+Complete unit result: `npm run test:unit -- --maxWorkers=4`: 372 files passed, 1 failed; 5,822 tests passed, 1 failed. The sole failure is the baseline U05433 asset ownership issue described above. Unit plus integration coverage totals 5,908 passing tests.

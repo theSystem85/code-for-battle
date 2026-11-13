@@ -241,6 +241,7 @@ export class MapRenderer {
   constructor(textureManager) {
     this.navalOccupancyOverlay = new Set()
     this.textureManager = textureManager
+    this.decalSpriteCache = new WeakMap()
     this.trackMarksRenderer = new TrackMarksRenderer()
     this.crystalGlowRenderer = new CrystalGlowRenderer()
     this.resourceSpriteCache = new WeakMap()
@@ -2541,41 +2542,48 @@ export class MapRenderer {
     const groupOffsetX = tileX - groupOriginX
     const groupOffsetY = tileY - groupOriginY
 
-    if (groupWidth > 1 || groupHeight > 1) {
-      const grouped = this.textureManager.selectGroupedTileVariant(tag, {
-        width: groupWidth,
-        height: groupHeight,
-        offsetX: groupOffsetX,
-        offsetY: groupOffsetY,
-        seed: variantSeed,
-        includeDefaultDecals: true
-      })
-      if (grouped?.rect && grouped?.image) {
-        const { rect, image } = grouped
-        ctx.drawImage(image, rect.x, rect.y, rect.width, rect.height, screenX, screenY, TILE_SIZE + 1, TILE_SIZE + 1)
-        return
+    // One record per live tile; unchanged frames do no catalog filtering or
+    // selection allocations. Catalog identity changes also invalidate misses.
+    const manager = this.textureManager
+    let cached = this.decalSpriteCache.get(tile)
+    if (!cached || cached.decal !== tile.decal || cached.tag !== tag ||
+      cached.seed !== variantSeed || cached.width !== groupWidth || cached.height !== groupHeight ||
+      cached.offsetX !== groupOffsetX || cached.offsetY !== groupOffsetY ||
+      cached.signature !== manager.integratedRenderSignature ||
+      cached.buckets !== manager.integratedTagBuckets ||
+      cached.defaults !== manager.defaultCombatDecalTagBuckets ||
+      cached.groups !== manager.integratedGroupedTagCatalog ||
+      cached.defaultGroups !== manager.defaultCombatDecalGroupedTagCatalog) {
+      let selected = null
+      if (groupWidth > 1 || groupHeight > 1) {
+        selected = manager.selectGroupedTileVariant(tag, {
+          width: groupWidth,
+          height: groupHeight,
+          offsetX: groupOffsetX,
+          offsetY: groupOffsetY,
+          seed: variantSeed,
+          includeDefaultDecals: true
+        })
       }
+      if (!selected?.rect || !selected?.image) {
+        const candidates = manager.getDecalTileCandidatesByTags([tag])
+        selected = candidates?.length ? candidates[variantSeed % candidates.length] : null
+      }
+      cached = {
+        decal: tile.decal, tag, seed: variantSeed,
+        width: groupWidth, height: groupHeight, offsetX: groupOffsetX, offsetY: groupOffsetY,
+        signature: manager.integratedRenderSignature,
+        buckets: manager.integratedTagBuckets, defaults: manager.defaultCombatDecalTagBuckets,
+        groups: manager.integratedGroupedTagCatalog, defaultGroups: manager.defaultCombatDecalGroupedTagCatalog,
+        selected
+      }
+      this.decalSpriteCache.set(tile, cached)
     }
-
-    const candidates = this.textureManager.getDecalTileCandidatesByTags([tag])
-
-    if (Array.isArray(candidates) && candidates.length > 0) {
-      const selected = candidates[variantSeed % candidates.length]
-      if (selected?.rect && selected?.image) {
-        const { rect, image } = selected
-        ctx.drawImage(
-          image,
-          rect.x,
-          rect.y,
-          rect.width,
-          rect.height,
-          screenX,
-          screenY,
-          TILE_SIZE + 1,
-          TILE_SIZE + 1
-        )
-        return
-      }
+    const selected = cached.selected
+    if (selected?.rect && selected?.image) {
+      const { rect, image } = selected
+      ctx.drawImage(image, rect.x, rect.y, rect.width, rect.height, screenX, screenY, TILE_SIZE + 1, TILE_SIZE + 1)
+      return
     }
 
     ctx.save()
