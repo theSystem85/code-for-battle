@@ -2,6 +2,8 @@ import { getTankImageAssets } from './tankImageRenderer.js'
 import { getHarvesterBaseImage } from './harvesterImageRenderer.js'
 import { getRocketTankBaseImage } from './rocketTankImageRenderer.js'
 import { getAmbulanceBaseImage } from './ambulanceImageRenderer.js'
+import { getAmmunitionTruckBaseImage } from './ammunitionTruckImageRenderer.js'
+import { getPreparedSprite } from './prepared/preparedSpritePipeline.js'
 import { getTankerTruckBaseImage } from './tankerTruckImageRenderer.js'
 import { getRecoveryTankBaseImage } from './recoveryTankImageRenderer.js'
 import { getHowitzerBaseImage } from './howitzerImageRenderer.js'
@@ -143,6 +145,9 @@ export function getSingleImageWreckSprite(unitType) {
     case 'tankerTruck':
       image = getTankerTruckBaseImage()
       break
+    case 'ammunitionTruck':
+      image = getAmmunitionTruckBaseImage()
+      break
     case 'recoveryTank':
       image = getRecoveryTankBaseImage()
       break
@@ -166,9 +171,8 @@ export function getSingleImageWreckSprite(unitType) {
       break
   }
 
-  if (!image) {
-    return null
-  }
+  if (!image) image = getPreparedSprite(`unit:${unitType}:base`)?.image
+  if (!image) return null
   return getDesaturatedCanvas(image)
 }
 
@@ -215,7 +219,7 @@ export function getCachedPreparedSinkingWreckSprite(unitType, density = 1) {
 
 export function prewarmWreckSpriteCache(density = 1) {
   for (const unitType of [
-    'harvester', 'rocketTank', 'ambulance', 'tankerTruck', 'recoveryTank',
+    'harvester', 'rocketTank', 'ambulance', 'tankerTruck', 'ammunitionTruck', 'recoveryTank',
     'howitzer', 'mineLayer', 'mineSweeper', 'f22Raptor', 'f35'
   ]) {
     getPreparedSingleImageWreckSprite(unitType, density)
