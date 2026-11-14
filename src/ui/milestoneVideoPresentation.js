@@ -1,10 +1,13 @@
 export const MILESTONE_PRESENTATION_FADE_MS = 400
 
 /**
- * Aspect of the floating portrait clip. Condensed portrait stretches this
- * ratio across the viewport width. Collapsed portrait still uses the pixel size.
+ * Aspect of the floating portrait clip. Condensed portrait uses this ratio at
+ * half the viewport width. Collapsed portrait still uses the pixel size.
  */
 export const PORTRAIT_COMPACT_VIDEO_SIZE = Object.freeze({ width: 160, height: 120 })
+
+/** Condensed portrait clip width. Height follows PORTRAIT_COMPACT_VIDEO_SIZE. */
+export const PORTRAIT_CONDENSED_VIDEO_WIDTH = '50vw'
 
 /**
  * Gap below the iOS protected top region (Dynamic Island, notch, status bar).
@@ -18,7 +21,7 @@ export function milestoneVideoPlacement(body, minimapRect) {
   if (classes.contains('mobile-portrait') && classes.contains('sidebar-condensed')) {
     return {
       mode: 'portrait-condensed',
-      span: 'viewport-width',
+      span: 'half-viewport',
       width: PORTRAIT_COMPACT_VIDEO_SIZE.width,
       height: PORTRAIT_COMPACT_VIDEO_SIZE.height,
       topGap: PORTRAIT_CONDENSED_VIDEO_TOP_GAP_PX

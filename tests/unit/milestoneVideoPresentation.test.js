@@ -3,7 +3,8 @@ import {
   configureMilestoneVideo,
   milestoneVideoPlacement,
   PORTRAIT_COMPACT_VIDEO_SIZE,
-  PORTRAIT_CONDENSED_VIDEO_TOP_GAP_PX
+  PORTRAIT_CONDENSED_VIDEO_TOP_GAP_PX,
+  PORTRAIT_CONDENSED_VIDEO_WIDTH
 } from '../../src/ui/milestoneVideoPresentation.js'
 import { VideoOverlay } from '../../src/ui/videoOverlay.js'
 
@@ -23,14 +24,15 @@ describe('milestone video presentation', () => {
     })
   })
 
-  it('[U05474] centers condensed portrait video with CSS safe-area clearance', () => {
+  it('[U05474] centers condensed portrait video at half the viewport width', () => {
     const condensed = {
       mode: 'portrait-condensed',
-      span: 'viewport-width',
+      span: 'half-viewport',
       width: PORTRAIT_COMPACT_VIDEO_SIZE.width,
       height: PORTRAIT_COMPACT_VIDEO_SIZE.height,
       topGap: PORTRAIT_CONDENSED_VIDEO_TOP_GAP_PX
     }
+    expect(PORTRAIT_CONDENSED_VIDEO_WIDTH).toBe('50vw')
     for (const mode of ['mobile-portrait sidebar-condensed', 'mobile-portrait sidebar-condensed pwa-standalone is-touch']) {
       document.body.className = mode
       expect(milestoneVideoPlacement(document.body, { left: 4, top: 8, width: 200, height: 100 })).toEqual(condensed)
@@ -51,11 +53,11 @@ describe('milestone video presentation', () => {
     expect(css).toMatch(/body\.mobile-portrait\.sidebar-condensed #video-overlay\.native-video\s*\{[^}]*top:\s*calc\(12px \+ max\(var\(--safe-area-top, 0px\), env\(safe-area-inset-top, 0px\)\)\)/)
     expect(css).toMatch(/body\.mobile-portrait\.sidebar-condensed #video-overlay\.native-video\s*\{[^}]*left:\s*0;/)
     expect(css).toMatch(/body\.mobile-portrait\.sidebar-condensed #video-overlay\.native-video\s*\{[^}]*right:\s*0;/)
-    expect(css).toMatch(/body\.mobile-portrait\.sidebar-condensed #video-overlay\.native-video\s*\{[^}]*width:\s*100%;/)
+    expect(css).toMatch(/body\.mobile-portrait\.sidebar-condensed #video-overlay\.native-video\s*\{[^}]*width:\s*50vw;/)
     expect(css).toMatch(/body\.mobile-portrait\.sidebar-condensed #video-overlay\.native-video\s*\{[^}]*height:\s*auto;/)
     expect(css).toMatch(/body\.mobile-portrait\.sidebar-condensed #video-overlay\.native-video\s*\{[^}]*aspect-ratio:\s*160\s*\/\s*120;/)
-    expect(css).toMatch(/body\.mobile-portrait\.sidebar-condensed #video-overlay\.native-video\s*\{[^}]*margin-left:\s*0;/)
-    expect(css).toMatch(/body\.mobile-portrait\.sidebar-condensed #video-overlay\.native-video\s*\{[^}]*margin-right:\s*0;/)
+    expect(css).toMatch(/body\.mobile-portrait\.sidebar-condensed #video-overlay\.native-video\s*\{[^}]*margin-left:\s*auto;/)
+    expect(css).toMatch(/body\.mobile-portrait\.sidebar-condensed #video-overlay\.native-video\s*\{[^}]*margin-right:\s*auto;/)
     expect(css).toMatch(/body\.mobile-portrait #video-overlay\.native-video\.show\s*\{[^}]*pointer-events:\s*auto;/)
     expect(css).not.toMatch(/body\.pwa-standalone\.mobile-portrait\.sidebar-condensed #video-overlay/)
 

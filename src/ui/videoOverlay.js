@@ -3,7 +3,8 @@ import {
   milestoneVideoPlacement,
   MILESTONE_PRESENTATION_FADE_MS,
   PORTRAIT_COMPACT_VIDEO_SIZE,
-  PORTRAIT_CONDENSED_VIDEO_TOP_GAP_PX
+  PORTRAIT_CONDENSED_VIDEO_TOP_GAP_PX,
+  PORTRAIT_CONDENSED_VIDEO_WIDTH
 } from './milestoneVideoPresentation.js'
 // ui/videoOverlay.js
 import { MILESTONE_VIDEO_CROPS } from './milestoneVideoCrop.js'
@@ -258,18 +259,19 @@ export class VideoOverlay {
         transform: none;
       }
       .video-overlay.native-video { box-shadow: none; }
-      /* Portrait condensed: full viewport width at the compact clip's aspect,
-         top-centered below the iOS protected region. Inline geometry is cleared
-         so this rule tracks --safe-area-top / env(safe-area-inset-top). */
+      /* Portrait condensed: half the viewport (50vw) at the compact clip's
+         aspect, centered below the iOS protected region. The side gutters keep
+         the corner controls clear, and the shorter clip stays above the build
+         bar. Inline geometry is cleared so this rule tracks the safe area. */
       body.mobile-portrait.sidebar-condensed #video-overlay.native-video {
         top: calc(${PORTRAIT_CONDENSED_VIDEO_TOP_GAP_PX}px + max(var(--safe-area-top, 0px), env(safe-area-inset-top, 0px)));
         left: 0;
         right: 0;
-        width: 100%;
+        width: ${PORTRAIT_CONDENSED_VIDEO_WIDTH};
         height: auto;
         aspect-ratio: ${PORTRAIT_COMPACT_VIDEO_SIZE.width} / ${PORTRAIT_COMPACT_VIDEO_SIZE.height};
-        margin-left: 0;
-        margin-right: 0;
+        margin-left: auto;
+        margin-right: auto;
       }
       body.mobile-portrait #video-overlay.native-video.show {
         pointer-events: auto;
