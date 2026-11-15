@@ -21,6 +21,7 @@ import {
   applyMilestoneVideoAudioState,
   MILESTONE_NARRATION_GAIN,
   MILESTONE_VIDEO_BED_GAIN,
+  milestoneClipIsEmbeddedAudioOnly,
   playMilestoneVideoWithAudioPolicy,
   resolveMilestonePlaybackVolume
 } from './milestoneAudioMode.js'
@@ -966,11 +967,16 @@ export function playMilestoneVideo(videoFile, audioFile, milestoneInfo) {
 /**
  * Convenience function for playing video and audio in sync by base filename
  * @param {string} baseFilename - The base filename without extension (e.g., 'tank_over_crystals')
- * @param {object} options - Optional settings for the video playback
+ * @param {object} options - Optional settings for the video playback.
+ *   `embeddedAudio: true` forces the mp4's own audio with no companion MP3.
  */
 export function playSyncedVideoAudio(baseFilename, options = {}) {
   const videoFile = `${baseFilename}.mp4`
-  const audioFile = `${baseFilename}.mp3`
+  // Embedded-audio clips have no companion MP3. Passing null makes the overlay
+  // play the mp4's own track and skips the MP3 request entirely.
+  const audioFile = milestoneClipIsEmbeddedAudioOnly(baseFilename, options.embeddedAudio)
+    ? null
+    : `${baseFilename}.mp3`
 
   const milestoneInfo = {
     title: options.title || 'Video Playback',

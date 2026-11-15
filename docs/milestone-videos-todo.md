@@ -8,12 +8,13 @@ Shared work list for generating the remaining milestone videos. Any agent may pi
 - **5:3, 960×576** to match the radar/minimap (`canvasManager.js`: height = width × 0.6). Generate 16:9 720p with action centered, then center-crop `crop=1200:720,scale=960:576`.
 - 15 s, photorealistic desert military style, sidebar icon as reference image.
 - Generate one at a time, get Patrick's review, then integrate (`videoFilename` in `src/game/milestoneSystem.js`) and tick the box with the commit SHA.
+- Add the clip's base name to `EMBEDDED_AUDIO_ONLY_CLIPS` in `src/ui/milestoneAudioMode.js` so the player uses the video's own audio and never requests a `.mp3` (the list is the single source of truth). Add a `FULL_5X3` entry in `src/ui/milestoneVideoCrop.js`.
 
 ## Status legend
 `[ ]` open · `[~]` in progress / in review (who, date) · `[x]` done (commit)
 
 ## Existing milestones without a video
-- [~] `firstFactory` → `first_factory.mp4` (generated 2026-11-15, in review with Patrick)
+- [x] `firstFactory` → `first_factory.mp4` (approved by Patrick 2026-11-15, integrated in this commit; embedded audio, no MP3)
 - [ ] `radarBuilt` → `radar_station.mp4`
 - [ ] `tenBuildings` → `ten_buildings.mp4`
 - [ ] `firstUnit` → `first_unit.mp4` (low priority, overlaps `firstTank`)

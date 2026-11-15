@@ -4,12 +4,13 @@ import {
   MILESTONE_NARRATION_GAIN,
   applyMilestoneVideoAudioState,
   MILESTONE_VIDEO_BED_GAIN,
+  milestoneClipIsEmbeddedAudioOnly,
   milestoneClipUsesEmbeddedAudio,
   playMilestoneVideoWithAudioPolicy,
   resolveMilestoneAudioMode,
   resolveMilestonePlaybackVolume
 } from '../../src/ui/milestoneAudioMode.js'
-import { videoOverlay } from '../../src/ui/videoOverlay.js'
+import { playSyncedVideoAudio, videoOverlay } from '../../src/ui/videoOverlay.js'
 
 function fakeVideo(play) {
   const attributes = new Set(['muted'])
@@ -231,5 +232,53 @@ describe('milestone embedded vs separate audio', () => {
     expect(video.volume).toBe(0)
 
     setMasterVolume(previous)
+  })
+
+  it('[U07144] picks the embedded-audio path from config for clips with no MP3', () => {
+    expect(milestoneClipIsEmbeddedAudioOnly('first_factory')).toBe(true)
+    expect(milestoneClipIsEmbeddedAudioOnly('first_factory.mp4')).toBe(true)
+    expect(milestoneClipIsEmbeddedAudioOnly('first_tank')).toBe(false)
+    expect(milestoneClipIsEmbeddedAudioOnly('air_strip')).toBe(false)
+    expect(milestoneClipIsEmbeddedAudioOnly('new_clip', true)).toBe(true)
+    expect(milestoneClipIsEmbeddedAudioOnly('first_factory', false)).toBe(false)
+  })
+
+  it('[U07145] playSyncedVideoAudio passes no MP3 for embedded clips and keeps the MP3 for the others', () => {
+    const play = vi.spyOn(videoOverlay, 'playMilestoneVideo').mockResolvedValue(undefined)
+    try {
+      playSyncedVideoAudio('first_factory', { title: 'First Factory Built' })
+      expect(play).toHaveBeenLastCalledWith('first_factory.mp4', null, expect.objectContaining({ title: 'First Factory Built' }))
+
+      playSyncedVideoAudio('first_tank', { title: 'First Tank Produced' })
+      expect(play).toHaveBeenLastCalledWith('first_tank.mp4', 'first_tank.mp3', expect.objectContaining({ title: 'First Tank Produced' }))
+
+      playSyncedVideoAudio('some_new_clip', { embeddedAudio: true })
+      expect(play).toHaveBeenLastCalledWith('some_new_clip.mp4', null, expect.any(Object))
+    } finally {
+      play.mockRestore()
+    }
+  })
+
+  it('[U07146] embedded-only clips follow master volume, mute, and fade at the narration level', () => {
+    const previous = {
+      audio: videoOverlay.currentAudio,
+      master: videoOverlay.milestoneMasterVolume,
+      muted: videoOverlay.milestoneAudioMuted
+    }
+    try {
+      videoOverlay.currentAudio = null
+      videoOverlay.milestoneAudioMuted = false
+      videoOverlay.milestoneMasterVolume = 1
+      expect(videoOverlay.computeMilestoneVideoVolume(1)).toBeCloseTo(MILESTONE_NARRATION_GAIN)
+      videoOverlay.milestoneMasterVolume = 0.5
+      expect(videoOverlay.computeMilestoneVideoVolume(1)).toBeCloseTo(MILESTONE_NARRATION_GAIN * 0.5)
+      expect(videoOverlay.computeMilestoneVideoVolume(0.5)).toBeCloseTo(MILESTONE_NARRATION_GAIN * 0.25)
+      videoOverlay.milestoneAudioMuted = true
+      expect(videoOverlay.computeMilestoneVideoVolume(1)).toBe(0)
+    } finally {
+      videoOverlay.currentAudio = previous.audio
+      videoOverlay.milestoneMasterVolume = previous.master
+      videoOverlay.milestoneAudioMuted = previous.muted
+    }
   })
 })

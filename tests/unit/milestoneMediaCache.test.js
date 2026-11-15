@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import {
   MILESTONE_VIDEO_FADE_MS,
   clearMilestoneMediaPreload,
@@ -65,5 +65,30 @@ describe('milestone media preload and fade', () => {
     expect(computeMilestoneVideoOpacity(true, start, start + MILESTONE_VIDEO_FADE_MS, 6, 1)).toBe(1)
     expect(computeMilestoneVideoOpacity(true, start, start + 3000, 6, 6 - (MILESTONE_VIDEO_FADE_MS / 2000))).toBeCloseTo(0.5)
     expect(computeMilestoneVideoOpacity(true, start, start + 3000, 6, 6)).toBe(0)
+  })
+
+  it('[U07147] preloads only the mp4 for an embedded-audio clip', async() => {
+    vi.resetModules()
+    const canPlay = vi.spyOn(window.HTMLMediaElement.prototype, 'canPlayType').mockReturnValue('maybe')
+    const load = vi.spyOn(window.HTMLMediaElement.prototype, 'load').mockImplementation(() => {})
+    try {
+      const cache = await import('../../src/ui/milestoneMediaCache.js')
+      cache.preloadMilestoneMedia('first_factory')
+      expect(cache.isMilestoneMediaPreloaded('first_factory')).toBe(true)
+      const entry = cache.takePreloadedMilestoneMedia('first_factory')
+      expect(entry.video).not.toBeNull()
+      expect(entry.video.getAttribute('src')).toBe('video/first_factory.mp4')
+      expect(entry.audio).toBeNull()
+      expect(entry.audioFailed).toBe(false)
+
+      cache.preloadMilestoneMedia('first_tank')
+      const withMp3 = cache.takePreloadedMilestoneMedia('first_tank')
+      expect(withMp3.audio).not.toBeNull()
+      expect(withMp3.audio.getAttribute('src')).toBe('video/first_tank.mp3')
+      cache.clearMilestoneMediaPreload()
+    } finally {
+      canPlay.mockRestore()
+      load.mockRestore()
+    }
   })
 })

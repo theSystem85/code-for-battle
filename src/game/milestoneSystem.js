@@ -38,6 +38,7 @@ export class MilestoneSystem {
         id: 'firstFactory',
         displayName: 'First Factory Built',
         description: 'Your industrial capabilities are expanding',
+        videoFilename: 'first_factory',
         priority: 'medium'
       },
       tenBuildings: {

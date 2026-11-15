@@ -1,4 +1,4 @@
 {
-  "commit": "6520450f",
-  "message": "fix: iPhone street rendering collapse with dedicated GPU atlas"
+  "commit": "cbc2670",
+  "message": "feat(audio): wire the ElevenLabs sound and voice pack"
 }

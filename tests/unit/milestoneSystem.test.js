@@ -333,6 +333,21 @@ describe('milestoneSystem.js', () => {
       expect(playSyncedVideoAudio).not.toHaveBeenCalled()
     })
 
+    it('[U07148] should play the first factory video when the player builds a vehicle factory', () => {
+      const local = new MilestoneSystem()
+      playSyncedVideoAudio.mockClear()
+      local.checkMilestones({
+        humanPlayer: 'player1',
+        buildings: [{ type: 'vehicleFactory', owner: 'player1' }],
+        units: []
+      })
+      expect(local.isAchieved('firstFactory')).toBe(true)
+      expect(playSyncedVideoAudio).toHaveBeenCalledWith('first_factory', expect.objectContaining({
+        title: 'First Factory Built',
+        priority: 'medium'
+      }))
+    })
+
     it('[U02771] should play a video the first time each new production unit appears', () => {
       const cases = [
         ['mineLayer', 'firstMineLayer', 'first_mine_layer', 'First Mine Layer Produced'],

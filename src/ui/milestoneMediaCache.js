@@ -2,6 +2,7 @@
 // Creating these elements must not start playback or mark a video as current.
 
 import { isEffectivelyOffline } from '../pwa/offlineState.js'
+import { milestoneClipIsEmbeddedAudioOnly } from './milestoneAudioMode.js'
 
 export const MILESTONE_VIDEO_FADE_MS = 220
 
@@ -104,6 +105,7 @@ export function preloadMilestoneMedia(baseFilename) {
     audioFailed: false
   }
   const skipVideo = isEffectivelyOffline()
+  const embeddedOnly = milestoneClipIsEmbeddedAudioOnly(baseFilename)
   if (!skipVideo && browserCanPreloadMilestoneMedia()) {
     try {
       const video = document.createElement('video')
@@ -116,23 +118,25 @@ export function preloadMilestoneMedia(baseFilename) {
       video.setAttribute('aria-hidden', 'true')
       video.dataset.milestonePreload = baseFilename
       video.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;'
-      const audio = document.createElement('audio')
-      audio.preload = 'auto'
-      audio.addEventListener('error', () => {
-        entry.audioFailed = true
-      })
       video.src = `video/${baseFilename}.mp4`
-      audio.src = `video/${baseFilename}.mp3`
       if (document.body) document.body.appendChild(video)
       video.load()
-      audio.load()
       entry.video = video
-      entry.audio = audio
+      if (!embeddedOnly) {
+        const audio = document.createElement('audio')
+        audio.preload = 'auto'
+        audio.addEventListener('error', () => {
+          entry.audioFailed = true
+        })
+        audio.src = `video/${baseFilename}.mp3`
+        audio.load()
+        entry.audio = audio
+      }
     } catch {
       entry.video = null
       entry.audio = null
     }
-  } else if (skipVideo && typeof document !== 'undefined') {
+  } else if (skipVideo && !embeddedOnly && typeof document !== 'undefined') {
     try {
       const audio = document.createElement('audio')
       audio.preload = 'auto'

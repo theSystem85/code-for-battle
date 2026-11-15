@@ -7,6 +7,22 @@ export const MILESTONE_NARRATION_GAIN = 0.28
 // clip sound audible under the narration at master volume 1.
 export const MILESTONE_VIDEO_BED_GAIN = 0.1
 
+// Clips whose narration is mixed into the mp4 itself and that ship with no
+// companion MP3. The MP3 approach is deprecated, so new milestone videos are
+// added here. The list is the single deterministic source: no network probe
+// decides this, and no 404 is requested for these clips.
+const EMBEDDED_AUDIO_ONLY_CLIPS = Object.freeze(['first_factory'])
+
+/**
+ * True when the clip has its own soundtrack and narration and no `.mp3`.
+ * `override` lets a caller force the answer (true or false) for a clip that is
+ * not in the list. Any other value falls back to the list.
+ */
+export function milestoneClipIsEmbeddedAudioOnly(baseFilename, override) {
+  if (override === true || override === false) return override
+  return EMBEDDED_AUDIO_ONLY_CLIPS.indexOf(String(baseFilename || '').replace(/\.mp4$/i, '')) !== -1
+}
+
 function clampUnitInterval(value) {
   const number = typeof value === 'number' ? value : Number(value)
   if (!Number.isFinite(number) || number <= 0) return 0
