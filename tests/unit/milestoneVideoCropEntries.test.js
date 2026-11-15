@@ -6,4 +6,10 @@ describe('milestone video crop entries', () => {
     expect(MILESTONE_VIDEO_CROPS.radar_station).toBe(MILESTONE_VIDEO_CROPS.first_factory)
     expect(MILESTONE_VIDEO_CROPS.radar_station).toEqual(MILESTONE_VIDEO_CROPS.helipad)
   })
+
+  it('[U07155] ten buildings and harvester unlock clips are full-frame 5:3 and need no crop', () => {
+    expect(MILESTONE_VIDEO_CROPS.ten_buildings).toBe(MILESTONE_VIDEO_CROPS.first_factory)
+    expect(MILESTONE_VIDEO_CROPS.harvester_unlocked).toBe(MILESTONE_VIDEO_CROPS.first_factory)
+    expect(MILESTONE_VIDEO_CROPS.ten_buildings).toEqual(MILESTONE_VIDEO_CROPS.helipad)
+  })
 })

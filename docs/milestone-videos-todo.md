@@ -17,9 +17,9 @@ Shared work list for generating the remaining milestone videos. Any agent may pi
 ## Existing milestones without a video
 - [x] `firstFactory` → `first_factory.mp4` (approved by Patrick 2026-11-15, integrated in 42433c8; embedded audio, no MP3)
 - [x] `radarBuilt` → `radar_station.mp4` (approved by Patrick 2026-11-15, integrated in 2c2a605; embedded audio, no MP3; 4 takes, the last before the 2-generation cap)
-- [ ] `tenBuildings` → `ten_buildings.mp4`
+- [x] `tenBuildings` → `ten_buildings.mp4` (approved by Patrick 2026-11-16, integrated in this commit; embedded audio, no MP3; 2 takes, kept take 1; known issue: steam is frozen, so it plays like a slow zoom into a still image)
 - [ ] `firstUnit` → `first_unit.mp4` (low priority, overlaps `firstTank`)
-- [ ] `harvesterUnlocked` → `harvester_unlocked.mp4`
+- [x] `harvesterUnlocked` → `harvester_unlocked.mp4` (approved by Patrick 2026-11-16, integrated in this commit; embedded audio, no MP3; 2 takes, kept take 2; known issue: the drum teeth and hubcaps shimmer/morph slightly, and it has 6 wheels instead of the icon's 4)
 - [ ] `rocketTankUnlocked` → `rocket_tank_unlocked.mp4` (not recommended)
 - [ ] `recoveryTankUnlocked` → `recovery_tank_unlocked.mp4`
 - [ ] `tankV3Unlocked` → `heavy_tank_unlocked.mp4`
@@ -57,3 +57,9 @@ Using the factory hangar from <IMAGE_0>: a wide golden-hour aerial of a large gr
 
 ### radarBuilt (generated 2026-11-15, 4 takes, final prompt)
 The radar station exactly as in <IMAGE_0>: a white square concrete bunker, a solid white cylindrical tower with a thin railing platform at the top, and one large white spherical radome on top, alone on a dry desert plain with scrub bushes and one narrow curving dirt road. One single continuous shot, no cuts, no crossfades: slow straight dolly-in with gentle upward tilt ending on the radome against the dawn sky; no orbit, no vehicles, no people; subtle sand wisps, blinking red light. Sound: wind, hum, radar ping every two seconds, no music; at ~2 s narration: 'Radar station operational. Advanced technologies are now available.'
+
+### tenBuildings (generated 2026-11-16, 2 takes, kept take 1)
+A slow high aerial glide over a desert military base with a dome construction yard and a crane, about ten structures on the sand, subject kept centered. One single continuous shot, no cuts, no crossfades; the buildings keep exactly the same shape, size and position; nothing morphs, appears or vanishes. Sound: desert wind, distant machinery, no music; at about 2 seconds a calm, deep male military command-briefing voice says: "Industrial complex established. Ten structures are now standing." Photorealistic cinematic military footage, golden-hour light, smooth camera motion, no text, no logos, no watermark.
+
+### harvesterUnlocked (generated 2026-11-16, 2 takes, kept take 2)
+Slow push-in toward a fully parked sand-colored harvester beside glowing ore crystals at golden hour, subject kept centered, the vehicle does not roll or slide. One single continuous shot, no cuts, no crossfades; the harvester keeps exactly the same shape, size and position; nothing morphs, appears or vanishes; only sand and the crystal glow move. Sound: desert wind, low engine idle, no music; at about 2 seconds a calm, deep male military command-briefing voice says: "Harvester unlocked. Resource collection is now available." Photorealistic cinematic military footage, golden-hour light, smooth camera motion, no text, no logos, no watermark.

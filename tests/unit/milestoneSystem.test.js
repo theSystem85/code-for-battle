@@ -364,6 +364,44 @@ describe('milestoneSystem.js', () => {
       }))
     })
 
+    it('[U07153] should play the industrial complex video when the player has ten buildings', () => {
+      const local = new MilestoneSystem()
+      playSyncedVideoAudio.mockClear()
+      const buildings = Array(10).fill(null).map(() => ({
+        type: 'concreteWall',
+        owner: 'player1'
+      }))
+      local.checkMilestones({
+        humanPlayer: 'player1',
+        buildings,
+        units: []
+      })
+      expect(local.isAchieved('tenBuildings')).toBe(true)
+      expect(playSyncedVideoAudio).toHaveBeenCalledWith('ten_buildings', expect.objectContaining({
+        title: 'Industrial Complex',
+        priority: 'low'
+      }))
+    })
+
+    it('[U07154] should play the harvester video when the player has a factory and a refinery', () => {
+      const local = new MilestoneSystem()
+      local.setProductionController({ unlockUnitType: vi.fn() })
+      playSyncedVideoAudio.mockClear()
+      local.checkMilestones({
+        humanPlayer: 'player1',
+        buildings: [
+          { type: 'vehicleFactory', owner: 'player1' },
+          { type: 'oreRefinery', owner: 'player1' }
+        ],
+        units: []
+      })
+      expect(local.isAchieved('harvesterUnlocked')).toBe(true)
+      expect(playSyncedVideoAudio).toHaveBeenCalledWith('harvester_unlocked', expect.objectContaining({
+        title: 'Harvester Available',
+        priority: 'medium'
+      }))
+    })
+
     it('[U02771] should play a video the first time each new production unit appears', () => {
       const cases = [
         ['mineLayer', 'firstMineLayer', 'first_mine_layer', 'First Mine Layer Produced'],

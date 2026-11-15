@@ -45,6 +45,7 @@ export class MilestoneSystem {
         id: 'tenBuildings',
         displayName: 'Industrial Complex',
         description: 'Ten buildings have been constructed',
+        videoFilename: 'ten_buildings',
         priority: 'low'
       },
       firstUnit: {
@@ -106,6 +107,7 @@ export class MilestoneSystem {
         id: 'harvesterUnlocked',
         displayName: 'Harvester Available',
         description: 'Resource harvesting capabilities unlocked',
+        videoFilename: 'harvester_unlocked',
         priority: 'medium'
       },
       rocketTankUnlocked: {
