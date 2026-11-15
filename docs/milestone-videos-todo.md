@@ -16,7 +16,7 @@ Shared work list for generating the remaining milestone videos. Any agent may pi
 
 ## Existing milestones without a video
 - [x] `firstFactory` → `first_factory.mp4` (approved by Patrick 2026-11-15, integrated in 42433c8; embedded audio, no MP3)
-- [x] `radarBuilt` → `radar_station.mp4` (approved by Patrick 2026-11-15, integrated in RADAR_SHA; embedded audio, no MP3; 4 takes, the last before the 2-generation cap)
+- [x] `radarBuilt` → `radar_station.mp4` (approved by Patrick 2026-11-15, integrated in 2c2a605; embedded audio, no MP3; 4 takes, the last before the 2-generation cap)
 - [ ] `tenBuildings` → `ten_buildings.mp4`
 - [ ] `firstUnit` → `first_unit.mp4` (low priority, overlaps `firstTank`)
 - [ ] `harvesterUnlocked` → `harvester_unlocked.mp4`
