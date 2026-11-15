@@ -216,7 +216,7 @@ describe('selectionManager', () => {
     expect(factory.selected).toBe(false)
     expect(gameState.attackGroupTargets).toEqual([])
     expect(showNotification).toHaveBeenCalledWith('Selected 2 tank(s)')
-    expect(playSound).toHaveBeenCalledWith('unitSelection')
+    expect(playSound).toHaveBeenCalledWith('ackSelectGround', 0.85)
     expect(getPlayableViewportWidth).toHaveBeenCalled()
     expect(getPlayableViewportHeight).toHaveBeenCalled()
     expect(getElementByIdSpy).toHaveBeenCalledWith('gameCanvas')
@@ -237,7 +237,7 @@ describe('selectionManager', () => {
     expect(selectedUnits).toEqual([clickedUnit, newUnit])
     expect(newUnit.selected).toBe(true)
     expect(showNotification).toHaveBeenCalledWith('Added 2 tank(s) to selection')
-    expect(playSound).toHaveBeenCalledWith('unitSelection')
+    expect(playSound).toHaveBeenCalledWith('ackSelectGround', 0.85)
   })
 
   it('[U06505] uses the browser click count instead of treating rapid single clicks as a double-click', () => {

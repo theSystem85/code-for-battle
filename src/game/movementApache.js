@@ -1,6 +1,7 @@
 import { TILE_SIZE, TILE_LENGTH_METERS } from '../config.js'
 import { removeUnitOccupancy } from '../units.js'
 import { addMovableOccupancy } from './occupancyTags.js'
+import { playVisiblePositionalSound } from '../audio/worldSound.js'
 import { playPositionalSound, audioContext, getMasterVolume } from '../sound.js'
 import { calculatePositionalAudio, consumeUnitGas } from './movementHelpers.js'
 import { BASE_FRAME_SECONDS, MOVEMENT_CONFIG } from './movementConstants.js'
@@ -208,6 +209,9 @@ export function updateApacheFlightState(unit, movement, occupancyMap, now) {
       ? Boolean(unit.groundedOccupancyApplied)
       : !unit.occupancyRemoved
   unit.flightState = newFlightState
+  if (unit.type === 'apache' && previouslyGrounded && unit.flightState === 'takeoff') {
+    playVisiblePositionalSound('apacheRotorSpoolUp', unit.x + TILE_SIZE / 2, unit.y + TILE_SIZE / 2, 0.55, unit.owner)
+  }
 
   const isGroundedNow = unit.flightState === 'grounded'
   const onHelipadNow = isGroundedNow && Boolean(unit.landedHelipadId)

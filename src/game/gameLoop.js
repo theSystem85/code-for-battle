@@ -13,6 +13,7 @@ import { updateMoneyBar } from '../ui/moneyBar.js'
 import { milestoneSystem } from './milestoneSystem.js'
 import { FPSDisplay } from '../ui/fpsDisplay.js'
 import { logPerformance } from '../performanceUtils.js'
+import { syncBattlefieldAmbience } from '../audio/ambienceManager.js'
 import { pauseAllSounds, resumeAllSounds } from '../sound.js'
 import { updateMapScrolling } from './gameStateManager.js'
 import { isLockstepEnabled, processLockstepTick } from '../network/gameCommandSync.js'
@@ -373,6 +374,7 @@ export class GameLoop {
         this.lastFrameTime = now
       }
     }
+    syncBattlefieldAmbience(gameState)
 
     if (!gameState.gameStarted) {
       this.fpsDisplay.reportFrameBreakdown({ updateMs: 0, renderMs: 0, idleMs: 0 })

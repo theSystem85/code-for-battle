@@ -1,4 +1,5 @@
 import { TILE_SIZE } from '../../config.js'
+import { playMoveOrderSound } from '../../audio/unitAcknowledgements.js'
 import { playPositionalSound } from '../../sound.js'
 import { showNotification } from '../../ui/notifications.js'
 import { gameState } from '../../gameState.js'
@@ -303,7 +304,7 @@ export function handleMovementCommand(handler, selectedUnits, targetX, targetY, 
   } else if (anyMoved) {
     const avgX = selectedUnits.reduce((sum, u) => sum + u.x, 0) / selectedUnits.length
     const avgY = selectedUnits.reduce((sum, u) => sum + u.y, 0) / selectedUnits.length
-    playPositionalSound('movement', avgX, avgY, 0.5)
+    playMoveOrderSound(selectedUnits, avgX, avgY, 0.5)
   }
 
   if (unreachableHumanCount > 0) {

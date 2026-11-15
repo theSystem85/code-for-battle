@@ -1,4 +1,5 @@
 import { productionQueue } from '../productionQueue.js'
+import { playSound } from '../sound.js'
 import { focusProducedUnit } from './productionUnitFocus.js'
 import { gameState } from '../gameState.js'
 
@@ -87,6 +88,7 @@ export function activateTab(controller, tabName, options = {}) {
   if (!targetButton || targetButton.classList.contains('disabled')) {
     return false
   }
+  const previousButton = document.querySelector('#productionTabs .tab-button.active[data-tab]')
 
   const tabButtons = document.querySelectorAll('.tab-button[data-tab]')
   const tabContents = document.querySelectorAll('.tab-content')
@@ -105,6 +107,7 @@ export function activateTab(controller, tabName, options = {}) {
   }
 
   controller.updateMobileCategoryToggle(tabName)
+  if (previousButton && previousButton !== targetButton) playSound('uiTabSwitch', 0.7)
   return true
 }
 

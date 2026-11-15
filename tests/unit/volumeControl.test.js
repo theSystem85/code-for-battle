@@ -48,7 +48,7 @@ describe('master volume preview', () => {
 
     slider.dispatchEvent(new window.Event('mouseup'))
     expect(playSound).toHaveBeenCalledTimes(1)
-    expect(playSound).toHaveBeenCalledWith('confirmed', 0.3)
+    expect(playSound).toHaveBeenCalledWith('uiToggleOn', 0.3)
 
     slider.dispatchEvent(new window.Event('change'))
     slider.dispatchEvent(new window.Event('pointerup'))

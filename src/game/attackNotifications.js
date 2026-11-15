@@ -36,6 +36,10 @@ const NAVAL_UNIT_TYPES = new Set([
 const attackedUnitNotificationTimes = new Map()
 const UNIT_ATTACK_NOTIFICATION_COOLDOWN = 8000
 let lastAttackFocusUnit = null
+let lastAircraftAttackNotification = 0
+let lastUnitsAttackNotification = 0
+
+const AIR_UNIT_TYPES = new Set(['apache', 'f22Raptor', 'f35'])
 
 export function focusLastAttackEvent() {
   focusAndSelectUnit(lastAttackFocusUnit)
@@ -224,6 +228,22 @@ function notifyNavalUnderAttack(target, now) {
   lastNavalAttackNotification.set(sound, now)
 }
 
+function notifyAirOrGroundUnderAttack(target, now) {
+  if (!isPlayerOwned(target) || isPlayerBase(target) || !target?.type) return
+  if (isPlayerHarvester(target)) return
+  if (target.isNaval === true || NAVAL_UNIT_TYPES.has(target.type)) return
+  if (AIR_UNIT_TYPES.has(target.type)) {
+    if (now - lastAircraftAttackNotification < NOTIFICATION_COOLDOWN) return
+    playSound('ourAircraftUnderAttack', 1.0, 0, true)
+    lastAircraftAttackNotification = now
+    return
+  }
+  if (target.isBuilding || target.width) return
+  if (now - lastUnitsAttackNotification < NOTIFICATION_COOLDOWN) return
+  playSound('ourUnitsUnderAttack', 1.0, 0, true)
+  lastUnitsAttackNotification = now
+}
+
 /**
  * Handle attack notifications when units/buildings take damage
  * Should be called from the bullet system when damage is dealt
@@ -249,6 +269,7 @@ export function handleAttackNotification(target, attacker, now) {
   }
 
   notifyNavalUnderAttack(target, now)
+  notifyAirOrGroundUnderAttack(target, now)
 
   if (isPlayerOwned(target) && !isPlayerBase(target) && target.type) {
     showUnitUnderAttackNotification(target, now)
@@ -262,6 +283,8 @@ export function resetAttackNotifications() {
   lastBaseAttackNotification = 0
   lastHarvesterAttackNotification = 0
   lastNavalAttackNotification.clear()
+  lastAircraftAttackNotification = 0
+  lastUnitsAttackNotification = 0
   attackedUnitNotificationTimes.clear()
   lastAttackFocusUnit = null
 }

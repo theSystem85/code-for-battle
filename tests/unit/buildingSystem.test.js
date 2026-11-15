@@ -782,10 +782,11 @@ describe('Building System', () => {
         }
       })
       expect(playPositionalSound).toHaveBeenCalledWith(
-        'explosion',
+        'buildingCollapse',
         expect.any(Number),
         expect.any(Number),
-        0.5
+        0.55,
+        0
       )
       expect(gameState.explosions).toHaveLength(1)
       expect(gameState.explosions[0]).toMatchObject({

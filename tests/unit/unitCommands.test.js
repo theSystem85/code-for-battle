@@ -1,9 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('../../src/config.js', () => ({
-  TILE_SIZE: 32,
-  TANK_FIRE_RANGE: 6
-}))
+vi.mock('../../src/config.js', async(importOriginal) => {
+  const actual = await importOriginal()
+  return {
+    ...actual,
+    TILE_SIZE: 32,
+    TANK_FIRE_RANGE: 6
+  }
+})
 
 vi.mock('../../src/units.js', () => ({
   findPathForOwner: vi.fn()
@@ -801,7 +805,7 @@ describe('UnitCommandsHandler attack group and movement', () => {
       mapGrid,
       { append: true, suppressNotifications: true, priority: true }
     )
-    expect(playSound).toHaveBeenCalledWith('movement', 0.5)
+    expect(playSound).toHaveBeenCalledWith('ackSupportMove', 0.5)
   })
 
   it('[U04716] handleDamagedUnitToRecoveryTankCommand skips fully healthy units', () => {

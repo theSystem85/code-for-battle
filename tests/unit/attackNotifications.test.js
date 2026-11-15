@@ -196,19 +196,22 @@ describe('attackNotifications', () => {
       expect(playSound).toHaveBeenLastCalledWith('ourBattleshipGotAttacked', 1.0, 0, true)
     })
 
-    it('[U00261] does not narrate enemy naval units or non-naval units', () => {
+    it('[U00261] stays silent for enemy ships and narrates player ground units', () => {
       handleAttackNotification(
         { id: 'enemy-bb', owner: 'enemy', type: 'battleship', isNaval: true, health: 100 },
         { owner: 'player1' },
         NOW
       )
+      expect(playSound).not.toHaveBeenCalled()
+
       handleAttackNotification(
         { id: 'tank-2', owner: 'player1', type: 'tank_v1', health: 100 },
         { owner: 'enemy' },
         NOW
       )
 
-      expect(playSound).not.toHaveBeenCalled()
+      expect(playSound).toHaveBeenCalledTimes(1)
+      expect(playSound).toHaveBeenCalledWith('ourUnitsUnderAttack', 1.0, 0, true)
     })
 
     it('[U00262] shows a unit under attack notification for player non-base non-harvester units', () => {
@@ -217,7 +220,8 @@ describe('attackNotifications', () => {
 
       handleAttackNotification(target, attacker, NOW)
 
-      expect(playSound).not.toHaveBeenCalled()
+      expect(playSound).toHaveBeenCalledTimes(1)
+      expect(playSound).toHaveBeenCalledWith('ourUnitsUnderAttack', 1.0, 0, true)
       expect(showNotification).toHaveBeenCalledWith('Tank is under attack!', 4500, expect.objectContaining({ historyMessage: 'Tank is under attack!' }))
     })
 

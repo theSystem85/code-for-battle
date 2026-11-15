@@ -1,6 +1,8 @@
 import { GAS_REFILL_TIME, GAS_REFILL_COST, TILE_SIZE } from '../config.js'
 import { logPerformance } from '../performanceUtils.js'
 import { getServiceRadiusPixels } from '../utils/serviceRadius.js'
+import { requestRefuelPump } from '../audio/serviceLoops.js'
+import { playSound } from '../sound.js'
 
 export const updateGasStationLogic = logPerformance(function(units, buildings, gameState, delta) {
   const stations = buildings.filter(b => b.type === 'gasStation')
@@ -30,7 +32,7 @@ export const updateGasStationLogic = logPerformance(function(units, buildings, g
           refilling = true
           if (!unit.refueling) {
             unit.refueling = true
-            // if (unit.owner === gameState.humanPlayer) playSound('unitRefules')
+            if (unit.owner === gameState.humanPlayer) playSound('unitRefules', 1, 8, true)
           }
 
           const fillRate = unit.maxGas / GAS_REFILL_TIME
@@ -47,6 +49,7 @@ export const updateGasStationLogic = logPerformance(function(units, buildings, g
         }
 
         if (refilling) {
+          if (unit.owner === gameState.humanPlayer) requestRefuelPump(centerX, centerY)
           const costPerMs = GAS_REFILL_COST / GAS_REFILL_TIME
           const costThisTick = costPerMs * delta
           if (unit.owner === gameState.humanPlayer) {

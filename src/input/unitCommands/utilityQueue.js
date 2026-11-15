@@ -1,7 +1,7 @@
 import { needsAmmo as targetNeedsAmmo } from '../../utils/ammunition.js'
 import { TILE_SIZE } from '../../config.js'
 import { gameState } from '../../gameState.js'
-import { playSound } from '../../sound.js'
+import { playMoveOrderSound } from '../../audio/unitAcknowledgements.js'
 import { showNotification } from '../../ui/notifications.js'
 import { findPathForOwner } from '../../units.js'
 import { units } from '../../main.js'
@@ -544,7 +544,7 @@ export function assignRecoveryTankToWreck(tank, wreck, mapGrid, { mode = 'tow', 
   tank.moveTarget = { x: plan.moveTarget.x, y: plan.moveTarget.y }
   tank.recoveryTask = task
   if (!suppressNotifications) {
-    playSound('movement', 0.5)
+    playMoveOrderSound([tank])
   }
 
   return true
@@ -811,7 +811,7 @@ export function queueUtilityTargets(handler, serviceUnits, targets, mode, mapGri
   })
 
   if (anyQueued) {
-    playSound('movement', 0.5)
+    playMoveOrderSound(capableUnits)
   }
   return anyQueued
 }

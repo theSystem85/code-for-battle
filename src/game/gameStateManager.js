@@ -21,6 +21,7 @@ import { unregisterAutomationEntity } from '../policies/policyStore.js'
 import { resolveUnitCollisions, removeUnitOccupancy } from '../units.js'
 import { explosions } from '../logic.js'
 import { isHost } from '../network/gameCommandSync.js'
+import { playVisiblePositionalSound } from '../audio/worldSound.js'
 import { playSound, playPositionalSound, audioContext } from '../sound.js'
 import { clearFactoryFromMapGrid } from '../factories.js'
 import { setBuildingDebrisDecals, setWorldDecal } from './tileDecals.js'
@@ -755,8 +756,7 @@ export function cleanupDestroyedFactories(factories, mapGrid, gameState) {
         playSound('enemyBuildingDestroyed', 1.0, 0, true)
       }
 
-      // Play explosion sound with reduced volume (0.5)
-      playPositionalSound('explosion', explosionX, explosionY, 0.5)
+      playVisiblePositionalSound('buildingCollapse', explosionX, explosionY, 0.55, factory.owner || factory.id)
 
       // Add one-shot destruction animation at factory center
       spawnDestructionExplosion(gameState, explosionX, explosionY)

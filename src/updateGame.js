@@ -21,6 +21,8 @@ import { FRAME_PHASE, framePhases } from './performance/framePhases.js'
 import { updateEnemyAI } from './enemy.js'
 import { cleanupDestroyedSelectedUnits, getUnitCommandsHandler } from './inputHandler.js'
 import './game/stuckClusterNotification.js'
+import { noteVisibleEnemies } from './audio/announcerCues.js'
+import { closeRefuelPumpFrame, openRefuelPumpFrame } from './audio/serviceLoops.js'
 import { updateBuildingsUnderRepair, updateBuildingsAwaitingRepair, buildingData, cacheBuildingSmokeScales } from './buildings.js'
 import { handleSelfRepair } from './utils.js'
 import { updateGuardBehavior } from './behaviours/guard.js'
@@ -564,6 +566,7 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
 
       updateRecoveryTankLogic(units, gameState, delta)
 
+      openRefuelPumpFrame()
       updateHospitalLogic(units, gameState.buildings, gameState, delta)
       updateAmbulanceLogic(units, gameState, delta)
       updateGasStationLogic(units, gameState.buildings, gameState, delta)
@@ -571,6 +574,7 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
       updateShipyardServiceLogic(units, gameState.buildings, mapGrid, delta)
       updateHelipadLogic(units, gameState.buildings, gameState, delta)
       updateTankerTruckLogic(units, gameState, delta)
+      closeRefuelPumpFrame()
       updateAmmunitionTruckLogic(units, gameState, delta)
       // Update mine system (arming, etc.)
       updateMines(now)
@@ -760,6 +764,7 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
 
     framePhases.begin(FRAME_PHASE.fog)
     updateShadowOfWar(gameState, units, mapGrid, factories)
+    noteVisibleEnemies(units, gameState.buildings)
     framePhases.end(FRAME_PHASE.fog)
 
     // Log status changes for units with logging enabled

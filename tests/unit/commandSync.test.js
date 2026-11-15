@@ -76,14 +76,18 @@ vi.mock('../../src/gameState.js', () => ({
 }))
 
 // Mock config
-vi.mock('../../src/config.js', () => ({
-  TILE_SIZE: 32,
-  setMapDimensions: vi.fn(),
-  ORE_SPREAD_ENABLED: false,
-  ORE_SPREAD_INTERVAL: 1000,
-  setOreSpreadEnabled: vi.fn(),
-  setOreSpreadInterval: vi.fn()
-}))
+vi.mock('../../src/config.js', async(importOriginal) => {
+  const actual = await importOriginal()
+  return {
+    ...actual,
+    TILE_SIZE: 32,
+    setMapDimensions: vi.fn(),
+    ORE_SPREAD_ENABLED: false,
+    ORE_SPREAD_INTERVAL: 1000,
+    setOreSpreadEnabled: vi.fn(),
+    setOreSpreadInterval: vi.fn()
+  }
+})
 
 // Mock other dependencies
 vi.mock('../../src/network/remoteConnection.js', () => ({

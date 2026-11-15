@@ -9,6 +9,7 @@ import {
 import { gameState } from '../gameState.js'
 import { getUniqueId } from '../utils.js'
 import { notifyEntityUnderAttack } from './attackAlertBridge.js'
+import { playVisiblePositionalSound } from '../audio/worldSound.js'
 
 const waterMineLookup = new Map()
 
@@ -107,6 +108,7 @@ export function detonateWaterMine(mine, units, now = 0) {
     duration: 650,
     underwater: true
   })
+  playVisiblePositionalSound('waterMineBlast', center.x, center.y, 0.7, mine.owner, 0.25)
   removeWaterMine(mine)
 
   ;[...(gameState.waterMines || [])].forEach(other => {

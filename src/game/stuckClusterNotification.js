@@ -3,6 +3,7 @@
 import { TILE_SIZE } from '../config.js'
 import { selectedUnits } from '../inputHandler.js'
 import { showNotification } from '../ui/notifications.js'
+import { playSound } from '../sound.js'
 import { getPlayableViewportHeight, getPlayableViewportWidth } from '../utils/layoutMetrics.js'
 import {
   registerStuckClusterNotifier,
@@ -94,6 +95,7 @@ export function showStuckClusterNotification(cluster, gameState, now) {
     y: center.y
   }
 
+  playSound('unitsBlocked', 1, 0, true)
   const message = `${members.length} of your units are stuck`
   const onActivate = () => focusStuckUnits(members, gameState)
   showNotification(message, 6000, {

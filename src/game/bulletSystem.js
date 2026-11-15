@@ -5,6 +5,7 @@ import { recordMusicAttack } from '../audio/musicDirector.js'
 // Bullet System Module - Handles all bullet/projectile updates and collision detection
 import { TILE_SIZE, BULLET_DAMAGES, CREW_KILL_CHANCE } from '../config.js'
 import { triggerExplosion } from '../logic.js'
+import { playVisiblePositionalSound } from '../audio/worldSound.js'
 import { playSound, playPositionalSound } from '../sound.js'
 import { awardExperience } from '../utils.js'
 import {
@@ -152,6 +153,10 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
           rocketExplosionOptions,
           bullet
         )
+        const impactSound = bullet.projectileType === 'artillery' || bullet.shooter?.type === 'howitzer' || bullet.shooter?.type === 'artilleryTurret'
+          ? 'explosionArtillery'
+          : 'explosion'
+        playVisiblePositionalSound(impactSound, bullet.targetPosition.x, bullet.targetPosition.y, 0.7, bullet.shooter?.owner)
         bullets.splice(i,1)
         continue
       } else {

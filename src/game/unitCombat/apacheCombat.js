@@ -9,6 +9,7 @@ import { getEffectiveFireRange, getEffectiveFireRate, isHumanControlledParty } f
 import { getAirstripParkingSpots, reserveAirstripParkingSlot } from '../../utils/airstripUtils.js'
 import { handleApacheVolley, handleF35BombDrop } from './firingHandlers.js'
 import { canF35ReleaseWeapons } from '../f35Behavior.js'
+import { announceAircraftLowFuel } from '../../audio/announcerCues.js'
 import { shouldJetReturnHomeForFuel } from '../jetFuel.js'
 import { getAircraftAltitudeLift } from '../aircraftTargeting.js'
 
@@ -632,6 +633,7 @@ export function updateF35Combat(unit, units, bullets, mapGrid, now, _occupancyMa
     unit.volleyState = null
     const alreadyLanding = Boolean(unit.helipadLandingRequested || unit.flightPlan?.mode === 'helipad' || unit.flightPlan?.mode === 'airstrip')
     if (!unit.homeCarrierId && !unit.guardMode && !alreadyLanding && (ammoRemaining <= 0 || shouldReturnForFuel || unit.autoReturnToHelipadOnTargetLoss)) {
+      if (shouldReturnForFuel) announceAircraftLowFuel(unit)
       const padInfo = findNearestLandingPadForF35(unit, units)
       if (padInfo) {
         initiateF35PadReturn(unit, padInfo)

@@ -9,6 +9,7 @@ import { showNotification } from './ui/notifications.js'
 import { clearChainBuildState, gameState } from './gameState.js'
 import { buildingData, canPlaceBuilding, isNearExistingBuilding } from './buildings.js'
 import { unitCosts } from './units.js'
+import { announceInsufficientFunds } from './audio/announcerCues.js'
 import { playSound } from './sound.js'
 import { assignHarvesterToOptimalRefinery } from './game/harvesterLogic.js'
 import { constructPlayerBuilding } from './game/playerBuildingLifecycle.js'
@@ -672,6 +673,7 @@ export const productionQueue = {
           this.pausedUnit = true
           this.clearMapProductionProgress()
           showNotification('Unit production paused: not enough money.')
+          announceInsufficientFunds()
           return
         }
       }
@@ -715,6 +717,7 @@ export const productionQueue = {
           // Not enough money, pause progress here
           this.pausedBuilding = true
           showNotification('Building production paused: not enough money.')
+          announceInsufficientFunds()
           return
         }
       }

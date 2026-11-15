@@ -5,12 +5,16 @@ import { gameState } from '../../src/gameState.js'
 import { getServiceRadiusPixels } from '../../src/utils/serviceRadius.js'
 
 // Mock dependencies
-vi.mock('../../src/config.js', () => ({
-  TILE_SIZE: 32,
-  AMMO_RESUPPLY_TIME: 1000,
-  AMMO_FACTORY_RANGE: 5,
-  AMMO_TRUCK_RANGE: 3
-}))
+vi.mock('../../src/config.js', async(importOriginal) => {
+  const actual = await importOriginal()
+  return {
+    ...actual,
+    TILE_SIZE: 32,
+    AMMO_RESUPPLY_TIME: 1000,
+    AMMO_FACTORY_RANGE: 5,
+    AMMO_TRUCK_RANGE: 3
+  }
+})
 
 vi.mock('../../src/gameState.js', () => ({
   gameState: {

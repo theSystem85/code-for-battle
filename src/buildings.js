@@ -1,4 +1,5 @@
 // Building configuration and management
+import { syncPowerAnnouncements } from './audio/announcerCues.js'
 import { playSound } from './sound.js'
 import { showNotification } from './ui/notifications.js'
 import { gameState } from './gameState.js'
@@ -610,6 +611,8 @@ export function updatePowerSupply(buildings, gameState) {
     // Radar is active only if player has a radar station and power is positive
     gameState.radarActive = playerHasRadarStation
   }
+
+  syncPowerAnnouncements(gameState)
 
   // Calculate enemy speed penalty when power is negative
   if (enemyTotalPower < 0) {

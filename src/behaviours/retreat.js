@@ -13,7 +13,7 @@ import { TILE_SIZE, TANK_FIRE_RANGE } from '../config.js'
 import { gameState } from '../gameState.js'
 import { angleDiff } from '../logic.js'
 // import { findPath } from '../units.js' // Unused but kept for future use
-import { playSound } from '../sound.js'
+import { playRetreatAcknowledgement } from '../audio/unitAcknowledgements.js'
 import { showNotification } from '../ui/notifications.js'
 import { noteDirectOrder } from '../policies/policyEngine.js'
 
@@ -96,7 +96,7 @@ export function initiateRetreat(selectedUnits, targetX, targetY, mapGrid) {
   })
 
   noteDirectOrder(retreatingUnits)
-  playSound('confirmed', 0.7)
+  playRetreatAcknowledgement()
   showNotification(`${retreatingUnits.length} unit(s) retreating`, 1500)
 }
 

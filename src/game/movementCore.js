@@ -59,9 +59,18 @@ const NO_AUTO_ROTATION_TYPES = new Set([
 const friendlyCandidateLists = [null, null]
 const NAVAL_CRUISE_LOOP_VOLUME = 0.22
 
+const SMALL_SHIP_CRUISE_TYPES = new Set([
+  'destroyer',
+  'supplyShip',
+  'vehicleFerry',
+  'navalMineLayer',
+  'aircraftCarrier'
+])
+
 function navalCruiseLoopEvent(unit) {
   if (unit?.type === 'battleship') return 'battleshipCruise'
   if (unit?.type === 'hovercraft') return 'hovercraftMoving'
+  if (SMALL_SHIP_CRUISE_TYPES.has(unit?.type)) return 'smallShipCruise'
   return null
 }
 

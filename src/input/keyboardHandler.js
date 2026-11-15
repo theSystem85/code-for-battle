@@ -5,7 +5,9 @@ import { noteDefenceDirectOrder } from '../policies/defenceCommandApi.js'
 import { clearChainBuildState, gameState } from '../gameState.js'
 import { TILE_SIZE } from '../config.js'
 import { findPathForOwner } from '../units.js'
-import { playSound, playPositionalSound } from '../sound.js'
+import { playMoveOrderSound, playSelectionSound } from '../audio/unitAcknowledgements.js'
+import { playUiToggle } from '../audio/uiFeedback.js'
+import { playSound } from '../sound.js'
 import { CheatSystem } from './cheatSystem.js'
 import { isInputFieldFocused } from '../utils/inputUtils.js'
 import { toggleUnitLogging } from '../utils/logger.js'
@@ -559,6 +561,7 @@ export class KeyboardHandler {
     if (modeWasCanceled) {
       const message = hadSelections ? 'Selection cleared' : 'Mode cancelled'
       this.showNotification(message, 1000)
+      playSound('cancel', 0.6)
     }
   }
 
@@ -586,7 +589,7 @@ export class KeyboardHandler {
     if (toggledCount > 0 && newStatus !== null) {
       const modeStatus = newStatus ? 'ON' : 'OFF'
       this.showNotification(`Alert mode ${modeStatus} for ${toggledCount} unit(s)`, 2000)
-      playSound('unitSelection')
+      playUiToggle(Boolean(newStatus))
     }
   }
 
@@ -703,7 +706,7 @@ export class KeyboardHandler {
     if (toggled) {
       const avgX = apaches.reduce((sum, unit) => sum + (unit?.x || 0), 0) / apaches.length
       const avgY = apaches.reduce((sum, unit) => sum + (unit?.y || 0), 0) / apaches.length
-      playPositionalSound('movement', avgX, avgY, 0.5)
+      playMoveOrderSound(apaches, avgX, avgY, 0.5)
     }
 
     return toggled
@@ -805,7 +808,7 @@ export class KeyboardHandler {
       this.showNotification(message, 1500)
       const avgX = selectedUnits.reduce((sum, u) => sum + u.x, 0) / selectedUnits.length
       const avgY = selectedUnits.reduce((sum, u) => sum + u.y, 0) / selectedUnits.length
-      playPositionalSound('movement', avgX, avgY, 0.3)
+      playMoveOrderSound(selectedUnits, avgX, avgY, 0.3)
     } else {
       this.showNotification('Unable to dodge - no clear path available', 2000)
     }
@@ -997,8 +1000,7 @@ export class KeyboardHandler {
         this.lastGroupKeyPressed = groupNum
         this.lastGroupKeyPressTime = currentTime
 
-        // Play selection sounds
-        playSound('unitSelection')
+        playSelectionSound(aliveUnits)
       }
     }
   }
@@ -1033,8 +1035,7 @@ export class KeyboardHandler {
   handleGridToggle() {
     // Toggle grid visibility
     gameState.gridVisible = !gameState.gridVisible
-    // Play a sound for feedback
-    playSound('confirmed', 0.5)
+    playUiToggle(gameState.gridVisible)
   }
 
   handleOccupancyMapToggle() {
@@ -1050,7 +1051,7 @@ export class KeyboardHandler {
 
     const label = this.formatOccupancyModeLabel(mode)
     this.showNotification(`Occupancy map: ${label}`, 2000)
-    playSound('confirmed', 0.5)
+    playUiToggle(enabled)
   }
 
   getOccupancyViewModes() {
@@ -1079,7 +1080,7 @@ export class KeyboardHandler {
     gameState.dzmOverlayIndex = next.index
     gameState.dzmOverlayLayer = next.layer
     this.showNotification(`Danger zone map: ${next.label}`, 2000)
-    playSound('confirmed', 0.5)
+    playUiToggle(next.layer !== 'off')
   }
 
   handleTankImageToggle() {
@@ -1090,8 +1091,7 @@ export class KeyboardHandler {
     const status = gameState.useTankImages ? 'ON' : 'OFF'
     this.showNotification(`Tank image rendering: ${status}`, 2000)
 
-    // Play a sound for feedback
-    playSound('confirmed', 0.5)
+    playUiToggle(gameState.useTankImages)
   }
 
   handleTurretImageToggle() {
@@ -1101,9 +1101,7 @@ export class KeyboardHandler {
     // Show notification to user
     const status = gameState.useTurretImages ? 'ON' : 'OFF'
     this.showNotification(`Turret image rendering: ${status}`, 2000)
-
-    // Play a sound for feedback
-    playSound('confirmed', 0.5)
+    playUiToggle(gameState.useTurretImages)
   }
 
   handleFpsDisplayToggle() {
@@ -1123,23 +1121,21 @@ export class KeyboardHandler {
     // Show notification to user
     const status = gameState.fpsVisible ? 'ON' : 'OFF'
     this.showNotification(`FPS display: ${status}`, 2000)
-
-    // Play a sound for feedback
-    playSound('confirmed', 0.5)
+    playUiToggle(gameState.fpsVisible)
   }
 
   handlePerformanceToggle() {
     performanceDialog.toggle()
     const status = gameState.performanceVisible ? 'ON' : 'OFF'
     this.showNotification(`Performance stats: ${status}`, 2000)
-    playSound('confirmed', 0.5)
+    playUiToggle(Boolean(gameState.performanceVisible))
   }
 
   handleWaypointToggle() {
     gameState.moveWaypointsVisible = !gameState.moveWaypointsVisible
     const status = gameState.moveWaypointsVisible ? 'ON' : 'OFF'
     this.showNotification(`Movement waypoints: ${status}`, 2000)
-    playSound('confirmed', 0.5)
+    playUiToggle(gameState.moveWaypointsVisible)
   }
 
   handleEntityOpacityToggle() {
@@ -1153,7 +1149,7 @@ export class KeyboardHandler {
     }
 
     this.showNotification(`Entity image opacity: ${labels[nextLevel] || '100%'}`, 2000)
-    playSound('confirmed', 0.5)
+    playUiToggle(nextLevel !== 2)
   }
 
   handleLoggingToggle(selectedUnits) {
@@ -1165,7 +1161,7 @@ export class KeyboardHandler {
 
     const status = selectedUnits[0].loggingEnabled ? 'ON' : 'OFF'
     this.showNotification(`Unit logging: ${status}`, 2000)
-    playSound('confirmed', 0.5)
+    playUiToggle(Boolean(selectedUnits[0].loggingEnabled))
   }
 
   // Add method to access cheat system for damage prevention

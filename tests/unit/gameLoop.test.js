@@ -64,7 +64,12 @@ vi.mock('../../src/performanceUtils.js', () => ({
 vi.mock('../../src/sound.js', () => ({
   updateDirectedMusic: vi.fn(),
   pauseAllSounds: pauseAllSoundsMock,
-  resumeAllSounds: resumeAllSoundsMock
+  resumeAllSounds: resumeAllSoundsMock,
+  playSound: vi.fn(),
+  playPositionalSound: vi.fn(() => Promise.resolve(null)),
+  getSharedAudioContext: () => null,
+  getEffectsVolume: () => 1,
+  onAudioVolumeChange: () => () => {}
 }))
 
 vi.mock('../../src/game/gameStateManager.js', () => ({

@@ -7,6 +7,7 @@
 
 // Note: vi is available globally in vitest tests - import kept for explicit usage
 import { beforeEach, vi as _vi } from 'vitest'
+import { resetAcknowledgementThrottle } from '../src/audio/acknowledgementClock.js'
 import { resetGameStorageForTests } from '../src/storage/indexedDbStorage.js'
 
 // Mock the global logger that the game expects
@@ -326,6 +327,7 @@ globalThis.localStorage = {
 
 beforeEach(() => {
   resetGameStorageForTests()
+  resetAcknowledgementThrottle()
 })
 
 // Mock matchMedia

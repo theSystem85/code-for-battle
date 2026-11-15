@@ -1,6 +1,7 @@
 import { needsAmmo as targetNeedsAmmo } from '../../utils/ammunition.js'
 import { TILE_SIZE } from '../../config.js'
-import { playSound, playPositionalSound } from '../../sound.js'
+import { playMoveOrderSound } from '../../audio/unitAcknowledgements.js'
+import { playSound } from '../../sound.js'
 import { showNotification } from '../../ui/notifications.js'
 import { findPathForOwner } from '../../units.js'
 import { gameState } from '../../gameState.js'
@@ -215,7 +216,7 @@ export function handleHarvesterCommand(handler, selectedUnits, oreTarget, mapGri
   if (anyAssigned) {
     const avgX = selectedUnits.reduce((sum, u) => sum + u.x, 0) / selectedUnits.length
     const avgY = selectedUnits.reduce((sum, u) => sum + u.y, 0) / selectedUnits.length
-    playPositionalSound('movement', avgX, avgY, 0.5)
+    playMoveOrderSound(selectedUnits, avgX, avgY, 0.5)
   }
 }
 
@@ -249,7 +250,7 @@ export function handleRepairWorkshopCommand(handler, selectedUnits, workshop, ma
       unit.moveTarget = null
     }
   })
-  playSound('movement', 0.5)
+  playMoveOrderSound(selectedUnits)
 }
 
 export function handleWorkshopRepairHotkey(handler, selectedUnits, mapGrid, queue = false, fromQueue = false) {
@@ -300,7 +301,7 @@ export function handleWorkshopRepairHotkey(handler, selectedUnits, mapGrid, queu
         unit.tileY = targetTile.y
         unit.moveTarget = null
       }
-      if (!fromQueue) playSound('movement', 0.5)
+      if (!fromQueue) playMoveOrderSound(selectedUnits)
     }
   })
 }
@@ -336,7 +337,7 @@ export function handleAmbulanceHealCommand(handler, selectedUnits, targetUnit, m
   })
 
   if (anyStarted) {
-    playSound('movement', 0.5)
+    playMoveOrderSound(selectedUnits)
   }
 }
 
@@ -363,7 +364,7 @@ export function handleTankerRefuelCommand(handler, selectedUnits, targetUnit, ma
   })
 
   if (anyStarted) {
-    playSound('movement', 0.5)
+    playMoveOrderSound(selectedUnits)
   }
 }
 
@@ -411,7 +412,7 @@ export function handleAmmunitionTruckResupplyCommand(handler, selectedUnits, tar
   })
 
   if (anyStarted) {
-    playSound('movement', 0.5)
+    playMoveOrderSound(selectedUnits)
   }
 }
 
@@ -445,7 +446,7 @@ export function handleAmmunitionTruckReloadCommand(handler, selectedUnits, facto
   })
 
   if (anyStarted) {
-    playSound('movement', 0.5)
+    playMoveOrderSound(selectedUnits)
   }
 }
 
@@ -485,7 +486,7 @@ export function handleServiceProviderRequest(handler, provider, selectedUnits, m
   })
 
   if ((queueResult.addedTargets && queueResult.addedTargets.length > 0) || queueResult.started) {
-    playSound('movement', 0.5)
+    playMoveOrderSound([provider])
     return true
   }
 
@@ -546,7 +547,7 @@ export function handleAmbulanceRefillCommand(handler, selectedUnits, hospital, m
     }
   })
 
-  playSound('movement', 0.5)
+  playMoveOrderSound(selectedUnits)
 }
 
 export function handleGasStationRefillCommand(handler, selectedUnits, station, mapGrid) {
@@ -585,7 +586,7 @@ export function handleGasStationRefillCommand(handler, selectedUnits, station, m
       unit.moveTarget = { x: pos.x * TILE_SIZE, y: pos.y * TILE_SIZE }
     }
   })
-  playSound('movement', 0.5)
+  playMoveOrderSound(selectedUnits)
 }
 
 export function handleRecoveryTowCommand(handler, selectedUnits, targetUnit) {
@@ -634,7 +635,7 @@ export function handleRecoveryTankRepairCommand(handler, selectedUnits, targetUn
   })
 
   if (anyStarted) {
-    playSound('movement', 0.5)
+    playMoveOrderSound(selectedUnits)
   }
 }
 
@@ -660,7 +661,7 @@ export function handleRecoveryWreckTowCommand(handler, selectedUnits, wreck, map
     })
 
     if (anyQueued && !suppressNotifications) {
-      playSound('movement', 0.5)
+      playMoveOrderSound(selectedUnits)
     } else if (!anyQueued && !suppressNotifications) {
       showNotification('All selected recovery tanks are busy.', 2000)
     }
@@ -700,7 +701,7 @@ export function handleRecoveryWreckRecycleCommand(handler, selectedUnits, wreck,
     })
 
     if (anyQueued && !suppressNotifications) {
-      playSound('movement', 0.5)
+      playMoveOrderSound(selectedUnits)
     } else if (!anyQueued && !suppressNotifications) {
       showNotification('All selected recovery tanks are busy.', 2000)
     }
@@ -731,6 +732,6 @@ export function handleDamagedUnitToRecoveryTankCommand(handler, selectedUnits, r
   })
 
   if ((result.addedTargets && result.addedTargets.length > 0) || result.started) {
-    playSound('movement', 0.5)
+    playMoveOrderSound([recoveryTank])
   }
 }

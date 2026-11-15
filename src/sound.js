@@ -104,7 +104,7 @@ export function reloadMasterVolumeFromStorage() {
   return masterVolume
 }
 
-const soundFiles = {
+export const soundFiles = {
   // Original sound categories
   explosion: ['explosion01.mp3', 'explosion02.mp3', 'explosion03.mp3', 'explosion04.mp3'],
   tankShot: ['tankShot01.mp3', 'tankShot02.mp3', 'tankShot03.mp3'],
@@ -206,9 +206,61 @@ const soundFiles = {
   // Direct file access (for legacy compatibility)
   yesSir01: ['yesSir01.mp3'],
 
-  // Missing sound placeholders (will use fallback beep)
-  error: [], // No error.mp3 file exists - will use fallback
-  cancel: [] // No cancel.mp3 file exists - will use fallback
+  // ElevenLabs pack (2026-11-15). Variant arrays rotate per play.
+  shootM2: ['m2AutocannonBurst1.mp3', 'm2AutocannonBurst2.mp3', 'm2AutocannonBurst3.mp3'],
+  shootHowitzer: ['howitzerFire1.mp3', 'howitzerFire2.mp3'],
+  explosionArtillery: ['artilleryShellImpact1.mp3', 'artilleryShellImpact2.mp3'],
+  shootRocketTank: ['rocketTankLaunch1.mp3', 'rocketTankLaunch2.mp3'],
+  shootApacheRocket: ['apacheRocketLaunch1.mp3', 'apacheRocketLaunch2.mp3'],
+  mineDetonation: ['mineDetonation1.mp3', 'mineDetonation2.mp3'],
+  mineSweeperDefuse: ['mineSweeperDefuse1.mp3', 'mineSweeperDefuse2.mp3'],
+  waterMineBlast: ['waterMineBlast1.mp3', 'waterMineBlast2.mp3'],
+  depthChargeDetonation: ['depthChargeDetonation.mp3'],
+  apacheRotorSpoolUp: ['apacheRotorSpoolUp.mp3'],
+  smallShipCruise: ['smallShipCruise.mp3'],
+  recoveryWinchHook: ['recoveryWinchHook.mp3'],
+  buildingCollapse: ['buildingCollapse1.mp3', 'buildingCollapse2.mp3', 'buildingCollapse3.mp3'],
+  lowPowerAlarm: ['lowPowerAlarm.mp3'],
+  radarOnline: ['radarOnline.mp3'],
+  radarOffline: ['radarOffline.mp3'],
+  crewRestored: ['crewRestored.mp3'],
+  refuelPumpLoop: ['refuelPumpLoop.mp3'],
+  ammoReloadClunk: ['ammoReloadClunk.mp3'],
+  achievementStinger: ['achievementStinger.mp3'],
+  uiPartyJoin: ['uiPartyJoin.mp3'],
+  uiTabSwitch: ['uiTabSwitch.mp3'],
+  uiToggleOn: ['uiToggleOn.mp3'],
+  uiToggleOff: ['uiToggleOff.mp3'],
+  ambienceWindOpen: ['ambienceWindOpen.mp3'],
+  ambienceWindDesert: ['ambienceWindDesert.mp3'],
+  ambienceWindSnow: ['ambienceWindSnow.mp3'],
+  lowPower: ['lowPower.mp3'],
+  powerRestored: ['powerRestored.mp3'],
+  insufficientFunds: ['insufficientFunds.mp3'],
+  radarOnlineVO: ['radarOnlineVO.mp3'],
+  radarOfflineVO: ['radarOfflineVO.mp3'],
+  ourUnitsUnderAttack: ['ourUnitsUnderAttack.mp3'],
+  ourAircraftUnderAttack: ['ourAircraftUnderAttack.mp3'],
+  aircraftLowFuel: ['aircraftLowFuel.mp3'],
+  unitsBlocked: ['unitsBlocked.mp3'],
+  enemySpotted: ['enemySpotted.mp3'],
+  ackSelectGround: ['ackSelectGround1.mp3', 'ackSelectGround2.mp3', 'ackSelectGround3.mp3'],
+  ackMoveGround: ['ackMoveGround1.mp3', 'ackMoveGround2.mp3', 'ackMoveGround3.mp3'],
+  ackAttackGround: ['ackAttackGround1.mp3', 'ackAttackGround2.mp3', 'ackAttackGround3.mp3'],
+  ackSupportSelect: ['ackSupportSelect1.mp3', 'ackSupportSelect2.mp3'],
+  ackSupportMove: ['ackSupportMove1.mp3', 'ackSupportMove2.mp3'],
+  ackNavalSelect: ['ackNavalSelect1.mp3', 'ackNavalSelect2.mp3'],
+  ackNavalMove: ['ackNavalMove1.mp3', 'ackNavalMove2.mp3'],
+  ackNavalAttack: ['ackNavalAttack1.mp3', 'ackNavalAttack2.mp3'],
+  ackAirSelect: ['ackAirSelect1.mp3', 'ackAirSelect2.mp3'],
+  ackAirMove: ['ackAirMove1.mp3', 'ackAirMove2.mp3'],
+  ackAirAttack: ['ackAirAttack1.mp3', 'ackAirAttack2.mp3'],
+  retreatCall: ['retreatCall1.mp3', 'retreatCall2.mp3', 'retreatCall3.mp3'],
+
+  // UI rejection cues. error1/error2 are the denied buzz; cancel shares them so
+  // playSound('cancel') no longer falls through to the synthetic beep.
+  error: ['error1.mp3', 'error2.mp3'],
+  cancel: ['error1.mp3', 'error2.mp3']
 }
 
 const activeAudioElements = new Map()

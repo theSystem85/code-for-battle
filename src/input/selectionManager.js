@@ -1,7 +1,7 @@
 // selectionManager.js
 import { TILE_SIZE, ENABLE_ENEMY_SELECTION, ENABLE_ENEMY_CONTROL } from '../config.js'
 import { gameState } from '../gameState.js'
-import { playSound } from '../sound.js'
+import { playSelectionSound } from '../audio/unitAcknowledgements.js'
 import { showNotification } from '../ui/notifications.js'
 import { hideLlmQueueTooltip, updateLlmQueueTooltipForSelection } from '../ui/llmQueueTooltip.js'
 import {
@@ -124,7 +124,7 @@ export class SelectionManager {
         selectedUnits.push(clickedUnit)
       }
       if (this.isCommandableUnit(clickedUnit)) {
-        playSound('unitSelection')
+        playSelectionSound(clickedUnit)
       }
     } else if (e.shiftKey && isDoubleClick) {
       // Shift+double click: Add all visible units of this type (same owner) to selection
@@ -143,7 +143,7 @@ export class SelectionManager {
       })
 
       if (visibleUnitsOfType.some(u => this.isCommandableUnit(u))) {
-        playSound('unitSelection')
+        playSelectionSound(visibleUnitsOfType)
       }
       showNotification(`Added ${visibleUnitsOfType.length} ${clickedUnit.type}(s) to selection`)
     } else if (isDoubleClick) {
@@ -169,7 +169,7 @@ export class SelectionManager {
       })
 
       if (visibleUnitsOfType.some(u => this.isCommandableUnit(u))) {
-        playSound('unitSelection')
+        playSelectionSound(visibleUnitsOfType)
       }
       showNotification(`Selected ${visibleUnitsOfType.length} ${clickedUnit.type}(s)`)
     } else {
@@ -184,7 +184,7 @@ export class SelectionManager {
       clickedUnit.selected = true
       selectedUnits.push(clickedUnit)
       if (this.isCommandableUnit(clickedUnit)) {
-        playSound('unitSelection')
+        playSelectionSound(clickedUnit)
       }
     }
 
@@ -332,7 +332,7 @@ export class SelectionManager {
       }
 
       if (anySelected && selectedUnits.some(u => this.isCommandableUnit(u))) {
-        playSound('unitSelection')
+        playSelectionSound(selectedUnits)
       }
 
       // Clear building selections but don't select buildings during drag selection

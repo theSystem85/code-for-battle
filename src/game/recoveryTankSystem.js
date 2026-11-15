@@ -1,5 +1,6 @@
 import { serviceUnitDistanceTiles } from '../utils/serviceUnitDistance.js'
 import { TILE_SIZE, SERVICE_DISCOVERY_RANGE, SERVICE_SERVING_RANGE } from '../config.js'
+import { playVisiblePositionalSound } from '../audio/worldSound.js'
 import { playSound } from '../sound.js'
 import { getUnitCost } from '../utils.js'
 import { logPerformance } from '../performanceUtils.js'
@@ -113,6 +114,7 @@ function handleTowTask(tank, task, wreck, units, gameState) {
       wreck.towedBy = tank.id
       wreck.assignedTankId = tank.id
       task.state = 'towingToWorkshop'
+      playVisiblePositionalSound('recoveryWinchHook', tank.x + TILE_SIZE / 2, tank.y + TILE_SIZE / 2, 0.7, tank.owner)
 
       const path = findPath(
         { x: tank.tileX, y: tank.tileY },

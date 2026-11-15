@@ -5,7 +5,8 @@ vi.mock('../../src/ui/notifications.js', () => ({
 }))
 
 vi.mock('../../src/sound.js', () => ({
-  playPositionalSound: vi.fn()
+  playPositionalSound: vi.fn(),
+  playSound: vi.fn()
 }))
 
 import { TILE_SIZE } from '../../src/config.js'

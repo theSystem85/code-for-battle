@@ -147,7 +147,7 @@ describe('KeyboardHandler', () => {
     document.getElementById('performanceWidgetBtn').click()
 
     expect(gameState.fpsVisible).toBe(true)
-    expect(playSound).toHaveBeenCalledWith('confirmed', 0.5)
+    expect(playSound).toHaveBeenCalledWith('uiToggleOn', 0.55)
   })
 
   it('[U02282] cancels active modes and clears selections on escape', () => {
@@ -264,7 +264,7 @@ describe('KeyboardHandler', () => {
     handler.handleAlertMode([unit])
 
     expect(unit.alertMode).toBe(true)
-    expect(playSound).toHaveBeenCalledWith('unitSelection')
+    expect(playSound).toHaveBeenCalledWith('uiToggleOn', 0.55)
     expect(handler.showNotification).toHaveBeenCalledWith('Alert mode ON for 1 unit(s)', 2000)
   })
 
@@ -393,7 +393,7 @@ describe('KeyboardHandler', () => {
     expect(flyingApache.manualFlightState).toBe('land')
     expect(flyingApache.manualFlightHoverRequested).toBe(false)
     expect(flyingApache.autoHoldAltitude).toBe(false)
-    expect(playPositionalSound).toHaveBeenCalledWith('movement', 150, 250, 0.5)
+    expect(playPositionalSound).toHaveBeenCalledWith('ackAirMove', 150, 250, 0.5)
   })
 
   it('[U02291] validates dodge positions against map bounds, terrain, and occupancy', () => {

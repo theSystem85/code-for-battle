@@ -1,4 +1,5 @@
 // game/mineSystem.js - Land mine deployment, detonation, and chain reaction mechanics
+import { playVisiblePositionalSound } from '../audio/worldSound.js'
 import { gameState } from '../gameState.js'
 import { getUniqueId } from '../utils.js'
 import {
@@ -126,6 +127,7 @@ export function detonateMine(mine, units, buildings) {
     startTime: now,
     duration: 300
   })
+  playVisiblePositionalSound('mineDetonation', explosionX, explosionY, 0.7, mine.owner, 0.2)
 
   const radius = Math.max(0, MINE_EXPLOSION_RADIUS)
   const maxOffset = Math.ceil(radius)
@@ -300,6 +302,7 @@ export function safeSweeperDetonation(mine, units, buildings) {
     startTime: now,
     duration: 300
   })
+  playVisiblePositionalSound('mineSweeperDefuse', explosionX, explosionY, 0.55, mine.owner, 0.15)
 
   const radius = 1 // Reduced radius for sweeper detonations to prevent chain reactions
   const maxOffset = Math.ceil(radius)

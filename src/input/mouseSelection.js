@@ -8,7 +8,8 @@ import {
   TILE_SIZE
 } from '../config.js'
 import { gameState } from '../gameState.js'
-import { playSound, playPositionalSound } from '../sound.js'
+import { playMoveOrderSound } from '../audio/unitAcknowledgements.js'
+import { playPositionalSound } from '../sound.js'
 import { showNotification } from '../ui/notifications.js'
 import { isForceAttackModifierActive, isGuardModifierActive } from '../utils/inputUtils.js'
 import { findWreckAtTile } from '../game/unitWreckManager.js'
@@ -748,7 +749,7 @@ export function handleLeftMouseUp(handler, e, units, factories, mapGrid, selecte
     window.logger('Deploying mine at tile:', tileX, tileY)
     mineInput.handleMineLayerClick(selectedUnits, tileX, tileY, e.shiftKey)
     mineDeploymentHandled = true
-    playSound('movement', 0.5)
+    playMoveOrderSound(selectedUnits)
   }
 
   let mineAreaHandled = false
@@ -763,15 +764,15 @@ export function handleLeftMouseUp(handler, e, units, factories, mapGrid, selecte
     if (!e.ctrlKey && mineInput.hasMineLayerSelected(selectedUnits)) {
       mineInput.handleMineLayerAreaDeploy(selectedUnits, area, e.shiftKey)
       mineAreaHandled = true
-      playSound('movement', 0.5)
+      playMoveOrderSound(selectedUnits)
     } else if (!e.ctrlKey && mineInput.hasMineSweeperSelected(selectedUnits)) {
       mineInput.handleMineSweeperRectangleSweep(selectedUnits, area, e.shiftKey)
       mineAreaHandled = true
-      playSound('movement', 0.5)
+      playMoveOrderSound(selectedUnits)
     } else if (e.ctrlKey && mineInput.hasMineSweeperSelected(selectedUnits) && gameState.mineFreeformPaint) {
       mineInput.handleMineSweeperFreeformSweep(selectedUnits, gameState.mineFreeformPaint, e.shiftKey)
       mineAreaHandled = true
-      playSound('movement', 0.5)
+      playMoveOrderSound(selectedUnits)
       gameState.mineFreeformPaint = null
     }
   }

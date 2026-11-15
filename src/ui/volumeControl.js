@@ -31,7 +31,7 @@ export function initMasterVolumeControl(doc = document) {
   const playPreviewIfArmed = () => {
     if (!previewArmed) return
     previewArmed = false
-    playSound('confirmed', 0.3)
+    playSound('uiToggleOn', 0.3)
   }
 
   volumeSlider.addEventListener('input', armPreview)

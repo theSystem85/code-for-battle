@@ -9,6 +9,8 @@ import {
   clearTankerKamikazeState,
   updateKamikazeTargetPoint
 } from './tankerTruckUtils.js'
+import { requestRefuelPump } from '../audio/serviceLoops.js'
+import { playSound } from '../sound.js'
 function normalizeServiceOwner(owner) {
   return owner === 'player' ? 'player1' : owner
 }
@@ -227,7 +229,10 @@ export const updateTankerTruckLogic = logPerformance(function(units, gameState, 
         // Log when tanker starts refueling (within serving range)
         // Note: Empty block kept for potential future debugging
         if (!tanker.refuelTimer || tanker.refuelTimer === 0) {
-          // Placeholder for start-refuel logging
+          if (tanker.owner === gameState.humanPlayer) playSound('unitRefules', 1, 8, true)
+        }
+        if (tanker.owner === gameState.humanPlayer) {
+          requestRefuelPump(tanker.x + TILE_SIZE / 2, tanker.y + TILE_SIZE / 2)
         }
         // Emergency units get faster refueling rate
         const isStrikeJetTarget = target.type === 'f22Raptor' || target.type === 'f35'

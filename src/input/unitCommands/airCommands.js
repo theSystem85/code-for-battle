@@ -1,6 +1,6 @@
 import { TILE_SIZE } from '../../config.js'
 import { gameState } from '../../gameState.js'
-import { playPositionalSound } from '../../sound.js'
+import { playMoveOrderSound } from '../../audio/unitAcknowledgements.js'
 import { showNotification } from '../../ui/notifications.js'
 import { getBuildingIdentifier } from '../../utils.js'
 import { getHelipadLandingCenter, getHelipadLandingTile, isHelipadAvailableForUnit } from '../../utils/helipadUtils.js'
@@ -277,7 +277,7 @@ export function handleApacheHelipadCommand(handler, selectedUnits, helipad, _map
 
     const avgX = apaches.reduce((sum, u) => sum + u.x, 0) / apaches.length
     const avgY = apaches.reduce((sum, u) => sum + u.y, 0) / apaches.length
-    playPositionalSound('movement', avgX, avgY, 0.5)
+    playMoveOrderSound(apaches, avgX, avgY, 0.5)
     return
   }
 
@@ -346,7 +346,7 @@ export function handleApacheHelipadCommand(handler, selectedUnits, helipad, _map
 
   const avgX = apaches.reduce((sum, u) => sum + u.x, 0) / apaches.length
   const avgY = apaches.reduce((sum, u) => sum + u.y, 0) / apaches.length
-  playPositionalSound('movement', avgX, avgY, 0.5)
+  playMoveOrderSound(apaches, avgX, avgY, 0.5)
 }
 
 export function handleLandingSpotCommand(handler, selectedUnits, landingSpot, allUnits = units) {

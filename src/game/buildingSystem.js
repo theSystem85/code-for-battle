@@ -1,6 +1,7 @@
 import { noteCompletionTargetDestroyed } from '../policies/unitCompletion.js'
 // Building System Module - Handles building updates, defensive buildings, and Tesla coils
 import { TILE_SIZE, TANK_TURRET_ROT, BUILDING_SELL_DURATION, LARGE_EXPLOSION_VISUAL_RADIUS } from '../config.js'
+import { playVisiblePositionalSound } from '../audio/worldSound.js'
 import { playSound, playPositionalSound } from '../sound.js'
 import { selectedUnits } from '../inputHandler.js'
 import { angleDiff, hasLineOfSightToTarget, smoothRotateTowardsAngle, triggerExplosion } from '../logic.js'
@@ -125,8 +126,7 @@ export const updateBuildings = logPerformance(function updateBuildings(gameState
 
         setBuildingDebrisDecals(mapGrid, gameState, building)
 
-        // Play explosion sound with reduced volume (0.5)
-        playPositionalSound('explosion', buildingCenterX, buildingCenterY, 0.5)
+        playVisiblePositionalSound('buildingCollapse', buildingCenterX, buildingCenterY, 0.55, building.owner)
 
         if (!building.destructionExplosionSpawned) {
           if (building.type === 'gasStation' || building.type === 'ammunitionFactory') {
@@ -154,6 +154,7 @@ export const updateBuildings = logPerformance(function updateBuildings(gameState
             false,
             {
               spawnVisual: false,
+              soundEvent: false,
               damageRingMultipliers: [1, 0.75, 0.5, 0.25],
               buildingDamageCaps: {
                 constructionYard: Math.round(buildingData.constructionYard.health * 0.9)
@@ -180,7 +181,8 @@ export const updateBuildings = logPerformance(function updateBuildings(gameState
             initialRadius,
             false,
             {
-              spawnVisual: false
+              spawnVisual: false,
+              soundEvent: false
             }
           )
 
@@ -215,7 +217,8 @@ export const updateBuildings = logPerformance(function updateBuildings(gameState
         } else {
           // Apply standard destruction splash damage without spawning duplicate VFX
           triggerExplosion(buildingCenterX, buildingCenterY, 40, units, factories, null, now, undefined, TILE_SIZE * 2, false, {
-            spawnVisual: false
+            spawnVisual: false,
+            soundEvent: false
           })
         }
 
@@ -741,7 +744,7 @@ function fireTurretProjectile(building, target, centerX, centerY, now, bullets, 
     projectile.arcHeight = projectile.distance * 0.5
     projectile.targetPosition = { x: targetPos.x, y: targetPos.y }
     projectile.explosionRadius = TILE_SIZE * 3
-    playPositionalSound('shoot_heavy', centerX, centerY, 0.5)
+    playVisiblePositionalSound('shootHowitzer', centerX, centerY, 0.5, building.owner)
   } else {
     // Standard bullet - calculate trajectory and store target position with spread
     projectile.homing = false

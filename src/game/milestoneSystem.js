@@ -2,6 +2,7 @@
 import { playSyncedVideoAudio } from '../ui/videoOverlay.js'
 import { firstProductionNarrationMilestoneId, setFirstProductionNarrationClaim, setMilestoneAchievedCheck } from '../ui/milestoneMediaCache.js'
 import { showNotification } from '../ui/notifications.js'
+import { playSound } from '../sound.js'
 
 export const FIRST_UNIT_VIDEO_MILESTONES = Object.freeze([
   Object.freeze(['firstF35', 'f35']),
@@ -521,6 +522,7 @@ export class MilestoneSystem {
     // Show notification
     showNotification(milestone.displayName, 'achievement')
 
+    if (!milestone.videoFilename) playSound('achievementStinger', 0.8)
     // Play video if available
     if (milestone.videoFilename) {
       playSyncedVideoAudio(milestone.videoFilename, {

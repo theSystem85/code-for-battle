@@ -29,6 +29,7 @@ import {
   canSubmarineTargetEntity
 } from './navalTargeting.js'
 import { spawnDestructionExplosion } from './spriteSheetEffects.js'
+import { playVisiblePositionalSound } from '../audio/worldSound.js'
 import { playPositionalSound } from '../sound.js'
 import { notifyEntityUnderAttack } from './attackAlertBridge.js'
 import {
@@ -1751,6 +1752,7 @@ function updateDepthCharges(units, now) {
       notifyEntityUnderAttack(target, { id: charge.id, owner: charge.owner }, now)
     }
     gameState.explosions.push({ x: charge.x, y: charge.y, maxRadius: DEPTH_CHARGE_RADIUS, startTime: now, duration: 520, underwater: true })
+    playVisiblePositionalSound('depthChargeDetonation', charge.x, charge.y, 0.7, charge.owner, 0.35)
     return false
   })
 }

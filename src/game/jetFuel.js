@@ -1,5 +1,6 @@
 import { TILE_SIZE, TILE_LENGTH_METERS } from '../config.js'
 import { gameState } from '../gameState.js'
+import { announceAircraftLowFuel } from '../audio/announcerCues.js'
 import { playPositionalSound } from '../sound.js'
 import { showNotification } from '../ui/notifications.js'
 import { getBuildingIdentifier } from '../utils.js'
@@ -149,6 +150,7 @@ export function rejectJetMissionIfImpossible(unit, destCenter, mode) {
   }
   if (!canJetCompleteRoundTrip(unit, destCenter.x, destCenter.y)) {
     notifyHumanJet(unit, JET_INSUFFICIENT_FUEL_MESSAGE)
+    announceAircraftLowFuel(unit)
     return true
   }
   return false

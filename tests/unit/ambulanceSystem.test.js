@@ -9,11 +9,15 @@ import { getUnitCommandsHandler } from '../../src/inputHandler.js'
 vi.mock('../../src/gameState.js', () => ({ gameState: { occupancyMap: [] } }))
 
 // Mock dependencies
-vi.mock('../../src/config.js', () => ({
-  SERVICE_DISCOVERY_RANGE: 10,
-  SERVICE_SERVING_RANGE: 1.5,
-  TILE_SIZE: 32
-}))
+vi.mock('../../src/config.js', async(importOriginal) => {
+  const actual = await importOriginal()
+  return {
+    ...actual,
+    SERVICE_DISCOVERY_RANGE: 10,
+    SERVICE_SERVING_RANGE: 1.5,
+    TILE_SIZE: 32
+  }
+})
 
 vi.mock('../../src/performanceUtils.js', () => ({
   logPerformance: fn => fn

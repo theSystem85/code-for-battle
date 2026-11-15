@@ -654,10 +654,11 @@ describe('gameStateManager', () => {
       expect(gameState.enemyBuildingsDestroyed).toBe(1)
       expect(playSound).toHaveBeenCalledWith('enemyBuildingDestroyed', 1.0, 0, true)
       expect(playPositionalSound).toHaveBeenCalledWith(
-        'explosion',
+        'buildingCollapse',
         (2 + 3 / 2) * TILE_SIZE,
         (3 + 2 / 2) * TILE_SIZE,
-        0.5
+        0.55,
+        0
       )
       expect(gameState.explosions).toHaveLength(1)
     })

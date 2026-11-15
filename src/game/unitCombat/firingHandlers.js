@@ -1,6 +1,7 @@
 import { recordMusicAttack } from '../../audio/musicDirector.js'
 import { TILE_SIZE, TANK_BULLET_SPEED, HOWITZER_PROJECTILE_SPEED, HOWITZER_EXPLOSION_RADIUS_TILES } from '../../config.js'
-import { playSound, playPositionalSound } from '../../sound.js'
+import { playWeaponSound } from '../../audio/worldSound.js'
+import { playSound } from '../../sound.js'
 import { hasClearShot } from '../../logic.js'
 import { gameState } from '../../gameState.js'
 import { showNotification } from '../../ui/notifications.js'
@@ -249,10 +250,23 @@ export function handleTankFiring(unit, target, bullets, now, fireRate, targetCen
         }
       }
 
-      const soundName = isF35Bomb ? 'f35BombDrop' : (projectileType === 'rocket' ? 'shoot_rocket' : 'shoot')
-      // The light tank reuses the tank shot at a lower volume so its rapid autocannon fire is not overpowering.
-      const vol = (projectileType === 'rocket' || isF35Bomb || unit.type === 'lightTank') ? 0.3 : 0.5
-      playPositionalSound(soundName, bullet.x, bullet.y, vol)
+      let soundName = isF35Bomb ? 'f35BombDrop' : (projectileType === 'rocket' ? 'shoot_rocket' : 'shoot')
+      let vol = (projectileType === 'rocket' || isF35Bomb) ? 0.3 : 0.5
+      let gapMs = 0
+      if (unit.type === 'apache' && projectileType === 'rocket') {
+        soundName = 'shootApacheRocket'
+        vol = 0.45
+        gapMs = 280
+      } else if (unit.type === 'rocketTank' && projectileType === 'rocket') {
+        soundName = 'shootRocketTank'
+        vol = 0.5
+        gapMs = 350
+      } else if (unit.type === 'lightTank') {
+        soundName = 'shootM2'
+        vol = 0.4
+        gapMs = 180
+      }
+      playWeaponSound(unit, soundName, bullet.x, bullet.y, vol, gapMs)
       unit.lastShotTime = now
 
       // Trigger recoil and muzzle flash animations
@@ -651,7 +665,7 @@ export function fireHowitzerShell(unit, aimTarget, bullets, now) {
     unit.ammunition = Math.max(0, unit.ammunition - unit.ammoPerShot)
   }
 
-  playPositionalSound('shoot_heavy', muzzleX, muzzleY, 0.5)
+  playWeaponSound(unit, 'shootHowitzer', muzzleX, muzzleY, 0.55, 400)
   unit.lastShotTime = now
   unit.recoilStartTime = now
   unit.muzzleFlashStartTime = now

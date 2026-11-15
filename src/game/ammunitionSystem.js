@@ -4,6 +4,7 @@ import { TILE_SIZE, AMMO_RESUPPLY_TIME, AMMO_TRUCK_RANGE } from '../config.js'
 import { logPerformance } from '../performanceUtils.js'
 import { getServiceRadiusPixels } from '../utils/serviceRadius.js'
 import { gameState } from '../gameState.js'
+import { playVisiblePositionalSound } from '../audio/worldSound.js'
 function normalizeServiceOwner(owner) {
   return owner === 'player' ? 'player1' : owner
 }
@@ -97,6 +98,7 @@ function processAmmunitionResupply(source, units, delta) {
       if (currentAmmo < maxAmmo) {
         if (!unit.resupplyingAmmo) {
           unit.resupplyingAmmo = true
+          playVisiblePositionalSound('ammoReloadClunk', unitCenterX, unitCenterY, 0.65, unit.owner)
         }
 
         const baseRefillRate = maxAmmo / AMMO_RESUPPLY_TIME
@@ -146,6 +148,7 @@ function processAmmunitionTruckResupply(truck, units, delta) {
     if (inRange && stationary && currentAmmo < maxAmmo) {
       if (!unit.resupplyingAmmo) {
         unit.resupplyingAmmo = true
+        playVisiblePositionalSound('ammoReloadClunk', unitCenterX, unitCenterY, 0.65, unit.owner)
       }
 
       const refillRate = maxAmmo / AMMO_RESUPPLY_TIME

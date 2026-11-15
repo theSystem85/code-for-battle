@@ -1,6 +1,7 @@
 import { TILE_SIZE } from '../config.js'
 import { logPerformance } from '../performanceUtils.js'
 import { getServiceRadiusPixels } from '../utils/serviceRadius.js'
+import { playSound } from '../sound.js'
 export const updateHospitalLogic = logPerformance(function(units, buildings, gameState, delta) {
   const hospitals = buildings.filter(b => b.type === 'hospital')
   if (hospitals.length === 0) return
@@ -70,6 +71,7 @@ export const updateHospitalLogic = logPerformance(function(units, buildings, gam
             // Heal the current role
             unit.crew[healingEntry.currentRole] = true
             healingEntry.progress -= healingEntry.totalProgress
+            if (unit.owner === gameState.humanPlayer) playSound('crewRestored', 0.8, 1.2)
 
             // Only deduct money from human player
             if (unit.owner === gameState.humanPlayer && gameState.money >= 10) {

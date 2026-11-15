@@ -1,6 +1,7 @@
 import { gameState } from '../gameState.js'
 import { markPartyControlledByHuman, markPartyControlledByAi, invalidateInviteToken, generateInviteForParty, getPartyState, setPartyUnresponsiveState } from './multiplayerStore.js'
 import { showHostNotification } from './hostNotifications.js'
+import { playSound } from '../sound.js'
 import { applyRemoteControlSnapshot, releaseRemoteControlSource } from '../input/remoteControlState.js'
 import { emitMultiplayerSessionChange } from './multiplayerSessionEvents.js'
 import { fetchPendingSessions, postAnswer, postCandidate } from './signalling.js'
@@ -540,6 +541,7 @@ class HostInviteMonitor {
       setPartyUnresponsiveState(this.partyId, null)
       markPartyControlledByHuman(this.partyId, session.alias)
       showHostNotification(`${session.alias || 'Remote client'} connected to party ${this.partyId}`)
+      playSound('uiPartyJoin', 0.8, 1)
       updateGlobalSession({
         isRemote: true,
         alias: session.alias,

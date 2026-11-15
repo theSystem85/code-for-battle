@@ -5,6 +5,7 @@ import { logPerformance } from '../performanceUtils.js'
 import { getUnitCommandsHandler } from '../inputHandler.js'
 import { getServiceRadiusPixels } from '../utils/serviceRadius.js'
 import { computeUtilityApproachPath, UTILITY_QUEUE_MODES } from '../input/unitCommands/utilityHelpers.js'
+import { playSound } from '../sound.js'
 function normalizeServiceOwner(owner) {
   return owner === 'player' ? 'player1' : owner
 }
@@ -226,8 +227,9 @@ export const updateAmbulanceLogic = logPerformance(function(units, gameState, de
         ambulance.medics = Math.max(ambulance.medics - 1, 0)
         ambulance.healingTimer -= healingInterval
 
-        // Play sound effect
-        // playSound('crewRestored')
+        if (ambulance.owner === gameState.humanPlayer || target.owner === gameState.humanPlayer) {
+          playSound('crewRestored', 0.8, 1.2)
+        }
       }
     }
 

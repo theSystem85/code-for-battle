@@ -2,9 +2,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { updateHospitalLogic } from '../../src/game/hospitalLogic.js'
 import { getServiceRadiusPixels } from '../../src/utils/serviceRadius.js'
 
-vi.mock('../../src/config.js', () => ({
-  TILE_SIZE: 32
-}))
+vi.mock('../../src/config.js', async(importOriginal) => {
+  const actual = await importOriginal()
+  return { ...actual, TILE_SIZE: 32 }
+})
 
 vi.mock('../../src/performanceUtils.js', () => ({
   logPerformance: fn => fn

@@ -16,7 +16,8 @@ vi.mock('../../src/config.js', async(importOriginal) => {
 })
 
 vi.mock('../../src/sound.js', () => ({
-  playSound: vi.fn()
+  playSound: vi.fn(),
+  playPositionalSound: vi.fn()
 }))
 
 vi.mock('../../src/utils.js', () => ({

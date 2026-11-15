@@ -1,5 +1,6 @@
 import { TILE_SIZE } from '../config.js'
 import { gameState } from '../gameState.js'
+import { announceAircraftLowFuel } from '../audio/announcerCues.js'
 import { playPositionalSound } from '../sound.js'
 import { findPath } from '../units.js'
 import { emitSmokeParticles } from '../utils/smokeUtils.js'
@@ -1208,6 +1209,7 @@ export function updateF22FlightState(unit, movement, now) {
     }
 
     if (!unit.helipadLandingRequested && (shouldReturnForFuel || shouldReturnForAmmo || shouldReturnAfterCombat)) {
+      if (shouldReturnForFuel) announceAircraftLowFuel(unit)
       unit.helipadLandingRequested = true
       unit.flightPlan = null
       if (shouldReturnForAmmo || shouldReturnAfterCombat) {

@@ -112,7 +112,9 @@ export function triggerExplosion(
   // Visual-only impacts (direct-fire rounds without splash) never damage the area around them.
   if (visualOnly) return
 
-  playPositionalSound('explosion', x, y, 0.5)
+  if (options?.soundEvent !== false) {
+    playPositionalSound(options?.soundEvent || 'explosion', x, y, 0.5)
+  }
 
   // Apply damage to nearby units
   units.forEach(unit => {

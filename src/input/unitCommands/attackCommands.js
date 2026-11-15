@@ -1,5 +1,5 @@
 import { TILE_SIZE, TANK_FIRE_RANGE } from '../../config.js'
-import { playSound } from '../../sound.js'
+import { playAttackOrderSound } from '../../audio/unitAcknowledgements.js'
 import { findPathForOwner } from '../../units.js'
 import { gameState } from '../../gameState.js'
 import { cancelRetreatForUnits } from '../../behaviours/retreat.js'
@@ -145,7 +145,7 @@ export function handleAttackCommand(handler, selectedUnits, target, mapGrid, isF
     }
   })
 
-  playSound('attacking', 1.0)
+  playAttackOrderSound(selectedUnits, 1.0)
   broadcastUnitAttack(selectedUnits, target)
 }
 
