@@ -14,7 +14,7 @@ Shared work list for generating the remaining milestone videos. Any agent may pi
 `[ ]` open · `[~]` in progress / in review (who, date) · `[x]` done (commit)
 
 ## Existing milestones without a video
-- [x] `firstFactory` → `first_factory.mp4` (approved by Patrick 2026-11-15, integrated in this commit; embedded audio, no MP3)
+- [x] `firstFactory` → `first_factory.mp4` (approved by Patrick 2026-11-15, integrated in 42433c8; embedded audio, no MP3)
 - [ ] `radarBuilt` → `radar_station.mp4`
 - [ ] `tenBuildings` → `ten_buildings.mp4`
 - [ ] `firstUnit` → `first_unit.mp4` (low priority, overlaps `firstTank`)
