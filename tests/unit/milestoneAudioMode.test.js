@@ -243,6 +243,10 @@ describe('milestone embedded vs separate audio', () => {
     expect(milestoneClipIsEmbeddedAudioOnly('ten_buildings.mp4')).toBe(true)
     expect(milestoneClipIsEmbeddedAudioOnly('harvester_unlocked')).toBe(true)
     expect(milestoneClipIsEmbeddedAudioOnly('harvester_unlocked.mp4')).toBe(true)
+    expect(milestoneClipIsEmbeddedAudioOnly('recovery_tank_unlocked')).toBe(true)
+    expect(milestoneClipIsEmbeddedAudioOnly('recovery_tank_unlocked.mp4')).toBe(true)
+    expect(milestoneClipIsEmbeddedAudioOnly('heavy_tank_unlocked')).toBe(true)
+    expect(milestoneClipIsEmbeddedAudioOnly('heavy_tank_unlocked.mp4')).toBe(true)
     expect(milestoneClipIsEmbeddedAudioOnly('first_tank')).toBe(false)
     expect(milestoneClipIsEmbeddedAudioOnly('air_strip')).toBe(false)
     expect(milestoneClipIsEmbeddedAudioOnly('new_clip', true)).toBe(true)
@@ -263,6 +267,12 @@ describe('milestone embedded vs separate audio', () => {
 
       playSyncedVideoAudio('harvester_unlocked', { title: 'Harvester Available' })
       expect(play).toHaveBeenLastCalledWith('harvester_unlocked.mp4', null, expect.objectContaining({ title: 'Harvester Available' }))
+
+      playSyncedVideoAudio('recovery_tank_unlocked', { title: 'Recovery Tank Available' })
+      expect(play).toHaveBeenLastCalledWith('recovery_tank_unlocked.mp4', null, expect.objectContaining({ title: 'Recovery Tank Available' }))
+
+      playSyncedVideoAudio('heavy_tank_unlocked', { title: 'Heavy Tank Available' })
+      expect(play).toHaveBeenLastCalledWith('heavy_tank_unlocked.mp4', null, expect.objectContaining({ title: 'Heavy Tank Available' }))
 
       playSyncedVideoAudio('first_tank', { title: 'First Tank Produced' })
       expect(play).toHaveBeenLastCalledWith('first_tank.mp4', 'first_tank.mp3', expect.objectContaining({ title: 'First Tank Produced' }))

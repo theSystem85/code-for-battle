@@ -402,6 +402,41 @@ describe('milestoneSystem.js', () => {
       }))
     })
 
+    it('[U07156] should play the recovery tank video when the player has a workshop', () => {
+      const local = new MilestoneSystem()
+      local.setProductionController({ unlockUnitType: vi.fn() })
+      playSyncedVideoAudio.mockClear()
+      local.checkMilestones({
+        humanPlayer: 'player1',
+        buildings: [{ type: 'vehicleWorkshop', owner: 'player1' }],
+        units: []
+      })
+      expect(local.isAchieved('recoveryTankUnlocked')).toBe(true)
+      expect(playSyncedVideoAudio).toHaveBeenCalledWith('recovery_tank_unlocked', expect.objectContaining({
+        title: 'Recovery Tank Available',
+        priority: 'medium'
+      }))
+    })
+
+    it('[U07157] should play the heavy tank video when the player has two vehicle factories', () => {
+      const local = new MilestoneSystem()
+      local.setProductionController({ unlockUnitType: vi.fn() })
+      playSyncedVideoAudio.mockClear()
+      local.checkMilestones({
+        humanPlayer: 'player1',
+        buildings: [
+          { type: 'vehicleFactory', owner: 'player1' },
+          { type: 'vehicleFactory', owner: 'player1' }
+        ],
+        units: []
+      })
+      expect(local.isAchieved('tankV3Unlocked')).toBe(true)
+      expect(playSyncedVideoAudio).toHaveBeenCalledWith('heavy_tank_unlocked', expect.objectContaining({
+        title: 'Heavy Tank Available',
+        priority: 'medium'
+      }))
+    })
+
     it('[U02771] should play a video the first time each new production unit appears', () => {
       const cases = [
         ['mineLayer', 'firstMineLayer', 'first_mine_layer', 'First Mine Layer Produced'],

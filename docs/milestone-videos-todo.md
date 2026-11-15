@@ -21,8 +21,8 @@ Shared work list for generating the remaining milestone videos. Any agent may pi
 - [ ] `firstUnit` → `first_unit.mp4` (low priority, overlaps `firstTank`)
 - [x] `harvesterUnlocked` → `harvester_unlocked.mp4` (approved by Patrick 2026-11-16, integrated in ef9cdf2; embedded audio, no MP3; 2 takes, kept take 2; known issue: the drum teeth and hubcaps shimmer/morph slightly, and it has 6 wheels instead of the icon's 4)
 - [ ] `rocketTankUnlocked` → `rocket_tank_unlocked.mp4` (not recommended)
-- [ ] `recoveryTankUnlocked` → `recovery_tank_unlocked.mp4`
-- [ ] `tankV3Unlocked` → `heavy_tank_unlocked.mp4`
+- [x] `recoveryTankUnlocked` → `recovery_tank_unlocked.mp4` (approved by Patrick 2026-11-16, integrated in this commit; embedded audio, no MP3; 2 takes, kept take 1; known issue: the push-in plays like a zoomed still, the front tow crane/hook morphs and grows parts, and distant fire is frozen)
+- [x] `tankV3Unlocked` → `heavy_tank_unlocked.mp4` (approved by Patrick 2026-11-16, integrated in this commit; embedded audio, no MP3; 1 take, passed QA with minor detail shimmer on the roof gun, barrel and track links)
 - [ ] `tankerTruckUnlocked` → `tanker_truck_unlocked.mp4`
 
 ## New milestones (need config + trigger in `milestoneSystem.js`)
@@ -63,3 +63,9 @@ A slow high aerial glide over a desert military base with a dome construction ya
 
 ### harvesterUnlocked (generated 2026-11-16, 2 takes, kept take 2)
 Slow push-in toward a fully parked sand-colored harvester beside glowing ore crystals at golden hour, subject kept centered, the vehicle does not roll or slide. One single continuous shot, no cuts, no crossfades; the harvester keeps exactly the same shape, size and position; nothing morphs, appears or vanishes; only sand and the crystal glow move. Sound: desert wind, low engine idle, no music; at about 2 seconds a calm, deep male military command-briefing voice says: "Harvester unlocked. Resource collection is now available." Photorealistic cinematic military footage, golden-hour light, smooth camera motion, no text, no logos, no watermark.
+
+### recoveryTankUnlocked (generated 2026-11-16, 2 takes, kept take 1)
+Slow push-in toward a parked desert-camo recovery tank with a front tow hook and chains, a damaged tank behind it, subject kept centered, the vehicle does not roll or slide. One single continuous shot, no cuts, no crossfades; the recovery tank keeps exactly the same shape, size and position; nothing morphs, appears or vanishes. Sound: desert wind, low engine idle, distant fire crackle, no music; at about 2 seconds a calm, deep male military command-briefing voice says: "Recovery tank unlocked. Damaged vehicles can now be towed and repaired." Photorealistic cinematic military footage, golden-hour light, smooth camera motion, no text, no logos, no watermark.
+
+### tankV3Unlocked (generated 2026-11-16, 1 take)
+Slow head-on push-in toward a parked desert-camo heavy tank on dry grassland, subject kept centered, the vehicle does not roll or slide. One single continuous shot, no cuts, no crossfades; the tank keeps exactly the same shape, size and position; nothing morphs, appears or vanishes; only grass and light move. Sound: dry wind, low engine idle, no music; at about 2 seconds a calm, deep male military command-briefing voice says: "Heavy tank unlocked. Superior armor and firepower are now available." Photorealistic cinematic military footage, golden-hour light, smooth camera motion, no text, no logos, no watermark.

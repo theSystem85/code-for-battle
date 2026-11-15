@@ -11,7 +11,7 @@ export const MILESTONE_VIDEO_BED_GAIN = 0.1
 // companion MP3. The MP3 approach is deprecated, so new milestone videos are
 // added here. The list is the single deterministic source: no network probe
 // decides this, and no 404 is requested for these clips.
-const EMBEDDED_AUDIO_ONLY_CLIPS = Object.freeze(['first_factory', 'radar_station', 'ten_buildings', 'harvester_unlocked'])
+const EMBEDDED_AUDIO_ONLY_CLIPS = Object.freeze(['first_factory', 'radar_station', 'ten_buildings', 'harvester_unlocked', 'recovery_tank_unlocked', 'heavy_tank_unlocked'])
 
 /**
  * True when the clip has its own soundtrack and narration and no `.mp3`.

@@ -120,12 +120,14 @@ export class MilestoneSystem {
         id: 'recoveryTankUnlocked',
         displayName: 'Recovery Tank Available',
         description: 'Field repair capabilities unlocked',
+        videoFilename: 'recovery_tank_unlocked',
         priority: 'medium'
       },
       tankV3Unlocked: {
         id: 'tankV3Unlocked',
         displayName: 'Heavy Tank Available',
         description: 'Advanced tank production capabilities unlocked',
+        videoFilename: 'heavy_tank_unlocked',
         priority: 'medium'
       },
       tankerTruckUnlocked: {
