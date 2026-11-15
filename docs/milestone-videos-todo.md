@@ -17,9 +17,9 @@ Shared work list for generating the remaining milestone videos. Any agent may pi
 ## Existing milestones without a video
 - [x] `firstFactory` → `first_factory.mp4` (approved by Patrick 2026-11-15, integrated in 42433c8; embedded audio, no MP3)
 - [x] `radarBuilt` → `radar_station.mp4` (approved by Patrick 2026-11-15, integrated in 2c2a605; embedded audio, no MP3; 4 takes, the last before the 2-generation cap)
-- [x] `tenBuildings` → `ten_buildings.mp4` (approved by Patrick 2026-11-16, integrated in this commit; embedded audio, no MP3; 2 takes, kept take 1; known issue: steam is frozen, so it plays like a slow zoom into a still image)
+- [x] `tenBuildings` → `ten_buildings.mp4` (approved by Patrick 2026-11-16, integrated in ef9cdf2; embedded audio, no MP3; 2 takes, kept take 1; known issue: steam is frozen, so it plays like a slow zoom into a still image)
 - [ ] `firstUnit` → `first_unit.mp4` (low priority, overlaps `firstTank`)
-- [x] `harvesterUnlocked` → `harvester_unlocked.mp4` (approved by Patrick 2026-11-16, integrated in this commit; embedded audio, no MP3; 2 takes, kept take 2; known issue: the drum teeth and hubcaps shimmer/morph slightly, and it has 6 wheels instead of the icon's 4)
+- [x] `harvesterUnlocked` → `harvester_unlocked.mp4` (approved by Patrick 2026-11-16, integrated in ef9cdf2; embedded audio, no MP3; 2 takes, kept take 2; known issue: the drum teeth and hubcaps shimmer/morph slightly, and it has 6 wheels instead of the icon's 4)
 - [ ] `rocketTankUnlocked` → `rocket_tank_unlocked.mp4` (not recommended)
 - [ ] `recoveryTankUnlocked` → `recovery_tank_unlocked.mp4`
 - [ ] `tankV3Unlocked` → `heavy_tank_unlocked.mp4`
