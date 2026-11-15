@@ -99,6 +99,7 @@ export class MilestoneSystem {
         id: 'radarBuilt',
         displayName: 'Radar Station Operational',
         description: 'Advanced technologies are now available',
+        videoFilename: 'radar_station',
         priority: 'high'
       },
       harvesterUnlocked: {

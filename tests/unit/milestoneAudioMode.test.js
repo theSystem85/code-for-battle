@@ -237,6 +237,8 @@ describe('milestone embedded vs separate audio', () => {
   it('[U07144] picks the embedded-audio path from config for clips with no MP3', () => {
     expect(milestoneClipIsEmbeddedAudioOnly('first_factory')).toBe(true)
     expect(milestoneClipIsEmbeddedAudioOnly('first_factory.mp4')).toBe(true)
+    expect(milestoneClipIsEmbeddedAudioOnly('radar_station')).toBe(true)
+    expect(milestoneClipIsEmbeddedAudioOnly('radar_station.mp4')).toBe(true)
     expect(milestoneClipIsEmbeddedAudioOnly('first_tank')).toBe(false)
     expect(milestoneClipIsEmbeddedAudioOnly('air_strip')).toBe(false)
     expect(milestoneClipIsEmbeddedAudioOnly('new_clip', true)).toBe(true)
@@ -248,6 +250,9 @@ describe('milestone embedded vs separate audio', () => {
     try {
       playSyncedVideoAudio('first_factory', { title: 'First Factory Built' })
       expect(play).toHaveBeenLastCalledWith('first_factory.mp4', null, expect.objectContaining({ title: 'First Factory Built' }))
+
+      playSyncedVideoAudio('radar_station', { title: 'Radar Station Operational' })
+      expect(play).toHaveBeenLastCalledWith('radar_station.mp4', null, expect.objectContaining({ title: 'Radar Station Operational' }))
 
       playSyncedVideoAudio('first_tank', { title: 'First Tank Produced' })
       expect(play).toHaveBeenLastCalledWith('first_tank.mp4', 'first_tank.mp3', expect.objectContaining({ title: 'First Tank Produced' }))

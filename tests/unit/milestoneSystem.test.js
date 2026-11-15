@@ -348,6 +348,22 @@ describe('milestoneSystem.js', () => {
       }))
     })
 
+    it('[U07149] should play the radar station video when the player builds a radar station', () => {
+      const local = new MilestoneSystem()
+      local.setProductionController({ unlockMultipleTypes: vi.fn() })
+      playSyncedVideoAudio.mockClear()
+      local.checkMilestones({
+        humanPlayer: 'player1',
+        buildings: [{ type: 'radarStation', owner: 'player1' }],
+        units: []
+      })
+      expect(local.isAchieved('radarBuilt')).toBe(true)
+      expect(playSyncedVideoAudio).toHaveBeenCalledWith('radar_station', expect.objectContaining({
+        title: 'Radar Station Operational',
+        priority: 'high'
+      }))
+    })
+
     it('[U02771] should play a video the first time each new production unit appears', () => {
       const cases = [
         ['mineLayer', 'firstMineLayer', 'first_mine_layer', 'First Mine Layer Produced'],

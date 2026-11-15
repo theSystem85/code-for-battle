@@ -48,7 +48,8 @@ export const MILESTONE_VIDEO_CROPS = Object.freeze({
   first_submarine: FULL_5X3,
   shipyard: FULL_5X3,
   helipad: FULL_5X3,
-  first_factory: FULL_5X3
+  first_factory: FULL_5X3,
+  radar_station: FULL_5X3
 })
 
 const detectedByVideo = new WeakMap()

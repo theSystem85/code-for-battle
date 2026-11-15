@@ -7,6 +7,7 @@ Shared work list for generating the remaining milestone videos. Any agent may pi
 - **HEVC** (libx265, `hvc1`, 24 fps, CRF ~28, faststart) for every new video.
 - **5:3, 960×576** to match the radar/minimap (`canvasManager.js`: height = width × 0.6). Generate 16:9 720p with action centered, then center-crop `crop=1200:720,scale=960:576`.
 - 15 s, photorealistic desert military style, sidebar icon as reference image.
+- **Maximum 2 generations per clip in total** (the first take plus at most one retake). Run the physics check after each take; if the second take is still imperfect, ship the better of the two or report it. Do not generate a third take.
 - Generate one at a time, get Patrick's review, then integrate (`videoFilename` in `src/game/milestoneSystem.js`) and tick the box with the commit SHA.
 - Add the clip's base name to `EMBEDDED_AUDIO_ONLY_CLIPS` in `src/ui/milestoneAudioMode.js` so the player uses the video's own audio and never requests a `.mp3` (the list is the single source of truth). Add a `FULL_5X3` entry in `src/ui/milestoneVideoCrop.js`.
 
@@ -15,7 +16,7 @@ Shared work list for generating the remaining milestone videos. Any agent may pi
 
 ## Existing milestones without a video
 - [x] `firstFactory` → `first_factory.mp4` (approved by Patrick 2026-11-15, integrated in 42433c8; embedded audio, no MP3)
-- [ ] `radarBuilt` → `radar_station.mp4`
+- [x] `radarBuilt` → `radar_station.mp4` (approved by Patrick 2026-11-15, integrated in RADAR_SHA; embedded audio, no MP3; 4 takes, the last before the 2-generation cap)
 - [ ] `tenBuildings` → `ten_buildings.mp4`
 - [ ] `firstUnit` → `first_unit.mp4` (low priority, overlaps `firstTank`)
 - [ ] `harvesterUnlocked` → `harvester_unlocked.mp4`
@@ -53,3 +54,6 @@ Draft prompts per item: see the review list from 2026-11-15; the final prompt us
 
 ### firstFactory (generated 2026-11-15)
 Using the factory hangar from <IMAGE_0>: a wide golden-hour aerial of a large grey four-bay military vehicle factory in desert dunes, empty concrete apron (0-5 s). The camera cranes down the facade as the bay doors stand open, welding sparks inside; a desert-camo main battle tank noses out of the center bay (5-10 s). Three-quarter rear tracking as the tank clears the bay and a second chassis waits in the next stall, heat haze (10-15 s). Keep all action centered in the frame. Sound: diesel engine rumble, clanking tracks, machinery hum, welding crackle, desert wind; at about 2 s a calm, deep male military command-briefing voice says: "Your first Vehicle Factory is online. Armor can now roll off the line." No music. Photorealistic cinematic military footage, golden-hour light, dramatic smoke and dust, smooth camera motion, no text, no logos, no watermark.
+
+### radarBuilt (generated 2026-11-15, 4 takes, final prompt)
+The radar station exactly as in <IMAGE_0>: a white square concrete bunker, a solid white cylindrical tower with a thin railing platform at the top, and one large white spherical radome on top, alone on a dry desert plain with scrub bushes and one narrow curving dirt road. One single continuous shot, no cuts, no crossfades: slow straight dolly-in with gentle upward tilt ending on the radome against the dawn sky; no orbit, no vehicles, no people; subtle sand wisps, blinking red light. Sound: wind, hum, radar ping every two seconds, no music; at ~2 s narration: 'Radar station operational. Advanced technologies are now available.'
