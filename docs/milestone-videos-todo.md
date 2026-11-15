@@ -21,8 +21,8 @@ Shared work list for generating the remaining milestone videos. Any agent may pi
 - [ ] `firstUnit` → `first_unit.mp4` (low priority, overlaps `firstTank`)
 - [x] `harvesterUnlocked` → `harvester_unlocked.mp4` (approved by Patrick 2026-11-16, integrated in ef9cdf2; embedded audio, no MP3; 2 takes, kept take 2; known issue: the drum teeth and hubcaps shimmer/morph slightly, and it has 6 wheels instead of the icon's 4)
 - [ ] `rocketTankUnlocked` → `rocket_tank_unlocked.mp4` (not recommended)
-- [x] `recoveryTankUnlocked` → `recovery_tank_unlocked.mp4` (approved by Patrick 2026-11-16, integrated in this commit; embedded audio, no MP3; 2 takes, kept take 1; known issue: the push-in plays like a zoomed still, the front tow crane/hook morphs and grows parts, and distant fire is frozen)
-- [x] `tankV3Unlocked` → `heavy_tank_unlocked.mp4` (approved by Patrick 2026-11-16, integrated in this commit; embedded audio, no MP3; 1 take, passed QA with minor detail shimmer on the roof gun, barrel and track links)
+- [x] `recoveryTankUnlocked` → `recovery_tank_unlocked.mp4` (approved by Patrick 2026-11-16, integrated in 966c5ca; embedded audio, no MP3; 2 takes, kept take 1; known issue: the push-in plays like a zoomed still, the front tow crane/hook morphs and grows parts, and distant fire is frozen)
+- [x] `tankV3Unlocked` → `heavy_tank_unlocked.mp4` (approved by Patrick 2026-11-16, integrated in 966c5ca; embedded audio, no MP3; 1 take, passed QA with minor detail shimmer on the roof gun, barrel and track links)
 - [ ] `tankerTruckUnlocked` → `tanker_truck_unlocked.mp4`
 
 ## New milestones (need config + trigger in `milestoneSystem.js`)
