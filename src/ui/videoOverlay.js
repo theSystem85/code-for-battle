@@ -1,14 +1,19 @@
 import {
   configureMilestoneVideo,
+  milestoneSignalMotionEnabled,
   milestoneVideoPlacement,
   MILESTONE_PRESENTATION_FADE_MS,
-  PORTRAIT_COMPACT_VIDEO_SIZE,
-  PORTRAIT_CONDENSED_VIDEO_TOP_GAP_PX,
-  PORTRAIT_CONDENSED_VIDEO_WIDTH
+  MILESTONE_SIGNAL_ACQUIRE_CLASS,
+  MILESTONE_SIGNAL_ACQUIRE_MS,
+  MILESTONE_SIGNAL_CHIRP,
+  MILESTONE_SIGNAL_CHIRP_VOLUME,
+  MILESTONE_SIGNAL_RELEASE_CLASS,
+  MILESTONE_SIGNAL_RELEASE_MS,
+  portraitMinimapOverlayCss
 } from './milestoneVideoPresentation.js'
 // ui/videoOverlay.js
 import { MILESTONE_VIDEO_CROPS } from './milestoneVideoCrop.js'
-import { getMasterVolume } from '../sound.js'
+import { getMasterVolume, playSound } from '../sound.js'
 import { isHeadlessAudioMuted } from '../utils/headlessAudioMute.js'
 import { showNotification } from './notifications.js'
 import { configureAudioElement } from '../pwa/audioElementPolicy.js'
@@ -81,6 +86,7 @@ export class VideoOverlay {
     this.nativePresentation = false
     this.presentationReady = false
     this.fadeOutTimer = 0
+    this.signalTimer = 0
     this.boundPortraitVideoTap = (event) => this.dismissPortraitVideoOnTap(event)
     this.createOverlayElement()
     this.updatePresentation = () => this.updateVideoPlacement()
@@ -108,6 +114,12 @@ export class VideoOverlay {
         <video class="milestone-video" muted autoplay playsinline webkit-playsinline preload="auto">
           Your browser does not support the video tag.
         </video>
+        <div class="signal-fx" aria-hidden="true">
+          <span class="signal-scan"></span>
+          <span class="signal-slice signal-slice-a"></span>
+          <span class="signal-slice signal-slice-b"></span>
+          <span class="signal-slice signal-slice-c"></span>
+        </div>
         <div class="video-controls">
           <div class="milestone-info">
             <h3 class="milestone-title"></h3>
@@ -260,24 +272,139 @@ export class VideoOverlay {
         transform: none;
       }
       .video-overlay.native-video { box-shadow: none; }
-      /* Portrait condensed: half the viewport (50vw) at the compact clip's
-         aspect, centered below the iOS protected region. The side gutters keep
-         the corner controls clear, and the shorter clip stays above the build
-         bar. Inline geometry is cleared so this rule tracks the safe area. */
-      body.mobile-portrait.sidebar-condensed #video-overlay.native-video {
-        top: calc(${PORTRAIT_CONDENSED_VIDEO_TOP_GAP_PX}px + max(var(--safe-area-top, 0px), env(safe-area-inset-top, 0px)));
-        left: 0;
-        right: 0;
-        width: ${PORTRAIT_CONDENSED_VIDEO_WIDTH};
-        height: auto;
-        aspect-ratio: ${PORTRAIT_COMPACT_VIDEO_SIZE.width} / ${PORTRAIT_COMPACT_VIDEO_SIZE.height};
-        margin-left: auto;
-        margin-right: auto;
-      }
+      /* Portrait condensed and collapsed: the same bottom-right box as
+         #mobileMinimapOverlay.visible (250×150, 5:3), including safe-area
+         insets. CSS owns the edges so a late safe-area update can move the
+         clip. 50vw is wider or narrower than that radar and is not used. */
+      ${portraitMinimapOverlayCss('condensed')}
+      ${portraitMinimapOverlayCss('collapsed')}
       body.mobile-portrait #video-overlay.native-video.show {
         pointer-events: auto;
         cursor: pointer;
         touch-action: manipulation;
+      }
+      .signal-fx {
+        display: none;
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        pointer-events: none;
+        z-index: 2;
+      }
+      .video-overlay.native-video.${MILESTONE_SIGNAL_ACQUIRE_CLASS},
+      .video-overlay.native-video.${MILESTONE_SIGNAL_RELEASE_CLASS} {
+        visibility: visible;
+      }
+      .video-overlay.native-video.${MILESTONE_SIGNAL_ACQUIRE_CLASS} {
+        transition: none;
+        opacity: 1;
+      }
+      .video-overlay.native-video.${MILESTONE_SIGNAL_ACQUIRE_CLASS} .signal-fx,
+      .video-overlay.native-video.${MILESTONE_SIGNAL_RELEASE_CLASS} .signal-fx {
+        display: block;
+      }
+      .video-overlay.native-video.${MILESTONE_SIGNAL_ACQUIRE_CLASS} .milestone-video,
+      .video-overlay.native-video.${MILESTONE_SIGNAL_RELEASE_CLASS} .milestone-video {
+        animation: milestone-signal-picture ${MILESTONE_SIGNAL_ACQUIRE_MS}ms steps(8, end) both;
+        will-change: transform, filter, clip-path;
+      }
+      .video-overlay.native-video.${MILESTONE_SIGNAL_RELEASE_CLASS} .milestone-video {
+        animation-duration: ${MILESTONE_SIGNAL_RELEASE_MS}ms;
+        animation-direction: reverse;
+      }
+      .signal-scan {
+        position: absolute;
+        inset: 0;
+        background: repeating-linear-gradient(
+          to bottom,
+          rgba(0, 0, 0, 0.55) 0 1px,
+          transparent 1px 4px
+        );
+        mix-blend-mode: multiply;
+        opacity: 0.85;
+        animation: milestone-signal-flicker ${MILESTONE_SIGNAL_ACQUIRE_MS}ms steps(6, end) both;
+      }
+      .signal-slice {
+        position: absolute;
+        left: 0;
+        right: 0;
+        height: 12%;
+        background: linear-gradient(90deg, rgba(255, 32, 48, 0.55), rgba(32, 220, 255, 0.5));
+        mix-blend-mode: screen;
+        animation: milestone-signal-slice ${MILESTONE_SIGNAL_ACQUIRE_MS}ms steps(5, end) both;
+      }
+      .signal-slice-a { top: 18%; }
+      .signal-slice-b { top: 46%; animation-delay: 40ms; }
+      .signal-slice-c { top: 72%; animation-delay: 70ms; }
+      .video-overlay.native-video.${MILESTONE_SIGNAL_RELEASE_CLASS} .signal-scan,
+      .video-overlay.native-video.${MILESTONE_SIGNAL_RELEASE_CLASS} .signal-slice {
+        animation-duration: ${MILESTONE_SIGNAL_RELEASE_MS}ms;
+        animation-direction: reverse;
+      }
+      @keyframes milestone-signal-picture {
+        0% {
+          transform: translate3d(-6px, 0, 0);
+          filter: drop-shadow(5px 0 0 rgba(255, 40, 48, 0.9)) drop-shadow(-5px 0 0 rgba(40, 220, 255, 0.85)) contrast(1.45) saturate(1.3);
+          clip-path: inset(6% 0 68% 0);
+        }
+        16% {
+          transform: translate3d(7px, 1px, 0);
+          filter: drop-shadow(-6px 0 0 rgba(255, 0, 64, 0.85)) drop-shadow(4px 0 0 rgba(0, 160, 255, 0.8)) contrast(1.6);
+          clip-path: inset(38% 0 34% 0);
+        }
+        32% {
+          transform: translate3d(-4px, -1px, 0);
+          filter: drop-shadow(4px 0 0 rgba(255, 80, 0, 0.75)) drop-shadow(-3px 0 0 rgba(0, 255, 190, 0.7));
+          clip-path: inset(58% 0 14% 0);
+        }
+        48% {
+          transform: translate3d(3px, 0, 0);
+          filter: drop-shadow(-3px 0 0 rgba(255, 0, 40, 0.65)) drop-shadow(3px 0 0 rgba(0, 210, 255, 0.6)) contrast(1.25);
+          clip-path: inset(22% 0 52% 0);
+        }
+        64% {
+          transform: translate3d(-2px, 0, 0);
+          filter: drop-shadow(2px 0 0 rgba(255, 0, 0, 0.45)) drop-shadow(-2px 0 0 rgba(0, 255, 255, 0.4));
+          clip-path: inset(0 0 0 0);
+        }
+        80% {
+          transform: translate3d(1px, 0, 0);
+          filter: drop-shadow(1px 0 0 rgba(255, 0, 0, 0.28)) drop-shadow(-1px 0 0 rgba(0, 255, 255, 0.24));
+          clip-path: none;
+        }
+        100% {
+          transform: none;
+          filter: none;
+          clip-path: none;
+        }
+      }
+      @keyframes milestone-signal-flicker {
+        0% { opacity: 0.95; transform: translate3d(0, 0, 0); }
+        25% { opacity: 0.25; transform: translate3d(0, -2px, 0); }
+        50% { opacity: 0.8; transform: translate3d(0, 1px, 0); }
+        75% { opacity: 0.35; }
+        100% { opacity: 0; transform: none; }
+      }
+      @keyframes milestone-signal-slice {
+        0% { transform: translate3d(-14%, 0, 0); opacity: 0.95; }
+        40% { transform: translate3d(12%, 0, 0); opacity: 0.75; }
+        100% { transform: translate3d(0, 0, 0); opacity: 0; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .video-overlay.native-video.${MILESTONE_SIGNAL_ACQUIRE_CLASS},
+        .video-overlay.native-video.${MILESTONE_SIGNAL_RELEASE_CLASS} {
+          transition: opacity ${MILESTONE_PRESENTATION_FADE_MS}ms ease;
+        }
+        .video-overlay.native-video.${MILESTONE_SIGNAL_ACQUIRE_CLASS} .milestone-video,
+        .video-overlay.native-video.${MILESTONE_SIGNAL_RELEASE_CLASS} .milestone-video,
+        .video-overlay.native-video .signal-scan,
+        .video-overlay.native-video .signal-slice {
+          animation: none;
+          filter: none;
+          transform: none;
+          clip-path: none;
+        }
+        .video-overlay.native-video .signal-fx { display: none; }
       }
     `
     document.head.appendChild(style)
@@ -542,6 +669,37 @@ export class VideoOverlay {
     // Drop the inline none left by the previous clip so the portrait tap rule can apply.
     this.overlayElement.style.pointerEvents = ''
     this.overlayElement.classList.add('show')
+    this.beginSignalAcquire()
+  }
+
+  beginSignalAcquire() {
+    if (!this.nativePresentation || !this.overlayElement) return
+    this.overlayElement.classList.remove(MILESTONE_SIGNAL_RELEASE_CLASS)
+    if (!milestoneSignalMotionEnabled()) return
+    this.overlayElement.classList.add(MILESTONE_SIGNAL_ACQUIRE_CLASS)
+    clearTimeout(this.signalTimer)
+    this.signalTimer = setTimeout(() => {
+      this.signalTimer = 0
+      this.overlayElement?.classList.remove(MILESTONE_SIGNAL_ACQUIRE_CLASS)
+    }, MILESTONE_SIGNAL_ACQUIRE_MS)
+    this.playSignalChirp()
+  }
+
+  playSignalChirp() {
+    // Vitest resolves fetch in Node, which rejects the relative sound path.
+    // The browser page still plays the registered chirp.
+    if (import.meta.env.VITEST) return
+    try {
+      playSound(MILESTONE_SIGNAL_CHIRP, MILESTONE_SIGNAL_CHIRP_VOLUME)
+    } catch {
+      // A missing UI buffer must not block the clip.
+    }
+  }
+
+  clearSignalMotion() {
+    clearTimeout(this.signalTimer)
+    this.signalTimer = 0
+    this.overlayElement?.classList.remove(MILESTONE_SIGNAL_ACQUIRE_CLASS, MILESTONE_SIGNAL_RELEASE_CLASS)
   }
 
   dismissPortraitVideoOnTap(event) {
@@ -562,15 +720,16 @@ export class VideoOverlay {
     this.nativePresentation = Boolean(placement)
     this.overlayElement.classList.toggle('native-video', this.nativePresentation)
     if (!placement) return
-    if (placement.mode === 'portrait-condensed') {
-      // CSS owns top/left so a late safe-area update moves the clip without
-      // another placement pass. Inline pixel styles would freeze the old top.
-      for (const key of ['left', 'top', 'right', 'width', 'height']) {
+    if (placement.mode === 'portrait-minimap') {
+      // CSS owns the bottom-right radar anchor, including safe-area insets.
+      // Inline pixel styles would freeze the old edge.
+      for (const key of ['left', 'top', 'right', 'bottom', 'width', 'height']) {
         this.overlayElement.style[key] = ''
       }
       return
     }
     this.overlayElement.style.right = ''
+    this.overlayElement.style.bottom = ''
     for (const key of ['left', 'top', 'width', 'height']) {
       this.overlayElement.style[key] = `${placement[key]}px`
     }
@@ -579,7 +738,12 @@ export class VideoOverlay {
   stopCurrentVideo(immediate = false) {
     if (this.fadeOutTimer && !immediate) return
     if (!immediate && this.isPlaying && this.nativePresentation && this.presentationReady) {
-      this.overlayElement.classList.remove('show')
+      this.overlayElement.classList.remove('show', MILESTONE_SIGNAL_ACQUIRE_CLASS)
+      clearTimeout(this.signalTimer)
+      this.signalTimer = 0
+      if (milestoneSignalMotionEnabled()) {
+        this.overlayElement.classList.add(MILESTONE_SIGNAL_RELEASE_CLASS)
+      }
       this.fadeOutTimer = setTimeout(() => {
         this.fadeOutTimer = 0
         this.stopCurrentVideo(true)
@@ -588,6 +752,7 @@ export class VideoOverlay {
     }
     clearTimeout(this.fadeOutTimer)
     this.fadeOutTimer = 0
+    this.clearSignalMotion()
     // Prevent multiple calls during cleanup
     if (!this.isPlaying) {
       return
@@ -602,6 +767,7 @@ export class VideoOverlay {
     // Hide overlay completely
     this.overlayElement.classList.remove('show')
     this.overlayElement.classList.remove('native-video')
+    this.overlayElement.classList.remove(MILESTONE_SIGNAL_ACQUIRE_CLASS, MILESTONE_SIGNAL_RELEASE_CLASS)
     this.overlayElement.style.pointerEvents = 'none'
 
     // Stop and clean up video with error handling
