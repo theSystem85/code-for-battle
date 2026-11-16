@@ -905,6 +905,37 @@ describe('UnitCommandsHandler attack group and movement', () => {
     expect(showNotification).toHaveBeenCalledWith('Cannot reach that location. Move command aborted.', 2200)
   })
 
+  it('[U07131] handleMovementCommand tells the player when a unit is out of fuel', () => {
+    const unit = {
+      id: 'dry-tank',
+      type: 'tank_v1',
+      owner: 'player',
+      tileX: 0,
+      tileY: 0,
+      x: 0,
+      y: 0,
+      gas: 0,
+      maxGas: 1900
+    }
+
+    findPathForOwner.mockReturnValue([{ x: 0, y: 0 }, { x: 1, y: 1 }])
+
+    handler.handleMovementCommand([unit], 96, 96, mapGrid)
+
+    expect(findPathForOwner).not.toHaveBeenCalled()
+    expect(unit.path).toBeUndefined()
+    expect(showNotification).toHaveBeenCalledWith('Out of fuel. Move command aborted.', 2200)
+  })
+
+  it('[U07132] handleMovementCommand names every empty human unit in one fuel notice', () => {
+    const first = { id: 'dry-1', type: 'tank_v1', owner: 'player', tileX: 0, tileY: 0, x: 0, y: 0, gas: 0, maxGas: 1900 }
+    const second = { id: 'dry-2', type: 'tank_v1', owner: 'player', tileX: 1, tileY: 0, x: 32, y: 0, gas: 0, maxGas: 1900 }
+
+    handler.handleMovementCommand([first, second], 96, 96, mapGrid)
+
+    expect(showNotification).toHaveBeenCalledWith('2 units are out of fuel. Move commands aborted.', 2200)
+  })
+
   it('[U04721] handleMovementCommand does not notify for unreachable non-human units', () => {
     const aiUnit = { id: 'u2', type: 'tank', owner: 'enemy', tileX: 0, tileY: 0 }
 

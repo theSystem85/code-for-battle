@@ -49,6 +49,11 @@ export function handleMovementCommand(handler, selectedUnits, targetX, targetY, 
 
   let anyMoved = false
   let outOfGasCount = 0
+  let humanOutOfGasCount = 0
+  const noteOutOfGas = unit => {
+    outOfGasCount++
+    if (unit.owner === gameState.humanPlayer) humanOutOfGasCount++
+  }
   let unreachableHumanCount = 0
   const mapHeight = mapGrid.length
   const mapWidth = mapGrid[0]?.length || 0
@@ -124,7 +129,7 @@ export function handleMovementCommand(handler, selectedUnits, targetX, targetY, 
 
     if (unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35') {
       if (gasDepleted) {
-        outOfGasCount++
+        noteOutOfGas(unit)
         return
       }
 
@@ -285,7 +290,7 @@ export function handleMovementCommand(handler, selectedUnits, targetX, targetY, 
       unit.forcedAttack = false
       anyMoved = true
     } else if (gasDepleted) {
-      outOfGasCount++
+      noteOutOfGas(unit)
     } else {
       if (unit.owner === gameState.humanPlayer) {
         unreachableHumanCount++
@@ -305,6 +310,15 @@ export function handleMovementCommand(handler, selectedUnits, targetX, targetY, 
     const avgX = selectedUnits.reduce((sum, u) => sum + u.x, 0) / selectedUnits.length
     const avgY = selectedUnits.reduce((sum, u) => sum + u.y, 0) / selectedUnits.length
     playMoveOrderSound(selectedUnits, avgX, avgY, 0.5)
+  }
+
+  if (humanOutOfGasCount > 0) {
+    showNotification(
+      humanOutOfGasCount === 1
+        ? 'Out of fuel. Move command aborted.'
+        : `${humanOutOfGasCount} units are out of fuel. Move commands aborted.`,
+      2200
+    )
   }
 
   if (unreachableHumanCount > 0) {
