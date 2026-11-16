@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
-  completeBoot, createReleaseDigest, getBootReleaseDigest, getHighlightIndex,
+  releaseEntries, completeBoot, createReleaseDigest, getBootReleaseDigest, getHighlightIndex,
   getLoadingHighlights, getManualReleaseDigest, getReleaseDigest,
   DURATION_HISTORY_KEY, LAST_DURATION_KEY, LAST_VERSION_KEY, buildUnreleasedRelease, getReleaseDelta, mergeReleaseEntries
 } from '../../src/ui/releaseDigest.js'
@@ -106,5 +106,26 @@ describe('unreleased release-note entries', () => {
     const sameVersion = mergeReleaseEntries(entries, { version: '0.12.0', features: ['Extra'], improvements: [], bugfixes: [] })
     expect(sameVersion.find(entry => entry.version === '0.12.0').features).toEqual(['Future', 'Extra'])
     expect(mergeReleaseEntries(entries, null)).toBe(entries)
+  })
+})
+
+describe('deployment loading notes', () => {
+  it('[U07175] shows only new notes across deployments sharing a version and keeps the manual diff', () => {
+    const before = releaseEntries
+    const after = mergeReleaseEntries(before, { version: APP_VERSION, features: ['New mode'], improvements: ['Faster'], bugfixes: ['Fixed'] })
+    completeBoot(100, null, before)
+    const digest = getBootReleaseDigest(after)
+    expect(digest).toMatchObject({ features: ['New mode'], improvements: ['Faster'], bugfixes: ['Fixed'] })
+    completeBoot(100, digest, after)
+    expect(getBootReleaseDigest(after)).toBeNull()
+    expect(getManualReleaseDigest()).toEqual(digest)
+  })
+
+  it('[U07176] does not repeat notes moved into a release and tolerates corrupt snapshots', () => {
+    const before = [{ version: '0.1.0', features: ['Existing'], improvements: [], bugfixes: [] }]
+    completeBoot(100, null, before, '0.1.0')
+    expect(getBootReleaseDigest([{ ...before[0], version: '0.2.0' }], '0.2.0')).toBeNull()
+    localStorage.setItem('cfb-last-loaded-releases', '[null]')
+    expect(() => getBootReleaseDigest()).not.toThrow()
   })
 })

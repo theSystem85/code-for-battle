@@ -1,7 +1,7 @@
 import { APP_VERSION } from '../version.js'
 import {
   buildUnreleasedRelease, compareVersions, getReleaseDigest as buildReleaseDigest,
-  mergeReleaseEntries
+  mergeReleaseEntries, getReleaseDelta, RELEASE_CATEGORIES
 } from './releaseData.js'
 
 export { buildUnreleasedRelease, compareVersions, getReleaseDelta, mergeReleaseEntries, RELEASE_CATEGORIES } from './releaseData.js'
@@ -17,6 +17,8 @@ export const releaseEntries = releases
 export const LAST_VERSION_KEY = 'cfb-last-loaded-version'
 export const LAST_DURATION_KEY = 'cfb-last-boot-duration-ms'
 export const DURATION_HISTORY_KEY = 'cfb-boot-duration-history-ms'
+export const LAST_RELEASES_KEY = 'cfb-last-loaded-releases'
+const PREVIOUS_DIGEST_KEY = 'cfb-last-update-digest'
 const PREVIOUS_VERSION_KEY = 'cfb-release-digest-from-version'
 
 export function readBootStorage(key) {
@@ -31,16 +33,43 @@ export function getReleaseDigest(fromVersion, toVersion = APP_VERSION, entries =
   return buildReleaseDigest(fromVersion, toVersion, entries)
 }
 
-export function getBootReleaseDigest() {
+function readJson(key) {
+  try { return JSON.parse(readBootStorage(key)) } catch { return null }
+}
+
+// Flatten versions so releasing previously seen unreleased notes does not show
+// them again merely because their version bucket changed.
+function flattenNotes(entries) {
+  return [{ version: '0.0.0', ...Object.fromEntries(RELEASE_CATEGORIES.map(category =>
+    [category, entries.flatMap(entry => entry[category] || [])])) }]
+}
+
+export function getBootReleaseDigest(entries = releases, version = APP_VERSION) {
   const previous = readBootStorage(LAST_VERSION_KEY)
-  return previous && compareVersions(APP_VERSION, previous) > 0 ? getReleaseDigest(previous) : null
+  if (!previous || compareVersions(version, previous) < 0) return null
+  const snapshot = readJson(LAST_RELEASES_KEY)
+  if (Array.isArray(snapshot) && snapshot.every(entry => entry && RELEASE_CATEGORIES.every(category =>
+    Array.isArray(entry[category]) && entry[category].every(text => typeof text === 'string')))) {
+    const digest = getReleaseDelta(flattenNotes(snapshot), flattenNotes(entries), {
+      fromVersion: previous, toVersion: version, fallback: false
+    })
+    return RELEASE_CATEGORIES.some(category => digest[category].length) ? digest : null
+  }
+  // Older clients have no snapshot; include the current version's notes once
+  // even when its version number has not changed.
+  if (compareVersions(version, previous) === 0) {
+    return getReleaseDelta([], entries.filter(entry => entry.version === version), {
+      fromVersion: previous, toVersion: version, fallback: false
+    })
+  }
+  return buildReleaseDigest(previous, version, entries)
 }
 
 export function getManualReleaseDigest() {
-  return getBootReleaseDigest() || getReleaseDigest(readBootStorage(PREVIOUS_VERSION_KEY))
+  return getBootReleaseDigest() || readJson(PREVIOUS_DIGEST_KEY) || getReleaseDigest(readBootStorage(PREVIOUS_VERSION_KEY))
 }
 
-export function completeBoot(duration, digest) {
+export function completeBoot(duration, digest, entries = releases, version = APP_VERSION) {
   const measured = Math.max(1, Math.round(duration))
   let history = []
   try {
@@ -51,8 +80,12 @@ export function completeBoot(duration, digest) {
   const average = Math.round(history.reduce((sum, value) => sum + value, 0) / history.length)
   writeBootStorage(DURATION_HISTORY_KEY, JSON.stringify(history))
   writeBootStorage(LAST_DURATION_KEY, average)
-  if (digest) writeBootStorage(PREVIOUS_VERSION_KEY, digest.fromVersion)
-  writeBootStorage(LAST_VERSION_KEY, APP_VERSION)
+  if (digest) {
+    writeBootStorage(PREVIOUS_VERSION_KEY, digest.fromVersion)
+    writeBootStorage(PREVIOUS_DIGEST_KEY, JSON.stringify(digest))
+  }
+  writeBootStorage(LAST_RELEASES_KEY, JSON.stringify(entries))
+  writeBootStorage(LAST_VERSION_KEY, version)
 }
 
 export function getLoadingHighlights(digest) {
