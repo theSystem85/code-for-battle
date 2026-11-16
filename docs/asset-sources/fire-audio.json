@@ -1,8 +1,70 @@
 {
-  "provider": "ElevenLabs connector",
-  "status": "generated; local download blocked by environment proxy HTTP 403",
-  "fire": { "flow_id": "T36jpRCsmyA9V3kLmIWC", "session_id": "tuslNGTiHRwkGwraGZEA", "generation_id": "U1uZv6YiU7ShFu4iXqKw", "model": "eleven_text_to_sound_v2" },
-  "hose": { "flow_id": "kjK5LtJd50M0hGaoGr7i", "session_id": "tSWmL3a7RbHgo5Buo3Xt", "generation_id": "GsgkpGivie565DkB4z0e", "model": "eleven_text_to_sound_v2" },
-  "ready": { "flow_id": "rPW2XjUAkDWECa29UOhF", "session_id": "d4pCzV22ipa3PCJ8YP0Q", "generation_id": "1jE2mUIuZsYesn5L0upu", "voice_id": "iAQ8JnVyb6JWIhvcjWww", "model": "eleven_multilingual_v2" },
-  "review": "SFX connector returned one-second, non-loop metadata despite requested parameters. Audition before final loop integration. Do not commit expiring signed media URLs. Map/sidebar art currently authored concept art; photorealistic elevated sidebar replacements require review."
+  "provider": "ElevenLabs connector (owner's ElevenLabs Starter plan, commercial license)",
+  "status": "downloaded, auditioned, loop-processed and bundled under public/sound/ (2026-11-16)",
+  "note": "Signed media URLs are never stored here. Re-fetch them with creative_get_generations(flow_id, generation_ids) if a raw take is needed again.",
+  "files": {
+    "fireLoop": {
+      "path": "public/sound/fireLoop.mp3",
+      "kind": "loop",
+      "duration_s": 8.0,
+      "format": "MP3 128 kbps / 44.1 kHz stereo",
+      "loudness_lufs": -25.0,
+      "true_peak_dbfs": -1.5,
+      "source_generation": "u3HgMdXxKQHhw9tnuOBx",
+      "replaces_take": "U1uZv6YiU7ShFu4iXqKw (1.04 s, loop=false, unusable as a loop; kept for provenance only)"
+    },
+    "fireHoseLoop": {
+      "path": "public/sound/fireHoseLoop.mp3",
+      "kind": "loop",
+      "duration_s": 4.4,
+      "format": "MP3 128 kbps / 44.1 kHz stereo",
+      "loudness_lufs": -22.1,
+      "true_peak_dbfs": -13.9,
+      "source_generation": "L3556a1tUeRMCuary4oI",
+      "replaces_take": "GsgkpGivie565DkB4z0e (1.04 s, loop=false, clipped at +1.0 dBFS; kept for provenance only)"
+    },
+    "fireEngineReady": {
+      "path": "public/sound/fireEngineReady.mp3",
+      "kind": "one-shot voice line",
+      "duration_s": 2.38,
+      "format": "MP3 128 kbps / 44.1 kHz mono",
+      "loudness_lufs": -23.9,
+      "true_peak_dbfs": -7.7,
+      "source_generation": "1jE2mUIuZsYesn5L0upu",
+      "text": "Fire engine ready. Standing by."
+    }
+  },
+  "fire": {
+    "flow_id": "T36jpRCsmyA9V3kLmIWC",
+    "node_id": "tNMDOLhWHQxFRGN5BTg9",
+    "model": "eleven_text_to_sound_v2",
+    "prompt": "Close burning wood and building fire, continuous crackling flames and low roaring heat, no music, no speech, seamless loop for a strategy game.",
+    "take_1": { "session_id": "tuslNGTiHRwkGwraGZEA", "generation_id": "U1uZv6YiU7ShFu4iXqKw", "settings": { "loop": false, "prompt_influence": 0.3, "duration_seconds": "auto (1.04 s result)" } },
+    "take_2_regeneration": { "session_id": "ZfmoWTj0nfP86DW1H8RR", "generation_id": "u3HgMdXxKQHhw9tnuOBx", "settings": { "loop": true, "prompt_influence": 0.5, "duration_seconds": 9 }, "result_duration_s": 9.04, "credits": 30 }
+  },
+  "hose": {
+    "flow_id": "kjK5LtJd50M0hGaoGr7i",
+    "node_id": "6LymeN78PuRuPlSLSMXU",
+    "model": "eleven_text_to_sound_v2",
+    "prompt": "High pressure firefighter water hose spraying a continuous jet of water, pump motor rumble, splashing water, no speech or music, seamless loop.",
+    "take_1": { "session_id": "tSWmL3a7RbHgo5Buo3Xt", "generation_id": "GsgkpGivie565DkB4z0e", "settings": { "loop": false, "prompt_influence": 0.3, "duration_seconds": "auto (1.04 s result)" } },
+    "take_2_regeneration": { "session_id": "aMfKTydUfUt4DL2yX15u", "generation_id": "L3556a1tUeRMCuary4oI", "settings": { "loop": true, "prompt_influence": 0.5, "duration_seconds": 5 }, "result_duration_s": 5.04, "credits": 16.67 }
+  },
+  "ready": {
+    "flow_id": "rPW2XjUAkDWECa29UOhF",
+    "node_id": "BsyaeEuZJYKJ2IGOJbKG",
+    "session_id": "d4pCzV22ipa3PCJ8YP0Q",
+    "generation_id": "1jE2mUIuZsYesn5L0upu",
+    "voice_id": "iAQ8JnVyb6JWIhvcjWww",
+    "model": "eleven_multilingual_v2",
+    "output_format": "mp3_44100_128",
+    "text": "Fire engine ready. Standing by."
+  },
+  "regenerations": "Exactly one regeneration each for fire and hose (the first takes were 1.04 s because loop=false and no duration were set on the node). The ready voice line was not regenerated.",
+  "processing": {
+    "loops": "Raw 9.0 s / 5.0 s takes were made seamless with an equal-power (sine/cosine) cross-fade of the final 1.0 s (fire) / 0.6 s (hose) into the first 1.0 s / 0.6 s, so the files are 1.0 s / 0.6 s shorter (8.0 s / 4.4 s) and wrap without any start/end fades. Verified: the wrap-point sample step is below the 99th percentile of normal sample steps (no click). MP3 encoder padding is 0.046 s (LAME gapless header present).",
+    "loudness": "Linear gain (no dynamic processing except a -3 dBFS peak limiter on the crackling fire loop) to match the existing pack: voice line about -23 LUFS like the ack* lines, loops about -22 to -25 LUFS as quiet positional beds.",
+    "ready_trim": "Trailing silence trimmed to 2.35 s with a 0.15 s fade-out."
+  },
+  "review": "Map/sidebar art was replaced on 2026-11-16 (see docs/asset-sources/fire-art-prompts.md). Format/folder follow the 2026-11-15 ElevenLabs pack convention: flat public/sound/, camelCase names, MP3 128 kbps / 44.1 kHz. Register sound keys in src/sound.js soundFiles."
 }
