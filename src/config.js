@@ -2181,3 +2181,6 @@ export const FIRE_EXTINGUISH_SECONDS = 3
 export const FIRE_HOSE_RANGE = 4
 export function setFireSpreadProbability(value) { FIRE_SPREAD_PROBABILITY = Math.max(0, Math.min(1, Number(value) || 0)) }
 export function setFireDamagePerSecond(value) { FIRE_DAMAGE_PER_SECOND = Math.max(0, Number(value) || 0) }
+
+export let FIRE_DETAIL = 'high'
+export function setFireDetail(value) { FIRE_DETAIL = value === 'low' ? 'low' : 'high' }

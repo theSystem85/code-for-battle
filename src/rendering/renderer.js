@@ -1,3 +1,4 @@
+import { prepareFireSprites } from './fireSprites.js'
 import { renderFires } from './fireRenderer.js'
 import { withTimeout } from '../utils/assetLoading.js'
 import { renderCityOverhangs } from './cityOverhangs.js'
@@ -463,6 +464,7 @@ export class Renderer {
         prepareRuntimeSprites().then(prepared => {
           if (prepared?.registry) this.setPreparedSpriteRegistry(prepared.registry)
         }),
+        withTimeout(prepareFireSprites(), 10000, 'Fire preparation'),
         withTimeout(prewarmDestructionExplosionTexture(gameState), 10000, 'Explosion preparation')
       ]).then(results => {
         for (const result of results) {

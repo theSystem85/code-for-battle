@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { TILE_SIZE, WIND_DIRECTION, setFireSpreadProbability, setFireDamagePerSecond } from '../../src/config.js'
 vi.mock('../../src/game/cityBuildings.js', () => ({ getCityAtWorld: () => null, applyCityDamage: vi.fn() }))
-import { igniteTile, igniteFromProjectile, restoreFires, updateFireSystem } from '../../src/game/fireSystem.js'
+import { igniteTile, igniteApacheImpact, igniteFromProjectile, restoreFires, updateFireSystem } from '../../src/game/fireSystem.js'
 import { migrations } from '../../src/gameStateMigrations.js'
 import { productionUnlockRules } from '../../src/production/techTree.js'
 
@@ -132,4 +132,40 @@ describe('Fire simulation', () => {
     expect(original.units[0].water).toBeUndefined()
     expect(productionUnlockRules).toContainEqual({ requires: ['vehicleWorkshop'], buildings: ['fireDepartment'] })
   })
+})
+
+it('[U07178] scales damage, suppression time and spread across all five severities', () => {
+  for (let severity = 1; severity <= 5; severity++) {
+    const { grid, state } = world()
+    const house = building(grid, state, 4, 4)
+    grid[4][5].type = 'woods'
+    igniteTile(state, grid, 4, 4)
+    state.fires[0].age = (severity - 1) * 20
+    updateFireSystem([], state, grid, 1000)
+    expect(house.health).toBe(300 - severity * 2)
+    const truck = engine(3, 4)
+    updateFireSystem([truck], state, grid, 3000)
+    expect(Boolean(grid[4][4].fire)).toBe(severity > 1)
+    if (severity > 1) {
+      updateFireSystem([truck], state, grid, (severity - 1) * 3000)
+      expect(grid[4][4].fire).toBeUndefined()
+    }
+  }
+})
+it('[U07179] ignites combustible terrain at Apache ground impacts and rejects water', () => {
+  const { grid, state } = world()
+  grid[4][4].type = 'woods'
+  const bullet = { x: 4.5 * TILE_SIZE, y: 4.5 * TILE_SIZE, originType: 'apacheRocket' }
+  expect(igniteApacheImpact(state, grid, bullet, () => 0)).toBe(true)
+  grid[5][4].type = 'water'
+  expect(igniteApacheImpact(state, grid, { ...bullet, y: 5.5 * TILE_SIZE }, () => 0)).toBe(false)
+})
+it('[U07180] increases spread probability with severity and keeps saved age', () => {
+  const { grid, state } = world()
+  grid[4][4].type = 'woods'
+  grid[4][5].type = 'woods'
+  restoreFires(state, grid, [{ x: 4, y: 4, age: 80 }])
+  updateFireSystem([], state, grid, 5000, null, () => 0.8)
+  expect(grid[4][5].fire).toBeDefined()
+  expect(state.fires[0].age).toBe(85)
 })

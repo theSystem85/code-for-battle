@@ -1,4 +1,4 @@
-import { igniteFromProjectile } from './fireSystem.js'
+import { igniteApacheImpact, igniteFromProjectile } from './fireSystem.js'
 import { COMBAT_CONFIG } from './unitCombat/combatConfig.js'
 import { getCityAtWorld, applyCityDamage } from './cityBuildings.js'
 import { gameState } from '../gameState.js'
@@ -483,6 +483,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
           // Apache rockets create 1 explosion at their current position
           // Base damage 10 * 0.9 multiplier * 1.67 tank multiplier ~= 15 damage per rocket
           // 8 rockets * 15 ~= 120 damage (tough tanks now survive a full volley)
+          if (!targetIsAirborneImpact(apacheTargetUnit)) igniteApacheImpact(gameState, mapGrid, bullet)
           const baseDamage = bullet.baseDamage * 0.9
 
           const explosionX = bullet.x
@@ -1356,4 +1357,8 @@ export function fireBullet(unit, target, bullets, now) {
     return bullet
   }
   return null
+}
+
+function targetIsAirborneImpact(target) {
+  return target && (target.type === 'apache' || target.type === 'f22Raptor' || target.type === 'f35') && target.flightState !== 'grounded'
 }

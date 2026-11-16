@@ -905,7 +905,7 @@ describe('UnitCommandsHandler attack group and movement', () => {
     expect(showNotification).toHaveBeenCalledWith('Cannot reach that location. Move command aborted.', 2200)
   })
 
-  it('[U07131] handleMovementCommand tells the player when a unit is out of fuel', () => {
+  it('[U07181] handleMovementCommand tells the player when a unit is out of fuel', () => {
     const unit = {
       id: 'dry-tank',
       type: 'tank_v1',
@@ -927,7 +927,7 @@ describe('UnitCommandsHandler attack group and movement', () => {
     expect(showNotification).toHaveBeenCalledWith('Out of fuel. Move command aborted.', 2200)
   })
 
-  it('[U07132] handleMovementCommand names every empty human unit in one fuel notice', () => {
+  it('[U07182] handleMovementCommand names every empty human unit in one fuel notice', () => {
     const first = { id: 'dry-1', type: 'tank_v1', owner: 'player', tileX: 0, tileY: 0, x: 0, y: 0, gas: 0, maxGas: 1900 }
     const second = { id: 'dry-2', type: 'tank_v1', owner: 'player', tileX: 1, tileY: 0, x: 32, y: 0, gas: 0, maxGas: 1900 }
 

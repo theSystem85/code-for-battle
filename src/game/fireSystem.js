@@ -1,3 +1,4 @@
+import { getFireSeverity } from './fireSeverity.js'
 import { TILE_SIZE, FIRE_SPREAD_PROBABILITY, FIRE_DAMAGE_PER_SECOND, FIRE_WATER_CAPACITY, FIRE_WATER_PER_SECOND, FIRE_EXTINGUISH_SECONDS, FIRE_HOSE_RANGE, WIND_DIRECTION } from '../config.js'
 import { getRegisteredDecorationLayout } from './decorationLayoutRegistry.js'
 import { gameRandom } from '../utils/gameRandom.js'
@@ -170,7 +171,8 @@ export function updateFireSystem(units, state, grid, delta, findPath, random = g
   const count = fires.length
   for (let i = count - 1; i >= 0; i--) {
     const fire = fires[i]
-    if (fire.suppression >= FIRE_EXTINGUISH_SECONDS || !isFlammable(grid, fire.x, fire.y)) {
+    const severity = getFireSeverity(fire)
+    if (fire.suppression >= FIRE_EXTINGUISH_SECONDS * severity || !isFlammable(grid, fire.x, fire.y)) {
       clearFire(grid, fire)
       fires.splice(i, 1)
       continue
@@ -178,7 +180,7 @@ export function updateFireSystem(units, state, grid, delta, findPath, random = g
     fire.age += seconds
     const building = structure(grid, fire.x, fire.y)
     if (building) {
-      let damage = FIRE_DAMAGE_PER_SECOND * seconds
+      let damage = FIRE_DAMAGE_PER_SECOND * severity * seconds
       if (building.owner === state.humanPlayer && globalThis.window?.cheatSystem) damage = window.cheatSystem.preventDamage(building, damage)
       if (building.type === 'city') applyCityDamage(building, damage, grid, state)
       else { building.health = Math.max(0, building.health - damage); building.destroyedCause = 'fire' }
@@ -190,11 +192,19 @@ export function updateFireSystem(units, state, grid, delta, findPath, random = g
     for (const [dx, dy] of neighbours) {
       const nx = fire.x + dx, ny = fire.y + dy
       if (isFlammable(grid, nx, ny)) {
-        if (random() < FIRE_SPREAD_PROBABILITY) igniteTile(state, grid, nx, ny)
+        if (random() < Math.min(1, FIRE_SPREAD_PROBABILITY * severity * Math.max(0.25, 1 + dx * WIND_DIRECTION.x + dy * WIND_DIRECTION.y))) igniteTile(state, grid, nx, ny)
       } else if (building && dx * WIND_DIRECTION.x + dy * WIND_DIRECTION.y > 0 && !grid?.[ny]?.[nx]?.building) {
         const other = structure(grid, nx + dx, ny + dy)
-        if (other && other !== building && random() < FIRE_SPREAD_PROBABILITY) igniteTile(state, grid, nx + dx, ny + dy)
+        if (other && other !== building && random() < Math.min(1, FIRE_SPREAD_PROBABILITY * severity * Math.max(0.25, 1 + dx * WIND_DIRECTION.x + dy * WIND_DIRECTION.y))) igniteTile(state, grid, nx + dx, ny + dy)
       }
     }
   }
+}
+
+export function igniteApacheImpact(state, grid, bullet, random = gameRandom) {
+  if (bullet.noBuildingDamage) return false
+  const x = Math.floor(bullet.x / TILE_SIZE), y = Math.floor(bullet.y / TILE_SIZE)
+  const building = structure(grid, x, y)
+  if (building) return igniteFromProjectile(state, grid, building, bullet, random)
+  return random() < 0.25 && igniteTile(state, grid, x, y)
 }

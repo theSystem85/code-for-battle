@@ -1,3 +1,4 @@
+import { FIRE_DETAIL, setFireDetail } from './config.js'
 import { FIRE_SPREAD_PROBABILITY, FIRE_DAMAGE_PER_SECOND, setFireSpreadProbability, setFireDamagePerSecond } from './config.js'
 // configRegistry.js
 // Safe runtime configuration system that works with minified builds
@@ -227,6 +228,7 @@ import {
  * Keys are internal IDs, values are ConfigEntry objects
  */
 export const configRegistry = {
+  fireDetail: { name: 'Fire detail', description: 'High: seamless turbulent flames, smoke and sparks. Low: classic flames.', type: 'string', options: ['low', 'high'], get: () => FIRE_DETAIL, set: setFireDetail, category: 'Graphics' },
   fireSpreadProbability: { name: 'Fire spread probability / 5s', description: 'Chance per neighbouring tile after five seconds without suppression', type: 'number', get: () => FIRE_SPREAD_PROBABILITY, set: setFireSpreadProbability, min: 0, max: 1, step: 0.01, category: 'Gameplay' },
   fireDamagePerSecond: { name: 'Fire damage per second per tile', description: 'Building damage from each burning footprint tile', type: 'number', get: () => FIRE_DAMAGE_PER_SECOND, set: setFireDamagePerSecond, min: 0, max: 100, step: 0.5, category: 'Gameplay' },
   // Graphics

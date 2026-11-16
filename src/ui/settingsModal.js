@@ -108,10 +108,16 @@ function bindGraphicsEffects(modal) {
     label.className = 'config-modal__field'
     const text = document.createElement('span')
     text.textContent = config.name
-    const input = document.createElement('input')
+    const input = document.createElement(config.options ? 'select' : 'input')
+    if (config.options) for (const value of config.options) {
+      const option = document.createElement('option')
+      option.value = value
+      option.textContent = value === 'high' ? 'High detail' : 'Low detail'
+      input.append(option)
+    }
     input.id = `settingsGraphics-${id}`
     const isExplosionRadius = id === 'largeExplosionVisualRadius'
-    input.type = config.type === 'boolean' ? 'checkbox' : isExplosionRadius ? 'range' : config.type === 'number' ? 'number' : 'text'
+    if (!config.options) input.type = config.type === 'boolean' ? 'checkbox' : isExplosionRadius ? 'range' : config.type === 'number' ? 'number' : 'text'
     if (config.type === 'boolean') input.checked = Boolean(getConfigValue(id))
     else input.value = String(getConfigValue(id))
     for (const field of ['min', 'max', 'step']) if (config[field] != null) input[field] = config[field]

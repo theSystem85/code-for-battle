@@ -1524,6 +1524,21 @@ describe('Bullet System', () => {
       expect(bullets).toHaveLength(0)
     })
 
+    it('[U07186] ignites vegetation when an Apache rocket reaches a ground impact', () => {
+      mapGrid[3][3] = { type: 'woods' }
+      const x = 3.5 * TILE_SIZE, y = 3.5 * TILE_SIZE
+      const bullet = createMockBullet({
+        originType: 'apacheRocket', projectileType: 'rocket', x, y,
+        targetPosition: { x, y }, creationTime: 1, startTime: 1,
+        shooter: { id: 'apache', owner: 'player', type: 'apache' }
+      })
+      const state = createGameState({ simulationTime: 2400 })
+      gameRandom.mockReturnValue(0)
+      updateBullets([bullet], [], [], state, mapGrid)
+      expect(mapGrid[3][3].fire).toBeDefined()
+      expect(state.fires).toHaveLength(1)
+    })
+
     it('[U00777] applies direct damage when apache rockets hit airborne apaches', () => {
       const airborneApache = createMockUnit({
         id: 'apache-1',
