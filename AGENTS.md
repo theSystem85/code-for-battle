@@ -170,3 +170,9 @@ Use `Live-Update: safe` only when all behavior-changing JavaScript files in the 
 ## Patrick's current workflow preference (2026-10-27)
 
 For subsequent requests, commit and push directly to `dev`, without a feature branch or PR, unless Patrick explicitly requests a different workflow. Keep the required validation checks.
+
+## Confirmed workflow preference (2026-11-16)
+
+Always complete the authorized work by committing and pushing directly to `dev`, unless Patrick explicitly requests another destination. Record verification limitations and continue with the authorized push when a check is blocked by the environment; do not leave completed work local solely because a browser download or hardware check is unavailable. Preserve the required validation attempts and fix code failures.
+
+For Playwright in environments with system Chromium, use `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm run test:e2e -- <affected tests> --project=chromium`. This avoids downloading a second browser when the Playwright CDN is blocked. The default remains Playwright’s bundled browser when this variable is absent.

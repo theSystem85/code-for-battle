@@ -44,6 +44,7 @@ const AI_SELL_PRIORITY = [
   'vehicleFactory',
   'powerPlant'
 ]
+import { updateHarvesterStreets } from './harvesterStreets.js'
 import { gameRandom } from '../utils/gameRandom.js'
 
 const AI_SELL_PRIORITY_MAP = AI_SELL_PRIORITY.reduce((acc, type, index) => {
@@ -435,6 +436,8 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
   const aiHarvesters = units.filter(
     u => u.owner === aiPlayerId && u.type === 'harvester' && u.health > 0
   )
+  const newStreet = updateHarvesterStreets(aiFactory, aiHarvesters, mapGrid, gameState, occupancyMap, now)
+  if (newStreet) recordAiBuildingPlacement(aiPlayerId, newStreet)
   const llmStrategicActive = isPartyUsingLlmStrategic(aiPlayerId, gameState)
   const allowStrategicDecisions = !llmStrategicActive
 

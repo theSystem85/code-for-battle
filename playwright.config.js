@@ -44,6 +44,9 @@ export default defineConfig({
     /* Video recording on failure */
     video: 'on-first-retry',
     launchOptions: {
+      ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
+        ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH }
+        : {}),
       args: launchArgs
     }
   },

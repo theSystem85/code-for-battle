@@ -7,6 +7,7 @@ vi.mock('../../src/performanceUtils.js', () => ({
 
 vi.mock('../../src/buildings.js', () => ({
   buildingData: {
+    street: { cost: 10, width: 1, height: 1, power: 0 },
     oreRefinery: { cost: 2000, width: 3, height: 3, power: -30 },
     powerPlant: { cost: 500, width: 2, height: 2, power: 100 },
     vehicleFactory: { cost: 1500, width: 3, height: 3, power: -40 },
