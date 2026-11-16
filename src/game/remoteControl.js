@@ -1127,6 +1127,10 @@ export function updateRemoteControlledUnits(units, bullets, mapGrid, occupancyMa
             }
           }
         }
+      } else if (unit.type === 'fireEngine') {
+        unit.fireManual = Boolean(hasMovementInput || manualTurretInput || fireIntensity > 0)
+        unit.fireManualSpray = fireIntensity > 0
+        unit.remoteControlActive = unit.fireManual
       } else if (hasTurret && fireIntensity > 0 && unit.canFire !== false) {
       // Fire forward when requested (for non-rocket tank turret units)
         const baseRate = getFireRateForUnit(unit)

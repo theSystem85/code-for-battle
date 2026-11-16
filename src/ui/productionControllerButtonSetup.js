@@ -203,7 +203,10 @@ export function setupUnitButtons(controller) {
       let requirementsMet = true
       let requirementText = ''
 
-      if (unitType === 'tankerTruck') {
+      if (unitType === 'fireEngine') {
+        requirementsMet = gameState.buildings.some(b => b.type === 'fireDepartment' && b.owner === gameState.humanPlayer && b.health > 0)
+        requirementText = 'Requires Fire Department'
+      } else if (unitType === 'tankerTruck') {
         const hasVehicleFactory = gameState.buildings.some(b => b.type === 'vehicleFactory' && b.owner === gameState.humanPlayer)
         const hasGasStation = gameState.buildings.some(b => b.type === 'gasStation' && b.owner === gameState.humanPlayer)
         if (!hasVehicleFactory || !hasGasStation) {

@@ -176,6 +176,7 @@ function loadValues(unit) {
   switch (unit.type) {
     case 'harvester': return { value: unit.oreCarried, max: unit.cargoCapacity }
     case 'ambulance': return { value: unit.medics, max: unit.maxMedics }
+    case 'fireEngine': return { value: unit.water, max: unit.maxWater }
     case 'tankerTruck': return { value: unit.supplyGas, max: unit.maxSupplyGas }
     case 'ammunitionTruck': return { value: unit.ammoCargo, max: unit.maxAmmoCargo }
     default: return null

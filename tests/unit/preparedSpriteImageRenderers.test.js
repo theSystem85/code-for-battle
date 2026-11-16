@@ -83,8 +83,8 @@ describe('prepared sprite generation and registry', () => {
 
     expect(manifest.webpQuality).toBe(85)
     expect(manifest.densities).toEqual([1, 2, 3])
-    expect(manifest.inventory.entryCount).toBe(306)
-    expect(manifest.entries).toHaveLength(306)
+    expect(manifest.inventory.entryCount).toBe(308)
+    expect(manifest.entries).toHaveLength(308)
     expect(manifest.entries.every(entry =>
       entry.hasAlpha &&
       entry.alphaMode === 'straight' &&

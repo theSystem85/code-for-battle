@@ -51,6 +51,7 @@ export const buildingData = {
     health: 300,
     smokeSpots: []
   },
+  fireDepartment: { width: 3, height: 3, cost: 2500, power: -20, image: 'fire_department.webp', displayName: 'Fire Department', health: 300, maxFireEngines: 4, smokeSpots: [] },
   vehicleWorkshop: {
     width: 3,
     height: 3,

@@ -140,6 +140,8 @@ vi.mock('../../src/config.js', async(importOriginal) => {
   const actual = await importOriginal()
   return {
     ...actual,
+    get FIRE_SPREAD_PROBABILITY() { return actual.FIRE_SPREAD_PROBABILITY },
+    get FIRE_DAMAGE_PER_SECOND() { return actual.FIRE_DAMAGE_PER_SECOND },
     TILE_SIZE: 32,
     TANKER_SUPPLY_CAPACITY: 200,
     setMapDimensions: vi.fn(() => ({ width: 100, height: 100 })),
@@ -294,6 +296,54 @@ describe('saveGame.js', () => {
   afterEach(() => {
     vi.restoreAllMocks()
     localStorage.clear()
+  })
+
+  it('[U07174] round trips burning tile timers, water, station assignment, route timing and fire wind', async() => {
+    const { gameState } = await import('../../src/gameState.js')
+    const { mapGrid, units, factories } = await import('../../src/main.js')
+    const config = await import('../../src/config.js')
+    const originalMap = mapGrid.map(row => row.map(tile => ({ ...tile })))
+    const originalBuildings = gameState.buildings
+    const yard = { id: 'player1', type: 'constructionYard', owner: 'player1', isBuilding: true, x: 0, y: 0, width: 3, height: 3, health: 350, maxHealth: 350 }
+    factories.push(yard)
+    gameState.buildings = [yard]
+    const oldWind = { ...config.WIND_DIRECTION }
+    const oldSpread = config.FIRE_SPREAD_PROBABILITY
+    const oldDamage = config.FIRE_DAMAGE_PER_SECOND
+    try {
+      const fire = { x: 3, y: 3, age: 4, spreadElapsed: 2, suppression: 1 }
+      gameState.fires = [fire]
+      mapGrid[3][3].type = 'woods'
+      mapGrid[3][3].fire = fire
+      mapGrid[3][3].tags = ['fire']
+      units.push({ id: 'saved-engine', type: 'fireEngine', owner: 'player1', x: 64, y: 64, health: 60, maxHealth: 60, path: [], water: 123, maxWater: 1000, fireHomeId: 'fire-station', fireRepathAt: 2500 })
+      config.setFireSpreadProbability(0.75)
+      config.setFireDamagePerSecond(4)
+      config.setWindDirectionX(-0.5)
+      saveGameModule.saveGame('FireRoundTrip')
+      gameState.fires = []
+      delete mapGrid[3][3].fire
+      units.length = 0
+      config.setWindDirectionX(2)
+      saveGameModule.loadGame('rts_save_FireRoundTrip')
+      expect(gameState.fires[0]).toMatchObject(fire)
+      expect(mapGrid[3][3].fire).toBe(gameState.fires[0])
+      expect(mapGrid[3][3].tags).toContain('fire')
+      expect(units.find(unit => unit.type === 'fireEngine')).toMatchObject({ water: 123, maxWater: 1000, fireHomeId: 'fire-station', fireRepathAt: 2500 })
+      expect(config.WIND_DIRECTION.x).toBe(-0.5)
+      expect(config.FIRE_SPREAD_PROBABILITY).toBe(0.75)
+      expect(config.FIRE_DAMAGE_PER_SECOND).toBe(4)
+    } finally {
+      gameState.fires = []
+      gameState.buildings = originalBuildings
+      factories.length = 0
+      mapGrid.splice(0, mapGrid.length, ...originalMap)
+      units.length = 0
+      config.setWindDirectionX(oldWind.x)
+      config.setWindDirectionY(oldWind.y)
+      config.setFireSpreadProbability(oldSpread)
+      config.setFireDamagePerSecond(oldDamage)
+    }
   })
 
   it('[U03842] round trips city HP, destroyed footprints and cluster settings through saveGame', async() => {

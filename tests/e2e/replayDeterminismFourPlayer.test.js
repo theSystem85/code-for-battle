@@ -364,6 +364,7 @@ test.describe('Replay determinism in four-player AI match', () => {
     await page.waitForSelector('#gameCanvas', { state: 'visible', timeout: 60000 })
     await page.waitForFunction(() => Boolean(window.gameState?.gameStarted), { timeout: 60000 })
     await page.waitForSelector('#recordBtn', { state: 'visible', timeout: 30000 })
+    await page.waitForFunction(() => document.getElementById('recordBtn')?.dataset.boundReplay === 'true', null, { timeout: 30000 })
     await suppressTutorial(page)
 
     await page.evaluate(() => {

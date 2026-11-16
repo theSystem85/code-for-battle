@@ -1,3 +1,4 @@
+import { igniteFromProjectile } from './fireSystem.js'
 import { COMBAT_CONFIG } from './unitCombat/combatConfig.js'
 import { getCityAtWorld, applyCityDamage } from './cityBuildings.js'
 import { gameState } from '../gameState.js'
@@ -958,6 +959,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
         if (city && checkBuildingCollision(bullet, city)) {
           const damage = Math.round(bullet.baseDamage * (0.8 + gameRandom() * 0.4) * (bullet.projectileType === 'rocket' ? 2 : 1))
           applyCityDamage(city, damage, mapGrid, gameState, playPositionalSound)
+          igniteFromProjectile(gameState, mapGrid, city, bullet)
           triggerExplosion(bullet.x, bullet.y, bullet.baseDamage, units, factories, bullet.shooter, now, mapGrid, bullet.explosionRadius, undefined, rocketExplosionOptions)
           bullets.splice(i, 1)
           bullet.active = false
@@ -995,6 +997,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
 
               // Ensure health doesn't go below 0
               building.health = Math.max(0, building.health)
+              igniteFromProjectile(gameState, mapGrid, building, bullet)
               recordDamageValue(bullet.shooter, building, previousHealth - building.health)
               const damageAmount = Math.max(0, previousHealth - building.health)
               if (damageAmount > 0 && gameState.gameStarted && !gameState.mapEditMode) {

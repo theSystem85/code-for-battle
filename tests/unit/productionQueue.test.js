@@ -176,6 +176,16 @@ describe('Production Queue System', () => {
     })
   })
 
+  it('[U07173] allows all four department bays including the engine currently in production', () => {
+    gameState.buildings = [
+      { type: 'vehicleFactory', owner: 'player', health: 300 },
+      { type: 'fireDepartment', owner: 'player', health: 300 }
+    ]
+    for (let i = 0; i < 5; i++) productionQueue.addItem('fireEngine', mockButton)
+    expect(productionQueue.currentUnit.type).toBe('fireEngine')
+    expect(productionQueue.unitItems).toHaveLength(4)
+  })
+
   it('[U05425] automatically enters placement on completion and advances through ready types', () => {
     gameState.chainBuildMode = true
     gameState.chainBuildPrimed = true

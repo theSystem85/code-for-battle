@@ -1215,6 +1215,7 @@ export const UNIT_COSTS = {
   'tank-v3': 3000,
   lightTank: 700,
   ambulance: 500,
+  fireEngine: 900,
   tankerTruck: 300,
   ammunitionTruck: 800,
   recoveryTank: 3000,
@@ -1318,6 +1319,7 @@ export const UNIT_PROPERTIES = {
     maxMedics: 10,
     medics: 10 // Initial crew capacity
   },
+  fireEngine: { health: 60, maxHealth: 60, speed: 0.66, rotationSpeed: TANK_WAGON_ROT, turretRotationSpeed: 0, armor: 1 },
   tankerTruck: {
     health: 20,
     maxHealth: 20,
@@ -2169,3 +2171,13 @@ export const CONFIG_VARIABLE_NAMES = [...EXPORTED_CONFIG_VARIABLES]
 
 // Neutral city structure durability by occupied tile count.
 export const CITY_BUILDING_HEALTH = Object.freeze({ 1: 150, 2: 250, 4: 400 })
+
+// Fire spread is rolled once per eligible neighbour every five simulation seconds.
+export let FIRE_SPREAD_PROBABILITY = 0.2
+export let FIRE_DAMAGE_PER_SECOND = 2
+export const FIRE_WATER_CAPACITY = 1000
+export const FIRE_WATER_PER_SECOND = 40
+export const FIRE_EXTINGUISH_SECONDS = 3
+export const FIRE_HOSE_RANGE = 4
+export function setFireSpreadProbability(value) { FIRE_SPREAD_PROBABILITY = Math.max(0, Math.min(1, Number(value) || 0)) }
+export function setFireDamagePerSecond(value) { FIRE_DAMAGE_PER_SECOND = Math.max(0, Number(value) || 0) }

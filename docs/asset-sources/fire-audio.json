@@ -1,0 +1,8 @@
+{
+  "provider": "ElevenLabs connector",
+  "status": "generated; local download blocked by environment proxy HTTP 403",
+  "fire": { "flow_id": "T36jpRCsmyA9V3kLmIWC", "session_id": "tuslNGTiHRwkGwraGZEA", "generation_id": "U1uZv6YiU7ShFu4iXqKw", "model": "eleven_text_to_sound_v2" },
+  "hose": { "flow_id": "kjK5LtJd50M0hGaoGr7i", "session_id": "tSWmL3a7RbHgo5Buo3Xt", "generation_id": "GsgkpGivie565DkB4z0e", "model": "eleven_text_to_sound_v2" },
+  "ready": { "flow_id": "rPW2XjUAkDWECa29UOhF", "session_id": "d4pCzV22ipa3PCJ8YP0Q", "generation_id": "1jE2mUIuZsYesn5L0upu", "voice_id": "iAQ8JnVyb6JWIhvcjWww", "model": "eleven_multilingual_v2" },
+  "review": "SFX connector returned one-second, non-loop metadata despite requested parameters. Audition before final loop integration. Do not commit expiring signed media URLs. Map/sidebar art currently authored concept art; photorealistic elevated sidebar replacements require review."
+}

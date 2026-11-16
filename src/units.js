@@ -912,6 +912,11 @@ export function spawnUnit(factory, type, units, mapGrid, rallyPointTarget = null
     ? { ...options, worldPosition: worldPositionOverride }
     : options
 
+  if (type === 'fireEngine') {
+    const owner = factory.owner || factory.id
+    const capacity = (gameState.buildings || []).filter(b => b.type === 'fireDepartment' && b.health > 0 && b.owner === owner).length * 4
+    if (units.filter(u => u.type === 'fireEngine' && u.health > 0 && u.owner === owner).length >= capacity) return null
+  }
   const newUnit = createUnit(factory, type, spawnPosition.x, spawnPosition.y, unitOptions)
   if (factory.type === 'vehicleFactory') beginFactoryExit(newUnit, factory, type === 'harvester' ? null : rallyPointTarget)
   if (occupancyMap && !newUnit.factoryExit && !isHelipadApache && !isAirstripF22 && !isPadF35 && !isShipyardNavalUnit) {
@@ -1161,7 +1166,7 @@ export function createUnit(factory, unitType, x, y, options = {}) {
     buildDuration: determineBuildDuration(actualType, options.buildDuration || null)
   }
 
-  const utilityUnitTypes = ['ambulance', 'tankerTruck', 'ammunitionTruck', 'recoveryTank']
+  const utilityUnitTypes = ['ambulance', 'fireEngine', 'tankerTruck', 'ammunitionTruck', 'recoveryTank']
   unit.isUtilityUnit = utilityUnitTypes.includes(actualType)
 
   if (unit.isUtilityUnit) {
@@ -1195,7 +1200,7 @@ export function createUnit(factory, unitType, x, y, options = {}) {
 
   // Add unit-specific properties
   const fullCrewTanks = ['tank_v1', 'tank-v2', 'tank-v3', 'lightTank', 'howitzer', 'destroyer', 'battleship', 'submarine', 'aircraftCarrier']
-  const loaderUnits = ['mineLayer', 'tankerTruck', 'ammunitionTruck', 'ambulance', 'recoveryTank', 'harvester', 'rocketTank', 'hovercraft', 'vehicleFerry', 'navalMineLayer']
+  const loaderUnits = ['fireEngine', 'mineLayer', 'tankerTruck', 'ammunitionTruck', 'ambulance', 'recoveryTank', 'harvester', 'rocketTank', 'hovercraft', 'vehicleFerry', 'navalMineLayer']
 
   // Apache helicopters and F22 Raptors don't have the crew system
   if (actualType !== 'apache' && actualType !== 'f22Raptor' && actualType !== 'f35') {
@@ -1406,6 +1411,7 @@ export function createUnit(factory, unitType, x, y, options = {}) {
       streetSpeedMultiplier: unitProps.streetSpeedMultiplier || 6.0
     }
   }
+  if (actualType === 'fireEngine') { unit.water = 1000; unit.maxWater = 1000; unit.canFire = false }
   if (actualType === 'tankerTruck') {
     unit.maxSupplyGas = TANKER_SUPPLY_CAPACITY
     unit.supplyGas = TANKER_SUPPLY_CAPACITY

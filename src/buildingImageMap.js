@@ -13,6 +13,7 @@ export const buildingImageMap = {
   powerPlant: 'images/map/buildings/power_plant.webp',
   oreRefinery: 'images/map/buildings/refinery.webp',
   vehicleFactory: 'images/map/buildings/vehicle_factory.webp',
+  fireDepartment: 'images/map/buildings/fire_department.webp',
   vehicleWorkshop: 'images/map/buildings/vehicle_workshop.webp',
   radarStation: 'images/map/buildings/radar_station.webp',
   hospital: 'images/map/buildings/hospital.webp',

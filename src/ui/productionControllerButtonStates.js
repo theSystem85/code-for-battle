@@ -45,7 +45,11 @@ export function updateVehicleButtonStates(controller) {
   unitButtons.forEach(button => {
     const unitType = button.getAttribute('data-unit-type')
 
-    if (unitType === 'tankerTruck') {
+    if (unitType === 'fireEngine') {
+      const ready = hasVehicleFactory && gameState.buildings.some(b => b.type === 'fireDepartment' && b.owner === gameState.humanPlayer && b.health > 0)
+      button.classList.toggle('disabled', !ready)
+      button.dataset.requirement = ready ? '' : 'Requires Vehicle Factory & Fire Department'
+    } else if (unitType === 'tankerTruck') {
       if (hasVehicleFactory && hasGasStation) {
         button.classList.remove('disabled')
         button.dataset.requirement = ''

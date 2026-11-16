@@ -88,3 +88,13 @@ These rules come from the tank image overhaul (#740, #742) and the light tank. E
 - Run `npm run test:unit` and fix root causes.
 - Run `npm run lint:fix:changed` and manually resolve remaining lint issues.
 - Update the matching TODO file and specs, and record the prompt in `prompt-history/`. A new unit is a feature: add it under the right area heading in `TODO/Features.md` (above Done) as `- [ ] **Title** — description` plus `Spec: [Title](../specs/....md)` or `Spec: none`. Do not append it to Done or to the end of the file.
+
+## Supply units with tile effects (fire-system implementation)
+- Model an overlay such as fire as a serializable tile tag plus a compact active-record list; never replace terrain or retain entity references in saved records. Restore tags and the active list together for saves, replay baselines and host snapshots; clear them on map reset.
+- Audit both direct-hit and explosion/splash damage paths, including neutral city structures. Use the shared smoke wind vector and simulation milliseconds for spread and service timers.
+- Register a supply unit in utility/crew classification, vehicle-factory routing, production capacity checks, remote-control input, CFBL load sensing and AI noncombat classification. Building capacity must include queued and alive units, and be rechecked at spawn.
+- Suppression blocks spread only while water is actually being applied; a partly extinguished tile must resume spreading after the crew leaves. Test multiple engines, empty tanks, station destruction and reassignment, save/load during suppression, and capacity released by destruction.
+- Inventory assets before implementation. Prepare new map art and DPR tiers before gameplay. Do not call concept/temporary art finished: sidebar art still needs its distinct elevated camera and map art its south-facing orthographic camera.
+- Generate audio once, poll the same generation, download and verify duration/loop metadata before integrating. Signed media links expire; never ship them as runtime asset URLs. Record network download blockers explicitly.
+- Follow the current AGENTS.md change-note workflow rather than the historical shared TODO instruction above. Update a dedicated spec, change note, release entry and prompt history.
+- For support-building changes, use the [fire department integration lessons](../new-building-fire-integration.md) as the companion building checklist. Treat browser sprite availability as an explicit asynchronous readiness condition; verify gameplay first, then await publication of the final-size prepared asset.

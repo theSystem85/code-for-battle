@@ -40,6 +40,7 @@ export const ENEMY_UNIT_TYPES = Object.freeze([
   { value: 'howitzer', label: 'Howitzer' },
   { value: 'harvester', label: 'Harvester' },
   { value: 'ambulance', label: 'Ambulance' },
+  { value: 'fireEngine', label: 'Fire engine' },
   { value: 'tankerTruck', label: 'Tanker truck' },
   { value: 'ammunitionTruck', label: 'Ammunition truck' },
   { value: 'recoveryTank', label: 'Recovery tank' },
@@ -64,6 +65,7 @@ export const BUILDING_TYPES = Object.freeze([
   { value: 'powerPlant', label: 'Power plant' },
   { value: 'oreRefinery', label: 'Ore refinery' },
   { value: 'vehicleFactory', label: 'Vehicle factory' },
+  { value: 'fireDepartment', label: 'Fire department' },
   { value: 'vehicleWorkshop', label: 'Vehicle workshop' },
   { value: 'hospital', label: 'Hospital' },
   { value: 'gasStation', label: 'Fuel station' },
@@ -87,6 +89,7 @@ export const SERVICE_BUILDING_OPTIONS = Object.freeze([
   { value: 'hospital', label: 'hospital' },
   { value: 'ammunitionFactory', label: 'ammo factory' },
   { value: 'gasStation', label: 'fuel station' },
+  { value: 'fireDepartment', label: 'fire department' },
   { value: 'vehicleWorkshop', label: 'workshop' }
 ])
 

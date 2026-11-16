@@ -33,7 +33,7 @@ function playUnitReadySound(unitType) {
 
 // List of unit types considered vehicles requiring a Vehicle Factory
 // Ambulance should spawn from the vehicle factory as well
-const vehicleUnitTypes = ['tank', 'tank-v2', 'rocketTank', 'tank_v1', 'tank-v3', 'lightTank', 'harvester', 'ambulance', 'tankerTruck', 'ammunitionTruck', 'recoveryTank', 'howitzer', 'mineLayer', 'mineSweeper']
+const vehicleUnitTypes = ['tank', 'tank-v2', 'rocketTank', 'tank_v1', 'tank-v3', 'lightTank', 'harvester', 'ambulance', 'fireEngine', 'tankerTruck', 'ammunitionTruck', 'recoveryTank', 'howitzer', 'mineLayer', 'mineSweeper']
 const navalUnitTypes = ['destroyer', 'supplyShip', 'hovercraft', 'vehicleFerry', 'aircraftCarrier', 'navalMineLayer', 'battleship', 'submarine']
 
 
@@ -335,6 +335,12 @@ export const productionQueue = {
   },
 
   addItem: function(type, button, isBuilding = false, blueprint = null, rallyPoint = null, options = {}) {
+    if (type === 'fireEngine') {
+      const capacity = gameState.buildings.filter(b => b.type === 'fireDepartment' && b.health > 0 && b.owner === gameState.humanPlayer).length * 4
+      const existing = units.filter(u => u.type === 'fireEngine' && u.health > 0 && u.owner === gameState.humanPlayer).length
+      const queued = this.unitItems.filter(item => item.type === 'fireEngine').length
+      if (existing + queued >= capacity) { showNotification('Fire departments can host four engines each.'); return }
+    }
     const allowReplay = options.allowReplay === true
     const shouldRecord = options.record !== false
 

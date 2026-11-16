@@ -1542,6 +1542,7 @@ class Game {
       y: gameState.scrollOffset?.y || 0
     }
     const normalizedSeed = resolveMapSeed(seed || '1')
+    gameState.fires = []
     resetHarvesterRuntimeState(gameState)
     gameState.buildings.length = 0
     gameState.powerSupply = 0

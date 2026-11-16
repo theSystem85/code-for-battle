@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "assetVersion": "7f4af182b6c8c999",
+  "assetVersion": "4211481fc9fa9c0f",
   "generatedBy": "scripts/build-prepared-sprites.mjs",
   "webpQuality": 85,
   "unitWebpQuality": 95,
@@ -10,10 +10,10 @@
     3
   ],
   "inventory": {
-    "entryCount": 306,
-    "sourceCount": 65,
-    "generatedVariantCount": 918,
-    "decodedVariantBytes": 49850448
+    "entryCount": 308,
+    "sourceCount": 67,
+    "generatedVariantCount": 924,
+    "decodedVariantBytes": 50423888
   },
   "entries": [
     {
@@ -15499,6 +15499,56 @@
       ]
     },
     {
+      "id": "building:fireDepartment:base",
+      "category": "building",
+      "source": "/images/map/buildings/fire_department.webp",
+      "sourceWidth": 384,
+      "sourceHeight": 384,
+      "logicalWidth": 96,
+      "logicalHeight": 96,
+      "hasAlpha": true,
+      "alphaMode": "straight",
+      "anchorSpace": "logical-pixels",
+      "anchors": {
+        "topLeft": {
+          "x": 0,
+          "y": 0
+        },
+        "center": {
+          "x": 48,
+          "y": 48
+        }
+      },
+      "states": [
+        "base",
+        "construction-clip",
+        "selling-clip"
+      ],
+      "variants": [
+        {
+          "density": 1,
+          "path": "/images/prepared/building/fireDepartment/base@1x.webp",
+          "backingWidth": 96,
+          "backingHeight": 96,
+          "decodedBytes": 36864
+        },
+        {
+          "density": 2,
+          "path": "/images/prepared/building/fireDepartment/base@2x.webp",
+          "backingWidth": 192,
+          "backingHeight": 192,
+          "decodedBytes": 147456
+        },
+        {
+          "density": 3,
+          "path": "/images/prepared/building/fireDepartment/base@3x.webp",
+          "backingWidth": 288,
+          "backingHeight": 288,
+          "decodedBytes": 331776
+        }
+      ]
+    },
+    {
       "id": "building:gasStation:base",
       "category": "building",
       "source": "/images/map/buildings/gas_station.webp",
@@ -17110,6 +17160,50 @@
         {
           "density": 3,
           "path": "/images/prepared/unit/ammunitionTruck/base@3x.webp",
+          "backingWidth": 96,
+          "backingHeight": 96,
+          "decodedBytes": 36864
+        }
+      ]
+    },
+    {
+      "id": "unit:fireEngine:base",
+      "category": "unit",
+      "source": "/images/map/units/fire_engine.webp",
+      "sourceWidth": 192,
+      "sourceHeight": 192,
+      "logicalWidth": 32,
+      "logicalHeight": 32,
+      "hasAlpha": true,
+      "alphaMode": "straight",
+      "anchorSpace": "logical-pixels",
+      "anchors": {
+        "center": {
+          "x": 16,
+          "y": 16
+        }
+      },
+      "states": [
+        "base"
+      ],
+      "variants": [
+        {
+          "density": 1,
+          "path": "/images/prepared/unit/fireEngine/base@1x.webp",
+          "backingWidth": 32,
+          "backingHeight": 32,
+          "decodedBytes": 4096
+        },
+        {
+          "density": 2,
+          "path": "/images/prepared/unit/fireEngine/base@2x.webp",
+          "backingWidth": 64,
+          "backingHeight": 64,
+          "decodedBytes": 16384
+        },
+        {
+          "density": 3,
+          "path": "/images/prepared/unit/fireEngine/base@3x.webp",
           "backingWidth": 96,
           "backingHeight": 96,
           "decodedBytes": 36864

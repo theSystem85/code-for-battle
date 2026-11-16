@@ -77,6 +77,7 @@ function hashUnit(unit) {
     hash = hashCombine(hash, quantize(unit.factoryExit.endY, POSITION_PRECISION))
   }
 
+  if (unit.type === 'fireEngine') hash = hashCombine(hash, quantize(unit.water || 0, 100))
   // Hash health
   hash = hashCombine(hash, quantize(unit.health, 1))
   hash = hashCombine(hash, quantize(unit.maxHealth, 1))
@@ -334,6 +335,14 @@ export function computeStateHash(gameState, tick) {
       hash = hashCombine(hash, hashString(party.partyId))
       hash = hashCombine(hash, quantize(party.money || 0, 1))
     }
+  }
+
+  for (const fire of gameState.fires || []) {
+    hash = hashCombine(hash, fire.x)
+    hash = hashCombine(hash, fire.y)
+    hash = hashCombine(hash, quantize(fire.age, 1000))
+    hash = hashCombine(hash, quantize(fire.spreadElapsed, 1000))
+    hash = hashCombine(hash, quantize(fire.suppression, 1000))
   }
 
   // Hash global money

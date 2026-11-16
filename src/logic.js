@@ -1,3 +1,4 @@
+import { igniteFromProjectile } from './game/fireSystem.js'
 import { getCityBuildings, applyCityDamage } from './game/cityBuildings.js'
 // logic.js
 import { createImpactVisual, resolveExplosionVisualRadius } from './rendering/vfx/impactVfx.js'
@@ -365,6 +366,7 @@ export function triggerExplosion(
 
         if (building.type === 'city') {
           applyCityDamage(building, damage, _mapGrid, gameState, playPositionalSound)
+          igniteFromProjectile(gameState, _mapGrid, building, visualProjectile || { originType: shooter?.type, x, y })
           continue
         }
 
@@ -380,6 +382,7 @@ export function triggerExplosion(
 
           // Ensure health doesn't go below 0
           building.health = Math.max(0, building.health)
+          igniteFromProjectile(gameState, _mapGrid, building, visualProjectile || { originType: shooter?.type, x, y })
           recordDamageValue(shooter, building, previousHealth - building.health)
           const damageAmount = Math.max(0, previousHealth - building.health)
           if (damageAmount > 0 && gameState.gameStarted && !gameState.mapEditMode) {

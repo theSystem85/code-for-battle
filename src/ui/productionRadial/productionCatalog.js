@@ -11,7 +11,7 @@ export const VEHICLE_FACTORY_UNITS = Object.freeze([
   'recoveryTank',
   'harvester',
   'ambulance',
-  'tankerTruck',
+  'fireEngine', 'tankerTruck',
   'ammunitionTruck',
   'mineLayer',
   'mineSweeper'

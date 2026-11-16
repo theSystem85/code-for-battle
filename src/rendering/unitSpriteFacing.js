@@ -23,6 +23,7 @@ export const UNIT_SPRITE_FACING = Object.freeze({
   'destroyer_map.webp': 'south',
   'f22_raptor_map.webp': 'north',
   'f35_map.webp': 'north',
+  'fire_engine.webp': 'south',
   'harvester.webp': 'south',
   'hovercraft_map.webp': 'south',
   'howitzer_barrel.webp': 'south',

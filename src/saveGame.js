@@ -1,6 +1,8 @@
 import { CheckpointMapMirror } from './storage/checkpointMapMirror.js'
 import { CheckpointEncoder } from './storage/checkpointEncoder.js'
 import { addMapReplacedListener, getMapMutationRevisionStore } from './rendering/prepared/mapMutationNotifier.js'
+import { FIRE_SPREAD_PROBABILITY, FIRE_DAMAGE_PER_SECOND, setFireSpreadProbability, setFireDamagePerSecond, WIND_DIRECTION, setWindDirectionX, setWindDirectionY } from './config.js'
+import { restoreFires } from './game/fireSystem.js'
 import { BIOMES, biomeLayersSignature, upgradeBiomeTransitions } from './game/mapBiomes.js'
 import { findCityBuildingById } from './game/cityBuildings.js'
 import { normalizeDecorationSettings } from './game/decorationSettings.js'
@@ -639,6 +641,7 @@ function buildSaveObject(label, { includeMap = true, includeStaticConfiguration 
       id: u.id,
       gas: u.gas,
       maxGas: u.maxGas,
+      water: u.water, maxWater: u.maxWater, fireHomeId: u.fireHomeId, fireRepathAt: u.fireRepathAt,
       supplyGas: u.supplyGas,
       maxSupplyGas: u.maxSupplyGas,
       supplyCrew: u.supplyCrew,
@@ -1017,6 +1020,8 @@ function buildSaveObject(label, { includeMap = true, includeStaticConfiguration 
     buildings: allBuildings,
     factoryRallyPoints,
     orePositions,
+    fireSettings: { spread: FIRE_SPREAD_PROBABILITY, damage: FIRE_DAMAGE_PER_SECOND, windX: WIND_DIRECTION.x, windY: WIND_DIRECTION.y },
+    fires: gameState.fires || [],
     mapGridTypes,
     mapTileState,
     harvestedTiles: Array.from(getHarvestedTiles()),
@@ -1163,13 +1168,14 @@ function getSelectedExportFormat() {
 }
 
 function downloadSaveObject(saveObj) {
+  const normalizedSave = decodeSaveObject(saveObj)
   const compact = getSelectedExportFormat() !== 'json'
-  const payload = compact ? encodeCompactSave(decodeSaveObject(saveObj)) : JSON.stringify(decodeSaveObject(saveObj), null, 2)
+  const payload = compact ? encodeCompactSave(normalizedSave) : JSON.stringify(normalizedSave, null, 2)
   const blob = new Blob([payload], { type: compact ? 'application/x-code-for-battle-save' : 'application/json' })
   const objectUrl = URL.createObjectURL(blob)
   const anchor = document.createElement('a')
   anchor.href = objectUrl
-  anchor.download = buildExportFilename(saveObj?.label, saveObj?.time, compact ? 'cfb' : 'json')
+  anchor.download = buildExportFilename(normalizedSave.label, normalizedSave.time, compact ? 'cfb' : 'json')
   document.body.appendChild(anchor)
   anchor.click()
   anchor.remove()
@@ -1528,6 +1534,7 @@ function loadGameFromSaveObject(saveObj, key) {
       hydrated.y = u.y
       hydrated.gas = u.gas
       hydrated.maxGas = u.maxGas
+      if (hydrated.type === 'fireEngine') { hydrated.water = u.water ?? 1000; hydrated.maxWater = u.maxWater ?? 1000; hydrated.fireHomeId = u.fireHomeId; hydrated.fireRepathAt = u.fireRepathAt ?? 0 }
       if (typeof u.supplyGas === 'number') {
         hydrated.supplyGas = u.supplyGas
       } else if (hydrated.type === 'tankerTruck') {
@@ -1970,6 +1977,8 @@ function loadGameFromSaveObject(saveObj, key) {
       }
 
       restoreStaticMapTiles(loaded, mapGrid)
+      if (loaded.fireSettings) { setFireSpreadProbability(loaded.fireSettings.spread); setFireDamagePerSecond(loaded.fireSettings.damage); if (Number.isFinite(loaded.fireSettings.windX)) setWindDirectionX(loaded.fireSettings.windX); if (Number.isFinite(loaded.fireSettings.windY)) setWindDirectionY(loaded.fireSettings.windY) }
+      restoreFires(gameState, mapGrid, loaded.fires || [])
 
       // Re-place all buildings through canonical placement logic so occupancy and passability
       // are restored exactly like a freshly built structure.

@@ -1,3 +1,4 @@
+import { updateFireSystem } from './game/fireSystem.js'
 import { findCityBuildingById } from './game/cityBuildings.js'
 import { applyMapAction } from './ui/mapActions/mapActionCommands.js'
 import { updateFactoryExits } from './game/factoryExit.js'
@@ -439,7 +440,7 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
 
           // Fallback to finding appropriate factory by type
           if (!spawnFactory) {
-            const vehicleUnitTypes = ['tank', 'tank-v2', 'rocketTank', 'tank_v1', 'tank-v3', 'lightTank', 'harvester', 'ambulance', 'tankerTruck', 'ammunitionTruck', 'recoveryTank', 'howitzer', 'mineLayer', 'mineSweeper']
+            const vehicleUnitTypes = ['tank', 'tank-v2', 'rocketTank', 'tank_v1', 'tank-v3', 'lightTank', 'harvester', 'ambulance', 'fireEngine', 'tankerTruck', 'ammunitionTruck', 'recoveryTank', 'howitzer', 'mineLayer', 'mineSweeper']
             if (vehicleUnitTypes.includes(unitType)) {
               spawnFactory = gameState.buildings.find(b => b.type === 'vehicleFactory' && b.owner === partyId)
             } else if (unitType === 'apache') {
@@ -573,6 +574,7 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
       updateAmmunitionSystem(units, gameState.buildings, gameState, delta)
       updateShipyardServiceLogic(units, gameState.buildings, mapGrid, delta)
       updateHelipadLogic(units, gameState.buildings, gameState, delta)
+      updateFireSystem(units, gameState, mapGrid, delta, factoryExitFindPath)
       updateTankerTruckLogic(units, gameState, delta)
       closeRefuelPumpFrame()
       updateAmmunitionTruckLogic(units, gameState, delta)

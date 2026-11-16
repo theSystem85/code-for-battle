@@ -1,3 +1,4 @@
+import { renderFires } from './fireRenderer.js'
 import { withTimeout } from '../utils/assetLoading.js'
 import { renderCityOverhangs } from './cityOverhangs.js'
 import { renderCityHealthBars } from '../game/cityBuildings.js'
@@ -744,6 +745,7 @@ export class Renderer {
 
     framePhases.begin(FRAME_PHASE.effects)
     this.effectsRenderer.render(gameCtx, bullets, gameState, units, scrollOffset)
+    renderFires(gameCtx, gameState, mapGrid, units, scrollOffset)
 
     // Render mine indicators (skull overlays)
     renderMineIndicators(gameCtx, scrollOffset)

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "signature": "8a49c6e6f55e20893d8c7207a7caa4b2dec38183fdddf875571d597efae808bc",
+  "signature": "3b5997f8f201154b4ffc052d2011477e16f0463247dafd0ca5dba621aa7afa8f",
   "sheets": [
     {
       "name": "crystals_q90_1024x1024",
@@ -165,10 +165,10 @@
     {
       "name": "dtv7_nature_soil_large",
       "manifest": "dtv7_nature_soil_large.json",
-      "signature": "aed5ffee3dc95a47ac0b176547de84eb31cdaeb919a6bba199f808b4291b127f",
+      "signature": "7466d510b624a37b943b59811457f5d179eb59fc90c704bcbe97f6cc78d34cdc",
       "metadataSignature": "7bca37c3ac765743e891be4a5ab20f7446ade0726cb50f62f6a4ccad3b7359ee",
       "decodedBytes": 9019904,
-      "compressedBytes": 576420
+      "compressedBytes": 576256
     }
   ]
 }

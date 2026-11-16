@@ -1,0 +1,3 @@
+# Building integration lessons: fire department
+
+A support building requires more than buildingData: add explicit prerequisite checks, event-driven unlocks, sidebar card and image mapping, AI/API tech tree, production/spawn service capacity, owner checks, destruction/reassignment, save and host synchronization. Define smoke spots explicitly (the fire department has none). Add new-building assets to prepared tiers before play. Service discovery must use reusable indexes, not building scans inside every unit tick. Supply bays and truck ownership are separate from factory spawn routing; land vehicles always leave the Vehicle Factory. Review these checklist entries after player feedback rather than assuming visual and usability acceptance.

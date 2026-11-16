@@ -1,6 +1,8 @@
 // A requirement is a building type, or a group of alternative building types.
 // These rules drive both gameplay unlocks and the cached build-card summaries.
 export const productionUnlockRules = [
+  { requires: ['vehicleWorkshop'], buildings: ['fireDepartment'] },
+  { requires: ['vehicleFactory', 'fireDepartment'], units: ['fireEngine'] },
   { requires: ['vehicleFactory'], units: ['tank', 'lightTank'], buildings: ['ammunitionFactory'] },
   { requires: ['vehicleFactory', 'oreRefinery'], units: ['harvester'] },
   { requires: ['vehicleFactory', 'gasStation'], units: ['tankerTruck'] },

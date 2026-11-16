@@ -1,3 +1,5 @@
+import { FIRE_SPREAD_PROBABILITY, FIRE_DAMAGE_PER_SECOND, setFireSpreadProbability, setFireDamagePerSecond, WIND_DIRECTION, setWindDirectionX, setWindDirectionY } from '../config.js'
+import { restoreFires } from '../game/fireSystem.js'
 import { normalizeDecorationSettings } from '../game/decorationSettings.js'
 import { getCityBuildings, applyCitySnapshot } from '../game/cityBuildings.js'
 import { applyProductionCompletionAck, getCompletionReceipt } from '../policies/completionReceipts.js'
@@ -506,6 +508,7 @@ export function createGameStateSnapshot({ fullAutomation = false } = {}) {
     turretDirection: unit.turretDirection,
     target: unit.target ? { id: unit.target.id, x: unit.target.x, y: unit.target.y } : null,
     moveTarget: unit.moveTarget,
+    water: unit.water, maxWater: unit.maxWater, fireHomeId: unit.fireHomeId, fireRepathAt: unit.fireRepathAt, extinguishing: unit.extinguishing,
     gas: unit.gas,
     maxGas: unit.maxGas,
     ammunition: unit.ammunition,
@@ -739,6 +742,8 @@ export function createGameStateSnapshot({ fullAutomation = false } = {}) {
     // Game settings that clients must inherit from host
     oreSpreadEnabled: ORE_SPREAD_ENABLED,
     oreSpreadInterval: ORE_SPREAD_INTERVAL,
+    fireSettings: { spread: FIRE_SPREAD_PROBABILITY, damage: FIRE_DAMAGE_PER_SECOND, windX: WIND_DIRECTION.x, windY: WIND_DIRECTION.y },
+    fires: gameState.fires || [],
     mapDecals: serializeMapDecals(gameState.mapGrid),
     simulationTime: simNow,
     shadowOfWarEnabled: gameState.shadowOfWarEnabled,
@@ -938,6 +943,8 @@ export function applyGameStateSnapshot(snapshot) {
     })
   }
 
+  if (snapshot.fireSettings) { setFireSpreadProbability(snapshot.fireSettings.spread); setFireDamagePerSecond(snapshot.fireSettings.damage); if (Number.isFinite(snapshot.fireSettings.windX)) setWindDirectionX(snapshot.fireSettings.windX); if (Number.isFinite(snapshot.fireSettings.windY)) setWindDirectionY(snapshot.fireSettings.windY) }
+  restoreFires(gameState, gameState.mapGrid, snapshot.fires || [])
   if (Array.isArray(snapshot.cityBuildings)) applyCitySnapshot(gameState.mapGrid, gameState, snapshot.cityBuildings)
 
   if (Array.isArray(snapshot.mapDecals)) {

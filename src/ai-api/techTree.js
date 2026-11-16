@@ -6,6 +6,7 @@ const FULL_BUILDING_TECH_TREE = [
   { type: 'powerPlant', req: '-' },
   { type: 'oreRefinery', req: '-' },
   { type: 'vehicleFactory', req: '-' },
+  { type: 'fireDepartment', req: 'vehicleWorkshop' },
   { type: 'vehicleWorkshop', req: '-' },
   { type: 'radarStation', req: '-' },
   { type: 'hospital', req: '-' },
@@ -27,6 +28,7 @@ const FULL_UNIT_TECH_TREE = [
   { type: 'tank', req: 'vehicleFactory', spawn: 'vehicleFactory' },
   { type: 'tank_v1', req: 'vehicleFactory', spawn: 'vehicleFactory' },
   { type: 'harvester', req: 'vehicleFactory+oreRefinery', spawn: 'vehicleFactory' },
+  { type: 'fireEngine', req: 'vehicleFactory+fireDepartment', spawn: 'vehicleFactory' },
   { type: 'tankerTruck', req: 'vehicleFactory+gasStation', spawn: 'vehicleFactory' },
   { type: 'ammunitionTruck', req: 'vehicleFactory+ammunitionFactory', spawn: 'vehicleFactory' },
   { type: 'ambulance', req: 'hospital', spawn: 'vehicleFactory' },
@@ -86,6 +88,7 @@ export function computeAvailableBuildingTypes(buildings, factories, owner) {
   const hasRadar = owned.some(building => building.type === 'radarStation')
   const hasFactory = owned.some(building => building.type === 'vehicleFactory')
   if (hasFactory) available.add('ammunitionFactory')
+  if (owned.some(building => building.type === 'vehicleWorkshop')) available.add('fireDepartment')
   if (hasRadar) {
     available.add('turretGunV2')
     available.add('turretGunV3')
@@ -124,6 +127,7 @@ export function computeAvailableUnitTypes(buildings, factories, owner) {
     available.add('lightTank')
   }
   if (hasFactory && hasRefinery) available.add('harvester')
+  if (hasFactory && owned.some(building => building.type === 'fireDepartment')) available.add('fireEngine')
   if (hasFactory && hasGasStation) available.add('tankerTruck')
   if (hasFactory && hasAmmunitionFactory) available.add('ammunitionTruck')
   if (hasHospital) available.add('ambulance')

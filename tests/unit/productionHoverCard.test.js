@@ -47,9 +47,9 @@ describe('production hover card data', () => {
     ['constructionYard', 0, ['powerPlant']],
     ['powerPlant', 0, ['oreRefinery']],
     ['oreRefinery', 1, ['vehicleFactory']],
-    ['vehicleFactory', 10, ['radarStation', 'gasStation', 'vehicleWorkshop', 'ammunitionFactory', 'hospital', 'turretGunV1', 'concreteWall']],
+    ['vehicleFactory', 11, ['radarStation', 'gasStation', 'vehicleWorkshop', 'ammunitionFactory', 'hospital', 'turretGunV1', 'concreteWall']],
     ['radarStation', 2, ['shipyard', 'helipad', 'airstrip', 'turretGunV2', 'turretGunV3', 'rocketTurret', 'teslaCoil', 'artilleryTurret']],
-    ['vehicleWorkshop', 4, ['constructionYard']]
+    ['vehicleWorkshop', 4, ['constructionYard', 'fireDepartment']]
   ])('[U03476] attributes %s unlocks to the last normal-build-order prerequisite', (type, units, buildings) => {
     const unlocks = buildProductionUnlockIndex().get(type)
     expect(unlocks.units).toHaveLength(units)

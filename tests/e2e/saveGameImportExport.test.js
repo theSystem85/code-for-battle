@@ -3,6 +3,7 @@ import { test, expect } from '@playwright/test'
 test.describe('Save game import/export from sidebar', () => {
   test('[E00102] exports saves, supports multi-import without auto-load, and auto-loads single import', async({ page }, testInfo) => {
     await page.goto('/')
+    await page.waitForFunction(() => document.getElementById('recordBtn')?.dataset.boundReplay === 'true', null, { timeout: 60000 })
     await page.waitForSelector('#saveLoadToggle', { state: 'visible' })
     const saveSectionOpen = await page.locator('#saveLoadToggle').getAttribute('aria-expanded') === 'true'
     if (!saveSectionOpen) {

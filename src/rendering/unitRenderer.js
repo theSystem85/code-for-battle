@@ -1,3 +1,4 @@
+import { drawPreparedSpriteCentered, getPreparedSprite } from './prepared/preparedSpritePipeline.js'
 // rendering/unitRenderer.js
 import { TILE_SIZE, HARVESTER_CAPPACITY, HARVESTER_UNLOAD_TIME, RECOIL_DISTANCE, RECOIL_DURATION, MUZZLE_FLASH_DURATION, MUZZLE_FLASH_SIZE, TANK_FIRE_RANGE, ATTACK_TARGET_INDICATOR_SIZE, ATTACK_TARGET_BOUNCE_SPEED, UNIT_TYPE_COLORS, PARTY_COLORS, TANKER_SUPPLY_CAPACITY, UTILITY_SERVICE_INDICATOR_SIZE, UTILITY_SERVICE_INDICATOR_BOUNCE_SPEED, SERVICE_DISCOVERY_RANGE, SERVICE_SERVING_RANGE, MINE_DEPLOY_STOP_TIME, VIEW_FRUSTUM_MARGIN, CURSOR_METERS_PER_TILE, BATTLESHIP_FIRE_RANGE, SUBMARINE_TORPEDO_RANGE, UNIT_SHADOWS_ENABLED, UNIT_SHADOW_OFFSET, UNIT_SHADOW_DIRECTION, UNIT_SHADOW_START_STRETCH, UNIT_SHADOW_END_STRETCH, UNIT_SHADOW_SIZE, UNIT_SHADOW_OPACITY, UNIT_SHADOW_BLUR } from '../config.js'
 import { isCityOccludedAtTile } from './cityOcclusionIndex.js'
@@ -1928,6 +1929,24 @@ export class UnitRenderer {
       }
     }
 
+    if (unit.type === 'fireEngine') {
+      const sprite = getPreparedSprite('unit:fireEngine:base')
+      if (sprite) {
+        ctx.save()
+        ctx.translate(centerX, centerY)
+        ctx.rotate(unit.direction - Math.PI / 2)
+        drawPreparedSpriteCentered(ctx, sprite, 0, 0)
+        ctx.restore()
+        this.renderSelection(ctx, unit, centerX, centerY)
+        if (unit.selected) {
+          ctx.fillStyle = '#12333d'
+          ctx.fillRect(centerX - 14, centerY + 20, 28, 4)
+          ctx.fillStyle = '#45c9ed'
+          ctx.fillRect(centerX - 14, centerY + 20, 28 * Math.max(0, unit.water / (unit.maxWater || 1000)), 4)
+        }
+        return
+      }
+    }
     if (unit.type === 'tankerTruck' && isTankerTruckImageLoaded()) {
       const ok = renderTankerTruckWithImage(ctx, unit, centerX, centerY)
       if (ok) {

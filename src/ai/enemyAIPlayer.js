@@ -551,6 +551,9 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
       // Build a vehicle workshop once a factory exists
       buildingType = 'vehicleWorkshop'
       cost = buildingData.vehicleWorkshop.cost
+    } else if (vehicleWorkshops.length > 0 && !aiBuildings.some(b => b.type === 'fireDepartment') && gameState.fires?.length && aiFactory.budget >= buildingData.fireDepartment.cost) {
+      buildingType = 'fireDepartment'
+      cost = buildingData.fireDepartment.cost
     } else if (hospitals.length === 0 && aiFactory.budget >= buildingData.hospital.cost) {
       buildingType = 'hospital'
       cost = buildingData.hospital.cost
@@ -1057,6 +1060,7 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
           })
         }
       }
+      if (gameState.fires?.length && aiBuildings.some(b => b.type === 'fireDepartment' && b.health > 0) && !units.some(u => u.type === 'fireEngine' && u.owner === aiPlayerId && u.health > 0)) unitType = 'fireEngine'
       // Determine cost based on unit type
       const cost = getUnitCost(unitType)
 
@@ -1073,6 +1077,7 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
           unitType === 'lightTank' ||
           unitType === 'rocketTank' ||
           unitType === 'ambulance' ||
+          unitType === 'fireEngine' ||
           unitType === 'tankerTruck' ||
           unitType === 'ammunitionTruck' ||
           unitType === 'recoveryTank' ||

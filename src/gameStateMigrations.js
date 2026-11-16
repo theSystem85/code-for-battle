@@ -78,6 +78,13 @@ migrations[6] = state => ({
     : state.units
 })
 
+migrations[7] = state => ({
+  ...state,
+  fires: Array.isArray(state.fires) ? state.fires.map(fire => ({ ...fire })) : [],
+  gameState: { ...state.gameState, fires: Array.isArray(state.gameState?.fires) ? state.gameState.fires.map(fire => ({ ...fire })) : [] },
+  units: Array.isArray(state.units) ? state.units.map(unit => unit?.type === 'fireEngine' ? { ...unit, water: unit.water ?? 1000, maxWater: unit.maxWater ?? 1000 } : unit) : state.units
+})
+
 function assertSchemaVersion(version, label) {
   if (!Number.isSafeInteger(version) || version < 1) {
     throw new TypeError(`Live state migration ${label} must be a positive integer; received ${String(version)}`)

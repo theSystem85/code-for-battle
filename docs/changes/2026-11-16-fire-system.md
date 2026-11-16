@@ -1,0 +1,6 @@
+- [ ] **Fire system** — Add fire engines, four-engine departments, spreading tile fires, damage, water service, rendering and simulation/persistence/control integrations. Audio download and final visual/hardware/browser acceptance remain open.
+  Spec: [Fire system](../../specs/fire-system.md)
+
+Validation: the full unit sweep passed 361 files / 5,726 tests (`npm run test:unit -- --maxWorkers=2`). A subsequent focused save/network/fire run passed 105 tests, including the added real save/load regression for fire timers, water, home station, routing timer and shared smoke wind. Browser E00262 passed with installed system Chromium. Production build and sprite-tier verification passed. Earlier failures from stale config mocks and concurrently overloaded UI setup hooks were resolved; assertions and hook timeouts were retained.
+
+Remaining: generated ElevenLabs clips cannot be downloaded through this environment's proxy (HTTP 403 for elevenlabsusercontent.com); their generation IDs are saved in `docs/asset-sources/fire-audio.json`. Playback wiring and final audio audition remain open. Artwork is authored concept art, pending the reviewed production camera/style treatment. Full multiplayer/replay acceptance and the 75 FPS hardware gate remain pending. The feature is intentionally still marked open.

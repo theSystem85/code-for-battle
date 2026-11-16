@@ -8,6 +8,7 @@ const PRODUCTION_BUILDING_TYPES = new Set([
   'oreRefinery',
   'vehicleFactory',
   'vehicleWorkshop',
+  'fireDepartment',
   'radarStation',
   'hospital',
   'helipad',
@@ -28,7 +29,7 @@ const DEFENSE_BUILDING_TYPES = new Set([
 ])
 
 const AIR_UNIT_TYPES = new Set(['apache', 'f22Raptor', 'f35'])
-const SUPPORT_UNIT_TYPES = new Set(['ambulance', 'tankerTruck', 'ammunitionTruck', 'recoveryTank'])
+const SUPPORT_UNIT_TYPES = new Set(['fireEngine', 'ambulance', 'tankerTruck', 'ammunitionTruck', 'recoveryTank'])
 const LOGISTICS_UNIT_TYPES = new Set(['harvester', 'mineLayer', 'mineSweeper'])
 const PRIORITY_TARGET_BUILDING_TYPES = new Set([
   'constructionYard',
@@ -65,6 +66,7 @@ const UNIT_ROLE_LABELS = {
   lightTank: 'fast-raider',
   rocketTank: 'anti-armor',
   harvester: 'economy',
+  fireEngine: 'fire-support',
   tankerTruck: 'fuel-support',
   ammunitionTruck: 'ammo-support',
   ambulance: 'healing-support',
@@ -151,8 +153,7 @@ function buildTilePosition(position) {
   }
   return {
     x: Math.round(position.x),
-    y: Math.round(position.y),
-    space: 'tile'
+    y: Math.round(position.y)
   }
 }
 
@@ -518,6 +519,7 @@ export function buildCompactStrategicInput(input, options = {}) {
   return {
     protocolVersion: input.protocolVersion,
     inputMode: 'compact-strategic-v1',
+    positionSpace: 'tile',
     matchId: input.matchId,
     playerId: input.playerId,
     tick: input.tick,

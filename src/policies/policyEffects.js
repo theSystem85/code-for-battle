@@ -20,6 +20,7 @@ export const EFFECT_GROUPS = Object.freeze({
 export const UNIT_BUILDABLE_TYPES = Object.freeze([
   { value: 'tank', label: 'Tank V1' }, { value: 'tank-v2', label: 'Tank V2' }, { value: 'tank-v3', label: 'Tank V3' }, { value: 'lightTank', label: 'Light Tank' },
   { value: 'rocketTank', label: 'Rocket tank' }, { value: 'howitzer', label: 'Howitzer' }, { value: 'harvester', label: 'Harvester' },
+  { value: 'fireEngine', label: 'Fire engine' },
   { value: 'ambulance', label: 'Ambulance' }, { value: 'tankerTruck', label: 'Tanker truck' },
   { value: 'ammunitionTruck', label: 'Ammunition truck' }, { value: 'recoveryTank', label: 'Recovery tank' },
   { value: 'mineLayer', label: 'Mine layer' }, { value: 'mineSweeper', label: 'Mine sweeper' },
@@ -44,6 +45,7 @@ export const BUILDABLE_TYPES = Object.freeze([
   { value: 'powerPlant', label: 'Power plant' },
   { value: 'oreRefinery', label: 'Ore refinery' },
   { value: 'vehicleFactory', label: 'Vehicle factory' },
+  { value: 'fireDepartment', label: 'Fire department' },
   { value: 'vehicleWorkshop', label: 'Vehicle workshop' },
   { value: 'constructionYard', label: 'Construction yard' },
   { value: 'radarStation', label: 'Radar station' },
