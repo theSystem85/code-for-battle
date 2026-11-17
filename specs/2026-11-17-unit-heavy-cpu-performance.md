@@ -11,7 +11,8 @@ Target at least 60 FPS through representative foreground gameplay, with a 16.67 
 - [x] Profile the remaining movement cost at 400 and 500 units. Investigate repeated contact queries, the friendly-waypoint owner-list scan, and idle-unit movement work. Keep blocked units, hazards, service movement and flight behavior covered. [Movement report](../docs/performance/2026-11-18-live-movement-lookups.md)
 - [x] Profile ambulance, tanker and recovery candidate selection. Reuse spatial and ID lookups across support systems where eligibility and deterministic tie order allow it. [Service unit report and stationary setup](../docs/performance/2026-11-18-service-unit-index.md)
 - [x] Measure fog visibility reset and reveal separately. If still material, track previously touched cells while preserving discovery, sight range, renderer invalidation and save/load behavior. [Fog visibility report](../docs/performance/2026-11-18-sparse-fog-visibility.md)
-- [ ] Define the supported reference envelope and repeat the complete hardware acceptance protocol from [the rendering performance plan](../performance_improvement.md). Include physical refresh evidence, layered naval units, cold and repeated traversal, graphics configuration coverage and profiling runs separate from FPS acceptance.
+- [x] Document the tested reference workload and capture the combined optimizations in a stationary battle without V8 profiling. [Combined hardware report](../docs/performance/2026-11-18-stationary-battle-60-fps.md)
+- [ ] Pass physical 60 FPS acceptance under [the rendering performance plan](../performance_improvement.md), including the layered naval case, confirmed refresh, and cold and repeated traversal. The current hardware run misses the deadline.
 
 ## Hot-loop and occupancy audit
 

@@ -33,8 +33,6 @@ try {
 
   const context = await browser.newContext({ viewport: null })
   await context.addInitScript(() => {
-    localStorage.setItem('tutorial-settings', JSON.stringify({ showTutorial: false, speechEnabled: false }))
-    localStorage.setItem('tutorial-progress', JSON.stringify({ completed: true, stepIndex: 0 }))
     window.__CFB_TERRAIN_GPU_TIMING__ = true
   })
   const page = await context.newPage()
@@ -58,7 +56,7 @@ try {
   })
 
   console.log(JSON.stringify({ adapter, cadence, browser: await browser.version() }))
-  await page.goto(`${url}/?seed=11&size=200&players=4&oreFields=24`)
+  await page.goto(`${url}/?seed=11&size=200&players=4&oreFields=24&tutorial=0`)
   const waitReady = () => page.waitForFunction(() =>
     window.gameState?.gameStarted && window.gameInstance?.gameLoop?.allAssetsLoaded &&
     window.gameInstance.renderer.textureManager.allTexturesLoaded &&
@@ -241,6 +239,9 @@ try {
       renderer.renderGame = render
       display.reportFrameBreakdown = report
     }
+    if (document.querySelector('.tutorial-overlay') || window.tutorialSystem) {
+      throw new Error('The tutorial=0 startup flag did not suppress tutorial initialization')
+    }
     if (battleOnly && (state.gameOver || state.localPlayerDefeated || maxBullets === 0 || state.gamePaused)) {
       throw new Error('Stationary benchmark did not sustain active combat')
     }
@@ -273,7 +274,7 @@ try {
   }
   const average = key => cpuFrames.reduce((sum, frame) => sum + frame[key], 0) / cpuFrames.length
   const summary = {
-    cadence, preparationMs, scene: battleOnly ? 'stationary battle' : 'fast scrolling',
+    cadence, preparationMs, tutorialDisabled: true, scene: battleOnly ? 'stationary battle' : 'fast scrolling',
     averageFps: intervals.length * 1000 / elapsed,
     minimumOneSecondFps,
     slowestFrameFps: 1000 / percent(1),

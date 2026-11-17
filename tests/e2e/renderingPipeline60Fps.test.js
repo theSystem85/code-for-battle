@@ -117,7 +117,7 @@ test.describe('Rendering pipeline strict 60 FPS diagnostics', () => {
     const startupCapture = await startCpuSampling(context, { label: 'startup-cold' })
     let resizeCleanup = null
     try {
-      await page.goto(`${baseURL || 'http://localhost:5173'}/?seed=4&size=200&players=4&monitor=1`, { waitUntil: 'domcontentloaded', timeout: 60000 })
+      await page.goto(`${baseURL || 'http://localhost:5173'}/?seed=4&size=200&players=4&monitor=1&tutorial=0`, { waitUntil: 'domcontentloaded', timeout: 60000 })
       await waitForReadyGame(page)
       resizeCleanup = await page.evaluateHandle(createResizeAuditScript())
       const canvas = await page.locator('#gameCanvas').boundingBox()
@@ -152,6 +152,7 @@ test.describe('Rendering pipeline strict 60 FPS diagnostics', () => {
       await testInfo.attach('rendering-pipeline-cdp-startup.json', { body: JSON.stringify(coldProfile), contentType: 'application/json' })
       await testInfo.attach('rendering-pipeline-cdp-steady.json', { body: JSON.stringify(steadyProfile), contentType: 'application/json' })
 
+      await expect(page.locator('.tutorial-overlay')).toHaveCount(0)
       expect(pageErrors, 'rendering route page errors').toHaveLength(0)
       expect(evidence.completed, 'timed route completed').toBe(true)
       expect(metrics.frameCount, 'benchmark collected animation frames').toBeGreaterThan(0)

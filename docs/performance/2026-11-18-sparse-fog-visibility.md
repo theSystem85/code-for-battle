@@ -1,6 +1,6 @@
 # Reset only cells revealed by the previous visibility pass
 
-Baseline commit `692700d3` compared with this change. Both runs use the stationary 500-unit battle with the tutorial disabled and construction yards protected against defeat. Both reached 26 concurrent bullets and finished with 481 surviving units.
+Baseline commit `692700d3` compared with this change. Both runs use the stationary 500-unit battle with construction yards protected against defeat. These captures seeded local tutorial preferences without an explicit startup flag. Both reached 26 concurrent bullets and finished with 481 surviving units.
 
 ```sh
 BENCHMARK_URL=http://127.0.0.1:4189 BENCHMARK_FIXTURE=tmp/unit-heavy/checklist-movement-500-before/fixture.cfb BENCHMARK_BATTLE_ONLY=1 BENCHMARK_PROFILE=1 BENCHMARK_OUTPUT=tmp/unit-heavy/checklist-service-after node scripts/benchmark-unit-heavy.mjs

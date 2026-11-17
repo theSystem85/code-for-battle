@@ -820,6 +820,7 @@ Object.assign(TutorialSystem.prototype, tutorialGuidance)
 
 export function initTutorialSystem() {
   if (typeof document === 'undefined') return null
+  if (new URLSearchParams(window.location.search).get('tutorial') === '0') return null
   const tutorial = new TutorialSystem()
   tutorial.init()
   window.tutorialSystem = tutorial

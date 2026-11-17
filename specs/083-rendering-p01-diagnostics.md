@@ -10,7 +10,7 @@ P01 adds opt-in tooling only. It does not change the renderer, game state, visua
 
 `tests/e2e/renderingPipeline60Fps.test.js` records a cold startup CDP sample and a steady two-lap timed route. The route traverses a serpentine full-map path, reverses direction between bands/laps, checks completion, and reports independent animation-frame intervals. The report includes mean FPS, p95/p99/max frame time, missed `1000/75` ms deadlines, per-window FPS, route distance and the scene readiness boundary.
 
-The strict deadline is `13.333... ms`. Acceptance mode is enabled only with `PERF_RENDERING_PIPELINE_ACCEPT=1`; it additionally requires a non-headless run, a known display refresh rate of at least 75 Hz, and zero missed deadlines. A headless run, unknown refresh, software fallback or display below 75 Hz is labeled `diagnostic-only` and cannot pass physical certification.
+The strict deadline is `1000 / 60 ms`. Acceptance mode is enabled only with `PERF_RENDERING_PIPELINE_ACCEPT=1`; it additionally requires a non-headless run, a known display refresh rate of at least 60 Hz, and zero missed deadlines. A headless run, unknown refresh, software fallback or display below 60 Hz is labeled `diagnostic-only` and cannot pass physical certification.
 
 CDP CPU sampling is explicitly labeled intrusive and captures `startup-cold` and `steady-repeat-laps` separately. It must not be used as the FPS-certification measurement. The read-only audit captures transformed image draws, canvas resize events, resource decoded bytes and transfer bytes without enabling any production audit path.
 
@@ -23,7 +23,7 @@ CDP CPU sampling is explicitly labeled intrusive and captures `startup-cold` and
 Diagnostic route and profiles:
 
 ```sh
-PERF_RENDERING_PIPELINE=1 PLAYWRIGHT_SKIP_WEB_SERVER=1 PLAYWRIGHT_BASE_URL=http://127.0.0.1:5173 npx playwright test tests/e2e/renderingPipeline60Fps.test.js --project=chromium --reporter=line --workers=1
+PERF_RENDERING_PIPELINE=1 PLAYWRIGHT_HEADED=1 PLAYWRIGHT_SKIP_WEB_SERVER=1 PLAYWRIGHT_BASE_URL=http://127.0.0.1:5173 npx playwright test tests/e2e/renderingPipeline60Fps.test.js --project=chromium --reporter=line --workers=1
 ```
 
 Strict acceptance on a qualifying physical display:
@@ -38,7 +38,7 @@ Visual golden capture:
 PERF_RENDERING_VISUAL=1 npx playwright test tests/e2e/renderingVisualParity.test.js --project=chromium --reporter=line --workers=1
 ```
 
-The current environment is not a qualifying physical 75 Hz presentation measurement unless the command is run headed on verified hardware; headless/software output remains diagnostic evidence.
+Physical acceptance requires a headed hardware run with confirmed display refresh and presented-frame evidence.
 
 
 The current gate is 60 presented FPS and a strict `1000 / 60` ms deadline. If the browser does not report physical refresh, set `PERF_DISPLAY_REFRESH_HZ` to the measured refresh of the display used for the headed hardware run.

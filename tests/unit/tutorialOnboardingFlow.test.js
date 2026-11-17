@@ -34,6 +34,17 @@ beforeEach(() => {
 afterEach(() => { tutorial?.stop(); vi.clearAllTimers(); vi.useRealTimers() })
 
 describe('tutorial input onboarding flow', () => {
+  it('[U07206] honors the tutorial=0 startup flag even when the saved tutorial is enabled', () => {
+    const originalUrl = window.location.href
+    window.history.replaceState(null, '', '?tutorial=0')
+    try {
+      expect(initTutorialSystem()).toBeNull()
+      expect(document.querySelector('.tutorial-overlay')).toBeNull()
+    } finally {
+      window.history.replaceState(null, '', originalUrl)
+    }
+  })
+
   it('[U05430] shows ready-placement and produced-unit shortcuts as additional tutorial guidance', () => {
     tutorial = initTutorialSystem()
     tutorial.start({ reset: true, manual: true })

@@ -1,6 +1,6 @@
 # Index service units in the stationary battle
 
-Baseline commit `04ea9eb1` compared with this change. The tutorial is disabled before navigation by browser initialization. The camera stays centered on the fight. Each starting construction yard retains at least one health and cannot be sold in the benchmark, so both sides remain in play. Unit combat, damage and destruction continue. Both runs selected 47 tanks, reached 26 simultaneous projectiles, and finished with 481 units.
+Baseline commit `04ea9eb1` compared with this change. These captures seeded local tutorial preferences, but that path did not guarantee suppression. Treat them as historical diagnostics. The camera stays centered on the fight. Each starting construction yard retains at least one health and cannot be sold in the benchmark, so both sides remain in play. Unit combat, damage and destruction continue. Both runs selected 47 tanks, reached 26 simultaneous projectiles, and finished with 481 units.
 
 ```sh
 BENCHMARK_URL=http://127.0.0.1:4188 BENCHMARK_FIXTURE=tmp/unit-heavy/checklist-movement-500-before/fixture.cfb BENCHMARK_BATTLE_ONLY=1 BENCHMARK_PROFILE=1 BENCHMARK_OUTPUT=tmp/unit-heavy/checklist-service-before node scripts/benchmark-unit-heavy.mjs
