@@ -56,7 +56,6 @@ const NO_AUTO_ROTATION_TYPES = new Set([
   'apache',
   'f35'
 ])
-const friendlyCandidateLists = [null, null]
 const NAVAL_CRUISE_LOOP_VOLUME = 0.22
 
 const SMALL_SHIP_CRUISE_TYPES = new Set([
@@ -233,49 +232,29 @@ export function isUnitCenterInsideMineCircle(unit, tileX, tileY) {
   return dx * dx + dy * dy <= radiusSq
 }
 
-export function hasFriendlyUnitOnTile(unit, tileX, tileY, units = []) {
-  if (!unit || !Number.isFinite(tileX) || !Number.isFinite(tileY) || !Array.isArray(units)) {
+export function hasFriendlyUnitOnTile(unit, tileX, tileY, units = [], collisionIndex = null) {
+  if (!unit || !Number.isInteger(tileX) || !Number.isInteger(tileY) || !Array.isArray(units)) {
     return false
   }
 
-  const indexedFriendlies = ownerUnitList(unit.owner)
-  let listCount = 0
-  if (indexedFriendlies) {
-    friendlyCandidateLists[0] = indexedFriendlies
-    listCount = 1
-    const aliasOwner = unit.owner === 'player' ? 'player1' : (unit.owner === 'player1' ? 'player' : null)
-    const aliasFriendlies = aliasOwner ? ownerUnitList(aliasOwner) : null
-    if (aliasFriendlies && aliasFriendlies.length && aliasFriendlies !== indexedFriendlies) {
-      friendlyCandidateLists[1] = aliasFriendlies
-      listCount = 2
-    }
+  if (collisionIndex) {
+    const candidates = collisionIndex.nearby((tileX + 0.5) * TILE_SIZE, (tileY + 0.5) * TILE_SIZE, TILE_SIZE / 2)
+    return hasFriendlyCenterOnTile(unit, tileX, tileY, candidates)
   }
+  const friendlies = ownerUnitList(unit.owner)
+  if (hasFriendlyCenterOnTile(unit, tileX, tileY, friendlies || units)) return true
+  const alias = unit.owner === 'player' ? 'player1' : unit.owner === 'player1' ? 'player' : null
+  const aliasFriendlies = friendlies && alias ? ownerUnitList(alias) : null
+  return Boolean(aliasFriendlies && hasFriendlyCenterOnTile(unit, tileX, tileY, aliasFriendlies))
+}
 
-  const scans = listCount || 1
-  const minX = tileX * TILE_SIZE - TILE_SIZE / 2
-  const minY = tileY * TILE_SIZE - TILE_SIZE / 2
-  const maxX = minX + TILE_SIZE
-  const maxY = minY + TILE_SIZE
-  for (let listIndex = 0; listIndex < scans; listIndex++) {
-    const candidates = listCount ? friendlyCandidateLists[listIndex] : units
-    for (let index = 0; index < candidates.length; index++) {
-      const otherUnit = candidates[index]
-      if (!otherUnit || otherUnit.id === unit.id || otherUnit.health <= 0) continue
-      // Reject distant live positions before domain/ownership checks. Do not
-      // cache occupancy here: earlier collision responses can move BOTH units
-      // during this pass. The final center-based check retains boundary rules.
-      if (otherUnit.x < minX || otherUnit.x >= maxX || otherUnit.y < minY || otherUnit.y >= maxY) continue
-      if (!listCount && ownersAreEnemies(unit.owner, otherUnit.owner)) continue
-      if (!isGroundUnit(otherUnit)) continue
-
-      const otherTileX = Math.floor((otherUnit.x + TILE_SIZE / 2) / TILE_SIZE)
-      const otherTileY = Math.floor((otherUnit.y + TILE_SIZE / 2) / TILE_SIZE)
-      if (otherTileX === tileX && otherTileY === tileY && !ownersAreEnemies(unit.owner, otherUnit.owner)) {
-        return true
-      }
-    }
+function hasFriendlyCenterOnTile(unit, tileX, tileY, candidates) {
+  for (const other of candidates) {
+    if (!other || other.id === unit.id || other.health <= 0) continue
+    if (Math.floor((other.x + TILE_SIZE / 2) / TILE_SIZE) !== tileX ||
+        Math.floor((other.y + TILE_SIZE / 2) / TILE_SIZE) !== tileY) continue
+    if (isGroundUnit(other) && !ownersAreEnemies(unit.owner, other.owner)) return true
   }
-
   return false
 }
 
@@ -526,7 +505,7 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
     const baseReachDistance = TILE_SIZE / 3
     let waypointReachDistance = baseReachDistance
 
-    if (distance >= baseReachDistance && hasFriendlyUnitOnTile(unit, nextTile.x, nextTile.y, units)) {
+    if (distance >= baseReachDistance && hasFriendlyUnitOnTile(unit, nextTile.x, nextTile.y, units, collisionIndex)) {
       const friendlyAllowance = Math.min(TILE_SIZE * 0.95, MOVEMENT_CONFIG.MIN_UNIT_DISTANCE * 1.25)
       waypointReachDistance = Math.max(baseReachDistance, friendlyAllowance)
     }
@@ -656,7 +635,7 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
       avoidanceForce = { x: 0, y: 0 }
     } else {
       avoidanceForce = isAirborne
-        ? calculateAirCollisionAvoidance(unit, units)
+        ? calculateAirCollisionAvoidance(unit, collisionIndex?.aircraft || units)
         : calculateCollisionAvoidance(unit, units, mapGrid, occupancyMap)
     }
   }

@@ -67,6 +67,7 @@ vi.mock('../../src/utils/gameRandom.js', () => ({
   gameRandom: vi.fn(() => 0.5)
 }))
 
+import { MovementCollisionIndex } from '../../src/game/movementCollisionIndex.js'
 import {
   hasFriendlyUnitOnTile,
   initializeUnitMovement,
@@ -411,6 +412,21 @@ describe('unifiedMovement.js', () => {
   })
 
   describe('hasFriendlyUnitOnTile', () => {
+    it('[U07203] uses live center tiles and excludes airborne or hostile occupants', () => {
+      const unit = { owner: 'player1', id: 'mover', x: 320, y: 320, health: 100 }
+      const friend = { owner: 'player', id: 'friend', x: 335, y: 320, tileX: 999, health: 100 }
+      const aircraft = { owner: 'player1', id: 'air', x: 320, y: 320, health: 100, isAirUnit: true }
+      const enemy = { owner: 'player2', id: 'enemy', x: 320, y: 320, health: 100 }
+      const units = [unit, aircraft, enemy, friend]
+      const index = new MovementCollisionIndex()
+      index.rebuild(units, 20)
+      expect(index.aircraft).toEqual([aircraft])
+      expect(hasFriendlyUnitOnTile(unit, 10, 10, units, index)).toBe(true)
+      friend.x = 369
+      index.update(friend)
+      expect(hasFriendlyUnitOnTile(unit, 10, 10, units, index)).toBe(false)
+    })
+
     it('[U04519] should return false if no units on tile', () => {
       const unit = { owner: 1, id: 'u1' }
       const units = []

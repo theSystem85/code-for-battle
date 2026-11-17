@@ -8,6 +8,10 @@ const url = process.env.BENCHMARK_URL || 'http://127.0.0.1:4176'
 const label = 'CPU benchmark'
 const fixture = process.env.BENCHMARK_FIXTURE || join(output, 'fixture.cfb')
 const profileEnabled = process.env.BENCHMARK_PROFILE === '1'
+const unitsPerParty = Number(process.env.BENCHMARK_UNITS_PER_PARTY || 100)
+if (!Number.isSafeInteger(unitsPerParty) || unitsPerParty < 100 || unitsPerParty > 500) {
+  throw new Error('BENCHMARK_UNITS_PER_PARTY must be an integer from 100 to 500')
+}
 await mkdir(output, { recursive: true })
 
 const browser = await chromium.launch({
@@ -62,7 +66,7 @@ try {
   await waitReady()
 
   if (process.env.BENCHMARK_CREATE_FIXTURE === '1') {
-    const save = await page.evaluate(async(label) => {
+    const save = await page.evaluate(async({ label, unitsPerParty }) => {
       const { factories, mapGrid, units } = await import('/src/main.js')
       const { createUnit, initializeOccupancyMap } = await import('/src/units.js')
       const { saveGame } = await import('/src/saveGame.js')
@@ -91,13 +95,13 @@ try {
           occupied.add(key)
           const unit = createUnit(factory, types[count % types.length], x, y)
           units.push(unit)
-          if (++count === 100) break
+          if (++count === unitsPerParty) break
         }
       })
       state.occupancyMap = initializeOccupancyMap(units, mapGrid)
       saveGame(label)
       return getStoredItem(`rts_save_${label}`)
-    }, label)
+    }, { label, unitsPerParty })
     await writeFile(fixture, save)
   }
 

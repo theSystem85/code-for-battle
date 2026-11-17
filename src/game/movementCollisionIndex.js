@@ -12,6 +12,7 @@ export class MovementCollisionIndex {
     this.unitsById = new Map()
     this.bucketPool = []
     this.results = []
+    this.aircraft = []
     this.stride = 1
   }
 
@@ -24,11 +25,15 @@ export class MovementCollisionIndex {
     this.unitCells.clear()
     this.unitsById.clear()
     this.results.length = 0
+    this.aircraft.length = 0
     this.stride = Math.ceil(mapWidth * TILE_SIZE / CELL_SIZE) + 2
 
     for (const unit of units) {
       if (!unit) continue
       this.unitsById.set(unit.id, unit)
+      // Preserve array order and include grounded aircraft that can take off
+      // during this movement pass. The avoidance test checks live flight state.
+      if (unit.isAirUnit || unit.type === 'apache' || unit.type === 'f35') this.aircraft.push(unit)
       this.update(unit)
     }
   }

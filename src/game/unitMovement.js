@@ -21,7 +21,6 @@ import { updateRetreatBehavior, shouldExitRetreat, cancelRetreat } from '../beha
 import { logPerformance } from '../performanceUtils.js'
 import { getEffectiveFireRange } from './unitCombat/combatHelpers.js'
 import { observeUnitCommandSignals, pruneUnitCommandHistory } from './unitCommandHistory.js'
-import { rebuildOwnerUnitIndex } from './unitOwnerIndex.js'
 import { MovementCollisionIndex } from './movementCollisionIndex.js'
 
 const REMOTE_ATTACK_CHASE_SUPPRESSION_MS = 5000
@@ -52,7 +51,6 @@ function isAiControlledUnit(unit, gameState) {
  * Updates unit movement, pathfinding, and formation handling
  */
 export const updateUnitMovement = logPerformance(function updateUnitMovement(units, mapGrid, occupancyMap, gameState, now, factories = null) {
-  rebuildOwnerUnitIndex(units)
   movementCollisionIndex.rebuild(units, mapGrid[0]?.length || 0)
   // Clean up unit selection - prevent null references
   cleanupDestroyedSelectedUnits()
