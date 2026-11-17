@@ -1,18 +1,8 @@
 import { TILE_SIZE, UTILITY_SERVICE_INDICATOR_SIZE, UTILITY_SERVICE_INDICATOR_BOUNCE_SPEED } from '../config.js'
 import { gameState } from '../gameState.js'
-import { renderTankWithImages } from './tankImageRenderer.js'
-import {
-  getCachedPreparedSingleImageWreckSprite,
-  getCachedPreparedSinkingWreckSprite,
-  getPreparedSinkingWreckSprite,
-  getSingleImageWreckSprite,
-  getTankWreckCanvases,
-  prewarmWreckSpriteCache
-} from './wreckSpriteCache.js'
-import { getDestroyerBaseImage } from './destroyerImageRenderer.js'
-import { getSupplyShipBaseImage } from './supplyShipImageRenderer.js'
-import { getNavalFleetBaseImage } from './navalFleetImageRenderer.js'
-import { getNavalRenderLengthTiles, getNavalSpriteLengthTiles, navalUnitTypes } from '../utils/navalUtils.js'
+import { getTankVariantForType, renderTankWithImages } from './tankImageRenderer.js'
+import { getWreckSprites } from './wreckSpriteCache.js'
+import { getNavalRenderLengthTiles } from '../utils/navalUtils.js'
 import { selectedUnits } from '../inputHandler.js'
 import { getCanvasLogicalSize } from './renderingUtils.js'
 import { drawStatusBar } from '../utils/statusBarGradient.js'
@@ -53,40 +43,15 @@ function getNoiseCanvas(seedKey, density) {
 
 export class WreckRenderer {
   constructor() {
-    this.preparedSpriteRegistry = null
+    this.preparedSprites = null
     this.preparedDensity = 1
+    this.noiseCanvas = null
   }
 
   setPreparedSpriteRegistry(registry) {
-    this.preparedSpriteRegistry = registry || null
-    if (Number.isFinite(registry?.density) && registry.density > 0) {
-      this.preparedDensity = registry.density
-    }
-    this.prepareCaches()
-  }
-
-  prepareCaches(density = this.preparedDensity) {
-    this.preparedDensity = Number.isFinite(density) && density > 0 ? density : 1
-    prewarmWreckSpriteCache(this.preparedDensity)
-    this.prepareSinkingSprite('supplyShip', getSupplyShipBaseImage(), 2.2)
-    this.prepareSinkingSprite('destroyer', getDestroyerBaseImage(), getNavalSpriteLengthTiles('destroyer'))
-    for (const unitType of navalUnitTypes) {
-      if (unitType === 'supplyShip' || unitType === 'destroyer') continue
-      this.prepareSinkingSprite(
-        unitType,
-        getNavalFleetBaseImage(unitType),
-        getNavalSpriteLengthTiles(unitType)
-      )
-    }
-  }
-
-  prepareSinkingSprite(unitType, source, spriteLengthTiles) {
-    return getPreparedSinkingWreckSprite(
-      unitType,
-      source,
-      spriteLengthTiles,
-      this.preparedDensity
-    )
+    this.preparedSprites = getWreckSprites(registry)
+    this.preparedDensity = registry?.density || 1
+    this.noiseCanvas = this.preparedSprites?.noise || null
   }
 
   render(ctx, wrecks, scrollOffset, entityIndex = null) {
@@ -174,7 +139,7 @@ export class WreckRenderer {
     const isBeingRestored = wreck.isBeingRestored || false
 
     if (isTank) {
-      const images = getTankWreckCanvases(wreck.unitType)
+      const images = this.preparedSprites?.tanks.get(getTankVariantForType(wreck.unitType))
       const pseudoUnit = {
         type: wreck.unitType,
         direction: isBeingRestored ? WORKSHOP_RESTORATION_ROTATION : (wreck.direction || 0),
@@ -190,9 +155,6 @@ export class WreckRenderer {
         ctx.globalAlpha = 0.8
       }
       const rendered = renderTankWithImages(ctx, pseudoUnit, centerX, centerY, {
-        // The tank renderer is an A10-owned boundary. Its layered wreck draw
-        // remains a known resize audit item until prepared wagon/turret/barrel
-        // handles are published; E11 must not duplicate that renderer here.
         images: images || undefined,
         disableRecoil: true,
         disableMuzzleFlash: true
@@ -202,7 +164,7 @@ export class WreckRenderer {
         this.renderFallback(ctx, wreck, centerX, centerY, isBeingRestored ? WORKSHOP_RESTORATION_ROTATION : null)
       }
     } else {
-      const sprite = getCachedPreparedSingleImageWreckSprite(wreck.unitType, this.preparedDensity)
+      const sprite = this.preparedSprites?.singles.get(wreck.unitType)
       if (sprite) {
         ctx.save()
         ctx.translate(centerX, centerY)
@@ -214,11 +176,11 @@ export class WreckRenderer {
         ctx.rotate(rotation)
         ctx.globalAlpha = 0.95
         ctx.drawImage(
-          sprite.canvas,
+          sprite.image,
           0,
           0,
-          sprite.canvas.width,
-          sprite.canvas.height,
+          sprite.image.width,
+          sprite.image.height,
           -sprite.logicalWidth / 2,
           -sprite.logicalHeight / 2,
           sprite.logicalWidth,
@@ -226,32 +188,7 @@ export class WreckRenderer {
         )
         ctx.restore()
       } else {
-        // A source that decoded after startup remains an explicit I20
-        // readiness conflict. Preserve the old visual via its legacy cache
-        // path rather than replacing it with a broken placeholder.
-        const source = getSingleImageWreckSprite(wreck.unitType)
-        if (source) {
-          ctx.save()
-          ctx.translate(centerX, centerY)
-          const rotation = isBeingRestored
-            ? WORKSHOP_RESTORATION_ROTATION
-            : (wreck.unitType === 'f22Raptor' || wreck.unitType === 'f35')
-              ? (wreck.direction || 0) + Math.PI / 2
-              : (wreck.direction || 0) - Math.PI / 2
-          ctx.rotate(rotation)
-          const scale = TILE_SIZE / Math.max(source.width, source.height)
-          ctx.globalAlpha = 0.95
-          ctx.drawImage(
-            source,
-            -source.width * scale / 2,
-            -source.height * scale / 2,
-            source.width * scale,
-            source.height * scale
-          )
-          ctx.restore()
-        } else {
-          this.renderFallback(ctx, wreck, centerX, centerY, isBeingRestored ? WORKSHOP_RESTORATION_ROTATION : null)
-        }
+        this.renderFallback(ctx, wreck, centerX, centerY, isBeingRestored ? WORKSHOP_RESTORATION_ROTATION : null)
       }
     }
 
@@ -270,50 +207,18 @@ export class WreckRenderer {
     const progress = Math.min(1, elapsed / (wreck.sinkDuration || 6000))
     const easedProgress = 1 - ((1 - progress) ** 2)
     const alpha = Math.max(0, 1 - progress)
-    const sourceImage = wreck.unitType === 'supplyShip'
-      ? getSupplyShipBaseImage()
-      : wreck.unitType === 'destroyer'
-        ? getDestroyerBaseImage()
-        : getNavalFleetBaseImage(wreck.unitType)
     const direction = wreck.direction || 0
-    const spriteLengthTiles = wreck.unitType === 'supplyShip'
-      ? 2.2
-      : getNavalSpriteLengthTiles(wreck.unitType)
 
     ctx.save()
-    const prepared = getCachedPreparedSinkingWreckSprite(wreck.unitType, this.preparedDensity)
+    const prepared = this.preparedSprites?.sinking.get(wreck.unitType)
     if (prepared) {
       this.drawSinkingSprite(
         ctx,
-        prepared.canvas,
-        prepared.canvas.width,
-        prepared.canvas.height,
+        prepared.image,
+        prepared.image.width,
+        prepared.image.height,
         prepared.logicalWidth,
         prepared.logicalHeight,
-        wreck,
-        centerX,
-        centerY,
-        direction,
-        easedProgress,
-        alpha
-      )
-    } else if (sourceImage) {
-      // Preparation can miss when a custom/naval image decodes after the
-      // startup barrier. Preserve the existing visual for that exceptional
-      // generation, but keep the resize conflict explicit for I20 to resolve
-      // by republishing and prewarming the complete asset generation.
-      const sourceWidth = sourceImage.naturalWidth || sourceImage.width
-      const sourceHeight = sourceImage.naturalHeight || sourceImage.height
-      const scale = (TILE_SIZE * spriteLengthTiles) / Math.max(sourceWidth, sourceHeight)
-      const renderWidth = sourceWidth * scale
-      const renderHeight = sourceHeight * scale
-      this.drawSinkingSprite(
-        ctx,
-        sourceImage,
-        sourceWidth,
-        sourceHeight,
-        renderWidth,
-        renderHeight,
         wreck,
         centerX,
         centerY,
@@ -485,10 +390,8 @@ export class WreckRenderer {
   }
 
   renderNoiseOverlay(ctx, wreck, centerX, centerY) {
-    const noiseCanvas = getNoiseCanvas(
-      wreck.spriteCacheKey || wreck.unitType || 'default',
-      this.preparedDensity
-    )
+    const seed = wreck.spriteCacheKey
+    const noiseCanvas = typeof seed === 'number' ? getNoiseCanvas(seed, this.preparedDensity) : this.noiseCanvas
     if (!noiseCanvas) return
     const size = TILE_SIZE * 1.2
     ctx.save()

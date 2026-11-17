@@ -17,6 +17,7 @@ import { disposeSpriteResourceLifecycle } from './spriteResourceLifecycle.js'
 import { getMapMutationRevisionStore } from './mapMutationNotifier.js'
 import { startTankRotationCache } from '../tankImageRenderer.js'
 import { resetTankRotationCache } from '../tankRotationCache.js'
+import { isWreckSourceEntry, prepareWreckSprites } from '../wreckSpriteCache.js'
 
 const PIPELINE_BYTE_LIMIT = 512 * 1024 * 1024
 
@@ -125,8 +126,21 @@ async function prepareAndPublishSprites({ density, signal, onProgress }) {
     signal,
     onProgress,
     deferUnits: true,
-    initialUnitTypes: (gameState.units || []).map(unit => unit.type)
+    initialUnitTypes: (gameState.units || []).map(unit => unit.type),
+    prioritizeEntry: isWreckSourceEntry
   })
+  if (generation !== spriteAssetGeneration) {
+    prepared.registry.dispose()
+    restoreActiveRegistryGenerations()
+    return getPreparedSpriteState()
+  }
+  try {
+    await prepareWreckSprites(prepared, { signal })
+  } catch (error) {
+    prepared.registry.dispose()
+    restoreActiveRegistryGenerations()
+    throw error
+  }
   if (generation !== spriteAssetGeneration) {
     prepared.registry.dispose()
     restoreActiveRegistryGenerations()

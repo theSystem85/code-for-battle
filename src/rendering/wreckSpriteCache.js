@@ -1,238 +1,137 @@
-import { getTankImageAssets } from './tankImageRenderer.js'
-import { getHarvesterBaseImage } from './harvesterImageRenderer.js'
-import { getRocketTankBaseImage } from './rocketTankImageRenderer.js'
-import { getAmbulanceBaseImage } from './ambulanceImageRenderer.js'
-import { getAmmunitionTruckBaseImage } from './ammunitionTruckImageRenderer.js'
-import { getPreparedSprite } from './prepared/preparedSpritePipeline.js'
-import { getTankerTruckBaseImage } from './tankerTruckImageRenderer.js'
-import { getRecoveryTankBaseImage } from './recoveryTankImageRenderer.js'
-import { getHowitzerBaseImage } from './howitzerImageRenderer.js'
-import { getMineLayerBaseImage } from './mineLayerImageRenderer.js'
-import { getMineSweeperBaseImage } from './mineSweeperImageRenderer.js'
-import { getF22BaseImage } from './f22ImageRenderer.js'
-import { getF35BaseImage } from './f35ImageRenderer.js'
 import { TILE_SIZE } from '../config.js'
+import { getNavalSpriteLengthTiles } from '../utils/navalUtils.js'
+import { loadPreparedImage } from './prepared/imagePreparation.js'
+import { getPreparedSpriteCacheKey } from './prepared/preparedSpritePipeline.js'
 
-const EFFECTS_RASTER_BYTE_LIMIT = 16 * 1024 * 1024
-const grayscaleCache = new Map()
-const preparedWreckCache = new Map()
-let cachedBytes = 0
-let accessSequence = 0
+const WRECK_RASTER_LIMIT = 16 * 1024 * 1024
+const TANK_LAYERS = ['wagon', 'turret', 'barrel']
+const WRECK_TANK_VARIANTS = ['tankV1', 'tankV2', 'tankV3', 'lightTank']
+const wrecksByRegistry = new WeakMap()
 
-function clamp(value, min, max) {
-  return Math.min(Math.max(value, min), max)
-}
-
-function createNoiseValue(index, seed = 0) {
-  const x = Math.sin((index + 1) * 12.9898 + seed * 78.233)
-  const fract = x - Math.floor(x)
-  return fract * 2 - 1
-}
-
-function getDesaturatedCanvas(image) {
-  if (!image || !image.width || !image.height) {
-    return null
-  }
-
-  const existing = grayscaleCache.get(image)
-  if (existing) {
-    existing.lastUsed = ++accessSequence
-    return existing.canvas
-  }
-
+function createCanvas(width, height) {
   const canvas = document.createElement('canvas')
-  canvas.width = image.width
-  canvas.height = image.height
-  const ctx = canvas.getContext('2d')
-  ctx.drawImage(image, 0, 0)
-
-  try {
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
-    const { data } = imageData
-    for (let i = 0; i < data.length; i += 4) {
-      const alpha = data[i + 3]
-      if (alpha === 0) continue
-      const r = data[i]
-      const g = data[i + 1]
-      const b = data[i + 2]
-      const luminance = 0.299 * r + 0.587 * g + 0.114 * b
-      const noise = createNoiseValue(i / 4, luminance)
-      const value = clamp(luminance + noise * 18, 0, 255)
-      data[i] = value
-      data[i + 1] = value
-      data[i + 2] = value
-    }
-    ctx.putImageData(imageData, 0, 0)
-  } catch (e) {
-    window.logger.warn('Failed to process wreck image for grayscale', e)
-  }
-
-  storeCacheEntry(grayscaleCache, image, canvas, canvas.width * canvas.height * 4)
+  canvas.width = width
+  canvas.height = height
   return canvas
 }
 
-function storeCacheEntry(cache, key, canvas, bytes, metadata = null) {
-  while (cachedBytes + bytes > EFFECTS_RASTER_BYTE_LIMIT) {
-    let oldestCache = null
-    let oldestKey = null
-    let oldestSequence = Infinity
-    for (const candidateCache of [grayscaleCache, preparedWreckCache]) {
-      for (const [candidateKey, entry] of candidateCache) {
-        if (entry.lastUsed < oldestSequence) {
-          oldestSequence = entry.lastUsed
-          oldestCache = candidateCache
-          oldestKey = candidateKey
+function desaturate(image) {
+  const canvas = createCanvas(image.width, image.height)
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })
+  ctx.drawImage(image, 0, 0)
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+  const { data } = imageData
+  for (let i = 0; i < data.length; i += 4) {
+    if (!data[i + 3]) continue
+    const luminance = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]
+    const amplitude = Math.sin((i / 4 + 1) * 12.9898 + luminance * 78.233)
+    const noise = (amplitude - Math.floor(amplitude)) * 2 - 1
+    const value = Math.min(255, Math.max(0, luminance + noise * 18))
+    data[i] = value
+    data[i + 1] = value
+    data[i + 2] = value
+  }
+  ctx.putImageData(imageData, 0, 0)
+  return canvas
+}
+
+function releaseCanvas(sprite) {
+  sprite.image.width = 0
+  sprite.image.height = 0
+}
+
+function isStandaloneWreckSource(id) {
+  return (id.startsWith('unit:') && id.endsWith(':base')) ||
+    (id.startsWith('naval:') && id.endsWith(':hull')) ||
+    id === 'aircraft:f22:flight' || id === 'aircraft:f35:flight'
+}
+
+export function isWreckSourceEntry({ id }) {
+  return isStandaloneWreckSource(id) || WRECK_TANK_VARIANTS.some(type => id.startsWith(`unit:${type}:`))
+}
+
+export function getWreckSprites(registry) {
+  return registry && !registry.disposed ? wrecksByRegistry.get(registry) : null
+}
+
+export async function prepareWreckSprites({ manifest, registry, density }, { signal, loadImage = loadPreparedImage } = {}) {
+  const sprites = { tanks: new Map(), singles: new Map(), sinking: new Map(), bytes: 0 }
+  const register = (id, image, logicalWidth, logicalHeight) => {
+    const decodedBytes = image.width * image.height * 4
+    if (sprites.bytes + decodedBytes > WRECK_RASTER_LIMIT) {
+      releaseCanvas({ image })
+      throw new Error('Wreck sprite byte budget exceeded')
+    }
+    const sprite = { image, logicalWidth, logicalHeight }
+    try {
+      registry.register(`wreck:${id}`, sprite, { decodedBytes, dispose: releaseCanvas })
+    } catch (error) {
+      releaseCanvas(sprite)
+      throw error
+    }
+    sprites.bytes += decodedBytes
+    return sprite
+  }
+
+  for (const tank of WRECK_TANK_VARIANTS) {
+    const images = {}
+    for (const layer of TANK_LAYERS) {
+      const id = `unit:${tank}:${layer}`
+      const source = registry.get(getPreparedSpriteCacheKey(manifest.assetVersion, density, id))
+      if (!source) break
+      images[layer] = register(id, desaturate(source.image), source.logicalWidth, source.logicalHeight).image
+    }
+    if (images.barrel) sprites.tanks.set(tank, images)
+  }
+
+  const entries = manifest.entries.filter(({ id }) => isStandaloneWreckSource(id))
+  // Keep only four source decodes in flight. Original-size grayscale canvases
+  // are scratch storage, released as soon as the final-size sprite is ready.
+  for (let start = 0; start < entries.length; start += 4) {
+    await Promise.all(entries.slice(start, start + 4).map(async entry => {
+      let source
+      try {
+        source = await loadImage(entry.source, { signal })
+      } catch (error) {
+        if (signal?.aborted) throw error
+        if (registry.disposed) return
+        // Offline installations already cache the prepared density variants.
+        source = registry.get(getPreparedSpriteCacheKey(manifest.assetVersion, density, entry.id))?.image
+        if (!source) {
+          console.warn(`Wreck source unavailable: ${entry.id}`, error)
+          return
         }
       }
-    }
-    if (!oldestCache) return null
-    const evicted = oldestCache.get(oldestKey)
-    cachedBytes -= evicted.bytes
-    oldestCache.delete(oldestKey)
-  }
-  const entry = { canvas, bytes, lastUsed: ++accessSequence, ...metadata }
-  cache.set(key, entry)
-  cachedBytes += bytes
-  return entry
-}
-
-function prepareFinalSizeSprite(key, source, logicalWidth, logicalHeight, density = 1) {
-  if (!source || logicalWidth <= 0 || logicalHeight <= 0) return null
-  const safeDensity = Number.isFinite(density) && density > 0 ? density : 1
-  const cacheKey = `${key}@${safeDensity}`
-  const existing = preparedWreckCache.get(cacheKey)
-  if (existing) {
-    existing.lastUsed = ++accessSequence
-    return existing
-  }
-  const canvas = document.createElement('canvas')
-  canvas.width = Math.max(1, Math.round(logicalWidth * safeDensity))
-  canvas.height = Math.max(1, Math.round(logicalHeight * safeDensity))
-  const ctx = canvas.getContext('2d')
-  if (!ctx) return null
-  ctx.drawImage(source, 0, 0, canvas.width, canvas.height)
-  return storeCacheEntry(
-    preparedWreckCache,
-    cacheKey,
-    canvas,
-    canvas.width * canvas.height * 4,
-    { logicalWidth, logicalHeight, density: safeDensity }
-  )
-}
-
-export function getTankWreckCanvases(unitType) {
-  const assets = getTankImageAssets(unitType)
-  if (!assets) return null
-  return {
-    wagon: getDesaturatedCanvas(assets.wagon),
-    turret: getDesaturatedCanvas(assets.turret),
-    barrel: getDesaturatedCanvas(assets.barrel)
-  }
-}
-
-export function getSingleImageWreckSprite(unitType) {
-  let image = null
-  switch (unitType) {
-    case 'harvester':
-      image = getHarvesterBaseImage()
-      break
-    case 'rocketTank':
-      image = getRocketTankBaseImage()
-      break
-    case 'ambulance':
-      image = getAmbulanceBaseImage()
-      break
-    case 'tankerTruck':
-      image = getTankerTruckBaseImage()
-      break
-    case 'ammunitionTruck':
-      image = getAmmunitionTruckBaseImage()
-      break
-    case 'recoveryTank':
-      image = getRecoveryTankBaseImage()
-      break
-    case 'howitzer':
-      image = getHowitzerBaseImage()
-      break
-    case 'mineLayer':
-      image = getMineLayerBaseImage()
-      break
-    case 'mineSweeper':
-      image = getMineSweeperBaseImage()
-      break
-    case 'f22Raptor':
-      image = getF22BaseImage()
-      break
-    case 'f35':
-      image = getF35BaseImage()
-      break
-    default:
-      image = null
-      break
+      if (signal?.aborted || registry.disposed) return
+      const [category, name] = entry.id.split(':')
+      const type = name === 'f22' ? 'f22Raptor' : name
+      const sinking = category === 'naval'
+      const length = sinking ? (type === 'supplyShip' ? 2.2 : getNavalSpriteLengthTiles(type)) : 1
+      const scale = length * TILE_SIZE / Math.max(source.width, source.height)
+      const logicalWidth = source.width * scale
+      const logicalHeight = source.height * scale
+      const gray = sinking ? null : desaturate(source)
+      const final = createCanvas(Math.max(1, Math.round(logicalWidth * density)), Math.max(1, Math.round(logicalHeight * density)))
+      final.getContext('2d').drawImage(gray || source, 0, 0, final.width, final.height)
+      if (gray) releaseCanvas({ image: gray })
+      const sprite = register(entry.id, final, logicalWidth, logicalHeight)
+      const target = sinking ? sprites.sinking : sprites.singles
+      target.set(type, sprite)
+    }))
   }
 
-  if (!image) image = getPreparedSprite(`unit:${unitType}:base`)?.image
-  if (!image) return null
-  return getDesaturatedCanvas(image)
-}
-
-export function getPreparedSingleImageWreckSprite(unitType, density = 1) {
-  const source = getSingleImageWreckSprite(unitType)
-  if (!source) return null
-  const scale = TILE_SIZE / Math.max(source.width, source.height)
-  return prepareFinalSizeSprite(
-    `single:${unitType}`,
-    source,
-    source.width * scale,
-    source.height * scale,
-    density
-  )
-}
-
-export function getCachedPreparedSingleImageWreckSprite(unitType, density = 1) {
-  const safeDensity = Number.isFinite(density) && density > 0 ? density : 1
-  const entry = preparedWreckCache.get(`single:${unitType}@${safeDensity}`) || null
-  if (entry) entry.lastUsed = ++accessSequence
-  return entry
-}
-
-export function getPreparedSinkingWreckSprite(unitType, source, spriteLengthTiles, density = 1) {
-  if (!source) return null
-  const sourceWidth = source.naturalWidth || source.width
-  const sourceHeight = source.naturalHeight || source.height
-  const scale = (TILE_SIZE * spriteLengthTiles) / Math.max(sourceWidth, sourceHeight)
-  return prepareFinalSizeSprite(
-    `sinking:${unitType}`,
-    source,
-    sourceWidth * scale,
-    sourceHeight * scale,
-    density
-  )
-}
-
-export function getCachedPreparedSinkingWreckSprite(unitType, density = 1) {
-  const safeDensity = Number.isFinite(density) && density > 0 ? density : 1
-  const entry = preparedWreckCache.get(`sinking:${unitType}@${safeDensity}`) || null
-  if (entry) entry.lastUsed = ++accessSequence
-  return entry
-}
-
-export function prewarmWreckSpriteCache(density = 1) {
-  for (const unitType of [
-    'harvester', 'rocketTank', 'ambulance', 'tankerTruck', 'ammunitionTruck', 'recoveryTank',
-    'howitzer', 'mineLayer', 'mineSweeper', 'f22Raptor', 'f35'
-  ]) {
-    getPreparedSingleImageWreckSprite(unitType, density)
+  if (!registry.disposed && !signal?.aborted) {
+    const logicalSize = TILE_SIZE * 1.2
+    const size = Math.max(1, Math.round(logicalSize * density))
+    const noise = createCanvas(size, size)
+    const ctx = noise.getContext('2d')
+    const pixels = ctx.createImageData(size, size)
+    // Normal wrecks have string seed keys, which produced black RGB in the
+    // original numeric noise formula. Saved numeric keys keep that formula.
+    for (let i = 3; i < pixels.data.length; i += 4) pixels.data[i] = 60
+    ctx.putImageData(pixels, 0, 0)
+    sprites.noise = register('noise', noise, logicalSize, logicalSize).image
+    wrecksByRegistry.set(registry, sprites)
   }
-  for (const tankType of ['tank_v1', 'tank-v2', 'tank_v2', 'tank-v3', 'tank_v3', 'lightTank']) {
-    getTankWreckCanvases(tankType)
-  }
-}
-
-export function getWreckSpriteCacheStats() {
-  return {
-    bytes: cachedBytes,
-    limitBytes: EFFECTS_RASTER_BYTE_LIMIT,
-    entries: grayscaleCache.size + preparedWreckCache.size
-  }
+  return sprites
 }

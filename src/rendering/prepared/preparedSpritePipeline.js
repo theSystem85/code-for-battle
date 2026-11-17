@@ -360,6 +360,7 @@ export async function prepareSpriteRegistry({
   onProgress,
   deferUnits = false,
   initialUnitTypes = [],
+  prioritizeEntry = null,
   resourceStore = getSpriteResourceLifecycleStore()
 } = {}) {
   assertDensity(density)
@@ -479,7 +480,7 @@ export async function prepareSpriteRegistry({
     const deferred = []
     const critical = []
     for (const entry of manifest.entries) {
-      if (deferUnits && entry.category !== 'building' && !initialUnitTypes.includes(entry.id.split(':')[1])) {
+      if (deferUnits && entry.category !== 'building' && !initialUnitTypes.includes(entry.id.split(':')[1]) && !prioritizeEntry?.(entry)) {
         deferred.push(entry)
       } else {
         critical.push(entry)

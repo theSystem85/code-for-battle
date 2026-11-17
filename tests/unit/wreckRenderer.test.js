@@ -1,69 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-const {
-  mockGameState,
-  mockRenderTankWithImages,
-  mockGetTankWreckCanvases,
-  mockGetSingleImageWreckSprite,
-  mockGetPreparedSingleImageWreckSprite,
-  mockGetCachedPreparedSingleImageWreckSprite,
-  mockGetPreparedSinkingWreckSprite,
-  mockGetCachedPreparedSinkingWreckSprite,
-  mockGetDestroyerBaseImage,
-  mockGetSupplyShipBaseImage
-} = vi.hoisted(() => ({
-  mockGameState: {
-    shadowOfWarEnabled: false,
-    humanPlayer: 'player',
-    visibilityMap: []
-  },
+const { mockGameState, mockRenderTankWithImages, mockGetWreckSprites } = vi.hoisted(() => ({
+  mockGameState: { shadowOfWarEnabled: false, humanPlayer: 'player', visibilityMap: [] },
   mockRenderTankWithImages: vi.fn(() => true),
-  mockGetTankWreckCanvases: vi.fn(() => ({ wagon: {}, turret: {}, barrel: {} })),
-  mockGetSingleImageWreckSprite: vi.fn(() => ({ width: 64, height: 64 })),
-  mockGetPreparedSingleImageWreckSprite: vi.fn(() => ({
-    canvas: { width: 64, height: 64 },
-    logicalWidth: 32,
-    logicalHeight: 32
-  })),
-  mockGetCachedPreparedSingleImageWreckSprite: vi.fn(() => ({
-    canvas: { width: 64, height: 64 },
-    logicalWidth: 32,
-    logicalHeight: 32
-  })),
-  mockGetPreparedSinkingWreckSprite: vi.fn(() => null),
-  mockGetCachedPreparedSinkingWreckSprite: vi.fn(() => null),
-  mockGetDestroyerBaseImage: vi.fn(() => ({ width: 109, height: 342 })),
-  mockGetSupplyShipBaseImage: vi.fn(() => ({ width: 256, height: 256 }))
+  mockGetWreckSprites: vi.fn()
 }))
 
-vi.mock('../../src/gameState.js', () => ({
-  gameState: mockGameState
-}))
-
+vi.mock('../../src/gameState.js', () => ({ gameState: mockGameState }))
 vi.mock('../../src/rendering/tankImageRenderer.js', () => ({
-  renderTankWithImages: mockRenderTankWithImages
+  renderTankWithImages: mockRenderTankWithImages,
+  getTankVariantForType: () => 'tankV2'
 }))
-
-vi.mock('../../src/rendering/wreckSpriteCache.js', () => ({
-  getTankWreckCanvases: mockGetTankWreckCanvases,
-  getSingleImageWreckSprite: mockGetSingleImageWreckSprite,
-  getPreparedSingleImageWreckSprite: mockGetPreparedSingleImageWreckSprite,
-  getCachedPreparedSingleImageWreckSprite: mockGetCachedPreparedSingleImageWreckSprite,
-  getPreparedSinkingWreckSprite: mockGetPreparedSinkingWreckSprite,
-  getCachedPreparedSinkingWreckSprite: mockGetCachedPreparedSinkingWreckSprite,
-  prewarmWreckSpriteCache: vi.fn()
-}))
+vi.mock('../../src/rendering/wreckSpriteCache.js', () => ({ getWreckSprites: mockGetWreckSprites }))
 
 vi.mock('../../src/inputHandler.js', () => ({
   selectedUnits: []
-}))
-
-vi.mock('../../src/rendering/destroyerImageRenderer.js', () => ({
-  getDestroyerBaseImage: mockGetDestroyerBaseImage
-}))
-
-vi.mock('../../src/rendering/supplyShipImageRenderer.js', () => ({
-  getSupplyShipBaseImage: mockGetSupplyShipBaseImage
 }))
 
 import { WreckRenderer } from '../../src/rendering/wreckRenderer.js'
@@ -106,16 +57,25 @@ function createMockContext() {
 }
 
 describe('WreckRenderer workshop restoration previews', () => {
+  let renderer
+  let singles
+
   beforeEach(() => {
     mockRenderTankWithImages.mockClear()
-    mockGetTankWreckCanvases.mockClear()
-    mockGetSingleImageWreckSprite.mockClear()
-    mockGetPreparedSingleImageWreckSprite.mockClear()
-    mockGetCachedPreparedSingleImageWreckSprite.mockClear()
+    renderer = new WreckRenderer()
+    singles = new Map()
+    const sprite = { image: { width: 64, height: 64 }, logicalWidth: 32, logicalHeight: 32 }
+    singles.set('f22Raptor', sprite)
+    singles.set('harvester', sprite)
+    const sinking = new Map([
+      ['destroyer', { image: { width: 109, height: 342 }, logicalWidth: 26, logicalHeight: 83 }],
+      ['supplyShip', { image: { width: 256, height: 256 }, logicalWidth: 70, logicalHeight: 70 }]
+    ])
+    mockGetWreckSprites.mockReturnValue({ singles, sinking, tanks: new Map(), noise: null })
+    renderer.setPreparedSpriteRegistry({ density: 1 })
   })
 
   it('[U05169] uses the F22 wreck sprite and rotates restored wrecks by 45 degrees', () => {
-    const renderer = new WreckRenderer()
 
     const f22Ctx = createMockContext()
     renderer.renderWreck(f22Ctx, {
@@ -141,7 +101,7 @@ describe('WreckRenderer workshop restoration previews', () => {
       isBeingRestored: true
     }, { x: 0, y: 0 })
 
-    expect(mockGetCachedPreparedSingleImageWreckSprite).toHaveBeenCalledWith('f22Raptor', 1)
+    expect(f22Ctx.drawImageArgs[0][0]).toBe(singles.get('f22Raptor').image)
     expect(f22Ctx.drawImageCalls).toBeGreaterThan(0)
     expect(f22Ctx.rotateCalls[0]).toBeCloseTo(Math.PI / 4)
     expect(harvesterCtx.rotateCalls[0]).toBeCloseTo(Math.PI / 4)
@@ -149,7 +109,6 @@ describe('WreckRenderer workshop restoration previews', () => {
 
   it('[U05170] renders a lateral sinking mode by progressively cropping from the selected side', () => {
     mockGameState.simulationTime = 3000
-    const renderer = new WreckRenderer()
     const ctx = createMockContext()
 
     renderer.renderSinkingShipWreck(ctx, {
@@ -167,7 +126,6 @@ describe('WreckRenderer workshop restoration previews', () => {
 
   it('[U05171] renders front-down sinking by progressively cropping the south-facing bow', () => {
     mockGameState.simulationTime = 3000
-    const renderer = new WreckRenderer()
     const ctx = createMockContext()
 
     renderer.renderSinkingShipWreck(ctx, {
@@ -184,7 +142,6 @@ describe('WreckRenderer workshop restoration previews', () => {
   })
 
   it('[U05172] culls distant wrecks with expanded bounds before drawing', () => {
-    const renderer = new WreckRenderer()
     const ctx = {
       ...createMockContext(),
       canvas: { width: 320, height: 200 }
@@ -199,7 +156,6 @@ describe('WreckRenderer workshop restoration previews', () => {
       maxHealth: 100
     }], { x: 0, y: 0 })
 
-    expect(mockGetCachedPreparedSingleImageWreckSprite).not.toHaveBeenCalled()
     expect(ctx.drawImageCalls).toBe(0)
   })
 })

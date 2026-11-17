@@ -470,7 +470,6 @@ export class Renderer {
         for (const result of results) {
           if (result.status === 'rejected') window.logger?.warn?.('Optional asset preparation failed', result.reason)
         }
-        this.wreckRenderer.prepareCaches?.(window.devicePixelRatio || 1)
       }).catch(error => {
         window.logger?.warn?.('Optional rendering caches unavailable; using fallback', error)
       })
