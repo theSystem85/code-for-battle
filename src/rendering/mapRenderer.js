@@ -1707,6 +1707,16 @@ export class MapRenderer {
         bounds: { startX: chunk.startX, startY: chunk.startY, endX: chunk.endX, endY: chunk.endY },
         assetRevisions: this.pageDependencies.snapshotForPage(chunk.key, this.terrainSpriteTier)
       })
+    } catch (error) {
+      // The failed redraw cleared or partly overwrote this page. Reset its
+      // backing store/state and never publish it as a complete cached image.
+      chunk.everRendered = false
+      chunk.canvas.width = 1
+      chunk.canvas.height = 1
+      chunk.residentToken?.release()
+      chunk.residentToken = null
+      chunk.residentBytes = 0
+      throw error
     } finally {
       this.collectingPageAssets = null
       stagingToken.release()
@@ -2124,69 +2134,72 @@ export class MapRenderer {
     this.drawingDecorations = false
     this.groupingMapGrid = mapGrid
 
-    for (let y = startTileY; y < endTileY; y++) {
-      for (let x = startTileX; x < endTileX; x++) {
-        const tile = mapGrid[y][x]
-        const visualTileType = tile?.airstripStreet ? 'land' : tile.type
-        const screenX = x * TILE_SIZE - offsetX
-        const screenY = y * TILE_SIZE - offsetY
+    try {
+      for (let y = startTileY; y < endTileY; y++) {
+        for (let x = startTileX; x < endTileX; x++) {
+          const tile = mapGrid[y][x]
+          const visualTileType = tile?.airstripStreet ? 'land' : tile.type
+          const screenX = x * TILE_SIZE - offsetX
+          const screenY = y * TILE_SIZE - offsetY
 
-        if (!(skipWaterBase && visualTileType === 'water')) {
-          this.drawTileBase(ctx, x, y, visualTileType, screenX, screenY, useTexture, currentWaterFrame)
-        }
-
-        // Use precomputed SOT mask instead of computing neighbors each frame.
-        // Water tiles can also host inverse SOT so enclosed islands smooth inward.
-        if (this.sotMask[y]?.[x] && !this.useOrganicTerrain(useTexture)) {
-          const sotInfo = this.sotMask[y][x]
-          if (visualTileType === 'street') {
-            continue
+          if (!(skipWaterBase && visualTileType === 'water')) {
+            this.drawTileBase(ctx, x, y, visualTileType, screenX, screenY, useTexture, currentWaterFrame)
           }
-          if (skipWaterSot && sotInfo.type === 'water') {
-            if (skipWaterBase && visualTileType !== 'water') {
-              this.clearTriangleArea(ctx, screenX, screenY, TILE_SIZE, sotInfo.orientation)
+
+          // Use precomputed SOT mask instead of computing neighbors each frame.
+          // Water tiles can also host inverse SOT so enclosed islands smooth inward.
+          if (this.sotMask[y]?.[x] && !this.useOrganicTerrain(useTexture)) {
+            const sotInfo = this.sotMask[y][x]
+            if (visualTileType === 'street') {
+              continue
             }
-            continue
-          }
-          this.drawSOT(ctx, x, y, sotInfo.orientation, scrollOffset, useTexture, sotApplied, sotInfo.type, currentWaterFrame)
-        }
-
-      }
-    }
-    // Coastline transitions are a ground underlay: they must cover water but
-    // remain beneath organic rock/cliffs, tile decals and all entities.
-    if (useTexture && this.useOrganicTerrain(useTexture)) {
-      this.drawOrganicLandTransitions(ctx, mapGrid, startTileX, startTileY, endTileX, endTileY, offsetX, offsetY)
-    }
-    if (useTexture && this.organicTerrain?.ready) {
-      const organicGround = this.useOrganicTerrain(useTexture)
-      const terracedCliffs = this.organicTerrain.cliffs?.complete && this.organicTerrain.cliffs.naturalWidth
-      // Two-cell halo rebuilds the same overlapping sprites on either side of
-      // chunk boundaries. Surface revisions invalidate both chunks.
-      for (const type of ['street', 'rock']) {
-        if (type === 'street' && !organicGround) continue
-        if (type === 'rock' && terracedCliffs) {
-          this.organicTerrain.drawCliffs(ctx, mapGrid, startTileX, startTileY, endTileX, endTileY, offsetX, offsetY, TILE_SIZE)
-          continue
-        }
-        for (let y = Math.max(0, startTileY - 2); y < Math.min(mapGrid.length, endTileY + 2); y++) {
-          for (let x = Math.max(0, startTileX - 2); x < Math.min(mapGrid[0].length, endTileX + 2); x++) {
-            const tile = mapGrid[y][x]
-            if (type === 'street' && (tile.type === 'land' || tile.type === 'water') && !tile.airstripStreet) {
-              this.organicTerrain.drawRoadFringe(ctx, mapGrid, x, y, x * TILE_SIZE - offsetX, y * TILE_SIZE - offsetY, TILE_SIZE)
+            if (skipWaterSot && sotInfo.type === 'water') {
+              if (skipWaterBase && visualTileType !== 'water') {
+                this.clearTriangleArea(ctx, screenX, screenY, TILE_SIZE, sotInfo.orientation)
+              }
+              continue
             }
-            if (tile.type !== type || tile.airstripStreet) continue
-            const sx = x * TILE_SIZE - offsetX
-            const sy = y * TILE_SIZE - offsetY
-            if (type === 'street') this.organicTerrain.drawRoad(ctx, mapGrid, x, y, sx, sy, TILE_SIZE)
-            else this.organicTerrain.drawRock(ctx, mapGrid, x, y, sx, sy, TILE_SIZE)
+            this.drawSOT(ctx, x, y, sotInfo.orientation, scrollOffset, useTexture, sotApplied, sotInfo.type, currentWaterFrame)
           }
+
         }
       }
+      // Coastline transitions are a ground underlay: they must cover water but
+      // remain beneath organic rock/cliffs, tile decals and all entities.
+      if (useTexture && this.useOrganicTerrain(useTexture)) {
+        this.drawOrganicLandTransitions(ctx, mapGrid, startTileX, startTileY, endTileX, endTileY, offsetX, offsetY)
+      }
+      if (useTexture && this.organicTerrain?.ready) {
+        const organicGround = this.useOrganicTerrain(useTexture)
+        const terracedCliffs = this.organicTerrain.cliffs?.complete && this.organicTerrain.cliffs.naturalWidth
+        // Two-cell halo rebuilds the same overlapping sprites on either side of
+        // chunk boundaries. Surface revisions invalidate both chunks.
+        for (const type of ['street', 'rock']) {
+          if (type === 'street' && !organicGround) continue
+          if (type === 'rock' && terracedCliffs) {
+            this.organicTerrain.drawCliffs(ctx, mapGrid, startTileX, startTileY, endTileX, endTileY, offsetX, offsetY, TILE_SIZE)
+            continue
+          }
+          for (let y = Math.max(0, startTileY - 2); y < Math.min(mapGrid.length, endTileY + 2); y++) {
+            for (let x = Math.max(0, startTileX - 2); x < Math.min(mapGrid[0].length, endTileX + 2); x++) {
+              const tile = mapGrid[y][x]
+              if (type === 'street' && (tile.type === 'land' || tile.type === 'water') && !tile.airstripStreet) {
+                this.organicTerrain.drawRoadFringe(ctx, mapGrid, x, y, x * TILE_SIZE - offsetX, y * TILE_SIZE - offsetY, TILE_SIZE)
+              }
+              if (tile.type !== type || tile.airstripStreet) continue
+              const sx = x * TILE_SIZE - offsetX
+              const sy = y * TILE_SIZE - offsetY
+              if (type === 'street') this.organicTerrain.drawRoad(ctx, mapGrid, x, y, sx, sy, TILE_SIZE)
+              else this.organicTerrain.drawRock(ctx, mapGrid, x, y, sx, sy, TILE_SIZE)
+            }
+          }
+        }
+      }
+      if (!skipResourceOverlays) this.drawResourceOverlays(ctx, mapGrid, startTileX, startTileY, endTileX, endTileY, offsetX, offsetY, useTexture)
+    } finally {
+      this.drawingDecorations = previousDrawingDecorations
+      this.groupingMapGrid = previousGroupingMap
     }
-    if (!skipResourceOverlays) this.drawResourceOverlays(ctx, mapGrid, startTileX, startTileY, endTileX, endTileY, offsetX, offsetY, useTexture)
-    this.drawingDecorations = previousDrawingDecorations
-    this.groupingMapGrid = previousGroupingMap
   }
 
   drawResourceOverlays(ctx, mapGrid, startTileX, startTileY, endTileX, endTileY, offsetX, offsetY, useTexture, clipToPage = false) {
@@ -2224,17 +2237,20 @@ export class MapRenderer {
     if (!this.useOrganicTerrain(useTexture)) return
     const previousDrawingDecorations = this.drawingDecorations
     this.drawingDecorations = true
-    for (let y = startTileY; y < endTileY; y++) {
-      for (let x = startTileX; x < endTileX; x++) {
-        const tile = mapGrid[y][x]
-        const screenX = x * TILE_SIZE - offsetX
-        const screenY = y * TILE_SIZE - offsetY
-        if (!this.drawIntegratedLandOverlay(ctx, mapGrid, tile, x, y, screenX, screenY)) {
-          this.organicTerrain.drawDecoration(ctx, mapGrid, x, y, screenX, screenY, TILE_SIZE, this.sotMask[y]?.[x])
+    try {
+      for (let y = startTileY; y < endTileY; y++) {
+        for (let x = startTileX; x < endTileX; x++) {
+          const tile = mapGrid[y][x]
+          const screenX = x * TILE_SIZE - offsetX
+          const screenY = y * TILE_SIZE - offsetY
+          if (!this.drawIntegratedLandOverlay(ctx, mapGrid, tile, x, y, screenX, screenY)) {
+            this.organicTerrain.drawDecoration(ctx, mapGrid, x, y, screenX, screenY, TILE_SIZE, this.sotMask[y]?.[x])
+          }
         }
       }
+    } finally {
+      this.drawingDecorations = previousDrawingDecorations
     }
-    this.drawingDecorations = previousDrawingDecorations
   }
 
   drawOrganicLandTransition(ctx, mapGrid, tileX, tileY, screenX, screenY) {

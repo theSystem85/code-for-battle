@@ -1,7 +1,7 @@
 // rendering.js - Refactored to use modular components
 import { Renderer } from './rendering/renderer.js'
 import { TILE_SIZE } from './config.js'
-import { getCanvasLogicalSize } from './rendering/renderingUtils.js'
+import { getCanvasLogicalSize, getCanvasPixelRatio } from './rendering/renderingUtils.js'
 import { STATIC_TERRAIN_PAGE_LIMIT, staticTerrainPageBytes } from './rendering/prepared/staticTerrainPages.js'
 import { RENDER_REVISION_DOMAINS } from './rendering/prepared/renderRevisionStore.js'
 import {
@@ -14,6 +14,7 @@ export { RENDER_REVISION_DOMAINS }
 
 // Create a single renderer instance
 const gameRenderer = new Renderer()
+let renderRecoveryPending = false
 if (typeof document !== 'undefined') {
   document.addEventListener('canvas-density-changed', () => {
     const grid = gameRenderer.mapRenderer.terrainRevisions.mapGrid
@@ -26,7 +27,28 @@ if (typeof document !== 'undefined') {
 }
 // Export main rendering functions for compatibility with existing code
 export function renderGame(gameCtx, gameCanvas, mapGrid, factories, units, bullets, buildings, scrollOffset, selectionActive, selectionStart, selectionEnd, gameState, gpuContext = null, gpuCanvas = null, webgpuCanvas = null) {
-  return gameRenderer.renderGame(gameCtx, gameCanvas, mapGrid, factories, units, bullets, buildings, scrollOffset, selectionActive, selectionStart, selectionEnd, gameState, gpuContext, gpuCanvas, webgpuCanvas)
+  // One check per frame, independent of entity count and DPR. Lost contexts
+  // cannot present; wait for restoration without stopping simulation/input.
+  if (gameCtx?.isContextLost?.()) return
+  try {
+    const result = gameRenderer.renderGame(gameCtx, gameCanvas, mapGrid, factories, units, bullets, buildings, scrollOffset, selectionActive, selectionStart, selectionEnd, gameState, gpuContext, gpuCanvas, webgpuCanvas)
+    renderRecoveryPending = false
+    return result
+  } catch (error) {
+    // drawImage can reject a source whose backing store was lost during loading.
+    // Reset also removes any unbalanced save/clip left by the interrupted draw.
+    // Programming errors must still surface instead of being silently retried.
+    if (error?.name !== 'InvalidStateError' || !gameCtx || !gameCanvas) throw error
+    const ratio = getCanvasPixelRatio(gameCanvas)
+    const backingWidth = gameCanvas.width
+    gameCanvas.width = backingWidth
+    gameCtx.setTransform(ratio, 0, 0, ratio, 0, 0)
+    gameCtx.imageSmoothingEnabled = true
+    gameCtx.imageSmoothingQuality = 'high'
+    if (!renderRecoveryPending) globalThis.window?.logger?.warn?.('Rendering interrupted by an unavailable image; retrying next frame', error)
+    renderRecoveryPending = true
+    return
+  }
 }
 
 export function renderMinimap(minimapCtx, minimapCanvas, mapGrid, scrollOffset, gameCanvas, units, buildings, gameState) {

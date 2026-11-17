@@ -394,6 +394,62 @@ describe('MapRenderer revisioned terrain cache', () => {
     expect(chunk.decorativeReadyAt).toBe(1234)
   })
 
+  it('[U07193] restores terrain grouping state when a tile image fails during drawing', () => {
+    const renderer = new MapRenderer(makeTextureManager())
+    const mapGrid = makeMap(1, 1)
+    const previousMap = makeMap(2, 2)
+    renderer.groupingMapGrid = previousMap
+    renderer.drawingDecorations = true
+    vi.spyOn(renderer, 'drawTileBase').mockImplementation(() => {
+      throw new DOMException('lost tile', 'InvalidStateError')
+    })
+    expect(() => renderer.drawBaseLayer(makeOutputContext(), mapGrid, 0, 0, 1, 1, 0, 0, false, null)).toThrow('lost tile')
+    expect(renderer.groupingMapGrid).toBe(previousMap)
+    expect(renderer.drawingDecorations).toBe(true)
+  })
+
+  it('[U07194] restores decoration mode when a streamed decoration cannot be drawn', () => {
+    const renderer = new MapRenderer(makeTextureManager())
+    renderer.drawingDecorations = false
+    vi.spyOn(renderer, 'useOrganicTerrain').mockReturnValue(true)
+    vi.spyOn(renderer, 'drawIntegratedLandOverlay').mockImplementation(() => {
+      throw new DOMException('lost decoration', 'InvalidStateError')
+    })
+    expect(() => renderer.drawDecorativeLayer(makeOutputContext(), makeMap(1, 1), 0, 0, 1, 1, 0, 0, true)).toThrow('lost decoration')
+    expect(renderer.drawingDecorations).toBe(false)
+  })
+
+  it('[U07198] invalidates a partly overwritten page after an interrupted refresh', () => {
+    installTraceCanvases()
+    const renderer = new MapRenderer(makeTextureManager())
+    const mapGrid = makeMap(16, 16)
+    const render = () => renderer.renderTiles(makeOutputContext(), mapGrid, { x: 0, y: 0 }, 0, 0, 16, 16, {}, {})
+    render()
+    const chunk = renderer.chunkCache.get('0,0')
+    const originalRaster = [...chunk.ctx.operations]
+    // Match browser canvas semantics: assigning width clears pixels and state.
+    let backingWidth = chunk.canvas.width
+    Object.defineProperty(chunk.canvas, 'width', {
+      get: () => backingWidth,
+      set: value => { backingWidth = value; chunk.ctx.operations.length = 0 }
+    })
+    renderer.terrainRevisions.invalidate(mapGrid, RENDER_REVISION_DOMAINS.SURFACE, { left: 0, top: 0, right: 1, bottom: 1 })
+    expect(chunk.everRendered).toBe(true)
+    const draw = vi.spyOn(renderer, 'drawBaseLayer').mockImplementationOnce(ctx => {
+      ctx.fillRect(0, 0, 2, 2)
+      throw new DOMException('lost image', 'InvalidStateError')
+    })
+    expect(render).toThrow('lost image')
+    expect(chunk.everRendered).toBe(false)
+    expect(chunk.canvas.width).toBe(1)
+    expect(chunk.residentBytes).toBe(0)
+    expect(renderer.terrainByteBudget.usage.terrainStaging).toBe(0)
+    draw.mockRestore()
+    render()
+    expect(chunk.everRendered).toBe(true)
+    expect(chunk.ctx.operations).toEqual(originalRaster)
+  })
+
   it('[U07003] rebuilds a previously loaded terrain page after its context is restored', () => {
     installTraceCanvases()
     const renderer = new MapRenderer(makeTextureManager())

@@ -21,6 +21,21 @@ describe('CanvasManager adaptive DPR', () => {
     document.body.innerHTML = ''
   })
 
+  it('[U07197] restores native overlay scale after context restoration and removes the listener on disposal', () => {
+    document.body.innerHTML = '<canvas id="gameCanvas"></canvas><canvas id="minimap"></canvas>'
+    vi.spyOn(window, 'devicePixelRatio', 'get').mockReturnValue(3)
+    const manager = new CanvasManager()
+    const ctx = manager.getGameContext()
+    vi.spyOn(manager.gameCanvas, 'getContext').mockReturnValue(ctx)
+    const scale = vi.spyOn(ctx, 'scale')
+    manager.gameCanvas.dispatchEvent(new Event('contextrestored'))
+    expect(scale).toHaveBeenCalledWith(3, 3)
+    manager.dispose()
+    scale.mockClear()
+    manager.gameCanvas.dispatchEvent(new Event('contextrestored'))
+    expect(scale).not.toHaveBeenCalled()
+  })
+
   it('[U00784] drops immediately to 1x while the camera is moving', () => {
     vi.spyOn(window, 'devicePixelRatio', 'get').mockReturnValue(3)
     const manager = createAdaptiveManager()

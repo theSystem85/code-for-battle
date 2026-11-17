@@ -47,6 +47,47 @@ describe('rendering.js', () => {
   })
 
   describe('renderGame', () => {
+    it('[U07199] recovers from an unavailable image and renders the next camera position', () => {
+      const renderer = renderingModule.getGameRenderer()
+      const ctx = { setTransform: vi.fn() }
+      const canvas = { width: 1200, height: 1800, style: { width: '400px', height: '600px' } }
+      let backingWidth = canvas.width
+      let leakedClip = false
+      Object.defineProperty(canvas, 'width', {
+        get: () => backingWidth,
+        set: value => { backingWidth = value; leakedClip = false }
+      })
+      const state = { money: 1000 }
+      const error = new DOMException('Image backing store unavailable', 'InvalidStateError')
+      renderer.renderGame.mockImplementationOnce(() => { leakedClip = true; throw error })
+      const draw = scroll => renderingModule.renderGame(ctx, canvas, [[]], [], [], [], [], scroll, false, null, null, state)
+
+      expect(() => draw({ x: 0, y: 0 })).not.toThrow()
+      expect(ctx.setTransform).toHaveBeenCalledWith(3, 0, 0, 3, 0, 0)
+      expect(canvas.width).toBe(1200)
+      expect(leakedClip).toBe(false)
+      draw({ x: 900, y: 600 })
+      expect(renderer.renderGame).toHaveBeenCalledTimes(2)
+      expect(renderer.renderGame.mock.lastCall[7]).toEqual({ x: 900, y: 600 })
+      expect(state.money).toBe(1000)
+    })
+
+    it('[U07195] waits while the main context is lost and resumes when it returns', () => {
+      const renderer = renderingModule.getGameRenderer()
+      const ctx = { isContextLost: vi.fn().mockReturnValue(true) }
+      renderingModule.renderGame(ctx)
+      expect(renderer.renderGame).not.toHaveBeenCalled()
+      ctx.isContextLost.mockReturnValue(false)
+      renderingModule.renderGame(ctx)
+      expect(renderer.renderGame).toHaveBeenCalledOnce()
+    })
+
+    it('[U07196] surfaces programming errors instead of retrying them as image failures', () => {
+      const renderer = renderingModule.getGameRenderer()
+      renderer.renderGame.mockImplementationOnce(() => { throw new TypeError('broken renderer') })
+      expect(() => renderingModule.renderGame({}, {})).toThrow('broken renderer')
+    })
+
     it('[U03719] should export renderGame function', () => {
       expect(typeof renderingModule.renderGame).toBe('function')
     })

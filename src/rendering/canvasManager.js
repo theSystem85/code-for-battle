@@ -26,6 +26,10 @@ export class CanvasManager {
     this.stableCameraSince = 0
     this.resetTerrainDensityGovernor()
     this.handleLayoutChange = () => this.resizeCanvases()
+    this.handleContextRestored = () => {
+      this.gameCtx = this.gameCanvas.getContext('2d')
+      this.resizeCanvases()
+    }
     this.resizeObserver = null
 
     this.setupEventListeners()
@@ -194,6 +198,7 @@ export class CanvasManager {
   }
 
   setupEventListeners() {
+    this.gameCanvas?.addEventListener('contextrestored', this.handleContextRestored)
     window.addEventListener('resize', this.handleLayoutChange)
     window.addEventListener('orientationchange', this.handleLayoutChange)
     window.visualViewport?.addEventListener('resize', this.handleLayoutChange)
@@ -209,6 +214,7 @@ export class CanvasManager {
   }
 
   dispose() {
+    this.gameCanvas?.removeEventListener('contextrestored', this.handleContextRestored)
     window.removeEventListener('resize', this.handleLayoutChange)
     window.removeEventListener('orientationchange', this.handleLayoutChange)
     window.visualViewport?.removeEventListener('resize', this.handleLayoutChange)
