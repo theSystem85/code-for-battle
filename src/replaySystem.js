@@ -1189,7 +1189,7 @@ export function loadReplay(key) {
   }
 
   terminateAllSounds()
-  loadGameFromState(parsed.baselineState, `${TEMP_BASELINE_LABEL_PREFIX}load_${Date.now()}`)
+  const preparation = loadGameFromState(parsed.baselineState, `${TEMP_BASELINE_LABEL_PREFIX}load_${Date.now()}`)
 
   const replay = ensureReplayState()
   replay.playbackActive = true
@@ -1205,6 +1205,7 @@ export function loadReplay(key) {
   gameState.replayMode = true
   syncPauseButtonIcon()
   showNotification(`Loaded replay: ${parsed.label || 'Unnamed replay'}`)
+  return preparation
 }
 
 function isReplayImportPayload(replayObj) {

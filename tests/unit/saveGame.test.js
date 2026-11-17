@@ -793,6 +793,40 @@ describe('saveGame.js', () => {
       }
     })
 
+    it('[U07201] resumes the game loop only after the restored map is ready', async() => {
+      const { getCurrentGame } = await import('../../src/main.js')
+      const { publishPreparedRuntimeMap } = await import('../../src/rendering.js')
+      const previousInstance = window.gameInstance
+      const game = getCurrentGame()
+      const loop = {
+        running: true,
+        stop: vi.fn(),
+        start: vi.fn(),
+        resumeFromPause: vi.fn()
+      }
+      game.gameLoop = loop
+      getCurrentGame.mockReturnValueOnce(game)
+      window.gameInstance = game
+      let finish
+      publishPreparedRuntimeMap.mockReturnValueOnce(new Promise(resolve => { finish = resolve }))
+      localStorage.setItem('rts_save_PreparedMap', JSON.stringify({
+        label: 'PreparedMap',
+        state: JSON.stringify({ gameState: { activeSpriteSheetSelections: [] }, units: [], buildings: [] })
+      }))
+
+      try {
+        expect(saveGameModule.loadGame('rts_save_PreparedMap')).toBe(true)
+        expect(loop.stop).toHaveBeenCalledTimes(1)
+        await vi.waitFor(() => expect(publishPreparedRuntimeMap).toHaveBeenCalledTimes(1))
+        expect(loop.start).not.toHaveBeenCalled()
+        finish()
+        await saveGameModule.waitForSavedGamePreparation()
+        expect(loop.start).toHaveBeenCalledTimes(1)
+      } finally {
+        window.gameInstance = previousInstance
+      }
+    })
+
     it('[U03858] should load builtin mission by key', async() => {
       const { showNotification } = await import('../../src/ui/notifications.js')
 

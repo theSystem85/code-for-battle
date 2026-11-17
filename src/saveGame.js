@@ -112,6 +112,7 @@ let lastPauseState = Boolean(gameState.gamePaused)
 let saveQuotaExceeded = false
 let storageEstimateCache = null
 let mapFileDropListenersAttached = false
+let saveGraphicsReady = Promise.resolve()
 
 function deriveDeterministicSessionSeed(state = {}) {
   return [
@@ -1999,34 +2000,6 @@ function loadGameFromSaveObject(saveObj, key) {
       mapRenderer.invalidateAllChunks()
     }
     const textureManager = getTextureManager()
-    if (textureManager?.setIntegratedSpriteSheetConfig) {
-      const preparedSheetLifecycle = Array.isArray(gameState.activeSpriteSheetSelections) && gameState.activeSpriteSheetSelections.length > 0
-      const restoreSheets = preparedSheetLifecycle
-        ? import('./ui/mapEditorControls.js').then(module => module.applyIntegratedSpriteSheetRuntime(null, { preserveTopology: true, sheetsOverride: loaded.gameState.mapTopologySheets }))
-        : textureManager.setIntegratedSpriteSheetConfig({
-          enabled: Boolean(gameState.useIntegratedSpriteSheetMode),
-          ...(gameState.activeSpriteSheetSelections?.length === 0 ? { sheets: [] } : {}),
-          sheetPath: gameState.activeSpriteSheetPath,
-          metadata: gameState.activeSpriteSheetMetadata,
-          biomeTag: gameState.activeSpriteSheetBiomeTag
-        })
-      restoreSheets.then(async() => {
-        // Restoring the sheet catalog retires the layout published above.
-        textureManager.ensureDecorationLayout?.(mapGrid)
-        if (mapRenderer && !preparedSheetLifecycle) {
-          await withPreparedRendering(() => {
-            mapRenderer.invalidateAllChunks()
-            return publishPreparedRuntimeMap(mapGrid)
-          })
-        }
-        gameState.occupancyMap = initializeOccupancyMap(units, mapGrid, textureManager)
-      }).catch((err) => {
-        window.logger.warn('Failed to apply integrated sprite sheet config after load:', err)
-      })
-    } else {
-      publishPreparedRuntimeMap(mapGrid)
-    }
-
     gameState.occupancyMap = initializeOccupancyMap(units, mapGrid, textureManager)
     updateDangerZoneMaps(gameState)
 
@@ -2134,6 +2107,8 @@ function loadGameFromSaveObject(saveObj, key) {
 
     productionQueue.restoreFromSerializableState(loaded.productionQueueState || null)
 
+    prepareLoadedSaveGraphics(gameInstance?.gameLoop, mapRenderer, textureManager, loaded.gameState.mapTopologySheets)
+
     // Auto-start the game after loading
     gameState.gamePaused = Boolean(window.__cfbUpdateHandoff)
     gameState.gameStarted = true
@@ -2194,15 +2169,54 @@ function loadGameFromSaveObject(saveObj, key) {
       queueMissionIntro(getBuiltinMissionById(key.slice(BUILTIN_SAVE_PREFIX.length)))
     }
 
-    showNotification('Game loaded: ' + (saveObj.label || key) + (topologyMismatch
+    const notifyLoaded = () => showNotification('Game loaded: ' + (saveObj.label || key) + (topologyMismatch
       ? '. This save uses a different sheet/tag configuration; its saved topology is preserved.'
       : ''))
+    if (gameInstance?.gameLoop?.stop) void waitForSavedGamePreparation().then(notifyLoaded)
+    else notifyLoaded()
     return true
   }
 }
 
+function prepareLoadedSaveGraphics(loop, mapRenderer, textureManager, topologySheets) {
+  // Keep synchronous state restore for replay and live-update callers. The loop
+  // and the loading screen must stay suspended while graphics catches up.
+  const previous = saveGraphicsReady
+  const ready = withPreparedRendering(async() => {
+    await previous
+    if (saveGraphicsReady !== ready) return
+    if (textureManager?.setIntegratedSpriteSheetConfig && gameState.activeSpriteSheetSelections?.length) {
+      const { applyIntegratedSpriteSheetRuntime } = await import('./ui/mapEditorControls.js')
+      if (saveGraphicsReady !== ready) return
+      await applyIntegratedSpriteSheetRuntime(null, { preserveTopology: true, sheetsOverride: topologySheets })
+      if (saveGraphicsReady === ready) textureManager.ensureDecorationLayout?.(mapGrid)
+    } else {
+      await textureManager?.setIntegratedSpriteSheetConfig?.({
+        enabled: Boolean(gameState.useIntegratedSpriteSheetMode),
+        ...(gameState.activeSpriteSheetSelections?.length === 0 ? { sheets: [] } : {}),
+        sheetPath: gameState.activeSpriteSheetPath,
+        metadata: gameState.activeSpriteSheetMetadata,
+        biomeTag: gameState.activeSpriteSheetBiomeTag
+      })
+      if (saveGraphicsReady !== ready) return
+      mapRenderer?.invalidateAllChunks()
+      await publishPreparedRuntimeMap(mapGrid)
+    }
+    if (saveGraphicsReady === ready) {
+      gameState.occupancyMap = initializeOccupancyMap(units, mapGrid, textureManager)
+    }
+  }, loop?.stop ? loop : null).catch(error => {
+    window.logger.warn('Failed to prepare restored game graphics:', error)
+  })
+  saveGraphicsReady = ready
+}
+
+export function waitForSavedGamePreparation() {
+  return saveGraphicsReady
+}
+
 export function loadGameFromState(state, label = 'Direct load') {
-  loadGameFromSaveObject({ label, state }, label)
+  if (loadGameFromSaveObject({ label, state }, label)) return waitForSavedGamePreparation()
 }
 
 function presentGameLoad(task, { builtin = false, label = '', kicker = null } = {}) {
@@ -2211,7 +2225,11 @@ function presentGameLoad(task, { builtin = false, label = '', kicker = null } = 
   const fallback = builtin ? 'Starting mission' : 'Loading saved game'
   const detailSource = name ? `${prefix} ${name}` : fallback
   const detail = detailSource.length > 64 ? `${detailSource.slice(0, 61)}...` : detailSource
-  return runWithLoadingScreen(() => task(), {
+  return runWithLoadingScreen(async() => {
+    const result = await task()
+    await waitForSavedGamePreparation()
+    return result
+  }, {
     phase: builtin ? 'mission' : 'save',
     kicker: kicker || (builtin ? 'MISSION' : 'SAVE FILE'),
     detail,
@@ -2611,8 +2629,9 @@ export function initSaveGameSystem() {
       importSaveInput.click()
     })
     importSaveInput.addEventListener('change', async() => {
-      await importSaveGamesFromFiles(importSaveInput.files)
+      const files = Array.from(importSaveInput.files || [])
       importSaveInput.value = ''
+      await importSaveGamesFromFiles(files)
     })
   }
 

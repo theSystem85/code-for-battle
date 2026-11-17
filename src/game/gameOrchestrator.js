@@ -33,7 +33,7 @@ import { initAiPartySync } from '../network/aiPartySync.js'
 import { setProductionControllerRef } from '../network/gameCommandSync.js'
 import { initFactories } from '../factories.js'
 import { initializeGameAssets, generateMap as generateMapFromSetup, cleanupOreFromBuildings } from '../gameSetup.js'
-import { initSaveGameSystem, initLastGameRecovery, maybeResumeLastPausedGame, finishLiveUpdateRecovery, persistLastGameCheckpoint } from '../saveGame.js'
+import { initSaveGameSystem, initLastGameRecovery, maybeResumeLastPausedGame, finishLiveUpdateRecovery, persistLastGameCheckpoint, waitForSavedGamePreparation } from '../saveGame.js'
 import { initReplaySystem } from '../replaySystem.js'
 import { showNotification } from '../ui/notifications.js'
 import { resetAttackDirections } from '../ai/enemyStrategies.js'
@@ -726,7 +726,7 @@ class Game {
         bootMark('systems-start')
         this.setupUI()
         try {
-          this.setupAutoSaveResume()
+          await this.setupAutoSaveResume()
         } catch (error) {
           if (window.__cfbUpdateHandoff) throw error
           window.logger.warn('Failed to restore the saved battle during startup', error)
@@ -977,10 +977,11 @@ class Game {
     })
   }
 
-  setupAutoSaveResume() {
+  async setupAutoSaveResume() {
     initLastGameRecovery()
     const resumed = maybeResumeLastPausedGame()
     if (window.__cfbUpdateHandoff && !resumed) throw new Error('The update could not restore the saved game')
+    if (resumed) await waitForSavedGamePreparation()
   }
 
   setupSpeedControl() {
