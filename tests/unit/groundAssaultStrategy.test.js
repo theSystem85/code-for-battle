@@ -332,6 +332,24 @@ describe('ground assault orchestrator', () => {
     expect(new Set(trucks.map(unit => unit.squadId)).size).toBe(2)
   })
 
+  it('[U07202] resumes a large breach search across eligible ticks without restarting it', () => {
+    const yard = building('far-yard', 'player1', 'constructionYard', 64, 64, { width: 2, height: 2 })
+    const state = strategyState([yard])
+    const units = [tank('first', 'player2', 1, 1), tank('second', 'player2', 2, 1)]
+    const map = grid(70, 70)
+    const start = 1000
+    const bucket = updateGroundAssaultStrategy('player2', units, state, map, start, { headroomMs: 3 })
+    expect(bucket.runs).toBe(1)
+    expect(units[0].aiAssault).toBeUndefined()
+    updateGroundAssaultStrategy('player2', units, state, map, start + 50, { headroomMs: 0 })
+    expect(units[0].aiAssault).toBeUndefined()
+    for (let step = 2; step < 24 && !units[0].aiAssault; step++) {
+      updateGroundAssaultStrategy('player2', units, state, map, start + step * 50, { headroomMs: 3 })
+    }
+    expect(bucket.runs).toBe(1)
+    expect(units[0].aiAssault?.target).toBe(yard)
+  })
+
   it('[U07110] runs the planner at most once every five seconds and skips it without frame headroom', () => {
     const yard = building('yard', 'player1', 'constructionYard', 12, 4, { width: 2, height: 2 })
     const state = strategyState([yard])

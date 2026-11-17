@@ -16,6 +16,8 @@ import { computeBuildingDps, generateDangerZoneMapForPlayer } from '../game/dang
 import { combinedDangerAt, refreshDynamicDangerMaps } from '../game/dynamicDangerZoneMap.js'
 import { getCachedPath } from '../game/pathfinding.js'
 import { getEnemyPlayers } from './enemyUtils.js'
+import { getMapMutationRevisionStore } from '../rendering/prepared/mapMutationNotifier.js'
+import { RENDER_REVISION_DOMAINS } from '../rendering/prepared/renderRevisionStore.js'
 import {
   AIR_DEFENSE_BUILDINGS,
   PLAYER_DEFENSE_BUILDINGS
@@ -28,6 +30,8 @@ export const WOUNDED_HEALTH_FRACTION = 0.8
 export const CRIPPLED_DURABILITY_FACTOR = 0.2
 export const RETREAT_TIME_MARGIN = 0.85
 export const PATH_EXPANSION_CAP = 20000
+const BREACH_HEAP_POPS_PER_TICK = 512
+const evaluationsByState = new WeakMap()
 
 export const SQUAD_TEMPLATE = Object.freeze({
   coreTanks: 3,
@@ -510,7 +514,7 @@ function reconstructPath(parent, index, width) {
   return path
 }
 
-function findMinPeakPath(mapGrid, dangerMap, blocked, origin, goalBuilding, dynamicState = null) {
+function* findMinPeakPath(mapGrid, dangerMap, blocked, origin, goalBuilding, dynamicState, budget) {
   const width = mapGrid[0].length
   const height = mapGrid.length
   const cellCount = width * height
@@ -532,6 +536,8 @@ function findMinPeakPath(mapGrid, dangerMap, blocked, origin, goalBuilding, dyna
   heapPush(heap, { peak: bestPeak[start], dist: 0, index: start })
   let expanded = 0
   while (heap.length && expanded < PATH_EXPANSION_CAP) {
+    if (budget?.remaining === 0) yield
+    if (budget) budget.remaining--
     const item = heapPop(heap)
     if (!item || item.peak !== bestPeak[item.index] || item.dist !== bestDist[item.index]) continue
     expanded++
@@ -570,7 +576,7 @@ function weakestDefence(defences) {
 }
 
 function minimumBreach(defences, tiles) {
-  const remaining = new Set(tiles.map(tile => `${tile.x},${tile.y}`))
+  const remaining = new Set(tiles)
   const pool = defences.slice()
   const chosen = []
   while (remaining.size && pool.length) {
@@ -579,11 +585,8 @@ function minimumBreach(defences, tiles) {
     let bestDps = Infinity
     for (const defence of pool) {
       let count = 0
-      for (const key of remaining) {
-        const comma = key.indexOf(',')
-        const x = Number(key.slice(0, comma))
-        const y = Number(key.slice(comma + 1))
-        if (defenceCoversTile(defence, x, y)) count++
+      for (const tile of remaining) {
+        if (defenceCoversTile(defence, tile.x, tile.y)) count++
       }
       const dps = computeBuildingDps(defence)
       if (count > bestCount || (count === bestCount && count > 0 && dps < bestDps)) {
@@ -595,17 +598,18 @@ function minimumBreach(defences, tiles) {
     if (!best || bestCount === 0) break
     chosen.push(best)
     pool.splice(pool.indexOf(best), 1)
-    for (const key of [...remaining]) {
-      const comma = key.indexOf(',')
-      const x = Number(key.slice(0, comma))
-      const y = Number(key.slice(comma + 1))
-      if (defenceCoversTile(best, x, y)) remaining.delete(key)
+    for (const tile of remaining) {
+      if (defenceCoversTile(best, tile.x, tile.y)) remaining.delete(tile)
     }
   }
   return chosen
 }
 
-export function planWeakestBreach({ mapGrid, dangerMap, buildings, origin, goalBuilding, gameState, dynamicState = null }) {
+export function planWeakestBreach(options) {
+  return runWeakestBreach(options).next().value
+}
+
+function* runWeakestBreach({ mapGrid, dangerMap, buildings, origin, goalBuilding, gameState, dynamicState = null }, budget) {
   const source = buildings || []
   const defences = source.filter(building => defenceIsActive(building, gameState))
   if (!goalBuilding || !mapGrid?.length || !mapGrid[0]?.length) {
@@ -621,7 +625,7 @@ export function planWeakestBreach({ mapGrid, dangerMap, buildings, origin, goalB
   for (const building of source) {
     if (building && building.health > 0) buildingFootprint(building, mapGrid[0].length, mapGrid.length, blocked)
   }
-  const path = findMinPeakPath(mapGrid, dangerMap, blocked, origin || { x: 0, y: 0 }, goalBuilding, dynamicState)
+  const path = yield* findMinPeakPath(mapGrid, dangerMap, blocked, origin || { x: 0, y: 0 }, goalBuilding, dynamicState, budget)
   if (!path) {
     const weakest = weakestDefence(defences)
     return {
@@ -901,12 +905,46 @@ function followSupportUnit(unit, tile, mapGrid, gameState, now) {
 export function updateGroundAssaultStrategy(aiPlayerId, units, gameState, mapGrid, now, options = {}) {
   const bucket = ensureBucket(gameState, aiPlayerId)
   const headroom = options.headroomMs !== undefined ? options.headroomMs : globalThis.__cfbFrameHeadroomMs
-  if (!shouldRunStrategyEvaluation(bucket.evaluatedAt, now, headroom)) return bucket
-  if (!mapGrid?.length || !mapGrid[0]?.length) return bucket
+  if (!mapGrid?.length || !mapGrid[0]?.length || !hasStrategyCpuBudget(headroom)) return bucket
 
-  bucket.evaluatedAt = now
-  bucket.runs += 1
-  refreshDynamicDangerMaps(gameState, units, mapGrid, now, headroom)
+  let evaluations = evaluationsByState.get(gameState)
+  let pending = evaluations?.get(aiPlayerId)
+  if (!pending && !shouldRunStrategyEvaluation(bucket.evaluatedAt, now, headroom)) return bucket
+
+  const store = getMapMutationRevisionStore()
+  const topology = store?.getGeneration(RENDER_REVISION_DOMAINS.TOPOLOGY)
+  const surface = store?.getGeneration(RENDER_REVISION_DOMAINS.SURFACE)
+  if (pending && (pending.mapGrid !== mapGrid || pending.store !== store || pending.topology !== topology ||
+      pending.surface !== surface || pending.bucket !== bucket || pending.buildings !== gameState.buildings)) {
+    evaluations.delete(aiPlayerId)
+    pending = null
+  }
+  if (!pending) {
+    if (!evaluations) {
+      evaluations = new Map()
+      evaluationsByState.set(gameState, evaluations)
+    }
+    refreshDynamicDangerMaps(gameState, units, mapGrid, now, headroom)
+    const budget = { remaining: BREACH_HEAP_POPS_PER_TICK, now }
+    pending = {
+      budget, mapGrid, store, topology, surface, bucket,
+      buildings: gameState.buildings,
+      work: evaluateGroundAssault(aiPlayerId, units, gameState, mapGrid, now, bucket, budget)
+    }
+    evaluations.set(aiPlayerId, pending)
+    bucket.evaluatedAt = now
+    bucket.runs += 1
+  }
+  pending.budget.remaining = BREACH_HEAP_POPS_PER_TICK
+  pending.budget.now = now
+  if (pending.work.next().done) evaluations.delete(aiPlayerId)
+  return bucket
+}
+
+function* evaluateGroundAssault(aiPlayerId, units, gameState, mapGrid, now, bucket, budget) {
+  // A pending search sees a consistent mobile-danger sample across slices.
+  const mobileDanger = gameState.dynamicDangerMaps?.[aiPlayerId]
+  const dynamicState = mobileDanger?.values ? { ...mobileDanger, values: mobileDanger.values.slice() } : null
   const squads = formSquads(units, aiPlayerId)
   const assigned = new Set()
   const rallyTile = ownRallyTile(aiPlayerId, gameState)
@@ -943,17 +981,6 @@ export function updateGroundAssaultStrategy(aiPlayerId, units, gameState, mapGri
       dangerMap = opponentDangerMap(aiPlayerId, mapGrid, opponent.buildings, gameState)
       dangerByOpponent.set(opponent.id, dangerMap)
     }
-    const dynamicState = gameState.dynamicDangerMaps?.[aiPlayerId] || null
-    const breach = planWeakestBreach({
-      mapGrid,
-      dangerMap,
-      buildings: opponent.buildings,
-      origin,
-      goalBuilding: anchor,
-      gameState,
-      dynamicState
-    })
-    const ordered = orderAssaultTargets(opponent.buildings, breach.breachIds)
     const engaging = findEngagingThreats(squad.members, units, opponent.buildings, aiPlayerId, gameState)
     const outcome = engaging.length ? estimateEngagementOutcome(squad.members, engaging) : null
     if (outcome?.shouldRetreat) {
@@ -1015,19 +1042,30 @@ export function updateGroundAssaultStrategy(aiPlayerId, units, gameState, mapGri
     const combatants = readyCombatants(squad.members)
     const groundDefenceCount = countGroundDefences(opponent.buildings, opponent.id)
     const airDefenceCount = countAirDefences(opponent.buildings, units, opponent.id)
-    const breachBuildings = ordered.filter(building => breach.breachIds.includes(building.id))
-    const pathDefenders = defendersNearPath(breach.path, units, opponent.id)
+    let breach = null
     let target = null
     if (mayGroundForceAttackBase({
       combatantCount: combatants.length,
       groundDefenceCount,
       airDefenceCount
     })) {
-      for (const candidate of ordered) {
+      breach = yield* runWeakestBreach({
+        mapGrid,
+        dangerMap,
+        buildings: opponent.buildings,
+        origin,
+        goalBuilding: anchor,
+        gameState,
+        dynamicState
+      }, budget)
+      now = budget.now
+      const ordered = orderAssaultTargets(opponent.buildings, breach.breachIds)
+      const breachBuildings = ordered.filter(building => breach.breachIds.includes(building.id))
+      const pathDefenders = defendersNearPath(breach.path, units, opponent.id)
+      const candidate = ordered[0]
+      if (candidate) {
         const threats = [...threatBuildingsFor(candidate, breachBuildings), ...pathDefenders]
-        if (!squadHasSufficientFirepower(combatants, threats)) break
-        target = candidate
-        break
+        if (squadHasSufficientFirepower(readyCombatants(squad.members), threats)) target = candidate
       }
     }
     if (!target) {
