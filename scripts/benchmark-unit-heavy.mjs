@@ -8,6 +8,7 @@ const url = process.env.BENCHMARK_URL || 'http://127.0.0.1:4176'
 const label = 'CPU benchmark'
 const fixture = process.env.BENCHMARK_FIXTURE || join(output, 'fixture.cfb')
 const profileEnabled = process.env.BENCHMARK_PROFILE === '1'
+const battleOnly = process.env.BENCHMARK_BATTLE_ONLY === '1'
 const unitsPerParty = Number(process.env.BENCHMARK_UNITS_PER_PARTY || 100)
 if (!Number.isSafeInteger(unitsPerParty) || unitsPerParty < 100 || unitsPerParty > 500) {
   throw new Error('BENCHMARK_UNITS_PER_PARTY must be an integer from 100 to 500')
@@ -127,12 +128,27 @@ try {
     await pageSession.send('Profiler.start')
   }
 
-  const result = await page.evaluate(async() => {
+  const result = await page.evaluate(async(battleOnly) => {
     const state = window.gameState
     const { gameLoop, renderer, units } = window.gameInstance
     const canvas = document.getElementById('gameCanvas')
     const selected = units.filter(unit => unit.owner === state.humanPlayer && unit.type.startsWith('tank'))
     selected.forEach(unit => { unit.selected = true })
+    if (battleOnly) {
+      window.selectedUnitsRef?.splice(0, window.selectedUnitsRef.length, ...selected)
+      // Keep the match running without shielding combat units or suppressing hits.
+      for (const base of new Set([...gameLoop.factories, ...state.buildings])) {
+        if (base.type !== 'constructionYard') continue
+        let health = base.health
+        Object.defineProperty(base, 'health', {
+          configurable: true,
+          enumerable: true,
+          get: () => health,
+          set: value => { health = Math.max(1, value) }
+        })
+        Object.defineProperty(base, 'isBeingSold', { configurable: true, get: () => false, set() {} })
+      }
+    }
     const startUnits = units.length
     if (startUnits < 400 || !selected.length || !state.frameLimiterEnabled) {
       throw new Error(`Unexpected fixture or frame limiter: ${startUnits} units, ${selected.length} selected`)
@@ -151,8 +167,8 @@ try {
     route.push(route[0])
     const lengths = route.slice(1).map(([x, y], index) => Math.hypot(x - route[index][0], y - route[index][1]))
     const distance = lengths.reduce((sum, value) => sum + value, 0)
-    const speed = 3600
-    const duration = Math.max(60000, 2 * distance / speed * 1000)
+    const speed = battleOnly ? 0 : 3600
+    const duration = battleOnly ? 60000 : Math.max(60000, 2 * distance / speed * 1000)
     const intervals = []
     const cpuFrames = []
     const samples = []
@@ -205,14 +221,16 @@ try {
           if (previous !== undefined) intervals.push(now - previous)
           previous = now
           const elapsed = now - start
-          let remaining = (elapsed * speed / 1000) % distance
-          let segment = 0
-          while (remaining > lengths[segment]) remaining -= lengths[segment++]
-          const [x, y] = route[segment]
-          const [nextX, nextY] = route[segment + 1]
-          const fraction = remaining / lengths[segment]
-          desiredX = x + (nextX - x) * fraction
-          desiredY = y + (nextY - y) * fraction
+          if (!battleOnly) {
+            let remaining = (elapsed * speed / 1000) % distance
+            let segment = 0
+            while (remaining > lengths[segment]) remaining -= lengths[segment++]
+            const [x, y] = route[segment]
+            const [nextX, nextY] = route[segment + 1]
+            const fraction = remaining / lengths[segment]
+            desiredX = x + (nextX - x) * fraction
+            desiredY = y + (nextY - y) * fraction
+          }
           if (elapsed < duration) requestAnimationFrame(frame)
           else resolve()
         }
@@ -223,12 +241,15 @@ try {
       renderer.renderGame = render
       display.reportFrameBreakdown = report
     }
+    if (battleOnly && (state.gameOver || state.localPlayerDefeated || maxBullets === 0 || state.gamePaused)) {
+      throw new Error('Stationary benchmark did not sustain active combat')
+    }
     return {
       startUnits, endUnits: units.length, maxBullets, selected: selected.length, duration, distance, speed,
       intervals, cpuFrames, samples, longTasks, backend: state.renderStats?.gpuTerrain?.backend,
       browserDpr: devicePixelRatio, canvas: [canvas.width, canvas.height, canvas.clientWidth, canvas.clientHeight]
     }
-  })
+  }, battleOnly)
   if (profileEnabled) {
     const { profile } = await pageSession.send('Profiler.stop')
     await writeFile(join(output, 'cpu.cpuprofile'), JSON.stringify(profile))
@@ -252,13 +273,12 @@ try {
   }
   const average = key => cpuFrames.reduce((sum, frame) => sum + frame[key], 0) / cpuFrames.length
   const summary = {
-    cadence, preparationMs,
+    cadence, preparationMs, scene: battleOnly ? 'stationary battle' : 'fast scrolling',
     averageFps: intervals.length * 1000 / elapsed,
     minimumOneSecondFps,
     slowestFrameFps: 1000 / percent(1),
     p95Ms: percent(0.95), p99Ms: percent(0.99), maxMs: percent(1),
     intervalsOver60Budget: intervals.filter(ms => ms > 1000 / 60).length,
-    intervalsOver75Budget: intervals.filter(ms => ms > 1000 / 75).length,
     averageUpdateMs: average('updateMs'), averageRenderMs: average('renderMs'),
     startUnits: result.startUnits, endUnits: result.endUnits, maxBullets: result.maxBullets,
     selected: result.selected, routeLaps: result.duration * result.speed / 1000 / result.distance,

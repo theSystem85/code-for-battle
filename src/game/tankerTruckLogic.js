@@ -11,9 +11,7 @@ import {
 } from './tankerTruckUtils.js'
 import { requestRefuelPump } from '../audio/serviceLoops.js'
 import { playSound } from '../sound.js'
-function normalizeServiceOwner(owner) {
-  return owner === 'player' ? 'player1' : owner
-}
+import { lookupServiceUnit, normalizeServiceOwner } from './serviceUnitIndex.js'
 
 function isAirborneServiceTarget(unit) {
   if (!unit) return false
@@ -28,18 +26,19 @@ function isEligibleFriendlyGroundServiceTarget(source, unit) {
 
 const AUTO_REFUEL_SCAN_INTERVAL = 10000
 
-export const updateTankerTruckLogic = logPerformance(function(units, gameState, delta) {
-  const tankers = units.filter(u => !u.factoryExit && u.type === 'tankerTruck' && u.health > 0)
+export const updateTankerTruckLogic = logPerformance(function(units, gameState, delta, serviceIndex = null) {
+  const tankers = serviceIndex?.tankers || units.filter(u => !u.factoryExit && u.type === 'tankerTruck' && u.health > 0)
   if (tankers.length === 0) return
 
   // IMMEDIATE RESPONSE: Check for units that just ran out of gas completely
-  handleEmergencyFuelRequests(tankers, units, gameState)
+  handleEmergencyFuelRequests(units, gameState)
 
   const unitCommands = getUnitCommandsHandler ? getUnitCommandsHandler() : null
 
   tankers.forEach(tanker => {
+    const friendly = serviceIndex?.friendly(tanker.owner) || units
     if (tanker.kamikazeMode) {
-      handleKamikazeBehavior(tanker, units, gameState)
+      handleKamikazeBehavior(tanker, units, gameState, serviceIndex)
       return
     }
 
@@ -70,32 +69,13 @@ export const updateTankerTruckLogic = logPerformance(function(units, gameState, 
       tanker.supplyGas = TANKER_SUPPLY_CAPACITY
     }
 
-    // Add periodic debugging for tankers
-    if (!tanker.lastDebugTime || performance.now() - tanker.lastDebugTime > 5000) {
-      const nearbyUnits = units.filter(u =>
-        u.id !== tanker.id &&
-        u.owner === tanker.owner &&
-        typeof u.maxGas === 'number' &&
-        Math.abs(u.tileX - tanker.tileX) <= 2 &&
-        Math.abs(u.tileY - tanker.tileY) <= 2
-      )
-      if (nearbyUnits.length > 0) {
-        nearbyUnits.forEach(u => {
-          const _distance = Math.abs(u.tileX - tanker.tileX) + Math.abs(u.tileY - tanker.tileY)
-          const _gasPercent = Math.round((u.gas / u.maxGas) * 100)
-          const _needsFuel = u.gas < (u.maxGas * 0.95) ? ' NEEDS FUEL' : ' (full)'
-        })
-      }
-      tanker.lastDebugTime = performance.now()
-    }
-
     // Handle emergency refueling missions first
     if (queueActive) {
       tanker.emergencyTarget = null
       tanker.emergencyMode = false
       tanker.emergencyStartTime = null
     } else if (tanker.emergencyTarget) {
-      const emergencyUnit = units.find(u => u.id === tanker.emergencyTarget.id)
+      const emergencyUnit = lookupServiceUnit(serviceIndex, units, tanker.emergencyTarget.id)
 
       // Clear emergency mission if target is gone, healthy, or has sufficient fuel
       if (!emergencyUnit || emergencyUnit.health <= 0 ||
@@ -129,7 +109,7 @@ export const updateTankerTruckLogic = logPerformance(function(units, gameState, 
     if (canAutoScan && unitCommands) {
       const nextScan = tanker.nextUtilityScanTime || 0
       if (now >= nextScan) {
-        const candidates = units
+        const candidates = friendly
           .filter(u =>
             u.id !== tanker.id &&
             isEligibleFriendlyGroundServiceTarget(tanker, u) &&
@@ -170,7 +150,7 @@ export const updateTankerTruckLogic = logPerformance(function(units, gameState, 
     if (!tanker.refuelTarget && !queueActive && !tanker.alertMode && !queueState?.lockedByUser) {
       // This logic is now mainly for player-controlled tankers that get close without a specific target
       // AI tankers should have refuelTarget set by the AI strategy system
-      const target = units
+      const target = friendly
         .filter(u =>
           u.id !== tanker.id &&
           isEligibleFriendlyGroundServiceTarget(tanker, u) &&
@@ -208,12 +188,7 @@ export const updateTankerTruckLogic = logPerformance(function(units, gameState, 
     }
 
     if (tanker.refuelTarget) {
-      const target = units.find(u => u.id === tanker.refuelTarget.id)
-
-      // Debug: Log refuelTarget details
-      if (!tanker.lastRefuelDebug || performance.now() - tanker.lastRefuelDebug > 2000) {
-        tanker.lastRefuelDebug = performance.now()
-      }
+      const target = lookupServiceUnit(serviceIndex, units, tanker.refuelTarget.id)
 
       const distanceToTarget = target ? serviceUnitDistanceTiles(tanker, target) : Infinity
       if (!target ||
@@ -309,7 +284,8 @@ export const updateTankerTruckLogic = logPerformance(function(units, gameState, 
  * Handles immediate emergency fuel requests for units that just ran out of gas
  * This ensures tanker trucks respond immediately to completely out-of-gas units
  */
-function handleEmergencyFuelRequests(tankers, units, gameState) {
+function handleEmergencyFuelRequests(units, gameState) {
+  if (!units.some(unit => unit?.needsEmergencyFuel && unit.emergencyFuelRequestTime)) return
   // Group units and tankers by owner
   const playerGroups = {}
 
@@ -393,7 +369,7 @@ function handleEmergencyFuelRequests(tankers, units, gameState) {
   })
 }
 
-function handleKamikazeBehavior(tanker, units, gameState) {
+function handleKamikazeBehavior(tanker, units, gameState, serviceIndex) {
   const mapGrid = gameState.mapGrid
   if (!mapGrid || mapGrid.length === 0) {
     return
@@ -409,8 +385,8 @@ function handleKamikazeBehavior(tanker, units, gameState) {
   const occupancyMap = gameState.occupancyMap
 
   if (tanker.kamikazeTargetType === 'unit' && tanker.kamikazeTargetId) {
-    const targetUnit = units.find(u => u.id === tanker.kamikazeTargetId && u.health > 0)
-    if (!targetUnit) {
+    const targetUnit = lookupServiceUnit(serviceIndex, units, tanker.kamikazeTargetId)
+    if (!(targetUnit?.health > 0)) {
       clearTankerKamikazeState(tanker)
       return
     }

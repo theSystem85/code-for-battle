@@ -41,6 +41,7 @@ import { updateWorkshopLogic } from './game/workshopLogic.js'
 import { updateBullets } from './game/bulletSystem.js'
 import { updateWreckPhysics } from './game/unitWreckManager.js'
 import { updateHospitalLogic } from './game/hospitalLogic.js'
+import { ServiceUnitIndex } from './game/serviceUnitIndex.js'
 import { updateAmbulanceLogic } from './game/ambulanceSystem.js'
 import { updateGasStationLogic } from './game/gasStationLogic.js'
 import { updateAmmunitionSystem } from './game/ammunitionSystem.js'
@@ -163,6 +164,7 @@ registerUnitBuildDeliveryHandler((unit, delivery) => {
   }
   return executeUnitCommand(command, unit, { target }, context)
 })
+const serviceUnitIndex = new ServiceUnitIndex()
 const DESTRUCTION_FREEZE_SMOKE_INTERVAL_MS = 180
 const DESTRUCTION_FREEZE_SMOKE_COUNT = 3
 const DESTRUCTION_FREEZE_SMOKE_SHADE = 0.9
@@ -565,17 +567,18 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
       updateHarvesterLogic(units, mapGrid, occupancyMap, gameState, factories, now)
       updateWorkshopLogic(units, gameState.buildings, mapGrid, delta)
 
-      updateRecoveryTankLogic(units, gameState, delta)
+      serviceUnitIndex.rebuild(units)
+      updateRecoveryTankLogic(units, gameState, delta, serviceUnitIndex)
 
       openRefuelPumpFrame()
       updateHospitalLogic(units, gameState.buildings, gameState, delta)
-      updateAmbulanceLogic(units, gameState, delta)
+      updateAmbulanceLogic(units, gameState, delta, serviceUnitIndex)
       updateGasStationLogic(units, gameState.buildings, gameState, delta)
       updateAmmunitionSystem(units, gameState.buildings, gameState, delta)
       updateShipyardServiceLogic(units, gameState.buildings, mapGrid, delta)
       updateHelipadLogic(units, gameState.buildings, gameState, delta)
       updateFireSystem(units, gameState, mapGrid, delta, factoryExitFindPath)
-      updateTankerTruckLogic(units, gameState, delta)
+      updateTankerTruckLogic(units, gameState, delta, serviceUnitIndex)
       closeRefuelPumpFrame()
       updateAmmunitionTruckLogic(units, gameState, delta)
       // Update mine system (arming, etc.)

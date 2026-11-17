@@ -6,9 +6,7 @@ import { getUnitCommandsHandler } from '../inputHandler.js'
 import { getServiceRadiusPixels } from '../utils/serviceRadius.js'
 import { computeUtilityApproachPath, UTILITY_QUEUE_MODES } from '../input/unitCommands/utilityHelpers.js'
 import { playSound } from '../sound.js'
-function normalizeServiceOwner(owner) {
-  return owner === 'player' ? 'player1' : owner
-}
+import { lookupServiceUnit, normalizeServiceOwner } from './serviceUnitIndex.js'
 
 function isAirborneServiceTarget(unit) {
   if (!unit) return false
@@ -21,7 +19,7 @@ function isEligibleFriendlyGroundServiceTarget(source, unit) {
   return normalizeServiceOwner(source.owner) === normalizeServiceOwner(unit.owner) && !isAirborneServiceTarget(unit)
 }
 
-export const updateAmbulanceLogic = logPerformance(function(units, gameState, delta) {
+export const updateAmbulanceLogic = logPerformance(function(units, gameState, delta, serviceIndex = null) {
   // Reset active service markers before processing to avoid stale indicators
   if (Array.isArray(units)) {
     units.forEach(unit => {
@@ -31,12 +29,13 @@ export const updateAmbulanceLogic = logPerformance(function(units, gameState, de
     })
   }
 
-  const ambulances = units.filter(u => !u.factoryExit && u.type === 'ambulance')
+  const ambulances = serviceIndex?.ambulances || units.filter(u => !u.factoryExit && u.type === 'ambulance')
   if (ambulances.length === 0) return
 
   const unitCommands = getUnitCommandsHandler ? getUnitCommandsHandler() : null
 
   ambulances.forEach(ambulance => {
+    const friendly = serviceIndex?.friendly(ambulance.owner) || units
     const queueState = ambulance.utilityQueue
     const queueActive = queueState && queueState.mode === 'heal' && (
       (Array.isArray(queueState.targets) && queueState.targets.length > 0) || queueState.currentTargetId
@@ -76,7 +75,7 @@ export const updateAmbulanceLogic = logPerformance(function(units, gameState, de
       for (let i = 0; i < maxQueueChecks; i++) {
         const request = pendingQueue.shift()
         if (!request) continue
-        const target = units.find(u => u.id === request.unitId)
+        const target = lookupServiceUnit(serviceIndex, units, request.unitId)
         if (!target || !target.crew || typeof target.crew !== 'object') {
           continue
         }
@@ -99,7 +98,7 @@ export const updateAmbulanceLogic = logPerformance(function(units, gameState, de
     if (canAutoScan && unitCommands) {
       const nextScan = ambulance.nextUtilityScanTime || 0
       if (now >= nextScan) {
-        const candidates = units
+        const candidates = friendly
           .filter(u =>
             u.id !== ambulance.id &&
             isEligibleFriendlyGroundServiceTarget(ambulance, u) &&
@@ -134,7 +133,7 @@ export const updateAmbulanceLogic = logPerformance(function(units, gameState, de
 
     // Auto-acquire healing target if none set (legacy close-range behaviour)
     if (!ambulance.healingTarget && !queueActive && !ambulance.alertMode) {
-      const potential = units.find(u =>
+      const potential = friendly.find(u =>
         u.id !== ambulance.id &&
         isEligibleFriendlyGroundServiceTarget(ambulance, u) &&
         u.crew && typeof u.crew === 'object' &&
@@ -151,7 +150,7 @@ export const updateAmbulanceLogic = logPerformance(function(units, gameState, de
       const target = ambulance.healingTarget
 
       // Check if target still exists and is within range
-      const targetExists = units.find(u => u.id === target.id)
+      const targetExists = lookupServiceUnit(serviceIndex, units, target.id)
       if (!targetExists) {
         ambulance.healingTarget = null
         ambulance.healingTimer = 0

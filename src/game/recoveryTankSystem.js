@@ -13,9 +13,7 @@ import {
   updateWreckPositionFromTank,
   releaseWreckAssignment
 } from './unitWreckManager.js'
-function normalizeServiceOwner(owner) {
-  return owner === 'player' ? 'player1' : owner
-}
+import { normalizeServiceOwner } from './serviceUnitIndex.js'
 
 function isAirborneServiceTarget(unit) {
   if (!unit) return false
@@ -275,13 +273,14 @@ function handleRecycleTask(tank, task, wreck, gameState, delta) {
   }
 }
 
-export const updateRecoveryTankLogic = logPerformance(function(units, gameState, delta) {
-  const tanks = units.filter(u => !u.factoryExit && u.type === 'recoveryTank')
+export const updateRecoveryTankLogic = logPerformance(function(units, gameState, delta, serviceIndex = null) {
+  const tanks = serviceIndex?.recoveryTanks || units.filter(u => !u.factoryExit && u.type === 'recoveryTank')
   if (tanks.length === 0) return
 
   const unitCommands = getUnitCommandsHandler ? getUnitCommandsHandler() : null
 
   tanks.forEach(tank => {
+    const friendly = serviceIndex?.friendly(tank.owner) || units
     const queueState = tank.utilityQueue
     const now = performance?.now ? performance.now() : Date.now()
     const wasServing = Boolean(tank._alertWasServing)
@@ -355,7 +354,7 @@ export const updateRecoveryTankLogic = logPerformance(function(units, gameState,
     if (canAutoScan && unitCommands) {
       const nextScan = tank.nextUtilityScanTime || 0
       if (now >= nextScan) {
-        const damagedCandidates = units
+        const damagedCandidates = friendly
           .filter(u =>
             u.id !== tank.id &&
             isEligibleFriendlyGroundServiceTarget(tank, u) &&
@@ -435,7 +434,7 @@ export const updateRecoveryTankLogic = logPerformance(function(units, gameState,
         if (tank.repairTargetUnit && tank.repairTargetUnit.health >= tank.repairTargetUnit.maxHealth) {
           tank.repairTargetUnit = null
         }
-        target = units.find(u =>
+        target = friendly.find(u =>
           isEligibleFriendlyGroundServiceTarget(tank, u) &&
           u !== tank &&
           u.health < u.maxHealth &&

@@ -10,7 +10,8 @@ const [before, after] = captures
 const a = before.summary
 const b = after.summary
 const backend = summary => summary.backend?.backend || summary.backend
-if (a.startUnits !== b.startUnits || a.routeLaps !== b.routeLaps || a.browserDpr !== b.browserDpr ||
+const scene = summary => summary.scene || 'fast scrolling'
+if (scene(a) !== scene(b) || a.startUnits !== b.startUnits || a.routeLaps !== b.routeLaps || a.browserDpr !== b.browserDpr ||
     String(a.canvas) !== String(b.canvas) || backend(a) !== backend(b) || before.profileEnabled !== after.profileEnabled) {
   throw new Error('Capture settings differ. Compare like-for-like runs.')
 }
@@ -27,7 +28,7 @@ const sample = (key, unit = 1) => capture => {
   return values.length ? percentile(values, 0.95) : NaN
 }
 
-console.log(`Both captures used headed Chrome ${before.browser}, hardware ${before.gpu.devices[0].deviceString}, ${backend(a)} terrain, DPR ${a.browserDpr}, and a ${a.canvas[2]}×${a.canvas[3]} CSS-pixel viewport. The route covered ${a.routeLaps.toFixed(2)} laps from a ${a.startUnits}-unit save. V8 sampling was ${before.profileEnabled ? 'enabled' : 'disabled'} for both runs. Minimum FPS is the worst trailing one-second callback count.
+console.log(`Both captures used headed Chrome ${before.browser}, hardware ${before.gpu.devices[0].deviceString}, ${backend(a)} terrain, DPR ${a.browserDpr}, and a ${a.canvas[2]}×${a.canvas[3]} CSS-pixel viewport. The ${scene(a)} scenario loaded a ${a.startUnits}-unit save${a.routeLaps ? ` and covered ${a.routeLaps.toFixed(2)} laps` : ' with the camera held on the battle'}. V8 sampling was ${before.profileEnabled ? 'enabled' : 'disabled'} for both runs. Minimum FPS is the worst trailing one-second callback count.
 
 | Metric | Before | After | Change |
 | --- | ---: | ---: | ---: |
