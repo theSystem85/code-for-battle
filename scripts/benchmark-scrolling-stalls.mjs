@@ -1,4 +1,4 @@
-// Headed hardware-GPU diagnostic, not a 75 FPS certificate. Run serially.
+// Headed hardware-GPU diagnostic, not a 60 FPS certificate. Run serially.
 import { chromium } from 'playwright';
 import fs from 'node:fs';
 const browser=await chromium.launch({channel:'chrome',headless:false,ignoreDefaultArgs:['--enable-unsafe-swiftshader']});

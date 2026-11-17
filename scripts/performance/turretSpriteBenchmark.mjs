@@ -1,4 +1,4 @@
-// Scoped renderer stress diagnostic; headless results cannot certify presented 75 FPS.
+// Scoped renderer stress diagnostic; headless results cannot certify presented 60 FPS.
 import process from 'node:process'
 import { URL } from 'node:url'
 import console from 'node:console'
@@ -45,7 +45,7 @@ for(const dpr of [1,2,3]) {
    times.push(globalThis.performance.now()-start)
   }
   const summary=a=>{const b=[...a].sort((a,b)=>a-b);return{p95:b[Math.floor(b.length*.95)],p99:b[Math.floor(b.length*.99)],max:b.at(-1),mean:a.reduce((x,y)=>x+y,0)/a.length}}
-  return {dpr,backend:'Canvas2D headless Chromium',entities:240,cpu:summary(times),coldCpu:summary(times.slice(0,30)),repeatCpu:summary(times.slice(30)),frame:summary(frames),fps:1000/(frames.reduce((a,b)=>a+b,0)/frames.length),missed:frames.filter(x=>x>1000/75).length,initialHeap,heap:globalThis.performance.memory?.usedJSHeapSize}
+  return {dpr,backend:'Canvas2D headless Chromium',entities:240,cpu:summary(times),coldCpu:summary(times.slice(0,30)),repeatCpu:summary(times.slice(30)),frame:summary(frames),fps:1000/(frames.reduce((a,b)=>a+b,0)/frames.length),missed:frames.filter(x=>x>1000/60).length,initialHeap,heap:globalThis.performance.memory?.usedJSHeapSize}
  },dpr))
  await context.close()
 }

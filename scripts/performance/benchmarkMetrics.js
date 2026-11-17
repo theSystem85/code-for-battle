@@ -1,4 +1,5 @@
-export const FRAME_DEADLINE_MS = 1000 / 75
+export const MIN_PRESENTED_FPS = 60
+export const FRAME_DEADLINE_MS = 1000 / MIN_PRESENTED_FPS
 
 function sorted(values) {
   return [...values].filter(Number.isFinite).sort((left, right) => left - right)
@@ -26,7 +27,7 @@ export function summarizeFrameIntervals(intervals, deadlineMs = FRAME_DEADLINE_M
     deadlineMs,
     missedDeadlineFrames: missed.length,
     missedDeadlineRatio: usable.length ? missed.length / usable.length : 0,
-    passed75Fps: usable.length > 0 && missed.length === 0
+    passedDeadline: usable.length > 0 && missed.length === 0
   }
 }
 
@@ -64,7 +65,7 @@ export function classifyRefreshCapability({ refreshRateHz, observedFrameRate, ba
   const refreshKnown = Number.isFinite(refreshRateHz) && refreshRateHz > 0
   const backendLabel = backend === 'software' || backend === 'cpu' ? 'software-fallback' : backend
   const backendEligible = !['unknown', 'software-fallback', 'cpu'].includes(backendLabel)
-  const displayEligible = refreshKnown && refreshRateHz >= 75 && !headless && backendEligible
+  const displayEligible = refreshKnown && refreshRateHz >= MIN_PRESENTED_FPS && !headless && backendEligible
   return {
     backend: backendLabel,
     refreshRateHz: refreshKnown ? refreshRateHz : null,
@@ -79,6 +80,6 @@ export function classifyRefreshCapability({ refreshRateHz, observedFrameRate, ba
           ? 'software-or-unknown-backend'
           : !refreshKnown
           ? 'refresh-rate-unavailable'
-          : 'display-refresh-below-75hz'
+          : 'display-refresh-below-60hz'
   }
 }

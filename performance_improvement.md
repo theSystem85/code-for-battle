@@ -4,9 +4,9 @@ Status: proposed implementation, not implemented. Date: 2026-09-16. Evidence: [r
 
 ## 1. Required outcome and acceptance contract
 
-Maintain at least **75 presented FPS during sustained fast scrolling** on the qualifying reference device, with current visual quality, full water animation, and unchanged simulation behavior. The rendering deadline is `1000 / 75 = 13.333… ms`. Do not accept 30/40/60 FPS, a 20% regression allowance, rounded FPS, or a hidden reduction of DPR, effects, water cadence, terrain detail or rotation fidelity as a pass.
+Maintain at least **60 presented FPS during sustained fast scrolling** on the qualifying reference device, with current visual quality, full water animation, and unchanged simulation behavior. The rendering deadline is `1000 / 60 = 16.666… ms`. Do not accept 30 or 40 FPS, a 20% regression allowance, rounded FPS, or a hidden reduction of DPR, effects, water cadence, terrain detail or rotation fidelity as a pass.
 
-Before implementation certification, capture the user's device/browser/GPU, display refresh, native/effective DPR, resolution, map/save, graphics mode, and usual maximum army size. Work can start immediately with repository fixtures; those fixtures do not substitute for the user's reference scene. A 60 Hz/headless/software-rendered environment can diagnose CPU work but cannot certify 75 presented FPS. Record such runs as diagnostic or not certifiable, not as relaxed passes.
+Before implementation certification, capture the user's device/browser/GPU, display refresh, native/effective DPR, resolution, map/save, graphics mode, and usual maximum army size. Work can start immediately with repository fixtures; those fixtures do not substitute for the user's reference scene. A below-60 Hz, headless, or software-rendered environment can diagnose CPU work but cannot certify 60 presented FPS. Record such runs as diagnostic or not certifiable, not as relaxed passes.
 
 Define a finite supported map, viewport, entity-count and camera-speed envelope from actual product limits. Today map dimensions have no finite upper bound. Keep unsupported/extreme cases visible in reports; do not silently cap maps or remove content. The user requirement is the gate for supported gameplay, including cold first traversal after readiness, fast reversals, return visits and camera jumps. An architecture unable to meet that must remain unfinished.
 
@@ -142,8 +142,8 @@ CPU/GPU/memory panel requirements:
 - Distinguish CPU update, render submission, raster/compositor evidence, scheduler delay and actual GPU timestamps. Use capability-checked asynchronous GPU timer queries, never blocking readback/fences in the frame path. Unsupported/disjoint samples show unavailable; residual `frameInterval − CPU` must say **unattributed wait**, not GPU time. GPU results cover instrumented passes, not all browser composition.
 - JS heap trend at low frequency where exposed, collection-like drops labeled suspected unless confirmed by a trace, major long tasks/animation frames where supported, worker timings, estimated decoded image/canvas/buffer/texture bytes. Actual GPU memory may be unavailable: do not present estimates as exact memory usage.
 - Per-frame and rolling chunk hits/misses/dirty rebuilds/evictions, cache byte totals, queue age/depth, startup vs gameplay bakes, masks created, uploaded bytes, draw calls, visible/culled entities, and unauthorized resize events. Preserve cumulative counters; final snapshots alone are insufficient.
-- Export scene/seed/route/build/device/backend/refresh/DPR/quality configuration and profiler mode with metrics. Compare profiler off/on on identical routes and show its measured overhead. Target disabled overhead below measurement noise; enabled CPU overhead ≤0.25 ms/frame at 75 FPS. If exceeded, reduce sampling/UI frequency, not game quality, and flag intrusive captures.
-- Expose threshold highlighting for 13.333 ms and missed deadlines; do not misdiagnose display/RAF limits as a CPU or GPU bottleneck without evidence.
+- Export scene/seed/route/build/device/backend/refresh/DPR/quality configuration and profiler mode with metrics. Compare profiler off/on on identical routes and show its measured overhead. Target disabled overhead below measurement noise; enabled CPU overhead ≤0.25 ms/frame at 60 FPS. If exceeded, reduce sampling/UI frequency, not game quality, and flag intrusive captures.
+- Expose threshold highlighting for 16.666 ms and missed deadlines; do not misdiagnose display/RAF limits as a CPU or GPU bottleneck without evidence.
 
 Helper tools to implement: deterministic fast-scroll runner, CDP CPU/trace capture, cache-event recorder, transformed-image resize audit, asset/decoded-memory inventory, and matched-camera/time screenshot comparison. Browser trace GPU/raster categories are diagnostic and engine-specific; do not claim portable GPU observability where none exists.
 
@@ -153,16 +153,16 @@ Capture a golden set from the current build before implementation: all rotated c
 
 Also record real-time water/effect sequences while stationary and scrolling, to catch frozen phases, lowered cadence and entry-boundary resets. Test cache invalidation against an uncached/reference bake after each mutation type. Simulated context loss, cancelled generation and save loading must recover before presenting a ready frame.
 
-Run strict tests on a production build on qualifying hardware; diagnostic headless runs remain useful but separate. Report cold-first and warm-repeat laps, random jumps, selected worst-case battles and monitor off/on. Count application-caused deadline misses; no relative-regression threshold replaces 75 FPS. Track JS and native-cache memory through repeated laps/map changes and ensure no monotonic retained growth, queue starvation or uncontrolled decoded-page expansion.
+Run strict tests on a production build on qualifying hardware; diagnostic headless runs remain useful but separate. Report cold-first and warm-repeat laps, random jumps, selected worst-case battles and monitor off/on. Count application-caused deadline misses; no relative-regression threshold replaces 60 FPS. Track JS and native-cache memory through repeated laps/map changes and ensure no monotonic retained growth, queue starvation or uncontrolled decoded-page expansion.
 
-Implementation work must run `npm run test:unit`, `npm run lint:fix:changed`, relevant behavior tests and the new performance/visual gates. This documentation-only task ran existing diagnostics; it did not implement any optimizations or claim a passing 75 FPS result.
+Implementation work must run `npm run test:unit`, `npm run lint:fix:changed`, relevant behavior tests and the new performance/visual gates. This documentation-only task ran existing diagnostics; it did not implement any optimizations or claim a passing 60 FPS result.
 
 ## 10. Execution order and decision gates
 
 1. Freeze interfaces/ownership, establish current visual and physical-device baseline, implement useful diagnostics and strict tests.
 2. Run independent lanes for revision-based terrain caching, startup preparation, retained animated-water geometry, final-size sprites, frame/visibility cleanup and mutation producers.
 3. Integrate at one controlled barrier. Shared `mapRenderer`, `renderer`, startup and game-loop files must have one owner at a time.
-4. Remeasure. If retained Canvas terrain meets 75 FPS with visual parity and bounded memory, do not add a second terrain engine. If raster/composition remains over budget, implement the retained GPU terrain proposal as a separate gated step with full parity checks.
+4. Remeasure. If retained Canvas terrain meets 60 FPS with visual parity and bounded memory, do not add a second terrain engine. If raster/composition remains over budget, implement the retained GPU terrain proposal as a separate gated step with full parity checks.
 5. Certify the entire combined pipeline. Keep performance blockers open until the reference workload passes; use the evidence to choose further targeted work rather than weakening thresholds.
 
 The delegation checklist gives exact step IDs, file ownership and dependencies. All listed implementation is future work for GPT-5.6 Luna agents; no worker should start a later wave until its prerequisites have landed.

@@ -133,7 +133,7 @@ try {
   }
   const cpuTails = Object.fromEntries(Object.entries(measurement.cpuFrames).map(([phase, samples]) => {
     const values = samples.filter(value => Number.isFinite(value) && value >= 0)
-    return [phase, { samples: values.length, p50Ms: percentile(values, 0.5), p95Ms: percentile(values, 0.95), p99Ms: percentile(values, 0.99), maxMs: Math.max(0, ...values), missedDeadlines: values.filter(value => value > 1000 / 75).length }]
+    return [phase, { samples: values.length, p50Ms: percentile(values, 0.5), p95Ms: percentile(values, 0.95), p99Ms: percentile(values, 0.99), maxMs: Math.max(0, ...values), missedDeadlines: values.filter(value => value > 1000 / 60).length }]
   }))
   // Retain each interval in exactly one bucket, including intervals spanning
   // a bucket boundary; do not discard a hitch to improve a window's FPS.
@@ -148,7 +148,7 @@ try {
     }
     return { windowMs, windows: buckets.map(intervals => summarizeFrameIntervals(intervals)) }
   })
-  const result = { certification: 'diagnostic-only; presented 75 FPS requires qualifying physical hardware and refresh evidence', browser: browser.version(), headless: process.env.PERF_HEADED !== '1', production, windowPosition: windowPosition || null, cpuThrottle: 1, scene, unitCount, speedPxPerSec: route ? speedPxPerSec : 600, routeLengthPx: route ? routeDistance(route) : null, durationMs, ...measurement, frames: summarizeFrameIntervals(measurement.intervals), cpuTailsAvailable: !production, cpuTails, windows, cpuSelfTime: [...totals].sort((a, b) => b[1] - a[1]).slice(0, 45), errors }
+  const result = { certification: 'diagnostic-only; presented 60 FPS requires qualifying physical hardware and refresh evidence', browser: browser.version(), headless: process.env.PERF_HEADED !== '1', production, windowPosition: windowPosition || null, cpuThrottle: 1, scene, unitCount, speedPxPerSec: route ? speedPxPerSec : 600, routeLengthPx: route ? routeDistance(route) : null, durationMs, ...measurement, frames: summarizeFrameIntervals(measurement.intervals), cpuTailsAvailable: !production, cpuTails, windows, cpuSelfTime: [...totals].sort((a, b) => b[1] - a[1]).slice(0, 45), errors }
   fs.writeFileSync(output, JSON.stringify(result, null, 2))
   fs.writeFileSync(output.replace(/\.json$/, '.cpuprofile'), JSON.stringify(profile))
   console.log(JSON.stringify({ output, frames: result.frames, timingMs: result.monitor.timingMs, cpuSelfTime: result.cpuSelfTime.slice(0, 15), errors }, null, 2))

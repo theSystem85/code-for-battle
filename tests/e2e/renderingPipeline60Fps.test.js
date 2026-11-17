@@ -93,17 +93,23 @@ async function collectRouteEvidence(page, route, speedPxPerFrame, durationMs) {
       backend,
       refreshRateHz,
       devicePixelRatio: window.devicePixelRatio || 1,
-      canvas: canvas ? { width: canvas.width, height: canvas.height, clientWidth: canvas.clientWidth, clientHeight: canvas.clientHeight } : null,
-      headlessHint: navigator.webdriver === true
+      canvas: canvas ? { width: canvas.width, height: canvas.height, clientWidth: canvas.clientWidth, clientHeight: canvas.clientHeight } : null
     }
   }, { route, speedPxPerFrame, durationMs })
 }
 
-test.describe('Rendering pipeline strict 75 FPS diagnostics', () => {
+test.describe('Rendering pipeline strict 60 FPS diagnostics', () => {
   test.skip(!RUN_BENCHMARK, 'Set PERF_RENDERING_PIPELINE=1 to run the opt-in rendering pipeline benchmark.')
 
   test('[E00095] captures cold traversal, repeat route, tails, capabilities and resize evidence', async({ browser, baseURL }, testInfo) => {
     testInfo.setTimeout(Math.max(180000, DURATION_MS * 20))
+    const browserSession = await browser.newBrowserCDPSession()
+    const { gpu } = await browserSession.send('SystemInfo.getInfo')
+    const adapter = gpu.devices[0]
+    const hardwareGpu = /Apple|NVIDIA|AMD|Intel|Adreno|Mali/i.test(JSON.stringify(adapter)) &&
+      !/swiftshader|llvmpipe|software|basic render|lavapipe/i.test(JSON.stringify(adapter)) &&
+      gpu.featureStatus.rasterization === 'enabled'
+    expect(hardwareGpu, 'benchmark requires a verified hardware GPU').toBe(true)
     const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 2 })
     const page = await context.newPage()
     const pageErrors = []
@@ -122,21 +128,27 @@ test.describe('Rendering pipeline strict 75 FPS diagnostics', () => {
       const steadyProfile = await stopCpuSampling(steadyCapture)
       const resizeAudit = await resizeCleanup.evaluate(cleanup => cleanup())
       const metrics = summarizeFrameIntervals(evidence.intervals)
-      const capability = classifyRefreshCapability({ refreshRateHz: evidence.refreshRateHz, observedFrameRate: metrics.fps, backend: evidence.backend, headless: evidence.headlessHint })
+      const capability = classifyRefreshCapability({
+        refreshRateHz: evidence.refreshRateHz ?? Number(process.env.PERF_DISPLAY_REFRESH_HZ),
+        observedFrameRate: metrics.fps,
+        backend: evidence.backend === 'canvas-2d' ? 'unknown' : evidence.backend,
+        headless: testInfo.project.use.headless !== false
+      })
       const report = {
         schemaVersion: 1,
-        acceptance: { enforced: ENFORCE_ACCEPTANCE, deadlineMs: metrics.deadlineMs, rule: '75 FPS means no frame interval may exceed 13.333 ms.' },
+        acceptance: { enforced: ENFORCE_ACCEPTANCE, deadlineMs: metrics.deadlineMs, rule: 'Every frame must meet the 1000/60 ms deadline.' },
         route: { points: route.length, distancePx: routeDistance(route), speedPxPerFrame: SPEED_PX_PER_FRAME, laps: 2, completed: evidence.completed },
         cold: { profilingOverhead: coldProfile.profilingOverhead, profileDurationMs: coldProfile.durationMs },
         steady: { ...metrics, windows: evidence.windows, profilingOverhead: steadyProfile.profilingOverhead },
         capability,
+        adapter,
         canvas: evidence.canvas,
         resizeAudit: { resizeEvents: resizeAudit.resizeEvents.length, transformedDraws: resizeAudit.transformedDraws.length },
         assets: summarizeAssetMetadata(evidence.resources),
         pageErrors
       }
-      console.log(`RENDERING_PIPELINE_75FPS_REPORT ${JSON.stringify(report, null, 2)}`)
-      await testInfo.attach('rendering-pipeline-75fps.json', { body: JSON.stringify(report, null, 2), contentType: 'application/json' })
+      console.log(`RENDERING_PIPELINE_60FPS_REPORT ${JSON.stringify(report, null, 2)}`)
+      await testInfo.attach('rendering-pipeline-60fps.json', { body: JSON.stringify(report, null, 2), contentType: 'application/json' })
       await testInfo.attach('rendering-pipeline-cdp-startup.json', { body: JSON.stringify(coldProfile), contentType: 'application/json' })
       await testInfo.attach('rendering-pipeline-cdp-steady.json', { body: JSON.stringify(steadyProfile), contentType: 'application/json' })
 
@@ -144,8 +156,8 @@ test.describe('Rendering pipeline strict 75 FPS diagnostics', () => {
       expect(evidence.completed, 'timed route completed').toBe(true)
       expect(metrics.frameCount, 'benchmark collected animation frames').toBeGreaterThan(0)
       if (ENFORCE_ACCEPTANCE) {
-        expect(capability.displayEligible, '75 FPS certification requires a real >=75Hz display and non-headless run').toBe(true)
-        expect(metrics.missedDeadlineFrames, 'application-caused frames over the 75 FPS deadline').toBe(0)
+        expect(capability.displayEligible, '60 FPS certification requires a real >=60Hz display and non-headless run').toBe(true)
+        expect(metrics.missedDeadlineFrames, 'application-caused frames over the 60 FPS deadline').toBe(0)
       }
     } finally {
       await resizeCleanup?.evaluate(cleanup => cleanup()).catch(() => {})

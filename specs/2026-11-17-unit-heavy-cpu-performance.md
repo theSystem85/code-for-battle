@@ -1,6 +1,6 @@
 # Unit-heavy CPU performance
 
-Target at least 60 FPS through representative foreground gameplay, with a 16.67 ms frame budget. The repository still requires 75 FPS on qualifying hardware, with a 13.33 ms budget. A finite supported scene, camera speed, viewport, display and graphics envelope is needed to interpret either target. Browser scheduling, system interruptions and unconstrained entity counts prevent a universal minimum-FPS guarantee.
+Target at least 60 FPS through representative foreground gameplay, with a 16.67 ms frame budget. This is also the repository hardware acceptance threshold. A finite supported scene, camera speed, viewport, display and graphics envelope is needed to interpret the result. Browser scheduling, system interruptions and unconstrained entity counts prevent a universal minimum-FPS guarantee.
 
 ## CPU improvement backlog
 
@@ -11,7 +11,7 @@ Target at least 60 FPS through representative foreground gameplay, with a 16.67 
 - [ ] Profile the remaining movement cost at 400 and 500 units. Investigate repeated contact queries, the friendly-waypoint owner-list scan, and idle-unit movement work. Keep blocked units, hazards, service movement and flight behavior covered.
 - [ ] Profile ambulance, tanker and recovery candidate selection. Reuse spatial and ID lookups across support systems where eligibility and deterministic tie order allow it.
 - [ ] Measure fog visibility reset and reveal separately. If still material, track previously touched cells while preserving discovery, sight range, renderer invalidation and save/load behavior.
-- [ ] Define the supported reference envelope and repeat the complete hardware acceptance protocol from [the rendering performance plan](../performance_improvement.md). Include a higher-refresh display, layered naval units, cold and repeated traversal, graphics configuration coverage and profiling runs separate from FPS acceptance.
+- [ ] Define the supported reference envelope and repeat the complete hardware acceptance protocol from [the rendering performance plan](../performance_improvement.md). Include physical refresh evidence, layered naval units, cold and repeated traversal, graphics configuration coverage and profiling runs separate from FPS acceptance.
 
 ## Hot-loop and occupancy audit
 
@@ -52,7 +52,7 @@ Mean CPU update fell 8.75% in the profiled pair and 7.42% in the unprofiled pair
 
 For the second pair, use the same fixture and omit `BENCHMARK_PROFILE`. The baseline ran against a separate local archive of `dev` at `83bbe651` on port 4177, using `BENCHMARK_URL=http://127.0.0.1:4177` with `BENCHMARK_OUTPUT=tmp/unit-heavy/baseline-unprofiled`. Both reported runs of the patch used a clean server with `BENCHMARK_URL=http://127.0.0.1:4178` and `BENCHMARK_OUTPUT` set to either `tmp/unit-heavy/after-fresh-profiled` or `tmp/unit-heavy/after-fresh-unprofiled`. The profiled baseline is in `tmp/unit-heavy/baseline`. The raw frame samples and DevTools CPU captures are in those directories. Earlier patch captures from the hot-reloaded server are retained in `tmp/unit-heavy/after` and `tmp/unit-heavy/after-unprofiled` for diagnosis. The first baseline's raw one-second summary predates correction of an off-by-one count. The table uses its raw intervals with the corrected count.
 
-The longest profiled tasks align with post-load decoration and terrain preparation, wreck-sprite pixel readback during rendering, and AI breach planning. The normal save loader can return and expose the game before all asynchronous map work retires. The captures retain those stalls. The fixture focuses on layered land units, Apache helicopters, support vehicles and active combat. A separate layered naval fixture and hardware-backed presented-frame acceptance on a 75 Hz or faster display remain pending. The measured scene misses the 60 FPS target.
+The longest profiled tasks align with post-load decoration and terrain preparation, wreck-sprite pixel readback during rendering, and AI breach planning. The normal save loader can return and expose the game before all asynchronous map work retires. The captures retain those stalls. The fixture focuses on layered land units, Apache helicopters, support vehicles and active combat. A separate layered naval fixture and hardware-backed presented-frame acceptance on a 60 Hz or faster display remain pending. The measured scene misses the 60 FPS target.
 
 ## Functional verification
 

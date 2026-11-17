@@ -46,7 +46,7 @@ try {
       diagnosticOnly: true, certification: 'Headless cannot certify 75 presented FPS',
       frameTimeMs: { avg, p50: percentile(0.5), p95: percentile(0.95), p99: percentile(0.99), max: samples.at(-1) },
       fps: 1000 / avg, samples: samples.length,
-      missedDeadlines: samples.filter(value => value > 1000 / 75).length,
+      missedDeadlines: samples.filter(value => value > 1000 / 60).length,
       effectiveDpr: canvas.width / canvas.clientWidth,
       memory: { startBytes: state.memoryStart, endBytes: performance.memory?.usedJSHeapSize || null, gc: 'not available' },
       gpuTiming: 'not available', runtime: window.__heavyBattleResult

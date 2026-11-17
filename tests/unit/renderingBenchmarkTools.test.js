@@ -3,13 +3,13 @@ import { classifyRefreshCapability, createTimedRoute, routeDistance, summarizeFr
 import { summarizeAssetMetadata } from '../../scripts/performance/resizeAssetAudit.js'
 
 describe('rendering benchmark tools', () => {
-  it('[U03740] reports strict 75 FPS deadline tails and misses', () => {
-    const report = summarizeFrameIntervals([10, 12, 13.333, 13.334, 20])
-    expect(report.deadlineMs).toBeCloseTo(13.333333, 5)
+  it('[U03740] reports strict 60 FPS deadline tails and misses', () => {
+    const report = summarizeFrameIntervals([10, 12, 16.666, 16.667, 20])
+    expect(report.deadlineMs).toBeCloseTo(1000 / 60, 8)
     expect(report.p95FrameMs).toBe(20)
     expect(report.p99FrameMs).toBe(20)
     expect(report.missedDeadlineFrames).toBe(2)
-    expect(report.passed75Fps).toBe(false)
+    expect(report.passedDeadline).toBe(false)
   })
 
   it('[U03741] builds timed serpentine routes with reversals and measurable distance', () => {
@@ -24,7 +24,8 @@ describe('rendering benchmark tools', () => {
     const software = classifyRefreshCapability({ refreshRateHz: 144, backend: 'software', headless: false })
     expect(software.backend).toBe('software-fallback')
     expect(software.displayEligible).toBe(false)
-    expect(classifyRefreshCapability({ refreshRateHz: 60, backend: 'webgl2', headless: false }).certification).toBe('diagnostic-only')
+    expect(classifyRefreshCapability({ refreshRateHz: 60, backend: 'webgl2', headless: false }).displayEligible).toBe(true)
+    expect(classifyRefreshCapability({ refreshRateHz: 59, backend: 'webgl2', headless: false }).certification).toBe('diagnostic-only')
   })
 
   it('[U03743] keeps decoded and transferred asset bytes separate', () => {

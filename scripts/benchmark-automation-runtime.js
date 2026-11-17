@@ -44,5 +44,5 @@ console.log(JSON.stringify({
   referenceMs, compiledMs,
   activeBatchMs: { p95: sorted[Math.floor(sorted.length * .95)], p99: sorted[Math.floor(sorted.length * .99)], max: sorted.at(-1) },
   compileMs, bindings: bindings.length, sensorQueries: 0,
-  limits: 'Node CPU diagnostics only; no rendering, realistic sensing, GPU timing, or 75 FPS certification. Active-batch budget may be missed on this shared host.'
+  limits: 'Node CPU diagnostics only; no rendering, realistic sensing, GPU timing, or 60 FPS certification. Active-batch budget may be missed on this shared host.'
 }, null, 2))

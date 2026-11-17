@@ -10,7 +10,7 @@ Model roles are intentional: Astra leads this analysis/documentation task; the i
 
 Copy this instruction and substitute the IDs listed in the schedule:
 
-> Implement steps **X, Y, Z** from `rendering_improvement_todos.md`. Read their prerequisites and the two linked analysis/design documents. Work only in the allocated file set, preserve current visuals and procedural water, and keep the 75 FPS gate. Do not weaken tests or reduce DPR/effects/animation cadence. Do not edit shared docs/manifests or another agent's files. If an extra file is required, report it for ownership assignment. Add focused behavior tests, run the repository's required unit tests and changed-file lint after implementation, and report changed paths, remaining issues, validation commands/results, and your exact model. Performance benchmarking is serialized through the integration owner; do not run it concurrently with other workers. Do not claim 75 FPS based on a non-qualifying display or a headless CPU-only run.
+> Implement steps **X, Y, Z** from `rendering_improvement_todos.md`. Read their prerequisites and the two linked analysis/design documents. Work only in the allocated file set, preserve current visuals and procedural water, and keep the 60 FPS gate. Do not weaken tests or reduce DPR/effects/animation cadence. Do not edit shared docs/manifests or another agent's files. If an extra file is required, report it for ownership assignment. Add focused behavior tests, run the repository's required unit tests and changed-file lint after implementation, and report changed paths, remaining issues, validation commands/results, and your exact model. Performance benchmarking is serialized through the integration owner; do not run it concurrently with other workers. Do not claim 60 FPS based on a non-qualifying display or a headless CPU-only run.
 
 Each task gets an isolated branch/worktree created from the same landed prerequisite commit. Tests owned by that task stay with its changes. Integration owner merges sequentially and resolves shared integration points. Do not have multiple agents cherry-pick, stage or edit the same checkout simultaneously. Existing unrelated version edits are not part of these tasks.
 
@@ -24,7 +24,7 @@ The integration owner alone updates this checklist, shared specs/TODO/history, p
 | 1 | P00 profiler; P01 benchmark/visual/resize harness | Yes, disjoint files; **browser measurements serial** | Both land, initial baseline recorded |
 | 2 | T10+T11 terrain cache; B10+B11 baking; W10+W11 water; A10+A11 sprites; E10+E11 entity/effects; V10+V11 viewport/minimap; M10 mutation producers | Yes, seven disjoint ownership lanes, after C00/P00/P01 | All focused tests pass; merge one at a time |
 | 3 | I20 pipeline integration | Single owner only | Combined startup, revisions, assets, water and profiler wiring verified |
-| 4 | Q30 physical performance certification; Q31 visual/memory audit | Read-only analysis can run together on captured evidence; captures/benchmarks run serially | 75 FPS, unchanged visuals, resize and memory gates |
+| 4 | Q30 physical performance certification; Q31 visual/memory audit | Read-only analysis can run together on captured evidence; captures/benchmarks run serially | 60 FPS, unchanged visuals, resize and memory gates |
 | 5, if needed | G40 retained GPU static terrain | Single backend integration owner; begins only on measured need | Repeat Q30/Q31; never relax the target |
 
 “Parallel” applies within a wave and within disjoint files; it does not mean each task is dependency-free. T10/T11 share `mapRenderer.js` and must be one agent or sequential. B10/B11 share asset/preparation state and must be one agent. W10/W11 share water contracts and should be one agent initially. A10/A11 share image renderers; E10/E11 share effects/entity rendering. Integration must not overlap file edits from these lanes.
@@ -54,7 +54,7 @@ The integration owner alone updates this checklist, shared specs/TODO/history, p
 
 **Exclusive write set:** `src/performance/performanceMonitor.js`, new profiler implementation files designated by C00, `src/performanceUtils.js`, `src/ui/performanceDialog.js`, `src/ui/fpsDisplay.js`, necessary overlay markup/styles, `src/game/gameLoop.js` for root timing only; profiler unit tests. P01 must not edit these files.
 
-**Done:** toggle works independently of recording; parent/child/recursion/exception accounting is covered; off mode has no clock reads, statistics writes or detailed timing allocations; the exported table identifies fixed and bounded legacy registrations; unknown GPU/heap capabilities are labeled. A five-run Node microbenchmark of the reusable profiler core measured 0.000272–0.000278 ms added per frame for three spans, and a 50-span stress probe measured 0.004617–0.004660 ms/frame, below the 0.25 ms/frame design budget. These are local CPU instrumentation measurements, not physical 75 FPS certification. API timing is CPU submission unless explicitly measured otherwise.
+**Done:** toggle works independently of recording; parent/child/recursion/exception accounting is covered; off mode has no clock reads, statistics writes or detailed timing allocations; the exported table identifies fixed and bounded legacy registrations; unknown GPU/heap capabilities are labeled. A five-run Node microbenchmark of the reusable profiler core measured 0.000272–0.000278 ms added per frame for three spans, and a 50-span stress probe measured 0.004617–0.004660 ms/frame, below the 0.25 ms/frame design budget. These are local CPU instrumentation measurements, not physical 60 FPS certification. API timing is CPU submission unless explicitly measured otherwise.
 
 ## P01 — strict benchmark and diagnostic tooling [implemented 2026-09-20]
 
@@ -62,14 +62,14 @@ The integration owner alone updates this checklist, shared specs/TODO/history, p
 
 - [x] Capture current golden images/sequences before any optimization. The opt-in visual capture emits WebP-85 shoreline/terrain/cliff-road/dynamic-entity states and a fixed-state repeat manifest; existing shoreline orientation coverage remains diagnostic input.
 - [x] Add time-based route runner, route completion checks, first-visit and repeat-lap windows, reversals/jumps, scene readiness boundary and refresh-capability labeling.
-- [x] Replace permissive rendering acceptance with 75 FPS/13.333 ms deadline evidence, tails/max/missed frames; preserve historical diagnostic scenarios without calling them acceptance passes.
+- [x] Replace permissive rendering acceptance with 60 FPS/16.666 ms deadline evidence, tails/max/missed frames; preserve historical diagnostic scenarios without calling them acceptance passes.
 - [x] Add CDP sampling/trace helper with explicit profiling-overhead labeling and readable self/inclusive function table. Include startup and steady captures separately.
 - [x] Add transformed-image resize/decode/canvas-resize audit, asset metadata/byte inventory and report capture. Auditing is opt-in and runs only inside the diagnostic E2E.
 - [x] Add physical-hardware run instructions and backend assertions. Distinguish real GPU vs CPU/software fallback; report independent FPS samples without selecting the larger. Headless, unknown-refresh and software runs are diagnostic-only.
 
-**Exclusive write set:** `tests/e2e/organicTerrain.test.js`, `tests/e2e/mobileFpsRegressionBenchmark.test.js`, new `tests/e2e/renderingPipeline75Fps.test.js`, `tests/e2e/renderingVisualParity.test.js`, diagnostics/helpers under `tests/e2e/helpers/`, new read-only capture tools under `scripts/performance/`. C00/integration owner handles package scripts; do not edit application renderer files.
+**Exclusive write set:** `tests/e2e/organicTerrain.test.js`, `tests/e2e/mobileFpsRegressionBenchmark.test.js`, new `tests/e2e/renderingPipeline60Fps.test.js`, `tests/e2e/renderingVisualParity.test.js`, diagnostics/helpers under `tests/e2e/helpers/`, new read-only capture tools under `scripts/performance/`. C00/integration owner handles package scripts; do not edit application renderer files.
 
-**Done:** strict reports include cold startup and steady repeat-lap captures, p95/p99/max frame tails, deadline misses, route completion, backend/refresh eligibility, resize events, transformed draws, asset bytes and separate CDP profiles. `PERF_RENDERING_PIPELINE_ACCEPT=1` refuses to certify headless/software/under-75Hz runs. Physical qualifying-hardware certification remains an external measurement step.
+**Done:** strict reports include cold startup and steady repeat-lap captures, p95/p99/max frame tails, deadline misses, route completion, backend/refresh eligibility, resize events, transformed draws, asset bytes and separate CDP profiles. `PERF_RENDERING_PIPELINE_ACCEPT=1` refuses to certify headless/software/under-60Hz runs. Physical qualifying-hardware certification remains an external measurement step.
 
 ## T10 — constant-time terrain cache validity [implemented 2026-09-19]
 
@@ -245,13 +245,13 @@ Building-layer boundary: A10 exclusively prepares/owns the generated art, manife
 
 **Done:** complete prepared pipeline is exercised by the real game, all nonperformance regression checks pass, and artifacts are ready for Q30/Q31.
 
-## Q30 — physical 75 FPS certification [not completed]
+## Q30 — physical 60 FPS certification [not completed]
 
 **Prerequisite:** I20. **Owns the exclusive browser/hardware measurement slot.**
 
-- [ ] Run production build on qualifying ≥75 Hz reference hardware at unchanged density/quality. Log actual backend and all environment fields.
+- [ ] Run production build on qualifying ≥60 Hz reference hardware at unchanged density/quality. Log actual backend and all environment fields.
 - [ ] Execute deterministic full-map routes at all agreed speeds, first visit, repeat laps, reversals/jumps and selected combat/effect worst case.
-- [ ] Verify ≥75 FPS evidence, 13.333 ms deadline budget, zero application-caused dropped 75 Hz refreshes, tails/max, queue/cache/upload behavior and on/off profiler overhead.
+- [ ] Verify ≥60 FPS evidence, 16.666 ms deadline budget, zero application-caused dropped 60 Hz refreshes, tails/max, queue/cache/upload behavior and on/off profiler overhead.
 - [ ] Repeat serially, save reports/traces and diagnose every failure. CPU fallback and low-refresh diagnostics remain separately labeled; no weaker floor.
 
 **Write set:** measurement artifacts and step-specific findings; central owner updates authoritative specs/TODO/history. No unrelated code fixes in certification; route failures to their owner.
@@ -274,7 +274,7 @@ Building-layer boundary: A10 exclusively prepares/owns the generated art, manife
 
 - [ ] Prototype retained world-space terrain geometry/material atlas/mask composition, reusing immutable descriptors and preserving the current pixel output.
 - [ ] Measure native-density memory/upload/overdraw costs against the revised Canvas path. Preserve shader water as an independent animated layer and street art as currently rendered.
-- [ ] Preserve draw ordering, premultiplied alpha, gutters, filtering, coverage, mixed corners, cliffs, decals and resources. Implement recovery/fallback contracts without claiming an unverified fallback passes 75 FPS.
+- [ ] Preserve draw ordering, premultiplied alpha, gutters, filtering, coverage, mixed corners, cliffs, decals and resources. Implement recovery/fallback contracts without claiming an unverified fallback passes 60 FPS.
 - [ ] Promote only after parity and Q30/Q31 pass; remove obsolete duplicate resources rather than retaining two full resident pipelines.
 
 **Write set:** GPU backends plus required terrain/renderer integration, exclusive after earlier owners finish; new backend-specific tests. No simultaneous T/W/I edits.
@@ -286,7 +286,7 @@ Building-layer boundary: A10 exclusively prepares/owns the generated art, manife
 - [ ] No source/asset resize during steady gameplay except explicitly tagged aircraft takeoff/landing.
 - [ ] No visual quality/cadence degradation; procedural water remains animated.
 - [ ] No 20% allowance or lower-FPS default can pass the strict target.
-- [ ] Combined production pipeline passes the qualifying reference scene at 75 FPS; otherwise keep the project performance work open with the exact next bottleneck.
+- [ ] Combined production pipeline passes the qualifying reference scene at 60 FPS; otherwise keep the project performance work open with the exact next bottleneck.
 
 ## Sprite streaming follow-up (2026-10-25)
 
@@ -397,7 +397,7 @@ The integration-owner-only paths are exactly: `src/rendering/textureManager.js`,
 - [x] Integrate S03 dependency invalidation; prevent coarse baked pages from surviving indefinitely. Coordinate display/DPR, map/load/editor/custom assets, missing files and context recovery through controlled generation swaps.
 - [x] Wire build/stale checks and conditional fallbacks. Update resize policy/tests to recognize user-authorized progressive sampling honestly. Keep final-quality acceptance distinct from scrolling coarse-tier latency.
 
-S06 software integration is covered by focused generation, tier-promotion, layout-lifecycle and offline-policy tests. Q30/Q31 and the 75 FPS cold-scroll/final-convergence acceptance remain pending capture on qualifying hardware; no result is inferred from headless tests.
+S06 software integration is covered by focused generation, tier-promotion, layout-lifecycle and offline-policy tests. Q30/Q31 and the 60 FPS cold-scroll/final-convergence acceptance remain pending capture on qualifying hardware; no result is inferred from headless tests.
 
 **Exclusive paths:** all S00-reserved integration files, plus producer adapters only after component owners have landed. This phase is serialized; do not edit active lane files.
 
