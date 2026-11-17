@@ -25,6 +25,7 @@ import { getClosestEnemyFactory } from './enemyUtils.js'
 import { beginBaseDefensePass, beginBaseDefenseUnit, finishBaseDefenseUnit, endBaseDefensePass } from './enemySupportBehavior.js'
 import { ensureAdvancedForcePreference } from './advancedForcePreference.js'
 import { chooseNextSquadUnit, updateGroundAssaultStrategy } from './groundAssaultStrategy.js'
+import { isBaseDefence, planBaseDefence, nextBaseDefence, relocateBaseDefences } from './baseDefence.js'
 
 const AI_SELL_PRIORITY = [
   'turretGunV1',
@@ -254,6 +255,17 @@ function ensureAIEconomyRecovery(aiPlayerId, aiFactory, aiBuildings, aiHarvester
   sellBuildingsForEmergencyFunds(aiPlayerId, aiFactory, aiBuildings, requiredBudget, now)
 }
 
+function keepsBaseRoadsOpen(type, x, y, mapGrid) {
+  if (type === 'shipyard') return true
+  const data = buildingData[type]
+  for (let row = y; row < y + data.height; row++) {
+    for (let column = x; column < x + data.width; column++) {
+      if (mapGrid[row]?.[column]?.type === 'street') return false
+    }
+  }
+  return true
+}
+
 export function findSimpleBuildingPosition(buildingType, mapGrid, buildings, factories, aiPlayerId) {
   // Validate inputs
   if (!buildingType) {
@@ -332,7 +344,7 @@ export function findSimpleBuildingPosition(buildingType, mapGrid, buildings, fac
           if (by >= y && by < y + buildingHeight && bx >= x && bx < x + buildingWidth) {
             if (by >= 0 && by < mapGrid.length && bx >= 0 && bx < mapGrid[0].length) {
               const tile = mapGrid[by][bx]
-              if (tile.type === 'water' || tile.type === 'rock' || tile.building || tile.seedCrystal ||
+              if (tile.type === 'water' || tile.type === 'rock' || tile.type === 'street' || tile.building || tile.seedCrystal ||
                   isDecorativeBuildBlocker(mapGrid, bx, by)) {
                 valid = false
               }
@@ -432,7 +444,7 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
   }
 
   // Calculate AI's current buildings and harvesters (used by both recovery and building logic)
-  const aiBuildings = gameState.buildings.filter(b => b.owner === aiPlayerId)
+  const aiBuildings = gameState.buildings.filter(b => b.owner === aiPlayerId && b.health > 0 && !b.isBeingSold)
   const aiHarvesters = units.filter(
     u => u.owner === aiPlayerId && u.type === 'harvester' && u.health > 0
   )
@@ -741,12 +753,30 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
       }
     }
 
+    let defencePosition = null
+    if (allowAdditionalBuildings && hasOreRefinery && hasVehicleFactory && currentPower > 0) {
+      const plan = planBaseDefence(aiPlayerId, mapGrid, gameState.buildings, factories)
+      relocateBaseDefences(plan, aiPlayerId, gameState.buildings, aiFactory, now)
+      const nextDefence = nextBaseDefence(plan, aiPlayerId, mapGrid, units, gameState.buildings, factories, aiFactory.budget)
+      // Economic/support expansion keeps its priority. Defence choices follow the perimeter plan.
+      if (!buildingType || isBaseDefence(buildingType)) {
+        buildingType = nextDefence?.type || null
+        defencePosition = nextDefence
+        cost = buildingType ? buildingData[buildingType].cost : 0
+        if (!buildingType && radarStations.length === 0 && aiFactory.budget >= buildingData.radarStation.cost) {
+          buildingType = 'radarStation'
+          cost = buildingData.radarStation.cost
+        }
+      }
+    }
+
     if (buildingType && buildingType !== 'powerPlant') {
       const buildingPowerImpact = buildingData[buildingType]?.power || 0
 
       if (buildingPowerImpact < 0 && currentPower + buildingPowerImpact < 0) {
         if (canAffordPowerPlant) {
           buildingType = 'powerPlant'
+          defencePosition = null
           cost = buildingData.powerPlant.cost
         } else {
           buildingType = null
@@ -758,7 +788,8 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
     // Attempt to start building construction (don't place immediately)
     if (buildingType && aiFactory.budget >= cost) {
       // Try advanced positioning first, then fallback to simple positioning
-      let position = findBuildingPosition(buildingType, mapGrid, units, gameState.buildings, factories, aiPlayerId)
+      let position = defencePosition || findBuildingPosition(buildingType, mapGrid, units, gameState.buildings, factories, aiPlayerId,
+        (x, y) => keepsBaseRoadsOpen(buildingType, x, y, mapGrid))
 
       if (!position) {
         window.logger(`AI ${aiPlayerId} could not find position for ${buildingType}, trying simpler placement`)
@@ -824,7 +855,11 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
 
     if (position) {
       // Double-check position is still valid before placing
-      const placementRemainsSafe = isExplosiveBuildingPlacementSafe(
+      const defencePlan = allowStrategicDecisions && isBaseDefence(buildingType)
+        ? planBaseDefence(aiPlayerId, mapGrid, gameState.buildings, factories) : null
+      const plannedPlacement = !defencePlan || [...defencePlan.slots, ...defencePlan.walls].some(slot =>
+        slot.type === buildingType && slot.x === position.x && slot.y === position.y)
+      const placementRemainsSafe = plannedPlacement && (!allowStrategicDecisions || keepsBaseRoadsOpen(buildingType, position.x, position.y, mapGrid)) && isExplosiveBuildingPlacementSafe(
         position.x,
         position.y,
         buildingData[buildingType].width,
@@ -849,10 +884,13 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
         // Position became invalid, try to find an alternative position immediately
 
         // Try the advanced algorithm first
-        let alternativePosition = findBuildingPosition(buildingType, mapGrid, units, gameState.buildings, factories, aiPlayerId)
+        let alternativePosition = defencePlan
+          ? nextBaseDefence({ ...defencePlan, slots: defencePlan.slots.filter(slot => slot.type === buildingType), walls: buildingType === 'concreteWall' ? defencePlan.walls : [] }, aiPlayerId, mapGrid, units, gameState.buildings, factories, Infinity)
+          : findBuildingPosition(buildingType, mapGrid, units, gameState.buildings, factories, aiPlayerId,
+            (x, y) => keepsBaseRoadsOpen(buildingType, x, y, mapGrid))
 
         // If that fails, try the simple algorithm
-        if (!alternativePosition) {
+        if (!alternativePosition && !defencePlan) {
           alternativePosition = findSimpleBuildingPosition(
             buildingType,
             mapGrid,
@@ -967,7 +1005,7 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
       const aiSupplyShips = units.filter(u => u.owner === aiPlayerId && u.type === 'supplyShip' && u.health > 0)
       const aiF22s = units.filter(u => u.owner === aiPlayerId && u.type === 'f22Raptor' && u.health > 0)
       const aiF35s = units.filter(u => u.owner === aiPlayerId && u.type === 'f35' && u.health > 0)
-      const aiBuildings = gameState.buildings.filter(b => b.owner === aiPlayerId)
+      const aiBuildings = gameState.buildings.filter(b => b.owner === aiPlayerId && b.health > 0 && !b.isBeingSold)
       const aiRefineries = aiBuildings.filter(b => b.type === 'oreRefinery')
       const gasStations = aiBuildings.filter(b => b.type === 'gasStation')
       const ammunitionFactoriesForProduction = aiBuildings.filter(b => b.type === 'ammunitionFactory')
