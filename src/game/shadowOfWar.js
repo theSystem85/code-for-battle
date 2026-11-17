@@ -10,6 +10,8 @@ const {
   harvesterRange = 5
 } = SHADOW_OF_WAR_CONFIG
 
+const visibilityTrackers = new WeakMap()
+
 const DEFENSIVE_BUILDING_TYPES = new Set([
   'turretGunV1',
   'turretGunV2',
@@ -64,24 +66,27 @@ function ensureVisibilityMap(gameState, mapGrid) {
 }
 
 function resetVisibility(visibilityMap) {
-  for (let y = 0; y < visibilityMap.length; y++) {
-    const row = visibilityMap[y]
-    if (!row) continue
-    for (let x = 0; x < row.length; x++) {
-      const cell = row[x]
-      if (!cell) continue
-      cell.visible = false
+  let tracker = visibilityTrackers.get(visibilityMap)
+  if (!tracker) {
+    // A restored map can already have visible cells. Clear it once before
+    // using the sparse list produced by later visibility passes.
+    for (const row of visibilityMap) {
+      if (!row) continue
+      for (const cell of row) {
+        if (cell) cell.visible = false
+      }
     }
+    tracker = { visibleCells: [], structures: new Set() }
+    visibilityTrackers.set(visibilityMap, tracker)
   }
+  for (const cell of tracker.visibleCells) cell.visible = false
+  tracker.visibleCells.length = 0
+  tracker.structures.clear()
+  return tracker
 }
 
 function isFriendlyOwner(owner, gameState) {
-  if (!owner || !gameState) return false
-  const friendlyOwners = new Set([gameState.humanPlayer, 'player'])
-  if (gameState.humanPlayer === 'player1') {
-    friendlyOwners.add('player1')
-  }
-  return friendlyOwners.has(owner)
+  return Boolean(gameState && owner && (owner === 'player' || owner === gameState.humanPlayer))
 }
 
 function isDefensiveStructure(structure) {
@@ -137,7 +142,7 @@ function getStructureFireRange(structure) {
   return 0
 }
 
-function applyRectVisibility(visibilityMap, startX, startY, width, height, borderTiles = 0) {
+function applyRectVisibility(visibilityMap, visibleCells, startX, startY, width, height, borderTiles = 0) {
   if (!visibilityMap || visibilityMap.length === 0) return
 
   const mapHeight = visibilityMap.length
@@ -155,7 +160,8 @@ function applyRectVisibility(visibilityMap, startX, startY, width, height, borde
     if (!row) continue
     for (let x = minX; x <= maxX; x++) {
       const cell = row[x]
-      if (!cell) continue
+      if (!cell || cell.visible) continue
+      visibleCells.push(cell)
       cell.visible = true
       cell.discovered = true
     }
@@ -188,7 +194,7 @@ export function getUnitVisionRange(unit) {
   }
 }
 
-function applyVisibility(visibilityMap, centerX, centerY, rangeTiles) {
+function applyVisibility(visibilityMap, visibleCells, centerX, centerY, rangeTiles) {
   if (!visibilityMap || visibilityMap.length === 0) return
   const height = visibilityMap.length
   const width = visibilityMap[0]?.length || 0
@@ -208,11 +214,12 @@ function applyVisibility(visibilityMap, centerX, centerY, rangeTiles) {
     if (!row) continue
     for (let x = minX; x <= maxX; x++) {
       const cell = row[x]
-      if (!cell) continue
+      if (!cell || cell.visible) continue
       const dx = (x + 0.5) - centerX
       const dy = (y + 0.5) - centerY
       const distSq = dx * dx + dy * dy
       if (distSq <= limitSq) {
+        visibleCells.push(cell)
         cell.visible = true
         cell.discovered = true
       }
@@ -276,9 +283,7 @@ export function updateShadowOfWar(gameState, units = [], mapGrid = gameState?.ma
   const visibilityMap = ensureVisibilityMap(gameState, mapGrid)
   if (!visibilityMap) return
 
-  resetVisibility(visibilityMap)
-
-  const structures = new Set()
+  const { visibleCells, structures } = resetVisibility(visibilityMap)
   if (Array.isArray(gameState.buildings)) {
     gameState.buildings.forEach(building => structures.add(building))
   }
@@ -299,19 +304,11 @@ export function updateShadowOfWar(gameState, units = [], mapGrid = gameState?.ma
     const centerX = rawX + width / 2
     const centerY = rawY + height / 2
 
-    const passiveRange = getBuildingPassiveDiscoveryRange(structure, width, height)
-
-    if (isDefensiveStructure(structure)) {
-      const range = Math.max(BUILDING_PROXIMITY_RANGE, getStructureFireRange(structure))
-      applyVisibility(visibilityMap, centerX, centerY, range)
-      markDiscoveredArea(visibilityMap, centerX, centerY, range)
-      applyRectVisibility(visibilityMap, startX, startY, width, height)
-    } else {
-      const visibilityRange = Math.max(passiveRange, BUILDING_PROXIMITY_RANGE)
-      applyVisibility(visibilityMap, centerX, centerY, visibilityRange)
-      markDiscoveredArea(visibilityMap, centerX, centerY, visibilityRange)
-      applyRectVisibility(visibilityMap, startX, startY, width, height)
-    }
+    const range = isDefensiveStructure(structure)
+      ? getStructureFireRange(structure)
+      : getBuildingPassiveDiscoveryRange(structure, width, height)
+    applyVisibility(visibilityMap, visibleCells, centerX, centerY, Math.max(BUILDING_PROXIMITY_RANGE, range))
+    applyRectVisibility(visibilityMap, visibleCells, startX, startY, width, height)
   })
 
   if (Array.isArray(units)) {
@@ -320,13 +317,14 @@ export function updateShadowOfWar(gameState, units = [], mapGrid = gameState?.ma
       const centerX = (unit.x + TILE_SIZE / 2) / TILE_SIZE
       const centerY = (unit.y + TILE_SIZE / 2) / TILE_SIZE
       const range = getUnitVisionRange(unit)
-      applyVisibility(visibilityMap, centerX, centerY, range)
+      applyVisibility(visibilityMap, visibleCells, centerX, centerY, range)
     })
   }
 }
 
 export function markAllVisible(gameState) {
   if (!gameState || !Array.isArray(gameState.visibilityMap)) return
+  visibilityTrackers.delete(gameState.visibilityMap)
   gameState.visibilityMap.forEach(row => {
     if (!row) return
     row.forEach(cell => {

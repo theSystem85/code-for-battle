@@ -85,6 +85,24 @@ describe('shadowOfWar.js', () => {
       initializeShadowOfWar(gameState, mapGrid)
     })
 
+    it('[U07205] clears previous sight without forgetting discovery or missing a reveal-all reset', () => {
+      const unit = { owner: 'player1', type: 'tankerTruck', x: 0, y: 0 }
+      updateShadowOfWar(gameState, [unit], mapGrid)
+      const previous = gameState.visibilityMap[0][0]
+      expect(previous).toEqual({ visible: true, discovered: true })
+
+      unit.x = 8 * 32
+      unit.y = 8 * 32
+      updateShadowOfWar(gameState, [unit], mapGrid)
+      expect(previous).toEqual({ visible: false, discovered: true })
+      expect(gameState.visibilityMap[8][8].visible).toBe(true)
+
+      markAllVisible(gameState)
+      updateShadowOfWar(gameState, [], mapGrid)
+      expect(gameState.visibilityMap[8][8]).toEqual({ visible: false, discovered: true })
+      expect(previous).toEqual({ visible: false, discovered: true })
+    })
+
     it('[U03991] should reset all visibility flags before updating', () => {
       gameState.visibilityMap[0][0].visible = true
       updateShadowOfWar(gameState, [], mapGrid)
