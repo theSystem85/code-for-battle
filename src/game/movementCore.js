@@ -308,7 +308,7 @@ function clearBlockedMovement(unit) {
   movement.currentSpeed = 0
 }
 
-export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [], gameState = globalGameState, factories = null) {
+export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [], gameState = globalGameState, factories = null, collisionIndex = null) {
   initializeUnitMovement(unit)
 
   // Runs once per unit per simulation tick: direct references, no entity scans.
@@ -787,7 +787,8 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
         gameState,
         mapGrid,
         occupancyMap,
-        wrecks
+        wrecks,
+        collisionIndex
       )
       if (detonated) {
         movement.velocity.x = 0
@@ -818,7 +819,8 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
           mapGrid,
           occupancyMap,
           units,
-          wrecks
+          wrecks,
+          collisionIndex
         )
       }
     } else if (collisionResult.type === 'terrain' || collisionResult.type === 'bounds') {
@@ -831,7 +833,8 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
         mapGrid,
         occupancyMap,
         units,
-        wrecks
+        wrecks,
+        collisionIndex
       )
     } else {
       trySlideMovement(unit, movement, mapGrid, occupancyMap, units, wrecks)

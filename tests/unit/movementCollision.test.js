@@ -18,6 +18,7 @@ import {
   checkUnitCollision,
   resolveNavalShoreOverlap
 } from '../../src/game/movementCollision.js'
+import { MovementCollisionIndex } from '../../src/game/movementCollisionIndex.js'
 import { initSpatialQuadtree, rebuildSpatialQuadtree } from '../../src/game/spatialQuadtree.js'
 
 function createMapGrid(width = 6, height = 6) {
@@ -50,10 +51,41 @@ describe('movementCollision environment response', () => {
     const updated = boarderUpdates ? boarder : idle
     const collision = checkUnitCollision(updated, mapGrid, occupancyMap, units)
     expect(collision.type).toBe('unit')
-    applyUnitCollisionResponse(updated, updated.movement, collision, units, [], null, mapGrid, occupancyMap)
+    const index = new MovementCollisionIndex()
+    index.rebuild(units, mapGrid[0].length)
+    applyUnitCollisionResponse(updated, updated.movement, collision, units, [], null, mapGrid, occupancyMap, [], index)
     expect({ x: idle.x, y: idle.y, path: idle.path, target: idle.moveTarget }).toEqual({ x: 84, y: 64, path: [], target: null })
     expect(boarder.x).toBeLessThan(64)
     expect(idle.movement.velocity).toEqual({ x: 0, y: 0 })
+  })
+
+  it('[U07200] checks live cross-cell blockers while excluding the moving unit’s own occupancy', () => {
+    const mapGrid = createMapGrid()
+    const occupancyMap = createOccupancyMap()
+    const tank = { id: 'tank', x: 48, y: 32, health: 100 }
+    const blocker = { id: 'blocker', x: 112, y: 32, health: 100 }
+    const units = [tank, blocker]
+    const index = new MovementCollisionIndex()
+    index.rebuild(units, mapGrid[0].length)
+    occupancyMap[1][2] = 1
+
+    const collide = () => {
+      const movement = { velocity: { x: -2, y: 0 }, currentSpeed: 2 }
+      applyStaticObstacleCollisionResponse(
+        tank, movement, { type: 'terrain', tileX: 1, tileY: 1 },
+        47, 32, mapGrid, occupancyMap, units, [], index
+      )
+    }
+
+    blocker.x = 70
+    index.update(blocker)
+    collide()
+    expect(tank.x).toBe(48)
+
+    blocker.x = 112
+    index.update(blocker)
+    collide()
+    expect(tank.x).toBeGreaterThan(48)
   })
 
   it('[U07127] lets a ferry approach its own boarding line without being repelled offshore', () => {

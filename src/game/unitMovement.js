@@ -22,8 +22,10 @@ import { logPerformance } from '../performanceUtils.js'
 import { getEffectiveFireRange } from './unitCombat/combatHelpers.js'
 import { observeUnitCommandSignals, pruneUnitCommandHistory } from './unitCommandHistory.js'
 import { rebuildOwnerUnitIndex } from './unitOwnerIndex.js'
+import { MovementCollisionIndex } from './movementCollisionIndex.js'
 
 const REMOTE_ATTACK_CHASE_SUPPRESSION_MS = 5000
+const movementCollisionIndex = new MovementCollisionIndex()
 
 function signedAngleDelta(currentAngle, targetAngle) {
   let difference = (targetAngle - currentAngle) % (Math.PI * 2)
@@ -51,6 +53,7 @@ function isAiControlledUnit(unit, gameState) {
  */
 export const updateUnitMovement = logPerformance(function updateUnitMovement(units, mapGrid, occupancyMap, gameState, now, factories = null) {
   rebuildOwnerUnitIndex(units)
+  movementCollisionIndex.rebuild(units, mapGrid[0]?.length || 0)
   // Clean up unit selection - prevent null references
   cleanupDestroyedSelectedUnits()
 
@@ -238,10 +241,11 @@ export const updateUnitMovement = logPerformance(function updateUnitMovement(uni
     updateUnitRotation(unit, now)
 
     // Use unified movement system for natural movement
-    updateUnitPosition(unit, mapGrid, occupancyMap, now, units, gameState, factories)
+    updateUnitPosition(unit, mapGrid, occupancyMap, now, units, gameState, factories, movementCollisionIndex)
 
     // Update last moved time
     if (unit.x !== prevX || unit.y !== prevY) {
+      movementCollisionIndex.update(unit)
       unit.lastMovedTime = now
     }
 

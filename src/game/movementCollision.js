@@ -214,12 +214,11 @@ function isTileBlockedForCollision(mapGrid, tileX, tileY, unit = null) {
   return false
 }
 
-function isPositionBlockedForCollision(unit, targetX, targetY, mapGrid, occupancyMap, units = [], wrecks = [], ignoreIds = []) {
+function isPositionBlockedForCollision(unit, targetX, targetY, mapGrid, occupancyMap, units, wrecks, ignoredId, collisionIndex) {
   if (!unit) {
     return true
   }
 
-  const ignoreSet = ignoreIds.length > 0 ? new Set(ignoreIds) : null
   const centerX = targetX + TILE_SIZE / 2
   const centerY = targetY + TILE_SIZE / 2
   const tileX = Math.floor(centerX / TILE_SIZE)
@@ -242,18 +241,14 @@ function isPositionBlockedForCollision(unit, targetX, targetY, mapGrid, occupanc
       occupancy = Math.max(0, occupancy - 1)
     }
 
-    if (occupancy > 0 && ignoreSet) {
-      for (const other of units || []) {
-        if (!other || other.id === unit.id) continue
-        if (!ignoreSet.has(other.id)) continue
-        const otherTileX = Math.floor((other.x + TILE_SIZE / 2) / TILE_SIZE)
-        const otherTileY = Math.floor((other.y + TILE_SIZE / 2) / TILE_SIZE)
-        if (otherTileX === tileX && otherTileY === tileY) {
-          occupancy = Math.max(0, occupancy - 1)
-        }
-        if (occupancy <= 0) {
-          break
-        }
+    if (occupancy > 0 && ignoredId !== undefined && ignoredId !== unit.id) {
+      const other = collisionIndex
+        ? collisionIndex.unitsById.get(ignoredId)
+        : units?.find(candidate => candidate?.id === ignoredId)
+      if (other &&
+          Math.floor((other.x + TILE_SIZE / 2) / TILE_SIZE) === tileX &&
+          Math.floor((other.y + TILE_SIZE / 2) / TILE_SIZE) === tileY) {
+        occupancy--
       }
     }
 
@@ -264,12 +259,13 @@ function isPositionBlockedForCollision(unit, targetX, targetY, mapGrid, occupanc
 
   const minSeparation = MOVEMENT_CONFIG.MIN_UNIT_DISTANCE * 0.95
 
-  if (units && units.length > 0) {
-    for (const other of units) {
+  const candidates = collisionIndex ? collisionIndex.nearby(centerX, centerY, minSeparation) : units
+  if (candidates) {
+    for (const other of candidates) {
       if (!other || other.id === unit.id || other.health <= 0) continue
       if (isCarrierAircraftCollisionPair(unit, other)) continue
       if (other.type === 'f22Raptor') continue
-      if (ignoreSet && ignoreSet.has(other.id)) continue
+      if (ignoredId !== undefined && other.id === ignoredId) continue
       if (!isGroundUnit(other)) continue
 
       const otherCenterX = other.x + TILE_SIZE / 2
@@ -297,7 +293,7 @@ function isPositionBlockedForCollision(unit, targetX, targetY, mapGrid, occupanc
   return false
 }
 
-function applySafeSeparation(unit, dx, dy, mapGrid, occupancyMap, units = [], wrecks = [], ignoreIds = []) {
+function applySafeSeparation(unit, dx, dy, mapGrid, occupancyMap, units, wrecks, ignoredId, collisionIndex) {
   if (!unit || (dx === 0 && dy === 0)) {
     return { appliedX: 0, appliedY: 0 }
   }
@@ -314,9 +310,10 @@ function applySafeSeparation(unit, dx, dy, mapGrid, occupancyMap, units = [], wr
     const targetX = startX + scaledX
     const targetY = startY + scaledY
 
-    if (!isPositionBlockedForCollision(unit, targetX, targetY, mapGrid, occupancyMap, units, wrecks, ignoreIds)) {
+    if (!isPositionBlockedForCollision(unit, targetX, targetY, mapGrid, occupancyMap, units, wrecks, ignoredId, collisionIndex)) {
       unit.x = targetX
       unit.y = targetY
+      collisionIndex?.update(unit)
       appliedX = scaledX
       appliedY = scaledY
       break
@@ -333,7 +330,7 @@ function applySafeSeparation(unit, dx, dy, mapGrid, occupancyMap, units = [], wr
   return { appliedX, appliedY }
 }
 
-function ensureMinimumSeparation(unit, otherUnit, normalX, normalY, mapGrid, occupancyMap, units = [], wrecks = []) {
+function ensureMinimumSeparation(unit, otherUnit, normalX, normalY, mapGrid, occupancyMap, units, wrecks, collisionIndex) {
   if (!unit || !otherUnit) {
     return
   }
@@ -368,7 +365,8 @@ function ensureMinimumSeparation(unit, otherUnit, normalX, normalY, mapGrid, occ
     occupancyMap,
     units,
     wrecks,
-    [unit.id]
+    unit.id,
+    collisionIndex
   )
 
   const otherAlong = otherResult.appliedX * normalX + otherResult.appliedY * normalY
@@ -383,7 +381,8 @@ function ensureMinimumSeparation(unit, otherUnit, normalX, normalY, mapGrid, occ
       occupancyMap,
       units,
       wrecks,
-      [otherUnit.id]
+      otherUnit.id,
+      collisionIndex
     )
     const unitAlong = -(unitResult.appliedX * normalX + unitResult.appliedY * normalY)
     remaining = Math.max(0, remaining - unitAlong)
@@ -398,7 +397,8 @@ function ensureMinimumSeparation(unit, otherUnit, normalX, normalY, mapGrid, occ
       occupancyMap,
       units,
       wrecks,
-      [unit.id]
+      unit.id,
+      collisionIndex
     )
   }
 }
@@ -414,7 +414,7 @@ function applyAirSeparation(unit, otherUnit, normalX, normalY, separation) {
   }
 }
 
-function queueFriendlyYieldMoveIfIdle(pushedUnit, pushingUnit, normalX, normalY, mapGrid, occupancyMap, units, wrecks) {
+function queueFriendlyYieldMoveIfIdle(pushedUnit, pushingUnit, normalX, normalY, mapGrid, occupancyMap, units, wrecks, collisionIndex) {
   if (!pushedUnit || !pushingUnit || !mapGrid) return
   if (ownersAreEnemies(pushedUnit.owner, pushingUnit.owner)) return
   if (pushedUnit.moveTarget) return
@@ -453,7 +453,8 @@ function queueFriendlyYieldMoveIfIdle(pushedUnit, pushingUnit, normalX, normalY,
     occupancyMap,
     units,
     wrecks,
-    [pushingUnit.id]
+    pushingUnit.id,
+    collisionIndex
   )
 
   if (blocked) return
@@ -823,7 +824,8 @@ export function applyStaticObstacleCollisionResponse(
   mapGrid,
   occupancyMap,
   units = [],
-  wrecks = []
+  wrecks = [],
+  collisionIndex = null
 ) {
   if (!unit || !movement || !collisionResult) {
     return
@@ -871,7 +873,9 @@ export function applyStaticObstacleCollisionResponse(
       mapGrid,
       occupancyMap,
       units,
-      wrecks
+      wrecks,
+      undefined,
+      collisionIndex
     )
   }
 
@@ -880,7 +884,7 @@ export function applyStaticObstacleCollisionResponse(
   movement.lastStaticCollisionNormal = { x: normalX, y: normalY }
 }
 
-export function applyUnitCollisionResponse(unit, movement, collisionResult, units = [], factories = [], gameState = null, mapGrid = null, occupancyMap = null, wrecks = []) {
+export function applyUnitCollisionResponse(unit, movement, collisionResult, units = [], factories = [], gameState = null, mapGrid = null, occupancyMap = null, wrecks = [], collisionIndex = null) {
   if (!unit || !movement || !collisionResult || collisionResult.type !== 'unit' || !collisionResult.data) {
     return false
   }
@@ -905,7 +909,7 @@ export function applyUnitCollisionResponse(unit, movement, collisionResult, unit
       const idle = unitBoardsPastIdle ? otherUnit : unit
       const sign = unitBoardsPastIdle ? -1 : 1
       applySafeSeparation(boarder, sign * normalX * overlap, sign * normalY * overlap,
-        mapGrid, occupancyMap, units, wrecks, [idle.id])
+        mapGrid, occupancyMap, units, wrecks, idle.id, collisionIndex)
       return false
     }
   }
@@ -957,6 +961,7 @@ export function applyUnitCollisionResponse(unit, movement, collisionResult, unit
   if (airCollision) {
     if (separation > 0.001) {
       applyAirSeparation(unit, otherUnit, normalX, normalY, separation)
+      if (otherUnit) collisionIndex?.update(otherUnit)
     }
 
     const otherVelocity = otherUnit?.movement?.velocity
@@ -989,10 +994,11 @@ export function applyUnitCollisionResponse(unit, movement, collisionResult, unit
         occupancyMap,
         units,
         wrecks,
-        [unit.id]
+        unit.id,
+        collisionIndex
       )
 
-      queueFriendlyYieldMoveIfIdle(otherUnit, unit, normalX, normalY, mapGrid, occupancyMap, units, wrecks)
+      queueFriendlyYieldMoveIfIdle(otherUnit, unit, normalX, normalY, mapGrid, occupancyMap, units, wrecks, collisionIndex)
     }
 
     applySafeSeparation(
@@ -1003,11 +1009,12 @@ export function applyUnitCollisionResponse(unit, movement, collisionResult, unit
       occupancyMap,
       units,
       wrecks,
-      otherUnit ? [otherUnit.id] : []
+      otherUnit?.id,
+      collisionIndex
     )
 
     if (otherUnit) {
-      ensureMinimumSeparation(unit, otherUnit, normalX, normalY, mapGrid, occupancyMap, units, wrecks)
+      ensureMinimumSeparation(unit, otherUnit, normalX, normalY, mapGrid, occupancyMap, units, wrecks, collisionIndex)
     }
   }
 
