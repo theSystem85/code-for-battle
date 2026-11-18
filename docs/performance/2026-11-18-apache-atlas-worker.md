@@ -31,3 +31,5 @@ Both 60-second captures used headed Chrome 157.0.8103.79 on the verified Apple M
 Average callback FPS changed by −0.90% and minimum by 0%. The sampled atlas work left the main thread. The page CPU profiler does not measure worker time, and the FPS results show no gain in this session. Heap samples vary with browser collection and omit native bitmap allocations. The render and terrain metrics do not isolate the worker's contribution.
 
 The headed Chromium regression test compared two different Apache poses cropped to 72×72 pixels, reported zero changed channels versus the original crop, and verified staging memory returned to zero after disposal.
+
+The [compiled-game follow-up](2026-11-18-physical-display-acceptance.md#compiled-game-results) verified that Chrome loaded the same-origin worker chunk and no main-thread `createImageBitmap` samples remained in the production capture.

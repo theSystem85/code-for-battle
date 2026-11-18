@@ -33,14 +33,15 @@ export function createAtlasCropClient(store) {
 
   return {
     crop(url, rect, width, height, signal) {
-      if (unavailable || typeof globalThis.Worker !== 'function' || typeof globalThis.createImageBitmap !== 'function') return Promise.resolve(null)
+      const { Worker } = globalThis
+      if (unavailable || typeof Worker !== 'function' || typeof globalThis.createImageBitmap !== 'function') return Promise.resolve(null)
       return new Promise((resolve, reject) => {
         signal.throwIfAborted()
         clearTimeout(idleTimer)
         if (!worker) {
           try {
             staging = store.reserve({ owner: 'atlas-crop-worker', byteClass: 'staging', bytes: WORKER_STAGE_BYTES })
-            worker = new globalThis.Worker(new URL('./atlasCrop.worker.js', import.meta.url), { type: 'module' })
+            worker = new Worker(new URL('./atlasCrop.worker.js', import.meta.url), { type: 'module' })
             worker.onmessage = ({ data }) => settle(data.id, data.error && new Error(data.error), data.bitmap)
             worker.onerror = event => {
               event.preventDefault()

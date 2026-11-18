@@ -9,6 +9,7 @@ const label = 'CPU benchmark'
 const fixture = process.env.BENCHMARK_FIXTURE || join(output, 'fixture.cfb')
 const profileEnabled = process.env.BENCHMARK_PROFILE === '1'
 const battleOnly = process.env.BENCHMARK_BATTLE_ONLY === '1'
+const importThroughUi = process.env.BENCHMARK_IMPORT_SAVE === '1'
 const traceEnabled = process.env.BENCHMARK_COMPOSITOR_TRACE === '1'
 const backendChoice = process.env.BENCHMARK_BACKEND || 'auto'
 const staticGroundTiming = process.env.BENCHMARK_STATIC_GROUND_TIMING !== '0'
@@ -69,7 +70,12 @@ try {
   const page = await context.newPage()
   await page.bringToFront()
   const errors = []
+  const workers = []
   page.on('pageerror', error => errors.push(error.message))
+  page.on('worker', worker => {
+    const url = new URL(worker.url())
+    workers.push(url.protocol === 'data:' ? 'data:' : url.pathname)
+  })
   const cadence = await page.evaluate(async() => {
     return new Promise(resolve => {
       let first
@@ -135,16 +141,26 @@ try {
     await writeFile(fixture, save)
   }
 
-  const save = await readFile(fixture, 'utf8')
+  if (importThroughUi) {
+    await page.waitForFunction(() =>
+      performance.getEntriesByName('startup:idle-settings-and-save:duration').length > 0,
+    null, { timeout: 120000, polling: 100 })
+  }
   const loadStart = Date.now()
-  await page.evaluate(async({ save, label }) => {
-    const { setStoredItem } = await import('/src/storage/indexedDbStorage.js')
-    const { loadGame } = await import('/src/saveGame.js')
-    const key = `rts_save_${label}`
-    window.gameState.gamePaused = true
-    setStoredItem(key, save)
-    await loadGame(key)
-  }, { save, label })
+  if (importThroughUi) {
+    await page.locator('#importSaveInput').setInputFiles(fixture)
+    await page.waitForFunction(() => window.gameInstance?.units?.length >= 400, null, { timeout: 120000 })
+  } else {
+    const save = await readFile(fixture, 'utf8')
+    await page.evaluate(async({ save, label }) => {
+      const { setStoredItem } = await import('/src/storage/indexedDbStorage.js')
+      const { loadGame } = await import('/src/saveGame.js')
+      const key = `rts_save_${label}`
+      window.gameState.gamePaused = true
+      setStoredItem(key, save)
+      await loadGame(key)
+    }, { save, label })
+  }
   await waitReady()
   const preparationMs = Date.now() - loadStart
 
@@ -268,6 +284,7 @@ try {
 
     let start
     let previous
+    window.__framePhases?.reset()
     state.gamePaused = false
     gameLoop.resumeFromPause()
     try {
@@ -307,6 +324,7 @@ try {
       startUnits, endUnits: units.length, maxBullets, maxVisibleApacheRockets, maxVisibleImpacts,
       selected: selected.length, duration, distance, speed,
       intervals, cpuFrames, samples, longTasks, backend: state.renderStats?.gpuTerrain?.backend,
+      framePhases: window.__framePhases?.snapshot(),
       browserDpr: devicePixelRatio, canvas: [canvas.width, canvas.height, canvas.clientWidth, canvas.clientHeight]
     }
   }, { battleOnly, battleDuration, omitWebGpuTerrainTiming })
@@ -352,8 +370,8 @@ try {
     errors
   }
   await writeFile(join(output, 'result.json'), JSON.stringify({
-    summary, gpu, browser: await browser.version(), profileEnabled, traceEnabled, backendChoice,
-    staticGroundTiming, omitWebGpuTerrainTiming, cdpMetrics, ...result
+    summary, gpu, browser: await browser.version(), profileEnabled, traceEnabled, backendChoice, importThroughUi,
+    staticGroundTiming, omitWebGpuTerrainTiming, workers, cdpMetrics, ...result
   }))
   console.log(JSON.stringify(summary, null, 2))
 } finally {

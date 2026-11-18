@@ -14,6 +14,7 @@ const scene = summary => summary.scene || 'fast scrolling'
 if (scene(a) !== scene(b) || a.startUnits !== b.startUnits || a.routeLaps !== b.routeLaps || a.browserDpr !== b.browserDpr ||
     String(a.canvas) !== String(b.canvas) || backend(a) !== backend(b) || before.profileEnabled !== after.profileEnabled ||
     before.duration !== after.duration || Boolean(before.traceEnabled) !== Boolean(after.traceEnabled) ||
+    Boolean(before.importThroughUi) !== Boolean(after.importThroughUi) ||
     (before.staticGroundTiming ?? true) !== (after.staticGroundTiming ?? true) ||
     Boolean(before.omitWebGpuTerrainTiming) !== Boolean(after.omitWebGpuTerrainTiming)) {
   throw new Error('Capture settings differ. Compare like-for-like runs.')
@@ -44,6 +45,7 @@ ${[
   row('Intervals above 1000/60 ms', capture => capture.intervals.filter(ms => ms > FRAME_DEADLINE_MS).length),
   row('Mean CPU update (ms)', avg('averageUpdateMs')),
   row('Mean CPU render (ms)', avg('averageRenderMs')),
+  row('CPU effects submission p95 (ms)', capture => capture.framePhases?.phases?.effects?.p95Ms),
   row('Terrain GPU p95 (ms)', sample('gpu')),
   row('Static ground GPU p95 (ms)', sample('staticGroundGpu')),
   row('Peak Apache rocket centers in viewport', avg('maxVisibleApacheRockets')),

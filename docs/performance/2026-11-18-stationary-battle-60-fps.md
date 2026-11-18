@@ -12,7 +12,7 @@ The scrolling and stationary numbers are separate scenarios. The stationary pair
 
 | Item | Report |
 | --- | --- |
-| Collision separation | [Collision measurements](../../specs/2026-11-17-unit-heavy-cpu-performance.md#local-comparison) |
+| Collision separation | [Collision measurements](2026-11-18-collision-separation.md) |
 | Prepared wreck sprites | [Wreck sprite report](2026-11-18-wreck-sprite-preparation.md) |
 | Save restoration | [Save restore report](2026-11-18-save-restore-readiness.md) |
 | AI breach search | [AI breach budget report](2026-11-18-ai-breach-budget.md) |
