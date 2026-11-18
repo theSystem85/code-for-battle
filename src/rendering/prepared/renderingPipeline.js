@@ -126,6 +126,7 @@ async function prepareAndPublishSprites({ density, signal, onProgress }) {
     signal,
     onProgress,
     deferUnits: true,
+    useAtlasWorker: true,
     initialUnitTypes: (gameState.units || []).map(unit => unit.type),
     prioritizeEntry: isWreckSourceEntry
   })

@@ -7,6 +7,7 @@ import { reportBootSprites, yieldBootPaint } from '../../ui/bootProgress.js'
 import { createSpriteStreamingScheduler } from '../../utils/spriteStreamingScheduler.js'
 import { SpriteResourceStore } from './spriteResourceStore.js'
 import { getSpriteResourceLifecycleStore, onSpriteResourceLifecycleTeardown } from './spriteResourceLifecycle.js'
+import { createAtlasCropClient } from './atlasCropClient.js'
 
 export const PREPARED_SPRITE_MANIFEST_URL = '/images/prepared/sprite-manifest.json'
 export const AIRCRAFT_RESIZE_AUDIT_TAGS = Object.freeze({
@@ -359,6 +360,7 @@ export async function prepareSpriteRegistry({
   signal,
   onProgress,
   deferUnits = false,
+  useAtlasWorker = false,
   initialUnitTypes = [],
   prioritizeEntry = null,
   resourceStore = getSpriteResourceLifecycleStore()
@@ -379,7 +381,10 @@ export async function prepareSpriteRegistry({
     throw new Error(`Prepared sprite byte budget exceeded: ${requiredBytes} > ${byteBudget}`)
   }
 
-  const registry = new PreparedSpriteRegistry({ assetGeneration, density, byteBudget, mapGeneration, resourceStore })
+  const atlasWorker = useAtlasWorker ? createAtlasCropClient(resourceStore) : null
+  const registry = new PreparedSpriteRegistry({
+    assetGeneration, density, byteBudget, mapGeneration, resourceStore, disposePreparation: atlasWorker?.dispose
+  })
   const sourcePromises = new Map()
   const stagedDisposables = []
   const entryCount = manifest.entries.length
@@ -402,6 +407,7 @@ export async function prepareSpriteRegistry({
 
   try {
     const prepareEntry = async(entry) => {
+      if (registry.disposed) return
       throwIfAborted(signal)
       const registryKey = getPreparedSpriteCacheKey(manifest.assetVersion, density, entry.id)
       // A deferred/critical request can race for the same entry; a live entry is final.
@@ -415,34 +421,31 @@ export async function prepareSpriteRegistry({
       const sourceUrl = selection.variant?.path
         ? `${path}${path.includes('?') ? '&' : '?'}v=${encodeURIComponent(manifest.assetVersion)}`
         : path
-      let source
-      try {
-        source = await getSource(sourceUrl)
-      } catch (error) {
-        if (signal?.aborted) throw error
-        console.warn(`Prepared sprite unavailable: ${entry.id}`, error)
-        return
-      }
-      let image = source
-      if (
-        selection.variant?.sourceRect ||
-        !selection.exact ||
-        (source.naturalWidth || source.width) !== targetWidth ||
-        (source.naturalHeight || source.height) !== targetHeight
-      ) {
-        image = await runAssetJob(registry.store, `prepared-bitmap:${sourceUrl}:${targetWidth}x${targetHeight}`, {
+      const rect = selection.variant?.sourceRect
+      let source, image
+      if (rect && atlasWorker) {
+        const options = {
           generations: registry.generations,
-          operation: () => createSizedBitmap(
-            source,
-            selection.variant?.sourceRect,
-            targetWidth,
-            targetHeight,
-            createBitmap,
-            canvasFactory
-          )
-        })
-        if (typeof image.close === 'function') {
-          stagedDisposables.push(image)
+          operation: jobSignal => atlasWorker.crop(sourceUrl, rect, targetWidth, targetHeight, jobSignal)
+        }
+        try {
+          image = await runAssetJob(registry.store, `${registry.storeNamespace}atlas-crop:${registryKey}`, options)
+        } catch (error) {
+          throwIfAborted(signal)
+          if (registry.disposed) return
+          console.warn(`Atlas crop worker unavailable: ${entry.id}`, error)
+        }
+      }
+      if (!image) {
+        source = await getSource(sourceUrl)
+        image = source
+        if (rect || !selection.exact ||
+            (source.naturalWidth || source.width) !== targetWidth ||
+            (source.naturalHeight || source.height) !== targetHeight) {
+          image = await runAssetJob(registry.store, `${registry.storeNamespace}prepared-bitmap:${registryKey}`, {
+            generations: registry.generations,
+            operation: () => createSizedBitmap(source, rect, targetWidth, targetHeight, createBitmap, canvasFactory)
+          })
         }
       }
       if (registry.disposed || registry.entries.has(registryKey)) {
@@ -462,11 +465,21 @@ export async function prepareSpriteRegistry({
         lastPaintYield = typeof performance !== 'undefined' ? performance.now() : lastPaintYield
         await yieldBootPaint()
       }
-      registry.register(
-        registryKey,
-        sprite,
-        { decodedBytes: targetWidth * targetHeight * 4, dispose: disposePreparedImage }
-      )
+      if (registry.disposed || registry.entries.has(registryKey)) {
+        if (image !== source) image.close?.()
+        return
+      }
+      try {
+        if (typeof image.close === 'function') stagedDisposables.push(image)
+        registry.register(
+          registryKey,
+          sprite,
+          { decodedBytes: targetWidth * targetHeight * 4, dispose: disposePreparedImage }
+        )
+      } catch (error) {
+        if (image !== source) image.close?.()
+        throw error
+      }
     }
     const entriesById = new Map(manifest.entries.map(entry => [entry.id, entry]))
     const safePrepareEntry = async entry => {

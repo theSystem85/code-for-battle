@@ -1,0 +1,1 @@
+{ "description": "Moved Apache sprite atlas preparation off the main thread." }

@@ -7,7 +7,7 @@ function sourceOf(sprite) {
 }
 
 export class PreparedSpriteRegistry {
-  constructor({ assetGeneration, density, byteBudget, resourceStore = null, mapGeneration = 0 }) {
+  constructor({ assetGeneration, density, byteBudget, resourceStore = null, mapGeneration = 0, disposePreparation = null }) {
     if (!Number.isInteger(assetGeneration) || assetGeneration < 0) throw new RangeError('Invalid asset generation')
     if (!Number.isFinite(density) || density <= 0) throw new RangeError('Invalid sprite density')
     if (!Number.isSafeInteger(byteBudget) || byteBudget < 0) throw new RangeError('Invalid sprite byte budget')
@@ -17,6 +17,7 @@ export class PreparedSpriteRegistry {
     this.decodedBytes = 0
     this.entries = new Map()
     this.disposed = false
+    this.disposePreparation = disposePreparation
     this.store = resourceStore || new SpriteResourceStore({ budgets: { resident: byteBudget } })
     this.ownsStore = !resourceStore
     // A shared lifecycle store may briefly hold an outgoing and an incoming
@@ -106,6 +107,7 @@ export class PreparedSpriteRegistry {
 
   dispose() {
     if (this.disposed) return
+    this.disposePreparation?.()
     for (const key of [...this.entries.keys()]) this.remove(key)
     if (this.ownsStore) this.store.dispose()
     this.disposed = true
