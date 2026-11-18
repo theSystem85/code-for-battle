@@ -11,3 +11,5 @@ The CPU optimization checklist implementation is complete on the local feature b
 7. [x] Test the condition for GPU-parallel impact particles. Bypassing the entire impact draw path reduced effects submission time and left presentation near 2.13 FPS. The 60 FPS gate remains open and the production particle renderer stays in place. [Impact draw attribution report](2026-11-18-impact-draw-attribution.md)
 
 A 60 FPS frame has 16.67 ms available. The reference run reported CPU update times above that budget on their own. GPU work and worker parallelism can free time for the main thread, but measurement at explicitly tested workloads is required for a frame-rate guarantee. The benchmark's minimum FPS is the count in the worst trailing one-second window.
+
+Continue with the [prioritized CPU, GPU and benchmark follow-up checklist](2026-11-18-next-performance-checklist.md).
