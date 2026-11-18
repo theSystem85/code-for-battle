@@ -4,6 +4,7 @@ import { LARGE_EXPLOSION_VISUAL_RADIUS, TILE_SIZE, UNIT_PROPERTIES } from '../..
 export const MAX_IMPACT_PARTICLES = 384
 export const MOBILE_IMPACT_PARTICLES = 128
 const COLORS = ['#ffe3a0', '#8b7053', '#ff8d27', '#65605a', '#ffad43']
+const FLASH_BANDS = 8
 let rendererSerial = 0
 const TANK_IMPACT_TYPES = new Set(['tank', 'tank_v1', 'tank_v2', 'tank_v3', 'tank-v2', 'tank-v3'])
 
@@ -178,19 +179,28 @@ export class ImpactVfx {
       ctx.globalAlpha = fade * (p.kind === 3 ? 0.22 : 0.85)
       ctx.fillStyle = COLORS[p.kind]
       if (p.kind === 4) {
-        // Concentric FILLED disks accumulate brightness toward the center.
-        // No edge band, stroke, gradient allocation or resized bitmap per frame.
+        // Composite the orange disks once. At every band, source-over
+        // produces the same opacity as the original stack of fills.
         const radius = p.size * Math.min(1, 0.3 + age / 220)
-        ctx.fillStyle = '#ff7018'
-        for (let layer = 8; layer > 0; layer--) {
-          ctx.globalAlpha = Math.min(1, fade * 2) * 0.18
-          ctx.beginPath()
-          ctx.arc(x, y, radius * layer / 8, 0, Math.PI * 2)
-          ctx.fill()
+        const intensity = Math.min(1, fade * 2)
+        const transmission = 1 - intensity * 0.18
+        const bands = ctx.createRadialGradient(x, y, 0, x, y, radius)
+        let inner = `rgba(255,112,24,${1 - transmission ** FLASH_BANDS})`
+        for (let band = 1; band < FLASH_BANDS; band++) {
+          const edge = band / FLASH_BANDS
+          const outer = `rgba(255,112,24,${1 - transmission ** (FLASH_BANDS - band)})`
+          bands.addColorStop(edge, inner)
+          bands.addColorStop(edge, outer)
+          inner = outer
         }
+        ctx.fillStyle = bands
+        ctx.globalAlpha = 1
+        ctx.beginPath()
+        ctx.arc(x, y, radius, 0, Math.PI * 2)
+        ctx.fill()
         ctx.globalCompositeOperation = 'lighter'
         ctx.fillStyle = '#fff4bc'
-        ctx.globalAlpha = Math.min(1, fade * 2)
+        ctx.globalAlpha = intensity
         ctx.beginPath()
         ctx.arc(x, y, radius * 0.4 * fade, 0, Math.PI * 2)
         ctx.fill()

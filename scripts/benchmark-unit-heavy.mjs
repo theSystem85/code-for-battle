@@ -187,10 +187,26 @@ try {
     const report = display.reportFrameBreakdown
     let lastSample = -Infinity
     let maxBullets = 0
+    let maxVisibleApacheRockets = 0
+    let maxVisibleImpacts = 0
+    const isOnScreen = entity => entity.x >= desiredX && entity.x < desiredX + canvas.clientWidth &&
+      entity.y >= desiredY && entity.y < desiredY + canvas.clientHeight
     display.reportFrameBreakdown = function(frame) {
       const now = performance.now()
       cpuFrames.push({ t: now, ...frame })
       maxBullets = Math.max(maxBullets, gameLoop.bullets.length)
+      if (battleOnly) {
+        let rockets = 0
+        let impacts = 0
+        for (const bullet of gameLoop.bullets) {
+          if (bullet.originType === 'apacheRocket' && isOnScreen(bullet)) rockets++
+        }
+        for (const explosion of state.explosions) {
+          if (explosion.type !== 'spriteSheet' && isOnScreen(explosion)) impacts++
+        }
+        maxVisibleApacheRockets = Math.max(maxVisibleApacheRockets, rockets)
+        maxVisibleImpacts = Math.max(maxVisibleImpacts, impacts)
+      }
       if (now - lastSample >= 1000) {
         lastSample = now
         samples.push({
@@ -246,7 +262,8 @@ try {
       throw new Error('Stationary benchmark did not sustain active combat')
     }
     return {
-      startUnits, endUnits: units.length, maxBullets, selected: selected.length, duration, distance, speed,
+      startUnits, endUnits: units.length, maxBullets, maxVisibleApacheRockets, maxVisibleImpacts,
+      selected: selected.length, duration, distance, speed,
       intervals, cpuFrames, samples, longTasks, backend: state.renderStats?.gpuTerrain?.backend,
       browserDpr: devicePixelRatio, canvas: [canvas.width, canvas.height, canvas.clientWidth, canvas.clientHeight]
     }
@@ -276,6 +293,8 @@ try {
   const summary = {
     cadence, preparationMs, tutorialDisabled: true, scene: battleOnly ? 'stationary battle' : 'fast scrolling',
     averageFps: intervals.length * 1000 / elapsed,
+    maxVisibleApacheRockets: result.maxVisibleApacheRockets,
+    maxVisibleImpacts: result.maxVisibleImpacts,
     minimumOneSecondFps,
     slowestFrameFps: 1000 / percent(1),
     p95Ms: percent(0.95), p99Ms: percent(0.99), maxMs: percent(1),

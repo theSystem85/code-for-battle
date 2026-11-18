@@ -4,7 +4,12 @@ import { describe, expect, it, vi } from 'vitest'
 import { ImpactVfx, createImpactVisual, resolveExplosionVisualRadius, selectImpactProfile, MAX_IMPACT_PARTICLES, MOBILE_IMPACT_PARTICLES, isLowImpactQuality } from '../../src/rendering/vfx/impactVfx.js'
 
 const explosion = (profile = 'blasty', seed = 123) => ({ x: 100, y: 100, startTime: 0, maxRadius: 40, impactProfile: profile, impactAngle: Math.PI, impactSurface: 'unit', visualSeed: seed })
-const context = () => ({ globalAlpha: 0.7, globalCompositeOperation: 'source-over', fillStyle: 'red', strokeStyle: 'blue', lineWidth: 3, drawImage: vi.fn(), beginPath: vi.fn(), arc: vi.fn(), ellipse: vi.fn(), fill: vi.fn(), moveTo: vi.fn(), lineTo: vi.fn(), stroke: vi.fn() })
+const context = () => ({
+  globalAlpha: 0.7, globalCompositeOperation: 'source-over', fillStyle: 'red', strokeStyle: 'blue', lineWidth: 3,
+  drawImage: vi.fn(), beginPath: vi.fn(), arc: vi.fn(), ellipse: vi.fn(), fill: vi.fn(),
+  moveTo: vi.fn(), lineTo: vi.fn(), stroke: vi.fn(),
+  createRadialGradient: vi.fn(() => ({ addColorStop: vi.fn() }))
+})
 
 describe('impact visuals', () => {
   it('[U07050] separates tank-impact visual radius from gameplay splash radius', () => {
@@ -48,6 +53,25 @@ describe('impact visuals', () => {
     const ctx = context()
     pool.render(ctx, {}, { x: 0, y: 0 }, 310, 200, 200)
     expect(ctx.arc.mock.calls.some(call => call[2] > 80)).toBe(true)
+  })
+  it('[U07207] composites the orange flash in one draw while retaining its band opacity and additive core', () => {
+    const pool = new ImpactVfx()
+    const ctx = context()
+    pool.emit(explosion(), 0, false)
+    const draws = []
+    ctx.fill.mockImplementation(() => draws.push([ctx.fillStyle, ctx.globalAlpha, ctx.globalCompositeOperation]))
+
+    pool.render(ctx, {}, { x: 0, y: 0 }, 300, 200, 200)
+
+    expect(ctx.createRadialGradient).toHaveBeenCalledTimes(1)
+    const gradient = ctx.createRadialGradient.mock.results[0].value
+    const stops = gradient.addColorStop.mock.calls
+    expect(stops[0][0]).toBe(1 / 8)
+    expect(Number(stops[0][1].match(/,([^,]+)\)$/)[1])).toBeCloseTo(1 - 0.91 ** 8)
+    expect(stops.at(-1)[0]).toBe(7 / 8)
+    expect(Number(stops.at(-1)[1].match(/,([^,]+)\)$/)[1])).toBeCloseTo(0.09)
+    expect(draws.filter(([style]) => style === gradient)).toEqual([[gradient, 1, 'source-over']])
+    expect(draws[1]).toEqual(['#fff4bc', 0.5, 'lighter'])
   })
   it('[U02048] adds scorch, dirt and more dust on ground, with more sparks on metal', () => {
     for (const profile of ['sparky', 'blasty']) {
