@@ -4,6 +4,7 @@ import { mkdir, open, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { createHash } from 'node:crypto'
 import { validateBattleResult } from './performance/battleValidity.js'
+import { installGpuShadowBatch } from './performance/gpu-shadow-batch.js'
 
 const output = process.env.BENCHMARK_OUTPUT || 'tmp/unit-heavy'
 const url = process.env.BENCHMARK_URL || 'http://127.0.0.1:4176'
@@ -15,6 +16,7 @@ const freezeTraversal = process.env.BENCHMARK_FREEZE_TRAVERSAL === '1'
 const importThroughUi = process.env.BENCHMARK_IMPORT_SAVE === '1'
 const traceEnabled = process.env.BENCHMARK_COMPOSITOR_TRACE === '1'
 const assetTrace = process.env.BENCHMARK_ASSET_TRACE === '1'
+const gpuShadowBatch = process.env.BENCHMARK_GPU_SHADOW_BATCH === '1'
 const countStandbyClears = process.env.BENCHMARK_COUNT_STANDBY_CLEARS === '1'
 const impactDraw = process.env.BENCHMARK_IMPACT_DRAW ?? null
 const holdMinimap = process.env.BENCHMARK_HOLD_MINIMAP === '1'
@@ -28,6 +30,7 @@ if (!['auto', 'webgpu', 'webgl'].includes(backendChoice)) {
   throw new Error('BENCHMARK_BACKEND must be auto, webgpu or webgl')
 }
 if (freezeTraversal && battleOnly) throw new Error('Frozen traversal requires the scrolling route')
+if (gpuShadowBatch && holdForeground !== '0') throw new Error('Shadow batching requires normal foreground rendering')
 if (impactDraw !== null && (!battleOnly || !['0', '1'].includes(impactDraw))) {
   throw new Error('BENCHMARK_IMPACT_DRAW requires a stationary battle and must be 0 or 1')
 }
@@ -76,6 +79,7 @@ try {
   }
 
   const context = await browser.newContext({ viewport: null })
+  if (gpuShadowBatch) await context.addInitScript({ content: `window.__installGpuShadowBatch = ${installGpuShadowBatch.toString()}` })
   await context.addInitScript(({ backendChoice, staticGroundTiming, countStandbyClears, assetTrace }) => {
     if (assetTrace) {
       performance.setResourceTimingBufferSize(10000)
@@ -345,20 +349,22 @@ try {
     const canvas = document.getElementById('gameCanvas')
     const selected = units.filter(unit => unit.owner === state.humanPlayer && unit.type.startsWith('tank'))
     selected.forEach(unit => { unit.selected = true })
-    if (battleOnly) {
-      window.selectedUnitsRef?.splice(0, window.selectedUnitsRef.length, ...selected)
-      // Keep the match running without shielding combat units or suppressing hits.
-      for (const base of new Set([...gameLoop.factories, ...state.buildings])) {
-        if (base.type !== 'constructionYard') continue
-        let health = base.health
-        Object.defineProperty(base, 'health', {
-          configurable: true,
-          enumerable: true,
-          get: () => health,
-          set: value => { health = Math.max(1, value) }
-        })
-        Object.defineProperty(base, 'isBeingSold', { configurable: true, get: () => false, set() {} })
-      }
+    if (battleOnly) window.selectedUnitsRef?.splice(0, window.selectedUnitsRef.length, ...selected)
+    // Keep all parties in the match while leaving unit damage and combat active.
+    const protectedYards = new Set([...gameLoop.factories, ...state.buildings].filter(base => base?.type === 'constructionYard'))
+    if (![...protectedYards].some(base => base.owner === state.humanPlayer || base.id === state.humanPlayer ||
+      (state.humanPlayer === 'player1' && base.owner === 'player'))) {
+      throw new Error('The benchmark fixture has no local construction yard to protect')
+    }
+    for (const base of protectedYards) {
+      let health = Math.max(1, base.health)
+      Object.defineProperty(base, 'health', {
+        configurable: true,
+        enumerable: true,
+        get: () => health,
+        set: value => { health = Math.max(1, value) }
+      })
+      Object.defineProperty(base, 'isBeingSold', { configurable: true, get: () => false, set() {} })
     }
     const startUnits = units.length
     if (startUnits < 400 || !selected.length || !state.frameLimiterEnabled) {
@@ -391,10 +397,13 @@ try {
     let desiredX = route[0][0]
     let desiredY = route[0][1]
     const render = renderer.renderGame
+    const shadowBatch = window.__installGpuShadowBatch?.(foreground)
     renderer.renderGame = function(...args) {
       state.scrollOffset.x = desiredX
       state.scrollOffset.y = desiredY
-      return render.apply(this, args)
+      const outcome = render.apply(this, args)
+      shadowBatch?.draw()
+      return outcome
     }
     const display = gameLoop.fpsDisplay
     const report = display.reportFrameBreakdown
@@ -521,6 +530,7 @@ try {
       renderer.renderGame = render
       display.reportFrameBreakdown = report
       gameLoop.renderMinimapIfDue = renderMinimap
+      shadowBatch?.close()
       if (holdForeground !== '0') {
         for (const method of drawMethods) delete foreground[method]
       }
@@ -529,8 +539,8 @@ try {
     if (document.querySelector('.tutorial-overlay') || window.tutorialSystem) {
       throw new Error('The tutorial=0 startup flag did not suppress tutorial initialization')
     }
-    if (battleOnly && (state.gameOver || state.localPlayerDefeated || maxBullets === 0 || state.gamePaused)) {
-      throw new Error('Stationary benchmark did not sustain active combat')
+    if (state.gameOver || state.localPlayerDefeated || state.gamePaused || (battleOnly && maxBullets === 0)) {
+      throw new Error('Benchmark match ended, paused, or failed to sustain the stationary battle')
     }
     if (impactDraw !== null && (activeImpactFrames === 0 || maxVisibleApacheRockets === 0 || maxVisibleImpacts === 0)) {
       throw new Error('The impact probe did not observe Apache volleys and active impacts')
@@ -538,6 +548,8 @@ try {
     return {
       startUnits, endUnits: units.length, maxBullets, maxVisibleApacheRockets, maxVisibleImpacts, minimapCalls, foregroundDraws, suppressedDraws, substitutedDraws, shadowBitmapCount: shadowBitmaps.size, imageSources, sourceStacks, cameraDriftFrames, invalidSceneFrames,
       simulationStepMs: state.simulationStepMs || 1000 / 60, tutorialSeen: window.__benchmarkTutorialSeen,
+      protectedConstructionYards: protectedYards.size,
+      gpuShadowBatch: shadowBatch?.stats(),
       selected: selected.length, duration, distance, speed,
       intervals, cpuFrames, samples, longTasks, backend: state.renderStats?.gpuTerrain?.backend,
       assetTrace: assetTrace ? {
