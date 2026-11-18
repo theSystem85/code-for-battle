@@ -1859,12 +1859,9 @@ export class UnitRenderer {
     ctx.restore()
   }
 
-  renderUnitBase(ctx, unit, scrollOffset, viewportWidth, viewportHeight, alreadyVisible = false) {
-    if (!alreadyVisible && !this.shouldRenderUnit(unit, scrollOffset, viewportWidth, viewportHeight)) return
-
+  renderUnitShadow(ctx, unit, scrollOffset) {
     const centerX = unit.x + TILE_SIZE / 2 - scrollOffset.x
     const centerY = unit.y + TILE_SIZE / 2 - scrollOffset.y
-
     if (UNIT_SHADOWS_ENABLED && usesUnitGroundShadow(unit)) {
       let drawMask = this.shadowMaskDrawers.get(unit.type)
       if (!drawMask) {
@@ -1874,6 +1871,13 @@ export class UnitRenderer {
       }
       drawCachedUnitShadow(ctx, unit.type, centerX, centerY, TILE_SIZE, drawMask, getCurrentUnitShadowSettings)
     }
+  }
+
+  renderUnitBase(ctx, unit, scrollOffset, viewportWidth, viewportHeight, alreadyVisible = false) {
+    if (!alreadyVisible && !this.shouldRenderUnit(unit, scrollOffset, viewportWidth, viewportHeight)) return
+
+    const centerX = unit.x + TILE_SIZE / 2 - scrollOffset.x
+    const centerY = unit.y + TILE_SIZE / 2 - scrollOffset.y
 
     // Check if this is a tank type and if image rendering is enabled
     const isTank = ['tank_v1', 'tank-v2', 'tank-v3', 'tank_v2', 'tank_v3', 'lightTank'].includes(unit.type)

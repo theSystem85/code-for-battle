@@ -715,6 +715,17 @@ export class Renderer {
       if (visibility <= 0) continue
       gameCtx.save()
       gameCtx.globalAlpha *= visibility
+      this.unitRenderer.renderUnitShadow(gameCtx, unit, scrollOffset)
+      gameCtx.restore()
+    }
+    for (const unit of visibleGroundedUnits) {
+      this.unitRenderer.renderUnitShadow(gameCtx, unit, scrollOffset)
+    }
+    for (const unit of visibleExitingUnits) {
+      const visibility = factoryExitVisibility(unit)
+      if (visibility <= 0) continue
+      gameCtx.save()
+      gameCtx.globalAlpha *= visibility
       this.singleExitingUnit[0] = unit
       this.unitRenderer.renderBases(gameCtx, this.singleExitingUnit, scrollOffset, true)
       gameCtx.restore()

@@ -692,12 +692,12 @@ export let UNIT_SHADOWS_ENABLED = true
 export let CRYSTAL_GLOW_ENABLED = true
 // Cosmetic only: tank shell impacts render at half this large-blast baseline.
 export let LARGE_EXPLOSION_VISUAL_RADIUS = TILE_SIZE * 2
-export let UNIT_SHADOW_OFFSET = 0.6
+export let UNIT_SHADOW_OFFSET = 0.8
 export let UNIT_SHADOW_DIRECTION = 69
 export let UNIT_SHADOW_START_STRETCH = 2
-export let UNIT_SHADOW_END_STRETCH = 2.65
+export let UNIT_SHADOW_END_STRETCH = 2.9
 export let UNIT_SHADOW_SIZE = 1.8
-export let UNIT_SHADOW_OPACITY = 0.2
+export let UNIT_SHADOW_OPACITY = 0.45
 export let UNIT_SHADOW_BLUR = 6.5
 export function setCoastalShallowsEnabled(value) {
   COASTAL_SHALLOWS_ENABLED = Boolean(value)

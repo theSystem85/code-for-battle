@@ -157,7 +157,7 @@ describe('Renderer airborne layering', () => {
 
   it('[U03713] partitions airborne and carrier-deck units into the top render layer', () => {
     const renderer = new Renderer()
-    const exitingTank = { id: 'exiting', type: 'tank_v1', x: 0, y: 0, factoryExit: { elapsed: 800, duration: 1200, phase: 'waiting' } }
+    const exitingTank = { id: 'exiting', type: 'tank_v1', x: 0, y: 0, factoryExit: { elapsed: 800, duration: 1200, phase: 'moving' } }
     const groundedTank = { id: 'ground-1', type: 'tank_v1', x: 0, y: 0, flightState: 'grounded' }
     const airborneApache = { id: 'air-1', type: 'apache', x: 0, y: 0, flightState: 'airborne', isAirUnit: true }
     const parkedApache = { id: 'air-2', type: 'apache', x: 0, y: 0, flightState: 'grounded', isAirUnit: true }
@@ -200,7 +200,7 @@ describe('Renderer airborne layering', () => {
   it('[U03715] renders airborne units after grounded units and building overlays', () => {
     const renderer = new Renderer()
     const callOrder = []
-    const exitingTank = { id: 'exiting', type: 'tank_v1', x: 0, y: 0, factoryExit: { elapsed: 800, duration: 1200, phase: 'waiting' } }
+    const exitingTank = { id: 'exiting', type: 'tank_v1', x: 0, y: 0, factoryExit: { elapsed: 800, duration: 1200, phase: 'moving' } }
     const groundedTank = { id: 'ground-1', type: 'tank_v1', x: 0, y: 0, flightState: 'grounded' }
     const airborneApache = { id: 'air-1', type: 'apache', x: 64, y: 64, flightState: 'airborne', isAirUnit: true }
     const carrier = { id: 'carrier-1', type: 'aircraftCarrier', x: 96, y: 96, flightState: 'grounded' }
@@ -243,6 +243,7 @@ describe('Renderer airborne layering', () => {
       callOrder.push(`building-bases:${entities.length}`)
     })
     renderer.wreckRenderer.render.mockImplementation(() => callOrder.push('wrecks'))
+    renderer.unitRenderer.renderUnitShadow = vi.fn((_ctx, unit) => callOrder.push(`shadow:${unit.id}`))
     renderer.unitRenderer.renderBases.mockImplementation((_ctx, entities) => {
       callOrder.push(`unit-bases:${entities.map(entity => entity.id).join(',') || 'none'}`)
     })
@@ -272,6 +273,8 @@ describe('Renderer airborne layering', () => {
       { entityImageOpacityLevel: 0, unitWrecks: [] }
     )
 
+    expect(callOrder.indexOf('shadow:exiting')).toBeLessThan(callOrder.indexOf('building-bases:1'))
+    expect(callOrder.indexOf('shadow:ground-1')).toBeLessThan(callOrder.indexOf('unit-bases:exiting'))
     expect(callOrder.indexOf('unit-bases:exiting')).toBeLessThan(callOrder.indexOf('building-bases:1'))
     expect(callOrder).not.toContain('unit-overlays:exiting')
     expect(callOrder).toContain('unit-bases:ground-1,carrier-1')
