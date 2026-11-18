@@ -571,7 +571,9 @@ export class Renderer {
         gpuBackend = 'webgl'
         frameDrawCalls = (this.gpuRenderer.stats?.drawCalls || 0) - drawsBefore
       }
-    } else if (gpuContext && gpuCanvas) {
+    } else if (!gpuRendered && gpuContext && gpuCanvas) {
+      // Only clear the WebGL canvas when the CPU draws terrain over it.
+      // The standby WebGL surface is hidden while WebGPU owns the frame.
       gpuContext.viewport(0, 0, gpuCanvas.width, gpuCanvas.height)
       gpuContext.clearColor(0, 0, 0, 0)
       gpuContext.clear(gpuContext.COLOR_BUFFER_BIT)

@@ -13,10 +13,8 @@ async function loadFreshGame(page) {
       }
     } })
     window.__CFB_TERRAIN_GPU_TIMING__ = true
-    localStorage.setItem('tutorial-settings', JSON.stringify({ showTutorial: false, speechEnabled: false }))
-    localStorage.setItem('tutorial-progress', JSON.stringify({ completed: true, stepIndex: 0 }))
   })
-  await page.goto('/?seed=11&size=200&players=4&oreFields=24')
+  await page.goto('/?seed=11&size=200&players=4&oreFields=24&tutorial=0')
   await page.waitForFunction(() => document.getElementById('loadingScreen')?.classList.contains('loading-screen--hidden') &&
     window.gameInstance?.renderer?.webgpuRenderer?.status === 'ready', null, { timeout: 120000 })
 }
@@ -62,6 +60,30 @@ test.describe('default high-DPI rendering lifecycle', () => {
     await loadFreshGame(page)
     await page.waitForFunction(() => window.gameState.renderStats?.gpuTerrain?.backend === 'webgpu')
     await page.waitForFunction(() => Number.isFinite(window.gameState.renderStats?.gpuStaticGround?.gpuMilliseconds))
+    const standby = await page.evaluate(async() => {
+      const game = window.gameInstance
+      const gl = game.canvasManager.getGameGlContext()
+      const clear = gl.clear
+      let clears = 0
+      gl.clear = function(mask) {
+        clears++
+        return clear.call(this, mask)
+      }
+      const startFrame = window.gameState.frameCount
+      try {
+        await new Promise(resolve => {
+          function waitForActiveFrames() {
+            if (window.gameState.frameCount - startFrame >= 3) resolve()
+            else requestAnimationFrame(waitForActiveFrames)
+          }
+          requestAnimationFrame(waitForActiveFrames)
+        })
+        return { clears, display: gl.canvas.style.display, backend: window.gameState.renderStats.gpuTerrain.backend }
+      } finally {
+        gl.clear = clear
+      }
+    })
+    expect(standby).toEqual({ clears: 0, display: 'none', backend: 'webgpu' })
     await page.evaluate(() => {
       window.destroyedTestDevice = window.gameInstance.renderer.webgpuRenderer.device
       window.destroyedTestDevice.destroy()

@@ -11,6 +11,7 @@ const profileEnabled = process.env.BENCHMARK_PROFILE === '1'
 const battleOnly = process.env.BENCHMARK_BATTLE_ONLY === '1'
 const importThroughUi = process.env.BENCHMARK_IMPORT_SAVE === '1'
 const traceEnabled = process.env.BENCHMARK_COMPOSITOR_TRACE === '1'
+const countStandbyClears = process.env.BENCHMARK_COUNT_STANDBY_CLEARS === '1'
 const backendChoice = process.env.BENCHMARK_BACKEND || 'auto'
 const staticGroundTiming = process.env.BENCHMARK_STATIC_GROUND_TIMING !== '0'
 const omitWebGpuTerrainTiming = process.env.BENCHMARK_WEBGPU_TERRAIN_TIMING === '0'
@@ -61,12 +62,21 @@ try {
   }
 
   const context = await browser.newContext({ viewport: null })
-  await context.addInitScript(({ backendChoice, staticGroundTiming }) => {
+  await context.addInitScript(({ backendChoice, staticGroundTiming, countStandbyClears }) => {
     window.__CFB_TERRAIN_GPU_TIMING__ = staticGroundTiming
+    if (countStandbyClears && window.WebGL2RenderingContext) {
+      window.benchmarkStandbyClears = 0
+      const prototype = window.WebGL2RenderingContext.prototype
+      const clear = prototype.clear
+      prototype.clear = function(mask) {
+        if (this.canvas.id === 'gameCanvasGL') window.benchmarkStandbyClears++
+        return clear.call(this, mask)
+      }
+    }
     if (backendChoice !== 'auto') {
       localStorage.setItem('rts_graphics_settings', JSON.stringify({ rendererBackendChoice: backendChoice }))
     }
-  }, { backendChoice, staticGroundTiming })
+  }, { backendChoice, staticGroundTiming, countStandbyClears })
   const page = await context.newPage()
   await page.bringToFront()
   const errors = []
@@ -181,9 +191,13 @@ try {
       traceConfig: { includedCategories: ['benchmark', 'blink.user_timing', 'cc', 'viz', 'gpu', 'renderer.scheduler'] }
     })
   }
-  const result = await page.evaluate(async({ battleOnly, battleDuration, omitWebGpuTerrainTiming, traceEnabled }) => {
+  const result = await page.evaluate(async({ battleOnly, battleDuration, omitWebGpuTerrainTiming, traceEnabled, countStandbyClears }) => {
     const state = window.gameState
     const { gameLoop, renderer, units } = window.gameInstance
+    if (countStandbyClears && !(window.WebGL2RenderingContext &&
+      window.gameInstance.canvasManager.getGameGlContext() instanceof window.WebGL2RenderingContext)) {
+      throw new Error('The standby clear probe requires a WebGL 2 terrain canvas')
+    }
     if (omitWebGpuTerrainTiming) renderer.webgpuRenderer.getTimestampWrites = () => undefined
     const canvas = document.getElementById('gameCanvas')
     const selected = units.filter(unit => unit.owner === state.humanPlayer && unit.type.startsWith('tank'))
@@ -284,6 +298,7 @@ try {
 
     let start
     let previous
+    if (countStandbyClears) window.benchmarkStandbyClears = 0
     window.__framePhases?.reset()
     state.gamePaused = false
     gameLoop.resumeFromPause()
@@ -329,9 +344,10 @@ try {
       selected: selected.length, duration, distance, speed,
       intervals, cpuFrames, samples, longTasks, backend: state.renderStats?.gpuTerrain?.backend,
       framePhases: window.__framePhases?.snapshot(),
+      standbyClears: window.benchmarkStandbyClears,
       browserDpr: devicePixelRatio, canvas: [canvas.width, canvas.height, canvas.clientWidth, canvas.clientHeight]
     }
-  }, { battleOnly, battleDuration, omitWebGpuTerrainTiming, traceEnabled })
+  }, { battleOnly, battleDuration, omitWebGpuTerrainTiming, traceEnabled, countStandbyClears })
   if (traceComplete) await saveCompositorTrace(browserSession, traceComplete)
   if (backendChoice !== 'auto' && result.backend !== backendChoice) {
     throw new Error(`Requested ${backendChoice}, but benchmark rendered on ${result.backend}`)

@@ -1,0 +1,1 @@
+{ "description": "Removed unnecessary WebGL work while WebGPU renders the game." }
