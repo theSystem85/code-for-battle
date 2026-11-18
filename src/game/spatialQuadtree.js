@@ -160,8 +160,7 @@ export class QuadtreeNode {
    * @param {Array} results - Array to push results into
    */
   queryCircleInto(cx, cy, radiusSq, excludeId, results) {
-    // Early exit if circle doesn't intersect this boundary
-    if (!this.boundary.intersectsCircle(cx, cy, radiusSq)) {
+    if ((!this.divided && this.unitCount === 0) || !this.boundary.intersectsCircle(cx, cy, radiusSq)) {
       return
     }
 
@@ -178,12 +177,22 @@ export class QuadtreeNode {
       }
     }
 
-    // Query children if subdivided
+    // Skip quadrants beyond the circle's extent while preserving query order.
     if (this.divided) {
-      this.northeast.queryCircleInto(cx, cy, radiusSq, excludeId, results)
-      this.northwest.queryCircleInto(cx, cy, radiusSq, excludeId, results)
-      this.southeast.queryCircleInto(cx, cy, radiusSq, excludeId, results)
-      this.southwest.queryCircleInto(cx, cy, radiusSq, excludeId, results)
+      const dx = cx - this.boundary.centerX
+      const dy = cy - this.boundary.centerY
+      const crossesX = dx * dx <= radiusSq
+      const crossesY = dy * dy <= radiusSq
+      const east = dx >= 0 || crossesX
+      const west = dx <= 0 || crossesX
+      if (dy <= 0 || crossesY) {
+        if (east) this.northeast.queryCircleInto(cx, cy, radiusSq, excludeId, results)
+        if (west) this.northwest.queryCircleInto(cx, cy, radiusSq, excludeId, results)
+      }
+      if (dy >= 0 || crossesY) {
+        if (east) this.southeast.queryCircleInto(cx, cy, radiusSq, excludeId, results)
+        if (west) this.southwest.queryCircleInto(cx, cy, radiusSq, excludeId, results)
+      }
     }
   }
 

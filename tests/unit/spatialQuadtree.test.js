@@ -271,6 +271,17 @@ describe('spatialQuadtree.js', () => {
       expect(node.southeast).toBe(null)
       expect(node.southwest).toBe(null)
     })
+
+    it('[U07218] retains quadrant order and tangent hits while skipping distant quadrants', () => {
+      const node = new QuadtreeNode(new AABB(0, 0, 100, 100), 2)
+      for (const [id, x, y] of [['nw', 45, 25], ['ne', 50, 25], ['sw', 45, 55], ['se', 55, 55]]) {
+        node.insert({ id, _cx: x, _cy: y })
+      }
+      node.southeast.queryCircleInto = () => { throw new Error('visited a quadrant outside the search circle') }
+      const results = []
+      node.queryCircleInto(45, 25, 25, null, results)
+      expect(results.map(unit => unit.id)).toEqual(['ne', 'nw'])
+    })
   })
 
   describe('SpatialQuadtree', () => {

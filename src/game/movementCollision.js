@@ -525,7 +525,7 @@ export function checkUnitCollision(unit, mapGrid, occupancyMap, units, wrecks = 
 
   const collisionQueryRadius = unit.isNaval
     ? getNavalHullSegment(unit).boundingRadius + MAX_NAVAL_HULL_BOUNDING_RADIUS
-    : MOVEMENT_CONFIG.FORCE_FIELD_RADIUS
+    : Math.min(MOVEMENT_CONFIG.MIN_UNIT_DISTANCE, MOVEMENT_CONFIG.FORCE_FIELD_RADIUS)
   const nearbyUnits = spatialTree
     ? spatialTree.queryNearbyForUnit(unitCenterX, unitCenterY, collisionQueryRadius, unitAirborne, unit.id)
     : []
