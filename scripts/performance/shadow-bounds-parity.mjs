@@ -29,7 +29,7 @@ try {
   await page.waitForFunction(() => window.gameInstance?.units?.length >= 400 &&
     document.getElementById('loadingScreen')?.classList.contains('loading-screen--hidden'), null, { timeout: 120000 })
   const result = await page.evaluate(async() => {
-    const { createUnitShadowCanvas, usesUnitGroundShadow } = await import('/src/rendering/unitShadow.js')
+    const { clearUnitShadowCaches, createUnitShadowCanvas, drawCachedUnitShadow, usesUnitGroundShadow } = await import('/src/rendering/unitShadow.js')
     const config = await import('/src/config.js')
     const { gameLoop, renderer, units } = window.gameInstance
     gameLoop.stop()
@@ -61,26 +61,7 @@ try {
     for (const [type, mask] of unitRenderer.shadowMaskDrawers) {
       for (const setting of settings) {
         const source = createUnitShadowCanvas(mask, config.TILE_SIZE, setting)
-        const data = source.getContext('2d').getImageData(0, 0, source.width, source.height).data
-        let minX = source.width, minY = source.height, maxX = -1, maxY = -1
-        for (let y = 0; y < source.height; y++) {
-          for (let x = 0; x < source.width; x++) {
-            if (!data[(y * source.width + x) * 4 + 3]) continue
-            minX = Math.min(minX, x)
-            minY = Math.min(minY, y)
-            maxX = Math.max(maxX, x)
-            maxY = Math.max(maxY, y)
-          }
-        }
-        if (maxX < 0) {
-          cases.push({ type, setting: setting.name, empty: true })
-          continue
-        }
-        minX = Math.max(0, minX - 2)
-        minY = Math.max(0, minY - 2)
-        maxX = Math.min(source.width - 1, maxX + 2)
-        maxY = Math.min(source.height - 1, maxY + 2)
-        const w = maxX - minX + 1, h = maxY - minY + 1
+        clearUnitShadowCaches()
         for (const dpr of [1, 2]) {
           for (const fraction of [0, 0.25, 0.5]) {
             const size = Math.ceil((source.width + 20) * dpr)
@@ -94,7 +75,7 @@ try {
             }
             const pos = 8 + fraction
             a.drawImage(source, pos, pos)
-            b.drawImage(source, minX, minY, w, h, pos + minX, pos + minY, w, h)
+            drawCachedUnitShadow(b, type, pos + source.width / 2, pos + source.height / 2, config.TILE_SIZE, mask, () => setting)
             const pixelsA = a.getImageData(0, 0, size, size).data
             const pixelsB = b.getImageData(0, 0, size, size).data
             let changedChannels = 0, maxDelta = 0
@@ -103,7 +84,7 @@ try {
               if (delta) changedChannels++
               maxDelta = Math.max(maxDelta, delta)
             }
-            cases.push({ type, setting: setting.name, dpr, fraction, source: [source.width, source.height], bounds: [minX, minY, w, h], changedChannels, maxDelta })
+            cases.push({ type, setting: setting.name, dpr, fraction, source: [source.width, source.height], changedChannels, maxDelta })
           }
         }
       }

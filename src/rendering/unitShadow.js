@@ -3,6 +3,7 @@ import { UNIT_PROPERTIES } from '../config.js'
 const DEG_TO_RADIANS = Math.PI / 180
 const CACHE_PADDING = 36
 const MASK_SIZE = 96
+const SAMPLING_MARGIN = 2
 
 const shadowCache = new Map()
 const shadowSources = new Map()
@@ -70,14 +71,45 @@ export function createUnitShadowCanvas(drawMask, footprint, rawSettings) {
   return canvas
 }
 
-function buildEntry(type, drawMask, footprint, settings) {
+function getShadowBounds(image) {
+  let pixels
+  try {
+    pixels = image.getContext('2d').getImageData(0, 0, image.width, image.height).data
+  } catch (error) {
+    if (error.name === 'SecurityError') return { x: 0, y: 0, width: image.width, height: image.height }
+    throw error
+  }
+  let left = image.width
+  let top = image.height
+  let right = -1
+  let bottom = -1
+  for (let y = 0; y < image.height; y++) {
+    for (let x = 0; x < image.width; x++) {
+      if (!pixels[(y * image.width + x) * 4 + 3]) continue
+      left = Math.min(left, x)
+      top = Math.min(top, y)
+      right = Math.max(right, x)
+      bottom = Math.max(bottom, y)
+    }
+  }
+  if (right < 0) return null
+  // Retain transparent pixels around the silhouette for fractional sampling.
+  left = Math.max(0, left - SAMPLING_MARGIN)
+  top = Math.max(0, top - SAMPLING_MARGIN)
+  right = Math.min(image.width - 1, right + SAMPLING_MARGIN)
+  bottom = Math.min(image.height - 1, bottom + SAMPLING_MARGIN)
+  return { x: left, y: top, width: right - left + 1, height: bottom - top + 1 }
+}
+
+function buildEntry(drawMask, footprint, settings) {
   const image = createUnitShadowCanvas(drawMask, footprint, settings)
+  const bounds = getShadowBounds(image)
   return {
     image,
-    drawOffsetX: -image.width / 2,
-    drawOffsetY: -image.height / 2,
-    revision: cacheRevision,
-    footprint
+    bounds,
+    drawOffsetX: (bounds?.x ?? 0) - image.width / 2,
+    drawOffsetY: (bounds?.y ?? 0) - image.height / 2,
+    revision: cacheRevision
   }
 }
 
@@ -89,17 +121,19 @@ export function drawCachedUnitShadow(ctx, type, centerX, centerY, footprint, dra
       source = { drawMask, footprint }
       shadowSources.set(type, source)
     }
-    entry = buildEntry(type, source.drawMask, source.footprint, getSettings())
+    entry = buildEntry(source.drawMask, source.footprint, getSettings())
     shadowCache.set(type, entry)
   }
-  ctx.drawImage(entry.image, centerX + entry.drawOffsetX, centerY + entry.drawOffsetY)
+  if (!entry.bounds) return
+  const { x, y, width, height } = entry.bounds
+  ctx.drawImage(entry.image, x, y, width, height, centerX + entry.drawOffsetX, centerY + entry.drawOffsetY, width, height)
 }
 
 export function rebuildUnitShadowCaches(settings) {
   cacheRevision++
   shadowCache.clear()
   for (const [type, source] of shadowSources) {
-    shadowCache.set(type, buildEntry(type, source.drawMask, source.footprint, settings))
+    shadowCache.set(type, buildEntry(source.drawMask, source.footprint, settings))
   }
 }
 
