@@ -178,10 +178,10 @@ try {
     traceComplete = new Promise(resolve => browserSession.once('Tracing.tracingComplete', resolve))
     await browserSession.send('Tracing.start', {
       transferMode: 'ReturnAsStream',
-      traceConfig: { includedCategories: ['benchmark', 'cc', 'viz', 'gpu', 'renderer.scheduler'] }
+      traceConfig: { includedCategories: ['benchmark', 'blink.user_timing', 'cc', 'viz', 'gpu', 'renderer.scheduler'] }
     })
   }
-  const result = await page.evaluate(async({ battleOnly, battleDuration, omitWebGpuTerrainTiming }) => {
+  const result = await page.evaluate(async({ battleOnly, battleDuration, omitWebGpuTerrainTiming, traceEnabled }) => {
     const state = window.gameState
     const { gameLoop, renderer, units } = window.gameInstance
     if (omitWebGpuTerrainTiming) renderer.webgpuRenderer.getTimestampWrites = () => undefined
@@ -290,6 +290,7 @@ try {
     try {
       await new Promise(resolve => {
         function frame(now) {
+          if (start === undefined && traceEnabled) performance.mark('cfb-benchmark-start')
           start ??= now
           if (previous !== undefined) intervals.push(now - previous)
           previous = now
@@ -305,7 +306,10 @@ try {
             desiredY = y + (nextY - y) * fraction
           }
           if (elapsed < duration) requestAnimationFrame(frame)
-          else resolve()
+          else {
+            if (traceEnabled) performance.mark('cfb-benchmark-end')
+            resolve()
+          }
         }
         requestAnimationFrame(frame)
       })
@@ -327,7 +331,7 @@ try {
       framePhases: window.__framePhases?.snapshot(),
       browserDpr: devicePixelRatio, canvas: [canvas.width, canvas.height, canvas.clientWidth, canvas.clientHeight]
     }
-  }, { battleOnly, battleDuration, omitWebGpuTerrainTiming })
+  }, { battleOnly, battleDuration, omitWebGpuTerrainTiming, traceEnabled })
   if (traceComplete) await saveCompositorTrace(browserSession, traceComplete)
   if (backendChoice !== 'auto' && result.backend !== backendChoice) {
     throw new Error(`Requested ${backendChoice}, but benchmark rendered on ${result.backend}`)

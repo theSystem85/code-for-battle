@@ -1,6 +1,6 @@
 # Production battle and physical-display acceptance
 
-macOS reported the Apple M1 GPU with Metal support. CoreGraphics returned success with zero active displays and main display ID 0. Testing in this session can verify the hardware rendering adapter and animation callback cadence. The physical presented-frame gate requires an active display.
+These preliminary runs verified the Apple M1 rendering adapter and animation callback cadence. Their sandboxed CoreGraphics query returned zero active displays. The later unsandboxed query and production compositor captures confirmed and used the built-in 60 Hz Retina display. [Active-display measurements](2026-11-18-active-display-fps.md)
 
 ```sh
 system_profiler SPDisplaysDataType
@@ -16,7 +16,7 @@ BENCHMARK_URL=http://127.0.0.1:4193 BENCHMARK_FIXTURE=tmp/unit-heavy/checklist-m
 
 For physical verification, run the stationary battle first on an active display at 60 Hz or faster. Set `BENCHMARK_COMPOSITOR_TRACE=1` to record the Chrome compositor trace with the callback timings, and check its presentation events for delivered frames. The cold and repeated full-map scrolling checks are separate runs using the same build and save with `BENCHMARK_BATTLE_ONLY` unset and a separate output directory.
 
-Physical 60 FPS acceptance and the scrolling presentation check remain open.
+The later active-display stationary and scrolling captures both missed the 60 FPS acceptance gate.
 
 ## Compiled game results
 
