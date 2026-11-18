@@ -26,7 +26,7 @@ if (!['auto', 'webgpu', 'webgl'].includes(backendChoice)) {
 if (impactDraw !== null && (!battleOnly || !['0', '1'].includes(impactDraw))) {
   throw new Error('BENCHMARK_IMPACT_DRAW requires a stationary battle and must be 0 or 1')
 }
-if (!['0', '1', 'images', 'inventory', 'canvas', 'html-canvas', 'offscreen', 'shadow-size', 'stacks'].includes(holdForeground)) {
+if (!['0', '1', 'images', 'inventory', 'canvas', 'html-canvas', 'offscreen', 'shadow-size', 'stacks', 'unit-images', 'bitmap-shadows', 'html-shadows', 'transparent-shadows', 'tiny-shadows', 'crop-shadows'].includes(holdForeground)) {
   throw new Error('Invalid BENCHMARK_HOLD_FOREGROUND mode')
 }
 if (!Number.isSafeInteger(battleDuration) || battleDuration < 10000) {
@@ -209,6 +209,9 @@ try {
     const imageSources = {}
     const sourceStacks = []
     const seenSources = new WeakSet()
+    const shadowBitmaps = new Map()
+    let suppressedDraws = 0
+    let substitutedDraws = 0
     if (holdForeground !== '0') {
       for (const method of drawMethods) {
         const original = foreground[method]
@@ -224,9 +227,65 @@ try {
             const source = args[0]
             if (source instanceof OffscreenCanvas && !seenSources.has(source) && sourceStacks.length < 30) {
               seenSources.add(source)
-              sourceStacks.push({ width: source.width, height: source.height, stack: new Error().stack })
+              const pixels = source.getContext('2d').getImageData(0, 0, source.width, source.height).data
+              let minX = source.width, minY = source.height, maxX = -1, maxY = -1
+              for (let y = 0; y < source.height; y++) {
+                for (let x = 0; x < source.width; x++) {
+                  if (pixels[(y * source.width + x) * 4 + 3] === 0) continue
+                  minX = Math.min(minX, x)
+                  minY = Math.min(minY, y)
+                  maxX = Math.max(maxX, x)
+                  maxY = Math.max(maxY, y)
+                }
+              }
+              sourceStacks.push({ width: source.width, height: source.height, alphaBounds: { minX, minY, maxX, maxY }, stack: new Error().stack })
             }
             return original.apply(this, args)
+          }
+          if (holdForeground === 'bitmap-shadows') {
+            const source = args[0]
+            if (source instanceof OffscreenCanvas && source.width === 276 && source.height === 276) {
+              if (!shadowBitmaps.has(source)) {
+                const pending = createImageBitmap(source).then(bitmap => {
+                  shadowBitmaps.set(source, bitmap)
+                  return bitmap
+                })
+                shadowBitmaps.set(source, pending)
+              }
+              const bitmap = shadowBitmaps.get(source)
+              if (!(bitmap instanceof Promise)) {
+                args[0] = bitmap
+                substitutedDraws++
+              }
+            }
+            return original.apply(this, args)
+          }
+          if (holdForeground === 'crop-shadows') {
+            const source = args[0]
+            if (source instanceof OffscreenCanvas && source.width === 276 && source.height === 276 && args.length === 3) {
+              substitutedDraws++
+              return original.call(this, source, 108, 98, 70, 62, args[1] + 108, args[2] + 98, 70, 62)
+            }
+            return original.apply(this, args)
+          }
+          if (holdForeground === 'html-shadows' || holdForeground === 'transparent-shadows' || holdForeground === 'tiny-shadows') {
+            const source = args[0]
+            if (source instanceof OffscreenCanvas && source.width === 276 && source.height === 276) {
+              if (!shadowBitmaps.has(source)) {
+                const copy = document.createElement('canvas')
+                copy.width = holdForeground === 'tiny-shadows' ? 1 : source.width
+                copy.height = holdForeground === 'tiny-shadows' ? 1 : source.height
+                if (holdForeground === 'html-shadows') copy.getContext('2d').drawImage(source, 0, 0)
+                shadowBitmaps.set(source, copy)
+              }
+              args[0] = shadowBitmaps.get(source)
+              substitutedDraws++
+            }
+            return original.apply(this, args)
+          }
+          if (holdForeground === 'unit-images') {
+            const url = args[0]?.currentSrc || args[0]?.src || ''
+            if (!url.includes('/prepared/unit/') && !url.includes('/prepared/aircraft/') && !(args[0] instanceof ImageBitmap)) return original.apply(this, args)
           }
           if (holdForeground === 'canvas' && !(args[0] instanceof HTMLCanvasElement) && !(args[0] instanceof OffscreenCanvas)) {
             return original.apply(this, args)
@@ -234,6 +293,7 @@ try {
           if (holdForeground === 'html-canvas' && !(args[0] instanceof HTMLCanvasElement)) return original.apply(this, args)
           if (holdForeground === 'offscreen' && !(args[0] instanceof OffscreenCanvas)) return original.apply(this, args)
           if (holdForeground === 'shadow-size' && (!(args[0] instanceof OffscreenCanvas) || args[0].width !== 276 || args[0].height !== 276)) return original.apply(this, args)
+          suppressedDraws++
         }
       }
     }
@@ -363,6 +423,11 @@ try {
     state.gamePaused = false
     gameLoop.resumeFromPause()
     try {
+      if (holdForeground === 'bitmap-shadows') {
+        await new Promise(resolve => setTimeout(resolve, 4000))
+        for (const [source, pending] of shadowBitmaps) shadowBitmaps.set(source, await pending)
+        if (!shadowBitmaps.size) throw new Error('No matching shadow canvases were prepared')
+      }
       await new Promise(resolve => {
         function frame(now) {
           if (start === undefined && traceEnabled) performance.mark('cfb-benchmark-start')
@@ -408,7 +473,7 @@ try {
       throw new Error('The impact probe did not observe Apache volleys and active impacts')
     }
     return {
-      startUnits, endUnits: units.length, maxBullets, maxVisibleApacheRockets, maxVisibleImpacts, minimapCalls, foregroundDraws, imageSources, sourceStacks,
+      startUnits, endUnits: units.length, maxBullets, maxVisibleApacheRockets, maxVisibleImpacts, minimapCalls, foregroundDraws, suppressedDraws, substitutedDraws, shadowBitmapCount: shadowBitmaps.size, imageSources, sourceStacks,
       selected: selected.length, duration, distance, speed,
       intervals, cpuFrames, samples, longTasks, backend: state.renderStats?.gpuTerrain?.backend,
       framePhases: window.__framePhases?.snapshot(),
