@@ -29,6 +29,11 @@ import { drawStatusBar, fillStatusBar, paintStatusBarOutline, paintStatusBarTrac
 import { drawCachedUnitShadow, usesUnitGroundShadow } from './unitShadow.js'
 
 const POLICY_ICON_SIZE = 10
+const HUD_EDGE_QUARTERS = Object.freeze({ right: 0, bottom: 1, left: 2, top: 3 })
+const CREW_COLORS = Object.freeze({ driver: '#00F', gunner: '#F00', loader: '#FFA500', commander: '#006400' })
+const CREW_LETTERS = Object.freeze({ driver: 'D', gunner: 'G', loader: 'L', commander: 'C' })
+const DONUT_CREW_OFFSETS = [[0, -1], [1, 0], [0, 1], [-1, 0]]
+const DONUT_CREW_POSITIONS = Object.freeze({ commander: 0, gunner: 1, loader: 2, driver: 3 })
 
 function getCurrentUnitShadowSettings() {
   return {
@@ -44,6 +49,7 @@ export class UnitRenderer {
     this.aliveCrewRoles = []
     this.policyIconRect = { x: 0, y: 0, width: POLICY_ICON_SIZE, height: POLICY_ICON_SIZE }
     this.donutGlowColorStops = new Map()
+    this.donutGlowGradients = new WeakMap()
     this.shadowMaskDrawers = new Map()
     this.loadRepairIcon()
   }
@@ -780,17 +786,10 @@ export class UnitRenderer {
       const crewGap = 3
       const crewHalfSpanAngle = ((crewSize / 2) + crewGap) / donutRadius
 
-      const arcRanges = {
-        left: [Math.PI + crewHalfSpanAngle, (Math.PI * 1.5) - crewHalfSpanAngle],
-        top: [(Math.PI * 1.5) + crewHalfSpanAngle, (Math.PI * 2) - crewHalfSpanAngle],
-        right: [crewHalfSpanAngle, (Math.PI / 2) - crewHalfSpanAngle],
-        bottom: [(Math.PI / 2) + crewHalfSpanAngle, Math.PI - crewHalfSpanAngle]
-      }
-
-      const selectedArc = arcRanges[edge]
-      if (!selectedArc) return
-
-      const [startAngle, endAngle] = selectedArc
+      const quarter = HUD_EDGE_QUARTERS[edge]
+      if (quarter === undefined) return
+      const startAngle = quarter * (Math.PI / 2) + crewHalfSpanAngle
+      const endAngle = (quarter + 1) * (Math.PI / 2) - crewHalfSpanAngle
       const sweep = endAngle - startAngle
 
       ctx.save()
@@ -899,16 +898,24 @@ export class UnitRenderer {
     // Leave the unit's center clear and fade the party color inward from the donut ring.
     const innerRadius = outerRadius * 0.36
     const partyColor = PARTY_COLORS[unit.owner] || PARTY_COLORS.player
-    const colorStops = this.getDonutGlowColorStops(partyColor)
-    const gradient = ctx.createRadialGradient(centerX, centerY, innerRadius, centerX, centerY, outerRadius)
-    for (let index = 0; index < colorStops.length; index += 1) {
-      gradient.addColorStop(colorStops[index][0], colorStops[index][1])
+    let gradients = this.donutGlowGradients.get(ctx)
+    if (!gradients) {
+      gradients = new Map()
+      this.donutGlowGradients.set(ctx, gradients)
+    }
+    const key = `${outerRadius}:${partyColor}`
+    let gradient = gradients.get(key)
+    if (!gradient) {
+      gradient = ctx.createRadialGradient(0, 0, innerRadius, 0, 0, outerRadius)
+      for (const [offset, color] of this.getDonutGlowColorStops(partyColor)) gradient.addColorStop(offset, color)
+      if (gradients.size < 64) gradients.set(key, gradient)
     }
 
     ctx.save()
+    ctx.translate(centerX, centerY)
     ctx.beginPath()
-    ctx.arc(centerX, centerY, outerRadius, 0, Math.PI * 2)
-    ctx.arc(centerX, centerY, innerRadius, 0, Math.PI * 2, true)
+    ctx.arc(0, 0, outerRadius, 0, Math.PI * 2)
+    ctx.arc(0, 0, innerRadius, 0, Math.PI * 2, true)
     ctx.fillStyle = gradient
     ctx.fill('evenodd')
     ctx.restore()
@@ -1441,9 +1448,6 @@ export class UnitRenderer {
     const centerY = unit.y + TILE_SIZE / 2 - scrollOffset.y
     const hudBounds = this.getSelectedHudBounds(centerX, centerY, unit)
     const size = 5
-    const colors = { driver: '#00F', gunner: '#F00', loader: '#FFA500', commander: '#006400' }
-    const letters = { driver: 'D', gunner: 'G', loader: 'L', commander: 'C' }
-
     const aliveCrew = this.getAliveCrewRoles(unit)
     if (aliveCrew.length === 0) return
 
@@ -1472,14 +1476,14 @@ export class UnitRenderer {
         ctx.fillStyle = 'rgba(0, 0, 0, 0.45)'
         ctx.fillRect(x - 1, y - rectHeight - 1, size + 2, rectHeight + 2)
 
-        ctx.fillStyle = colors[role]
+        ctx.fillStyle = CREW_COLORS[role]
         ctx.fillRect(x, y - rectHeight, size, rectHeight)
 
         ctx.fillStyle = '#FFF'
         ctx.font = '4px "Rajdhani", "Arial Narrow", sans-serif'
         ctx.textAlign = 'center'
         ctx.textBaseline = 'middle'
-        ctx.fillText(letters[role], x + size / 2, y - rectHeight / 2)
+        ctx.fillText(CREW_LETTERS[role], x + size / 2, y - rectHeight / 2)
       })
       ctx.restore()
       return
@@ -1488,39 +1492,25 @@ export class UnitRenderer {
     if (this.isDonutSelectionHud()) {
       const rectHeight = size * 2 * 0.7
       const donutRadius = (Math.min(hudBounds.width, hudBounds.height) / 2) + 2
-      const anchorOffsets = {
-        commander: { x: 0, y: -donutRadius },
-        gunner: { x: donutRadius, y: 0 },
-        loader: { x: 0, y: donutRadius },
-        driver: { x: -donutRadius, y: 0 }
-      }
-
-      const fallbackOffsets = [
-        { x: 0, y: -donutRadius },
-        { x: donutRadius, y: 0 },
-        { x: 0, y: donutRadius },
-        { x: -donutRadius, y: 0 }
-      ]
-
       ctx.save()
+      ctx.font = '4px "Rajdhani", "Arial Narrow", sans-serif'
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
       aliveCrew.forEach((role, idx) => {
-        const offset = anchorOffsets[role] || fallbackOffsets[idx % fallbackOffsets.length]
-        const centerPx = centerX + offset.x
-        const centerPy = centerY + offset.y
+        const offset = DONUT_CREW_OFFSETS[DONUT_CREW_POSITIONS[role] ?? (idx % DONUT_CREW_OFFSETS.length)]
+        const centerPx = centerX + offset[0] * donutRadius
+        const centerPy = centerY + offset[1] * donutRadius
         const x = centerPx - (size / 2)
         const y = centerPy + (rectHeight / 2)
 
         ctx.fillStyle = 'rgba(0, 0, 0, 0.45)'
         ctx.fillRect(x - 1, y - rectHeight - 1, size + 2, rectHeight + 2)
 
-        ctx.fillStyle = colors[role]
+        ctx.fillStyle = CREW_COLORS[role]
         ctx.fillRect(x, y - rectHeight, size, rectHeight)
 
         ctx.fillStyle = '#FFF'
-        ctx.font = '4px "Rajdhani", "Arial Narrow", sans-serif'
-        ctx.textAlign = 'center'
-        ctx.textBaseline = 'middle'
-        ctx.fillText(letters[role], x + size / 2, y - rectHeight / 2)
+        ctx.fillText(CREW_LETTERS[role], x + size / 2, y - rectHeight / 2)
       })
       ctx.restore()
       return
@@ -1537,14 +1527,14 @@ export class UnitRenderer {
         const y = baseY
         const rectHeight = size * 2 * 0.7
 
-        ctx.fillStyle = colors[role]
+        ctx.fillStyle = CREW_COLORS[role]
         ctx.fillRect(x, y - rectHeight, size, rectHeight)
 
         ctx.fillStyle = '#FFF'
         ctx.font = '4px "Rajdhani", "Arial Narrow", sans-serif'
         ctx.textAlign = 'center'
         ctx.textBaseline = 'middle'
-        ctx.fillText(letters[role], x + size / 2, y - rectHeight / 2)
+        ctx.fillText(CREW_LETTERS[role], x + size / 2, y - rectHeight / 2)
 
         idx++
       })
@@ -1564,14 +1554,14 @@ export class UnitRenderer {
 
       const rectHeight = size * 2 * 0.7
 
-      ctx.fillStyle = colors[role]
+      ctx.fillStyle = CREW_COLORS[role]
       ctx.fillRect(x, y - rectHeight, size, rectHeight)
 
       ctx.fillStyle = '#FFF'
       ctx.font = '4px "Rajdhani", "Arial Narrow", sans-serif'
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
-      ctx.fillText(letters[role], x + size / 2, y - rectHeight / 2)
+      ctx.fillText(CREW_LETTERS[role], x + size / 2, y - rectHeight / 2)
     })
     ctx.restore()
   }

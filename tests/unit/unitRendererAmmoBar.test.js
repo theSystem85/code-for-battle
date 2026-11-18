@@ -345,6 +345,7 @@ describe('UnitRenderer ammo HUD consistency', () => {
       beginPath: vi.fn(),
       arc: vi.fn(),
       fill: vi.fn(),
+      translate: vi.fn(),
       createRadialGradient: vi.fn(() => gradient)
     }
 
@@ -356,14 +357,15 @@ describe('UnitRenderer ammo HUD consistency', () => {
 
     expect(ctx.createRadialGradient).toHaveBeenCalledTimes(1)
     const [x0, y0, innerRadius, x1, y1, outerRadius] = ctx.createRadialGradient.mock.calls[0]
-    expect(x0).toBe(100)
-    expect(y0).toBe(80)
-    expect(x1).toBe(100)
-    expect(y1).toBe(80)
+    expect(x0).toBe(0)
+    expect(y0).toBe(0)
+    expect(x1).toBe(0)
+    expect(y1).toBe(0)
     expect(innerRadius).toBeGreaterThan(0)
     expect(innerRadius).toBeLessThan(outerRadius)
-    expect(ctx.arc).toHaveBeenCalledWith(100, 80, outerRadius, 0, Math.PI * 2)
-    expect(ctx.arc).toHaveBeenCalledWith(100, 80, innerRadius, 0, Math.PI * 2, true)
+    expect(ctx.translate).toHaveBeenCalledWith(100, 80)
+    expect(ctx.arc).toHaveBeenCalledWith(0, 0, outerRadius, 0, Math.PI * 2)
+    expect(ctx.arc).toHaveBeenCalledWith(0, 0, innerRadius, 0, Math.PI * 2, true)
     expect(ctx.fill).toHaveBeenCalledWith('evenodd')
 
     const stopColors = gradient.addColorStop.mock.calls.map(call => call[1])
@@ -373,6 +375,9 @@ describe('UnitRenderer ammo HUD consistency', () => {
     expect(Math.max(...alphas)).toBeGreaterThan(alphas[0])
     expect(Math.max(...alphas)).toBeGreaterThan(alphas.at(-1))
     expect(alphas[1]).toBeLessThan(alphas[3])
+    renderer.renderSelection(ctx, { selected: true, owner: 'player2', type: 'tank_v1' }, 120, 90)
+    expect(ctx.translate).toHaveBeenCalledWith(120, 90)
+    expect(ctx.createRadialGradient).toHaveBeenCalledTimes(1)
   })
 
   it('[U04800] does not draw the inward glow unless the circular HUD is selected', () => {

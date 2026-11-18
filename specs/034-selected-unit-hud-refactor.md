@@ -18,6 +18,10 @@ Refactor the selected-unit HUD to improve readability and reduce occlusion of th
 ## Affected area
 - `src/rendering/unitRenderer.js`
 
+## Performance verification
+
+The [100-tank selection benchmark](../docs/performance/2026-11-18-selection-hud-performance.md) documents how to run the selected and unselected cases at the same camera position on a hardware GPU. It includes the compositor FPS measurements and the pixel comparison for donut glow, status arcs and crew badges at DPR 1 and 2.
+
 ## Acceptance checks
 - Select a unit with all relevant indicators available and verify all five indicators appear at 3px thickness.
 - Confirm the outline is exactly 1px and centered through each indicator strip.

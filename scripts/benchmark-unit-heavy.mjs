@@ -12,6 +12,7 @@ const label = 'CPU benchmark'
 const fixture = process.env.BENCHMARK_FIXTURE || join(output, 'fixture.cfb')
 const profileEnabled = process.env.BENCHMARK_PROFILE === '1'
 const battleOnly = process.env.BENCHMARK_BATTLE_ONLY === '1'
+const hudSelection = process.env.BENCHMARK_HUD_SELECTION
 const freezeTraversal = process.env.BENCHMARK_FREEZE_TRAVERSAL === '1'
 const importThroughUi = process.env.BENCHMARK_IMPORT_SAVE === '1'
 const traceEnabled = process.env.BENCHMARK_COMPOSITOR_TRACE === '1'
@@ -30,6 +31,9 @@ if (!['auto', 'webgpu', 'webgl'].includes(backendChoice)) {
   throw new Error('BENCHMARK_BACKEND must be auto, webgpu or webgl')
 }
 if (freezeTraversal && battleOnly) throw new Error('Frozen traversal requires the scrolling route')
+if (hudSelection && (!battleOnly || !['selected', 'unselected'].includes(hudSelection))) {
+  throw new Error('HUD selection benchmark requires battle mode and selected or unselected')
+}
 if (gpuShadowBatch && holdForeground !== '0') throw new Error('Shadow batching requires normal foreground rendering')
 if (impactDraw !== null && (!battleOnly || !['0', '1'].includes(impactDraw))) {
   throw new Error('BENCHMARK_IMPACT_DRAW requires a stationary battle and must be 0 or 1')
@@ -237,7 +241,7 @@ try {
       traceConfig: { includedCategories: ['benchmark', 'blink.user_timing', 'cc', 'viz', 'gpu', 'renderer.scheduler'] }
     })
   }
-  const result = await page.evaluate(async({ battleOnly, battleDuration, omitWebGpuTerrainTiming, traceEnabled, countStandbyClears, impactDraw, holdMinimap, holdForeground, freezeTraversal, assetTrace }) => {
+  const result = await page.evaluate(async({ battleOnly, hudSelection, battleDuration, omitWebGpuTerrainTiming, traceEnabled, countStandbyClears, impactDraw, holdMinimap, holdForeground, freezeTraversal, assetTrace }) => {
     const state = window.gameState
     const { gameLoop, renderer, units } = window.gameInstance
     const foreground = gameLoop.canvasManager.getGameContext()
@@ -347,7 +351,25 @@ try {
     }
     if (omitWebGpuTerrainTiming) renderer.webgpuRenderer.getTimestampWrites = () => undefined
     const canvas = document.getElementById('gameCanvas')
-    const selected = units.filter(unit => unit.owner === state.humanPlayer && unit.type.startsWith('tank'))
+    if (hudSelection) {
+      const tanks = units.filter(unit => unit.health > 0 && unit.type.startsWith('tank')).slice(0, 100)
+      if (tanks.length !== 100 || Math.min(canvas.clientWidth, canvas.clientHeight) < 540) {
+        throw new Error('HUD benchmark requires 100 tanks and a viewport of at least 540 pixels on both axes')
+      }
+      const left = gameLoop.mapGrid[0].length * 16 - 225
+      const top = gameLoop.mapGrid.length * 16 - 225
+      for (let index = 0; index < tanks.length; index++) {
+        const unit = tanks[index]
+        unit.owner = state.humanPlayer
+        unit.selected = false
+        unit.x = left + (index % 10) * 50 - 16
+        unit.y = top + Math.floor(index / 10) * 50 - 16
+        unit.tileX = Math.floor((unit.x + 16) / 32)
+        unit.tileY = Math.floor((unit.y + 16) / 32)
+      }
+      units.splice(0, units.length, ...tanks)
+    }
+    const selected = hudSelection === 'unselected' ? [] : units.filter(unit => unit.owner === state.humanPlayer && unit.type.startsWith('tank'))
     selected.forEach(unit => { unit.selected = true })
     if (battleOnly) window.selectedUnitsRef?.splice(0, window.selectedUnitsRef.length, ...selected)
     // Keep all parties in the match while leaving unit damage and combat active.
@@ -367,7 +389,7 @@ try {
       Object.defineProperty(base, 'isBeingSold', { configurable: true, get: () => false, set() {} })
     }
     const startUnits = units.length
-    if (startUnits < 400 || !selected.length || !state.frameLimiterEnabled) {
+    if ((!hudSelection && (startUnits < 400 || !selected.length)) || !state.frameLimiterEnabled) {
       throw new Error(`Unexpected fixture or frame limiter: ${startUnits} units, ${selected.length} selected`)
     }
 
@@ -486,7 +508,7 @@ try {
     window.__framePhases?.reset()
     state.gamePaused = false
     gameLoop.resumeFromPause()
-    if (freezeTraversal) gameLoop.stop()
+    if (freezeTraversal || hudSelection) gameLoop.stop()
     try {
       if (holdForeground === 'bitmap-shadows') {
         await new Promise(resolve => setTimeout(resolve, 4000))
@@ -511,7 +533,7 @@ try {
             desiredX = x + (nextX - x) * fraction
             desiredY = y + (nextY - y) * fraction
           }
-          if (freezeTraversal) {
+          if (freezeTraversal || hudSelection) {
             const renderStart = performance.now()
             gameLoop.renderUpdateSnapshot()
             display.reportFrameBreakdown({ updateMs: 0, renderMs: performance.now() - renderStart, idleMs: 0 })
@@ -539,7 +561,7 @@ try {
     if (document.querySelector('.tutorial-overlay') || window.tutorialSystem) {
       throw new Error('The tutorial=0 startup flag did not suppress tutorial initialization')
     }
-    if (state.gameOver || state.localPlayerDefeated || state.gamePaused || (battleOnly && maxBullets === 0)) {
+    if (state.gameOver || state.localPlayerDefeated || state.gamePaused || (battleOnly && !hudSelection && maxBullets === 0)) {
       throw new Error('Benchmark match ended, paused, or failed to sustain the stationary battle')
     }
     if (impactDraw !== null && (activeImpactFrames === 0 || maxVisibleApacheRockets === 0 || maxVisibleImpacts === 0)) {
@@ -563,7 +585,7 @@ try {
       standbyClears: window.benchmarkStandbyClears,
       browserDpr: devicePixelRatio, canvas: [canvas.width, canvas.height, canvas.clientWidth, canvas.clientHeight]
     }
-  }, { battleOnly, battleDuration, omitWebGpuTerrainTiming, traceEnabled, countStandbyClears, impactDraw, holdMinimap, holdForeground, freezeTraversal, assetTrace })
+  }, { battleOnly, hudSelection, battleDuration, omitWebGpuTerrainTiming, traceEnabled, countStandbyClears, impactDraw, holdMinimap, holdForeground, freezeTraversal, assetTrace })
   if (traceComplete) await saveCompositorTrace(browserSession, traceComplete)
   if (backendChoice !== 'auto' && result.backend !== backendChoice) {
     throw new Error(`Requested ${backendChoice}, but benchmark rendered on ${result.backend}`)
@@ -593,7 +615,7 @@ try {
   const simulationMs = cpuFrames.reduce((sum, frame) => sum + (frame.simulationDeltaMs || 0), 0)
   const simulationTicks = simulationMs / result.simulationStepMs
   const summary = {
-    cadence, preparationMs, tutorialDisabled: true, scene: battleOnly ? 'stationary battle' : 'fast scrolling',
+    cadence, preparationMs, tutorialDisabled: true, scene: hudSelection ? `100 tanks, ${hudSelection}` : (battleOnly ? 'stationary battle' : 'fast scrolling'),
     averageFps: intervals.length * 1000 / elapsed,
     maxVisibleApacheRockets: result.maxVisibleApacheRockets,
     maxVisibleImpacts: result.maxVisibleImpacts,
@@ -609,11 +631,11 @@ try {
     backend: result.backend, browserDpr: result.browserDpr, canvas: result.canvas,
     errors
   }
-  const validityFailures = battleOnly ? validateBattleResult({
+  const validityFailures = battleOnly && !hudSelection ? validateBattleResult({
     summary, samples: result.samples, fixtureSha256,
     expectedFixtureSha256: process.env.BENCHMARK_EXPECT_FIXTURE_SHA256,
     tutorialSeen: result.tutorialSeen
-  }) : []
+  }) : (hudSelection && (result.cameraDriftFrames || result.invalidSceneFrames || errors.length) ? ['invalid-hud-scene'] : [])
   await writeFile(join(output, 'result.json'), JSON.stringify({
     summary, fixtureSha256, gpu, browser: await browser.version(), profileEnabled, traceEnabled, backendChoice, importThroughUi,
     staticGroundTiming, omitWebGpuTerrainTiming, impactDraw, holdMinimap, holdForeground, freezeTraversal, validityFailures, workers, cdpMetrics, ...result
