@@ -10,6 +10,7 @@ const label = 'CPU benchmark'
 const fixture = process.env.BENCHMARK_FIXTURE || join(output, 'fixture.cfb')
 const profileEnabled = process.env.BENCHMARK_PROFILE === '1'
 const battleOnly = process.env.BENCHMARK_BATTLE_ONLY === '1'
+const freezeTraversal = process.env.BENCHMARK_FREEZE_TRAVERSAL === '1'
 const importThroughUi = process.env.BENCHMARK_IMPORT_SAVE === '1'
 const traceEnabled = process.env.BENCHMARK_COMPOSITOR_TRACE === '1'
 const countStandbyClears = process.env.BENCHMARK_COUNT_STANDBY_CLEARS === '1'
@@ -24,6 +25,7 @@ const unitsPerParty = Number(process.env.BENCHMARK_UNITS_PER_PARTY || 100)
 if (!['auto', 'webgpu', 'webgl'].includes(backendChoice)) {
   throw new Error('BENCHMARK_BACKEND must be auto, webgpu or webgl')
 }
+if (freezeTraversal && battleOnly) throw new Error('Frozen traversal requires the scrolling route')
 if (impactDraw !== null && (!battleOnly || !['0', '1'].includes(impactDraw))) {
   throw new Error('BENCHMARK_IMPACT_DRAW requires a stationary battle and must be 0 or 1')
 }
@@ -202,7 +204,7 @@ try {
       traceConfig: { includedCategories: ['benchmark', 'blink.user_timing', 'cc', 'viz', 'gpu', 'renderer.scheduler'] }
     })
   }
-  const result = await page.evaluate(async({ battleOnly, battleDuration, omitWebGpuTerrainTiming, traceEnabled, countStandbyClears, impactDraw, holdMinimap, holdForeground }) => {
+  const result = await page.evaluate(async({ battleOnly, battleDuration, omitWebGpuTerrainTiming, traceEnabled, countStandbyClears, impactDraw, holdMinimap, holdForeground, freezeTraversal }) => {
     const state = window.gameState
     const { gameLoop, renderer, units } = window.gameInstance
     const foreground = gameLoop.canvasManager.getGameContext()
@@ -409,6 +411,7 @@ try {
           gpu: state.renderStats?.gpuTiming?.milliseconds,
           staticGroundDraws: state.renderStats?.gpuStaticGround?.drawCalls,
           staticGroundGpu: state.renderStats?.gpuStaticGround?.gpuMilliseconds,
+          chunks: state.renderStats?.mapChunks ? { ...state.renderStats.mapChunks } : null,
           backend: state.renderStats?.gpuTerrain?.backend,
           heap: performance.memory?.usedJSHeapSize,
           visible: document.visibilityState,
@@ -434,6 +437,7 @@ try {
     window.__framePhases?.reset()
     state.gamePaused = false
     gameLoop.resumeFromPause()
+    if (freezeTraversal) gameLoop.stop()
     try {
       if (holdForeground === 'bitmap-shadows') {
         await new Promise(resolve => setTimeout(resolve, 4000))
@@ -457,6 +461,11 @@ try {
             const fraction = remaining / lengths[segment]
             desiredX = x + (nextX - x) * fraction
             desiredY = y + (nextY - y) * fraction
+          }
+          if (freezeTraversal) {
+            const renderStart = performance.now()
+            gameLoop.renderUpdateSnapshot()
+            display.reportFrameBreakdown({ updateMs: 0, renderMs: performance.now() - renderStart, idleMs: 0 })
           }
           if (elapsed < duration) requestAnimationFrame(frame)
           else {
@@ -496,7 +505,7 @@ try {
       standbyClears: window.benchmarkStandbyClears,
       browserDpr: devicePixelRatio, canvas: [canvas.width, canvas.height, canvas.clientWidth, canvas.clientHeight]
     }
-  }, { battleOnly, battleDuration, omitWebGpuTerrainTiming, traceEnabled, countStandbyClears, impactDraw, holdMinimap, holdForeground })
+  }, { battleOnly, battleDuration, omitWebGpuTerrainTiming, traceEnabled, countStandbyClears, impactDraw, holdMinimap, holdForeground, freezeTraversal })
   if (traceComplete) await saveCompositorTrace(browserSession, traceComplete)
   if (backendChoice !== 'auto' && result.backend !== backendChoice) {
     throw new Error(`Requested ${backendChoice}, but benchmark rendered on ${result.backend}`)
@@ -544,7 +553,7 @@ try {
   }
   await writeFile(join(output, 'result.json'), JSON.stringify({
     summary, fixtureSha256, gpu, browser: await browser.version(), profileEnabled, traceEnabled, backendChoice, importThroughUi,
-    staticGroundTiming, omitWebGpuTerrainTiming, impactDraw, holdMinimap, holdForeground, workers, cdpMetrics, ...result
+    staticGroundTiming, omitWebGpuTerrainTiming, impactDraw, holdMinimap, holdForeground, freezeTraversal, workers, cdpMetrics, ...result
   }))
   console.log(JSON.stringify(summary, null, 2))
 } finally {

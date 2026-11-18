@@ -41,3 +41,7 @@ The [shadow bounds follow-up](2026-11-18-shadow-bounds-followup.md) compares uni
 The [simulation throughput report](2026-11-18-simulation-throughput.md) records hardware A/B measurements and adds fixture, scene and simulation-time counters. Matched tick cost and the remaining harness safeguards are still open.
 
 The [gap timeline](2026-11-18-gap-timeline.md) correlates game-frame samples with long presentation intervals and notes missing frame identifiers.
+
+The [fixed-tick replay](2026-11-18-fixed-tick-replay.md) provides repeatable selected-state hashes, per-update timing and quadtree counts. Full-state equivalence and caller attribution remain open.
+
+The [frozen-world traversal](2026-11-18-frozen-traversal.md) compares first and repeated route laps without simulation-driven unit losses. Cache-event attribution and live traversal remain open.
