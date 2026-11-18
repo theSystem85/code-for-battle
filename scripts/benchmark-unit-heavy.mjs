@@ -14,6 +14,7 @@ const battleOnly = process.env.BENCHMARK_BATTLE_ONLY === '1'
 const freezeTraversal = process.env.BENCHMARK_FREEZE_TRAVERSAL === '1'
 const importThroughUi = process.env.BENCHMARK_IMPORT_SAVE === '1'
 const traceEnabled = process.env.BENCHMARK_COMPOSITOR_TRACE === '1'
+const assetTrace = process.env.BENCHMARK_ASSET_TRACE === '1'
 const countStandbyClears = process.env.BENCHMARK_COUNT_STANDBY_CLEARS === '1'
 const impactDraw = process.env.BENCHMARK_IMPACT_DRAW ?? null
 const holdMinimap = process.env.BENCHMARK_HOLD_MINIMAP === '1'
@@ -75,7 +76,22 @@ try {
   }
 
   const context = await browser.newContext({ viewport: null })
-  await context.addInitScript(({ backendChoice, staticGroundTiming, countStandbyClears }) => {
+  await context.addInitScript(({ backendChoice, staticGroundTiming, countStandbyClears, assetTrace }) => {
+    if (assetTrace) {
+      performance.setResourceTimingBufferSize(10000)
+      window.__benchmarkTextureUploads = []
+      const queue = window.GPUQueue?.prototype
+      for (const method of ['copyExternalImageToTexture', 'writeTexture']) {
+        if (!queue?.[method]) continue
+        const upload = queue[method]
+        queue[method] = function(...args) {
+          const startMs = performance.now()
+          const result = upload.apply(this, args)
+          window.__benchmarkTextureUploads.push({ method, startMs, endMs: performance.now() })
+          return result
+        }
+      }
+    }
     window.__benchmarkTutorialSeen = false
     window.__benchmarkTutorialObserver = new MutationObserver(records => {
       for (const record of records) {
@@ -100,7 +116,7 @@ try {
     if (backendChoice !== 'auto') {
       localStorage.setItem('rts_graphics_settings', JSON.stringify({ rendererBackendChoice: backendChoice }))
     }
-  }, { backendChoice, staticGroundTiming, countStandbyClears })
+  }, { backendChoice, staticGroundTiming, countStandbyClears, assetTrace })
   const page = await context.newPage()
   await page.bringToFront()
   const errors = []
@@ -217,7 +233,7 @@ try {
       traceConfig: { includedCategories: ['benchmark', 'blink.user_timing', 'cc', 'viz', 'gpu', 'renderer.scheduler'] }
     })
   }
-  const result = await page.evaluate(async({ battleOnly, battleDuration, omitWebGpuTerrainTiming, traceEnabled, countStandbyClears, impactDraw, holdMinimap, holdForeground, freezeTraversal }) => {
+  const result = await page.evaluate(async({ battleOnly, battleDuration, omitWebGpuTerrainTiming, traceEnabled, countStandbyClears, impactDraw, holdMinimap, holdForeground, freezeTraversal, assetTrace }) => {
     const state = window.gameState
     const { gameLoop, renderer, units } = window.gameInstance
     const foreground = gameLoop.canvasManager.getGameContext()
@@ -399,6 +415,17 @@ try {
       const simulationDeltaMs = previousSimulationTime === null ? null : simulationTime - previousSimulationTime
       previousSimulationTime = simulationTime
       cpuFrames.push({ t: now, simulationTime, simulationDeltaMs, schedulerSource: gameLoop.lastSchedulerSource, schedulerDelayMs: gameLoop.lastSchedulerDelayMs, ...frame })
+      if (assetTrace) {
+        const chunks = state.renderStats?.mapChunks
+        const ground = state.renderStats?.gpuStaticGround
+        Object.assign(cpuFrames.at(-1), {
+          chunkMisses: chunks?.chunkMisses ?? null,
+          chunksEvicted: chunks?.chunksEvicted ?? null,
+          chunksWarmed: chunks?.chunksWarmed ?? null,
+          terrainUploads: ground?.uploads ?? null,
+          terrainUploadBytes: ground?.uploadBytes ?? null
+        })
+      }
       if (battleOnly && (state.scrollOffset.x !== desiredX || state.scrollOffset.y !== desiredY)) cameraDriftFrames++
       if (battleOnly && (state.gameOver || state.localPlayerDefeated || state.gamePaused || document.visibilityState !== 'visible' || !document.hasFocus() || document.querySelector('.tutorial-overlay') || window.tutorialSystem)) invalidSceneFrames++
       maxBullets = Math.max(maxBullets, gameLoop.bullets.length)
@@ -513,12 +540,18 @@ try {
       simulationStepMs: state.simulationStepMs || 1000 / 60, tutorialSeen: window.__benchmarkTutorialSeen,
       selected: selected.length, duration, distance, speed,
       intervals, cpuFrames, samples, longTasks, backend: state.renderStats?.gpuTerrain?.backend,
+      assetTrace: assetTrace ? {
+        textureUploads: window.__benchmarkTextureUploads,
+        spriteRequests: performance.getEntriesByType('resource')
+          .filter(entry => /\/images\/(prepared\/|prepared-map-sprites\/|map\/(units|buildings)\/)/.test(entry.name))
+          .map(entry => ({ url: new URL(entry.name).pathname, startMs: entry.startTime, endMs: entry.responseEnd }))
+      } : undefined,
       framePhases: window.__framePhases?.snapshot(),
       activeImpactFrames: impactDraw === null ? undefined : activeImpactFrames,
       standbyClears: window.benchmarkStandbyClears,
       browserDpr: devicePixelRatio, canvas: [canvas.width, canvas.height, canvas.clientWidth, canvas.clientHeight]
     }
-  }, { battleOnly, battleDuration, omitWebGpuTerrainTiming, traceEnabled, countStandbyClears, impactDraw, holdMinimap, holdForeground, freezeTraversal })
+  }, { battleOnly, battleDuration, omitWebGpuTerrainTiming, traceEnabled, countStandbyClears, impactDraw, holdMinimap, holdForeground, freezeTraversal, assetTrace })
   if (traceComplete) await saveCompositorTrace(browserSession, traceComplete)
   if (backendChoice !== 'auto' && result.backend !== backendChoice) {
     throw new Error(`Requested ${backendChoice}, but benchmark rendered on ${result.backend}`)

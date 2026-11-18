@@ -25,7 +25,9 @@ if (presentations.length < 2) throw new Error('Trace has insufficient presentati
 const trackedNames = [
   'ProxyMain::BeginMainFrame',
   'SkiaOutputSurfaceImplOnGpu::SwapBuffers',
-  'CALayerTreeCoordinator::ApplyBackpressure'
+  'CALayerTreeCoordinator::ApplyBackpressure',
+  'IOSurfaceImageBacking::WaitForCommandsToBeScheduled::Dawn',
+  'RasterDecoderImpl::DoRasterCHROMIUM'
 ]
 const spans = traceEvents.filter(event => trackedNames.includes(event.name) && event.ph === 'X' &&
   Number.isFinite(event.dur) && event.ts < end.ts && event.ts + event.dur > start.ts)
@@ -37,6 +39,25 @@ const intervals = presentations.slice(1).map((time, index) => ({
   precedingIntervalMs: index ? (presentations[index] - presentations[index - 1]) / 1000 : null,
   followingIntervalMs: presentations[index + 2] ? (presentations[index + 2] - time) / 1000 : null
 }))
+
+function assetsDuring(startMs, endMs, gameFrames) {
+  const { textureUploads, spriteRequests } = result.assetTrace || {}
+  if (!textureUploads || !spriteRequests) return undefined
+  const previousFrame = frames.findLast(frame => frame.t < startMs)
+  const lastFrame = gameFrames.at(-1)
+  const firstBytes = previousFrame?.terrainUploadBytes
+  const lastBytes = lastFrame?.terrainUploadBytes
+  const overlaps = event => event.startMs < endMs && event.endMs >= startMs
+  return {
+    textureUploads: textureUploads.filter(overlaps).length,
+    spriteRequests: spriteRequests.filter(overlaps).length,
+    chunkMisses: gameFrames.reduce((sum, frame) => sum + (frame.chunkMisses ?? 0), 0),
+    chunksEvicted: gameFrames.reduce((sum, frame) => sum + (frame.chunksEvicted ?? 0), 0),
+    chunksWarmed: gameFrames.reduce((sum, frame) => sum + (frame.chunksWarmed ?? 0), 0),
+    terrainUploadBytes: Number.isFinite(firstBytes) && Number.isFinite(lastBytes) && lastBytes >= firstBytes
+      ? lastBytes - firstBytes : null
+  }
+}
 
 const gaps = intervals.sort((a, b) => b.durationMs - a.durationMs).slice(0, 10).map(interval => {
   const startMs = origin + (interval.start - start.ts) / 1000
@@ -70,15 +91,18 @@ const gaps = intervals.sort((a, b) => b.durationMs - a.durationMs).slice(0, 10).
     schedulerSources: [...new Set(gameFrames.map(frame => frame.schedulerSource).filter(Boolean))],
     maxSchedulerDelayMs: gameFrames.some(frame => Number.isFinite(frame.schedulerDelayMs)) ? Math.max(...gameFrames.map(frame => frame.schedulerDelayMs).filter(Number.isFinite)) : null,
     mainFrames,
+    assets: assetsDuring(startMs, endMs, gameFrames),
     overlaps
   }
 })
 
+const endClockMs = origin + (end.ts - start.ts) / 1000
 console.log(JSON.stringify({
   rendererPid: start.pid,
   presentCount: presentations.length,
   clockAlignment: 'performance.mark startTime mapped to trace timestamp',
   correlation: 'time overlap only; compositor spans are not matched to game frame IDs',
-  missing: ['game scheduler source', 'game frame IDs', 'compositor frame IDs'],
+  missing: ['shared game-to-compositor frame IDs'],
+  captureAssets: assetsDuring(origin, endClockMs, frames.filter(frame => frame.t >= origin && frame.t < endClockMs)),
   gaps
 }, null, 2))

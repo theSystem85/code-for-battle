@@ -10,13 +10,13 @@ describe('presentation gap report', () => {
     for (const directory of directories.splice(0)) rmSync(directory, { recursive: true, force: true })
   })
 
-  function run(events, frames = []) {
+  function run(events, frames = [], assetTrace) {
     const directory = mkdtempSync(join(tmpdir(), 'cfb-gap-report-'))
     directories.push(directory)
     const trace = join(directory, 'trace.json')
     const result = join(directory, 'result.json')
     writeFileSync(trace, JSON.stringify({ traceEvents: events }))
-    writeFileSync(result, JSON.stringify({ cpuFrames: frames }))
+    writeFileSync(result, JSON.stringify({ cpuFrames: frames, assetTrace }))
     return execFileSync(process.execPath, ['scripts/performance/report-unit-heavy-gaps.mjs', trace, result], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] })
   }
 
@@ -46,5 +46,17 @@ describe('presentation gap report', () => {
     expect(report.gaps[0].mainFrames).toEqual([{ beginFrameId: 4, mainFrameId: 7, gameReports: 1 }])
     expect(report.gaps[0].schedulerSources).toEqual(['raf'])
     expect(report.gaps[0].maxSchedulerDelayMs).toBe(12)
+  })
+
+  it('[U07219] aligns asset activity to the presentation gap and excludes later events', () => {
+    const events = [start, end, feedback(1, 1500000), feedback(1, 2500000)]
+    const frames = [{ t: 550, terrainUploadBytes: 32 }, { t: 700, terrainUploadBytes: 96, chunkMisses: 2 }]
+    const assetTrace = {
+      textureUploads: [{ startMs: 590, endMs: 620 }, { startMs: 1600, endMs: 1601 }],
+      spriteRequests: [{ startMs: 100, endMs: 500 }, { startMs: 750, endMs: 800 }]
+    }
+    const report = JSON.parse(run(events, frames, assetTrace))
+    expect(report.gaps[0].assets).toMatchObject({ textureUploads: 1, spriteRequests: 1, chunkMisses: 2, terrainUploadBytes: 64 })
+    expect(report.captureAssets.textureUploads).toBe(2)
   })
 })
