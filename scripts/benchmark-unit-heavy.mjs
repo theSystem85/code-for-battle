@@ -1,6 +1,6 @@
 // Run against a local Vite server in foreground Chrome on a hardware GPU.
 import { chromium } from 'playwright'
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { mkdir, open, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
 const output = process.env.BENCHMARK_OUTPUT || 'tmp/unit-heavy'
@@ -9,11 +9,39 @@ const label = 'CPU benchmark'
 const fixture = process.env.BENCHMARK_FIXTURE || join(output, 'fixture.cfb')
 const profileEnabled = process.env.BENCHMARK_PROFILE === '1'
 const battleOnly = process.env.BENCHMARK_BATTLE_ONLY === '1'
+const traceEnabled = process.env.BENCHMARK_COMPOSITOR_TRACE === '1'
+const backendChoice = process.env.BENCHMARK_BACKEND || 'auto'
+const staticGroundTiming = process.env.BENCHMARK_STATIC_GROUND_TIMING !== '0'
+const omitWebGpuTerrainTiming = process.env.BENCHMARK_WEBGPU_TERRAIN_TIMING === '0'
+const battleDuration = Number(process.env.BENCHMARK_BATTLE_DURATION_MS || 60000)
 const unitsPerParty = Number(process.env.BENCHMARK_UNITS_PER_PARTY || 100)
+if (!['auto', 'webgpu', 'webgl'].includes(backendChoice)) {
+  throw new Error('BENCHMARK_BACKEND must be auto, webgpu or webgl')
+}
+if (!Number.isSafeInteger(battleDuration) || battleDuration < 10000) {
+  throw new Error('BENCHMARK_BATTLE_DURATION_MS must be an integer of at least 10000')
+}
 if (!Number.isSafeInteger(unitsPerParty) || unitsPerParty < 100 || unitsPerParty > 500) {
   throw new Error('BENCHMARK_UNITS_PER_PARTY must be an integer from 100 to 500')
 }
 await mkdir(output, { recursive: true })
+
+async function saveCompositorTrace(session, traceComplete) {
+  await session.send('Tracing.end')
+  const { stream } = await traceComplete
+  const file = await open(join(output, 'compositor.json'), 'w')
+  try {
+    let eof = false
+    while (!eof) {
+      const part = await session.send('IO.read', { handle: stream, size: 1024 * 1024 })
+      await file.writeFile(part.base64Encoded ? Buffer.from(part.data, 'base64') : part.data)
+      eof = part.eof
+    }
+  } finally {
+    await file.close()
+    await session.send('IO.close', { handle: stream })
+  }
+}
 
 const browser = await chromium.launch({
   channel: 'chrome',
@@ -32,9 +60,12 @@ try {
   }
 
   const context = await browser.newContext({ viewport: null })
-  await context.addInitScript(() => {
-    window.__CFB_TERRAIN_GPU_TIMING__ = true
-  })
+  await context.addInitScript(({ backendChoice, staticGroundTiming }) => {
+    window.__CFB_TERRAIN_GPU_TIMING__ = staticGroundTiming
+    if (backendChoice !== 'auto') {
+      localStorage.setItem('rts_graphics_settings', JSON.stringify({ rendererBackendChoice: backendChoice }))
+    }
+  }, { backendChoice, staticGroundTiming })
   const page = await context.newPage()
   await page.bringToFront()
   const errors = []
@@ -126,9 +157,18 @@ try {
     await pageSession.send('Profiler.start')
   }
 
-  const result = await page.evaluate(async(battleOnly) => {
+  let traceComplete
+  if (traceEnabled) {
+    traceComplete = new Promise(resolve => browserSession.once('Tracing.tracingComplete', resolve))
+    await browserSession.send('Tracing.start', {
+      transferMode: 'ReturnAsStream',
+      traceConfig: { includedCategories: ['benchmark', 'cc', 'viz', 'gpu', 'renderer.scheduler'] }
+    })
+  }
+  const result = await page.evaluate(async({ battleOnly, battleDuration, omitWebGpuTerrainTiming }) => {
     const state = window.gameState
     const { gameLoop, renderer, units } = window.gameInstance
+    if (omitWebGpuTerrainTiming) renderer.webgpuRenderer.getTimestampWrites = () => undefined
     const canvas = document.getElementById('gameCanvas')
     const selected = units.filter(unit => unit.owner === state.humanPlayer && unit.type.startsWith('tank'))
     selected.forEach(unit => { unit.selected = true })
@@ -166,7 +206,7 @@ try {
     const lengths = route.slice(1).map(([x, y], index) => Math.hypot(x - route[index][0], y - route[index][1]))
     const distance = lengths.reduce((sum, value) => sum + value, 0)
     const speed = battleOnly ? 0 : 3600
-    const duration = battleOnly ? 60000 : Math.max(60000, 2 * distance / speed * 1000)
+    const duration = battleOnly ? battleDuration : Math.max(60000, 2 * distance / speed * 1000)
     const intervals = []
     const cpuFrames = []
     const samples = []
@@ -269,7 +309,11 @@ try {
       intervals, cpuFrames, samples, longTasks, backend: state.renderStats?.gpuTerrain?.backend,
       browserDpr: devicePixelRatio, canvas: [canvas.width, canvas.height, canvas.clientWidth, canvas.clientHeight]
     }
-  }, battleOnly)
+  }, { battleOnly, battleDuration, omitWebGpuTerrainTiming })
+  if (traceComplete) await saveCompositorTrace(browserSession, traceComplete)
+  if (backendChoice !== 'auto' && result.backend !== backendChoice) {
+    throw new Error(`Requested ${backendChoice}, but benchmark rendered on ${result.backend}`)
+  }
   if (profileEnabled) {
     const { profile } = await pageSession.send('Profiler.stop')
     await writeFile(join(output, 'cpu.cpuprofile'), JSON.stringify(profile))
@@ -308,7 +352,8 @@ try {
     errors
   }
   await writeFile(join(output, 'result.json'), JSON.stringify({
-    summary, gpu, browser: await browser.version(), profileEnabled, cdpMetrics, ...result
+    summary, gpu, browser: await browser.version(), profileEnabled, traceEnabled, backendChoice,
+    staticGroundTiming, omitWebGpuTerrainTiming, cdpMetrics, ...result
   }))
   console.log(JSON.stringify(summary, null, 2))
 } finally {

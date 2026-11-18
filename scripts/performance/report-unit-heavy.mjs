@@ -12,7 +12,10 @@ const b = after.summary
 const backend = summary => summary.backend?.backend || summary.backend
 const scene = summary => summary.scene || 'fast scrolling'
 if (scene(a) !== scene(b) || a.startUnits !== b.startUnits || a.routeLaps !== b.routeLaps || a.browserDpr !== b.browserDpr ||
-    String(a.canvas) !== String(b.canvas) || backend(a) !== backend(b) || before.profileEnabled !== after.profileEnabled) {
+    String(a.canvas) !== String(b.canvas) || backend(a) !== backend(b) || before.profileEnabled !== after.profileEnabled ||
+    before.duration !== after.duration || Boolean(before.traceEnabled) !== Boolean(after.traceEnabled) ||
+    (before.staticGroundTiming ?? true) !== (after.staticGroundTiming ?? true) ||
+    Boolean(before.omitWebGpuTerrainTiming) !== Boolean(after.omitWebGpuTerrainTiming)) {
   throw new Error('Capture settings differ. Compare like-for-like runs.')
 }
 
@@ -42,6 +45,9 @@ ${[
   row('Mean CPU update (ms)', avg('averageUpdateMs')),
   row('Mean CPU render (ms)', avg('averageRenderMs')),
   row('Terrain GPU p95 (ms)', sample('gpu')),
+  row('Static ground GPU p95 (ms)', sample('staticGroundGpu')),
+  row('Peak Apache rocket centers in viewport', avg('maxVisibleApacheRockets')),
+  row('Peak impact centers in viewport', avg('maxVisibleImpacts')),
   row('JS heap p95 (MiB)', sample('heap', 1048576)),
   row('Long tasks', capture => capture.longTasks.length),
   row('Save readiness (ms)', avg('preparationMs')),

@@ -28,4 +28,4 @@ Both 60-second runs used headed Chrome 157.0.8103.79, verified hardware rasteriz
 
 Average changed by −0.03% and minimum by 0%. Battle evolution varied across runs. V8 attributed about 15 ms before and 9 ms after in total to JavaScript in the impact module across the entire capture. These measurements show no FPS improvement or demonstrated 60 FPS acceptance. Terrain timestamps cover terrain only. Actual impact raster timing, physical display presentation, and cold and repeated scrolling acceptance remain open. The CPU profile's long idle intervals also leave the primary cause of the callback delays unisolated.
 
-Lint passed. The full unit suite passed 5,898 cases, including the new band-composition test. The known `U05433` sprite-worker alpha assertion failed again and previously reproduced on the unchanged dev baseline.
+Lint passed. The full unit suite passed 5,898 cases, including the new band-composition test. The known `U05433` map sprite alpha assertion failed again and previously reproduced on the unchanged dev baseline.
