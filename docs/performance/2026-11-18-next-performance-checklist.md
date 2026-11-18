@@ -37,3 +37,7 @@ For each fix, commit its report under `docs/performance/`. Record A1/B1/B2/A2 re
 The foreground canvas investigation identified a cached-shadow source as the next fix candidate. The related benchmark attribution, hardware results and remaining work are in the [shadow source report](2026-11-18-shadow-source-attribution.md).
 
 The [shadow bounds follow-up](2026-11-18-shadow-bounds-followup.md) compares unit sprites, shadow copies and bounded draws. It identifies the next candidate and records the remaining parity and hardware checks.
+
+The [simulation throughput report](2026-11-18-simulation-throughput.md) records hardware A/B measurements and adds fixture, scene and simulation-time counters. Matched tick cost and the remaining harness safeguards are still open.
+
+The [gap timeline](2026-11-18-gap-timeline.md) correlates game-frame samples with long presentation intervals and notes missing frame identifiers.

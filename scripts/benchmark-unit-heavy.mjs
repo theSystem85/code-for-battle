@@ -2,6 +2,7 @@
 import { chromium } from 'playwright'
 import { mkdir, open, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
+import { createHash } from 'node:crypto'
 
 const output = process.env.BENCHMARK_OUTPUT || 'tmp/unit-heavy'
 const url = process.env.BENCHMARK_URL || 'http://127.0.0.1:4176'
@@ -182,6 +183,7 @@ try {
   }
   await waitReady()
   const preparationMs = Date.now() - loadStart
+  const fixtureSha256 = createHash('sha256').update(await readFile(fixture)).digest('hex')
 
   const pageSession = await context.newCDPSession(page)
   await pageSession.send('Performance.enable')
@@ -369,11 +371,21 @@ try {
     let maxBullets = 0
     let maxVisibleApacheRockets = 0
     let maxVisibleImpacts = 0
+    let previousSimulationTime = null
+    let cameraDriftFrames = 0
+    let invalidSceneFrames = 0
+    let captureActive = false
     const isOnScreen = entity => entity.x >= desiredX && entity.x < desiredX + canvas.clientWidth &&
       entity.y >= desiredY && entity.y < desiredY + canvas.clientHeight
     display.reportFrameBreakdown = function(frame) {
+      if (!captureActive) return report.call(this, frame)
       const now = performance.now()
-      cpuFrames.push({ t: now, ...frame })
+      const simulationTime = state.simulationTime
+      const simulationDeltaMs = previousSimulationTime === null ? null : simulationTime - previousSimulationTime
+      previousSimulationTime = simulationTime
+      cpuFrames.push({ t: now, simulationTime, simulationDeltaMs, ...frame })
+      if (battleOnly && (state.scrollOffset.x !== desiredX || state.scrollOffset.y !== desiredY)) cameraDriftFrames++
+      if (battleOnly && (state.gameOver || state.localPlayerDefeated || state.gamePaused || document.visibilityState !== 'visible' || !document.hasFocus() || document.querySelector('.tutorial-overlay') || window.tutorialSystem)) invalidSceneFrames++
       maxBullets = Math.max(maxBullets, gameLoop.bullets.length)
       if (battleOnly) {
         let rockets = 0
@@ -431,6 +443,7 @@ try {
       await new Promise(resolve => {
         function frame(now) {
           if (start === undefined && traceEnabled) performance.mark('cfb-benchmark-start')
+          captureActive = true
           start ??= now
           if (previous !== undefined) intervals.push(now - previous)
           previous = now
@@ -447,6 +460,7 @@ try {
           }
           if (elapsed < duration) requestAnimationFrame(frame)
           else {
+            captureActive = false
             if (traceEnabled) performance.mark('cfb-benchmark-end')
             resolve()
           }
@@ -473,7 +487,8 @@ try {
       throw new Error('The impact probe did not observe Apache volleys and active impacts')
     }
     return {
-      startUnits, endUnits: units.length, maxBullets, maxVisibleApacheRockets, maxVisibleImpacts, minimapCalls, foregroundDraws, suppressedDraws, substitutedDraws, shadowBitmapCount: shadowBitmaps.size, imageSources, sourceStacks,
+      startUnits, endUnits: units.length, maxBullets, maxVisibleApacheRockets, maxVisibleImpacts, minimapCalls, foregroundDraws, suppressedDraws, substitutedDraws, shadowBitmapCount: shadowBitmaps.size, imageSources, sourceStacks, cameraDriftFrames, invalidSceneFrames,
+      simulationStepMs: state.simulationStepMs || 1000 / 60,
       selected: selected.length, duration, distance, speed,
       intervals, cpuFrames, samples, longTasks, backend: state.renderStats?.gpuTerrain?.backend,
       framePhases: window.__framePhases?.snapshot(),
@@ -508,6 +523,8 @@ try {
     if (elapsed >= 1000) minimumOneSecondFps = Math.min(minimumOneSecondFps, right - left + 1)
   }
   const average = key => cpuFrames.reduce((sum, frame) => sum + frame[key], 0) / cpuFrames.length
+  const simulationMs = cpuFrames.reduce((sum, frame) => sum + (frame.simulationDeltaMs || 0), 0)
+  const simulationTicks = simulationMs / result.simulationStepMs
   const summary = {
     cadence, preparationMs, tutorialDisabled: true, scene: battleOnly ? 'stationary battle' : 'fast scrolling',
     averageFps: intervals.length * 1000 / elapsed,
@@ -518,13 +535,15 @@ try {
     p95Ms: percent(0.95), p99Ms: percent(0.99), maxMs: percent(1),
     intervalsOver60Budget: intervals.filter(ms => ms > 1000 / 60).length,
     averageUpdateMs: average('updateMs'), averageRenderMs: average('renderMs'),
+    simulationMs, simulationTicks, simulationTicksPerSecond: simulationTicks * 1000 / elapsed,
+    cameraDriftFrames: result.cameraDriftFrames, invalidSceneFrames: result.invalidSceneFrames,
     startUnits: result.startUnits, endUnits: result.endUnits, maxBullets: result.maxBullets,
     selected: result.selected, routeLaps: result.duration * result.speed / 1000 / result.distance,
     backend: result.backend, browserDpr: result.browserDpr, canvas: result.canvas,
     errors
   }
   await writeFile(join(output, 'result.json'), JSON.stringify({
-    summary, gpu, browser: await browser.version(), profileEnabled, traceEnabled, backendChoice, importThroughUi,
+    summary, fixtureSha256, gpu, browser: await browser.version(), profileEnabled, traceEnabled, backendChoice, importThroughUi,
     staticGroundTiming, omitWebGpuTerrainTiming, impactDraw, holdMinimap, holdForeground, workers, cdpMetrics, ...result
   }))
   console.log(JSON.stringify(summary, null, 2))
