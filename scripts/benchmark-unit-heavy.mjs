@@ -12,6 +12,7 @@ const battleOnly = process.env.BENCHMARK_BATTLE_ONLY === '1'
 const importThroughUi = process.env.BENCHMARK_IMPORT_SAVE === '1'
 const traceEnabled = process.env.BENCHMARK_COMPOSITOR_TRACE === '1'
 const countStandbyClears = process.env.BENCHMARK_COUNT_STANDBY_CLEARS === '1'
+const impactDraw = process.env.BENCHMARK_IMPACT_DRAW ?? null
 const backendChoice = process.env.BENCHMARK_BACKEND || 'auto'
 const staticGroundTiming = process.env.BENCHMARK_STATIC_GROUND_TIMING !== '0'
 const omitWebGpuTerrainTiming = process.env.BENCHMARK_WEBGPU_TERRAIN_TIMING === '0'
@@ -19,6 +20,9 @@ const battleDuration = Number(process.env.BENCHMARK_BATTLE_DURATION_MS || 60000)
 const unitsPerParty = Number(process.env.BENCHMARK_UNITS_PER_PARTY || 100)
 if (!['auto', 'webgpu', 'webgl'].includes(backendChoice)) {
   throw new Error('BENCHMARK_BACKEND must be auto, webgpu or webgl')
+}
+if (impactDraw !== null && (!battleOnly || !['0', '1'].includes(impactDraw))) {
+  throw new Error('BENCHMARK_IMPACT_DRAW requires a stationary battle and must be 0 or 1')
 }
 if (!Number.isSafeInteger(battleDuration) || battleDuration < 10000) {
   throw new Error('BENCHMARK_BATTLE_DURATION_MS must be an integer of at least 10000')
@@ -191,7 +195,7 @@ try {
       traceConfig: { includedCategories: ['benchmark', 'blink.user_timing', 'cc', 'viz', 'gpu', 'renderer.scheduler'] }
     })
   }
-  const result = await page.evaluate(async({ battleOnly, battleDuration, omitWebGpuTerrainTiming, traceEnabled, countStandbyClears }) => {
+  const result = await page.evaluate(async({ battleOnly, battleDuration, omitWebGpuTerrainTiming, traceEnabled, countStandbyClears, impactDraw }) => {
     const state = window.gameState
     const { gameLoop, renderer, units } = window.gameInstance
     if (countStandbyClears && !(window.WebGL2RenderingContext &&
@@ -296,6 +300,16 @@ try {
       return report.call(this, frame)
     }
 
+    const impact = renderer.effectsRenderer.impactVfx
+    const renderImpact = impact.render
+    let activeImpactFrames = 0
+    if (impactDraw !== null) {
+      impact.render = function(ctx, gameState, scroll, now, width, height) {
+        if (now < this.activeUntil) activeImpactFrames++
+        if (impactDraw === '1') return renderImpact.call(this, ctx, gameState, scroll, now, width, height)
+      }
+    }
+
     let start
     let previous
     if (countStandbyClears) window.benchmarkStandbyClears = 0
@@ -332,6 +346,7 @@ try {
       observer.disconnect()
       renderer.renderGame = render
       display.reportFrameBreakdown = report
+      if (impactDraw !== null) delete impact.render
     }
     if (document.querySelector('.tutorial-overlay') || window.tutorialSystem) {
       throw new Error('The tutorial=0 startup flag did not suppress tutorial initialization')
@@ -339,15 +354,19 @@ try {
     if (battleOnly && (state.gameOver || state.localPlayerDefeated || maxBullets === 0 || state.gamePaused)) {
       throw new Error('Stationary benchmark did not sustain active combat')
     }
+    if (impactDraw !== null && (activeImpactFrames === 0 || maxVisibleApacheRockets === 0 || maxVisibleImpacts === 0)) {
+      throw new Error('The impact probe did not observe Apache volleys and active impacts')
+    }
     return {
       startUnits, endUnits: units.length, maxBullets, maxVisibleApacheRockets, maxVisibleImpacts,
       selected: selected.length, duration, distance, speed,
       intervals, cpuFrames, samples, longTasks, backend: state.renderStats?.gpuTerrain?.backend,
       framePhases: window.__framePhases?.snapshot(),
+      activeImpactFrames: impactDraw === null ? undefined : activeImpactFrames,
       standbyClears: window.benchmarkStandbyClears,
       browserDpr: devicePixelRatio, canvas: [canvas.width, canvas.height, canvas.clientWidth, canvas.clientHeight]
     }
-  }, { battleOnly, battleDuration, omitWebGpuTerrainTiming, traceEnabled, countStandbyClears })
+  }, { battleOnly, battleDuration, omitWebGpuTerrainTiming, traceEnabled, countStandbyClears, impactDraw })
   if (traceComplete) await saveCompositorTrace(browserSession, traceComplete)
   if (backendChoice !== 'auto' && result.backend !== backendChoice) {
     throw new Error(`Requested ${backendChoice}, but benchmark rendered on ${result.backend}`)
@@ -391,7 +410,7 @@ try {
   }
   await writeFile(join(output, 'result.json'), JSON.stringify({
     summary, gpu, browser: await browser.version(), profileEnabled, traceEnabled, backendChoice, importThroughUi,
-    staticGroundTiming, omitWebGpuTerrainTiming, workers, cdpMetrics, ...result
+    staticGroundTiming, omitWebGpuTerrainTiming, impactDraw, workers, cdpMetrics, ...result
   }))
   console.log(JSON.stringify(summary, null, 2))
 } finally {

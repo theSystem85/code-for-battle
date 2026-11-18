@@ -14,6 +14,7 @@ const scene = summary => summary.scene || 'fast scrolling'
 if (scene(a) !== scene(b) || a.startUnits !== b.startUnits || a.routeLaps !== b.routeLaps || a.browserDpr !== b.browserDpr ||
     String(a.canvas) !== String(b.canvas) || backend(a) !== backend(b) || before.profileEnabled !== after.profileEnabled ||
     before.duration !== after.duration || Boolean(before.traceEnabled) !== Boolean(after.traceEnabled) ||
+    (before.impactDraw ?? null) !== (after.impactDraw ?? null) ||
     Boolean(before.importThroughUi) !== Boolean(after.importThroughUi) ||
     (before.staticGroundTiming ?? true) !== (after.staticGroundTiming ?? true) ||
     Boolean(before.omitWebGpuTerrainTiming) !== Boolean(after.omitWebGpuTerrainTiming)) {
