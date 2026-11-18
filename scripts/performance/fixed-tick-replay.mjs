@@ -8,9 +8,11 @@ const fixture = process.env.BENCHMARK_FIXTURE
 const output = process.env.BENCHMARK_OUTPUT
 const ticks = Number(process.env.BENCHMARK_FIXED_TICKS || 150)
 const countSpatial = process.env.BENCHMARK_COUNT_SPATIAL === '1'
+const stackEvery = Number(process.env.BENCHMARK_SPATIAL_STACK_EVERY || 0)
 if (!fixture || !output || !Number.isSafeInteger(ticks) || ticks < 1 || ticks > 1000) {
   throw new Error('Set BENCHMARK_FIXTURE, BENCHMARK_OUTPUT and a valid BENCHMARK_FIXED_TICKS (1–1000)')
 }
+if (!Number.isSafeInteger(stackEvery) || stackEvery < 0) throw new Error('Invalid BENCHMARK_SPATIAL_STACK_EVERY')
 await mkdir(output, { recursive: true })
 const fixtureSha256 = createHash('sha256').update(await readFile(fixture)).digest('hex')
 const browser = await chromium.launch({ channel: 'chrome', headless: false, ignoreDefaultArgs: ['--enable-unsafe-swiftshader'] })
@@ -38,7 +40,7 @@ try {
   await page.locator('#importSaveInput').setInputFiles(fixture)
   await page.waitForFunction(() => window.gameInstance?.units?.length >= 400 &&
     document.getElementById('loadingScreen')?.classList.contains('loading-screen--hidden'), null, { timeout: 120000 })
-  const result = await page.evaluate(async({ count, countSpatial }) => {
+  const result = await page.evaluate(async({ count, countSpatial, stackEvery }) => {
     const { updateGame } = await import('/src/updateGame.js')
     const { advanceSimulationTime, getFixedSimulationStepMs } = await import('/src/game/time.js')
     const { QuadtreeNode, SpatialQuadtree } = await import('/src/game/spatialQuadtree.js')
@@ -61,6 +63,8 @@ try {
     const initialState = digestState()
     const timings = []
     const spatial = { rebuilds: 0, groundQueries: 0, airQueries: 0, visitedNodes: 0, candidateUnits: 0, returnedUnits: 0 }
+    const queryStacks = {}
+    let queryCount = 0
     if (countSpatial) {
       const rebuild = SpatialQuadtree.prototype.rebuild
       SpatialQuadtree.prototype.rebuild = function(...args) {
@@ -71,6 +75,11 @@ try {
         const original = SpatialQuadtree.prototype[method]
         SpatialQuadtree.prototype[method] = function(...args) {
           spatial[counter]++
+          queryCount++
+          if (stackEvery && queryCount % stackEvery === 0) {
+            const stack = new Error().stack.split('\n').slice(2, 6).join('\n')
+            queryStacks[stack] = (queryStacks[stack] || 0) + 1
+          }
           const result = original.apply(this, args)
           spatial.returnedUnits += result.length
           return result
@@ -94,8 +103,8 @@ try {
     } finally {
       Math.random = originalRandom
     }
-    return { initialState, finalState: digestState(), timings, step, spatial, unitCount: units.length, visible: document.visibilityState, focused: document.hasFocus() }
-  }, { count: ticks, countSpatial })
+    return { initialState, finalState: digestState(), timings, step, spatial, queryStacks, unitCount: units.length, visible: document.visibilityState, focused: document.hasFocus() }
+  }, { count: ticks, countSpatial, stackEvery })
   const hash = value => createHash('sha256').update(value).digest('hex')
   const sorted = [...result.timings].sort((a, b) => a - b)
   const percentile = p => sorted[Math.ceil(sorted.length * p) - 1]
@@ -104,7 +113,7 @@ try {
     initialStateHash: hash(result.initialState), finalStateHash: hash(result.finalState),
     meanTickMs: sorted.reduce((sum, value) => sum + value, 0) / sorted.length,
     p50TickMs: percentile(0.5), p95TickMs: percentile(0.95), p99TickMs: percentile(0.99),
-    maxTickMs: sorted.at(-1), endUnits: result.unitCount, visible: result.visible, focused: result.focused, countSpatial, spatial: result.spatial, errors
+    maxTickMs: sorted.at(-1), endUnits: result.unitCount, visible: result.visible, focused: result.focused, countSpatial, stackEvery, spatial: result.spatial, queryStacks: result.queryStacks, errors
   }
   await writeFile(join(output, 'result.json'), JSON.stringify({ summary, timings: result.timings }, null, 2))
   console.log(JSON.stringify(summary))

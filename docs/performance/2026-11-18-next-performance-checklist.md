@@ -45,3 +45,5 @@ The [gap timeline](2026-11-18-gap-timeline.md) correlates game-frame samples wit
 The [fixed-tick replay](2026-11-18-fixed-tick-replay.md) provides repeatable selected-state hashes, per-update timing and quadtree counts. Full-state equivalence and caller attribution remain open.
 
 The [frozen-world traversal](2026-11-18-frozen-traversal.md) compares first and repeated route laps without simulation-driven unit losses. Cache-event attribution and live traversal remain open.
+
+The [shadow parity matrix](2026-11-18-shadow-parity.md) tests the fixture's seven ground-unit masks at two DPRs, while [spatial caller samples](2026-11-18-spatial-query-callers.md) identify the dominant collision-query paths. Full production parity and per-caller CPU timing remain open.
