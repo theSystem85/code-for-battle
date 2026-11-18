@@ -215,6 +215,8 @@ try {
           buildings: state.buildings.length,
           bullets: gameLoop.bullets.length,
           gpu: state.renderStats?.gpuTiming?.milliseconds,
+          staticGroundDraws: state.renderStats?.gpuStaticGround?.drawCalls,
+          staticGroundGpu: state.renderStats?.gpuStaticGround?.gpuMilliseconds,
           backend: state.renderStats?.gpuTerrain?.backend,
           heap: performance.memory?.usedJSHeapSize,
           visible: document.visibilityState,

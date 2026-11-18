@@ -6,6 +6,8 @@ import { TILE_SIZE } from '../../config.js'
 // sampling grid, upload it before play, and present at the native GPU viewport;
 // do not resize source images on the Canvas render path or lower canvas DPR.
 const QUAD = new Float32Array([0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1])
+const UNIFORM_SLOT_BYTES = 256
+const UNIFORM_SLOT_FLOATS = UNIFORM_SLOT_BYTES / Float32Array.BYTES_PER_ELEMENT
 const BUFFER = Object.freeze({ MAP_READ: 1, COPY_SRC: 4, COPY_DST: 8, VERTEX: 32, UNIFORM: 64, QUERY_RESOLVE: 512 })
 const TEXTURE = Object.freeze({ COPY_DST: 2, TEXTURE_BINDING: 4, RENDER_ATTACHMENT: 16 })
 const RETAINED_OPTIONS = Object.freeze({ skipWaterBase: true, skipWaterSot: true, countHit: false, countMiss: false })
@@ -57,7 +59,6 @@ export class StaticTerrainGpuPages {
     this.budget = budget
     this.records = new Map()
     this.visible = []
-    this.uniforms = new Float32Array(8)
     this.dynamicOffset = new Uint32Array(1)
     this.stats = { bytes: 0, uploads: 0, uploadBytes: 0, rebuilds: 0, drawCalls: 0, active: false, gpuMilliseconds: null }
     this.glState = null
@@ -142,7 +143,8 @@ export class StaticTerrainGpuPages {
     if (this.gpuState?.device === device) return
     this.releaseGpu()
     const timing = renderer.timestampSupported && globalThis.__CFB_TERRAIN_GPU_TIMING__
-    const bytes = this.pages.bytes + this.records.size * 256 + QUAD.byteLength + (timing ? 48 : 0)
+    const uniformBytes = this.records.size * UNIFORM_SLOT_BYTES
+    const bytes = this.pages.bytes + uniformBytes + QUAD.byteLength + (timing ? 48 : 0)
     const token = this.budget.reserve('gpuTerrain', bytes)
     const state = { device, token, bytes, buffer: null, uniforms: null }
     this.gpuState = state
@@ -165,7 +167,8 @@ export class StaticTerrainGpuPages {
       state.buffer = device.createBuffer({ size: QUAD.byteLength, usage: BUFFER.VERTEX | BUFFER.COPY_DST })
       device.queue.writeBuffer(state.buffer, 0, QUAD)
       // One aligned uniform slot per retained page also covers arbitrary camera jumps.
-      state.uniforms = device.createBuffer({ size: this.records.size * 256, usage: BUFFER.UNIFORM | BUFFER.COPY_DST })
+      state.uniforms = device.createBuffer({ size: uniformBytes, usage: BUFFER.UNIFORM | BUFFER.COPY_DST })
+      state.uniformData = new Float32Array(uniformBytes / Float32Array.BYTES_PER_ELEMENT)
       if (timing) {
         state.query = device.createQuerySet({ type: 'timestamp', count: 2 })
         state.resolve = device.createBuffer({ size: 16, usage: BUFFER.QUERY_RESOLVE | BUFFER.COPY_SRC })
@@ -260,21 +263,44 @@ export class StaticTerrainGpuPages {
   }
 
   renderGpu(renderer, canvas, scroll, density) {
-    const s = this.gpuState, device = s.device, encoder = device.createCommandEncoder()
+    const s = this.gpuState, device = s.device
+    const uniforms = s.uniformData
+    const scale = Math.fround(density)
+    let changed = false
+    for (let i = 0; i < this.visible.length; i++) {
+      const chunk = this.visible[i].chunk
+      const image = chunk.preparedRaster.image
+      const slot = i * UNIFORM_SLOT_FLOATS
+      const x = Math.fround((chunk.offsetX - scroll.x) * density)
+      const y = Math.fround((chunk.offsetY - scroll.y) * density)
+      const width = Math.fround(image.width * density)
+      const height = Math.fround(image.height * density)
+      if (uniforms[slot] === x && uniforms[slot + 1] === y &&
+          uniforms[slot + 2] === width && uniforms[slot + 3] === height &&
+          uniforms[slot + 4] === canvas.width && uniforms[slot + 5] === canvas.height &&
+          uniforms[slot + 6] === scale) continue
+      uniforms[slot] = x
+      uniforms[slot + 1] = y
+      uniforms[slot + 2] = width
+      uniforms[slot + 3] = height
+      uniforms[slot + 4] = canvas.width
+      uniforms[slot + 5] = canvas.height
+      uniforms[slot + 6] = uniforms[slot + 7] = scale
+      changed = true
+    }
+    // The GPU retains identical slots on stationary frames. On movement,
+    // upload the occupied slots in one queue operation, including alignment.
+    if (changed) device.queue.writeBuffer(s.uniforms, 0, uniforms, 0, this.visible.length * UNIFORM_SLOT_FLOATS)
+
+    const encoder = device.createCommandEncoder()
     const timed = Boolean(s.query && !s.readPending)
     const pass = encoder.beginRenderPass({ colorAttachments: [{ view: renderer.context.getCurrentTexture().createView(), loadOp: 'load', storeOp: 'store' }],
       timestampWrites: timed ? s.timestampWrites : undefined })
     pass.setPipeline(s.pipeline)
     pass.setVertexBuffer(0, s.buffer)
     for (let i = 0; i < this.visible.length; i++) {
-      const record = this.visible[i], chunk = record.chunk, u = this.uniforms
-      u[0] = (chunk.offsetX - scroll.x) * density
-      u[1] = (chunk.offsetY - scroll.y) * density
-      u[2] = chunk.preparedRaster.image.width * density; u[3] = chunk.preparedRaster.image.height * density
-      u[4] = canvas.width; u[5] = canvas.height; u[6] = density; u[7] = density
-      device.queue.writeBuffer(s.uniforms, i * 256, u)
-      this.dynamicOffset[0] = i * 256
-      pass.setBindGroup(0, record.group, this.dynamicOffset)
+      this.dynamicOffset[0] = i * UNIFORM_SLOT_BYTES
+      pass.setBindGroup(0, this.visible[i].group, this.dynamicOffset)
       pass.draw(6)
     }
     pass.end()
