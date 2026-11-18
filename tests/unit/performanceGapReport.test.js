@@ -20,7 +20,7 @@ describe('presentation gap report', () => {
     return execFileSync(process.execPath, ['scripts/performance/report-unit-heavy-gaps.mjs', trace, result], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] })
   }
 
-  const start = { name: 'cfb-benchmark-start', cat: 'blink.user_timing', pid: 1, ts: 1000000, args: { data: { startTime: 100 } } }
+  const start = { name: 'cfb-benchmark-start', cat: 'blink.user_timing', pid: 1, tid: 2, ts: 1000000, args: { data: { startTime: 100 } } }
   const end = { name: 'cfb-benchmark-end', cat: 'blink.user_timing', pid: 1, ts: 4000000 }
   const feedback = (pid, ts) => ({ name: 'SwapEndToPresentationCompositorFrame', ph: 'e', pid, ts })
 
@@ -38,5 +38,13 @@ describe('presentation gap report', () => {
   it('[U07212] rejects missing marks and insufficient presentation data', () => {
     expect(() => run([start])).toThrow()
     expect(() => run([start, end, feedback(1, 1500000)])).toThrow()
+  })
+
+  it('[U07217] associates frame reports with overlapping renderer main-frame spans', () => {
+    const main = { name: 'ProxyMain::BeginMainFrame', ph: 'X', pid: 1, tid: 2, ts: 1550000, dur: 200000, args: { begin_frame_id: 4, main_frame_pipeline: { main_frame_id: 7 } } }
+    const report = JSON.parse(run([start, end, feedback(1, 1500000), feedback(1, 2500000), main], [{ t: 700, schedulerSource: 'raf', schedulerDelayMs: 12 }]))
+    expect(report.gaps[0].mainFrames).toEqual([{ beginFrameId: 4, mainFrameId: 7, gameReports: 1 }])
+    expect(report.gaps[0].schedulerSources).toEqual(['raf'])
+    expect(report.gaps[0].maxSchedulerDelayMs).toBe(12)
   })
 })

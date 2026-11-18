@@ -48,6 +48,16 @@ const gaps = intervals.sort((a, b) => b.durationMs - a.durationMs).slice(0, 10).
       .filter(duration => duration > 0)
     return [name, { count: durations.length, longestOverlapMs: durations.length ? Math.max(...durations) : null }]
   }))
+  const mainFrames = spans.filter(event => event.pid === start.pid && event.tid === start.tid &&
+    event.name === 'ProxyMain::BeginMainFrame' && event.ts < interval.end && event.ts + event.dur > interval.start)
+    .map(event => ({
+      beginFrameId: event.args?.begin_frame_id ?? null,
+      mainFrameId: Number.isSafeInteger(event.args?.main_frame_pipeline?.main_frame_id) ? event.args.main_frame_pipeline.main_frame_id : null,
+      gameReports: gameFrames.filter(frame => {
+        const timestamp = start.ts + (frame.t - origin) * 1000
+        return timestamp >= event.ts && timestamp < event.ts + event.dur
+      }).length
+    }))
   return {
     startSeconds: (interval.start - start.ts) / 1_000_000,
     durationMs: interval.durationMs,
@@ -57,6 +67,9 @@ const gaps = intervals.sort((a, b) => b.durationMs - a.durationMs).slice(0, 10).
     maxUpdateMs: gameFrames.length ? Math.max(...gameFrames.map(frame => frame.updateMs || 0)) : null,
     maxRenderMs: gameFrames.length ? Math.max(...gameFrames.map(frame => frame.renderMs || 0)) : null,
     simulationDeltaMs: gameFrames.reduce((sum, frame) => sum + (frame.simulationDeltaMs || 0), 0),
+    schedulerSources: [...new Set(gameFrames.map(frame => frame.schedulerSource).filter(Boolean))],
+    maxSchedulerDelayMs: gameFrames.some(frame => Number.isFinite(frame.schedulerDelayMs)) ? Math.max(...gameFrames.map(frame => frame.schedulerDelayMs).filter(Number.isFinite)) : null,
+    mainFrames,
     overlaps
   }
 })

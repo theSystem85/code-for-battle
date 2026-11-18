@@ -47,3 +47,5 @@ The [fixed-tick replay](2026-11-18-fixed-tick-replay.md) provides repeatable sel
 The [frozen-world traversal](2026-11-18-frozen-traversal.md) compares first and repeated route laps without simulation-driven unit losses. Cache-event attribution and live traversal remain open.
 
 The [shadow parity matrix](2026-11-18-shadow-parity.md) tests the fixture's seven ground-unit masks at two DPRs, while [spatial caller samples](2026-11-18-spatial-query-callers.md) identify the dominant collision-query paths. Full production parity and per-caller CPU timing remain open.
+
+Additional reports cover [traversal cache correlation](2026-11-18-traversal-cache-correlation.md), [scheduler and compositor spans](2026-11-18-frame-scheduler-correlation.md), and [stationary benchmark validity](2026-11-18-benchmark-validity.md). Each report identifies attribution and validation that still remain open.

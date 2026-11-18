@@ -3,6 +3,7 @@ import { chromium } from 'playwright'
 import { mkdir, open, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { createHash } from 'node:crypto'
+import { validateBattleResult } from './performance/battleValidity.js'
 
 const output = process.env.BENCHMARK_OUTPUT || 'tmp/unit-heavy'
 const url = process.env.BENCHMARK_URL || 'http://127.0.0.1:4176'
@@ -75,6 +76,17 @@ try {
 
   const context = await browser.newContext({ viewport: null })
   await context.addInitScript(({ backendChoice, staticGroundTiming, countStandbyClears }) => {
+    window.__benchmarkTutorialSeen = false
+    window.__benchmarkTutorialObserver = new MutationObserver(records => {
+      for (const record of records) {
+        const nodes = record.type === 'attributes' ? [record.target] : record.addedNodes
+        for (const node of nodes) {
+          if (node.nodeType === Node.ELEMENT_NODE && (node.matches('.tutorial-overlay') || node.querySelector('.tutorial-overlay'))) window.__benchmarkTutorialSeen = true
+        }
+      }
+      if (window.tutorialSystem) window.__benchmarkTutorialSeen = true
+    })
+    window.__benchmarkTutorialObserver.observe(document, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] })
     window.__CFB_TERRAIN_GPU_TIMING__ = staticGroundTiming
     if (countStandbyClears && window.WebGL2RenderingContext) {
       window.benchmarkStandbyClears = 0
@@ -122,6 +134,7 @@ try {
     document.getElementById('loadingScreen')?.classList.contains('loading-screen--hidden'),
   null, { timeout: 120000 })
   await waitReady()
+  await page.evaluate(() => window.__benchmarkTutorialObserver.disconnect())
 
   if (process.env.BENCHMARK_CREATE_FIXTURE === '1') {
     const save = await page.evaluate(async({ label, unitsPerParty }) => {
@@ -385,7 +398,7 @@ try {
       const simulationTime = state.simulationTime
       const simulationDeltaMs = previousSimulationTime === null ? null : simulationTime - previousSimulationTime
       previousSimulationTime = simulationTime
-      cpuFrames.push({ t: now, simulationTime, simulationDeltaMs, ...frame })
+      cpuFrames.push({ t: now, simulationTime, simulationDeltaMs, schedulerSource: gameLoop.lastSchedulerSource, schedulerDelayMs: gameLoop.lastSchedulerDelayMs, ...frame })
       if (battleOnly && (state.scrollOffset.x !== desiredX || state.scrollOffset.y !== desiredY)) cameraDriftFrames++
       if (battleOnly && (state.gameOver || state.localPlayerDefeated || state.gamePaused || document.visibilityState !== 'visible' || !document.hasFocus() || document.querySelector('.tutorial-overlay') || window.tutorialSystem)) invalidSceneFrames++
       maxBullets = Math.max(maxBullets, gameLoop.bullets.length)
@@ -497,7 +510,7 @@ try {
     }
     return {
       startUnits, endUnits: units.length, maxBullets, maxVisibleApacheRockets, maxVisibleImpacts, minimapCalls, foregroundDraws, suppressedDraws, substitutedDraws, shadowBitmapCount: shadowBitmaps.size, imageSources, sourceStacks, cameraDriftFrames, invalidSceneFrames,
-      simulationStepMs: state.simulationStepMs || 1000 / 60,
+      simulationStepMs: state.simulationStepMs || 1000 / 60, tutorialSeen: window.__benchmarkTutorialSeen,
       selected: selected.length, duration, distance, speed,
       intervals, cpuFrames, samples, longTasks, backend: state.renderStats?.gpuTerrain?.backend,
       framePhases: window.__framePhases?.snapshot(),
@@ -551,11 +564,17 @@ try {
     backend: result.backend, browserDpr: result.browserDpr, canvas: result.canvas,
     errors
   }
+  const validityFailures = battleOnly ? validateBattleResult({
+    summary, samples: result.samples, fixtureSha256,
+    expectedFixtureSha256: process.env.BENCHMARK_EXPECT_FIXTURE_SHA256,
+    tutorialSeen: result.tutorialSeen
+  }) : []
   await writeFile(join(output, 'result.json'), JSON.stringify({
     summary, fixtureSha256, gpu, browser: await browser.version(), profileEnabled, traceEnabled, backendChoice, importThroughUi,
-    staticGroundTiming, omitWebGpuTerrainTiming, impactDraw, holdMinimap, holdForeground, freezeTraversal, workers, cdpMetrics, ...result
+    staticGroundTiming, omitWebGpuTerrainTiming, impactDraw, holdMinimap, holdForeground, freezeTraversal, validityFailures, workers, cdpMetrics, ...result
   }))
   console.log(JSON.stringify(summary, null, 2))
+  if (validityFailures.length) throw new Error(`Invalid benchmark run: ${validityFailures.join(', ')}`)
 } finally {
   await browser.close()
 }
