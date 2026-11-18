@@ -13,6 +13,8 @@ const importThroughUi = process.env.BENCHMARK_IMPORT_SAVE === '1'
 const traceEnabled = process.env.BENCHMARK_COMPOSITOR_TRACE === '1'
 const countStandbyClears = process.env.BENCHMARK_COUNT_STANDBY_CLEARS === '1'
 const impactDraw = process.env.BENCHMARK_IMPACT_DRAW ?? null
+const holdMinimap = process.env.BENCHMARK_HOLD_MINIMAP === '1'
+const holdForeground = process.env.BENCHMARK_HOLD_FOREGROUND || '0'
 const backendChoice = process.env.BENCHMARK_BACKEND || 'auto'
 const staticGroundTiming = process.env.BENCHMARK_STATIC_GROUND_TIMING !== '0'
 const omitWebGpuTerrainTiming = process.env.BENCHMARK_WEBGPU_TERRAIN_TIMING === '0'
@@ -23,6 +25,9 @@ if (!['auto', 'webgpu', 'webgl'].includes(backendChoice)) {
 }
 if (impactDraw !== null && (!battleOnly || !['0', '1'].includes(impactDraw))) {
   throw new Error('BENCHMARK_IMPACT_DRAW requires a stationary battle and must be 0 or 1')
+}
+if (!['0', '1', 'images', 'inventory', 'canvas', 'html-canvas', 'offscreen', 'shadow-size', 'stacks'].includes(holdForeground)) {
+  throw new Error('Invalid BENCHMARK_HOLD_FOREGROUND mode')
 }
 if (!Number.isSafeInteger(battleDuration) || battleDuration < 10000) {
   throw new Error('BENCHMARK_BATTLE_DURATION_MS must be an integer of at least 10000')
@@ -195,9 +200,50 @@ try {
       traceConfig: { includedCategories: ['benchmark', 'blink.user_timing', 'cc', 'viz', 'gpu', 'renderer.scheduler'] }
     })
   }
-  const result = await page.evaluate(async({ battleOnly, battleDuration, omitWebGpuTerrainTiming, traceEnabled, countStandbyClears, impactDraw }) => {
+  const result = await page.evaluate(async({ battleOnly, battleDuration, omitWebGpuTerrainTiming, traceEnabled, countStandbyClears, impactDraw, holdMinimap, holdForeground }) => {
     const state = window.gameState
     const { gameLoop, renderer, units } = window.gameInstance
+    const foreground = gameLoop.canvasManager.getGameContext()
+    const drawMethods = holdForeground !== '1' ? ['drawImage'] : ['clearRect', 'fillRect', 'strokeRect', 'fill', 'stroke', 'drawImage', 'fillText', 'strokeText', 'putImageData']
+    let foregroundDraws = 0
+    const imageSources = {}
+    const sourceStacks = []
+    const seenSources = new WeakSet()
+    if (holdForeground !== '0') {
+      for (const method of drawMethods) {
+        const original = foreground[method]
+        foreground[method] = function(...args) {
+          foregroundDraws++
+          if (holdForeground === 'inventory') {
+            const source = args[0]
+            const key = source?.currentSrc || source?.src || source?.constructor?.name || 'unknown'
+            imageSources[key] = (imageSources[key] || 0) + 1
+            return original.apply(this, args)
+          }
+          if (holdForeground === 'stacks') {
+            const source = args[0]
+            if (source instanceof OffscreenCanvas && !seenSources.has(source) && sourceStacks.length < 30) {
+              seenSources.add(source)
+              sourceStacks.push({ width: source.width, height: source.height, stack: new Error().stack })
+            }
+            return original.apply(this, args)
+          }
+          if (holdForeground === 'canvas' && !(args[0] instanceof HTMLCanvasElement) && !(args[0] instanceof OffscreenCanvas)) {
+            return original.apply(this, args)
+          }
+          if (holdForeground === 'html-canvas' && !(args[0] instanceof HTMLCanvasElement)) return original.apply(this, args)
+          if (holdForeground === 'offscreen' && !(args[0] instanceof OffscreenCanvas)) return original.apply(this, args)
+          if (holdForeground === 'shadow-size' && (!(args[0] instanceof OffscreenCanvas) || args[0].width !== 276 || args[0].height !== 276)) return original.apply(this, args)
+        }
+      }
+    }
+    const renderMinimap = gameLoop.renderMinimapIfDue
+    let minimapCalls = 0
+    gameLoop.renderMinimapIfDue = function(...args) {
+      minimapCalls++
+      if (!holdMinimap) return renderMinimap.apply(this, args)
+      return 0
+    }
     if (countStandbyClears && !(window.WebGL2RenderingContext &&
       window.gameInstance.canvasManager.getGameGlContext() instanceof window.WebGL2RenderingContext)) {
       throw new Error('The standby clear probe requires a WebGL 2 terrain canvas')
@@ -346,6 +392,10 @@ try {
       observer.disconnect()
       renderer.renderGame = render
       display.reportFrameBreakdown = report
+      gameLoop.renderMinimapIfDue = renderMinimap
+      if (holdForeground !== '0') {
+        for (const method of drawMethods) delete foreground[method]
+      }
       if (impactDraw !== null) delete impact.render
     }
     if (document.querySelector('.tutorial-overlay') || window.tutorialSystem) {
@@ -358,7 +408,7 @@ try {
       throw new Error('The impact probe did not observe Apache volleys and active impacts')
     }
     return {
-      startUnits, endUnits: units.length, maxBullets, maxVisibleApacheRockets, maxVisibleImpacts,
+      startUnits, endUnits: units.length, maxBullets, maxVisibleApacheRockets, maxVisibleImpacts, minimapCalls, foregroundDraws, imageSources, sourceStacks,
       selected: selected.length, duration, distance, speed,
       intervals, cpuFrames, samples, longTasks, backend: state.renderStats?.gpuTerrain?.backend,
       framePhases: window.__framePhases?.snapshot(),
@@ -366,7 +416,7 @@ try {
       standbyClears: window.benchmarkStandbyClears,
       browserDpr: devicePixelRatio, canvas: [canvas.width, canvas.height, canvas.clientWidth, canvas.clientHeight]
     }
-  }, { battleOnly, battleDuration, omitWebGpuTerrainTiming, traceEnabled, countStandbyClears, impactDraw })
+  }, { battleOnly, battleDuration, omitWebGpuTerrainTiming, traceEnabled, countStandbyClears, impactDraw, holdMinimap, holdForeground })
   if (traceComplete) await saveCompositorTrace(browserSession, traceComplete)
   if (backendChoice !== 'auto' && result.backend !== backendChoice) {
     throw new Error(`Requested ${backendChoice}, but benchmark rendered on ${result.backend}`)
@@ -410,7 +460,7 @@ try {
   }
   await writeFile(join(output, 'result.json'), JSON.stringify({
     summary, gpu, browser: await browser.version(), profileEnabled, traceEnabled, backendChoice, importThroughUi,
-    staticGroundTiming, omitWebGpuTerrainTiming, impactDraw, workers, cdpMetrics, ...result
+    staticGroundTiming, omitWebGpuTerrainTiming, impactDraw, holdMinimap, holdForeground, workers, cdpMetrics, ...result
   }))
   console.log(JSON.stringify(summary, null, 2))
 } finally {
