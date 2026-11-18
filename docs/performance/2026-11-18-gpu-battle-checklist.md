@@ -1,6 +1,6 @@
 # GPU rendering work for dense battles
 
-The CPU optimization checklist implementation is complete on the local feature branch. [CPU reports and stationary battle results](2026-11-18-stationary-battle-60-fps.md). The measured 60 FPS acceptance check remains open. The representative case for this work is the loaded 500-unit battle with the camera fixed, tutorial disabled at startup and construction yards protected from defeat.
+The CPU optimization checklist implementation is complete on the local feature branch. [CPU reports and stationary battle results](2026-11-18-stationary-battle-60-fps.md). [Combined dev-to-final FPS comparison](2026-11-18-combined-cpu-gpu-fps.md). The measured 60 FPS acceptance check remains open. The representative case for this work is the loaded 500-unit battle with the camera fixed, tutorial disabled at startup and construction yards protected from defeat.
 
 1. [x] Reduce Apache impact flash overdraw and measure the stationary battle. [Impact flash report](2026-11-18-apache-impact-flash.md)
 2. [x] Consolidate WebGPU terrain uniform writes and reuse them while the camera remains stationary. [Terrain uniform upload report](2026-11-18-webgpu-terrain-uploads.md)
