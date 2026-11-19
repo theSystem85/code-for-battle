@@ -202,6 +202,7 @@ function applyMineDamageToTile(tileX, tileY, damage, units, buildings) {
 
   // Damage buildings on this tile
   buildings.forEach(building => {
+    if (building.type === 'street') return
     for (let by = building.y; by < building.y + building.height; by++) {
       for (let bx = building.x; bx < building.x + building.width; bx++) {
         if (bx === tileX && by === tileY) {
@@ -383,6 +384,7 @@ function applyMineDamageWithSweeperImmunity(tileX, tileY, damage, units, buildin
 
   // Damage buildings on this tile
   buildings.forEach(building => {
+    if (building.type === 'street') return
     for (let by = building.y; by < building.y + building.height; by++) {
       for (let bx = building.x; bx < building.x + building.width; bx++) {
         if (bx === tileX && by === tileY) {

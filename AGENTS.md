@@ -51,6 +51,8 @@ There is no CI on `dev` and deploys are not gated, so the agent that pushes is t
 2. `npm run test` (unit and integration tests)
 3. `npm run test:e2e` (Playwright, Chromium). If the full suite cannot run in your environment, run the e2e tests that cover the changed area and say exactly what was skipped in the PR description.
 
+If Playwright reports a missing browser, check `command -v chromium` before trying a download. When the system browser is present, run `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH="$(command -v chromium)" npm run test:e2e -- --project=chromium` and add affected test paths when using the targeted fallback. This uses the browser already installed even when the Playwright CDN is blocked. For older checkouts, verify that `playwright.config.js` reads `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`.
+
 A docs-only change skips the test commands in this list. Run `npm run lint` only, then push straight to `dev` (rule 21).
 
 GitHub Actions (`.github/workflows/ci.yml`) only runs for PRs into `main` and pushes to `main`. Do not add CI jobs for `dev`.
@@ -174,8 +176,6 @@ For subsequent requests, commit and push directly to `dev`, without a feature br
 ## Confirmed workflow preference (2026-11-16)
 
 Always complete the authorized work by committing and pushing directly to `dev`, unless Patrick explicitly requests another destination. Record verification limitations and continue with the authorized push when a check is blocked by the environment; do not leave completed work local solely because a browser download or hardware check is unavailable. Preserve the required validation attempts and fix code failures.
-
-For Playwright in environments with system Chromium, use `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm run test:e2e -- <affected tests> --project=chromium`. This avoids downloading a second browser when the Playwright CDN is blocked. The default remains Playwright’s bundled browser when this variable is absent.
 
 ## Verify GitHub destinations before requesting repeated approval (2026-11-17)
 

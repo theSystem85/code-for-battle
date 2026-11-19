@@ -83,7 +83,7 @@ export function checkWreckCollision(bullet, wreck) {
  */
 export function checkBuildingCollision(bullet, building) {
   try {
-    if (!bullet || !building || building.health <= 0 || bullet.navalOnly) return false
+    if (!bullet || !building || building.type === 'street' || building.health <= 0 || bullet.navalOnly) return false
     if (bullet.strictTarget && bullet.target?.id && building.id !== bullet.target.id) return false
 
     // Skip friendly buildings unless this is a forced attack

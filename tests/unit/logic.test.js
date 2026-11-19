@@ -642,6 +642,16 @@ describe('logic.js', () => {
       explosions.length = 0
     })
 
+    it('[U07249] leaves built streets intact while blast damage affects nearby buildings', () => {
+      const street = { type: 'street', x: 2, y: 2, width: 1, height: 1, health: 100, owner: 'player2' }
+      const building = { type: 'powerPlant', x: 2, y: 2, width: 1, height: 1, health: 100, owner: 'player2' }
+      gameState.buildings = [street, building]
+      triggerExplosion(64, 64, 100, [], [], null, 100, [], 64, true)
+      expect(street.health).toBe(100)
+      expect(building.health).toBeLessThan(100)
+      gameState.buildings = []
+    })
+
     it('[U02480] applies the same footprint splash damage to neutral cities and ordinary buildings', () => {
       const map = Array.from({ length: 8 }, () => Array.from({ length: 8 }, () => ({ type: 'land' })))
       const group = { width: 2, height: 1, tagSet: new Set(['city']) }

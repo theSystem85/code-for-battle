@@ -326,7 +326,7 @@ export function triggerExplosion(
     const ordinaryCount = gameState.buildings?.length || 0
     for (let index = 0; index < ordinaryCount + cityBuildings.length; index++) {
       const building = index < ordinaryCount ? gameState.buildings[index] : cityBuildings[index - ordinaryCount]
-      if (building.health <= 0) continue
+      if (building.type === 'street' || building.health <= 0) continue
 
       const buildingMinX = building.x * TILE_SIZE
       const buildingMinY = building.y * TILE_SIZE

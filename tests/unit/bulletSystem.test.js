@@ -481,6 +481,12 @@ describe('Bullet System', () => {
   })
 
   describe('Building Collision Detection', () => {
+    it('[U07248] lets projectiles pass through built streets', () => {
+      const street = createMockBuilding({ type: 'street', x: 10, y: 10, width: 1, height: 1, owner: 'enemy' })
+      const bullet = createMockBullet({ x: 10 * TILE_SIZE + 16, y: 10 * TILE_SIZE + 16 })
+      expect(checkBuildingCollision(bullet, street)).toBe(false)
+    })
+
     it('[U00718] should detect collision when bullet hits building', () => {
       const building = createMockBuilding({ x: 10, y: 10, width: 2, height: 2, owner: 'enemy' })
       const buildingCenterX = building.x * TILE_SIZE + (building.width * TILE_SIZE) / 2

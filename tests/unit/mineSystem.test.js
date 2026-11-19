@@ -287,6 +287,16 @@ describe('mineSystem', () => {
       )
     })
 
+    it('[U07250] leaves built streets intact when a mine detonates', () => {
+      broadcastBuildingDamage.mockClear()
+      const mine = deployMine(5, 10, 'player')
+      mine.active = true
+      const street = { type: 'street', x: 5, y: 10, width: 1, height: 1, health: 100, id: 'street' }
+      detonateMine(mine, [], [street])
+      expect(street.health).toBe(100)
+      expect(broadcastBuildingDamage).not.toHaveBeenCalled()
+    })
+
     it('[U02918] should not throw for null mine', () => {
       expect(() => detonateMine(null, [], [])).not.toThrow()
     })
