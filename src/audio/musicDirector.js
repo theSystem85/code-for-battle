@@ -11,6 +11,9 @@ export const MUSIC_SKIP_ORDER = [
   'music03.mp3',
   'music04.mp3',
   'music05.mp3',
+  'music06.mp3',
+  'music07.mp3',
+  'music08.mp3',
   MUSIC_TRACKS.firstAttack,
   MUSIC_TRACKS.underAttackOutnumbered,
   MUSIC_TRACKS.nearDefeat
@@ -22,6 +25,9 @@ export const MUSIC_TRACK_TITLES = {
   'music03.mp3': 'Iron Veil (Industrial Theme)',
   'music04.mp3': 'Marching Orders (Advance Theme)',
   'music05.mp3': 'Heavy Barrage (Combat Theme)',
+  'music06.mp3': 'Nightforge (Cyberpunk Industrial Theme)',
+  'music07.mp3': 'Chrome Legion (Instrumental Metal Theme)',
+  'music08.mp3': 'Obsidian Pulse (Atmospheric Djent Theme)',
   [MUSIC_TRACKS.firstAttack]: 'First Strike (Attack Theme)',
   [MUSIC_TRACKS.underAttackOutnumbered]: 'Outnumbered (Danger Theme)',
   [MUSIC_TRACKS.nearDefeat]: 'Last Stand (Defeat Theme)'

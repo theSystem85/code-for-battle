@@ -276,7 +276,10 @@ export const backgroundMusicFiles = [
   'music02.mp3',
   'music03.mp3',
   'music04.mp3',
-  'music05.mp3'
+  'music05.mp3',
+  'music06.mp3',
+  'music07.mp3',
+  'music08.mp3'
 ]
 
 // Cache audio buffers using Web Audio API for true zero-network caching

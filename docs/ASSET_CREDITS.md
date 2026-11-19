@@ -17,11 +17,14 @@ Background tracks in `public/sound/music/`:
 | `music03.mp3` | Generated with ElevenLabs Music v2.5 | Normal playlist (Iron Veil) |
 | `music04.mp3` | Generated with ElevenLabs Music v2.5 | Normal playlist (Marching Orders) |
 | `music05.mp3` | Generated with ElevenLabs Music v2.5 | Normal playlist (Heavy Barrage) |
+| `music06.mp3` | Generated with ElevenLabs Music v2.5 | Normal playlist (Nightforge) |
+| `music07.mp3` | Generated with ElevenLabs Music v2.5 | Normal playlist (Chrome Legion) |
+| `music08.mp3` | Generated with ElevenLabs Music v2.5 | Normal playlist (Obsidian Pulse) |
 | `music_attack_motivational.mp3` | Generated with ElevenLabs Music v2.5 | First attack |
 | `music_under_attack_danger.mp3` | Generated with ElevenLabs Music v2.5 | Under attack while outnumbered |
 | `music_defeat_sad.mp3` | Generated with ElevenLabs Music v2.5 | Near defeat |
 
-The three situational tracks were generated on the owner's ElevenLabs Starter plan, which includes a commercial music license. `music03.mp3`, `music04.mp3` and `music05.mp3` were generated on 2026-10-30 with ElevenLabs Music v2.5 (about 150 seconds each) and added to the normal playlist. Every ElevenLabs track carries the MP3 comment tag "Generated with ElevenLabs Music v2.5". All tracks are instrumental, 160 kbps / 48 kHz and loudness-matched to about -12 LUFS.
+The three situational tracks were generated on the owner's ElevenLabs Starter plan, which includes a commercial music license. `music03.mp3`, `music04.mp3` and `music05.mp3` were generated on 2026-10-30 with ElevenLabs Music v2.5 (about 150 seconds each) and added to the normal playlist. `music06.mp3`, `music07.mp3` and `music08.mp3` were generated on 2026-11-19 with ElevenLabs Music v2.5 (model id `eleven_music_v2_5`, 200 seconds each, one take apiece) and added to the normal playlist. Prompts, generation ids and processing notes for the playlist tracks are in `docs/asset-sources/playlist-music-prompts.json`. Every ElevenLabs track carries the MP3 comment tag "Generated with ElevenLabs Music v2.5". All tracks are instrumental, 160 kbps / 48 kHz and loudness-matched to about -12 LUFS.
 
 ## App icons
 

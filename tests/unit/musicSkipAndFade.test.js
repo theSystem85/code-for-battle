@@ -22,7 +22,7 @@ const flush = () => new Promise(resolve => setTimeout(resolve, 0))
 describe('music skip order', () => {
   it('[U03122] walks playlist tracks then situational themes in a fixed order and wraps around', () => {
     expect(MUSIC_SKIP_ORDER).toEqual([
-      'music01.mp3', 'music02.mp3', 'music03.mp3', 'music04.mp3', 'music05.mp3',
+      'music01.mp3', 'music02.mp3', 'music03.mp3', 'music04.mp3', 'music05.mp3', 'music06.mp3', 'music07.mp3', 'music08.mp3',
       'music_attack_motivational.mp3',
       'music_under_attack_danger.mp3', 'music_defeat_sad.mp3'
     ])
