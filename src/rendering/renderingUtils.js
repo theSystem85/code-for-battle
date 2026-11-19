@@ -1,6 +1,5 @@
 // rendering/renderingUtils.js
 import { MOBILE_CANVAS_PIXEL_RATIO_CAP, TILE_SIZE } from '../config.js'
-import { gameRandom } from '../utils/gameRandom.js'
 import { getCanvasViewportRecord } from './prepared/canvasViewportRegistry.js'
 
 // Get device pixel ratio for high-DPI rendering
@@ -47,8 +46,8 @@ export function drawTeslaCoilLightning(gameCtx, fromX, fromY, toX, toY, scatterR
   const points = [{ x: fromX, y: fromY }]
   for (let i = 1; i < numSegments; i++) {
     const t = i / numSegments
-    const x = fromX + (toX - fromX) * t + (gameRandom() - 0.5) * 18
-    const y = fromY + (toY - fromY) * t + (gameRandom() - 0.5) * 18
+    const x = fromX + (toX - fromX) * t + (Math.random() - 0.5) * 18
+    const y = fromY + (toY - fromY) * t + (Math.random() - 0.5) * 18
     points.push({ x, y })
   }
   points.push({ x: toX, y: toY })
@@ -86,8 +85,8 @@ export function drawTeslaCoilLightning(gameCtx, fromX, fromY, toX, toY, scatterR
 
   // Impact scatter
   for (let i = 0; i < 4; i++) {
-    const angle = gameRandom() * Math.PI * 2
-    const r = scatterRadius * (0.5 + gameRandom() * 0.5)
+    const angle = Math.random() * Math.PI * 2
+    const r = scatterRadius * (0.5 + Math.random() * 0.5)
     const ex = toX + Math.cos(angle) * r
     const ey = toY + Math.sin(angle) * r
     gameCtx.save()

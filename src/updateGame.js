@@ -24,6 +24,7 @@ import { cleanupDestroyedSelectedUnits, getUnitCommandsHandler } from './inputHa
 import './game/stuckClusterNotification.js'
 import { noteVisibleEnemies } from './audio/announcerCues.js'
 import { closeRefuelPumpFrame, openRefuelPumpFrame } from './audio/serviceLoops.js'
+import { syncFireAudio } from './audio/fireAudio.js'
 import { updateBuildingsUnderRepair, updateBuildingsAwaitingRepair, buildingData, cacheBuildingSmokeScales } from './buildings.js'
 import { handleSelfRepair } from './utils.js'
 import { updateGuardBehavior } from './behaviours/guard.js'
@@ -779,6 +780,7 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
       }
     })
 
+    syncFireAudio(units, gameState, mapGrid)
     flushDeferredReplayPlayback()
     finalizeReplayPlaybackIfPending()
 

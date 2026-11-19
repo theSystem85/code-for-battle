@@ -1,0 +1,10 @@
+- [x] **Fire audio and replay determinism** — Keep visual effects off the simulation random stream, stamp fire damage with simulation time, roll building ignition once per projectile, and play the bundled fire, hose and ready sounds.
+  Spec: [Fire system](../../specs/fire-system.md)
+
+Visual radar snow and Tesla lightning were calling the seeded simulation random generator on animation frames. Record and replay could then diverge whenever their frame pacing differed, and fire spread turned that into building, milestone and factory-budget differences. Those draws now use ordinary visual randomness. Burning buildings record `lastAttackedTime` from `simulationTime`, which is the clock repairs already use. A projectile rolls ignition once per building, so a direct hit and its splash do not consume two random numbers.
+
+`fireLoop.mp3`, `fireHoseLoop.mp3` and `fireEngineReady.mp3` play through a path that never reads the simulation generator. At most four fires and two hoses are heard, chosen by distance. Enemy fires stay quiet in the fog. The ready line waits 4.5 seconds before it can play again. Voices stop when the game pauses, the session resets, or the fire goes out. Headless runs stay muted.
+
+E00097 passed after the fix at 99.75% overlap. The 99% threshold was not changed. The remaining sample differences are still under buildings, achieved milestones and AI factory budgets.
+
+The fire department emits smoke from the hose tower on the current map art. In game at DPR 3 the engine's red body measures about 9 by 27 logical pixels (about 28 by 82 device pixels on the long axis). East and west are horizontal; south keeps the cab at the bottom and north turns it to the top, matching the registered south-facing sprite. The light bar is only a few pixels at DPR 1 and is clearer at DPR 3. The sprite is not resized during play. The department's painted bays sit inside the existing 3×3 footprint. Hardware frame-rate acceptance stays pending: this environment has no verified hardware GPU.

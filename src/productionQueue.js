@@ -26,6 +26,10 @@ import { applyUnitBuildDelivery } from './policies/unitBuildDelivery.js'
 
 function playUnitReadySound(unitType) {
   if (claimFirstProductionNarration(unitType)) return
+  if (unitType === 'fireEngine') {
+    import('./audio/fireAudio.js').then(module => module.playFireEngineReady()).catch(() => {})
+    return
+  }
   const readySounds = ['unitReady01', 'unitReady02', 'unitReady03']
   const randomSound = readySounds[Math.floor(gameRandom() * readySounds.length)]
   playSound(randomSound, 1.0, 0, true)

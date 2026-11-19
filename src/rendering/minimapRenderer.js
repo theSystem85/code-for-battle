@@ -2,7 +2,6 @@
 import { TILE_SIZE, TILE_COLORS, PARTY_COLORS } from '../config.js'
 import { videoOverlay } from '../ui/videoOverlay.js'
 import { writeMilestoneVideoSourceRect } from '../ui/milestoneVideoCrop.js'
-import { gameRandom } from '../utils/gameRandom.js'
 import { gameState } from '../gameState.js'
 import { renderProfiler } from '../performance/renderProfiler.js'
 import { PROFILER_SPAN_IDS } from '../performance/profilerIds.js'
@@ -511,10 +510,10 @@ export class MinimapRenderer {
       const grainCtx = this.radarOfflineGrainCtx
       grainCtx.clearRect(0, 0, minimapWidth, minimapHeight)
       for (let i = 0; i < 420; i++) {
-        const x = gameRandom() * minimapWidth
-        const y = gameRandom() * minimapHeight
-        const size = (gameRandom() * 2 + 0.6) * pixelRatio
-        const opacity = gameRandom() * 0.45
+        const x = Math.random() * minimapWidth
+        const y = Math.random() * minimapHeight
+        const size = (Math.random() * 2 + 0.6) * pixelRatio
+        const opacity = Math.random() * 0.45
         grainCtx.fillStyle = `rgba(255,255,255,${opacity})`
         grainCtx.fillRect(x, y, size, size)
       }
@@ -548,10 +547,10 @@ export class MinimapRenderer {
 
     // Add a small random speckle burst each frame so snow visibly flickers.
     for (let i = 0; i < 70; i++) {
-      const x = gameRandom() * minimapWidth
-      const y = gameRandom() * minimapHeight
-      const size = (gameRandom() * 1.8 + 0.4) * pixelRatio
-      const opacity = gameRandom() * 0.5 + 0.1
+      const x = Math.random() * minimapWidth
+      const y = Math.random() * minimapHeight
+      const size = (Math.random() * 1.8 + 0.4) * pixelRatio
+      const opacity = Math.random() * 0.5 + 0.1
       minimapCtx.fillStyle = `rgba(255,255,255,${opacity})`
       minimapCtx.fillRect(x, y, size, size)
     }

@@ -6,6 +6,7 @@ import { registerDecorationLayout } from '../../src/game/decorationLayoutRegistr
 import { getValidDecorationCell } from '../../src/rendering/decorationLayout.js'
 import { migrations } from '../../src/gameStateMigrations.js'
 import { productionUnlockRules } from '../../src/production/techTree.js'
+import { buildingData } from '../../src/data/buildingData.js'
 
 function world() {
   const grid = Array.from({ length: 16 }, () => Array.from({ length: 16 }, () => ({ type: 'land' })))
@@ -112,7 +113,8 @@ describe('Fire simulation', () => {
     const bullet = { originType: 'tank_v1', x: 4 * TILE_SIZE, y: 4 * TILE_SIZE }
     expect(igniteFromProjectile(state, grid, house, bullet, () => 0.3)).toBe(false)
     house.health = 20
-    expect(igniteFromProjectile(state, grid, house, bullet, () => 0.3)).toBe(true)
+    const laterShot = { originType: 'tank_v1', x: 4 * TILE_SIZE, y: 4 * TILE_SIZE }
+    expect(igniteFromProjectile(state, grid, house, laterShot, () => 0.3)).toBe(true)
   })
   it('[U07171] round trips fire timers and overlay tags without retaining old fires', () => {
     const { grid, state } = world()
@@ -222,6 +224,57 @@ it('[U07231] ignites a decorative farm from a shell impact and removes the whole
   updateFireSystem([], state, grid, NON_STRUCTURE_BURN_SECONDS * 1000)
   expect(getValidDecorationCell(layout, grid, 5, 4)).toBeNull()
   expect(igniteTile(state, grid, 5, 4)).toBe(false)
+})
+
+it('[U07240] stamps repair pauses with simulation time', () => {
+  const { grid, state } = world()
+  const house = building(grid, state, 4, 4)
+  state.simulationTime = 12345
+  igniteTile(state, grid, 4, 4)
+  updateFireSystem([], state, grid, 100)
+  expect(house.lastAttackedTime).toBe(12345)
+  expect(house.needsRepairPause).toBe(true)
+})
+
+it('[U07241] keeps a player move order instead of dispatching to a distant fire', () => {
+  const { grid, state } = world()
+  grid[10][10].type = 'woods'
+  igniteTile(state, grid, 10, 10)
+  const order = [{ x: 1, y: 1 }]
+  const truck = { ...engine(1, 1), path: order }
+  const findPath = vi.fn(() => [{ x: 1, y: 1 }, { x: 2, y: 1 }])
+  updateFireSystem([truck], state, grid, 100, findPath, () => 1)
+  expect(truck.path).toBe(order)
+  expect(findPath).not.toHaveBeenCalled()
+})
+
+it('[U07242] does not spray while remote control is active without the hose held', () => {
+  const { grid, state } = world()
+  building(grid, state, 4, 4)
+  igniteTile(state, grid, 4, 4)
+  const truck = { ...engine(4, 4), remoteControlActive: true, fireManualSpray: false }
+  updateFireSystem([truck], state, grid, 500, null, () => 0)
+  expect(truck.water).toBe(1000)
+  expect(state.fires).toHaveLength(1)
+})
+
+it('[U07243] rolls ignition once per building for one projectile', () => {
+  const { grid, state } = world()
+  const house = building(grid, state, 4, 4)
+  const other = building(grid, state, 6, 4)
+  house.health = 1
+  other.health = 1
+  const bullet = { originType: 'tank_v1', x: 4 * TILE_SIZE + 8, y: 4 * TILE_SIZE + 8 }
+  const random = vi.fn(() => 0.99)
+  expect(igniteFromProjectile(state, grid, house, bullet, random)).toBe(false)
+  expect(igniteFromProjectile(state, grid, house, bullet, random)).toBe(false)
+  expect(random).toHaveBeenCalledTimes(1)
+  igniteFromProjectile(state, grid, other, bullet, random)
+  expect(random).toHaveBeenCalledTimes(2)
+})
+
+it('[U07244] marks the fire department hose tower as a smoke source', () => {
+  expect(buildingData.fireDepartment.smokeSpots).toEqual([{ x: 228, y: 52 }])
 })
 
 it('[U07232] restores one fire per tile with its spread boost', () => {

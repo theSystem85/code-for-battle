@@ -51,7 +51,18 @@ export const buildingData = {
     health: 300,
     smokeSpots: []
   },
-  fireDepartment: { width: 3, height: 3, cost: 2500, power: -20, image: 'fire_department.webp', displayName: 'Fire Department', health: 300, maxFireEngines: 4, smokeSpots: [] },
+  fireDepartment: {
+    width: 3,
+    height: 3,
+    cost: 2500,
+    power: -20,
+    image: 'fire_department.webp',
+    displayName: 'Fire Department',
+    health: 300,
+    maxFireEngines: 4,
+    // Hose-tower mast on the 384px map art. Smoke scales with the 3×3 footprint.
+    smokeSpots: [{ x: 228, y: 52 }]
+  },
   vehicleWorkshop: {
     width: 3,
     height: 3,

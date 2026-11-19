@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { deterministicRNG } from '../../src/network/deterministicRandom.js'
 import { MinimapRenderer } from '../../src/rendering/minimapRenderer.js'
 import { publishCanvasViewport } from '../../src/rendering/prepared/canvasViewportRegistry.js'
 import { renderProfiler } from '../../src/performance/renderProfiler.js'
@@ -257,5 +258,40 @@ describe('MinimapRenderer prepared caches', () => {
       width: crop.width,
       height: crop.height
     })
+  })
+
+  it('[U07245] keeps radar-offline snow off the simulation random stream', () => {
+    const renderer = new MinimapRenderer()
+    const minimapCanvas = createCanvas(160, 96, 2)
+    const gameCanvas = createCanvas(400, 240, 2)
+    const previous = deterministicRNG.getState()
+    deterministicRNG.setSeed(11)
+    deterministicRNG.enable()
+    try {
+      const before = deterministicRNG.getCallCount()
+      renderer.render(
+        minimapCanvas.getContext('2d'),
+        minimapCanvas,
+        createMap(),
+        { x: 0, y: 0 },
+        gameCanvas,
+        [],
+        [],
+        { radarActive: false }
+      )
+      renderer.render(
+        minimapCanvas.getContext('2d'),
+        minimapCanvas,
+        createMap(),
+        { x: 8, y: 8 },
+        gameCanvas,
+        [],
+        [],
+        { radarActive: false }
+      )
+      expect(deterministicRNG.getCallCount()).toBe(before)
+    } finally {
+      deterministicRNG.setState(previous)
+    }
   })
 })

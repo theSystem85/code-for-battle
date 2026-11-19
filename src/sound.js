@@ -226,6 +226,9 @@ export const soundFiles = {
   radarOffline: ['radarOffline.mp3'],
   crewRestored: ['crewRestored.mp3'],
   refuelPumpLoop: ['refuelPumpLoop.mp3'],
+  fireLoop: ['fireLoop.mp3'],
+  fireHoseLoop: ['fireHoseLoop.mp3'],
+  fireEngineReady: ['fireEngineReady.mp3'],
   ammoReloadClunk: ['ammoReloadClunk.mp3'],
   achievementStinger: ['achievementStinger.mp3'],
   uiPartyJoin: ['uiPartyJoin.mp3'],
@@ -569,6 +572,62 @@ export function playPositionalSound(eventName, x, y, volume = 1.0, throttleSecon
   if (finalVolume <= 0) return Promise.resolve(null)
   options = { ...options, pan }
   return playSound(eventName, finalVolume, throttleSeconds, stackable, options)
+}
+
+// Playback that never touches the simulation RNG. Variant sounds keep using
+// playSound; these helpers always use the first registered file.
+let fixedAudioSerial = 0
+const audioSessionResetters = new Set()
+
+export function onAudioSessionReset(listener) {
+  audioSessionResetters.add(listener)
+  return () => audioSessionResetters.delete(listener)
+}
+
+function notifyAudioSessionReset() {
+  audioSessionResetters.forEach(listener => {
+    try { listener() } catch (error) { window.logger?.warn?.('Audio reset listener failed:', error) }
+  })
+}
+
+function startFixedBuffer(eventName, volume, pan, loop) {
+  const file = soundFiles[eventName]?.[0]
+  if (!file || !audioContext || audioContext.state === 'suspended') return Promise.resolve(null)
+  return getCachedAudioBuffer(`sound/${file}`).then(buffer => {
+    const audioId = `fixed:${eventName}:${++fixedAudioSerial}`
+    const cleanup = () => { activeAudioElements.delete(audioId) }
+    const nodes = playAudioBuffer(buffer, volume, loop ? undefined : cleanup, { pan, loop })
+    if (!nodes) return null
+    activeAudioElements.set(audioId, nodes.source)
+    nodes.audioId = audioId
+    return nodes
+  }).catch(() => null)
+}
+
+export function playFixedSound(eventName, volume = 1) {
+  if (suppressAudioForAutomation) return Promise.resolve(null)
+  return startFixedBuffer(eventName, volume, 0, false)
+}
+
+export function playFixedPositionalSound(eventName, x, y, volume = 1, options = {}) {
+  if (suppressAudioForAutomation) return Promise.resolve(null)
+  const { pan, volumeFactor } = calculatePositionalAudio(x, y)
+  const finalVolume = volume * volumeFactor
+  if (finalVolume <= 0) return Promise.resolve(null)
+  return startFixedBuffer(eventName, finalVolume, pan, Boolean(options.playLoop))
+}
+
+export function updateFixedPositionalGain(handle, x, y, volume = 1) {
+  if (!handle?.gainNode) return
+  const { pan, volumeFactor } = calculatePositionalAudio(x, y)
+  handle.gainNode.gain.value = volume * volumeFactor * getEffectsVolume()
+  if (handle.panner) handle.panner.pan.value = pan
+}
+
+export function stopFixedSound(handle) {
+  if (!handle?.source) return
+  if (handle.audioId) activeAudioElements.delete(handle.audioId)
+  try { handle.source.stop() } catch { /* already stopped */ }
 }
 
 // Test function for narrated sound stacking (can be called from browser console)
@@ -1364,6 +1423,7 @@ export async function toggleBackgroundMusic() {
 // --- Game Pause/Resume Helpers ---
 // Immediately stop all active audio sources from the current session.
 export function terminateAllSounds() {
+  notifyAudioSessionReset()
   musicEnabled = false
   musicRequest++
   stopMusicFade()

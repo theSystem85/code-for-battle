@@ -13,6 +13,7 @@ import { hasBuildingFire } from './fireQueries.js'
 import { notifyBuildingFire } from '../ui/fireNotifications.js'
 
 const neighbours = [[1, 0], [-1, 0], [0, 1], [0, -1]]
+const ignitionRolls = new WeakMap()
 const stationIndex = new Map()
 const stationLoads = new Map()
 const dispatchTargets = new Map()
@@ -119,10 +120,24 @@ export function restoreFires(state, grid, records) {
     state.fires.push(fire)
   }
 }
+function ignitionAlreadyRolled(bullet, building) {
+  if (!bullet || typeof bullet !== 'object') return false
+  let seen = ignitionRolls.get(bullet)
+  if (!seen) {
+    seen = new Set()
+    ignitionRolls.set(bullet, seen)
+  }
+  const id = building.id ?? `${building.x}:${building.y}`
+  if (seen.has(id)) return true
+  seen.add(id)
+  return false
+}
 export function igniteFromProjectile(state, grid, building, bullet, random = gameRandom) {
   if (!(building.health > 0) || bullet.noBuildingDamage) return false
   const kind = `${bullet.originType || bullet.shooter?.type || ''} ${bullet.projectileType || ''}`
   if (!/tank|howitzer|artillery|rocket|grenade|shell/i.test(kind)) return false
+  // A direct hit and its splash share one projectile. Roll each building once.
+  if (ignitionAlreadyRolled(bullet, building)) return false
   const damageRatio = 1 - building.health / (building.maxHealth || 300)
   if (random() >= 0.08 + 0.52 * Math.max(0, Math.min(1, damageRatio))) return false
   const x = Math.max(building.x, Math.min(building.x + (building.width || 1) - 1, Math.floor(bullet.x / TILE_SIZE)))
@@ -253,7 +268,9 @@ export function updateFireSystem(units, state, grid, delta, findPath, random = g
   }
   // Fix the count so newly spread fires cannot spread/damage again in this tick.
   const count = fires.length
-  const attackTime = performance.now()
+  // Repair cooldowns compare this stamp with simulation time. Wall-clock time
+  // diverges between a live match and its replay.
+  const attackTime = state.simulationTime || 0
   for (let i = count - 1; i >= 0; i--) {
     const fire = fires[i]
     const severity = getFireSeverity(fire)

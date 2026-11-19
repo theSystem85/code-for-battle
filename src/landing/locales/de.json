@@ -67,7 +67,7 @@
         },
         "logistics": {
           "title": "Versorgung und Besatzung",
-          "body": "Treibstoff und Munition gehen zur Neige. Tanklaster, Munitionslaster, das Lazarett und Sanitäter halten die Einheiten im Kampf. Minen, Räumer und Bergepanzer arbeiten im Feld. Beförderungen verbessern Reichweite, Panzerung oder Feuerrate. Feuerwachen beherbergen bis zu vier Löschfahrzeuge, die mit ihrem Wasservorrat um sich greifende Gebäude- und Waldbrände löschen."
+          "body": "Treibstoff und Munition gehen zur Neige. Tanklaster, Munitionslaster, das Lazarett und Sanitäter halten die Einheiten im Kampf. Minen, Räumer und Bergepanzer arbeiten im Feld. Beförderungen verbessern Reichweite, Panzerung oder Feuerrate. Feuerwachen beherbergen bis zu vier Löschfahrzeuge, die mit ihrem Wasservorrat um sich greifende Gebäude- und Waldbrände löschen. Nahe Brände und Schläuche sind zu hören."
         },
         "command": {
           "title": "Führung",
