@@ -221,6 +221,8 @@ describe('Renderer airborne layering', () => {
     }
     const gameCtx = {
       canvas: { width: 800, height: 600 },
+      getTransform: vi.fn(() => ({ a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 })),
+      drawImage: vi.fn(() => callOrder.push('shadow-composite')),
       globalAlpha: 1,
       save: vi.fn(() => callOrder.push('ctx.save')),
       restore: vi.fn(() => callOrder.push('ctx.restore')),
@@ -283,6 +285,8 @@ describe('Renderer airborne layering', () => {
       expect(index).toBe(renderer.frameEntityIndex)
     }
     expect(callOrder.indexOf('shadow:exiting')).toBeLessThan(callOrder.indexOf('building-bases:1'))
+    expect(gameCtx.drawImage).toHaveBeenCalledWith(renderer.unitShadowLayer, 0, 0, 800, 600)
+    expect(callOrder.indexOf('shadow-composite')).toBeLessThan(callOrder.indexOf('unit-bases:exiting'))
     expect(callOrder.indexOf('shadow:ground-1')).toBeLessThan(callOrder.indexOf('unit-bases:exiting'))
     expect(callOrder.indexOf('unit-bases:exiting')).toBeLessThan(callOrder.indexOf('building-bases:1'))
     expect(callOrder).not.toContain('unit-overlays:exiting')

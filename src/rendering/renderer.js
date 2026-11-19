@@ -39,6 +39,7 @@ import {
   WATER_EFFECT_SATURATION,
   WATER_EFFECT_ZOOM,
   TILE_SIZE,
+  UNIT_SHADOWS_ENABLED,
   USE_PROCEDURAL_WATER_RENDERING,
   getRendererBackendChoice,
   publishRenderedTerrainFrame
@@ -715,16 +716,37 @@ export class Renderer {
     gameCtx.save()
     gameCtx.globalAlpha *= entityImageAlpha
     const exitRegistry = this.buildingRenderer.preparedSpriteRegistry
+    const compositeShadows = UNIT_SHADOWS_ENABLED && (visibleGroundedUnits.length || visibleExitingUnits.length) &&
+      gameCtx.canvas && gameCtx.getTransform && gameCtx.canvas.width * gameCtx.canvas.height * 4 <= 64 * 1024 * 1024
+    let shadowCtx = gameCtx
+    if (compositeShadows) {
+      if (!this.unitShadowLayer) this.unitShadowLayer = document.createElement('canvas')
+      const layer = this.unitShadowLayer
+      if (layer.width !== gameCtx.canvas.width || layer.height !== gameCtx.canvas.height) {
+        layer.width = gameCtx.canvas.width
+        layer.height = gameCtx.canvas.height
+      }
+      shadowCtx = layer.getContext('2d')
+      shadowCtx.resetTransform()
+      shadowCtx.clearRect(0, 0, layer.width, layer.height)
+      shadowCtx.setTransform(gameCtx.getTransform())
+    }
+    const shadowAlpha = gameCtx.globalAlpha
     for (const unit of visibleExitingUnits) {
       const visibility = factoryExitVisibility(unit)
       if (visibility <= 0) continue
-      gameCtx.save()
-      gameCtx.globalAlpha *= visibility
-      this.unitRenderer.renderUnitShadow(gameCtx, unit, scrollOffset)
-      gameCtx.restore()
+      shadowCtx.globalAlpha = shadowAlpha * visibility
+      this.unitRenderer.renderUnitShadow(shadowCtx, unit, scrollOffset)
     }
     for (const unit of visibleGroundedUnits) {
-      this.unitRenderer.renderUnitShadow(gameCtx, unit, scrollOffset)
+      shadowCtx.globalAlpha = shadowAlpha
+      this.unitRenderer.renderUnitShadow(shadowCtx, unit, scrollOffset)
+    }
+    gameCtx.globalAlpha = shadowAlpha
+    if (compositeShadows) {
+      gameCtx.globalAlpha = 1
+      gameCtx.drawImage(this.unitShadowLayer, 0, 0, logicalCanvasWidth, logicalCanvasHeight)
+      gameCtx.globalAlpha = shadowAlpha
     }
     for (const unit of visibleExitingUnits) {
       const visibility = factoryExitVisibility(unit)

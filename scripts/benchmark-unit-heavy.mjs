@@ -360,19 +360,37 @@ try {
     }
     if (omitWebGpuTerrainTiming) renderer.webgpuRenderer.getTimestampWrites = () => undefined
     const canvas = document.getElementById('gameCanvas')
+    let hudCamera = null
+    let hudLandPositions = null
     if (hudSelection) {
       const tanks = units.filter(unit => unit.health > 0 && unit.type.startsWith('tank')).slice(0, 100)
       if (tanks.length !== 100 || Math.min(canvas.clientWidth, canvas.clientHeight) < 540) {
         throw new Error('HUD benchmark requires 100 tanks and a viewport of at least 540 pixels on both axes')
       }
-      const left = gameLoop.mapGrid[0].length * 16 - 225
-      const top = gameLoop.mapGrid.length * 16 - 225
+      const grid = gameLoop.mapGrid
+      const columns = Math.floor((canvas.clientWidth - 160) / 40)
+      const rows = Math.floor((canvas.clientHeight - 160) / 40)
+      const positions = []
+      for (let originY = 3; originY * 32 + canvas.clientHeight < grid.length * 32 && !hudCamera; originY += 4) {
+        for (let originX = 3; originX * 32 + canvas.clientWidth < grid[0].length * 32 && !hudCamera; originX += 4) {
+          positions.length = 0
+          for (let row = 0; row < rows; row++) for (let col = 0; col < columns; col++) {
+            const x = Math.floor((originX * 32 + 80 + col * 40) / 32) * 32 + 16
+            const y = Math.floor((originY * 32 + 80 + row * 40) / 32) * 32 + 16
+            const tile = grid[Math.floor(y / 32)]?.[Math.floor(x / 32)]
+            if (tile && tile.type !== 'water' && tile.type !== 'rock' && !tile.building && !tile.seedCrystal) positions.push([x, y])
+          }
+          if (positions.length >= 100) hudCamera = [originX * 32, originY * 32]
+        }
+      }
+      if (!hudCamera) throw new Error('No land viewport can hold 100 tanks without terrain or building obstruction')
+      hudLandPositions = positions.slice(0, 100)
       for (let index = 0; index < tanks.length; index++) {
         const unit = tanks[index]
         unit.owner = state.humanPlayer
         unit.selected = false
-        unit.x = left + (index % 10) * 50 - 16
-        unit.y = top + Math.floor(index / 10) * 50 - 16
+        unit.x = hudLandPositions[index][0] - 16
+        unit.y = hudLandPositions[index][1] - 16
         unit.tileX = Math.floor((unit.x + 16) / 32)
         unit.tileY = Math.floor((unit.y + 16) / 32)
       }
@@ -407,7 +425,7 @@ try {
     const rows = Math.ceil(height / (canvas.clientHeight * 0.8))
     const route = []
     // Start on the loaded battle, then traverse the full map in alternating rows.
-    route.push([width / 2, height / 2])
+    route.push(hudCamera || [width / 2, height / 2])
     for (let row = 0; row <= rows; row++) {
       route.push([row % 2 ? width : 0, height * row / rows])
       route.push([row % 2 ? 0 : width, height * row / rows])
@@ -570,6 +588,10 @@ try {
     if (document.querySelector('.tutorial-overlay') || window.tutorialSystem) {
       throw new Error('The tutorial=0 startup flag did not suppress tutorial initialization')
     }
+    if (hudSelection && units.some(unit => {
+      const tile = gameLoop.mapGrid[Math.floor((unit.y + 16) / 32)]?.[Math.floor((unit.x + 16) / 32)]
+      return !tile || tile.type === 'water' || tile.type === 'rock' || tile.building || tile.seedCrystal
+    })) throw new Error('HUD benchmark contains a tank outside clear land')
     if (state.gameOver || state.localPlayerDefeated || state.gamePaused || (battleOnly && !hudSelection && maxBullets === 0)) {
       throw new Error('Benchmark match ended, paused, or failed to sustain the stationary battle')
     }
@@ -582,6 +604,7 @@ try {
       protectedConstructionYards: protectedYards.size,
       gpuShadowBatch: shadowBatch?.stats(),
       selected: selected.length, duration, distance, speed,
+      hudCamera, hudLandPositions,
       intervals, cpuFrames, samples, longTasks, backend: state.renderStats?.gpuTerrain?.backend,
       assetTrace: assetTrace ? {
         textureUploads: window.__benchmarkTextureUploads,
