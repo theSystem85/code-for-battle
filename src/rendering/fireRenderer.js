@@ -76,7 +76,8 @@ export function renderFires(ctx, state, grid, units, scroll) {
 // At 1,000 visible tiles: <=6,000 quads; raster area scales with DPR squared.
 // No particle objects, gradients, readbacks, filters, or gameplay resizing caches.
 function drawHighFire(ctx, sheet, x, y, tx, ty, severity, strength, now) {
-  const frame = (Math.floor(now / 70) + tx * 3 + ty * 7) & 15
+  const variant = Math.abs((tx * 17 + ty * 31) % 5)
+  const frame = (Math.floor(now / (65 + variant * 7)) + tx * 3 + ty * 7) & 15
   const width = TILE_SIZE * (1.15 + severity * 0.12)
   const height = TILE_SIZE * (0.8 + severity * 0.32)
   const windX = Math.max(-1, Math.min(1, WIND_DIRECTION.x))
@@ -85,7 +86,7 @@ function drawHighFire(ctx, sheet, x, y, tx, ty, severity, strength, now) {
   ctx.translate(x, y)
   ctx.transform(1, 0, -windX * 0.42, 1 - windY * 0.16, 0, 0)
   ctx.globalAlpha = strength
-  ctx.drawImage(sheet, (frame % 8) * 64, Math.floor(frame / 8) * 128, 64, 128, -width / 2, -height, width, height)
+  ctx.drawImage(sheet, (frame % 8) * 64, Math.floor(frame / 8) * 128, 64, 128, -width / 2, -height, width, height * 1.2)
   ctx.globalAlpha = strength * (0.35 + severity * 0.13)
   ctx.drawImage(sheet, (frame % 8) * 64, (2 + Math.floor(frame / 8)) * 128, 64, 128, -width * 0.65, -height * 2, width * 1.3, height * 1.7)
   ctx.fillStyle = '#ffdc89'

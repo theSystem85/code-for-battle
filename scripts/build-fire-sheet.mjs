@@ -6,17 +6,26 @@ const pixels = Buffer.alloc(width * height * 4)
 for (let frame = 0; frame < 32; frame++) {
   const phase = (frame % 16) / 16 * Math.PI * 2
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-    const u = (x + 0.5) / w * 2 - 1, v = 1 - (y + 0.5) / h
+    const u = (x + 0.5) / w * 2 - 1, v = 1 - (y + 0.5) / (h * 0.84)
     const turbulence = Math.sin(u * 11 + v * 13 - phase) * 0.13 + Math.sin(u * 23 - v * 21 + phase * 2) * 0.07 + Math.sin(u * 41 + v * 32 - phase * 3) * 0.035
     const i = (((frame >> 3) * h + y) * width + (frame % 8) * w + x) * 4
     if (frame < 16) {
+      if (v < 0) {
+        // Baked translucent ground glow, animated with the flame frames.
+        const falloff = Math.max(0, 1 + v / 0.19) * Math.max(0, 1 - u * u)
+        pixels[i] = 255
+        pixels[i + 1] = Math.round(80 + 45 * (0.5 + 0.5 * Math.sin(phase)))
+        pixels[i + 2] = 12
+        pixels[i + 3] = Math.round(falloff * falloff * (80 + 15 * Math.sin(phase)))
+        continue
+      }
       const heat = Math.max(0, Math.min(1, (1 - Math.abs(u + Math.sin(v * 9 - phase) * v * 0.17) - v * 0.98 + turbulence) * 2.8))
       pixels[i] = 255; pixels[i + 1] = Math.round(65 + heat * 180); pixels[i + 2] = Math.round(12 + heat ** 4 * 170)
       pixels[i + 3] = Math.round(heat * Math.min(1, (1 - Math.abs(u)) * 8) * Math.min(1, v * 22) * Math.min(1, (1 - v) * 10) * 225)
     } else {
       const density = Math.max(0, 1 - Math.abs(u + Math.sin(v * 12 - phase) * 0.18) / (0.25 + v * 0.7))
       pixels[i] = 65; pixels[i + 1] = 61; pixels[i + 2] = 58
-      pixels[i + 3] = Math.round(density * Math.sin(v * Math.PI) ** 2 * (0.65 + turbulence) * 105)
+      pixels[i + 3] = Math.round(density * Math.sin(Math.max(0, v) * Math.PI) ** 2 * (0.65 + turbulence) * 105)
     }
   }
 }

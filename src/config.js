@@ -2173,11 +2173,11 @@ export const CONFIG_VARIABLE_NAMES = [...EXPORTED_CONFIG_VARIABLES]
 export const CITY_BUILDING_HEALTH = Object.freeze({ 1: 150, 2: 250, 4: 400 })
 
 // Fire spread is rolled once per eligible neighbour every five simulation seconds.
-export let FIRE_SPREAD_PROBABILITY = 0.2
-export let FIRE_DAMAGE_PER_SECOND = 2
-export const FIRE_WATER_CAPACITY = 1000
+export let FIRE_SPREAD_PROBABILITY = 0.04
+export let FIRE_DAMAGE_PER_SECOND = 0.2
+export const FIRE_WATER_CAPACITY = 1800
 export const FIRE_WATER_PER_SECOND = 40
-export const FIRE_EXTINGUISH_SECONDS = 3
+export const FIRE_EXTINGUISH_SECONDS = 0.5
 export const FIRE_HOSE_RANGE = 4
 export function setFireSpreadProbability(value) { FIRE_SPREAD_PROBABILITY = Math.max(0, Math.min(1, Number(value) || 0)) }
 export function setFireDamagePerSecond(value) { FIRE_DAMAGE_PER_SECOND = Math.max(0, Number(value) || 0) }

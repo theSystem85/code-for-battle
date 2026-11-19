@@ -11,7 +11,8 @@ import {
   UNIT_GAS_PROPERTIES,
   TANKER_SUPPLY_CAPACITY,
   UNIT_AMMO_CAPACITY,
-  AMMO_TRUCK_CARGO
+  AMMO_TRUCK_CARGO,
+  FIRE_WATER_CAPACITY
 } from './config.js'
 import { logPerformance } from './performanceUtils.js'
 import { getUniqueId, updateUnitSpeedModifier, getUnitCost, getBuildingIdentifier } from './utils.js'
@@ -1411,7 +1412,7 @@ export function createUnit(factory, unitType, x, y, options = {}) {
       streetSpeedMultiplier: unitProps.streetSpeedMultiplier || 6.0
     }
   }
-  if (actualType === 'fireEngine') { unit.water = 1000; unit.maxWater = 1000; unit.canFire = false }
+  if (actualType === 'fireEngine') { unit.water = FIRE_WATER_CAPACITY; unit.maxWater = FIRE_WATER_CAPACITY; unit.canFire = false }
   if (actualType === 'tankerTruck') {
     unit.maxSupplyGas = TANKER_SUPPLY_CAPACITY
     unit.supplyGas = TANKER_SUPPLY_CAPACITY

@@ -29,8 +29,8 @@ test('[E00262] fire engine extinguishes a burning building and restores fire sta
   })
   expect(result.restored).toBe(true)
   expect(result.burning).toBe(false)
-  expect(result.water).toBeGreaterThan(870)
-  expect(result.water).toBeLessThan(881)
+  expect(result.water).toBeGreaterThan(1778)
+  expect(result.water).toBeLessThan(1781)
   expect(result.damaged).toBe(true)
   await expect.poll(() => page.evaluate(async() => {
     const { getPreparedSprite } = await import('/src/rendering/prepared/preparedSpritePipeline.js')
@@ -77,4 +77,99 @@ test('[E00263] fire atlas prepares and graphics quality variants render transluc
   await detail.selectOption('high')
   expect(result.width).toBe(512)
   expect(result.modes).toEqual([{ detail: 'high', translucent: true }, { detail: 'low', translucent: true }])
+})
+
+test('[E00266] one engine saves a fully burning 3x3 building with neighbouring fire', async({ page }) => {
+  await prepareRegressionScenario(page, '419&size=64&players=2')
+  const result = await page.evaluate(async() => {
+    const { createBuilding, placeBuilding } = await import('/src/buildings.js')
+    const { igniteTile, updateFireSystem } = await import('/src/game/fireSystem.js')
+    const gs = window.gameState
+    const owner = window.__regression.human
+    const building = createBuilding('vehicleFactory', 26, 22)
+    building.owner = owner
+    gs.buildings.push(building)
+    placeBuilding(building, gs.mapGrid, gs.occupancyMap)
+    const truck = window.__regression.unit('fireEngine', owner, 25, 23)
+    for (let y = 22; y < 25; y++) for (let x = 26; x < 29; x++) {
+      igniteTile(gs, gs.mapGrid, x, y)
+      gs.mapGrid[y][x].fire.age = 80
+    }
+    // A neighbouring fire can spread back into the building and is within hose range.
+    gs.mapGrid[21][26].type = 'woods'
+    igniteTile(gs, gs.mapGrid, 26, 21)
+    gs.mapGrid[21][26].fire.age = 80
+    let seed = 123456
+    const random = () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 4294967296 }
+    let ticks = 0
+    while (gs.fires.length && building.health > 0 && truck.water > 0 && ticks < 60 * 120) {
+      updateFireSystem([truck], gs, gs.mapGrid, 1000 / 60, null, random)
+      ticks++
+    }
+    return { fires: gs.fires.length, health: building.health, water: truck.water, ticks }
+  })
+  expect(result.fires).toBe(0)
+  expect(result.health).toBeGreaterThan(0)
+  expect(result.water).toBeGreaterThan(0)
+  expect(result.ticks).toBeLessThan(60 * 120)
+})
+
+
+test('[E00267] fire pauses repairs until the attack cooldown expires', async({ page }) => {
+  await prepareRegressionScenario(page, '419&size=64&players=2')
+  const result = await page.evaluate(async() => {
+    const { createBuilding, placeBuilding, updateBuildingsUnderRepair, updateBuildingsAwaitingRepair } = await import('/src/buildings.js')
+    const { igniteTile, updateFireSystem, restoreFires } = await import('/src/game/fireSystem.js')
+    const gs = window.gameState
+    const building = createBuilding('vehicleFactory', 26, 22)
+    building.owner = window.__regression.human
+    gs.buildings.push(building)
+    placeBuilding(building, gs.mapGrid, gs.occupancyMap)
+    building.health -= 50
+    gs.buildingsUnderRepair = [{ building, startTime: performance.now(), duration: 20000, startHealth: building.health, targetHealth: building.maxHealth, healthToRepair: 50, cost: 100, costPaid: 0 }]
+    igniteTile(gs, gs.mapGrid, 26, 22)
+    updateFireSystem([], gs, gs.mapGrid, 1000)
+    const attackTime = building.lastAttackedTime
+    updateBuildingsUnderRepair(gs, attackTime)
+    const paused = gs.buildingsUnderRepair.length === 0 && gs.buildingsAwaitingRepair.length === 1
+    updateBuildingsAwaitingRepair(gs, attackTime + 9999)
+    const waiting = gs.buildingsUnderRepair.length === 0
+    restoreFires(gs, gs.mapGrid, [])
+    updateBuildingsAwaitingRepair(gs, attackTime + 10000)
+    return { paused, waiting, resumed: gs.buildingsUnderRepair.length === 1 }
+  })
+  expect(result).toEqual({ paused: true, waiting: true, resumed: true })
+})
+
+test('[E00268] the running game saves a fully burning factory with one engine', async({ page }) => {
+  await prepareRegressionScenario(page, '419&size=64&players=2')
+  await page.evaluate(async() => {
+    const { igniteTile } = await import('/src/game/fireSystem.js')
+    const gs = window.gameState
+    const building = window.__regression.building('vehicleFactory', window.__regression.human, 26, 22)
+    const truck = window.__regression.unit('fireEngine', window.__regression.human, 25, 23)
+    for (let y = 22; y < 25; y++) for (let x = 26; x < 29; x++) {
+      igniteTile(gs, gs.mapGrid, x, y)
+      gs.mapGrid[y][x].fire.age = 80
+    }
+    gs.mapGrid[21][26].type = 'woods'
+    igniteTile(gs, gs.mapGrid, 26, 21)
+    gs.mapGrid[21][26].fire.age = 80
+    window.__fireTest = { building, truck }
+    gs.speedMultiplier = 3
+    gs.gamePaused = false
+  })
+  await expect.poll(() => page.evaluate(() => ({
+    fires: window.gameState.fires.length,
+    health: window.__fireTest.building.health,
+    water: window.__fireTest.truck.water
+  })), { timeout: 90000 }).toMatchObject({ fires: 0, health: expect.any(Number), water: expect.any(Number) })
+  const result = await page.evaluate(() => ({
+    alive: window.gameState.buildings.includes(window.__fireTest.building),
+    health: window.__fireTest.building.health,
+    water: window.__fireTest.truck.water
+  }))
+  expect(result.alive).toBe(true)
+  expect(result.health).toBeGreaterThan(0)
+  expect(result.water).toBeGreaterThan(0)
 })

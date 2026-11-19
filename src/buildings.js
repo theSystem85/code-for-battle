@@ -824,7 +824,11 @@ function processPendingRepairPauses(gameState, currentTime) {
   // Check all buildings under repair for pause marks
   gameState.buildingsUnderRepair.forEach(repairInfo => {
     if (repairInfo.building.needsRepairPause) {
-      buildingsToProcess.push(repairInfo.building)
+      if (currentTime - repairInfo.building.lastAttackedTime < 10000) {
+        buildingsToProcess.push(repairInfo.building)
+      } else {
+        delete repairInfo.building.needsRepairPause
+      }
     }
   })
 

@@ -69,8 +69,8 @@ describe('Fire simulation', () => {
     grid[4][5].type = 'woods'
     igniteTile(state, grid, 4, 4)
     const truck = engine(3, 4)
-    for (let i = 0; i < 3; i++) updateFireSystem([truck], state, grid, 1000, null, () => 0)
-    expect(truck.water).toBe(880)
+    updateFireSystem([truck], state, grid, 500, null, () => 0)
+    expect(truck.water).toBe(980)
     expect(state.fires).toHaveLength(0)
     expect(grid[4][4].tags).not.toContain('fire')
   })
@@ -79,7 +79,7 @@ describe('Fire simulation', () => {
     building(grid, state, 4, 4)
     grid[4][5].type = 'woods'
     igniteTile(state, grid, 4, 4)
-    updateFireSystem([engine(3, 4)], state, grid, 1000, null, () => 0)
+    updateFireSystem([engine(3, 4)], state, grid, 250, null, () => 0)
     updateFireSystem([], state, grid, 5000, null, () => 0)
     expect(grid[4][5].fire).toBeDefined()
   })
@@ -144,10 +144,10 @@ it('[U07178] scales damage, suppression time and spread across all five severiti
     updateFireSystem([], state, grid, 1000)
     expect(house.health).toBe(300 - severity * 2)
     const truck = engine(3, 4)
-    updateFireSystem([truck], state, grid, 3000)
+    updateFireSystem([truck], state, grid, 500)
     expect(Boolean(grid[4][4].fire)).toBe(severity > 1)
     if (severity > 1) {
-      updateFireSystem([truck], state, grid, (severity - 1) * 3000)
+      updateFireSystem([truck], state, grid, (severity - 1) * 500)
       expect(grid[4][4].fire).toBeUndefined()
     }
   }

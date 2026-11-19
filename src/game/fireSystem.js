@@ -169,6 +169,7 @@ export function updateFireSystem(units, state, grid, delta, findPath, random = g
   if (!fires?.length) return
   // Fix the count so newly spread fires cannot spread/damage again in this tick.
   const count = fires.length
+  const attackTime = performance.now()
   for (let i = count - 1; i >= 0; i--) {
     const fire = fires[i]
     const severity = getFireSeverity(fire)
@@ -183,7 +184,12 @@ export function updateFireSystem(units, state, grid, delta, findPath, random = g
       let damage = FIRE_DAMAGE_PER_SECOND * severity * seconds
       if (building.owner === state.humanPlayer && globalThis.window?.cheatSystem) damage = window.cheatSystem.preventDamage(building, damage)
       if (building.type === 'city') applyCityDamage(building, damage, grid, state)
-      else { building.health = Math.max(0, building.health - damage); building.destroyedCause = 'fire' }
+      else {
+        building.health = Math.max(0, building.health - damage)
+        building.destroyedCause = 'fire'
+        building.lastAttackedTime = attackTime
+        building.needsRepairPause = true
+      }
     }
     if (fire.sprayed) { fire.spreadElapsed = 0; continue }
     fire.spreadElapsed += seconds
