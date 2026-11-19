@@ -5,9 +5,9 @@
   "status_values": {
     "regenerated-v3": "Regenerated with eleven_text_to_sound_v3 from the original prompt; previous holds the replaced take.",
     "generated-v3": "Created with eleven_text_to_sound_v3 directly.",
-    "unknown-prompt": "Original prompt not traceable; file unchanged."
+    "unknown-prompt": "Original prompt not traceable; file unchanged (none left since 2026-11-20)."
   },
-  "note": "Signed media URLs are never stored here. Re-fetch raw takes with creative_get_generations(flow_id, generation_ids). Durations are the shipped file durations; v3 one-shots were trimmed of leading silence, kept at least 90 % of the previous length (quiet tail kept or padded) and cut at 110 % at most.",
+  "note": "Signed media URLs are never stored here. Re-fetch raw takes with creative_get_generations(flow_id, generation_ids). Durations are the shipped file durations; v3 one-shots were trimmed of leading silence, kept at least 90 % of the previous length (quiet tail kept or padded) and cut at 110 % at most. prompt_source \"reconstructed-from-audio-analysis\" marks prompts written on 2026-11-20 from an analysis of the previous file because the original prompt was unknown.",
   "rework_2026_11_19": {
     "flow_id": "iHCzr4VVIxrycjoqLWyt",
     "flow_name": "code-for-battle SFX v3 rework 2026-11-19",
@@ -2716,479 +2716,2501 @@
     },
     "F22Flight": {
       "path": "public/sound/F22Flight.mp3",
-      "status": "unknown-prompt",
-      "prompt": null,
-      "model_id": "unknown",
-      "generation_id": null,
-      "added_in_commit": "2026-02-25 5e8d7dd8",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, no music, no voice. Stealth fighter jet cruising at medium distance, steady deep turbofan roar with warm low-mid rumble, slightly muffled with no high-pitched whine, constant level from start to end, no doppler pass.",
+      "prompt_source": "reconstructed-from-audio-analysis",
+      "prompt_note": "Original prompt unknown; this prompt was written from an analysis of the previous file.",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-20",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "jZfiQKott9IiCahS7hhj",
+      "generation_id": "10HLzIoj2SgW72bxudkC",
+      "settings": {
+        "duration_seconds": 5.04,
+        "prompt_influence": 0.5,
+        "loop": false
+      },
       "loop": false,
-      "result": {
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "10HLzIoj2SgW72bxudkC",
+          "credits": 17.0,
+          "used": true,
+          "prompt": "Military RTS game sound effect, no music, no voice. Stealth fighter jet cruising at medium distance, steady deep turbofan roar with warm low-mid rumble, slightly muffled with no high-pitched whine, constant level from start to end, no doppler pass."
+        }
+      ],
+      "credits": 17.0,
+      "usage": "sound key f22Flight; positional one-shot at volume 0.25 repeated while an F22 flies (movementF22.js, movementApache.js)",
+      "analysis": {
+        "character": "steady broadband jet roar, low-passed around 2.5 kHz, constant level",
         "duration_s": 5.04,
+        "loudness_lufs": -9.16,
+        "true_peak_dbtp": -0.23,
+        "attack_s": 2.32,
+        "decay_20db_s": null,
+        "spectral_centroid_hz": 562,
+        "centroid_by_quarter_hz": [
+          574,
+          559,
+          572,
+          593
+        ],
+        "dominant_hz_by_quarter": [
+          237,
+          215,
+          237,
+          215
+        ],
+        "band_energy_pct": {
+          "<150": 7.4,
+          "150-600": 54.0,
+          "600-2.5k": 38.7,
+          "2.5-8k": 0.0,
+          ">8k": 0.0
+        },
+        "stereo_side_db": -13.1
+      },
+      "result": {
+        "duration_s": 4.848,
         "sample_rate": 48000,
         "channels": 2,
-        "loudness_lufs": -9.16,
-        "true_peak_dbtp": -0.23
+        "bitrate_kbps": 192,
+        "loudness_lufs": -9.5,
+        "true_peak_dbtp": -1.68,
+        "loudness_target": "-9.16 LUFS",
+        "spectral_centroid_hz": 506,
+        "centroid_by_quarter_hz": [
+          656,
+          620,
+          404,
+          379
+        ],
+        "envelope_correlation_with_previous": 0.77,
+        "processing": [
+          "peak limiter reduced peaks by 7.5 dB (ceiling -1.5 dBFS)"
+        ]
       },
-      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+      "previous": {
+        "model_id": "unknown",
+        "added_in_commit": "2026-02-25 5e8d7dd8",
+        "duration_s": 5.04,
+        "loudness_lufs": -9.16,
+        "sample_rate": 48000,
+        "channels": 2,
+        "bitrate_kbps": 193
+      }
     },
     "F22Landing": {
       "path": "public/sound/F22Landing.mp3",
-      "status": "unknown-prompt",
-      "prompt": null,
-      "model_id": "unknown",
-      "generation_id": null,
-      "added_in_commit": "2026-02-25 5e8d7dd8",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, no music, no voice. Fighter jet landing heard from the runway: a bright high-pitched turbine whine that clearly dominates and slowly winds down in pitch, light jet roar underneath, a soft tyre touchdown chirp in the middle, ending on a quieter low idle whine. Little sub-bass.",
+      "prompt_source": "reconstructed-from-audio-analysis",
+      "prompt_note": "Original prompt unknown; this prompt was written from an analysis of the previous file. Take 1 was a different kind of sound, so the retake used a refined prompt.",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-20",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "pnZkVCrGHEQk2H6TBQWo",
+      "generation_id": "uNfZg6mw9ARvUeKyXjkr",
+      "settings": {
+        "duration_seconds": 5.04,
+        "prompt_influence": 0.5,
+        "loop": false
+      },
       "loop": false,
-      "result": {
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "LNclqcZzoUeB49RwRFM5",
+          "credits": 17.0,
+          "used": false,
+          "prompt": "Military RTS game sound effect, no music, no voice. Stealth fighter jet landing: turbine whine winding down from a high pitch to a low idle hum, a soft tyre touchdown thump in the middle, engines settling to a quiet idle at the end."
+        },
+        {
+          "take": 2,
+          "generation_id": "uNfZg6mw9ARvUeKyXjkr",
+          "credits": 17.0,
+          "used": true,
+          "prompt": "Military RTS game sound effect, no music, no voice. Fighter jet landing heard from the runway: a bright high-pitched turbine whine that clearly dominates and slowly winds down in pitch, light jet roar underneath, a soft tyre touchdown chirp in the middle, ending on a quieter low idle whine. Little sub-bass."
+        }
+      ],
+      "credits": 34.0,
+      "usage": "sound key f22Landing; positional one-shot at 0.55 once per landing (movementF22.js)",
+      "analysis": {
+        "character": "turbine whine descending in pitch (dominant ~1.05 kHz -> ~0.2 kHz), mid-band, mono-like",
         "duration_s": 5.04,
+        "loudness_lufs": -15.92,
+        "true_peak_dbtp": -3.78,
+        "attack_s": 2.09,
+        "decay_20db_s": null,
+        "spectral_centroid_hz": 1094,
+        "centroid_by_quarter_hz": [
+          699,
+          945,
+          1614,
+          1035
+        ],
+        "dominant_hz_by_quarter": [
+          1055,
+          668,
+          258,
+          194
+        ],
+        "band_energy_pct": {
+          "<150": 6.5,
+          "150-600": 21.3,
+          "600-2.5k": 62.5,
+          "2.5-8k": 9.7,
+          ">8k": 0.0
+        },
+        "stereo_side_db": -35.3
+      },
+      "result": {
+        "duration_s": 4.608,
         "sample_rate": 48000,
         "channels": 2,
-        "loudness_lufs": -15.92,
-        "true_peak_dbtp": -3.78
+        "bitrate_kbps": 192,
+        "loudness_lufs": -15.76,
+        "true_peak_dbtp": -7.61,
+        "loudness_target": "-15.92 LUFS",
+        "spectral_centroid_hz": 2438,
+        "centroid_by_quarter_hz": [
+          2143,
+          2614,
+          2465,
+          2197
+        ],
+        "envelope_correlation_with_previous": 0.61
       },
-      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+      "previous": {
+        "model_id": "unknown",
+        "added_in_commit": "2026-02-25 5e8d7dd8",
+        "duration_s": 5.04,
+        "loudness_lufs": -15.92,
+        "sample_rate": 48000,
+        "channels": 2,
+        "bitrate_kbps": 193
+      }
     },
     "F22TakeOff_1": {
       "path": "public/sound/F22TakeOff_1.mp3",
-      "status": "unknown-prompt",
-      "prompt": null,
-      "model_id": "unknown",
-      "generation_id": null,
-      "added_in_commit": "2026-02-25 5e8d7dd8",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, no music, no voice. Fighter jet takeoff with afterburner: engines spool up from silence into a powerful roaring blast, then the jet pulls away and the roar recedes into a low distant rumble that fades out.",
+      "prompt_source": "reconstructed-from-audio-analysis",
+      "prompt_note": "Original prompt unknown; this prompt was written from an analysis of the previous file.",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-20",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "IcgQiYNJCyvotgXgr9pD",
+      "generation_id": "FFiP5tPbgqhN9ZTf81HT",
+      "settings": {
+        "duration_seconds": 5.04,
+        "prompt_influence": 0.5,
+        "loop": false
+      },
       "loop": false,
-      "result": {
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "FFiP5tPbgqhN9ZTf81HT",
+          "credits": 17.0,
+          "used": true,
+          "prompt": "Military RTS game sound effect, no music, no voice. Fighter jet takeoff with afterburner: engines spool up from silence into a powerful roaring blast, then the jet pulls away and the roar recedes into a low distant rumble that fades out."
+        }
+      ],
+      "credits": 17.0,
+      "usage": "sound key f22Takeoff (random of F22TakeOff_1/_2); positional one-shot at 0.55 once per takeoff (movementF22.js)",
+      "analysis": {
+        "character": "swell-up roar peaking at 1.5-3 s, brightness falling as it recedes (centroid 1.2 kHz -> 0.3 kHz); clipped",
         "duration_s": 5.04,
+        "loudness_lufs": -3.67,
+        "true_peak_dbtp": 2.15,
+        "attack_s": 2.34,
+        "decay_20db_s": 1.6400000000000001,
+        "spectral_centroid_hz": 1004,
+        "centroid_by_quarter_hz": [
+          1173,
+          1255,
+          586,
+          314
+        ],
+        "dominant_hz_by_quarter": [
+          538,
+          474,
+          237,
+          151
+        ],
+        "band_energy_pct": {
+          "<150": 6.2,
+          "150-600": 45.0,
+          "600-2.5k": 40.8,
+          "2.5-8k": 7.4,
+          ">8k": 0.7
+        },
+        "stereo_side_db": -11.7
+      },
+      "result": {
+        "duration_s": 4.68,
         "sample_rate": 48000,
         "channels": 2,
-        "loudness_lufs": -3.67,
-        "true_peak_dbtp": 2.15
+        "bitrate_kbps": 192,
+        "loudness_lufs": -8.7,
+        "true_peak_dbtp": -1.43,
+        "loudness_target": "-3.67 LUFS",
+        "spectral_centroid_hz": 539,
+        "centroid_by_quarter_hz": [
+          635,
+          699,
+          239,
+          302
+        ],
+        "envelope_correlation_with_previous": 0.92,
+        "processing": [
+          "loudness capped at -8.7 LUFS (target -3.67): the old file is clipped/brick-walled (true peak 2.15 dBTP) and reaching it would need more than 14 dB of peak limiting",
+          "peak limiter reduced peaks by 14.0 dB (ceiling -1.5 dBFS)"
+        ]
       },
-      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+      "previous": {
+        "model_id": "unknown",
+        "added_in_commit": "2026-02-25 5e8d7dd8",
+        "duration_s": 5.04,
+        "loudness_lufs": -3.67,
+        "sample_rate": 48000,
+        "channels": 2,
+        "bitrate_kbps": 193
+      }
     },
     "F22TakeOff_2": {
       "path": "public/sound/F22TakeOff_2.mp3",
-      "status": "unknown-prompt",
-      "prompt": null,
-      "model_id": "unknown",
-      "generation_id": null,
-      "added_in_commit": "2026-02-25 5e8d7dd8",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, no music, no voice. Fighter jet afterburner takeoff, variant with heavier low end: quick throttle-up into deep thundering afterburner roar, jet climbs away and the sound drops to a low rumble and fades out.",
+      "prompt_source": "reconstructed-from-audio-analysis",
+      "prompt_note": "Original prompt unknown; this prompt was written from an analysis of the previous file.",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-20",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "EPbZnVmWUytWfKOIp2QC",
+      "generation_id": "LaKSGyVBmg7WEaDn89iP",
+      "settings": {
+        "duration_seconds": 5.04,
+        "prompt_influence": 0.5,
+        "loop": false
+      },
       "loop": false,
-      "result": {
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "LaKSGyVBmg7WEaDn89iP",
+          "credits": 17.0,
+          "used": true,
+          "prompt": "Military RTS game sound effect, no music, no voice. Fighter jet afterburner takeoff, variant with heavier low end: quick throttle-up into deep thundering afterburner roar, jet climbs away and the sound drops to a low rumble and fades out."
+        }
+      ],
+      "credits": 17.0,
+      "usage": "sound key f22Takeoff (random of F22TakeOff_1/_2); positional one-shot at 0.55 once per takeoff (movementF22.js)",
+      "analysis": {
+        "character": "same takeoff shape with heavier low end and a bright start (centroid 1.6 kHz -> 0.27 kHz); clipped",
         "duration_s": 5.04,
+        "loudness_lufs": -3.67,
+        "true_peak_dbtp": 2.28,
+        "attack_s": 2.56,
+        "decay_20db_s": 1.62,
+        "spectral_centroid_hz": 804,
+        "centroid_by_quarter_hz": [
+          1599,
+          1223,
+          295,
+          272
+        ],
+        "dominant_hz_by_quarter": [
+          1163,
+          248,
+          129,
+          129
+        ],
+        "band_energy_pct": {
+          "<150": 20.7,
+          "150-600": 42.5,
+          "600-2.5k": 29.8,
+          "2.5-8k": 6.6,
+          ">8k": 0.3
+        },
+        "stereo_side_db": -10.6
+      },
+      "result": {
+        "duration_s": 4.632,
         "sample_rate": 48000,
         "channels": 2,
-        "loudness_lufs": -3.67,
-        "true_peak_dbtp": 2.28
+        "bitrate_kbps": 192,
+        "loudness_lufs": -6.57,
+        "true_peak_dbtp": -1.04,
+        "loudness_target": "-3.67 LUFS",
+        "spectral_centroid_hz": 546,
+        "centroid_by_quarter_hz": [
+          740,
+          549,
+          464,
+          315
+        ],
+        "envelope_correlation_with_previous": 0.94,
+        "processing": [
+          "loudness capped at -6.6 LUFS (target -3.67): the old file is clipped/brick-walled (true peak 2.28 dBTP) and reaching it would need more than 14 dB of peak limiting",
+          "peak limiter reduced peaks by 14.0 dB (ceiling -1.5 dBFS)"
+        ]
       },
-      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+      "previous": {
+        "model_id": "unknown",
+        "added_in_commit": "2026-02-25 5e8d7dd8",
+        "duration_s": 5.04,
+        "loudness_lufs": -3.67,
+        "sample_rate": 48000,
+        "channels": 2,
+        "bitrate_kbps": 193
+      }
     },
     "F35BombDetonation": {
       "path": "public/sound/F35BombDetonation.mp3",
-      "status": "unknown-prompt",
-      "prompt": null,
-      "model_id": "unknown",
-      "generation_id": null,
-      "added_in_commit": "2026-03-08 100389f5",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, no music, no voice. Heavy aerial bomb detonation: deep sub-bass boom and ground-shaking thud, dark and muffled with no high-frequency debris, rumbling decay that dies out after about one second.",
+      "prompt_source": "reconstructed-from-audio-analysis",
+      "prompt_note": "Original prompt unknown; this prompt was written from an analysis of the previous file.",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-20",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "q6t6SB3oPM6pwVI9XeFY",
+      "generation_id": "nXQL9o3LKnHGj8LCOREf",
+      "settings": {
+        "duration_seconds": 2.04,
+        "prompt_influence": 0.55,
+        "loop": false
+      },
       "loop": false,
-      "result": {
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "nXQL9o3LKnHGj8LCOREf",
+          "credits": 7.0,
+          "used": true,
+          "prompt": "Military RTS game sound effect, no music, no voice. Heavy aerial bomb detonation: deep sub-bass boom and ground-shaking thud, dark and muffled with no high-frequency debris, rumbling decay that dies out after about one second."
+        }
+      ],
+      "credits": 7.0,
+      "usage": "sound key f35BombImpact; positional one-shot at 0.7 when an F35 bomb hits (bulletSystem.js)",
+      "analysis": {
+        "character": "almost pure sub-bass boom (99% below 150 Hz), decays within ~1.3 s; clipped",
         "duration_s": 2.04,
+        "loudness_lufs": -10.28,
+        "true_peak_dbtp": 1.28,
+        "attack_s": 0.31,
+        "decay_20db_s": 0.62,
+        "spectral_centroid_hz": 30,
+        "centroid_by_quarter_hz": [
+          38,
+          24,
+          28,
+          20
+        ],
+        "dominant_hz_by_quarter": [
+          97,
+          86,
+          86,
+          86
+        ],
+        "band_energy_pct": {
+          "<150": 98.8,
+          "150-600": 1.2,
+          "600-2.5k": 0.0,
+          "2.5-8k": 0.0,
+          ">8k": 0.0
+        },
+        "stereo_side_db": -32.6
+      },
+      "result": {
+        "duration_s": 1.872,
         "sample_rate": 48000,
         "channels": 2,
-        "loudness_lufs": -10.28,
-        "true_peak_dbtp": 1.28
+        "bitrate_kbps": 192,
+        "loudness_lufs": -11.63,
+        "true_peak_dbtp": -1.69,
+        "loudness_target": "-10.28 LUFS",
+        "spectral_centroid_hz": 132,
+        "centroid_by_quarter_hz": [
+          132,
+          143,
+          160,
+          176
+        ],
+        "envelope_correlation_with_previous": 0.91,
+        "processing": [
+          "loudness capped at -11.6 LUFS (target -10.28): the old file is clipped/brick-walled (true peak 1.28 dBTP) and reaching it would need more than 14 dB of peak limiting",
+          "peak limiter reduced peaks by 14.0 dB (ceiling -1.5 dBFS)"
+        ]
       },
-      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+      "previous": {
+        "model_id": "unknown",
+        "added_in_commit": "2026-03-08 100389f5",
+        "duration_s": 2.04,
+        "loudness_lufs": -10.28,
+        "sample_rate": 48000,
+        "channels": 2,
+        "bitrate_kbps": 194
+      }
     },
     "F35BombDrop": {
       "path": "public/sound/F35BombDrop.mp3",
-      "status": "unknown-prompt",
-      "prompt": null,
-      "model_id": "unknown",
-      "generation_id": null,
-      "added_in_commit": "2026-03-08 100389f5",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, no music, no voice. Falling bomb whistle: one clean high-pitched whistling tone that slowly descends in pitch while the bomb falls, steady level, ends just before impact, no explosion.",
+      "prompt_source": "reconstructed-from-audio-analysis",
+      "prompt_note": "Original prompt unknown; this prompt was written from an analysis of the previous file.",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-20",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "nzWdFxpY3syEJCsHIpaY",
+      "generation_id": "tHt5QDtuFAD7RZ8WyEsF",
+      "settings": {
+        "duration_seconds": 3.02,
+        "prompt_influence": 0.6,
+        "loop": false
+      },
       "loop": false,
-      "result": {
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "tHt5QDtuFAD7RZ8WyEsF",
+          "credits": 10.0,
+          "used": true,
+          "prompt": "Military RTS game sound effect, no music, no voice. Falling bomb whistle: one clean high-pitched whistling tone that slowly descends in pitch while the bomb falls, steady level, ends just before impact, no explosion."
+        }
+      ],
+      "credits": 10.0,
+      "usage": "sound key f35BombDrop; positional one-shot when an F35 releases a bomb (unitCombat/firingHandlers.js)",
+      "analysis": {
+        "character": "single falling whistle tone 2.2 kHz -> 1.46 kHz at constant level",
         "duration_s": 3.024,
+        "loudness_lufs": -2.57,
+        "true_peak_dbtp": 0.23,
+        "attack_s": 1.78,
+        "decay_20db_s": 1.02,
+        "spectral_centroid_hz": 1892,
+        "centroid_by_quarter_hz": [
+          2234,
+          2007,
+          1736,
+          1464
+        ],
+        "dominant_hz_by_quarter": [
+          2196,
+          1960,
+          1723,
+          1464
+        ],
+        "band_energy_pct": {
+          "<150": 0.0,
+          "150-600": 0.1,
+          "600-2.5k": 99.1,
+          "2.5-8k": 0.7,
+          ">8k": 0.0
+        },
+        "stereo_side_db": -31.6
+      },
+      "result": {
+        "duration_s": 2.784,
         "sample_rate": 48000,
         "channels": 2,
-        "loudness_lufs": -2.57,
-        "true_peak_dbtp": 0.23
+        "bitrate_kbps": 192,
+        "loudness_lufs": -2.72,
+        "true_peak_dbtp": -1.56,
+        "loudness_target": "-2.57 LUFS",
+        "spectral_centroid_hz": 2181,
+        "centroid_by_quarter_hz": [
+          2390,
+          2129,
+          1920,
+          1660
+        ],
+        "envelope_correlation_with_previous": 0.84,
+        "processing": [
+          "peak limiter reduced peaks by 2.3 dB (ceiling -1.5 dBFS)"
+        ]
       },
-      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+      "previous": {
+        "model_id": "unknown",
+        "added_in_commit": "2026-03-08 100389f5",
+        "duration_s": 3.024,
+        "loudness_lufs": -2.57,
+        "sample_rate": 48000,
+        "channels": 2,
+        "bitrate_kbps": 194
+      }
     },
     "F35Landing": {
       "path": "public/sound/F35Landing.mp3",
-      "status": "unknown-prompt",
-      "prompt": null,
-      "model_id": "unknown",
-      "generation_id": null,
-      "added_in_commit": "2026-03-08 100389f5",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, no music, no voice. Jet fighter vertical landing: loud hovering turbine and lift-fan roar, pitch descending from a high whine to a low hum as the engine throttles down, fades out at the end.",
+      "prompt_source": "reconstructed-from-audio-analysis",
+      "prompt_note": "Original prompt unknown; this prompt was written from an analysis of the previous file.",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-20",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "upXoSpQI9ikNzayRDk7s",
+      "generation_id": "vLbSenADUxapLDgHDfeb",
+      "settings": {
+        "duration_seconds": 5.04,
+        "prompt_influence": 0.5,
+        "loop": false
+      },
       "loop": false,
-      "result": {
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "vLbSenADUxapLDgHDfeb",
+          "credits": 17.0,
+          "used": true,
+          "prompt": "Military RTS game sound effect, no music, no voice. Jet fighter vertical landing: loud hovering turbine and lift-fan roar, pitch descending from a high whine to a low hum as the engine throttles down, fades out at the end."
+        }
+      ],
+      "credits": 17.0,
+      "usage": "sound key f35Landing; positional one-shot at 0.55, at most once per second (movementApache.js)",
+      "analysis": {
+        "character": "jet roar with descending dominant pitch (1.2 kHz -> 0.2 kHz), fades at the end; clipped",
         "duration_s": 5.04,
+        "loudness_lufs": -4.22,
+        "true_peak_dbtp": 1.27,
+        "attack_s": 3.21,
+        "decay_20db_s": 1.08,
+        "spectral_centroid_hz": 1413,
+        "centroid_by_quarter_hz": [
+          1396,
+          1378,
+          1420,
+          906
+        ],
+        "dominant_hz_by_quarter": [
+          1227,
+          689,
+          258,
+          194
+        ],
+        "band_energy_pct": {
+          "<150": 0.2,
+          "150-600": 31.1,
+          "600-2.5k": 53.4,
+          "2.5-8k": 15.1,
+          ">8k": 0.2
+        },
+        "stereo_side_db": -30.3
+      },
+      "result": {
+        "duration_s": 4.968,
         "sample_rate": 48000,
         "channels": 2,
-        "loudness_lufs": -4.22,
-        "true_peak_dbtp": 1.27
+        "bitrate_kbps": 192,
+        "loudness_lufs": -6.09,
+        "true_peak_dbtp": -1.31,
+        "loudness_target": "-4.22 LUFS",
+        "spectral_centroid_hz": 867,
+        "centroid_by_quarter_hz": [
+          927,
+          982,
+          783,
+          604
+        ],
+        "envelope_correlation_with_previous": 0.55,
+        "processing": [
+          "loudness capped at -6.1 LUFS (target -4.22): the old file is clipped/brick-walled (true peak 1.27 dBTP) and reaching it would need more than 14 dB of peak limiting",
+          "peak limiter reduced peaks by 14.0 dB (ceiling -1.5 dBFS)"
+        ]
       },
-      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+      "previous": {
+        "model_id": "unknown",
+        "added_in_commit": "2026-03-08 100389f5",
+        "duration_s": 5.04,
+        "loudness_lufs": -4.22,
+        "sample_rate": 48000,
+        "channels": 2,
+        "bitrate_kbps": 193
+      }
     },
     "F35TakeOff": {
       "path": "public/sound/F35TakeOff.mp3",
-      "status": "unknown-prompt",
-      "prompt": null,
-      "model_id": "unknown",
-      "generation_id": null,
-      "added_in_commit": "2026-03-08 100389f5",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, no music, no voice. Jet fighter vertical takeoff: starts immediately with a loud turbine and lift-fan roar at full power, peaks in the first two seconds, then the jet climbs away and the roar steadily recedes into a distant low rumble that fades out at the end.",
+      "prompt_source": "reconstructed-from-audio-analysis",
+      "prompt_note": "Original prompt unknown; this prompt was written from an analysis of the previous file. Take 1 was a different kind of sound, so the retake used a refined prompt.",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-20",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "HeHW4TdLA4LfeTcLOa2F",
+      "generation_id": "4rq6wSDXbRpE3UhsaMKI",
+      "settings": {
+        "duration_seconds": 5.04,
+        "prompt_influence": 0.5,
+        "loop": false
+      },
       "loop": false,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "Aiwm4fGudF1kGO99foYd",
+          "credits": 17.0,
+          "used": false,
+          "prompt": "Military RTS game sound effect, no music, no voice. Jet fighter vertical takeoff: lift-fan and turbine roar building up quickly, the jet rises and accelerates away and the roar recedes into a distant low rumble that fades out."
+        },
+        {
+          "take": 2,
+          "generation_id": "4rq6wSDXbRpE3UhsaMKI",
+          "credits": 17.0,
+          "used": true,
+          "prompt": "Military RTS game sound effect, no music, no voice. Jet fighter vertical takeoff: starts immediately with a loud turbine and lift-fan roar at full power, peaks in the first two seconds, then the jet climbs away and the roar steadily recedes into a distant low rumble that fades out at the end."
+        }
+      ],
+      "credits": 34.0,
+      "usage": "sound key f35Takeoff; positional one-shot at 0.55 once per takeoff (movementApache.js)",
+      "analysis": {
+        "character": "jet roar peaking early then receding (centroid 0.9 kHz -> 0.29 kHz); clipped",
+        "duration_s": 5.04,
+        "loudness_lufs": -6.62,
+        "true_peak_dbtp": 2.2,
+        "attack_s": 1.32,
+        "decay_20db_s": 2.12,
+        "spectral_centroid_hz": 853,
+        "centroid_by_quarter_hz": [
+          892,
+          950,
+          598,
+          287
+        ],
+        "dominant_hz_by_quarter": [
+          312,
+          237,
+          215,
+          161
+        ],
+        "band_energy_pct": {
+          "<150": 4.8,
+          "150-600": 48.0,
+          "600-2.5k": 42.3,
+          "2.5-8k": 4.8,
+          ">8k": 0.1
+        },
+        "stereo_side_db": -11.0
+      },
       "result": {
         "duration_s": 5.04,
         "sample_rate": 48000,
         "channels": 2,
-        "loudness_lufs": -6.62,
-        "true_peak_dbtp": 2.2
+        "bitrate_kbps": 192,
+        "loudness_lufs": -7.03,
+        "true_peak_dbtp": -1.31,
+        "loudness_target": "-6.62 LUFS",
+        "spectral_centroid_hz": 1088,
+        "centroid_by_quarter_hz": [
+          1971,
+          1647,
+          672,
+          404
+        ],
+        "envelope_correlation_with_previous": -0.61,
+        "processing": [
+          "peak limiter reduced peaks by 7.9 dB (ceiling -1.5 dBFS)"
+        ]
       },
-      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+      "previous": {
+        "model_id": "unknown",
+        "added_in_commit": "2026-03-08 100389f5",
+        "duration_s": 5.04,
+        "loudness_lufs": -6.62,
+        "sample_rate": 48000,
+        "channels": 2,
+        "bitrate_kbps": 193
+      }
     },
     "apache_fly": {
       "path": "public/sound/apache_fly.mp3",
-      "status": "unknown-prompt",
-      "prompt": null,
-      "model_id": "unknown",
-      "generation_id": null,
-      "added_in_commit": "2025-10-31 a1bbfe33",
-      "loop": false,
-      "result": {
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, no music, no voice. Attack helicopter flying, continuous rhythmic rotor blade thumping with a turbine hum, mostly low-mid frequencies, steady level, seamless loop.",
+      "prompt_source": "reconstructed-from-audio-analysis",
+      "prompt_note": "Original prompt unknown; this prompt was written from an analysis of the previous file.",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-20",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "TpYN3YX2IKn5g36vfNFK",
+      "generation_id": "PDXkKUpC4hwA1WYs6UUr",
+      "settings": {
+        "duration_seconds": 4.03,
+        "prompt_influence": 0.5,
+        "loop": true
+      },
+      "loop": true,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "PDXkKUpC4hwA1WYs6UUr",
+          "credits": 13.0,
+          "used": true,
+          "prompt": "Military RTS game sound effect, no music, no voice. Attack helicopter flying, continuous rhythmic rotor blade thumping with a turbine hum, mostly low-mid frequencies, steady level, seamless loop."
+        }
+      ],
+      "credits": 13.0,
+      "usage": "sound key apache_fly; positional rotor loop (playLoop) at APACHE_ROTOR_LOOP_VOLUME while airborne (movementApache.js)",
+      "analysis": {
+        "character": "steady rotor thump plus turbine hum, low-mid (52% 150-600 Hz), loop",
         "duration_s": 4.032,
+        "loudness_lufs": -4.19,
+        "true_peak_dbtp": 0.63,
+        "attack_s": 3.26,
+        "decay_20db_s": null,
+        "spectral_centroid_hz": 349,
+        "centroid_by_quarter_hz": [
+          299,
+          312,
+          303,
+          311
+        ],
+        "dominant_hz_by_quarter": [
+          172,
+          172,
+          172,
+          194
+        ],
+        "band_energy_pct": {
+          "<150": 31.5,
+          "150-600": 51.5,
+          "600-2.5k": 17.0,
+          "2.5-8k": 0.1,
+          ">8k": 0.0
+        },
+        "stereo_side_db": -11.0
+      },
+      "result": {
+        "duration_s": 3.84,
         "sample_rate": 48000,
         "channels": 2,
-        "loudness_lufs": -4.19,
-        "true_peak_dbtp": 0.63
+        "bitrate_kbps": 192,
+        "loudness_lufs": -7.47,
+        "true_peak_dbtp": -1.6,
+        "loudness_target": "-4.19 LUFS",
+        "spectral_centroid_hz": 396,
+        "centroid_by_quarter_hz": [
+          438,
+          391,
+          396,
+          392
+        ],
+        "envelope_correlation_with_previous": -0.16,
+        "processing": [
+          "equal-power head/tail cross-fade 0.20s (raw seam jump 0.1x p99, rms step 4.6 dB)",
+          "loudness capped at -7.5 LUFS (target -4.19): the old file is clipped/brick-walled (true peak 0.63 dBTP) and reaching it would need more than 14 dB of peak limiting",
+          "peak limiter reduced peaks by 14.0 dB (ceiling -1.5 dBFS)"
+        ]
       },
-      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+      "previous": {
+        "model_id": "unknown",
+        "added_in_commit": "2025-10-31 a1bbfe33",
+        "duration_s": 4.032,
+        "loudness_lufs": -4.19,
+        "sample_rate": 48000,
+        "channels": 2,
+        "bitrate_kbps": 193
+      }
     },
     "buildingPlaced": {
       "path": "public/sound/buildingPlaced.mp3",
-      "status": "unknown-prompt",
-      "prompt": null,
-      "model_id": "unknown",
-      "generation_id": null,
-      "added_in_commit": "2025-03-24 c7b1cbc8",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, clean start. Prefab building placed on the ground: heavy thud as a structure drops onto concrete, followed by a few metallic clanks and bolts locking into place.",
+      "prompt_source": "reconstructed-from-audio-analysis",
+      "prompt_note": "Original prompt unknown; this prompt was written from an analysis of the previous file.",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-20",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "CcUQi2FqGe9uUu0F4ei4",
+      "generation_id": "0TRQ9PA8mjA16HBnw7XD",
+      "settings": {
+        "duration_seconds": 1.57,
+        "prompt_influence": 0.55,
+        "loop": false
+      },
       "loop": false,
-      "result": {
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "0TRQ9PA8mjA16HBnw7XD",
+          "credits": 5.0,
+          "used": true,
+          "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, clean start. Prefab building placed on the ground: heavy thud as a structure drops onto concrete, followed by a few metallic clanks and bolts locking into place."
+        }
+      ],
+      "credits": 5.0,
+      "usage": "sound key buildingPlaced; UI one-shot when a building is placed (eventHandlers.js, playerBuildingLifecycle.js)",
+      "analysis": {
+        "character": "mono thud followed by several clanks (onsets ~0.06-0.3 s apart)",
         "duration_s": 1.567,
+        "loudness_lufs": -15.14,
+        "true_peak_dbtp": -0.43,
+        "attack_s": 0.23,
+        "decay_20db_s": 0.3,
+        "spectral_centroid_hz": 674,
+        "centroid_by_quarter_hz": [
+          399,
+          282,
+          453,
+          188
+        ],
+        "dominant_hz_by_quarter": [
+          172,
+          151,
+          172,
+          172
+        ],
+        "band_energy_pct": {
+          "<150": 16.3,
+          "150-600": 57.2,
+          "600-2.5k": 21.1,
+          "2.5-8k": 5.4,
+          ">8k": 0.0
+        },
+        "stereo_side_db": -40.7
+      },
+      "result": {
+        "duration_s": 1.463,
         "sample_rate": 44100,
         "channels": 2,
-        "loudness_lufs": -15.14,
-        "true_peak_dbtp": -0.43
+        "bitrate_kbps": 128,
+        "loudness_lufs": -15.23,
+        "true_peak_dbtp": -1.77,
+        "loudness_target": "-15.14 LUFS",
+        "spectral_centroid_hz": 935,
+        "centroid_by_quarter_hz": [
+          878,
+          806,
+          447,
+          61
+        ],
+        "envelope_correlation_with_previous": 0.67,
+        "processing": [
+          "peak limiter reduced peaks by 7.5 dB (ceiling -1.5 dBFS)"
+        ]
       },
-      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+      "previous": {
+        "model_id": "unknown",
+        "added_in_commit": "2025-03-24 c7b1cbc8",
+        "duration_s": 1.567,
+        "loudness_lufs": -15.14,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 128
+      }
     },
     "bulletHit01": {
       "path": "public/sound/bulletHit01.mp3",
-      "status": "unknown-prompt",
-      "prompt": null,
-      "model_id": "unknown",
-      "generation_id": null,
-      "added_in_commit": "2025-02-12 c41891b7",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, clean start. Heavy shell impact: a deep, dark low-frequency boom and heavy thud like a small explosion on armor, almost no high frequencies, no metallic ring, no ricochet, short rumbling decay.",
+      "prompt_source": "reconstructed-from-audio-analysis",
+      "prompt_note": "Original prompt unknown; this prompt was written from an analysis of the previous file. Take 1 was a different kind of sound, so the retake used a refined prompt.",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-20",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "U7qHJ4CKez2Tw6acOVVR",
+      "generation_id": "kkiU56xQrDm08AaZyogp",
+      "settings": {
+        "duration_seconds": 2.09,
+        "prompt_influence": 0.55,
+        "loop": false
+      },
       "loop": false,
-      "result": {
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "QFMLqWs37Dd511UQ3RAw",
+          "credits": 7.0,
+          "used": false,
+          "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, clean start. Heavy tank shell hitting an armored vehicle: deep impact thud with a low muffled boom and a short rumbling decay, no ricochet whistle."
+        },
+        {
+          "take": 2,
+          "generation_id": "kkiU56xQrDm08AaZyogp",
+          "credits": 7.0,
+          "used": true,
+          "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, clean start. Heavy shell impact: a deep, dark low-frequency boom and heavy thud like a small explosion on armor, almost no high frequencies, no metallic ring, no ricochet, short rumbling decay."
+        }
+      ],
+      "credits": 14.0,
+      "usage": "sound key bulletHit; positional one-shot at 0.5 for bullet/shell hits (bulletSystem.js)",
+      "analysis": {
+        "character": "deep low boom (80% below 150 Hz), ~0.6 s decay, not a ricochet",
         "duration_s": 2.09,
+        "loudness_lufs": -7.36,
+        "true_peak_dbtp": 0.29,
+        "attack_s": 0.34,
+        "decay_20db_s": 0.63,
+        "spectral_centroid_hz": 150,
+        "centroid_by_quarter_hz": [
+          163,
+          84,
+          75,
+          67
+        ],
+        "dominant_hz_by_quarter": [
+          97,
+          86,
+          86,
+          86
+        ],
+        "band_energy_pct": {
+          "<150": 80.0,
+          "150-600": 16.9,
+          "600-2.5k": 2.3,
+          "2.5-8k": 0.8,
+          ">8k": 0.0
+        },
+        "stereo_side_db": -44.1
+      },
+      "result": {
+        "duration_s": 1.933,
         "sample_rate": 44100,
         "channels": 2,
-        "loudness_lufs": -7.36,
-        "true_peak_dbtp": 0.29
+        "bitrate_kbps": 320,
+        "loudness_lufs": -13.16,
+        "true_peak_dbtp": -1.47,
+        "loudness_target": "-7.36 LUFS",
+        "spectral_centroid_hz": 100,
+        "centroid_by_quarter_hz": [
+          86,
+          95,
+          104,
+          126
+        ],
+        "envelope_correlation_with_previous": 0.93,
+        "processing": [
+          "loudness capped at -13.2 LUFS (target -7.36): the old file is clipped/brick-walled (true peak 0.29 dBTP) and reaching it would need more than 14 dB of peak limiting",
+          "peak limiter reduced peaks by 14.0 dB (ceiling -1.5 dBFS)"
+        ]
       },
-      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+      "previous": {
+        "model_id": "unknown",
+        "added_in_commit": "2025-02-12 c41891b7",
+        "duration_s": 2.09,
+        "loudness_lufs": -7.36,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 320
+      }
     },
     "deposit": {
       "path": "public/sound/deposit.mp3",
-      "status": "unknown-prompt",
-      "prompt": null,
-      "model_id": "unknown",
-      "generation_id": null,
-      "added_in_commit": "2025-02-12 c41891b7",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, no music, no voice. Money deposit: bright cash register cha-ching with jingling coins and a metallic chime, short and crisp.",
+      "prompt_source": "reconstructed-from-audio-analysis",
+      "prompt_note": "Original prompt unknown; this prompt was written from an analysis of the previous file.",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-20",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "HGjUsrikehhX4YTmw8G8",
+      "generation_id": "FfwZ6J9d9DPmoKKYmJ2G",
+      "settings": {
+        "duration_seconds": 1.57,
+        "prompt_influence": 0.55,
+        "loop": false
+      },
       "loop": false,
-      "result": {
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "FfwZ6J9d9DPmoKKYmJ2G",
+          "credits": 5.0,
+          "used": true,
+          "prompt": "Military RTS game sound effect, no music, no voice. Money deposit: bright cash register cha-ching with jingling coins and a metallic chime, short and crisp."
+        }
+      ],
+      "credits": 5.0,
+      "usage": "sound key deposit; UI one-shot on building sale and money cheats (buildingSellHandler.js, cheatSystem.js)",
+      "analysis": {
+        "character": "bright wide-stereo coin/register jingle (70% above 8 kHz) with a few transients",
         "duration_s": 1.567,
+        "loudness_lufs": -11.64,
+        "true_peak_dbtp": -0.28,
+        "attack_s": 0.26,
+        "decay_20db_s": 0.7000000000000001,
+        "spectral_centroid_hz": 9306,
+        "centroid_by_quarter_hz": [
+          12335,
+          9369,
+          10367,
+          9839
+        ],
+        "dominant_hz_by_quarter": [
+          2013,
+          237,
+          991,
+          2218
+        ],
+        "band_energy_pct": {
+          "<150": 4.2,
+          "150-600": 2.3,
+          "600-2.5k": 5.1,
+          "2.5-8k": 18.6,
+          ">8k": 69.9
+        },
+        "stereo_side_db": -2.2
+      },
+      "result": {
+        "duration_s": 1.463,
         "sample_rate": 44100,
         "channels": 2,
-        "loudness_lufs": -11.64,
-        "true_peak_dbtp": -0.28
+        "bitrate_kbps": 320,
+        "loudness_lufs": -11.82,
+        "true_peak_dbtp": -0.71,
+        "loudness_target": "-11.64 LUFS",
+        "spectral_centroid_hz": 5317,
+        "centroid_by_quarter_hz": [
+          4865,
+          6094,
+          4952,
+          4417
+        ],
+        "envelope_correlation_with_previous": 0.78,
+        "processing": [
+          "peak limiter reduced peaks by 4.2 dB (ceiling -1.5 dBFS)"
+        ]
       },
-      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+      "previous": {
+        "model_id": "unknown",
+        "added_in_commit": "2025-02-12 c41891b7",
+        "duration_s": 1.567,
+        "loudness_lufs": -11.64,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 320
+      }
     },
     "explosion01": {
       "path": "public/sound/explosion01.mp3",
-      "status": "unknown-prompt",
-      "prompt": null,
-      "model_id": "unknown",
-      "generation_id": null,
-      "added_in_commit": "2025-02-12 c41891b7",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, clean start. Vehicle explosion at medium distance: deep heavy boom with sub-bass rumble, dark and muffled, rolling decay over about one and a half seconds.",
+      "prompt_source": "reconstructed-from-audio-analysis",
+      "prompt_note": "Original prompt unknown; this prompt was written from an analysis of the previous file.",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-20",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "3jq3NxAfjeWcwz41Vsis",
+      "generation_id": "FwrauXelaCIFeDz3JgAl",
+      "settings": {
+        "duration_seconds": 2.09,
+        "prompt_influence": 0.55,
+        "loop": false
+      },
       "loop": false,
-      "result": {
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "FwrauXelaCIFeDz3JgAl",
+          "credits": 7.0,
+          "used": true,
+          "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, clean start. Vehicle explosion at medium distance: deep heavy boom with sub-bass rumble, dark and muffled, rolling decay over about one and a half seconds."
+        }
+      ],
+      "credits": 7.0,
+      "usage": "sound key explosion (random of explosion01-04); positional one-shot at 0.5-0.7 for unit/building/projectile explosions (logic.js, bulletSystem.js)",
+      "analysis": {
+        "character": "deep sub-bass boom (96% below 150 Hz), rolling ~0.8 s decay",
         "duration_s": 2.09,
+        "loudness_lufs": -10.7,
+        "true_peak_dbtp": -0.0,
+        "attack_s": 0.17,
+        "decay_20db_s": 0.79,
+        "spectral_centroid_hz": 59,
+        "centroid_by_quarter_hz": [
+          55,
+          69,
+          80,
+          57
+        ],
+        "dominant_hz_by_quarter": [
+          86,
+          97,
+          86,
+          86
+        ],
+        "band_energy_pct": {
+          "<150": 95.6,
+          "150-600": 3.6,
+          "600-2.5k": 0.7,
+          "2.5-8k": 0.0,
+          ">8k": 0.0
+        },
+        "stereo_side_db": -17.6
+      },
+      "result": {
+        "duration_s": 1.933,
         "sample_rate": 44100,
         "channels": 2,
-        "loudness_lufs": -10.7,
-        "true_peak_dbtp": -0.0
+        "bitrate_kbps": 320,
+        "loudness_lufs": -11.48,
+        "true_peak_dbtp": -1.49,
+        "loudness_target": "-10.7 LUFS",
+        "spectral_centroid_hz": 46,
+        "centroid_by_quarter_hz": [
+          39,
+          41,
+          48,
+          42
+        ],
+        "envelope_correlation_with_previous": 0.89,
+        "processing": [
+          "peak limiter reduced peaks by 14.0 dB (ceiling -1.5 dBFS)"
+        ]
       },
-      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+      "previous": {
+        "model_id": "unknown",
+        "added_in_commit": "2025-02-12 c41891b7",
+        "duration_s": 2.09,
+        "loudness_lufs": -10.7,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 320
+      }
     },
     "explosion02": {
       "path": "public/sound/explosion02.mp3",
-      "status": "unknown-prompt",
-      "prompt": null,
-      "model_id": "unknown",
-      "generation_id": null,
-      "added_in_commit": "2025-02-12 c41891b7",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, clean start. Large explosion: fast deep boom with a wide, long rumbling sub-bass tail that slowly fades over two seconds.",
+      "prompt_source": "reconstructed-from-audio-analysis",
+      "prompt_note": "Original prompt unknown; this prompt was written from an analysis of the previous file.",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-20",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "95NJYXOEedjQ3bp9tKEq",
+      "generation_id": "FvKt0P8Iwh4i01bmcsxq",
+      "settings": {
+        "duration_seconds": 2.09,
+        "prompt_influence": 0.55,
+        "loop": false
+      },
       "loop": false,
-      "result": {
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "FvKt0P8Iwh4i01bmcsxq",
+          "credits": 7.0,
+          "used": true,
+          "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, clean start. Large explosion: fast deep boom with a wide, long rumbling sub-bass tail that slowly fades over two seconds."
+        }
+      ],
+      "credits": 7.0,
+      "usage": "sound key explosion (random of explosion01-04); positional one-shot at 0.5-0.7 (logic.js, bulletSystem.js)",
+      "analysis": {
+        "character": "deep wide boom with long ~1.3 s rumbling tail",
         "duration_s": 2.09,
+        "loudness_lufs": -8.25,
+        "true_peak_dbtp": -0.01,
+        "attack_s": 0.05,
+        "decay_20db_s": 1.31,
+        "spectral_centroid_hz": 81,
+        "centroid_by_quarter_hz": [
+          93,
+          64,
+          70,
+          69
+        ],
+        "dominant_hz_by_quarter": [
+          86,
+          86,
+          86,
+          86
+        ],
+        "band_energy_pct": {
+          "<150": 91.4,
+          "150-600": 8.0,
+          "600-2.5k": 0.6,
+          "2.5-8k": 0.0,
+          ">8k": 0.0
+        },
+        "stereo_side_db": -10.8
+      },
+      "result": {
+        "duration_s": 1.933,
         "sample_rate": 44100,
         "channels": 2,
-        "loudness_lufs": -8.25,
-        "true_peak_dbtp": -0.01
+        "bitrate_kbps": 320,
+        "loudness_lufs": -9.13,
+        "true_peak_dbtp": -1.31,
+        "loudness_target": "-8.25 LUFS",
+        "spectral_centroid_hz": 135,
+        "centroid_by_quarter_hz": [
+          147,
+          131,
+          102,
+          111
+        ],
+        "envelope_correlation_with_previous": 0.94,
+        "processing": [
+          "peak limiter reduced peaks by 13.5 dB (ceiling -1.5 dBFS)"
+        ]
       },
-      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+      "previous": {
+        "model_id": "unknown",
+        "added_in_commit": "2025-02-12 c41891b7",
+        "duration_s": 2.09,
+        "loudness_lufs": -8.25,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 320
+      }
     },
     "explosion03": {
       "path": "public/sound/explosion03.mp3",
-      "status": "unknown-prompt",
-      "prompt": null,
-      "model_id": "unknown",
-      "generation_id": null,
-      "added_in_commit": "2025-02-12 c41891b7",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, clean start. Explosion with a punchy low-mid blast: short heavy boom with some low-mid body and a fast rumbling decay.",
+      "prompt_source": "reconstructed-from-audio-analysis",
+      "prompt_note": "Original prompt unknown; this prompt was written from an analysis of the previous file.",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-20",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "RW2iTfZdgXEcc0ftssKc",
+      "generation_id": "F1qaZhiOK1K8YwpBkQUk",
+      "settings": {
+        "duration_seconds": 2.09,
+        "prompt_influence": 0.55,
+        "loop": false
+      },
       "loop": false,
-      "result": {
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "F1qaZhiOK1K8YwpBkQUk",
+          "credits": 7.0,
+          "used": true,
+          "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, clean start. Explosion with a punchy low-mid blast: short heavy boom with some low-mid body and a fast rumbling decay."
+        }
+      ],
+      "credits": 7.0,
+      "usage": "sound key explosion (random of explosion01-04); positional one-shot at 0.5-0.7 (logic.js, bulletSystem.js)",
+      "analysis": {
+        "character": "boom with more low-mid body (26% 150-600 Hz), fast decay",
         "duration_s": 2.09,
+        "loudness_lufs": -8.3,
+        "true_peak_dbtp": -0.01,
+        "attack_s": 0.16,
+        "decay_20db_s": 0.6,
+        "spectral_centroid_hz": 127,
+        "centroid_by_quarter_hz": [
+          123,
+          107,
+          106,
+          86
+        ],
+        "dominant_hz_by_quarter": [
+          108,
+          86,
+          86,
+          108
+        ],
+        "band_energy_pct": {
+          "<150": 73.3,
+          "150-600": 26.1,
+          "600-2.5k": 0.6,
+          "2.5-8k": 0.0,
+          ">8k": 0.0
+        },
+        "stereo_side_db": -39.2
+      },
+      "result": {
+        "duration_s": 1.933,
         "sample_rate": 44100,
         "channels": 2,
-        "loudness_lufs": -8.3,
-        "true_peak_dbtp": -0.01
+        "bitrate_kbps": 320,
+        "loudness_lufs": -12.79,
+        "true_peak_dbtp": -1.27,
+        "loudness_target": "-8.3 LUFS",
+        "spectral_centroid_hz": 74,
+        "centroid_by_quarter_hz": [
+          49,
+          60,
+          107,
+          108
+        ],
+        "envelope_correlation_with_previous": 0.79,
+        "processing": [
+          "loudness capped at -12.8 LUFS (target -8.3): the old file is clipped/brick-walled (true peak -0.01 dBTP) and reaching it would need more than 14 dB of peak limiting",
+          "peak limiter reduced peaks by 14.0 dB (ceiling -1.5 dBFS)"
+        ]
       },
-      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+      "previous": {
+        "model_id": "unknown",
+        "added_in_commit": "2025-02-12 c41891b7",
+        "duration_s": 2.09,
+        "loudness_lufs": -8.3,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 320
+      }
     },
     "explosion04": {
       "path": "public/sound/explosion04.mp3",
-      "status": "unknown-prompt",
-      "prompt": null,
-      "model_id": "unknown",
-      "generation_id": null,
-      "added_in_commit": "2025-02-12 c41891b7",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, clean start. Short heavy explosion impact: deep punchy boom and a quick low rumble decay, about one second long.",
+      "prompt_source": "reconstructed-from-audio-analysis",
+      "prompt_note": "Original prompt unknown; this prompt was written from an analysis of the previous file.",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-20",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "puM5dHVkYTwtdXg3gS13",
+      "generation_id": "VGEf4riNZXYqHqEAjyNY",
+      "settings": {
+        "duration_seconds": 1.07,
+        "prompt_influence": 0.55,
+        "loop": false
+      },
       "loop": false,
-      "result": {
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "VGEf4riNZXYqHqEAjyNY",
+          "credits": 4.0,
+          "used": true,
+          "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, clean start. Short heavy explosion impact: deep punchy boom and a quick low rumble decay, about one second long."
+        }
+      ],
+      "credits": 4.0,
+      "usage": "sound keys explosion (random of explosion01-04) and f22CrashImpact (movementF22.js, 0.7)",
+      "analysis": {
+        "character": "short deep boom, ~1 s",
         "duration_s": 1.071,
+        "loudness_lufs": -10.6,
+        "true_peak_dbtp": 0.07,
+        "attack_s": 0.13,
+        "decay_20db_s": 0.65,
+        "spectral_centroid_hz": 85,
+        "centroid_by_quarter_hz": [
+          81,
+          65,
+          60,
+          51
+        ],
+        "dominant_hz_by_quarter": [
+          86,
+          86,
+          86,
+          86
+        ],
+        "band_energy_pct": {
+          "<150": 92.4,
+          "150-600": 5.9,
+          "600-2.5k": 1.6,
+          "2.5-8k": 0.1,
+          ">8k": 0.0
+        },
+        "stereo_side_db": -20.4
+      },
+      "result": {
+        "duration_s": 1.019,
         "sample_rate": 44100,
         "channels": 2,
-        "loudness_lufs": -10.6,
-        "true_peak_dbtp": 0.07
+        "bitrate_kbps": 320,
+        "loudness_lufs": -11.29,
+        "true_peak_dbtp": -1.38,
+        "loudness_target": "-10.6 LUFS",
+        "spectral_centroid_hz": 278,
+        "centroid_by_quarter_hz": [
+          309,
+          318,
+          242,
+          208
+        ],
+        "envelope_correlation_with_previous": 0.91,
+        "processing": [
+          "peak limiter reduced peaks by 12.5 dB (ceiling -1.5 dBFS)"
+        ]
       },
-      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+      "previous": {
+        "model_id": "unknown",
+        "added_in_commit": "2025-02-12 c41891b7",
+        "duration_s": 1.071,
+        "loudness_lufs": -10.6,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 320
+      }
     },
     "harvest": {
       "path": "public/sound/harvest.mp3",
-      "status": "unknown-prompt",
-      "prompt": null,
-      "model_id": "unknown",
-      "generation_id": null,
-      "added_in_commit": "2025-03-24 c7b1cbc8",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, no music, no voice. Harvester collecting ore: a soft mid-pitched mechanical servo whirr with a few quick rhythmic clicks and clanks, small and quiet, no high hiss, no explosion.",
+      "prompt_source": "reconstructed-from-audio-analysis",
+      "prompt_note": "Original prompt unknown; this prompt was written from an analysis of the previous file. Take 1 was a different kind of sound, so the retake used a refined prompt.",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-20",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "KNdmfaK4P5bOPUyr8k3K",
+      "generation_id": "zhWvaKWPXT18ZOjV23ne",
+      "settings": {
+        "duration_seconds": 1.57,
+        "prompt_influence": 0.5,
+        "loop": false
+      },
       "loop": false,
-      "result": {
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "hWjxQX82kTJY08Ta7XTj",
+          "credits": 5.0,
+          "used": false,
+          "prompt": "Military RTS game sound effect, no music, no voice. Harvester mining crystals: a quick series of small metallic scraping clicks and soft crunches as a mechanical scoop digs into ore, light, quiet and short."
+        },
+        {
+          "take": 2,
+          "generation_id": "zhWvaKWPXT18ZOjV23ne",
+          "credits": 5.0,
+          "used": true,
+          "prompt": "Military RTS game sound effect, no music, no voice. Harvester collecting ore: a soft mid-pitched mechanical servo whirr with a few quick rhythmic clicks and clanks, small and quiet, no high hiss, no explosion."
+        }
+      ],
+      "credits": 10.0,
+      "usage": "sound key harvest; one-shot when a harvester starts harvesting (harvesterLogic.js)",
+      "analysis": {
+        "character": "very quiet (-31 LUFS) mid-band (0.6-2.5 kHz) tonal clicks ~80 ms apart",
         "duration_s": 1.567,
+        "loudness_lufs": -30.85,
+        "true_peak_dbtp": -8.05,
+        "attack_s": 0.79,
+        "decay_20db_s": 0.08,
+        "spectral_centroid_hz": 1626,
+        "centroid_by_quarter_hz": [
+          1391,
+          1240,
+          2155,
+          1669
+        ],
+        "dominant_hz_by_quarter": [
+          1141,
+          1292,
+          1593,
+          689
+        ],
+        "band_energy_pct": {
+          "<150": 0.1,
+          "150-600": 6.6,
+          "600-2.5k": 70.7,
+          "2.5-8k": 22.3,
+          ">8k": 0.4
+        },
+        "stereo_side_db": -52.1
+      },
+      "result": {
+        "duration_s": 1.463,
         "sample_rate": 44100,
         "channels": 2,
-        "loudness_lufs": -30.85,
-        "true_peak_dbtp": -8.05
+        "bitrate_kbps": 128,
+        "loudness_lufs": -30.83,
+        "true_peak_dbtp": -19.94,
+        "loudness_target": "-30.85 LUFS",
+        "spectral_centroid_hz": 3492,
+        "centroid_by_quarter_hz": [
+          873,
+          5174,
+          5960,
+          1018
+        ],
+        "envelope_correlation_with_previous": 0.49
       },
-      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+      "previous": {
+        "model_id": "unknown",
+        "added_in_commit": "2025-03-24 c7b1cbc8",
+        "duration_s": 1.567,
+        "loudness_lufs": -30.85,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 128
+      }
     },
     "mine_explosion": {
       "path": "public/mine_explosion.mp3",
-      "status": "unknown-prompt",
-      "prompt": null,
-      "model_id": "unknown",
-      "generation_id": null,
-      "added_in_commit": "2025-11-06 abcfce80",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, clean start. Landmine detonation: sharp close blast with a deep boom and dirt debris, short rumbling decay.",
+      "prompt_source": "reconstructed-from-audio-analysis",
+      "prompt_note": "Original prompt unknown; this prompt was written from an analysis of the previous file.",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-20",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "Va2m7JjSo68s8hoHRMRq",
+      "generation_id": "drj8KdJjNImvJNFuT3iG",
+      "settings": {
+        "duration_seconds": 1.51,
+        "prompt_influence": 0.55,
+        "loop": false
+      },
       "loop": false,
-      "result": {
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "drj8KdJjNImvJNFuT3iG",
+          "credits": 5.0,
+          "used": true,
+          "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, clean start. Landmine detonation: sharp close blast with a deep boom and dirt debris, short rumbling decay."
+        }
+      ],
+      "credits": 5.0,
+      "usage": "public/mine_explosion.mp3 is not referenced in src/ (unused); mines use mineDetonation1-2",
+      "analysis": {
+        "character": "deep blast (82% below 150 Hz), ~0.6 s decay; clipped",
         "duration_s": 1.512,
+        "loudness_lufs": -4.78,
+        "true_peak_dbtp": 1.48,
+        "attack_s": 0.17,
+        "decay_20db_s": 0.6,
+        "spectral_centroid_hz": 185,
+        "centroid_by_quarter_hz": [
+          290,
+          115,
+          78,
+          61
+        ],
+        "dominant_hz_by_quarter": [
+          86,
+          86,
+          86,
+          86
+        ],
+        "band_energy_pct": {
+          "<150": 82.1,
+          "150-600": 10.9,
+          "600-2.5k": 6.3,
+          "2.5-8k": 0.7,
+          ">8k": 0.0
+        },
+        "stereo_side_db": -32.4
+      },
+      "result": {
+        "duration_s": 1.416,
         "sample_rate": 48000,
         "channels": 2,
-        "loudness_lufs": -4.78,
-        "true_peak_dbtp": 1.48
+        "bitrate_kbps": 192,
+        "loudness_lufs": -9.47,
+        "true_peak_dbtp": -1.6,
+        "loudness_target": "-4.78 LUFS",
+        "spectral_centroid_hz": 81,
+        "centroid_by_quarter_hz": [
+          103,
+          71,
+          53,
+          52
+        ],
+        "envelope_correlation_with_previous": 0.98,
+        "processing": [
+          "loudness capped at -9.5 LUFS (target -4.78): the old file is clipped/brick-walled (true peak 1.48 dBTP) and reaching it would need more than 14 dB of peak limiting",
+          "peak limiter reduced peaks by 14.0 dB (ceiling -1.5 dBFS)"
+        ]
       },
-      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+      "previous": {
+        "model_id": "unknown",
+        "added_in_commit": "2025-11-06 abcfce80",
+        "duration_s": 1.512,
+        "loudness_lufs": -4.78,
+        "sample_rate": 48000,
+        "channels": 2,
+        "bitrate_kbps": 195
+      },
+      "notes": "Not used by the game code; regenerated for completeness."
     },
     "patriotMissile01": {
       "path": "public/sound/patriotMissile01.mp3",
-      "status": "unknown-prompt",
-      "prompt": null,
-      "model_id": "unknown",
-      "generation_id": null,
-      "added_in_commit": "2025-03-05 05d3af46",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, no music, no voice. Surface-to-air missile launch: sharp ignition blast followed by a deep roaring rocket motor whoosh that quickly fades into the distance.",
+      "prompt_source": "reconstructed-from-audio-analysis",
+      "prompt_note": "Original prompt unknown; this prompt was written from an analysis of the previous file.",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-20",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "cUBK8Y05CnbQGR5fNFtV",
+      "generation_id": "LLNxas1KJrOPZ8nGePYN",
+      "settings": {
+        "duration_seconds": 1.57,
+        "prompt_influence": 0.55,
+        "loop": false
+      },
       "loop": false,
-      "result": {
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "LLNxas1KJrOPZ8nGePYN",
+          "credits": 5.0,
+          "used": true,
+          "prompt": "Military RTS game sound effect, no music, no voice. Surface-to-air missile launch: sharp ignition blast followed by a deep roaring rocket motor whoosh that quickly fades into the distance."
+        }
+      ],
+      "credits": 5.0,
+      "usage": "sound keys patriotMissile/shoot_rocket (random of 01/02); positional one-shot at 0.5 for rocket launches (firingHandlers.js, destroyerCombat.js, buildingSystem.js)",
+      "analysis": {
+        "character": "bright ignition (centroid ~1 kHz) then deep rocket roar (~0.27 kHz)",
         "duration_s": 1.567,
+        "loudness_lufs": -9.13,
+        "true_peak_dbtp": 0.17,
+        "attack_s": 0.42,
+        "decay_20db_s": 0.88,
+        "spectral_centroid_hz": 525,
+        "centroid_by_quarter_hz": [
+          999,
+          272,
+          321,
+          284
+        ],
+        "dominant_hz_by_quarter": [
+          129,
+          108,
+          108,
+          108
+        ],
+        "band_energy_pct": {
+          "<150": 47.4,
+          "150-600": 33.1,
+          "600-2.5k": 15.3,
+          "2.5-8k": 3.8,
+          ">8k": 0.5
+        },
+        "stereo_side_db": -21.8
+      },
+      "result": {
+        "duration_s": 1.593,
         "sample_rate": 44100,
         "channels": 2,
-        "loudness_lufs": -9.13,
-        "true_peak_dbtp": 0.17
+        "bitrate_kbps": 320,
+        "loudness_lufs": -9.47,
+        "true_peak_dbtp": -1.37,
+        "loudness_target": "-9.13 LUFS",
+        "spectral_centroid_hz": 251,
+        "centroid_by_quarter_hz": [
+          263,
+          228,
+          370,
+          419
+        ],
+        "envelope_correlation_with_previous": 0.92,
+        "processing": [
+          "peak limiter reduced peaks by 6.3 dB (ceiling -1.5 dBFS)"
+        ]
       },
-      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+      "previous": {
+        "model_id": "unknown",
+        "added_in_commit": "2025-03-05 05d3af46",
+        "duration_s": 1.567,
+        "loudness_lufs": -9.13,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 320
+      }
     },
     "patriotMissile02": {
       "path": "public/sound/patriotMissile02.mp3",
-      "status": "unknown-prompt",
-      "prompt": null,
-      "model_id": "unknown",
-      "generation_id": null,
-      "added_in_commit": "2025-03-05 05d3af46",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, no music, no voice. Missile launching from a launcher tube: bright hissing ignition burst, then a roaring rocket whoosh that recedes and fades.",
+      "prompt_source": "reconstructed-from-audio-analysis",
+      "prompt_note": "Original prompt unknown; this prompt was written from an analysis of the previous file.",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-20",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "Q6O6Vm8NUgbTkRyYtjA7",
+      "generation_id": "kYtHK88lexc8mQojhKLl",
+      "settings": {
+        "duration_seconds": 1.57,
+        "prompt_influence": 0.55,
+        "loop": false
+      },
       "loop": false,
-      "result": {
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "kYtHK88lexc8mQojhKLl",
+          "credits": 5.0,
+          "used": true,
+          "prompt": "Military RTS game sound effect, no music, no voice. Missile launching from a launcher tube: bright hissing ignition burst, then a roaring rocket whoosh that recedes and fades."
+        }
+      ],
+      "credits": 5.0,
+      "usage": "sound keys patriotMissile/shoot_rocket (random of 01/02); positional one-shot at 0.5",
+      "analysis": {
+        "character": "brighter hissing ignition (centroid ~1.9 kHz) then roaring whoosh",
         "duration_s": 1.567,
+        "loudness_lufs": -7.85,
+        "true_peak_dbtp": 0.43,
+        "attack_s": 0.35,
+        "decay_20db_s": 1.0,
+        "spectral_centroid_hz": 903,
+        "centroid_by_quarter_hz": [
+          1867,
+          665,
+          644,
+          894
+        ],
+        "dominant_hz_by_quarter": [
+          161,
+          108,
+          108,
+          118
+        ],
+        "band_energy_pct": {
+          "<150": 27.1,
+          "150-600": 38.8,
+          "600-2.5k": 25.0,
+          "2.5-8k": 8.3,
+          ">8k": 0.9
+        },
+        "stereo_side_db": -20.7
+      },
+      "result": {
+        "duration_s": 1.463,
         "sample_rate": 44100,
         "channels": 2,
-        "loudness_lufs": -7.85,
-        "true_peak_dbtp": 0.43
+        "bitrate_kbps": 320,
+        "loudness_lufs": -11.99,
+        "true_peak_dbtp": -1.03,
+        "loudness_target": "-7.85 LUFS",
+        "spectral_centroid_hz": 687,
+        "centroid_by_quarter_hz": [
+          557,
+          441,
+          426,
+          445
+        ],
+        "envelope_correlation_with_previous": 0.75,
+        "processing": [
+          "loudness capped at -12.0 LUFS (target -7.85): the old file is clipped/brick-walled (true peak 0.43 dBTP) and reaching it would need more than 14 dB of peak limiting",
+          "peak limiter reduced peaks by 14.0 dB (ceiling -1.5 dBFS)"
+        ]
       },
-      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+      "previous": {
+        "model_id": "unknown",
+        "added_in_commit": "2025-03-05 05d3af46",
+        "duration_s": 1.567,
+        "loudness_lufs": -7.85,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 320
+      }
     },
     "tankDrive4sLoop": {
       "path": "public/sound/tankDrive4sLoop.mp3",
-      "status": "unknown-prompt",
-      "prompt": null,
-      "model_id": "unknown",
-      "generation_id": null,
-      "added_in_commit": "2025-07-24 26044ba6",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, no music, no voice. Tank driving: diesel engine rumble with mid-frequency track clatter and squeaking treads, steady level, seamless loop.",
+      "prompt_source": "reconstructed-from-audio-analysis",
+      "prompt_note": "Original prompt unknown; this prompt was written from an analysis of the previous file.",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-20",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "S69jTXpjchuvhuhKHZ5a",
+      "generation_id": "GgVM8qKafid7qqqQTQED",
+      "settings": {
+        "duration_seconds": 4.08,
+        "prompt_influence": 0.5,
+        "loop": true
+      },
       "loop": true,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "GgVM8qKafid7qqqQTQED",
+          "credits": 14.0,
+          "used": true,
+          "prompt": "Military RTS game sound effect, no music, no voice. Tank driving: diesel engine rumble with mid-frequency track clatter and squeaking treads, steady level, seamless loop."
+        }
+      ],
+      "credits": 14.0,
+      "usage": "sound key tankDriveLoop; looped tank engine (beginLoopedMovementSound, TANK_ENGINE_LOOP_VOLUME) while a tank moves (movementCore.js)",
+      "analysis": {
+        "character": "steady engine/track rumble, 150-600 Hz dominant, wide stereo, loop",
+        "duration_s": 4.075,
+        "loudness_lufs": -5.7,
+        "true_peak_dbtp": 0.01,
+        "attack_s": 2.29,
+        "decay_20db_s": null,
+        "spectral_centroid_hz": 536,
+        "centroid_by_quarter_hz": [
+          478,
+          504,
+          580,
+          577
+        ],
+        "dominant_hz_by_quarter": [
+          108,
+          345,
+          366,
+          366
+        ],
+        "band_energy_pct": {
+          "<150": 13.8,
+          "150-600": 54.0,
+          "600-2.5k": 31.2,
+          "2.5-8k": 0.9,
+          ">8k": 0.0
+        },
+        "stereo_side_db": -8.6
+      },
       "result": {
         "duration_s": 4.075,
         "sample_rate": 44100,
         "channels": 2,
-        "loudness_lufs": -5.7,
-        "true_peak_dbtp": 0.01
+        "bitrate_kbps": 192,
+        "loudness_lufs": -6.91,
+        "true_peak_dbtp": -1.04,
+        "loudness_target": "-5.7 LUFS",
+        "spectral_centroid_hz": 570,
+        "centroid_by_quarter_hz": [
+          571,
+          536,
+          515,
+          633
+        ],
+        "envelope_correlation_with_previous": -0.1,
+        "processing": [
+          "native v3 loop seam kept (jump 1.5x p99, rms step -1.3 dB)",
+          "peak limiter reduced peaks by 13.3 dB (ceiling -1.5 dBFS)"
+        ]
       },
-      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+      "previous": {
+        "model_id": "unknown",
+        "added_in_commit": "2025-07-24 26044ba6",
+        "duration_s": 4.075,
+        "loudness_lufs": -5.7,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 187
+      }
     },
     "tankEngineStart01": {
       "path": "public/sound/tankEngineStart01.mp3",
-      "status": "unknown-prompt",
-      "prompt": null,
-      "model_id": "unknown",
-      "generation_id": null,
-      "added_in_commit": "2025-02-12 c41891b7",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, no music, no voice. Heavy diesel tank engine idling and revving, starts instantly at full volume: very deep low-frequency engine rumble with rhythmic chugging and a few throttle blips, no starter motor, no high-pitched whine.",
+      "prompt_source": "reconstructed-from-audio-analysis",
+      "prompt_note": "Original prompt unknown; this prompt was written from an analysis of the previous file. Take 1 was a different kind of sound, so the retake used a refined prompt.",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-20",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "O800A9guo26xBQSxaw2z",
+      "generation_id": "YUKuBJJ1meCbK4mr05K6",
+      "settings": {
+        "duration_seconds": 3.06,
+        "prompt_influence": 0.5,
+        "loop": false
+      },
       "loop": false,
-      "result": {
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "1RTL7CNfIxVtdDTQQio0",
+          "credits": 10.0,
+          "used": false,
+          "prompt": "Military RTS game sound effect, no music, no voice. Diesel tank engine revving: deep low rumbling engine with a few quick throttle revs and rhythmic chugging, constant low pitch, no starter whine."
+        },
+        {
+          "take": 2,
+          "generation_id": "YUKuBJJ1meCbK4mr05K6",
+          "credits": 10.0,
+          "used": true,
+          "prompt": "Military RTS game sound effect, no music, no voice. Heavy diesel tank engine idling and revving, starts instantly at full volume: very deep low-frequency engine rumble with rhythmic chugging and a few throttle blips, no starter motor, no high-pitched whine."
+        }
+      ],
+      "credits": 20.0,
+      "usage": "sound keys tankMove/movement (random of tankEngineStart01, confirmed, onMyWay); played at 0.5 on a move order (mouseSelection.js, unitAcknowledgements.js)",
+      "analysis": {
+        "character": "steady deep diesel rumble (81% below 150 Hz, ~108 Hz fundamental) with rev pulses every ~0.12-0.25 s",
         "duration_s": 3.056,
+        "loudness_lufs": -9.63,
+        "true_peak_dbtp": 0.19,
+        "attack_s": 0.04,
+        "decay_20db_s": 0.22,
+        "spectral_centroid_hz": 117,
+        "centroid_by_quarter_hz": [
+          115,
+          116,
+          116,
+          117
+        ],
+        "dominant_hz_by_quarter": [
+          108,
+          108,
+          108,
+          86
+        ],
+        "band_energy_pct": {
+          "<150": 80.8,
+          "150-600": 18.6,
+          "600-2.5k": 0.5,
+          "2.5-8k": 0.1,
+          ">8k": 0.0
+        },
+        "stereo_side_db": -15.9
+      },
+      "result": {
+        "duration_s": 3.082,
         "sample_rate": 44100,
         "channels": 2,
-        "loudness_lufs": -9.63,
-        "true_peak_dbtp": 0.19
+        "bitrate_kbps": 320,
+        "loudness_lufs": -9.81,
+        "true_peak_dbtp": -1.35,
+        "loudness_target": "-9.63 LUFS",
+        "spectral_centroid_hz": 382,
+        "centroid_by_quarter_hz": [
+          385,
+          381,
+          362,
+          363
+        ],
+        "envelope_correlation_with_previous": 0.09,
+        "processing": [
+          "peak limiter reduced peaks by 2.2 dB (ceiling -1.5 dBFS)"
+        ]
       },
-      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+      "previous": {
+        "model_id": "unknown",
+        "added_in_commit": "2025-02-12 c41891b7",
+        "duration_s": 3.056,
+        "loudness_lufs": -9.63,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 320
+      }
     },
     "tankMove01": {
       "path": "public/sound/tankMove01.mp3",
-      "status": "unknown-prompt",
-      "prompt": null,
-      "model_id": "unknown",
-      "generation_id": null,
-      "added_in_commit": "2025-02-12 c41891b7",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, no music, no voice. Tank driving past at a steady speed: constant low diesel engine drone with faint track rattle, even level throughout.",
+      "prompt_source": "reconstructed-from-audio-analysis",
+      "prompt_note": "Original prompt unknown; this prompt was written from an analysis of the previous file.",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-20",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "DZkyPlASRr2gUAgsxpUv",
+      "generation_id": "Yko3BwEPHwxuIxW2yboZ",
+      "settings": {
+        "duration_seconds": 6.09,
+        "prompt_influence": 0.5,
+        "loop": false
+      },
       "loop": false,
-      "result": {
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "Yko3BwEPHwxuIxW2yboZ",
+          "credits": 20.0,
+          "used": true,
+          "prompt": "Military RTS game sound effect, no music, no voice. Tank driving past at a steady speed: constant low diesel engine drone with faint track rattle, even level throughout."
+        }
+      ],
+      "credits": 20.0,
+      "usage": "not referenced in src/ (unused)",
+      "analysis": {
+        "character": "constant diesel drone (~108 Hz) with mid clatter, 6 s",
         "duration_s": 6.087,
+        "loudness_lufs": -12.93,
+        "true_peak_dbtp": -3.2,
+        "attack_s": 0.53,
+        "decay_20db_s": 5.54,
+        "spectral_centroid_hz": 423,
+        "centroid_by_quarter_hz": [
+          419,
+          490,
+          382,
+          467
+        ],
+        "dominant_hz_by_quarter": [
+          108,
+          108,
+          108,
+          86
+        ],
+        "band_energy_pct": {
+          "<150": 48.8,
+          "150-600": 32.7,
+          "600-2.5k": 16.8,
+          "2.5-8k": 1.5,
+          ">8k": 0.2
+        },
+        "stereo_side_db": -36.7
+      },
+      "result": {
+        "duration_s": 6.113,
         "sample_rate": 44100,
         "channels": 2,
+        "bitrate_kbps": 320,
         "loudness_lufs": -12.93,
-        "true_peak_dbtp": -3.2
+        "true_peak_dbtp": -1.84,
+        "loudness_target": "-12.93 LUFS",
+        "spectral_centroid_hz": 389,
+        "centroid_by_quarter_hz": [
+          390,
+          395,
+          380,
+          403
+        ],
+        "envelope_correlation_with_previous": 0.05
       },
-      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+      "previous": {
+        "model_id": "unknown",
+        "added_in_commit": "2025-02-12 c41891b7",
+        "duration_s": 6.087,
+        "loudness_lufs": -12.93,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 320
+      },
+      "notes": "Not used by the game code; regenerated for completeness."
     },
     "tankShot01": {
       "path": "public/sound/tankShot01.mp3",
-      "status": "unknown-prompt",
-      "prompt": null,
-      "model_id": "unknown",
-      "generation_id": null,
-      "added_in_commit": "2025-02-12 c41891b7",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, clean start. Tank main cannon firing: sharp deep boom with sub-bass punch, quick decay into a faint distant rumble echo.",
+      "prompt_source": "reconstructed-from-audio-analysis",
+      "prompt_note": "Original prompt unknown; this prompt was written from an analysis of the previous file.",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-20",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "jO85N0ZDWIMUCpehR81I",
+      "generation_id": "twHCDoJx0DP5z5nMcLw2",
+      "settings": {
+        "duration_seconds": 3.06,
+        "prompt_influence": 0.55,
+        "loop": false
+      },
       "loop": false,
-      "result": {
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "twHCDoJx0DP5z5nMcLw2",
+          "credits": 10.0,
+          "used": true,
+          "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, clean start. Tank main cannon firing: sharp deep boom with sub-bass punch, quick decay into a faint distant rumble echo."
+        }
+      ],
+      "credits": 10.0,
+      "usage": "sound keys tankShot/shoot (random of tankShot01-03); positional one-shot for cannon fire (firingHandlers.js, buildingSystem.js, bulletSystem.js)",
+      "analysis": {
+        "character": "sharp deep cannon boom, fast ~0.4 s decay then faint tail",
         "duration_s": 3.056,
+        "loudness_lufs": -13.04,
+        "true_peak_dbtp": 0.09,
+        "attack_s": 0.24,
+        "decay_20db_s": 0.4,
+        "spectral_centroid_hz": 127,
+        "centroid_by_quarter_hz": [
+          96,
+          66,
+          66,
+          68
+        ],
+        "dominant_hz_by_quarter": [
+          108,
+          86,
+          86,
+          86
+        ],
+        "band_energy_pct": {
+          "<150": 88.6,
+          "150-600": 8.4,
+          "600-2.5k": 2.3,
+          "2.5-8k": 0.7,
+          ">8k": 0.0
+        },
+        "stereo_side_db": -44.5
+      },
+      "result": {
+        "duration_s": 2.795,
         "sample_rate": 44100,
         "channels": 2,
-        "loudness_lufs": -13.04,
-        "true_peak_dbtp": 0.09
+        "bitrate_kbps": 320,
+        "loudness_lufs": -13.17,
+        "true_peak_dbtp": -1.32,
+        "loudness_target": "-13.04 LUFS",
+        "spectral_centroid_hz": 80,
+        "centroid_by_quarter_hz": [
+          70,
+          40,
+          42,
+          35
+        ],
+        "envelope_correlation_with_previous": 0.96,
+        "processing": [
+          "peak limiter reduced peaks by 6.5 dB (ceiling -1.5 dBFS)"
+        ]
       },
-      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+      "previous": {
+        "model_id": "unknown",
+        "added_in_commit": "2025-02-12 c41891b7",
+        "duration_s": 3.056,
+        "loudness_lufs": -13.04,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 320
+      }
     },
     "tankShot02": {
       "path": "public/sound/tankShot02.mp3",
-      "status": "unknown-prompt",
-      "prompt": null,
-      "model_id": "unknown",
-      "generation_id": null,
-      "added_in_commit": "2025-02-12 c41891b7",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, clean start. Tank cannon shot: short punchy deep boom with a slightly brighter muzzle crack and fast decay.",
+      "prompt_source": "reconstructed-from-audio-analysis",
+      "prompt_note": "Original prompt unknown; this prompt was written from an analysis of the previous file.",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-20",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "VAckAUetiYYtA2pXXQQl",
+      "generation_id": "aeBDgKjhvH4eYz9aECtB",
+      "settings": {
+        "duration_seconds": 1.07,
+        "prompt_influence": 0.55,
+        "loop": false
+      },
       "loop": false,
-      "result": {
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "aeBDgKjhvH4eYz9aECtB",
+          "credits": 4.0,
+          "used": true,
+          "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, clean start. Tank cannon shot: short punchy deep boom with a slightly brighter muzzle crack and fast decay."
+        }
+      ],
+      "credits": 4.0,
+      "usage": "sound keys tankShot/shoot (random of tankShot01-03); positional one-shot for cannon fire",
+      "analysis": {
+        "character": "short punchy deep boom, ~0.8 s decay",
         "duration_s": 1.071,
+        "loudness_lufs": -8.94,
+        "true_peak_dbtp": 0.03,
+        "attack_s": 0.14,
+        "decay_20db_s": 0.79,
+        "spectral_centroid_hz": 179,
+        "centroid_by_quarter_hz": [
+          180,
+          138,
+          139,
+          107
+        ],
+        "dominant_hz_by_quarter": [
+          108,
+          97,
+          97,
+          86
+        ],
+        "band_energy_pct": {
+          "<150": 79.7,
+          "150-600": 15.6,
+          "600-2.5k": 3.9,
+          "2.5-8k": 0.7,
+          ">8k": 0.1
+        },
+        "stereo_side_db": -27.3
+      },
+      "result": {
+        "duration_s": 1.019,
         "sample_rate": 44100,
         "channels": 2,
-        "loudness_lufs": -8.94,
-        "true_peak_dbtp": 0.03
+        "bitrate_kbps": 320,
+        "loudness_lufs": -9.92,
+        "true_peak_dbtp": -1.17,
+        "loudness_target": "-8.94 LUFS",
+        "spectral_centroid_hz": 147,
+        "centroid_by_quarter_hz": [
+          113,
+          94,
+          89,
+          106
+        ],
+        "envelope_correlation_with_previous": 0.87,
+        "processing": [
+          "peak limiter reduced peaks by 14.0 dB (ceiling -1.5 dBFS)"
+        ]
       },
-      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+      "previous": {
+        "model_id": "unknown",
+        "added_in_commit": "2025-02-12 c41891b7",
+        "duration_s": 1.071,
+        "loudness_lufs": -8.94,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 320
+      }
     },
     "tankShot03": {
       "path": "public/sound/tankShot03.mp3",
-      "status": "unknown-prompt",
-      "prompt": null,
-      "model_id": "unknown",
-      "generation_id": null,
-      "added_in_commit": "2025-02-12 c41891b7",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, clean start. Heavy gun turret firing: powerful deep cannon boom with strong low-end thump and a rolling rumble tail.",
+      "prompt_source": "reconstructed-from-audio-analysis",
+      "prompt_note": "Original prompt unknown; this prompt was written from an analysis of the previous file.",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-20",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "OQQnQATEMjmfcsZKEvzS",
+      "generation_id": "W2OfNpLEW63maFlIeZIM",
+      "settings": {
+        "duration_seconds": 2.09,
+        "prompt_influence": 0.55,
+        "loop": false
+      },
       "loop": false,
-      "result": {
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "W2OfNpLEW63maFlIeZIM",
+          "credits": 7.0,
+          "used": true,
+          "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, clean start. Heavy gun turret firing: powerful deep cannon boom with strong low-end thump and a rolling rumble tail."
+        }
+      ],
+      "credits": 7.0,
+      "usage": "sound keys tankShot/shoot (random) and tankShot03/shoot_heavy (turretGunV3, buildingSystem.js, 0.5)",
+      "analysis": {
+        "character": "heavy deep cannon boom with rolling tail",
         "duration_s": 2.09,
+        "loudness_lufs": -14.29,
+        "true_peak_dbtp": 0.31,
+        "attack_s": 0.11,
+        "decay_20db_s": 0.63,
+        "spectral_centroid_hz": 136,
+        "centroid_by_quarter_hz": [
+          129,
+          96,
+          84,
+          86
+        ],
+        "dominant_hz_by_quarter": [
+          118,
+          86,
+          86,
+          86
+        ],
+        "band_energy_pct": {
+          "<150": 80.0,
+          "150-600": 18.2,
+          "600-2.5k": 1.4,
+          "2.5-8k": 0.4,
+          ">8k": 0.1
+        },
+        "stereo_side_db": -15.8
+      },
+      "result": {
+        "duration_s": 1.933,
         "sample_rate": 44100,
         "channels": 2,
-        "loudness_lufs": -14.29,
-        "true_peak_dbtp": 0.31
+        "bitrate_kbps": 320,
+        "loudness_lufs": -14.37,
+        "true_peak_dbtp": -1.36,
+        "loudness_target": "-14.29 LUFS",
+        "spectral_centroid_hz": 183,
+        "centroid_by_quarter_hz": [
+          242,
+          86,
+          24,
+          15
+        ],
+        "envelope_correlation_with_previous": 0.84,
+        "processing": [
+          "peak limiter reduced peaks by 6.1 dB (ceiling -1.5 dBFS)"
+        ]
       },
-      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+      "previous": {
+        "model_id": "unknown",
+        "added_in_commit": "2025-02-12 c41891b7",
+        "duration_s": 2.09,
+        "loudness_lufs": -14.29,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 320
+      }
     },
     "teslacoil_firing": {
       "path": "public/sound/teslacoil_firing.mp3",
-      "status": "unknown-prompt",
-      "prompt": null,
-      "model_id": "unknown",
-      "generation_id": null,
-      "added_in_commit": "2025-05-20 818a399a",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, no music, no voice. Tesla coil firing: a heavy low-frequency electric discharge, deep powerful buzzing hum around 150 Hz with a thick bassy zap, only a little crackle on top, decaying over about one and a half seconds. No high-pitched hiss.",
+      "prompt_source": "reconstructed-from-audio-analysis",
+      "prompt_note": "Original prompt unknown; this prompt was written from an analysis of the previous file. Take 1 was a different kind of sound, so the retake used a refined prompt.",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-20",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "c8pPRKj0W4q14lkZvnc4",
+      "generation_id": "s6M7ySWqlN7FArrj8PKc",
+      "settings": {
+        "duration_seconds": 1.57,
+        "prompt_influence": 0.55,
+        "loop": false
+      },
       "loop": false,
-      "result": {
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "k6PIkCYttyPJki2QQshh",
+          "credits": 5.0,
+          "used": false,
+          "prompt": "Military RTS game sound effect, no music, no voice. Tesla coil discharge: loud electric zap with crackling high-voltage arcs and a buzzing low electrical hum, decaying over about one and a half seconds."
+        },
+        {
+          "take": 2,
+          "generation_id": "s6M7ySWqlN7FArrj8PKc",
+          "credits": 5.0,
+          "used": true,
+          "prompt": "Military RTS game sound effect, no music, no voice. Tesla coil firing: a heavy low-frequency electric discharge, deep powerful buzzing hum around 150 Hz with a thick bassy zap, only a little crackle on top, decaying over about one and a half seconds. No high-pitched hiss."
+        }
+      ],
+      "credits": 10.0,
+      "usage": "sound key teslacoil_firing; positional one-shot at 1.0 when the Tesla coil fires (buildingSystem.js)",
+      "analysis": {
+        "character": "electric discharge with strong ~150 Hz hum, decays over ~1.2 s",
         "duration_s": 1.567,
+        "loudness_lufs": -9.74,
+        "true_peak_dbtp": -0.29,
+        "attack_s": 0.07,
+        "decay_20db_s": 1.1500000000000001,
+        "spectral_centroid_hz": 394,
+        "centroid_by_quarter_hz": [
+          429,
+          421,
+          497,
+          478
+        ],
+        "dominant_hz_by_quarter": [
+          151,
+          151,
+          226,
+          215
+        ],
+        "band_energy_pct": {
+          "<150": 23.9,
+          "150-600": 59.9,
+          "600-2.5k": 15.5,
+          "2.5-8k": 0.7,
+          ">8k": 0.0
+        },
+        "stereo_side_db": -14.7
+      },
+      "result": {
+        "duration_s": 1.463,
         "sample_rate": 44100,
         "channels": 2,
-        "loudness_lufs": -9.74,
-        "true_peak_dbtp": -0.29
+        "bitrate_kbps": 128,
+        "loudness_lufs": -11.06,
+        "true_peak_dbtp": -0.76,
+        "loudness_target": "-9.74 LUFS",
+        "spectral_centroid_hz": 842,
+        "centroid_by_quarter_hz": [
+          1197,
+          802,
+          130,
+          126
+        ],
+        "envelope_correlation_with_previous": 0.78,
+        "processing": [
+          "loudness capped at -11.1 LUFS (target -9.74): the old file is clipped/brick-walled (true peak -0.29 dBTP) and reaching it would need more than 14 dB of peak limiting",
+          "peak limiter reduced peaks by 14.0 dB (ceiling -1.5 dBFS)"
+        ]
       },
-      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+      "previous": {
+        "model_id": "unknown",
+        "added_in_commit": "2025-05-20 818a399a",
+        "duration_s": 1.567,
+        "loudness_lufs": -9.74,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 128
+      }
     },
     "teslacoil_loading": {
       "path": "public/sound/teslacoil_loading.mp3",
-      "status": "unknown-prompt",
-      "prompt": null,
-      "model_id": "unknown",
-      "generation_id": null,
-      "added_in_commit": "2025-05-20 818a399a",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, no music, no voice. Tesla coil charging up: low electrical hum that rises steadily in pitch while energy builds, ends abruptly at the peak.",
+      "prompt_source": "reconstructed-from-audio-analysis",
+      "prompt_note": "Original prompt unknown; this prompt was written from an analysis of the previous file.",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-20",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "CqgfxvVNa4vcKvfm1dKJ",
+      "generation_id": "bXabESnV64jQtfBfj2zH",
+      "settings": {
+        "duration_seconds": 1.07,
+        "prompt_influence": 0.6,
+        "loop": false
+      },
       "loop": false,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "bXabESnV64jQtfBfj2zH",
+          "credits": 4.0,
+          "used": true,
+          "prompt": "Military RTS game sound effect, no music, no voice. Tesla coil charging up: low electrical hum that rises steadily in pitch while energy builds, ends abruptly at the peak."
+        },
+        {
+          "take": 2,
+          "generation_id": "yTAJxQCxDRV7EEAEZwLZ",
+          "credits": 4.0,
+          "used": false,
+          "prompt": "Military RTS game sound effect, no music, no voice. Tesla coil charging up: a single deep electrical hum tone sweeping clearly upward in pitch from low to mid over one second, building energy, cut off abruptly at the top."
+        }
+      ],
+      "credits": 8.0,
+      "usage": "sound key teslacoil_loading; positional one-shot at 1.0 while the Tesla coil charges (buildingSystem.js)",
+      "analysis": {
+        "character": "rising electrical tone 108 Hz -> 334 Hz, abrupt end, near-square level",
+        "duration_s": 1.071,
+        "loudness_lufs": -3.25,
+        "true_peak_dbtp": -0.31,
+        "attack_s": 0.89,
+        "decay_20db_s": 0.08,
+        "spectral_centroid_hz": 244,
+        "centroid_by_quarter_hz": [
+          115,
+          173,
+          254,
+          358
+        ],
+        "dominant_hz_by_quarter": [
+          108,
+          172,
+          258,
+          334
+        ],
+        "band_energy_pct": {
+          "<150": 22.4,
+          "150-600": 76.5,
+          "600-2.5k": 0.9,
+          "2.5-8k": 0.1,
+          ">8k": 0.0
+        },
+        "stereo_side_db": -43.4
+      },
       "result": {
         "duration_s": 1.071,
         "sample_rate": 44100,
         "channels": 2,
-        "loudness_lufs": -3.25,
-        "true_peak_dbtp": -0.31
+        "bitrate_kbps": 128,
+        "loudness_lufs": -8.35,
+        "true_peak_dbtp": -0.73,
+        "loudness_target": "-3.25 LUFS",
+        "spectral_centroid_hz": 437,
+        "centroid_by_quarter_hz": [
+          412,
+          384,
+          415,
+          475
+        ],
+        "envelope_correlation_with_previous": 0.56,
+        "processing": [
+          "loudness capped at -8.3 LUFS (target -3.25): the old file is clipped/brick-walled (true peak -0.31 dBTP) and reaching it would need more than 14 dB of peak limiting",
+          "peak limiter reduced peaks by 14.0 dB (ceiling -1.5 dBFS)"
+        ]
       },
-      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+      "previous": {
+        "model_id": "unknown",
+        "added_in_commit": "2025-05-20 818a399a",
+        "duration_s": 1.071,
+        "loudness_lufs": -3.25,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 128
+      }
     }
+  },
+  "reconstruction_2026_11_20": {
+    "flow_id": "iHCzr4VVIxrycjoqLWyt",
+    "files": 28,
+    "credits_total": 333.0,
+    "method": "Each previous file was analysed (duration, envelope, LUFS, true peak, spectral centroid and bands per quarter, dominant pitch track, onsets/periodicity, stereo width, loop seam, spectrogram) together with its use in src/. A prompt was written from that, generated once with eleven_text_to_sound_v3 at the previous duration and loop flag; when the result was clearly a different kind of sound (centroid ratio outside 0.5-2 or envelope correlation below 0.3) it got one retake with a refined prompt and the closer take was kept.",
+    "loudness": "Matched to the previous file within 1 LU where that needed at most 14 dB of peak limiting at -1.5 dBFS. Many previous files are clipped or brick-walled (true peak up to +2.3 dBTP); those are left quieter than before, see result.processing per file."
   }
 }
