@@ -184,3 +184,7 @@ Patrick confirmed that agents should verify the authorized GitHub destination be
 Use the connected GitHub app to verify the authenticated account, repository ownership or access, and push permissions; compare the repository's clone URL with the local push destination. On 2026-11-17 the connector identified Patrick Beyer (`theSystem85`, GitHub user ID `16178459`), and GitHub reported this public repository was owned by that same account with push/admin permissions. Treat those as dated observations and recheck when needed, rather than assuming credentials or access never change.
 
 GitHub app access and the shell approval reviewer are separate controls. If a push is rejected because ownership, destination or authorization is unverified, gather read-only evidence and include it with a retry through the same supported approval mechanism when the rejection permits verification. This resolved the rejection on 2026-11-17 without changing the user's "Allow low-risk actions" app setting. Do not bypass a denial using another transport, broaden app permissions without a specific user request, or claim that connector access automatically approves every shell operation. Ask Patrick only if a material ambiguity or an approval rejection remains after verification, explaining the exact blocker.
+
+## UI styleguide
+
+Never use shadows on buttons in any UI state.

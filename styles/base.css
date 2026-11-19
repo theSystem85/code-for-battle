@@ -2501,6 +2501,14 @@ body.mobile-portrait.sidebar-condensed #mobileBuildMenuContainer .tab-content.ac
   cursor: pointer;
 }
 
+#minimapSatelliteToggle,
+#minimapSatelliteToggle:hover,
+#minimapSatelliteToggle:active,
+#minimapSatelliteToggle:focus {
+  background: transparent;
+  box-shadow: none;
+}
+
 #minimapSatelliteToggle svg {
   width: 100%;
   height: 100%;
