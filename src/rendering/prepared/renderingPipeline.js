@@ -128,7 +128,9 @@ async function prepareAndPublishSprites({ density, signal, onProgress }) {
     deferUnits: true,
     useAtlasWorker: true,
     initialUnitTypes: (gameState.units || []).map(unit => unit.type),
-    prioritizeEntry: isWreckSourceEntry
+    // The fall rotates this neutral pose with the separate rotor at runtime.
+    prioritizeEntry: entry => isWreckSourceEntry(entry) ||
+      entry.id === 'aircraft:apache:body:90:neutral' || entry.id === 'aircraft:apache:rotor'
   })
   if (generation !== spriteAssetGeneration) {
     prepared.registry.dispose()

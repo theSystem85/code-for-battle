@@ -595,7 +595,7 @@ describe('gameStateManager', () => {
         x: 64,
         y: 96,
         direction: 0.5,
-        altitude: TILE_SIZE * 2.4,
+        altitude: TILE_SIZE,
         maxAltitude: TILE_SIZE * 3,
         rotor: { angle: 0.25, speed: 0.35, targetSpeed: 0.35 },
         occupancyRemoved: false
@@ -613,23 +613,33 @@ describe('gameStateManager', () => {
       performanceNow.mockReturnValue(1000)
       cleanupDestroyedUnits(units, gameState)
       expect(units).toHaveLength(1)
-      expect(apache.apacheDestructionInitialAltitude).toBeGreaterThan(0)
-      const initialAltitude = apache.apacheDestructionInitialAltitude
+      expect(apache.altitude).toBe(TILE_SIZE)
+      expect(apache.destructionExplosionSpawned).not.toBe(true)
+      expect(gameState.explosions ?? []).toHaveLength(0)
+      expect(playPositionalSound).not.toHaveBeenCalled()
+      const shadow = apache.shadow
 
       performanceNow.mockReturnValue(2000)
       cleanupDestroyedUnits(units, gameState)
       expect(units).toHaveLength(1)
-      expect(apache.altitude).toBeLessThan(initialAltitude)
+      expect(apache.altitude).toBe(TILE_SIZE / 4)
       expect(apache.apacheDestructionRenderDirection).toBeCloseTo(0.5 + (Math.PI * 0.75), 5)
       expect(apache.rotor.angle).toBeGreaterThan(0.25)
       expect(apache.rotor.speed).toBeCloseTo(0.35 * 0.25, 5)
       expect(apache.shadow?.scale).toBeGreaterThanOrEqual(0.6)
       expect(apache.shadow?.scale).toBeLessThanOrEqual(1)
+      expect(apache.shadow).toBe(shadow)
+      expect(gameState.explosions ?? []).toHaveLength(0)
 
-      performanceNow.mockReturnValue(3001)
+      performanceNow.mockReturnValue(3000)
       cleanupDestroyedUnits(units, gameState)
       expect(units).toHaveLength(0)
+      expect(apache.altitude).toBe(0)
+      expect(apache.direction).toBeCloseTo(0.5 + Math.PI * 1.5)
       expect(apache.rotor.speed).toBe(0)
+      expect(gameState.explosions).toHaveLength(1)
+      expect(gameState.explosions[0]).toMatchObject({ x: 80, y: 112 })
+      expect(playPositionalSound).toHaveBeenCalledTimes(1)
       expect(playPositionalSound).toHaveBeenCalledWith('explosion', 80, 112, 0.5)
     })
   })

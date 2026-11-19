@@ -31,6 +31,7 @@ const PREPARED_BODY_IDS = Object.freeze(Array.from({ length: ROTATION_BUCKET_COU
   ))
 }))
 const PREPARED_ROTOR_ID = 'aircraft:apache:rotor'
+const PREPARED_CRASH_BODY_ID = PREPARED_BODY_IDS[90 / ROTATION_BUCKET_SIZE].neutral
 
 function ensureImagesLoaded(callback) {
   if (bodyLoaded && rotorLoaded) {
@@ -189,18 +190,15 @@ function getPreparedBodySprite(rotationBucket, tiltState) {
   return getPreparedSprite(PREPARED_BODY_IDS[rotationBucket / ROTATION_BUCKET_SIZE][tiltState])
 }
 
-function renderBody(ctx, unit, centerX, centerY, preparedBody) {
-  if (!preparedBody && !isApacheImageLoaded()) return false
-  const sprite = preparedBody || getBodySprite(getRotationBucket(unit.direction || 0), getTiltState(unit))
-  const altitudeLift = (unit.altitude || 0) * 0.4
+function renderBody(ctx, centerX, liftedY, preparedBody, rotationBucket, tiltState) {
   if (preparedBody) {
-    drawPreparedSpriteCentered(ctx, preparedBody, centerX, centerY - altitudeLift)
+    drawPreparedSpriteCentered(ctx, preparedBody, centerX, liftedY)
   } else {
+    const sprite = getBodySprite(rotationBucket, tiltState)
     const drawX = centerX - sprite.width / 2
-    const drawY = centerY - sprite.height / 2 - altitudeLift
+    const drawY = liftedY - sprite.height / 2
     ctx.drawImage(sprite, drawX, drawY)
   }
-  return true
 }
 
 function renderRotor(ctx, unit, centerX, centerY, preparedRotor, tiltState) {
@@ -234,9 +232,13 @@ function renderRotor(ctx, unit, centerX, centerY, preparedRotor, tiltState) {
 }
 
 export function renderApacheWithImage(ctx, unit, centerX, centerY) {
-  const rotationBucket = getRotationBucket(unit.direction || 0)
-  const tiltState = getTiltState(unit)
-  const preparedBody = getPreparedBodySprite(rotationBucket, tiltState)
+  const direction = unit.direction || 0
+  const isCrashing = unit.health <= 0 && Number.isFinite(unit.destructionQueuedAt)
+  // The 90° neutral atlas entry is the unrotated body. Rotate it continuously during the fall.
+  const crashBody = isCrashing ? getPreparedSprite(PREPARED_CRASH_BODY_ID) : null
+  const rotationBucket = crashBody ? 90 : getRotationBucket(direction)
+  const tiltState = crashBody ? 'neutral' : getTiltState(unit)
+  const preparedBody = crashBody || getPreparedBodySprite(rotationBucket, tiltState)
   const preparedRotor = getPreparedSprite(PREPARED_ROTOR_ID)
   if (!preparedBody && !isApacheImageLoaded()) {
     preloadApacheImages()
@@ -244,9 +246,18 @@ export function renderApacheWithImage(ctx, unit, centerX, centerY) {
   }
 
   renderShadow(ctx, unit, centerX, centerY)
-  const rendered = renderBody(ctx, unit, centerX, centerY, preparedBody)
+  const liftedY = centerY - (unit.altitude || 0) * 0.4
+  if (crashBody) {
+    ctx.save()
+    ctx.translate(centerX, liftedY)
+    ctx.rotate(direction - Math.PI / 2)
+    renderBody(ctx, 0, 0, preparedBody, rotationBucket, tiltState)
+    ctx.restore()
+  } else {
+    renderBody(ctx, centerX, liftedY, preparedBody, rotationBucket, tiltState)
+  }
   renderRotor(ctx, unit, centerX, centerY, preparedRotor, tiltState)
-  return rendered
+  return true
 }
 
 export function getApacheRocketSpawnPoints(unit, centerX, centerY) {

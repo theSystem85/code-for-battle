@@ -514,6 +514,7 @@ export function cleanupDestroyedUnits(units, gameState) {
   for (let i = units.length - 1; i >= 0; i--) {
     if (units[i].health <= 0) {
       const unit = units[i]
+      const isApache = unit.type === 'apache'
 
       if (!Number.isFinite(unit.destructionQueuedAt)) {
         unit.destructionQueuedAt = now
@@ -521,16 +522,8 @@ export function cleanupDestroyedUnits(units, gameState) {
         unit.frozenDestructionTurretDirection = Number.isFinite(unit.turretDirection)
           ? unit.turretDirection
           : (Number.isFinite(unit.direction) ? unit.direction : 0)
-        if (unit.type === 'apache') {
-          const currentAltitude = Number.isFinite(unit.altitude) ? unit.altitude : 0
-          const fallbackAltitude = Number.isFinite(unit.maxAltitude) ? unit.maxAltitude * 0.8 : TILE_SIZE * 1.5
-          unit.apacheDestructionInitialAltitude = Math.max(currentAltitude, fallbackAltitude, TILE_SIZE * 0.6)
-          unit.apacheDestructionBaseDirection = unit.frozenDestructionDirection
-          unit.apacheDestructionRotorStartAngle = Number.isFinite(unit.rotor?.angle) ? unit.rotor.angle : 0
-          const sampledRotorSpeed = Number.isFinite(unit.rotor?.speed) ? unit.rotor.speed : APACHE_DESTRUCTION_DEFAULT_ROTOR_SPEED
-          unit.apacheDestructionRotorInitialSpeed = Math.max(0, sampledRotorSpeed)
-        }
-        if (!unit.destructionExplosionSpawned) {
+        // Keep the Apache visible until the fall reaches the ground.
+        if (!isApache && !unit.destructionExplosionSpawned) {
           const unitCenterX = unit.x + TILE_SIZE / 2
           const unitCenterY = unit.y + TILE_SIZE / 2
           playPositionalSound('explosion', unitCenterX, unitCenterY, unit.isNaval ? 0.65 : 0.5)
@@ -561,38 +554,32 @@ export function cleanupDestroyedUnits(units, gameState) {
       }
 
       const usesAirDestructionSequence = unit.isAirUnit === true ||
-        unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35'
-      if (usesAirDestructionSequence && now - unit.destructionQueuedAt < UNIT_DESTRUCTION_FREEZE_DELAY_MS) {
-        if (unit.type === 'apache') {
-          const elapsed = Math.max(0, now - unit.destructionQueuedAt)
-          const progress = Math.max(0, Math.min(1, elapsed / UNIT_DESTRUCTION_FREEZE_DELAY_MS))
-          const easedFallProgress = 1 - ((1 - progress) ** 2)
-          const startAltitude = Number.isFinite(unit.apacheDestructionInitialAltitude)
-            ? unit.apacheDestructionInitialAltitude
-            : Math.max(Number.isFinite(unit.altitude) ? unit.altitude : 0, TILE_SIZE * 0.6)
-          const baseDirection = Number.isFinite(unit.apacheDestructionBaseDirection)
-            ? unit.apacheDestructionBaseDirection
-            : (Number.isFinite(unit.direction) ? unit.direction : 0)
+        isApache || unit.type === 'f22Raptor' || unit.type === 'f35'
+      const elapsed = now - unit.destructionQueuedAt
+      if (isApache) {
+        const startAltitude = unit.apacheDestructionInitialAltitude ??= Math.max(0, unit.altitude || 0)
+        const baseDirection = unit.apacheDestructionBaseDirection ??= unit.frozenDestructionDirection ?? (unit.direction || 0)
+        const rotorStartAngle = unit.apacheDestructionRotorStartAngle ??= unit.rotor?.angle || 0
+        const rotorInitialSpeed = unit.apacheDestructionRotorInitialSpeed ??= Math.max(0,
+          unit.rotor?.speed ?? (startAltitude > 0 ? APACHE_DESTRUCTION_DEFAULT_ROTOR_SPEED : 0))
+        const progress = Math.max(0, Math.min(1, elapsed / UNIT_DESTRUCTION_FREEZE_DELAY_MS))
+        const remaining = 1 - progress
+        const altitudeFactor = remaining ** 2
 
-          unit.apacheDestructionFallProgress = progress
-          unit.apacheDestructionRenderDirection = baseDirection + (APACHE_DESTRUCTION_TOTAL_ROTATION_RADIANS * progress)
-          unit.altitude = Math.max(0, startAltitude * (1 - easedFallProgress))
-          unit.direction = unit.apacheDestructionRenderDirection
-          const rotorStartAngle = Number.isFinite(unit.apacheDestructionRotorStartAngle) ? unit.apacheDestructionRotorStartAngle : 0
-          const rotorInitialSpeed = Number.isFinite(unit.apacheDestructionRotorInitialSpeed)
-            ? Math.max(0, unit.apacheDestructionRotorInitialSpeed)
-            : APACHE_DESTRUCTION_DEFAULT_ROTOR_SPEED
-          const rotorAngleProgress = (1 - ((1 - progress) ** 3)) / 3
-          const rotor = unit.rotor || { angle: 0, speed: 0, targetSpeed: 0 }
-          rotor.angle = (rotorStartAngle + (rotorInitialSpeed * UNIT_DESTRUCTION_FREEZE_DELAY_MS * rotorAngleProgress)) % (Math.PI * 2)
-          rotor.speed = rotorInitialSpeed * ((1 - progress) ** 2)
-          rotor.targetSpeed = 0
-          unit.rotor = rotor
-          unit.shadow = {
-            offset: unit.altitude * 0.18,
-            scale: Math.max(0.6, 1 - (unit.altitude / Math.max(startAltitude, 0.001)) * 0.35)
-          }
-        }
+        unit.apacheDestructionFallProgress = progress
+        unit.apacheDestructionRenderDirection = baseDirection + (APACHE_DESTRUCTION_TOTAL_ROTATION_RADIANS * progress)
+        unit.altitude = startAltitude * altitudeFactor
+        unit.direction = unit.apacheDestructionRenderDirection
+        const rotorAngleProgress = (1 - remaining ** 3) / 3
+        const rotor = unit.rotor ??= { angle: 0, speed: 0, targetSpeed: 0 }
+        rotor.angle = (rotorStartAngle + (rotorInitialSpeed * UNIT_DESTRUCTION_FREEZE_DELAY_MS * rotorAngleProgress)) % (Math.PI * 2)
+        rotor.speed = rotorInitialSpeed * altitudeFactor
+        rotor.targetSpeed = 0
+        const shadow = unit.shadow ??= { offset: 0, scale: 1 }
+        shadow.offset = unit.altitude * 0.18
+        shadow.scale = startAltitude > 0 ? 1 - altitudeFactor * 0.35 : 1
+      }
+      if (usesAirDestructionSequence && elapsed < UNIT_DESTRUCTION_FREEZE_DELAY_MS) {
         unit.vx = 0
         unit.vy = 0
         continue
@@ -649,11 +636,6 @@ export function cleanupDestroyedUnits(units, gameState) {
 
       if (unit.type === 'tankerTruck') {
         detonateTankerTruck(unit, units, gameState.factories || [], gameState)
-      }
-
-      if (unit.type === 'apache' && unit.rotor) {
-        unit.rotor.speed = 0
-        unit.rotor.targetSpeed = 0
       }
 
       if (!unit.destructionExplosionSpawned) {
