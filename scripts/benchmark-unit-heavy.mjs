@@ -13,6 +13,8 @@ const fixture = process.env.BENCHMARK_FIXTURE || join(output, 'fixture.cfb')
 const profileEnabled = process.env.BENCHMARK_PROFILE === '1'
 const battleOnly = process.env.BENCHMARK_BATTLE_ONLY === '1'
 const hudSelection = process.env.BENCHMARK_HUD_SELECTION
+const shadowsEnabled = process.env.BENCHMARK_UNIT_SHADOWS !== '0'
+const omitHud = process.env.BENCHMARK_OMIT_HUD || ''
 const freezeTraversal = process.env.BENCHMARK_FREEZE_TRAVERSAL === '1'
 const importThroughUi = process.env.BENCHMARK_IMPORT_SAVE === '1'
 const traceEnabled = process.env.BENCHMARK_COMPOSITOR_TRACE === '1'
@@ -33,6 +35,9 @@ if (!['auto', 'webgpu', 'webgl'].includes(backendChoice)) {
 if (freezeTraversal && battleOnly) throw new Error('Frozen traversal requires the scrolling route')
 if (hudSelection && (!battleOnly || !['selected', 'unselected'].includes(hudSelection))) {
   throw new Error('HUD selection benchmark requires battle mode and selected or unselected')
+}
+if (omitHud && (hudSelection !== 'selected' || !['glow', 'arcs', 'crew'].includes(omitHud))) {
+  throw new Error('BENCHMARK_OMIT_HUD requires selected HUD mode and glow, arcs or crew')
 }
 if (gpuShadowBatch && holdForeground !== '0') throw new Error('Shadow batching requires normal foreground rendering')
 if (impactDraw !== null && (!battleOnly || !['0', '1'].includes(impactDraw))) {
@@ -84,7 +89,7 @@ try {
 
   const context = await browser.newContext({ viewport: null })
   if (gpuShadowBatch) await context.addInitScript({ content: `window.__installGpuShadowBatch = ${installGpuShadowBatch.toString()}` })
-  await context.addInitScript(({ backendChoice, staticGroundTiming, countStandbyClears, assetTrace }) => {
+  await context.addInitScript(({ backendChoice, staticGroundTiming, countStandbyClears, assetTrace, shadowsEnabled }) => {
     if (assetTrace) {
       performance.setResourceTimingBufferSize(10000)
       window.__benchmarkTextureUploads = []
@@ -121,10 +126,12 @@ try {
         return clear.call(this, mask)
       }
     }
-    if (backendChoice !== 'auto') {
-      localStorage.setItem('rts_graphics_settings', JSON.stringify({ rendererBackendChoice: backendChoice }))
+    if (backendChoice !== 'auto' || !shadowsEnabled) {
+      const settings = { unitShadowsEnabled: shadowsEnabled }
+      if (backendChoice !== 'auto') settings.rendererBackendChoice = backendChoice
+      localStorage.setItem('rts_graphics_settings', JSON.stringify(settings))
     }
-  }, { backendChoice, staticGroundTiming, countStandbyClears, assetTrace })
+  }, { backendChoice, staticGroundTiming, countStandbyClears, assetTrace, shadowsEnabled })
   const page = await context.newPage()
   await page.bringToFront()
   const errors = []
@@ -241,9 +248,11 @@ try {
       traceConfig: { includedCategories: ['benchmark', 'blink.user_timing', 'cc', 'viz', 'gpu', 'renderer.scheduler'] }
     })
   }
-  const result = await page.evaluate(async({ battleOnly, hudSelection, battleDuration, omitWebGpuTerrainTiming, traceEnabled, countStandbyClears, impactDraw, holdMinimap, holdForeground, freezeTraversal, assetTrace }) => {
+  const result = await page.evaluate(async({ battleOnly, hudSelection, omitHud, battleDuration, omitWebGpuTerrainTiming, traceEnabled, countStandbyClears, impactDraw, holdMinimap, holdForeground, freezeTraversal, assetTrace }) => {
     const state = window.gameState
     const { gameLoop, renderer, units } = window.gameInstance
+    const omittedHudMethod = { glow: 'renderDonutSelectionGlow', arcs: 'drawHudEdgeBar', crew: 'renderCrewStatus' }[omitHud]
+    if (omittedHudMethod) renderer.unitRenderer[omittedHudMethod] = () => {}
     const foreground = gameLoop.canvasManager.getGameContext()
     const drawMethods = holdForeground !== '1' ? ['drawImage'] : ['clearRect', 'fillRect', 'strokeRect', 'fill', 'stroke', 'drawImage', 'fillText', 'strokeText', 'putImageData']
     let foregroundDraws = 0
@@ -585,7 +594,7 @@ try {
       standbyClears: window.benchmarkStandbyClears,
       browserDpr: devicePixelRatio, canvas: [canvas.width, canvas.height, canvas.clientWidth, canvas.clientHeight]
     }
-  }, { battleOnly, hudSelection, battleDuration, omitWebGpuTerrainTiming, traceEnabled, countStandbyClears, impactDraw, holdMinimap, holdForeground, freezeTraversal, assetTrace })
+  }, { battleOnly, hudSelection, omitHud, battleDuration, omitWebGpuTerrainTiming, traceEnabled, countStandbyClears, impactDraw, holdMinimap, holdForeground, freezeTraversal, assetTrace })
   if (traceComplete) await saveCompositorTrace(browserSession, traceComplete)
   if (backendChoice !== 'auto' && result.backend !== backendChoice) {
     throw new Error(`Requested ${backendChoice}, but benchmark rendered on ${result.backend}`)
@@ -638,7 +647,7 @@ try {
   }) : (hudSelection && (result.cameraDriftFrames || result.invalidSceneFrames || errors.length) ? ['invalid-hud-scene'] : [])
   await writeFile(join(output, 'result.json'), JSON.stringify({
     summary, fixtureSha256, gpu, browser: await browser.version(), profileEnabled, traceEnabled, backendChoice, importThroughUi,
-    staticGroundTiming, omitWebGpuTerrainTiming, impactDraw, holdMinimap, holdForeground, freezeTraversal, validityFailures, workers, cdpMetrics, ...result
+    staticGroundTiming, omitWebGpuTerrainTiming, impactDraw, holdMinimap, holdForeground, freezeTraversal, shadowsEnabled, omitHud, validityFailures, workers, cdpMetrics, ...result
   }))
   console.log(JSON.stringify(summary, null, 2))
   if (validityFailures.length) throw new Error(`Invalid benchmark run: ${validityFailures.join(', ')}`)

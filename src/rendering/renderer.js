@@ -249,7 +249,12 @@ export class Renderer {
         entity.forcedAttackTarget?.id !== undefined ||
         entity.forcedAttackQueue?.length ||
         entity.utilityQueue?.currentTargetId ||
-        entity.utilityQueue?.targets?.length
+        entity.utilityQueue?.targets?.length ||
+        ((entity.type === 'ambulance' || entity.type === 'tankerTruck' || entity.type === 'recoveryTank') && (
+          entity.repairTarget?.id !== undefined || entity.repairTargetUnit?.id !== undefined ||
+          entity.towedUnit?.id !== undefined || entity.healingTarget?.id !== undefined ||
+          entity.refuelTarget?.id !== undefined || entity.emergencyTarget?.id !== undefined
+        ))
       )
     )) {
       return true
@@ -800,12 +805,13 @@ export class Renderer {
     renderCityHealthBars(gameCtx, mapGrid, scrollOffset)
     this.buildingRenderer.renderOverlays(gameCtx, visibleBuildings, scrollOffset, true, frameEntityIndex)
     this.buildingRenderer.renderOverlays(gameCtx, visibleFactories, scrollOffset, true, frameEntityIndex)
-    this.unitRenderer.renderOverlays(gameCtx, visibleGroundedUnits, scrollOffset, frameEntityIndex, units, true)
+    // A cleared index means there are no targets. Pass it to avoid scanning the selection for each unit.
+    this.unitRenderer.renderOverlays(gameCtx, visibleGroundedUnits, scrollOffset, this.frameEntityIndex, units, true)
     gameCtx.save()
     gameCtx.globalAlpha *= entityImageAlpha
     this.unitRenderer.renderBases(gameCtx, visibleAirborneUnits, scrollOffset, true)
     gameCtx.restore()
-    this.unitRenderer.renderOverlays(gameCtx, visibleAirborneUnits, scrollOffset, frameEntityIndex, units, true)
+    this.unitRenderer.renderOverlays(gameCtx, visibleAirborneUnits, scrollOffset, this.frameEntityIndex, units, true)
     renderProfiler.endSpan(entityOverlaysSpan)
     entitiesMs += framePhases.end(FRAME_PHASE.entities)
     framePhases.begin(FRAME_PHASE.ui)

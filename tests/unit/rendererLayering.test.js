@@ -1,4 +1,5 @@
 import { renderCityOverhangs } from '../../src/rendering/cityOverhangs.js'
+import { selectedUnits } from '../../src/inputHandler.js'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const createSimpleRendererClass = (methods = {}) => class {
@@ -152,6 +153,7 @@ describe('Renderer airborne layering', () => {
 
   beforeEach(async() => {
     vi.clearAllMocks()
+    selectedUnits.length = 0
     ;({ Renderer } = await import('../../src/rendering/renderer.js'))
   })
 
@@ -195,6 +197,9 @@ describe('Renderer airborne layering', () => {
 
     expect(index).toBe(renderer.frameEntityIndex)
     expect(index.get('unit:target')).toBe(target)
+
+    selectedUnits.push({ id: 'recovery', type: 'recoveryTank', selected: true, towedUnit: target })
+    expect(renderer.prepareFrameEntityIndex([target], [], [], [], {}).get('utilityPosition:unit:target')).toBe(1)
   })
 
   it('[U03715] renders airborne units after grounded units and building overlays', () => {
@@ -273,6 +278,10 @@ describe('Renderer airborne layering', () => {
       { entityImageOpacityLevel: 0, unitWrecks: [] }
     )
 
+    expect(renderer.unitRenderer.renderOverlays.mock.calls).toHaveLength(2)
+    for (const [, , , index] of renderer.unitRenderer.renderOverlays.mock.calls) {
+      expect(index).toBe(renderer.frameEntityIndex)
+    }
     expect(callOrder.indexOf('shadow:exiting')).toBeLessThan(callOrder.indexOf('building-bases:1'))
     expect(callOrder.indexOf('shadow:ground-1')).toBeLessThan(callOrder.indexOf('unit-bases:exiting'))
     expect(callOrder.indexOf('unit-bases:exiting')).toBeLessThan(callOrder.indexOf('building-bases:1'))
