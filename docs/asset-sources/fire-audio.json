@@ -1,6 +1,7 @@
 {
   "provider": "ElevenLabs connector (owner's ElevenLabs Starter plan, commercial license)",
   "status": "downloaded, auditioned, loop-processed and bundled under public/sound/ (2026-11-16)",
+  "superseded_by": "fireLoop and fireHoseLoop were regenerated with Sound Effects v3 (eleven_text_to_sound_v3) on 2026-11-19 from the same prompts; current ids, settings and loudness: docs/asset-sources/sound-effects-prompts.json. The v2 history below is kept for provenance; fireEngineReady (voice line) is unchanged.",
   "note": "Signed media URLs are never stored here. Re-fetch them with creative_get_generations(flow_id, generation_ids) if a raw take is needed again.",
   "files": {
     "fireLoop": {

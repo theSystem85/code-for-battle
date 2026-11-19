@@ -2,6 +2,8 @@
 
 Handoff spec for the wiring agent. Source of truth for the 45 proposals: the review page "code-for-battle: audio gaps & ElevenLabs prompts" (all 45 approved by the project owner). This commit adds **assets and credits only**; no JS was changed. Every file lives in `public/sound/` (flat, same folder as the existing effects and announcer lines).
 
+> **2026-11-19:** all sound effects of this pack (not the voice lines) were regenerated with Sound Effects v3 (`eleven_text_to_sound_v3`) from the prompts below. Current generation ids, settings and loudness per file: [`sound-effects-prompts.json`](sound-effects-prompts.json).
+
 ## Summary
 
 - 78 mp3 files, 2.46 MB total, generated 2026-11-15 on the owner's ElevenLabs account.

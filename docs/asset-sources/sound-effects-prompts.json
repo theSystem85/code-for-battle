@@ -1,0 +1,3194 @@
+{
+  "description": "Prompt mapping for every sound effect in the repo (music and voice lines are excluded; see the exclusion lists in tests/unit/soundEffectsPromptMapping.test.js). Every new or changed sound effect under public/sound/ (or public/mine_explosion.mp3) must get an entry here in the same commit.",
+  "provider": "ElevenLabs Sound Effects (owner's ElevenLabs Starter plan, commercial license)",
+  "current_model_id": "eleven_text_to_sound_v3",
+  "status_values": {
+    "regenerated-v3": "Regenerated with eleven_text_to_sound_v3 from the original prompt; previous holds the replaced take.",
+    "generated-v3": "Created with eleven_text_to_sound_v3 directly.",
+    "unknown-prompt": "Original prompt not traceable; file unchanged."
+  },
+  "note": "Signed media URLs are never stored here. Re-fetch raw takes with creative_get_generations(flow_id, generation_ids). Durations are the shipped file durations; v3 one-shots were trimmed of leading silence, kept at least 90 % of the previous length (quiet tail kept or padded) and cut at 110 % at most.",
+  "rework_2026_11_19": {
+    "flow_id": "iHCzr4VVIxrycjoqLWyt",
+    "flow_name": "code-for-battle SFX v3 rework 2026-11-19",
+    "settings": "Same prompt and prompt_influence as the original; duration_seconds = shipped duration of the previous file (minimum 0.5 s); loop = original loop flag (battleshipCruise and hovercraftMoving set to loop because the game plays them as movement loops).",
+    "processing": "ffmpeg/numpy: one-shots trimmed of leading silence (-48 dBFS) with 3 ms fade-in and 12 ms fade-out; loops kept native when the seam is clean, otherwise an equal-power head/tail cross-fade; integrated loudness matched to the previous file (ffmpeg loudnorm meter, clips under 0.5 s peak-matched); lookahead limiter at -1.5 dBFS; MP3 128 kbps / 44.1 kHz with the previous channel count.",
+    "qa": "Per file: duration within ±10 % of the previous file, loudness within 1 LU, no clipping, no mostly-silent output, loop seam jump below 4× the p99 sample step and RMS step below 3 dB, and a Whisper check that no speech was generated. At most one retake per sound.",
+    "credits_total": 544.0
+  },
+  "files": {
+    "achievementStinger": {
+      "path": "public/sound/achievementStinger.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, no reverb tail, clean start and clean cut-off. Short achievement notification sting, confident rising two-note brass-synth hit with a crisp snare tap, no melody.",
+      "prompt_source": "docs/asset-sources/elevenlabs-audio-pack-2026-11-15.md + ElevenLabs flow JbDThbAmeAhvxSLb7ZiX",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "O1FL4ZAJaovSSc8QEWSO",
+      "generation_id": "okmpO729D5byjVqFEQn4",
+      "settings": {
+        "duration_seconds": 0.97,
+        "prompt_influence": 0.55,
+        "loop": false
+      },
+      "loop": false,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "okmpO729D5byjVqFEQn4",
+          "credits": 3.0,
+          "used": true
+        }
+      ],
+      "credits": 3.0,
+      "result": {
+        "duration_s": 0.914,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 128,
+        "loudness_lufs": -16.93,
+        "true_peak_dbtp": -1.75,
+        "loudness_target": "-16.89 LUFS",
+        "processing": [
+          "peak limiter reduced peaks by 6.5 dB (ceiling -1.5 dBFS)"
+        ]
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-11-15",
+        "flow_id": "JbDThbAmeAhvxSLb7ZiX",
+        "node_id": null,
+        "generation_id": "co80cmFHXecSltBgIWiD",
+        "settings": {
+          "duration_seconds": 1.5,
+          "prompt_influence": 0.55,
+          "loop": false
+        },
+        "duration_s": 0.967,
+        "loudness_lufs": -16.89,
+        "channels": 2
+      }
+    },
+    "ambienceWindDesert": {
+      "path": "public/sound/ambienceWindDesert.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Battlefield ambience bed, dry desert wind with fine sand hiss and faint distant rumble, no birds, no voices, no music, seamless loop, constant level.",
+      "prompt_source": "docs/asset-sources/elevenlabs-audio-pack-2026-11-15.md + ElevenLabs flow JbDThbAmeAhvxSLb7ZiX",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "bt4WvvGedtpslhiaymIv",
+      "generation_id": "m5G2LfA7Q0G1IzwRg3Ic",
+      "settings": {
+        "duration_seconds": 19.54,
+        "prompt_influence": 0.45,
+        "loop": true
+      },
+      "loop": true,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "m5G2LfA7Q0G1IzwRg3Ic",
+          "credits": 65.0,
+          "used": true
+        }
+      ],
+      "credits": 65.0,
+      "result": {
+        "duration_s": 19.566,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 128,
+        "loudness_lufs": -30.44,
+        "true_peak_dbtp": -16.1,
+        "loudness_target": "-30.45 LUFS",
+        "processing": [
+          "native v3 loop seam kept (jump 1.1x p99, rms step 0.9 dB)"
+        ]
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-11-15",
+        "flow_id": "JbDThbAmeAhvxSLb7ZiX",
+        "node_id": null,
+        "generation_id": "meErudMbb0XVs03W6i70",
+        "settings": {
+          "duration_seconds": 20.0,
+          "prompt_influence": 0.45,
+          "loop": true
+        },
+        "duration_s": 19.54,
+        "loudness_lufs": -30.45,
+        "channels": 2
+      }
+    },
+    "ambienceWindOpen": {
+      "path": "public/sound/ambienceWindOpen.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Battlefield ambience bed, quiet steady wind over open grassland with very faint distant rumble, no birds, no voices, no music, seamless loop, constant level.",
+      "prompt_source": "docs/asset-sources/elevenlabs-audio-pack-2026-11-15.md + ElevenLabs flow JbDThbAmeAhvxSLb7ZiX",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "tmyay450VdQT7MkGLLr6",
+      "generation_id": "qiwDeYr3uNY28cR0H9QV",
+      "settings": {
+        "duration_seconds": 19.54,
+        "prompt_influence": 0.45,
+        "loop": true
+      },
+      "loop": true,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "qiwDeYr3uNY28cR0H9QV",
+          "credits": 65.0,
+          "used": true
+        }
+      ],
+      "credits": 65.0,
+      "result": {
+        "duration_s": 19.069,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 128,
+        "loudness_lufs": -30.4,
+        "true_peak_dbtp": -16.32,
+        "loudness_target": "-30.41 LUFS",
+        "processing": [
+          "equal-power head/tail cross-fade 0.50s (raw seam jump 0.0x p99, rms step -3.2 dB)"
+        ]
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-11-15",
+        "flow_id": "JbDThbAmeAhvxSLb7ZiX",
+        "node_id": null,
+        "generation_id": "UL8ZodBTDShzwmxdrRgK",
+        "settings": {
+          "duration_seconds": 20.0,
+          "prompt_influence": 0.45,
+          "loop": true
+        },
+        "duration_s": 19.54,
+        "loudness_lufs": -30.41,
+        "channels": 2
+      }
+    },
+    "ambienceWindSnow": {
+      "path": "public/sound/ambienceWindSnow.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Battlefield ambience bed, cold howling arctic wind with soft snow gusts and faint distant rumble, no birds, no voices, no music, seamless loop, constant level.",
+      "prompt_source": "docs/asset-sources/elevenlabs-audio-pack-2026-11-15.md + ElevenLabs flow JbDThbAmeAhvxSLb7ZiX",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "dcH2tYxjXfkvRCmivndV",
+      "generation_id": "g7I9w5D8J66kTtjbAbuP",
+      "settings": {
+        "duration_seconds": 19.54,
+        "prompt_influence": 0.45,
+        "loop": true
+      },
+      "loop": true,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "g7I9w5D8J66kTtjbAbuP",
+          "credits": 65.0,
+          "used": true
+        }
+      ],
+      "credits": 65.0,
+      "result": {
+        "duration_s": 19.566,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 128,
+        "loudness_lufs": -30.46,
+        "true_peak_dbtp": -13.63,
+        "loudness_target": "-30.44 LUFS",
+        "processing": [
+          "native v3 loop seam kept (jump 0.4x p99, rms step 1.7 dB)"
+        ]
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-11-15",
+        "flow_id": "JbDThbAmeAhvxSLb7ZiX",
+        "node_id": null,
+        "generation_id": "Qwy8Ww1K6lvLPy4Oup7j",
+        "settings": {
+          "duration_seconds": 20.0,
+          "prompt_influence": 0.45,
+          "loop": true
+        },
+        "duration_s": 19.54,
+        "loudness_lufs": -30.44,
+        "channels": 2
+      }
+    },
+    "ammoReloadClunk": {
+      "path": "public/sound/ammoReloadClunk.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, no reverb tail, clean start and clean cut-off. Heavy ammunition crate sliding into place and a tank gun breech clunking shut, two metallic clanks.",
+      "prompt_source": "docs/asset-sources/elevenlabs-audio-pack-2026-11-15.md + ElevenLabs flow JbDThbAmeAhvxSLb7ZiX",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "gmFOLbH7lOHXMWAoluIi",
+      "generation_id": "KkbTIOGVsHuk3BPA2WEo",
+      "settings": {
+        "duration_seconds": 0.99,
+        "prompt_influence": 0.6,
+        "loop": false
+      },
+      "loop": false,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "KkbTIOGVsHuk3BPA2WEo",
+          "credits": 3.0,
+          "used": true
+        }
+      ],
+      "credits": 3.0,
+      "result": {
+        "duration_s": 0.94,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 128,
+        "loudness_lufs": -15.71,
+        "true_peak_dbtp": -1.31,
+        "loudness_target": "-15.6 LUFS",
+        "processing": [
+          "peak limiter reduced peaks by 1.9 dB (ceiling -1.5 dBFS)"
+        ]
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-11-15",
+        "flow_id": "JbDThbAmeAhvxSLb7ZiX",
+        "node_id": null,
+        "generation_id": "AukgZ71XxYVHR0b35M05",
+        "settings": {
+          "duration_seconds": 1.5,
+          "prompt_influence": 0.6,
+          "loop": false
+        },
+        "duration_s": 0.993,
+        "loudness_lufs": -15.6,
+        "channels": 2
+      }
+    },
+    "apacheRocketLaunch1": {
+      "path": "public/sound/apacheRocketLaunch1.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, no reverb tail, clean start and clean cut-off. Attack helicopter launching a pair of small air-to-ground rockets, two quick sharp hissing whooshes, light and fast.",
+      "prompt_source": "docs/asset-sources/elevenlabs-audio-pack-2026-11-15.md + ElevenLabs flow JbDThbAmeAhvxSLb7ZiX",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "eWIgDxbUAtLUvF3B1vMl",
+      "generation_id": "vfskXEbRrNorrb8S4h7R",
+      "settings": {
+        "duration_seconds": 0.81,
+        "prompt_influence": 0.6,
+        "loop": false
+      },
+      "loop": false,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "vfskXEbRrNorrb8S4h7R",
+          "credits": 3.0,
+          "used": true
+        }
+      ],
+      "credits": 3.0,
+      "result": {
+        "duration_s": 0.784,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 128,
+        "loudness_lufs": -14.06,
+        "true_peak_dbtp": -1.47,
+        "loudness_target": "-14.03 LUFS",
+        "processing": null
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-11-15",
+        "flow_id": "JbDThbAmeAhvxSLb7ZiX",
+        "node_id": null,
+        "generation_id": "pvKn2ieVQ5YUACnCeXAr",
+        "settings": {
+          "duration_seconds": 1.2,
+          "prompt_influence": 0.6,
+          "loop": false
+        },
+        "duration_s": 0.81,
+        "loudness_lufs": -14.03,
+        "channels": 2
+      }
+    },
+    "apacheRocketLaunch2": {
+      "path": "public/sound/apacheRocketLaunch2.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, no reverb tail, clean start and clean cut-off. Attack helicopter launching a pair of small air-to-ground rockets, two quick sharp hissing whooshes, light and fast.",
+      "prompt_source": "docs/asset-sources/elevenlabs-audio-pack-2026-11-15.md + ElevenLabs flow JbDThbAmeAhvxSLb7ZiX",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "dqCEwdpZs8HKKj4OJlV5",
+      "generation_id": "z7Zbt5RUeq2YV3mlTgWn",
+      "settings": {
+        "duration_seconds": 0.63,
+        "prompt_influence": 0.6,
+        "loop": false
+      },
+      "loop": false,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "z7Zbt5RUeq2YV3mlTgWn",
+          "credits": 2.0,
+          "used": true
+        }
+      ],
+      "credits": 2.0,
+      "result": {
+        "duration_s": 0.601,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 128,
+        "loudness_lufs": -13.73,
+        "true_peak_dbtp": -1.54,
+        "loudness_target": "-13.89 LUFS",
+        "processing": null
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-11-15",
+        "flow_id": "JbDThbAmeAhvxSLb7ZiX",
+        "node_id": null,
+        "generation_id": "jlNuDM4AzxSSq2YzI8k3",
+        "settings": {
+          "duration_seconds": 1.2,
+          "prompt_influence": 0.6,
+          "loop": false
+        },
+        "duration_s": 0.627,
+        "loudness_lufs": -13.89,
+        "channels": 2
+      }
+    },
+    "apacheRotorSpoolUp": {
+      "path": "public/sound/apacheRotorSpoolUp.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, no reverb tail, clean start and clean cut-off. Attack helicopter turbine starting up and the main rotor slowly accelerating to full speed, whine rising into a chopping thump.",
+      "prompt_source": "docs/asset-sources/elevenlabs-audio-pack-2026-11-15.md + ElevenLabs flow JbDThbAmeAhvxSLb7ZiX",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "RmsZ2RFi6H4g6g8Mrd56",
+      "generation_id": "Kh6WhLDQBqBcTTAS6Rpa",
+      "settings": {
+        "duration_seconds": 3.03,
+        "prompt_influence": 0.55,
+        "loop": false
+      },
+      "loop": false,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "Kh6WhLDQBqBcTTAS6Rpa",
+          "credits": 10.0,
+          "used": true
+        }
+      ],
+      "credits": 10.0,
+      "result": {
+        "duration_s": 2.769,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 128,
+        "loudness_lufs": -16.55,
+        "true_peak_dbtp": -1.03,
+        "loudness_target": "-16.43 LUFS",
+        "processing": [
+          "peak limiter reduced peaks by 3.4 dB (ceiling -1.5 dBFS)"
+        ]
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-11-15",
+        "flow_id": "JbDThbAmeAhvxSLb7ZiX",
+        "node_id": null,
+        "generation_id": "rtPDq9HeGUTtYPLdRbA9",
+        "settings": {
+          "duration_seconds": 3.0,
+          "prompt_influence": 0.55,
+          "loop": false
+        },
+        "duration_s": 3.03,
+        "loudness_lufs": -16.43,
+        "channels": 2
+      }
+    },
+    "artilleryShellImpact1": {
+      "path": "public/sound/artilleryShellImpact1.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, no reverb tail, clean start and clean cut-off. Large artillery shell impact on dry ground, deep boom followed by dirt and debris raining down, no whistle.",
+      "prompt_source": "docs/asset-sources/elevenlabs-audio-pack-2026-11-15.md + ElevenLabs flow JbDThbAmeAhvxSLb7ZiX",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "6khSGbehFrCnYwNaX9uz",
+      "generation_id": "3MIS91fbzVgPJHp8MK2b",
+      "settings": {
+        "duration_seconds": 1.38,
+        "prompt_influence": 0.6,
+        "loop": false
+      },
+      "loop": false,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "3MIS91fbzVgPJHp8MK2b",
+          "credits": 5.0,
+          "used": true
+        }
+      ],
+      "credits": 5.0,
+      "result": {
+        "duration_s": 1.28,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 128,
+        "loudness_lufs": -15.56,
+        "true_peak_dbtp": -2.77,
+        "loudness_target": "-15.53 LUFS",
+        "processing": null
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-11-15",
+        "flow_id": "JbDThbAmeAhvxSLb7ZiX",
+        "node_id": null,
+        "generation_id": "WTza6BtxxbU5JnJZKRY4",
+        "settings": {
+          "duration_seconds": 2.5,
+          "prompt_influence": 0.6,
+          "loop": false
+        },
+        "duration_s": 1.384,
+        "loudness_lufs": -15.53,
+        "channels": 2
+      }
+    },
+    "artilleryShellImpact2": {
+      "path": "public/sound/artilleryShellImpact2.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, no reverb tail, clean start and clean cut-off. Large artillery shell impact on dry ground, deep boom followed by dirt and debris raining down, no whistle.",
+      "prompt_source": "docs/asset-sources/elevenlabs-audio-pack-2026-11-15.md + ElevenLabs flow JbDThbAmeAhvxSLb7ZiX",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "pIIBjCxelGxlPelVgDHC",
+      "generation_id": "xkbOUMKT1alvUHUtLpVJ",
+      "settings": {
+        "duration_seconds": 2.51,
+        "prompt_influence": 0.6,
+        "loop": false
+      },
+      "loop": false,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "xkbOUMKT1alvUHUtLpVJ",
+          "credits": 8.0,
+          "used": true
+        }
+      ],
+      "credits": 8.0,
+      "result": {
+        "duration_s": 2.299,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 128,
+        "loudness_lufs": -16.63,
+        "true_peak_dbtp": -2.86,
+        "loudness_target": "-16.66 LUFS",
+        "processing": null
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-11-15",
+        "flow_id": "JbDThbAmeAhvxSLb7ZiX",
+        "node_id": null,
+        "generation_id": "Nhsk0Oi7bePmdvCbStZv",
+        "settings": {
+          "duration_seconds": 2.5,
+          "prompt_influence": 0.6,
+          "loop": false
+        },
+        "duration_s": 2.508,
+        "loudness_lufs": -16.66,
+        "channels": 2
+      }
+    },
+    "battleshipCruise": {
+      "path": "public/sound/battleshipCruise.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Continuous 6 second seamless loop of a battleship cruising at sea: deep diesel marine engines humming steadily, water wash against steel hull, low rumble throughout the full six seconds with no fade out, no music, no voice, no gunfire",
+      "prompt_source": "ElevenLabs flow ogzmAY8104vlhjUpxrGi \"Naval SFX and narrator VO\" (take matched to the repo file by waveform correlation 1.0)",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "JgRgRlRTiLhRJUI7GPSR",
+      "generation_id": "U95G3RmHtwjKGmUO7QCh",
+      "settings": {
+        "duration_seconds": 2.04,
+        "prompt_influence": 0.3,
+        "loop": true
+      },
+      "loop": true,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "U95G3RmHtwjKGmUO7QCh",
+          "credits": 7.0,
+          "used": true
+        }
+      ],
+      "credits": 7.0,
+      "result": {
+        "duration_s": 2.038,
+        "sample_rate": 44100,
+        "channels": 1,
+        "bitrate_kbps": 128,
+        "loudness_lufs": -10.35,
+        "true_peak_dbtp": -1.72,
+        "loudness_target": "-9.73 LUFS",
+        "processing": [
+          "native v3 loop seam kept (jump 0.2x p99, rms step -0.0 dB)",
+          "peak limiter reduced peaks by 8.5 dB (ceiling -1.5 dBFS)"
+        ]
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-09-23",
+        "flow_id": "ogzmAY8104vlhjUpxrGi",
+        "node_id": "5ObcKi5ASx3nb9ti0609",
+        "generation_id": "FkSlVqkDk8jEnKrX5iut",
+        "settings": {
+          "duration_seconds": "auto",
+          "prompt_influence": 0.3,
+          "loop": false
+        },
+        "duration_s": 2.038,
+        "loudness_lufs": -9.73,
+        "channels": 1
+      }
+    },
+    "battleshipFire1": {
+      "path": "public/sound/battleshipFire1.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Battleship main gun firing sound effect variant A for an RTS game: heavy naval cannon boom, muzzle blast, short metallic echo over water, punchy 1.2 second one-shot, no music, no voice",
+      "prompt_source": "ElevenLabs flow ogzmAY8104vlhjUpxrGi \"Naval SFX and narrator VO\" (take matched to the repo file by waveform correlation 1.0)",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "BEZmFFUnkXKIAAiQddpG",
+      "generation_id": "VJEiaB9p2ZjDNKLY3OMr",
+      "settings": {
+        "duration_seconds": 1.04,
+        "prompt_influence": 0.3,
+        "loop": false
+      },
+      "loop": false,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "VJEiaB9p2ZjDNKLY3OMr",
+          "credits": 3.0,
+          "used": true
+        }
+      ],
+      "credits": 3.0,
+      "result": {
+        "duration_s": 1.045,
+        "sample_rate": 44100,
+        "channels": 1,
+        "bitrate_kbps": 128,
+        "loudness_lufs": -19.69,
+        "true_peak_dbtp": -1.79,
+        "loudness_target": "-19.44 LUFS",
+        "processing": [
+          "peak limiter reduced peaks by 7.8 dB (ceiling -1.5 dBFS)"
+        ]
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-09-23",
+        "flow_id": "ogzmAY8104vlhjUpxrGi",
+        "node_id": "BoKSEcF2Nrb1HZ32XUKd",
+        "generation_id": "zJwJIrBBO9R1O9EhPOZP",
+        "settings": {
+          "duration_seconds": "auto",
+          "prompt_influence": 0.3,
+          "loop": false
+        },
+        "duration_s": 1.045,
+        "loudness_lufs": -19.44,
+        "channels": 1
+      }
+    },
+    "battleshipFire2": {
+      "path": "public/sound/battleshipFire2.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Battleship main gun firing sound effect variant B for an RTS game: slightly higher pitched naval artillery crack then deep boom, shell casing metallic ring, punchy 1.3 second one-shot, no music, no voice",
+      "prompt_source": "ElevenLabs flow ogzmAY8104vlhjUpxrGi \"Naval SFX and narrator VO\" (take matched to the repo file by waveform correlation 1.0)",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "ghZOQS2cObdDGMVFzAaR",
+      "generation_id": "u7AneACPcCo3DOD2P7lH",
+      "settings": {
+        "duration_seconds": 1.04,
+        "prompt_influence": 0.3,
+        "loop": false
+      },
+      "loop": false,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "u7AneACPcCo3DOD2P7lH",
+          "credits": 3.0,
+          "used": true
+        }
+      ],
+      "credits": 3.0,
+      "result": {
+        "duration_s": 0.993,
+        "sample_rate": 44100,
+        "channels": 1,
+        "bitrate_kbps": 128,
+        "loudness_lufs": -16.71,
+        "true_peak_dbtp": -1.87,
+        "loudness_target": "-16.58 LUFS",
+        "processing": [
+          "peak limiter reduced peaks by 6.8 dB (ceiling -1.5 dBFS)"
+        ]
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-09-23",
+        "flow_id": "ogzmAY8104vlhjUpxrGi",
+        "node_id": "upn5t8KlIrJBpr4SrkTS",
+        "generation_id": "RDnvAsUAvZhxg5o7Jpiw",
+        "settings": {
+          "duration_seconds": "auto",
+          "prompt_influence": 0.3,
+          "loop": false
+        },
+        "duration_s": 1.045,
+        "loudness_lufs": -16.58,
+        "channels": 1
+      }
+    },
+    "battleshipFire3": {
+      "path": "public/sound/battleshipFire3.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Battleship main gun firing sound effect variant C for an RTS game: thunderous twin-gun salvo boom with water splash echo, heavy low-end impact, punchy 1.4 second one-shot, no music, no voice",
+      "prompt_source": "ElevenLabs flow ogzmAY8104vlhjUpxrGi \"Naval SFX and narrator VO\" (take matched to the repo file by waveform correlation 1.0)",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "jyclQzl26mLBy25tAFVq",
+      "generation_id": "6hArL4s0aur5HgO69Q2C",
+      "settings": {
+        "duration_seconds": 1.04,
+        "prompt_influence": 0.3,
+        "loop": false
+      },
+      "loop": false,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "6hArL4s0aur5HgO69Q2C",
+          "credits": 3.0,
+          "used": true
+        }
+      ],
+      "credits": 3.0,
+      "result": {
+        "duration_s": 0.993,
+        "sample_rate": 44100,
+        "channels": 1,
+        "bitrate_kbps": 128,
+        "loudness_lufs": -16.21,
+        "true_peak_dbtp": -1.6,
+        "loudness_target": "-16.11 LUFS",
+        "processing": [
+          "peak limiter reduced peaks by 2.5 dB (ceiling -1.5 dBFS)"
+        ]
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-09-23",
+        "flow_id": "ogzmAY8104vlhjUpxrGi",
+        "node_id": "plZ5LynpFPffKo203gqK",
+        "generation_id": "ytbJh14mkr6kXptwlLFr",
+        "settings": {
+          "duration_seconds": "auto",
+          "prompt_influence": 0.3,
+          "loop": false
+        },
+        "duration_s": 1.045,
+        "loudness_lufs": -16.11,
+        "channels": 1
+      }
+    },
+    "buildingCollapse1": {
+      "path": "public/sound/buildingCollapse1.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, no reverb tail, clean start and clean cut-off. Large concrete and steel building collapsing after a blast, deep boom, crumbling masonry, steel groan, dust settling.",
+      "prompt_source": "docs/asset-sources/elevenlabs-audio-pack-2026-11-15.md + ElevenLabs flow JbDThbAmeAhvxSLb7ZiX",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "7AiseTPxxduOhjx0GWhV",
+      "generation_id": "kVY2nqeNPq4fNepbsS3D",
+      "settings": {
+        "duration_seconds": 2.33,
+        "prompt_influence": 0.6,
+        "loop": false
+      },
+      "loop": false,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "kVY2nqeNPq4fNepbsS3D",
+          "credits": 8.0,
+          "used": true
+        }
+      ],
+      "credits": 8.0,
+      "result": {
+        "duration_s": 2.142,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 128,
+        "loudness_lufs": -14.13,
+        "true_peak_dbtp": -1.32,
+        "loudness_target": "-13.74 LUFS",
+        "processing": [
+          "peak limiter reduced peaks by 9.0 dB (ceiling -1.5 dBFS)"
+        ]
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-11-15",
+        "flow_id": "JbDThbAmeAhvxSLb7ZiX",
+        "node_id": null,
+        "generation_id": "CfNDXtMgBqjru3yFe0GE",
+        "settings": {
+          "duration_seconds": 3.5,
+          "prompt_influence": 0.6,
+          "loop": false
+        },
+        "duration_s": 2.325,
+        "loudness_lufs": -13.74,
+        "channels": 2
+      }
+    },
+    "buildingCollapse2": {
+      "path": "public/sound/buildingCollapse2.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, no reverb tail, clean start and clean cut-off. Large concrete and steel building collapsing after a blast, deep boom, crumbling masonry, steel groan, dust settling.",
+      "prompt_source": "docs/asset-sources/elevenlabs-audio-pack-2026-11-15.md + ElevenLabs flow JbDThbAmeAhvxSLb7ZiX",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "mvOLl4PeMBxCm8cST34Q",
+      "generation_id": "gT6Ut1ztODJ8A8MuVqMQ",
+      "settings": {
+        "duration_seconds": 2.22,
+        "prompt_influence": 0.6,
+        "loop": false
+      },
+      "loop": false,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "gT6Ut1ztODJ8A8MuVqMQ",
+          "credits": 7.0,
+          "used": true
+        }
+      ],
+      "credits": 7.0,
+      "result": {
+        "duration_s": 2.038,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 128,
+        "loudness_lufs": -12.92,
+        "true_peak_dbtp": -1.37,
+        "loudness_target": "-12.9 LUFS",
+        "processing": [
+          "peak limiter reduced peaks by 3.3 dB (ceiling -1.5 dBFS)"
+        ]
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-11-15",
+        "flow_id": "JbDThbAmeAhvxSLb7ZiX",
+        "node_id": null,
+        "generation_id": "cAtM5UXcGrmwVGogT5eQ",
+        "settings": {
+          "duration_seconds": 3.5,
+          "prompt_influence": 0.6,
+          "loop": false
+        },
+        "duration_s": 2.22,
+        "loudness_lufs": -12.9,
+        "channels": 2
+      }
+    },
+    "buildingCollapse3": {
+      "path": "public/sound/buildingCollapse3.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, no reverb tail, clean start and clean cut-off. Large concrete and steel building collapsing after a blast, deep boom, crumbling masonry, steel groan, dust settling.",
+      "prompt_source": "docs/asset-sources/elevenlabs-audio-pack-2026-11-15.md + ElevenLabs flow JbDThbAmeAhvxSLb7ZiX",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "1wSY21sWGRtFl527XsDg",
+      "generation_id": "yOEw5QAHCdOusSEHlRj4",
+      "settings": {
+        "duration_seconds": 2.43,
+        "prompt_influence": 0.6,
+        "loop": false
+      },
+      "loop": false,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "yOEw5QAHCdOusSEHlRj4",
+          "credits": 8.0,
+          "used": true
+        }
+      ],
+      "credits": 8.0,
+      "result": {
+        "duration_s": 2.247,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 128,
+        "loudness_lufs": -13.1,
+        "true_peak_dbtp": -1.35,
+        "loudness_target": "-12.97 LUFS",
+        "processing": [
+          "peak limiter reduced peaks by 3.0 dB (ceiling -1.5 dBFS)"
+        ]
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-11-15",
+        "flow_id": "JbDThbAmeAhvxSLb7ZiX",
+        "node_id": null,
+        "generation_id": "Vn06inbLZbo8VMI6Pwqa",
+        "settings": {
+          "duration_seconds": 3.5,
+          "prompt_influence": 0.6,
+          "loop": false
+        },
+        "duration_s": 2.429,
+        "loudness_lufs": -12.97,
+        "channels": 2
+      }
+    },
+    "crewRestored": {
+      "path": "public/sound/crewRestored.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, no reverb tail, clean start and clean cut-off. Short positive medical device chime with a soft gear-clip click, quick two-tone electronic blip, not a melody.",
+      "prompt_source": "docs/asset-sources/elevenlabs-audio-pack-2026-11-15.md + ElevenLabs flow JbDThbAmeAhvxSLb7ZiX",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "HFKTKgYqEzEDw8doctQX",
+      "generation_id": "IJRonB8bbiqUJWXn2Zzk",
+      "settings": {
+        "duration_seconds": 0.84,
+        "prompt_influence": 0.6,
+        "loop": false
+      },
+      "loop": false,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "z26QScBsT07TSPw32i51",
+          "credits": 3.0,
+          "used": false
+        },
+        {
+          "take": 2,
+          "generation_id": "IJRonB8bbiqUJWXn2Zzk",
+          "credits": 3.0,
+          "used": true
+        }
+      ],
+      "credits": 6.0,
+      "result": {
+        "duration_s": 0.784,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 128,
+        "loudness_lufs": -19.94,
+        "true_peak_dbtp": -5.32,
+        "loudness_target": "-20.05 LUFS",
+        "processing": null
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-11-15",
+        "flow_id": "JbDThbAmeAhvxSLb7ZiX",
+        "node_id": null,
+        "generation_id": "DZ80rLOPJzxLF3BZAMPQ",
+        "settings": {
+          "duration_seconds": 0.8,
+          "prompt_influence": 0.6,
+          "loop": false
+        },
+        "duration_s": 0.836,
+        "loudness_lufs": -20.05,
+        "channels": 2
+      }
+    },
+    "depthChargeDetonation": {
+      "path": "public/sound/depthChargeDetonation.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, no reverb tail, clean start and clean cut-off. Depth charge detonating underwater, deep rolling thump with a churning water plume breaking the surface.",
+      "prompt_source": "docs/asset-sources/elevenlabs-audio-pack-2026-11-15.md + ElevenLabs flow JbDThbAmeAhvxSLb7ZiX",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "PuHB7ilIhktOGFG3XrK3",
+      "generation_id": "wzexpfQPdTZbxs07gSIv",
+      "settings": {
+        "duration_seconds": 1.7,
+        "prompt_influence": 0.6,
+        "loop": false
+      },
+      "loop": false,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "TL2IoLGlig2g7z5Gmkpz",
+          "credits": 6.0,
+          "used": false
+        },
+        {
+          "take": 2,
+          "generation_id": "wzexpfQPdTZbxs07gSIv",
+          "credits": 6.0,
+          "used": true
+        }
+      ],
+      "credits": 12.0,
+      "result": {
+        "duration_s": 1.567,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 128,
+        "loudness_lufs": -17.45,
+        "true_peak_dbtp": -1.3,
+        "loudness_target": "-17.36 LUFS",
+        "processing": [
+          "peak limiter reduced peaks by 0.6 dB (ceiling -1.5 dBFS)"
+        ]
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-11-15",
+        "flow_id": "JbDThbAmeAhvxSLb7ZiX",
+        "node_id": null,
+        "generation_id": "nXhQcLztti8eQtzxfbn0",
+        "settings": {
+          "duration_seconds": 2.5,
+          "prompt_influence": 0.6,
+          "loop": false
+        },
+        "duration_s": 1.698,
+        "loudness_lufs": -17.36,
+        "channels": 2
+      }
+    },
+    "error1": {
+      "path": "public/sound/error1.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, no reverb tail, clean start and clean cut-off. Short low dull denied buzz from a military computer terminal, flat double pulse, dry and not harsh.",
+      "prompt_source": "docs/asset-sources/elevenlabs-audio-pack-2026-11-15.md + ElevenLabs flow JbDThbAmeAhvxSLb7ZiX",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "Lrd9AFtd96dSQJyI634l",
+      "generation_id": "bnXQ6Fx9lzJXrKLa6L1N",
+      "settings": {
+        "duration_seconds": 0.5,
+        "prompt_influence": 0.6,
+        "loop": false
+      },
+      "loop": false,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "bnXQ6Fx9lzJXrKLa6L1N",
+          "credits": 2.0,
+          "used": true
+        }
+      ],
+      "credits": 2.0,
+      "result": {
+        "duration_s": 0.444,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 128,
+        "loudness_lufs": null,
+        "true_peak_dbtp": null,
+        "loudness_target": "peak -6.4 dBFS (clip shorter than 0.5 s)",
+        "processing": [
+          "trimmed to 0.40s with 0.05s fade-out to stay within +10%"
+        ]
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-11-15",
+        "flow_id": "JbDThbAmeAhvxSLb7ZiX",
+        "node_id": null,
+        "generation_id": "SwrtQvv1DCrrjD60bnJ1",
+        "settings": {
+          "duration_seconds": 0.4,
+          "prompt_influence": 0.6,
+          "loop": false
+        },
+        "duration_s": 0.366,
+        "loudness_lufs": null,
+        "channels": 2
+      }
+    },
+    "error2": {
+      "path": "public/sound/error2.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, no reverb tail, clean start and clean cut-off. Short low dull denied buzz from a military computer terminal, flat double pulse, dry and not harsh.",
+      "prompt_source": "docs/asset-sources/elevenlabs-audio-pack-2026-11-15.md + ElevenLabs flow JbDThbAmeAhvxSLb7ZiX",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "96ALjOgSbIi1bgDZy013",
+      "generation_id": "itibPzviDm5FjXRjAjhk",
+      "settings": {
+        "duration_seconds": 0.5,
+        "prompt_influence": 0.6,
+        "loop": false
+      },
+      "loop": false,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "itibPzviDm5FjXRjAjhk",
+          "credits": 2.0,
+          "used": true
+        }
+      ],
+      "credits": 2.0,
+      "result": {
+        "duration_s": 0.47,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 128,
+        "loudness_lufs": null,
+        "true_peak_dbtp": null,
+        "loudness_target": "peak -6.3 dBFS (clip shorter than 0.5 s)",
+        "processing": null
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-11-15",
+        "flow_id": "JbDThbAmeAhvxSLb7ZiX",
+        "node_id": null,
+        "generation_id": "8rnkH2RukQ69PrTSKXtI",
+        "settings": {
+          "duration_seconds": 0.4,
+          "prompt_influence": 0.6,
+          "loop": false
+        },
+        "duration_s": 0.444,
+        "loudness_lufs": -25.45,
+        "channels": 2
+      }
+    },
+    "fireHoseLoop": {
+      "path": "public/sound/fireHoseLoop.mp3",
+      "status": "regenerated-v3",
+      "prompt": "High pressure firefighter water hose spraying a continuous jet of water, pump motor rumble, splashing water, no speech or music, seamless loop.",
+      "prompt_source": "docs/asset-sources/fire-audio.json",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "8yauhCdp9ClAaBiH0cJj",
+      "generation_id": "vdZ3i2IhvcVB2ZhPWtXB",
+      "settings": {
+        "duration_seconds": 4.44,
+        "prompt_influence": 0.5,
+        "loop": true
+      },
+      "loop": true,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "vdZ3i2IhvcVB2ZhPWtXB",
+          "credits": 15.0,
+          "used": true
+        }
+      ],
+      "credits": 15.0,
+      "result": {
+        "duration_s": 4.467,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 128,
+        "loudness_lufs": -22.19,
+        "true_peak_dbtp": -13.26,
+        "loudness_target": "-22.21 LUFS",
+        "processing": [
+          "native v3 loop seam kept (jump 0.1x p99, rms step 0.3 dB)"
+        ]
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-11-16",
+        "flow_id": "kjK5LtJd50M0hGaoGr7i",
+        "node_id": "6LymeN78PuRuPlSLSMXU",
+        "generation_id": "L3556a1tUeRMCuary4oI",
+        "settings": {
+          "duration_seconds": 5,
+          "prompt_influence": 0.5,
+          "loop": true
+        },
+        "duration_s": 4.441,
+        "loudness_lufs": -22.21,
+        "channels": 2
+      }
+    },
+    "fireLoop": {
+      "path": "public/sound/fireLoop.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Close burning wood and building fire, continuous crackling flames and low roaring heat, no music, no speech, seamless loop for a strategy game.",
+      "prompt_source": "docs/asset-sources/fire-audio.json",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "pG9Nn7WG1dPfGx0kBxlg",
+      "generation_id": "L0tXsTQKuNybmWdFY8j1",
+      "settings": {
+        "duration_seconds": 8.05,
+        "prompt_influence": 0.5,
+        "loop": true
+      },
+      "loop": true,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "L0tXsTQKuNybmWdFY8j1",
+          "credits": 27.0,
+          "used": true
+        }
+      ],
+      "credits": 27.0,
+      "result": {
+        "duration_s": 8.072,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 128,
+        "loudness_lufs": -24.88,
+        "true_peak_dbtp": -1.36,
+        "loudness_target": "-24.85 LUFS",
+        "processing": [
+          "native v3 loop seam kept (jump 0.2x p99, rms step 0.5 dB)",
+          "peak limiter reduced peaks by 4.6 dB (ceiling -1.5 dBFS)"
+        ]
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-11-16",
+        "flow_id": "T36jpRCsmyA9V3kLmIWC",
+        "node_id": "tNMDOLhWHQxFRGN5BTg9",
+        "generation_id": "u3HgMdXxKQHhw9tnuOBx",
+        "settings": {
+          "duration_seconds": 9,
+          "prompt_influence": 0.5,
+          "loop": true
+        },
+        "duration_s": 8.046,
+        "loudness_lufs": -24.85,
+        "channels": 2
+      }
+    },
+    "hovercraftMoving": {
+      "path": "public/sound/hovercraftMoving.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Military hovercraft moving loop for an RTS game: loud fan cushion roar, spray and skimming water wash, turbine whine, seamless loopable about 4 seconds, no music, no voice, no gunfire",
+      "prompt_source": "ElevenLabs flow ogzmAY8104vlhjUpxrGi \"Naval SFX and narrator VO\" (take matched to the repo file by waveform correlation 1.0)",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "d1jJoj27bMigpIkYXPKq",
+      "generation_id": "Hetihcicq0mcGphkLVCz",
+      "settings": {
+        "duration_seconds": 20.04,
+        "prompt_influence": 0.3,
+        "loop": true
+      },
+      "loop": true,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "Hetihcicq0mcGphkLVCz",
+          "credits": 67.0,
+          "used": true
+        }
+      ],
+      "credits": 67.0,
+      "result": {
+        "duration_s": 20.088,
+        "sample_rate": 44100,
+        "channels": 1,
+        "bitrate_kbps": 128,
+        "loudness_lufs": -14.64,
+        "true_peak_dbtp": -2.95,
+        "loudness_target": "-14.61 LUFS",
+        "processing": [
+          "native v3 loop seam kept (jump 0.4x p99, rms step -0.1 dB)"
+        ]
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-09-23",
+        "flow_id": "ogzmAY8104vlhjUpxrGi",
+        "node_id": "9U4uJHNG3Y8TaWhwSfqe",
+        "generation_id": "ln8onqiJkVOG3q6hF8v6",
+        "settings": {
+          "duration_seconds": "auto",
+          "prompt_influence": 0.3,
+          "loop": false
+        },
+        "duration_s": 20.036,
+        "loudness_lufs": -14.61,
+        "channels": 1
+      }
+    },
+    "howitzerFire1": {
+      "path": "public/sound/howitzerFire1.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, no reverb tail, clean start and clean cut-off. 152 mm self-propelled howitzer firing, huge concussive boom with heavy barrel recoil thump and a short ringing decay.",
+      "prompt_source": "docs/asset-sources/elevenlabs-audio-pack-2026-11-15.md + ElevenLabs flow JbDThbAmeAhvxSLb7ZiX",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "B6h5ibBQKlSiipNGGmKy",
+      "generation_id": "l8tzfinuMkU2iID1ZU4i",
+      "settings": {
+        "duration_seconds": 2.51,
+        "prompt_influence": 0.6,
+        "loop": false
+      },
+      "loop": false,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "DwZjd0eRM9Mfi79efUcV",
+          "credits": 8.0,
+          "used": false
+        },
+        {
+          "take": 2,
+          "generation_id": "l8tzfinuMkU2iID1ZU4i",
+          "credits": 8.0,
+          "used": true
+        }
+      ],
+      "credits": 16.0,
+      "result": {
+        "duration_s": 2.299,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 128,
+        "loudness_lufs": -12.41,
+        "true_peak_dbtp": -1.27,
+        "loudness_target": "-11.46 LUFS",
+        "processing": [
+          "peak limiter reduced peaks by 11.0 dB (ceiling -1.5 dBFS)"
+        ]
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-11-15",
+        "flow_id": "JbDThbAmeAhvxSLb7ZiX",
+        "node_id": null,
+        "generation_id": "loyXFwfHsp7AhYTYtmvN",
+        "settings": {
+          "duration_seconds": 2.5,
+          "prompt_influence": 0.6,
+          "loop": false
+        },
+        "duration_s": 2.508,
+        "loudness_lufs": -11.46,
+        "channels": 2
+      }
+    },
+    "howitzerFire2": {
+      "path": "public/sound/howitzerFire2.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, no reverb tail, clean start and clean cut-off. 152 mm self-propelled howitzer firing, huge concussive boom with heavy barrel recoil thump and a short ringing decay.",
+      "prompt_source": "docs/asset-sources/elevenlabs-audio-pack-2026-11-15.md + ElevenLabs flow JbDThbAmeAhvxSLb7ZiX",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "uiBwhXR9B3L3ooVx6s7K",
+      "generation_id": "tOvGSe2fi3a1B5EhzE0k",
+      "settings": {
+        "duration_seconds": 2.17,
+        "prompt_influence": 0.6,
+        "loop": false
+      },
+      "loop": false,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "tOvGSe2fi3a1B5EhzE0k",
+          "credits": 7.0,
+          "used": true
+        }
+      ],
+      "credits": 7.0,
+      "result": {
+        "duration_s": 2.011,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 128,
+        "loudness_lufs": -11.72,
+        "true_peak_dbtp": -1.1,
+        "loudness_target": "-11.45 LUFS",
+        "processing": [
+          "peak limiter reduced peaks by 8.1 dB (ceiling -1.5 dBFS)"
+        ]
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-11-15",
+        "flow_id": "JbDThbAmeAhvxSLb7ZiX",
+        "node_id": null,
+        "generation_id": "UfltwmG5AjlNh17LDRQr",
+        "settings": {
+          "duration_seconds": 2.5,
+          "prompt_influence": 0.6,
+          "loop": false
+        },
+        "duration_s": 2.168,
+        "loudness_lufs": -11.45,
+        "channels": 2
+      }
+    },
+    "lowPowerAlarm": {
+      "path": "public/sound/lowPowerAlarm.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, no reverb tail, clean start and clean cut-off. Industrial power-down: a descending electrical whine followed by a two-note warning beep, not musical.",
+      "prompt_source": "docs/asset-sources/elevenlabs-audio-pack-2026-11-15.md + ElevenLabs flow JbDThbAmeAhvxSLb7ZiX",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "lzzksv9RUgFqsFYdxce1",
+      "generation_id": "e90qJPEWN6ne1jRYpPb9",
+      "settings": {
+        "duration_seconds": 1.51,
+        "prompt_influence": 0.6,
+        "loop": false
+      },
+      "loop": false,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "e90qJPEWN6ne1jRYpPb9",
+          "credits": 5.0,
+          "used": true
+        }
+      ],
+      "credits": 5.0,
+      "result": {
+        "duration_s": 1.411,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 128,
+        "loudness_lufs": -16.43,
+        "true_peak_dbtp": -5.64,
+        "loudness_target": "-16.47 LUFS",
+        "processing": null
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-11-15",
+        "flow_id": "JbDThbAmeAhvxSLb7ZiX",
+        "node_id": null,
+        "generation_id": "ceDhGzqngWe4V29IqKne",
+        "settings": {
+          "duration_seconds": 1.5,
+          "prompt_influence": 0.6,
+          "loop": false
+        },
+        "duration_s": 1.515,
+        "loudness_lufs": -16.47,
+        "channels": 2
+      }
+    },
+    "m2AutocannonBurst1": {
+      "path": "public/sound/m2AutocannonBurst1.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, no reverb tail, clean start and clean cut-off. 25 mm autocannon burst from an armored fighting vehicle, five rapid sharp shots, dry metallic crack with tiny brass-casing clinks, close perspective.",
+      "prompt_source": "docs/asset-sources/elevenlabs-audio-pack-2026-11-15.md + ElevenLabs flow JbDThbAmeAhvxSLb7ZiX",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "fUnzr4XI9zVR1kWtZbHb",
+      "generation_id": "alsIBwTnNvSrrQXhVwsT",
+      "settings": {
+        "duration_seconds": 0.5,
+        "prompt_influence": 0.6,
+        "loop": false
+      },
+      "loop": false,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "alsIBwTnNvSrrQXhVwsT",
+          "credits": 2.0,
+          "used": true
+        }
+      ],
+      "credits": 2.0,
+      "result": {
+        "duration_s": 0.522,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 128,
+        "loudness_lufs": -17.35,
+        "true_peak_dbtp": -3.08,
+        "loudness_target": "peak -2.7 dBFS (clip shorter than 0.5 s)",
+        "processing": null
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-11-15",
+        "flow_id": "JbDThbAmeAhvxSLb7ZiX",
+        "node_id": null,
+        "generation_id": "XyABO6Gn6CfNwqEqRk54",
+        "settings": {
+          "duration_seconds": 1.0,
+          "prompt_influence": 0.6,
+          "loop": false
+        },
+        "duration_s": 0.496,
+        "loudness_lufs": -16.25,
+        "channels": 2
+      }
+    },
+    "m2AutocannonBurst2": {
+      "path": "public/sound/m2AutocannonBurst2.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, no reverb tail, clean start and clean cut-off. 25 mm autocannon burst from an armored fighting vehicle, five rapid sharp shots, dry metallic crack with tiny brass-casing clinks, close perspective.",
+      "prompt_source": "docs/asset-sources/elevenlabs-audio-pack-2026-11-15.md + ElevenLabs flow JbDThbAmeAhvxSLb7ZiX",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "kIOhNP1TcpTOvAFb6bQl",
+      "generation_id": "T8hfs4YGX3lGyfMVZccP",
+      "settings": {
+        "duration_seconds": 0.5,
+        "prompt_influence": 0.6,
+        "loop": false
+      },
+      "loop": false,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "T8hfs4YGX3lGyfMVZccP",
+          "credits": 2.0,
+          "used": true
+        }
+      ],
+      "credits": 2.0,
+      "result": {
+        "duration_s": 0.392,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 128,
+        "loudness_lufs": null,
+        "true_peak_dbtp": null,
+        "loudness_target": "peak -3.2 dBFS (clip shorter than 0.5 s)",
+        "processing": [
+          "trimmed to 0.34s with 0.05s fade-out to stay within +10%"
+        ]
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-11-15",
+        "flow_id": "JbDThbAmeAhvxSLb7ZiX",
+        "node_id": null,
+        "generation_id": "zlExyvrxRWvfgSsXzpDz",
+        "settings": {
+          "duration_seconds": 1.0,
+          "prompt_influence": 0.6,
+          "loop": false
+        },
+        "duration_s": 0.313,
+        "loudness_lufs": null,
+        "channels": 2
+      }
+    },
+    "m2AutocannonBurst3": {
+      "path": "public/sound/m2AutocannonBurst3.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, no reverb tail, clean start and clean cut-off. 25 mm autocannon burst from an armored fighting vehicle, five rapid sharp shots, dry metallic crack with tiny brass-casing clinks, close perspective.",
+      "prompt_source": "docs/asset-sources/elevenlabs-audio-pack-2026-11-15.md + ElevenLabs flow JbDThbAmeAhvxSLb7ZiX",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "W9Bt4fi96ZgREpfWSZ8S",
+      "generation_id": "Bo8P6kdF93A2vwdWjx5X",
+      "settings": {
+        "duration_seconds": 0.5,
+        "prompt_influence": 0.6,
+        "loop": false
+      },
+      "loop": false,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "Bo8P6kdF93A2vwdWjx5X",
+          "credits": 2.0,
+          "used": true
+        }
+      ],
+      "credits": 2.0,
+      "result": {
+        "duration_s": 0.496,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 128,
+        "loudness_lufs": null,
+        "true_peak_dbtp": null,
+        "loudness_target": "peak -1.8 dBFS (clip shorter than 0.5 s)",
+        "processing": null
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-11-15",
+        "flow_id": "JbDThbAmeAhvxSLb7ZiX",
+        "node_id": null,
+        "generation_id": "TQlD4bhSMFB9sp02sSyX",
+        "settings": {
+          "duration_seconds": 1.0,
+          "prompt_influence": 0.6,
+          "loop": false
+        },
+        "duration_s": 0.444,
+        "loudness_lufs": -13.35,
+        "channels": 2
+      }
+    },
+    "mineDetonation1": {
+      "path": "public/sound/mineDetonation1.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, no reverb tail, clean start and clean cut-off. Land mine exploding under a vehicle, tight sharp blast with a burst of dirt and shrapnel debris, short fast decay.",
+      "prompt_source": "docs/asset-sources/elevenlabs-audio-pack-2026-11-15.md + ElevenLabs flow JbDThbAmeAhvxSLb7ZiX",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "CssrlisDnD0XzUDmiBBN",
+      "generation_id": "gmi5qVSS0bClHxHexYGt",
+      "settings": {
+        "duration_seconds": 1.51,
+        "prompt_influence": 0.65,
+        "loop": false
+      },
+      "loop": false,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "gmi5qVSS0bClHxHexYGt",
+          "credits": 5.0,
+          "used": true
+        }
+      ],
+      "credits": 5.0,
+      "result": {
+        "duration_s": 1.411,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 128,
+        "loudness_lufs": -15.38,
+        "true_peak_dbtp": -1.49,
+        "loudness_target": "-15.05 LUFS",
+        "processing": [
+          "peak limiter reduced peaks by 8.4 dB (ceiling -1.5 dBFS)"
+        ]
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-11-15",
+        "flow_id": "JbDThbAmeAhvxSLb7ZiX",
+        "node_id": null,
+        "generation_id": "TKLsmuLxg6Y6EjkamqMt",
+        "settings": {
+          "duration_seconds": 1.5,
+          "prompt_influence": 0.65,
+          "loop": false
+        },
+        "duration_s": 1.515,
+        "loudness_lufs": -15.05,
+        "channels": 2
+      }
+    },
+    "mineDetonation2": {
+      "path": "public/sound/mineDetonation2.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, no reverb tail, clean start and clean cut-off. Land mine exploding under a vehicle, tight sharp blast with a burst of dirt and shrapnel debris, short fast decay.",
+      "prompt_source": "docs/asset-sources/elevenlabs-audio-pack-2026-11-15.md + ElevenLabs flow JbDThbAmeAhvxSLb7ZiX",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "B0Em26PgaFFxZSOTpTbr",
+      "generation_id": "HLXIwOBURoe49VwKbfTW",
+      "settings": {
+        "duration_seconds": 0.76,
+        "prompt_influence": 0.65,
+        "loop": false
+      },
+      "loop": false,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "HLXIwOBURoe49VwKbfTW",
+          "credits": 3.0,
+          "used": true
+        }
+      ],
+      "credits": 3.0,
+      "result": {
+        "duration_s": 0.731,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 128,
+        "loudness_lufs": -15.86,
+        "true_peak_dbtp": -1.22,
+        "loudness_target": "-15.01 LUFS",
+        "processing": [
+          "peak limiter reduced peaks by 12.4 dB (ceiling -1.5 dBFS)"
+        ]
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-11-15",
+        "flow_id": "JbDThbAmeAhvxSLb7ZiX",
+        "node_id": null,
+        "generation_id": "2K8zJz6c0xZwvl4ZLEOA",
+        "settings": {
+          "duration_seconds": 1.5,
+          "prompt_influence": 0.65,
+          "loop": false
+        },
+        "duration_s": 0.758,
+        "loudness_lufs": -15.01,
+        "channels": 2
+      }
+    },
+    "mineSweeperDefuse1": {
+      "path": "public/sound/mineSweeperDefuse1.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, no reverb tail, clean start and clean cut-off. Controlled small demolition pop of a defused land mine with a metallic clank and a muffled puff of dirt, much quieter than a real explosion.",
+      "prompt_source": "docs/asset-sources/elevenlabs-audio-pack-2026-11-15.md + ElevenLabs flow JbDThbAmeAhvxSLb7ZiX",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "we4PRvusKuXR6cmKEwnv",
+      "generation_id": "M7Xx4JeEoXEQOnpWu2io",
+      "settings": {
+        "duration_seconds": 0.5,
+        "prompt_influence": 0.6,
+        "loop": false
+      },
+      "loop": false,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "M7Xx4JeEoXEQOnpWu2io",
+          "credits": 2.0,
+          "used": true
+        }
+      ],
+      "credits": 2.0,
+      "result": {
+        "duration_s": 0.47,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 128,
+        "loudness_lufs": null,
+        "true_peak_dbtp": null,
+        "loudness_target": "peak -7.4 dBFS (clip shorter than 0.5 s)",
+        "processing": null
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-11-15",
+        "flow_id": "JbDThbAmeAhvxSLb7ZiX",
+        "node_id": null,
+        "generation_id": "EfPeG50vm1hXglCCla5r",
+        "settings": {
+          "duration_seconds": 1.0,
+          "prompt_influence": 0.6,
+          "loop": false
+        },
+        "duration_s": 0.47,
+        "loudness_lufs": -26.95,
+        "channels": 2
+      }
+    },
+    "mineSweeperDefuse2": {
+      "path": "public/sound/mineSweeperDefuse2.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, no reverb tail, clean start and clean cut-off. Controlled small demolition pop of a defused land mine with a metallic clank and a muffled puff of dirt, much quieter than a real explosion.",
+      "prompt_source": "docs/asset-sources/elevenlabs-audio-pack-2026-11-15.md + ElevenLabs flow JbDThbAmeAhvxSLb7ZiX",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "WSVQEHxro7MKRQ6FIBsh",
+      "generation_id": "QUAr53yrVbOPhqAB8Bap",
+      "settings": {
+        "duration_seconds": 1.04,
+        "prompt_influence": 0.6,
+        "loop": false
+      },
+      "loop": false,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "QUAr53yrVbOPhqAB8Bap",
+          "credits": 3.0,
+          "used": true
+        }
+      ],
+      "credits": 3.0,
+      "result": {
+        "duration_s": 0.993,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 128,
+        "loudness_lufs": -19.73,
+        "true_peak_dbtp": -2.03,
+        "loudness_target": "-19.65 LUFS",
+        "processing": [
+          "peak limiter reduced peaks by 2.7 dB (ceiling -1.5 dBFS)"
+        ]
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-11-15",
+        "flow_id": "JbDThbAmeAhvxSLb7ZiX",
+        "node_id": null,
+        "generation_id": "l7LuQK42ciJpaJwZpNyZ",
+        "settings": {
+          "duration_seconds": 1.0,
+          "prompt_influence": 0.6,
+          "loop": false
+        },
+        "duration_s": 1.045,
+        "loudness_lufs": -19.65,
+        "channels": 2
+      }
+    },
+    "radarOffline": {
+      "path": "public/sound/radarOffline.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, no reverb tail, clean start and clean cut-off. Radar powering down, falling electronic whine collapsing into a burst of static crackle.",
+      "prompt_source": "docs/asset-sources/elevenlabs-audio-pack-2026-11-15.md + ElevenLabs flow JbDThbAmeAhvxSLb7ZiX",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "YQ6XLhFsDb977kvip121",
+      "generation_id": "03GcONMQY7h9MZQlca7Z",
+      "settings": {
+        "duration_seconds": 0.65,
+        "prompt_influence": 0.55,
+        "loop": false
+      },
+      "loop": false,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "03GcONMQY7h9MZQlca7Z",
+          "credits": 2.0,
+          "used": true
+        }
+      ],
+      "credits": 2.0,
+      "result": {
+        "duration_s": 0.627,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 128,
+        "loudness_lufs": -18.36,
+        "true_peak_dbtp": -5.35,
+        "loudness_target": "-18.38 LUFS",
+        "processing": null
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-11-15",
+        "flow_id": "JbDThbAmeAhvxSLb7ZiX",
+        "node_id": null,
+        "generation_id": "qhTV0krqZwbZKDQ9Ii0k",
+        "settings": {
+          "duration_seconds": 1.5,
+          "prompt_influence": 0.55,
+          "loop": false
+        },
+        "duration_s": 0.653,
+        "loudness_lufs": -18.38,
+        "channels": 2
+      }
+    },
+    "radarOnline": {
+      "path": "public/sound/radarOnline.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, no reverb tail, clean start and clean cut-off. Radar scope powering up, rising electronic hum then a soft sonar-like ping sweep.",
+      "prompt_source": "docs/asset-sources/elevenlabs-audio-pack-2026-11-15.md + ElevenLabs flow JbDThbAmeAhvxSLb7ZiX",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "egVZVgCKU17dvAprassg",
+      "generation_id": "s6mqPirHKM6JmbOU62cp",
+      "settings": {
+        "duration_seconds": 2.04,
+        "prompt_influence": 0.55,
+        "loop": false
+      },
+      "loop": false,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "s7sDHTrea6kONVr8DWmG",
+          "credits": 7.0,
+          "used": false
+        },
+        {
+          "take": 2,
+          "generation_id": "s6mqPirHKM6JmbOU62cp",
+          "credits": 7.0,
+          "used": true
+        }
+      ],
+      "credits": 14.0,
+      "result": {
+        "duration_s": 1.881,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 128,
+        "loudness_lufs": -18.62,
+        "true_peak_dbtp": -2.48,
+        "loudness_target": "-18.43 LUFS",
+        "processing": null
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-11-15",
+        "flow_id": "JbDThbAmeAhvxSLb7ZiX",
+        "node_id": null,
+        "generation_id": "tLqElrSgYvgJFLfNXNGN",
+        "settings": {
+          "duration_seconds": 2.0,
+          "prompt_influence": 0.55,
+          "loop": false
+        },
+        "duration_s": 2.038,
+        "loudness_lufs": -18.43,
+        "channels": 2
+      }
+    },
+    "recoveryWinchHook": {
+      "path": "public/sound/recoveryWinchHook.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, no reverb tail, clean start and clean cut-off. Heavy steel winch cable ratcheting tight and a hook clanking onto a vehicle, chain tension creak.",
+      "prompt_source": "docs/asset-sources/elevenlabs-audio-pack-2026-11-15.md + ElevenLabs flow JbDThbAmeAhvxSLb7ZiX",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "llgJrzL5PyHZ7UIakCOm",
+      "generation_id": "N8bliu2NWYAWivNPTunY",
+      "settings": {
+        "duration_seconds": 1.75,
+        "prompt_influence": 0.6,
+        "loop": false
+      },
+      "loop": false,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "N8bliu2NWYAWivNPTunY",
+          "credits": 6.0,
+          "used": true
+        }
+      ],
+      "credits": 6.0,
+      "result": {
+        "duration_s": 1.62,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 128,
+        "loudness_lufs": -16.75,
+        "true_peak_dbtp": -3.36,
+        "loudness_target": "-16.8 LUFS",
+        "processing": null
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-11-15",
+        "flow_id": "JbDThbAmeAhvxSLb7ZiX",
+        "node_id": null,
+        "generation_id": "77abKVPDiP43iWIPdcPK",
+        "settings": {
+          "duration_seconds": 2.0,
+          "prompt_influence": 0.6,
+          "loop": false
+        },
+        "duration_s": 1.75,
+        "loudness_lufs": -16.8,
+        "channels": 2
+      }
+    },
+    "refuelPumpLoop": {
+      "path": "public/sound/refuelPumpLoop.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, no reverb tail, clean start and clean cut-off. Seamless loop, constant level, no start or end transient. Industrial diesel fuel pump running, steady liquid flowing through a hose over a mechanical motor hum.",
+      "prompt_source": "docs/asset-sources/elevenlabs-audio-pack-2026-11-15.md + ElevenLabs flow JbDThbAmeAhvxSLb7ZiX",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "F32nbfJiJjzmIn1l3vww",
+      "generation_id": "GNdBZPo9iZMPClY287Pr",
+      "settings": {
+        "duration_seconds": 2.85,
+        "prompt_influence": 0.5,
+        "loop": true
+      },
+      "loop": true,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "GNdBZPo9iZMPClY287Pr",
+          "credits": 10.0,
+          "used": true
+        }
+      ],
+      "credits": 10.0,
+      "result": {
+        "duration_s": 2.873,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 128,
+        "loudness_lufs": -20.41,
+        "true_peak_dbtp": -10.45,
+        "loudness_target": "-20.36 LUFS",
+        "processing": [
+          "native v3 loop seam kept (jump 0.4x p99, rms step -0.7 dB)"
+        ]
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-11-15",
+        "flow_id": "JbDThbAmeAhvxSLb7ZiX",
+        "node_id": null,
+        "generation_id": "M8urbugg4D9wpe45FGvG",
+        "settings": {
+          "duration_seconds": 3.0,
+          "prompt_influence": 0.5,
+          "loop": true
+        },
+        "duration_s": 2.847,
+        "loudness_lufs": -20.36,
+        "channels": 2
+      }
+    },
+    "rocketTankLaunch1": {
+      "path": "public/sound/rocketTankLaunch1.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, no reverb tail, clean start and clean cut-off. Single unguided artillery rocket launching from a truck-mounted launcher, sharp ignition whoosh into a short motor roar that fades away.",
+      "prompt_source": "docs/asset-sources/elevenlabs-audio-pack-2026-11-15.md + ElevenLabs flow JbDThbAmeAhvxSLb7ZiX",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "mvjXoKhfiB895pVVhlA1",
+      "generation_id": "bHy8bAp9IXQj8PTtLo72",
+      "settings": {
+        "duration_seconds": 0.99,
+        "prompt_influence": 0.6,
+        "loop": false
+      },
+      "loop": false,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "bHy8bAp9IXQj8PTtLo72",
+          "credits": 3.0,
+          "used": true
+        }
+      ],
+      "credits": 3.0,
+      "result": {
+        "duration_s": 0.993,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 128,
+        "loudness_lufs": -14.01,
+        "true_peak_dbtp": -1.76,
+        "loudness_target": "-14.09 LUFS",
+        "processing": null
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-11-15",
+        "flow_id": "JbDThbAmeAhvxSLb7ZiX",
+        "node_id": null,
+        "generation_id": "PdOzcLvuaO7CjtqdVnh9",
+        "settings": {
+          "duration_seconds": 1.6,
+          "prompt_influence": 0.6,
+          "loop": false
+        },
+        "duration_s": 0.993,
+        "loudness_lufs": -14.09,
+        "channels": 2
+      }
+    },
+    "rocketTankLaunch2": {
+      "path": "public/sound/rocketTankLaunch2.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, no reverb tail, clean start and clean cut-off. Single unguided artillery rocket launching from a truck-mounted launcher, sharp ignition whoosh into a short motor roar that fades away.",
+      "prompt_source": "docs/asset-sources/elevenlabs-audio-pack-2026-11-15.md + ElevenLabs flow JbDThbAmeAhvxSLb7ZiX",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "Wspt8urMtOf7y3f9mSw8",
+      "generation_id": "WPX8hUaOrKEeUcsIkZ5X",
+      "settings": {
+        "duration_seconds": 1.46,
+        "prompt_influence": 0.6,
+        "loop": false
+      },
+      "loop": false,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "WPX8hUaOrKEeUcsIkZ5X",
+          "credits": 5.0,
+          "used": true
+        }
+      ],
+      "credits": 5.0,
+      "result": {
+        "duration_s": 1.358,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 128,
+        "loudness_lufs": -12.35,
+        "true_peak_dbtp": -1.22,
+        "loudness_target": "-12.29 LUFS",
+        "processing": [
+          "peak limiter reduced peaks by 4.7 dB (ceiling -1.5 dBFS)"
+        ]
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-11-15",
+        "flow_id": "JbDThbAmeAhvxSLb7ZiX",
+        "node_id": null,
+        "generation_id": "e1Bk8vioREd5FSBqOfr4",
+        "settings": {
+          "duration_seconds": 1.6,
+          "prompt_influence": 0.6,
+          "loop": false
+        },
+        "duration_s": 1.463,
+        "loudness_lufs": -12.29,
+        "channels": 2
+      }
+    },
+    "shipSinking": {
+      "path": "public/sound/shipSinking.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Large warship sinking sound effect for an RTS game: metal groaning and buckling, water rushing into hull, bubbles and final plunge splash, dramatic 3 second one-shot, no music, no voice, no explosion",
+      "prompt_source": "ElevenLabs flow ogzmAY8104vlhjUpxrGi \"Naval SFX and narrator VO\" (take matched to the repo file by waveform correlation 1.0)",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "tU9KxkaLzXJOSGRMIL5b",
+      "generation_id": "CGMHXfv2yYqurkQX9L8t",
+      "settings": {
+        "duration_seconds": 1.04,
+        "prompt_influence": 0.3,
+        "loop": false
+      },
+      "loop": false,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "CGMHXfv2yYqurkQX9L8t",
+          "credits": 3.0,
+          "used": true
+        }
+      ],
+      "credits": 3.0,
+      "result": {
+        "duration_s": 0.993,
+        "sample_rate": 44100,
+        "channels": 1,
+        "bitrate_kbps": 128,
+        "loudness_lufs": -17.39,
+        "true_peak_dbtp": -1.91,
+        "loudness_target": "-17.37 LUFS",
+        "processing": [
+          "peak limiter reduced peaks by 0.8 dB (ceiling -1.5 dBFS)"
+        ]
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-09-23",
+        "flow_id": "ogzmAY8104vlhjUpxrGi",
+        "node_id": "zAgFp9CElkmzOAFED1ZR",
+        "generation_id": "vMTKv5GTemLlX57N8X9M",
+        "settings": {
+          "duration_seconds": "auto",
+          "prompt_influence": 0.3,
+          "loop": false
+        },
+        "duration_s": 1.045,
+        "loudness_lufs": -17.37,
+        "channels": 1
+      }
+    },
+    "smallShipCruise": {
+      "path": "public/sound/smallShipCruise.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, no reverb tail, clean start and clean cut-off. Seamless loop, constant level, no start or end transient. Mid-size warship diesel engines and bow wake at steady cruise, low rumble with water slapping the hull.",
+      "prompt_source": "docs/asset-sources/elevenlabs-audio-pack-2026-11-15.md + ElevenLabs flow JbDThbAmeAhvxSLb7ZiX",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "QxKX6DQu9R7njtpGnByY",
+      "generation_id": "waICY3ZWCZUWaKia1jOS",
+      "settings": {
+        "duration_seconds": 3.84,
+        "prompt_influence": 0.5,
+        "loop": true
+      },
+      "loop": true,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "waICY3ZWCZUWaKia1jOS",
+          "credits": 13.0,
+          "used": true
+        }
+      ],
+      "credits": 13.0,
+      "result": {
+        "duration_s": 3.84,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 128,
+        "loudness_lufs": -18.45,
+        "true_peak_dbtp": -7.72,
+        "loudness_target": "-18.44 LUFS",
+        "processing": [
+          "native v3 loop seam kept (jump 0.1x p99, rms step 0.4 dB)"
+        ]
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-11-15",
+        "flow_id": "JbDThbAmeAhvxSLb7ZiX",
+        "node_id": null,
+        "generation_id": "gcsR8tnTfJZbNzBSUNDF",
+        "settings": {
+          "duration_seconds": 4.0,
+          "prompt_influence": 0.5,
+          "loop": true
+        },
+        "duration_s": 3.84,
+        "loudness_lufs": -18.44,
+        "channels": 2
+      }
+    },
+    "submarineDiving": {
+      "path": "public/sound/submarineDiving.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Realistic submarine diving submerging sound effect for an RTS game: ballast tanks flooding, hull creaking under pressure, bubbles and water closing over metal, short cinematic 2.5 second one-shot, no music, no voice",
+      "prompt_source": "ElevenLabs flow ogzmAY8104vlhjUpxrGi \"Naval SFX and narrator VO\" (take matched to the repo file by waveform correlation 1.0)",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "ZUMgSzCdq9e30u6ctHa5",
+      "generation_id": "q8LbuQnj0rPkox3h9rFO",
+      "settings": {
+        "duration_seconds": 1.04,
+        "prompt_influence": 0.3,
+        "loop": false
+      },
+      "loop": false,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "q8LbuQnj0rPkox3h9rFO",
+          "credits": 3.0,
+          "used": true
+        }
+      ],
+      "credits": 3.0,
+      "result": {
+        "duration_s": 0.993,
+        "sample_rate": 44100,
+        "channels": 1,
+        "bitrate_kbps": 128,
+        "loudness_lufs": -23.31,
+        "true_peak_dbtp": -2.35,
+        "loudness_target": "-23.35 LUFS",
+        "processing": null
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-09-23",
+        "flow_id": "ogzmAY8104vlhjUpxrGi",
+        "node_id": "bLczENtXTLRRrWW6IuB2",
+        "generation_id": "8JSO98mI71CTivtnISVc",
+        "settings": {
+          "duration_seconds": "auto",
+          "prompt_influence": 0.3,
+          "loop": false
+        },
+        "duration_s": 1.045,
+        "loudness_lufs": -23.35,
+        "channels": 1
+      }
+    },
+    "submarineSurfacing": {
+      "path": "public/sound/submarineSurfacing.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Realistic submarine surfacing sound effect for an RTS game: deep underwater rumble rising, water cascading off a metal hull, bubbles rushing to the surface, short cinematic 2.5 second one-shot, no music, no voice",
+      "prompt_source": "ElevenLabs flow ogzmAY8104vlhjUpxrGi \"Naval SFX and narrator VO\" (take matched to the repo file by waveform correlation 1.0)",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "noa7fsDXvOE2C4RT8b62",
+      "generation_id": "277UjmcOZUr2bA3OU6CI",
+      "settings": {
+        "duration_seconds": 1.04,
+        "prompt_influence": 0.3,
+        "loop": false
+      },
+      "loop": false,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "277UjmcOZUr2bA3OU6CI",
+          "credits": 3.0,
+          "used": true
+        }
+      ],
+      "credits": 3.0,
+      "result": {
+        "duration_s": 0.993,
+        "sample_rate": 44100,
+        "channels": 1,
+        "bitrate_kbps": 128,
+        "loudness_lufs": -23.01,
+        "true_peak_dbtp": -6.56,
+        "loudness_target": "-23.0 LUFS",
+        "processing": [
+          "target -23.0 LUFS instead of original -35.09 (original take near-silent)"
+        ]
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-09-23",
+        "flow_id": "ogzmAY8104vlhjUpxrGi",
+        "node_id": "BEW8pLwCzwtpZkIoCksl",
+        "generation_id": "JjYw56R3GfaAI3a1YAzb",
+        "settings": {
+          "duration_seconds": "auto",
+          "prompt_influence": 0.3,
+          "loop": false
+        },
+        "duration_s": 1.045,
+        "loudness_lufs": -35.09,
+        "channels": 1
+      }
+    },
+    "submarineTorpedo": {
+      "path": "public/sound/submarineTorpedo.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Submarine firing a torpedo sound effect for an RTS game: pneumatic tube launch whoosh, underwater torpedo propulsion whir, metallic clank, short punchy 1.5 second one-shot, no music, no voice",
+      "prompt_source": "ElevenLabs flow ogzmAY8104vlhjUpxrGi \"Naval SFX and narrator VO\" (take matched to the repo file by waveform correlation 1.0)",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "HzyD6yDRuAwTBJwTYxtc",
+      "generation_id": "if1lXO7I4USgd9Qlf8aS",
+      "settings": {
+        "duration_seconds": 3.03,
+        "prompt_influence": 0.3,
+        "loop": false
+      },
+      "loop": false,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "if1lXO7I4USgd9Qlf8aS",
+          "credits": 10.0,
+          "used": true
+        }
+      ],
+      "credits": 10.0,
+      "result": {
+        "duration_s": 2.769,
+        "sample_rate": 44100,
+        "channels": 1,
+        "bitrate_kbps": 128,
+        "loudness_lufs": -22.61,
+        "true_peak_dbtp": -7.88,
+        "loudness_target": "-22.61 LUFS",
+        "processing": null
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-09-23",
+        "flow_id": "ogzmAY8104vlhjUpxrGi",
+        "node_id": "zeY2BUViyD3T8ahXfRQK",
+        "generation_id": "hleW9rMwaFjgHv45gp7c",
+        "settings": {
+          "duration_seconds": "auto",
+          "prompt_influence": 0.3,
+          "loop": false
+        },
+        "duration_s": 3.03,
+        "loudness_lufs": -22.61,
+        "channels": 1
+      }
+    },
+    "uiPartyJoin": {
+      "path": "public/sound/uiPartyJoin.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, no reverb tail, clean start and clean cut-off. Soft two-tone radio chime for a player joining a channel, friendly and brief.",
+      "prompt_source": "docs/asset-sources/elevenlabs-audio-pack-2026-11-15.md + ElevenLabs flow JbDThbAmeAhvxSLb7ZiX",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "HryXAP0zYBK9Pf66Tkf0",
+      "generation_id": "hhfzr2TDctZxnpmgDwok",
+      "settings": {
+        "duration_seconds": 0.84,
+        "prompt_influence": 0.55,
+        "loop": false
+      },
+      "loop": false,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "hhfzr2TDctZxnpmgDwok",
+          "credits": 3.0,
+          "used": true
+        }
+      ],
+      "credits": 3.0,
+      "result": {
+        "duration_s": 0.784,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 128,
+        "loudness_lufs": -18.45,
+        "true_peak_dbtp": -2.5,
+        "loudness_target": "-18.5 LUFS",
+        "processing": null
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-11-15",
+        "flow_id": "JbDThbAmeAhvxSLb7ZiX",
+        "node_id": null,
+        "generation_id": "2jQrEOPHqq79nW9H1cVA",
+        "settings": {
+          "duration_seconds": 0.8,
+          "prompt_influence": 0.55,
+          "loop": false
+        },
+        "duration_s": 0.836,
+        "loudness_lufs": -18.5,
+        "channels": 2
+      }
+    },
+    "uiTabSwitch": {
+      "path": "public/sound/uiTabSwitch.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, no reverb tail, clean start and clean cut-off. Quiet crisp plastic tab click with a very short soft electronic tick.",
+      "prompt_source": "docs/asset-sources/elevenlabs-audio-pack-2026-11-15.md + ElevenLabs flow JbDThbAmeAhvxSLb7ZiX",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "WiPZ51wH8cCSU74W6pNL",
+      "generation_id": "DIHpR64TKO0Gyql9NMvO",
+      "settings": {
+        "duration_seconds": 0.5,
+        "prompt_influence": 0.6,
+        "loop": false
+      },
+      "loop": false,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "DIHpR64TKO0Gyql9NMvO",
+          "credits": 2.0,
+          "used": true
+        }
+      ],
+      "credits": 2.0,
+      "result": {
+        "duration_s": 0.287,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 128,
+        "loudness_lufs": null,
+        "true_peak_dbtp": null,
+        "loudness_target": "peak -10.4 dBFS (clip shorter than 0.5 s)",
+        "processing": null
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-11-15",
+        "flow_id": "JbDThbAmeAhvxSLb7ZiX",
+        "node_id": null,
+        "generation_id": "G1W8oxmN07fV4gdiONYE",
+        "settings": {
+          "duration_seconds": 0.25,
+          "prompt_influence": 0.6,
+          "loop": false
+        },
+        "duration_s": 0.287,
+        "loudness_lufs": null,
+        "channels": 2
+      }
+    },
+    "uiToggleOff": {
+      "path": "public/sound/uiToggleOff.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, no reverb tail, clean start and clean cut-off. Small tactile switch clicking down with a faint falling electronic blip, very short.",
+      "prompt_source": "docs/asset-sources/elevenlabs-audio-pack-2026-11-15.md + ElevenLabs flow JbDThbAmeAhvxSLb7ZiX",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "ctB6s5dwPfaomEPtBA3S",
+      "generation_id": "gufvQ08QA8pm4bMFWcFN",
+      "settings": {
+        "duration_seconds": 0.5,
+        "prompt_influence": 0.6,
+        "loop": false
+      },
+      "loop": false,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "oXi2vlzbrGwGmoN9tMvW",
+          "credits": 2.0,
+          "used": false
+        },
+        {
+          "take": 2,
+          "generation_id": "gufvQ08QA8pm4bMFWcFN",
+          "credits": 2.0,
+          "used": true
+        }
+      ],
+      "credits": 4.0,
+      "result": {
+        "duration_s": 0.34,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 128,
+        "loudness_lufs": null,
+        "true_peak_dbtp": null,
+        "loudness_target": "peak -9.5 dBFS (clip shorter than 0.5 s)",
+        "processing": null
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-11-15",
+        "flow_id": "JbDThbAmeAhvxSLb7ZiX",
+        "node_id": null,
+        "generation_id": "YBQD7Wv5dmGmT9TKZHym",
+        "settings": {
+          "duration_seconds": 0.3,
+          "prompt_influence": 0.6,
+          "loop": false
+        },
+        "duration_s": 0.34,
+        "loudness_lufs": null,
+        "channels": 2
+      }
+    },
+    "uiToggleOn": {
+      "path": "public/sound/uiToggleOn.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, no reverb tail, clean start and clean cut-off. Small tactile switch clicking up with a faint rising electronic blip, very short.",
+      "prompt_source": "docs/asset-sources/elevenlabs-audio-pack-2026-11-15.md + ElevenLabs flow JbDThbAmeAhvxSLb7ZiX",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "WQ43A5wKJTfZAWX6vxCU",
+      "generation_id": "KzJ7JKgRgqD8iaCAPyEN",
+      "settings": {
+        "duration_seconds": 0.5,
+        "prompt_influence": 0.6,
+        "loop": false
+      },
+      "loop": false,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "KzJ7JKgRgqD8iaCAPyEN",
+          "credits": 2.0,
+          "used": true
+        }
+      ],
+      "credits": 2.0,
+      "result": {
+        "duration_s": 0.418,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 128,
+        "loudness_lufs": null,
+        "true_peak_dbtp": null,
+        "loudness_target": "peak -9.4 dBFS (clip shorter than 0.5 s)",
+        "processing": [
+          "trimmed to 0.37s with 0.05s fade-out to stay within +10%"
+        ]
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-11-15",
+        "flow_id": "JbDThbAmeAhvxSLb7ZiX",
+        "node_id": null,
+        "generation_id": "KeJyPcILBt44L7fG9APA",
+        "settings": {
+          "duration_seconds": 0.3,
+          "prompt_influence": 0.6,
+          "loop": false
+        },
+        "duration_s": 0.34,
+        "loudness_lufs": null,
+        "channels": 2
+      }
+    },
+    "waterMineBlast1": {
+      "path": "public/sound/waterMineBlast1.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, no reverb tail, clean start and clean cut-off. Naval mine exploding just below the surface, deep muffled thump followed by a big water surge and bubbling.",
+      "prompt_source": "docs/asset-sources/elevenlabs-audio-pack-2026-11-15.md + ElevenLabs flow JbDThbAmeAhvxSLb7ZiX",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "33tRhv4kAAe13bi0N6rp",
+      "generation_id": "VlsmCXQ9MHnhrpQocLnY",
+      "settings": {
+        "duration_seconds": 2.51,
+        "prompt_influence": 0.6,
+        "loop": false
+      },
+      "loop": false,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "VlsmCXQ9MHnhrpQocLnY",
+          "credits": 8.0,
+          "used": true
+        }
+      ],
+      "credits": 8.0,
+      "result": {
+        "duration_s": 2.299,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 128,
+        "loudness_lufs": -14.75,
+        "true_peak_dbtp": -1.4,
+        "loudness_target": "-14.3 LUFS",
+        "processing": [
+          "peak limiter reduced peaks by 13.0 dB (ceiling -1.5 dBFS)"
+        ]
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-11-15",
+        "flow_id": "JbDThbAmeAhvxSLb7ZiX",
+        "node_id": null,
+        "generation_id": "neuMR1GBr63dZkjczRVH",
+        "settings": {
+          "duration_seconds": 2.5,
+          "prompt_influence": 0.6,
+          "loop": false
+        },
+        "duration_s": 2.508,
+        "loudness_lufs": -14.3,
+        "channels": 2
+      }
+    },
+    "waterMineBlast2": {
+      "path": "public/sound/waterMineBlast2.mp3",
+      "status": "regenerated-v3",
+      "prompt": "Military RTS game sound effect, punchy and dry, close-mic, no music, no voice, no reverb tail, clean start and clean cut-off. Naval mine exploding just below the surface, deep muffled thump followed by a big water surge and bubbling.",
+      "prompt_source": "docs/asset-sources/elevenlabs-audio-pack-2026-11-15.md + ElevenLabs flow JbDThbAmeAhvxSLb7ZiX",
+      "model_id": "eleven_text_to_sound_v3",
+      "generated_on": "2026-11-19",
+      "flow_id": "iHCzr4VVIxrycjoqLWyt",
+      "node_id": "5pXZGnxLZ0PJpGX9Kadh",
+      "generation_id": "b03sxwmKBCUVq3rKqWwl",
+      "settings": {
+        "duration_seconds": 1.96,
+        "prompt_influence": 0.6,
+        "loop": false
+      },
+      "loop": false,
+      "takes": [
+        {
+          "take": 1,
+          "generation_id": "b03sxwmKBCUVq3rKqWwl",
+          "credits": 7.0,
+          "used": true
+        }
+      ],
+      "credits": 7.0,
+      "result": {
+        "duration_s": 1.802,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 128,
+        "loudness_lufs": -15.65,
+        "true_peak_dbtp": -1.3,
+        "loudness_target": "-15.6 LUFS",
+        "processing": [
+          "peak limiter reduced peaks by 5.5 dB (ceiling -1.5 dBFS)"
+        ]
+      },
+      "previous": {
+        "model_id": "eleven_text_to_sound_v2",
+        "generated_on": "2026-11-15",
+        "flow_id": "JbDThbAmeAhvxSLb7ZiX",
+        "node_id": null,
+        "generation_id": "rrJwvOiCUBeUBk0CYPTU",
+        "settings": {
+          "duration_seconds": 2.5,
+          "prompt_influence": 0.6,
+          "loop": false
+        },
+        "duration_s": 1.959,
+        "loudness_lufs": -15.6,
+        "channels": 2
+      }
+    },
+    "F22Flight": {
+      "path": "public/sound/F22Flight.mp3",
+      "status": "unknown-prompt",
+      "prompt": null,
+      "model_id": "unknown",
+      "generation_id": null,
+      "added_in_commit": "2026-02-25 5e8d7dd8",
+      "loop": false,
+      "result": {
+        "duration_s": 5.04,
+        "sample_rate": 48000,
+        "channels": 2,
+        "loudness_lufs": -9.16,
+        "true_peak_dbtp": -0.23
+      },
+      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+    },
+    "F22Landing": {
+      "path": "public/sound/F22Landing.mp3",
+      "status": "unknown-prompt",
+      "prompt": null,
+      "model_id": "unknown",
+      "generation_id": null,
+      "added_in_commit": "2026-02-25 5e8d7dd8",
+      "loop": false,
+      "result": {
+        "duration_s": 5.04,
+        "sample_rate": 48000,
+        "channels": 2,
+        "loudness_lufs": -15.92,
+        "true_peak_dbtp": -3.78
+      },
+      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+    },
+    "F22TakeOff_1": {
+      "path": "public/sound/F22TakeOff_1.mp3",
+      "status": "unknown-prompt",
+      "prompt": null,
+      "model_id": "unknown",
+      "generation_id": null,
+      "added_in_commit": "2026-02-25 5e8d7dd8",
+      "loop": false,
+      "result": {
+        "duration_s": 5.04,
+        "sample_rate": 48000,
+        "channels": 2,
+        "loudness_lufs": -3.67,
+        "true_peak_dbtp": 2.15
+      },
+      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+    },
+    "F22TakeOff_2": {
+      "path": "public/sound/F22TakeOff_2.mp3",
+      "status": "unknown-prompt",
+      "prompt": null,
+      "model_id": "unknown",
+      "generation_id": null,
+      "added_in_commit": "2026-02-25 5e8d7dd8",
+      "loop": false,
+      "result": {
+        "duration_s": 5.04,
+        "sample_rate": 48000,
+        "channels": 2,
+        "loudness_lufs": -3.67,
+        "true_peak_dbtp": 2.28
+      },
+      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+    },
+    "F35BombDetonation": {
+      "path": "public/sound/F35BombDetonation.mp3",
+      "status": "unknown-prompt",
+      "prompt": null,
+      "model_id": "unknown",
+      "generation_id": null,
+      "added_in_commit": "2026-03-08 100389f5",
+      "loop": false,
+      "result": {
+        "duration_s": 2.04,
+        "sample_rate": 48000,
+        "channels": 2,
+        "loudness_lufs": -10.28,
+        "true_peak_dbtp": 1.28
+      },
+      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+    },
+    "F35BombDrop": {
+      "path": "public/sound/F35BombDrop.mp3",
+      "status": "unknown-prompt",
+      "prompt": null,
+      "model_id": "unknown",
+      "generation_id": null,
+      "added_in_commit": "2026-03-08 100389f5",
+      "loop": false,
+      "result": {
+        "duration_s": 3.024,
+        "sample_rate": 48000,
+        "channels": 2,
+        "loudness_lufs": -2.57,
+        "true_peak_dbtp": 0.23
+      },
+      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+    },
+    "F35Landing": {
+      "path": "public/sound/F35Landing.mp3",
+      "status": "unknown-prompt",
+      "prompt": null,
+      "model_id": "unknown",
+      "generation_id": null,
+      "added_in_commit": "2026-03-08 100389f5",
+      "loop": false,
+      "result": {
+        "duration_s": 5.04,
+        "sample_rate": 48000,
+        "channels": 2,
+        "loudness_lufs": -4.22,
+        "true_peak_dbtp": 1.27
+      },
+      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+    },
+    "F35TakeOff": {
+      "path": "public/sound/F35TakeOff.mp3",
+      "status": "unknown-prompt",
+      "prompt": null,
+      "model_id": "unknown",
+      "generation_id": null,
+      "added_in_commit": "2026-03-08 100389f5",
+      "loop": false,
+      "result": {
+        "duration_s": 5.04,
+        "sample_rate": 48000,
+        "channels": 2,
+        "loudness_lufs": -6.62,
+        "true_peak_dbtp": 2.2
+      },
+      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+    },
+    "apache_fly": {
+      "path": "public/sound/apache_fly.mp3",
+      "status": "unknown-prompt",
+      "prompt": null,
+      "model_id": "unknown",
+      "generation_id": null,
+      "added_in_commit": "2025-10-31 a1bbfe33",
+      "loop": false,
+      "result": {
+        "duration_s": 4.032,
+        "sample_rate": 48000,
+        "channels": 2,
+        "loudness_lufs": -4.19,
+        "true_peak_dbtp": 0.63
+      },
+      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+    },
+    "buildingPlaced": {
+      "path": "public/sound/buildingPlaced.mp3",
+      "status": "unknown-prompt",
+      "prompt": null,
+      "model_id": "unknown",
+      "generation_id": null,
+      "added_in_commit": "2025-03-24 c7b1cbc8",
+      "loop": false,
+      "result": {
+        "duration_s": 1.567,
+        "sample_rate": 44100,
+        "channels": 2,
+        "loudness_lufs": -15.14,
+        "true_peak_dbtp": -0.43
+      },
+      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+    },
+    "bulletHit01": {
+      "path": "public/sound/bulletHit01.mp3",
+      "status": "unknown-prompt",
+      "prompt": null,
+      "model_id": "unknown",
+      "generation_id": null,
+      "added_in_commit": "2025-02-12 c41891b7",
+      "loop": false,
+      "result": {
+        "duration_s": 2.09,
+        "sample_rate": 44100,
+        "channels": 2,
+        "loudness_lufs": -7.36,
+        "true_peak_dbtp": 0.29
+      },
+      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+    },
+    "deposit": {
+      "path": "public/sound/deposit.mp3",
+      "status": "unknown-prompt",
+      "prompt": null,
+      "model_id": "unknown",
+      "generation_id": null,
+      "added_in_commit": "2025-02-12 c41891b7",
+      "loop": false,
+      "result": {
+        "duration_s": 1.567,
+        "sample_rate": 44100,
+        "channels": 2,
+        "loudness_lufs": -11.64,
+        "true_peak_dbtp": -0.28
+      },
+      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+    },
+    "explosion01": {
+      "path": "public/sound/explosion01.mp3",
+      "status": "unknown-prompt",
+      "prompt": null,
+      "model_id": "unknown",
+      "generation_id": null,
+      "added_in_commit": "2025-02-12 c41891b7",
+      "loop": false,
+      "result": {
+        "duration_s": 2.09,
+        "sample_rate": 44100,
+        "channels": 2,
+        "loudness_lufs": -10.7,
+        "true_peak_dbtp": -0.0
+      },
+      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+    },
+    "explosion02": {
+      "path": "public/sound/explosion02.mp3",
+      "status": "unknown-prompt",
+      "prompt": null,
+      "model_id": "unknown",
+      "generation_id": null,
+      "added_in_commit": "2025-02-12 c41891b7",
+      "loop": false,
+      "result": {
+        "duration_s": 2.09,
+        "sample_rate": 44100,
+        "channels": 2,
+        "loudness_lufs": -8.25,
+        "true_peak_dbtp": -0.01
+      },
+      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+    },
+    "explosion03": {
+      "path": "public/sound/explosion03.mp3",
+      "status": "unknown-prompt",
+      "prompt": null,
+      "model_id": "unknown",
+      "generation_id": null,
+      "added_in_commit": "2025-02-12 c41891b7",
+      "loop": false,
+      "result": {
+        "duration_s": 2.09,
+        "sample_rate": 44100,
+        "channels": 2,
+        "loudness_lufs": -8.3,
+        "true_peak_dbtp": -0.01
+      },
+      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+    },
+    "explosion04": {
+      "path": "public/sound/explosion04.mp3",
+      "status": "unknown-prompt",
+      "prompt": null,
+      "model_id": "unknown",
+      "generation_id": null,
+      "added_in_commit": "2025-02-12 c41891b7",
+      "loop": false,
+      "result": {
+        "duration_s": 1.071,
+        "sample_rate": 44100,
+        "channels": 2,
+        "loudness_lufs": -10.6,
+        "true_peak_dbtp": 0.07
+      },
+      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+    },
+    "harvest": {
+      "path": "public/sound/harvest.mp3",
+      "status": "unknown-prompt",
+      "prompt": null,
+      "model_id": "unknown",
+      "generation_id": null,
+      "added_in_commit": "2025-03-24 c7b1cbc8",
+      "loop": false,
+      "result": {
+        "duration_s": 1.567,
+        "sample_rate": 44100,
+        "channels": 2,
+        "loudness_lufs": -30.85,
+        "true_peak_dbtp": -8.05
+      },
+      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+    },
+    "mine_explosion": {
+      "path": "public/mine_explosion.mp3",
+      "status": "unknown-prompt",
+      "prompt": null,
+      "model_id": "unknown",
+      "generation_id": null,
+      "added_in_commit": "2025-11-06 abcfce80",
+      "loop": false,
+      "result": {
+        "duration_s": 1.512,
+        "sample_rate": 48000,
+        "channels": 2,
+        "loudness_lufs": -4.78,
+        "true_peak_dbtp": 1.48
+      },
+      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+    },
+    "patriotMissile01": {
+      "path": "public/sound/patriotMissile01.mp3",
+      "status": "unknown-prompt",
+      "prompt": null,
+      "model_id": "unknown",
+      "generation_id": null,
+      "added_in_commit": "2025-03-05 05d3af46",
+      "loop": false,
+      "result": {
+        "duration_s": 1.567,
+        "sample_rate": 44100,
+        "channels": 2,
+        "loudness_lufs": -9.13,
+        "true_peak_dbtp": 0.17
+      },
+      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+    },
+    "patriotMissile02": {
+      "path": "public/sound/patriotMissile02.mp3",
+      "status": "unknown-prompt",
+      "prompt": null,
+      "model_id": "unknown",
+      "generation_id": null,
+      "added_in_commit": "2025-03-05 05d3af46",
+      "loop": false,
+      "result": {
+        "duration_s": 1.567,
+        "sample_rate": 44100,
+        "channels": 2,
+        "loudness_lufs": -7.85,
+        "true_peak_dbtp": 0.43
+      },
+      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+    },
+    "tankDrive4sLoop": {
+      "path": "public/sound/tankDrive4sLoop.mp3",
+      "status": "unknown-prompt",
+      "prompt": null,
+      "model_id": "unknown",
+      "generation_id": null,
+      "added_in_commit": "2025-07-24 26044ba6",
+      "loop": true,
+      "result": {
+        "duration_s": 4.075,
+        "sample_rate": 44100,
+        "channels": 2,
+        "loudness_lufs": -5.7,
+        "true_peak_dbtp": 0.01
+      },
+      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+    },
+    "tankEngineStart01": {
+      "path": "public/sound/tankEngineStart01.mp3",
+      "status": "unknown-prompt",
+      "prompt": null,
+      "model_id": "unknown",
+      "generation_id": null,
+      "added_in_commit": "2025-02-12 c41891b7",
+      "loop": false,
+      "result": {
+        "duration_s": 3.056,
+        "sample_rate": 44100,
+        "channels": 2,
+        "loudness_lufs": -9.63,
+        "true_peak_dbtp": 0.19
+      },
+      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+    },
+    "tankMove01": {
+      "path": "public/sound/tankMove01.mp3",
+      "status": "unknown-prompt",
+      "prompt": null,
+      "model_id": "unknown",
+      "generation_id": null,
+      "added_in_commit": "2025-02-12 c41891b7",
+      "loop": false,
+      "result": {
+        "duration_s": 6.087,
+        "sample_rate": 44100,
+        "channels": 2,
+        "loudness_lufs": -12.93,
+        "true_peak_dbtp": -3.2
+      },
+      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+    },
+    "tankShot01": {
+      "path": "public/sound/tankShot01.mp3",
+      "status": "unknown-prompt",
+      "prompt": null,
+      "model_id": "unknown",
+      "generation_id": null,
+      "added_in_commit": "2025-02-12 c41891b7",
+      "loop": false,
+      "result": {
+        "duration_s": 3.056,
+        "sample_rate": 44100,
+        "channels": 2,
+        "loudness_lufs": -13.04,
+        "true_peak_dbtp": 0.09
+      },
+      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+    },
+    "tankShot02": {
+      "path": "public/sound/tankShot02.mp3",
+      "status": "unknown-prompt",
+      "prompt": null,
+      "model_id": "unknown",
+      "generation_id": null,
+      "added_in_commit": "2025-02-12 c41891b7",
+      "loop": false,
+      "result": {
+        "duration_s": 1.071,
+        "sample_rate": 44100,
+        "channels": 2,
+        "loudness_lufs": -8.94,
+        "true_peak_dbtp": 0.03
+      },
+      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+    },
+    "tankShot03": {
+      "path": "public/sound/tankShot03.mp3",
+      "status": "unknown-prompt",
+      "prompt": null,
+      "model_id": "unknown",
+      "generation_id": null,
+      "added_in_commit": "2025-02-12 c41891b7",
+      "loop": false,
+      "result": {
+        "duration_s": 2.09,
+        "sample_rate": 44100,
+        "channels": 2,
+        "loudness_lufs": -14.29,
+        "true_peak_dbtp": 0.31
+      },
+      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+    },
+    "teslacoil_firing": {
+      "path": "public/sound/teslacoil_firing.mp3",
+      "status": "unknown-prompt",
+      "prompt": null,
+      "model_id": "unknown",
+      "generation_id": null,
+      "added_in_commit": "2025-05-20 818a399a",
+      "loop": false,
+      "result": {
+        "duration_s": 1.567,
+        "sample_rate": 44100,
+        "channels": 2,
+        "loudness_lufs": -9.74,
+        "true_peak_dbtp": -0.29
+      },
+      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+    },
+    "teslacoil_loading": {
+      "path": "public/sound/teslacoil_loading.mp3",
+      "status": "unknown-prompt",
+      "prompt": null,
+      "model_id": "unknown",
+      "generation_id": null,
+      "added_in_commit": "2025-05-20 818a399a",
+      "loop": false,
+      "result": {
+        "duration_s": 1.071,
+        "sample_rate": 44100,
+        "channels": 2,
+        "loudness_lufs": -3.25,
+        "true_peak_dbtp": -0.31
+      },
+      "notes": "No prompt, model or generation id in the repo, its git history, prompt-history/ or the ElevenLabs flows reachable through the MCP connector (the sound-effects web history is not exposed). Not regenerated: a prompt would have to be invented. Fill in prompt/model_id/generation_id if the original is found, then it can be regenerated with v3."
+    }
+  }
+}

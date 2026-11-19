@@ -140,6 +140,10 @@ User documentation and gameplay reference:
 - [In-game and gameplay documentation](./Documentation.md)
 - [Spec 032: In-Game User Documentation](./specs/032-user-documentation.md)
 
+## 🔊 Sound effect provenance
+
+Every sound effect in `public/sound/` is mapped to the prompt, model and ElevenLabs generation it was created with in [`docs/asset-sources/sound-effects-prompts.json`](docs/asset-sources/sound-effects-prompts.json). Add an entry whenever you add or regenerate a sound effect; `tests/unit/soundEffectsPromptMapping.test.js` fails on unmapped files. Music (`public/sound/music/`) and voice lines are excluded.
+
 ## 🏗️ Architecture Documentation
 
 Technical and architecture-focused documentation:
