@@ -1281,6 +1281,7 @@
             <button class="config-modal__tab" data-config-tab="keybindings" role="tab" aria-selected="false">Key
               Bindings</button>
             <button class="config-modal__tab" data-config-tab="gamepads" role="tab" aria-selected="false" data-i18n="settings.gamepad.tab">Controllers</button>
+            <button class="config-modal__tab" id="settingsAudioTab" data-config-tab="audio" role="tab" aria-selected="false" aria-controls="settingsAudioPanel">Audio</button>
           </div>
         </div>
         <button id="configModalCloseBtn" class="config-modal__close" aria-label="Close settings">×</button>
@@ -1755,6 +1756,7 @@
           <div id="keybindingsEditor"></div>
         </div>
         <div class="config-modal__content" data-config-tab-panel="gamepads" hidden></div>
+        <div class="config-modal__content" id="settingsAudioPanel" data-config-tab-panel="audio" role="tabpanel" aria-labelledby="settingsAudioTab" hidden></div>
       </div>
     </div>
   </div>

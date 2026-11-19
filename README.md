@@ -142,7 +142,7 @@ User documentation and gameplay reference:
 
 ## 🔊 Sound effect provenance
 
-Every sound effect in `public/sound/` is mapped to the prompt, model and ElevenLabs generation it was created with in [`docs/asset-sources/sound-effects-prompts.json`](docs/asset-sources/sound-effects-prompts.json). Add an entry whenever you add or regenerate a sound effect; `tests/unit/soundEffectsPromptMapping.test.js` fails on unmapped files. Music (`public/sound/music/`) and voice lines are excluded.
+Every sound effect in `public/sound/` is mapped to the prompt, model and ElevenLabs generation it was created with in [`docs/asset-sources/sound-effects-prompts.json`](docs/asset-sources/sound-effects-prompts.json). Add an entry whenever you add or regenerate a sound effect; `tests/unit/soundEffectsPromptMapping.test.js` fails on unmapped files. Music (`public/sound/music/`) and voice lines are excluded from that mapping. Every shipped audio file, including music and voice lines, is also listed in [`src/audio/audioCatalogue.js`](src/audio/audioCatalogue.js) for the Settings Audio tab; `tests/unit/audioCatalogue.test.js` fails if a file is missing.
 
 ## 🏗️ Architecture Documentation
 

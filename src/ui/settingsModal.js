@@ -285,6 +285,23 @@ function saveRadarOfflineAnimationSetting(enabled) {
   }
 }
 
+let audioCatalogueModule = null
+
+function syncAudioCatalogue(modal, tabId) {
+  if (tabId !== 'audio') {
+    if (audioCatalogueModule) audioCatalogueModule.then(api => api.stopAudioCatalogue())
+    return
+  }
+  const panel = modal.querySelector('[data-config-tab-panel="audio"]')
+  if (!audioCatalogueModule) audioCatalogueModule = import('./audioCataloguePanel.js')
+  audioCatalogueModule.then(api => {
+    if (modal.querySelector('[data-config-tab="audio"]')?.getAttribute('aria-selected') !== 'true') return
+    api.mountAudioCatalogue(panel)
+  }).catch(error => {
+    window.logger?.warn?.('Audio catalogue failed to open:', error)
+  })
+}
+
 function setActiveTab(modal, tabId) {
   const tabs = modal.querySelectorAll('[data-config-tab]')
   const panels = modal.querySelectorAll('[data-config-tab-panel]')
@@ -298,6 +315,7 @@ function setActiveTab(modal, tabId) {
     panel.classList.toggle('config-modal__content--active', isActive)
     panel.hidden = !isActive
   })
+  syncAudioCatalogue(modal, tabId)
 }
 
 function bindTabs(modal) {
@@ -358,6 +376,7 @@ function closeModal(modal) {
     unitShadowSettingsDirty = false
   }
   stopGamepadMenu()
+  if (audioCatalogueModule) audioCatalogueModule.then(api => api.stopAudioCatalogue())
   modal.classList.remove('config-modal--open')
   modal.setAttribute('aria-hidden', 'true')
   document.body.classList.remove('config-modal-open')
