@@ -17,8 +17,10 @@ test('[E00271] switches minimap terrain using the image prepared for each map', 
   await page.goto('/?seed=41&size=64&players=2')
   const loadingScreen = page.locator('#loadingScreen')
   await expect(loadingScreen).toHaveAttribute('aria-hidden', 'true', { timeout: 90000 })
-  const toggle = page.getByRole('button', { name: 'Satellite', exact: true })
+  const toggle = page.locator('#minimapSatelliteToggle')
   await expect(toggle).toHaveAttribute('aria-pressed', 'false')
+  await expect(toggle).toHaveAccessibleName('Switch to satellite view')
+  await expect(toggle.locator('.minimap-satellite-icon')).toBeVisible()
 
   const terrainColors = await page.evaluate(async() => {
     const { minimapRenderer } = (await import('/src/rendering.js')).getGameRenderer()
@@ -48,6 +50,8 @@ test('[E00271] switches minimap terrain using the image prepared for each map', 
   await expect.poll(() => page.evaluate(() => window.drawnMinimapTerrain)).toBe('normal')
   await toggle.press('Space')
   await expect(toggle).toHaveAttribute('aria-pressed', 'true')
+  await expect(toggle).toHaveAccessibleName('Switch to normal view')
+  await expect(toggle.locator('.minimap-normal-icon')).toBeVisible()
   await expect.poll(() => page.evaluate(() => window.drawnMinimapTerrain)).toBe('satellite')
   await toggle.click()
   await expect.poll(() => page.evaluate(() => window.drawnMinimapTerrain)).toBe('normal')

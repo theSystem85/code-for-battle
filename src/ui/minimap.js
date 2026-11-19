@@ -22,6 +22,9 @@ export function setupMinimapHandlers(gameCanvas, setSatelliteEnabled) {
     const enabled = satelliteToggle.getAttribute('aria-pressed') !== 'true'
     setSatelliteEnabled?.(enabled)
     satelliteToggle.setAttribute('aria-pressed', String(enabled))
+    const label = enabled ? 'Switch to normal view' : 'Switch to satellite view'
+    satelliteToggle.setAttribute('aria-label', label)
+    satelliteToggle.title = label
   })
   const stopToggleShortcut = event => {
     if (event.key === ' ' || event.key === 'Enter') event.stopPropagation()

@@ -208,7 +208,10 @@
   <div id="sidebar" class="expanded-left-sidebar">
     <div class="sidebar-minimap">
       <canvas id="minimap"></canvas>
-      <button id="minimapSatelliteToggle" type="button" aria-controls="minimap" aria-pressed="false">Satellite</button>
+      <button id="minimapSatelliteToggle" class="action-button icon-button" type="button" aria-controls="minimap" aria-pressed="false" aria-label="Switch to satellite view" title="Switch to satellite view">
+        <svg class="minimap-satellite-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m13.5 5.5 5 5-3 3-5-5zm-5 4 6 6-2 2-6-6zm-3.5 3 6 6-2 2-6-6zm10-10 6 6-2 2-6-6zm-9 15a7 7 0 0 0 7 7M3 18a10 10 0 0 0 4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg class="minimap-normal-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3zm6-3v15m6-12v15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
     </div>
 
     <!-- Money bar positioned right above the energy bar -->

@@ -2494,19 +2494,25 @@ body.mobile-portrait.sidebar-condensed #mobileBuildMenuContainer .tab-content.ac
   position: absolute;
   right: 4px;
   bottom: 16px;
-  padding: 4px 8px;
-  border: 1px solid #70808c;
-  border-radius: 3px;
-  background: #172026;
+  width: 32px;
+  height: 32px;
+  padding: 5px;
   color: #fff;
-  font: inherit;
-  font-size: 0.8rem;
   cursor: pointer;
 }
 
-#minimapSatelliteToggle[aria-pressed="true"] {
-  background: #dcecf6;
-  color: #172026;
+#minimapSatelliteToggle svg {
+  width: 100%;
+  height: 100%;
+}
+
+#minimapSatelliteToggle .minimap-normal-icon,
+#minimapSatelliteToggle[aria-pressed="true"] .minimap-satellite-icon {
+  display: none;
+}
+
+#minimapSatelliteToggle[aria-pressed="true"] .minimap-normal-icon {
+  display: block;
 }
 
 body.sidebar-collapsed #minimapSatelliteToggle,
