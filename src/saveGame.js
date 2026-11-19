@@ -39,7 +39,7 @@ import { showNotification } from './ui/notifications.js'
 import { runWithLoadingScreen } from './ui/loadingScreen.js'
 import { milestoneSystem } from './game/milestoneSystem.js'
 import { initializeOccupancyMap } from './units.js'
-import { getTextureManager, getMapRenderer, publishPreparedRuntimeMap } from './rendering.js'
+import { getTextureManager, getMapRenderer, publishPreparedRuntimeMap, prepareSatelliteMinimap } from './rendering.js'
 import { withPreparedRendering } from './rendering/prepared/runtimeGraphicsPreparation.js'
 import {
   assignHarvesterToOptimalRefinery,
@@ -2207,6 +2207,9 @@ function prepareLoadedSaveGraphics(loop, mapRenderer, textureManager, topologySh
     }
     if (saveGraphicsReady === ready) {
       gameState.occupancyMap = initializeOccupancyMap(units, mapGrid, textureManager)
+      // Startup restores its map before creating the game loop and prepares the
+      // satellite view as the final boot step.
+      if (loop) await prepareSatelliteMinimap(mapGrid)
     }
   }, loop?.stop ? loop : null).catch(error => {
     window.logger.warn('Failed to prepare restored game graphics:', error)

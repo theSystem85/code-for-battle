@@ -4,6 +4,8 @@ import { TILE_SIZE } from './config.js'
 import { getCanvasLogicalSize, getCanvasPixelRatio } from './rendering/renderingUtils.js'
 import { STATIC_TERRAIN_PAGE_LIMIT, staticTerrainPageBytes } from './rendering/prepared/staticTerrainPages.js'
 import { RENDER_REVISION_DOMAINS } from './rendering/prepared/renderRevisionStore.js'
+import { addMapReplacedListener } from './rendering/prepared/mapMutationNotifier.js'
+import { getLoadingScreenState, updateLoadingScreen, waitForLoadingPaint } from './ui/loadingScreen.js'
 import {
   bindRenderingDensityPreparation,
   prepareRuntimeMap,
@@ -14,7 +16,13 @@ export { RENDER_REVISION_DOMAINS }
 
 // Create a single renderer instance
 const gameRenderer = new Renderer()
+const MAX_SATELLITE_EDGE = 1024
+let satelliteMapGeneration = 0
 let renderRecoveryPending = false
+addMapReplacedListener(() => {
+  satelliteMapGeneration++
+  gameRenderer.minimapRenderer.satelliteImage = null
+})
 if (typeof document !== 'undefined') {
   document.addEventListener('canvas-density-changed', () => {
     const grid = gameRenderer.mapRenderer.terrainRevisions.mapGrid
@@ -53,6 +61,42 @@ export function renderGame(gameCtx, gameCanvas, mapGrid, factories, units, bulle
 
 export function renderMinimap(minimapCtx, minimapCanvas, mapGrid, scrollOffset, gameCanvas, units, buildings, gameState) {
   return gameRenderer.renderMinimap(minimapCtx, minimapCanvas, mapGrid, scrollOffset, gameCanvas, units, buildings, gameState)
+}
+
+export function setSatelliteMinimapEnabled(enabled) {
+  gameRenderer.minimapRenderer.satelliteEnabled = enabled
+}
+
+export async function prepareSatelliteMinimap(mapGrid) {
+  const minimap = document.getElementById('minimap')
+  const renderer = gameRenderer.minimapRenderer
+  if (!minimap || !mapGrid[0]?.length || renderer.satelliteImage?.grid === mapGrid) return
+
+  const generation = satelliteMapGeneration
+  const loading = getLoadingScreenState()
+  if (loading.visible) {
+    updateLoadingScreen({
+      phase: 'satellite',
+      detail: 'Rendering satellite minimap',
+      progress: loading.progress == null ? null : 0.99
+    }, loading.session)
+    await waitForLoadingPaint()
+  }
+  if (generation !== satelliteMapGeneration || renderer.satelliteImage?.grid === mapGrid) return
+
+  // Rasterize at minimap scale. A full-size world canvas would grow with map
+  // area and consume far more memory than the cached image can display.
+  const canvas = document.createElement('canvas')
+  canvas.width = Math.max(1, Math.min(minimap.width, MAX_SATELLITE_EDGE))
+  canvas.height = Math.max(1, Math.min(minimap.height, MAX_SATELLITE_EDGE))
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return
+  try {
+    gameRenderer.mapRenderer.renderSatelliteTerrain(ctx, mapGrid)
+    renderer.satelliteImage = { grid: mapGrid, canvas }
+  } catch (error) {
+    globalThis.window?.logger?.warn?.('Failed to render satellite minimap', error)
+  }
 }
 
 // Export the preload function so it can be called from main.js

@@ -8,7 +8,7 @@ import {
   getPlayableViewportWidth
 } from '../utils/layoutMetrics.js'
 
-export function setupMinimapHandlers(gameCanvas) {
+export function setupMinimapHandlers(gameCanvas, setSatelliteEnabled) {
   const minimapElement = document.getElementById('minimap')
   if (!minimapElement) {
     return
@@ -16,6 +16,18 @@ export function setupMinimapHandlers(gameCanvas) {
 
   mobileMinimapState.minimapElement = minimapElement
   mobileMinimapState.gameCanvas = gameCanvas
+
+  const satelliteToggle = document.getElementById('minimapSatelliteToggle')
+  satelliteToggle?.addEventListener('click', () => {
+    const enabled = satelliteToggle.getAttribute('aria-pressed') !== 'true'
+    setSatelliteEnabled?.(enabled)
+    satelliteToggle.setAttribute('aria-pressed', String(enabled))
+  })
+  const stopToggleShortcut = event => {
+    if (event.key === ' ' || event.key === 'Enter') event.stopPropagation()
+  }
+  satelliteToggle?.addEventListener('keydown', stopToggleShortcut)
+  satelliteToggle?.addEventListener('keyup', stopToggleShortcut)
 
   // Handle minimap dragging state
   let isMinimapDragging = false

@@ -32,6 +32,8 @@ export class MinimapRenderer {
   constructor() {
     this.terrainCacheCanvas = document.createElement('canvas')
     this.terrainCacheCtx = this.terrainCacheCanvas.getContext('2d')
+    this.satelliteEnabled = false
+    this.satelliteImage = null
     this.resourceCacheCanvas = document.createElement('canvas')
     this.resourceCacheCtx = this.resourceCacheCanvas.getContext('2d')
     this.visibilityCacheCanvas = document.createElement('canvas')
@@ -152,9 +154,13 @@ export class MinimapRenderer {
 
       let token = renderProfiler.startSpan(PROFILER_SPAN_IDS.MINIMAP_BASE)
       try {
-        this.ensureMapCache(mapGrid, backingWidth, backingHeight)
-        minimapCtx.drawImage(this.terrainCacheCanvas, 0, 0)
-        minimapCtx.drawImage(this.resourceCacheCanvas, 0, 0)
+        if (this.satelliteEnabled && this.satelliteImage?.grid === mapGrid) {
+          minimapCtx.drawImage(this.satelliteImage.canvas, 0, 0, backingWidth, backingHeight)
+        } else {
+          this.ensureMapCache(mapGrid, backingWidth, backingHeight)
+          minimapCtx.drawImage(this.terrainCacheCanvas, 0, 0)
+          minimapCtx.drawImage(this.resourceCacheCanvas, 0, 0)
+        }
       } finally {
         renderProfiler.endSpan(token)
       }

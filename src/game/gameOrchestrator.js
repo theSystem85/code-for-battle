@@ -37,7 +37,8 @@ import { initSaveGameSystem, initLastGameRecovery, maybeResumeLastPausedGame, fi
 import { initReplaySystem } from '../replaySystem.js'
 import { showNotification } from '../ui/notifications.js'
 import { resetAttackDirections } from '../ai/enemyStrategies.js'
-import { getTextureManager, preloadTileTextures, getMapRenderer, publishPreparedRuntimeMap } from '../rendering.js'
+import { getTextureManager, preloadTileTextures, getMapRenderer, publishPreparedRuntimeMap, prepareSatelliteMinimap, setSatelliteMinimapEnabled } from '../rendering.js'
+import { withPreparedRendering } from '../rendering/prepared/runtimeGraphicsPreparation.js'
 import { milestoneSystem } from '../game/milestoneSystem.js'
 import { updateDangerZoneMaps } from '../game/dangerZoneMap.js'
 import { APP_VERSION } from '../version.js'
@@ -740,6 +741,7 @@ class Game {
         await waitForBootPhase('present')
 
         stopBootProgressPaint()
+        await prepareSatelliteMinimap(mapGrid)
         boot?.finishAll()
         updateLoadingScreen({
           phase: 'ready',
@@ -948,7 +950,10 @@ class Game {
     )
     this.eventHandlers.setProductionController(this.productionController)
 
-    setupMinimapHandlers(this.canvasManager.getGameCanvas())
+    setupMinimapHandlers(this.canvasManager.getGameCanvas(), enabled => {
+      setSatelliteMinimapEnabled(enabled)
+      this.gameLoop?.requestRender()
+    })
 
     gameState.gamePaused = false
 
@@ -1207,9 +1212,9 @@ class Game {
       gameState.mapTilesY = height
 
       try {
-        await runWithLoadingScreen(() => {
-          this.resetGameWithNewMap(seed, { preserveCamera: true })
-        }, {
+        await runWithLoadingScreen(() => withPreparedRendering(
+          () => this.resetGameWithNewMap(seed, { preserveCamera: true }), this.gameLoop
+        ), {
           phase: 'map',
           kicker: 'MAP CONTROL',
           detail: 'Generating the map',
@@ -1528,7 +1533,7 @@ class Game {
     }
   }
 
-  resetGameWithNewMap(seed, options = {}) {
+  async resetGameWithNewMap(seed, options = {}) {
     clearPathCache()
     clearFlowFields()
     const textures = getTextureManager()
@@ -1676,7 +1681,9 @@ class Game {
 
     gameState.occupancyMap = initializeOccupancyMap(units, mapGrid, getTextureManager())
     updateDangerZoneMaps(gameState)
-    return terrainPreparation
+    const prepared = await terrainPreparation
+    await prepareSatelliteMinimap(mapGrid)
+    return prepared
   }
 
   async resetGame() {
@@ -1807,7 +1814,7 @@ class Game {
     } finally {
       commitMapMutationTransaction(mapLifecycleTransaction)
     }
-    publishPreparedRuntimeMap(mapGrid)
+    const terrainPreparation = publishPreparedRuntimeMap(mapGrid)
     updatePowerSupply(gameState.buildings, gameState)
 
     units.length = 0
@@ -1844,10 +1851,10 @@ class Game {
     this.centerOnPlayerFactory()
     this.updateStatsDisplay()
 
-    setTimeout(() => {
-      this.startGameLoop()
-      window.logger('Game reset complete!')
-    }, 100)
+    await terrainPreparation
+    await prepareSatelliteMinimap(mapGrid)
+    this.startGameLoop()
+    window.logger('Game reset complete!')
   }
 
   updateUIAfterReset() {
@@ -1985,8 +1992,6 @@ function regenerateMapForClient(seed, widthTiles, heightTiles, playerCount, mapO
   } finally {
     commitMapMutationTransaction(mapLifecycleTransaction)
   }
-  publishPreparedRuntimeMap(mapGrid)
-
   gameState.occupancyMap = []
   for (let y = 0; y < heightTiles; y++) {
     gameState.occupancyMap[y] = []

@@ -2118,6 +2118,17 @@ export class MapRenderer {
     return this.drawIntegratedTileImage(ctx, overlay, screenX, screenY)
   }
 
+  renderSatelliteTerrain(ctx, mapGrid) {
+    const height = mapGrid.length
+    const width = mapGrid[0].length
+    const useTexture = USE_TEXTURES && this.textureManager.allTexturesLoaded
+    const waterFrame = this.textureManager.waterFrames.length ? this.textureManager.getCurrentWaterFrame() : null
+    this.attachMutationStore(mapGrid)
+    ctx.setTransform(ctx.canvas.width / (width * TILE_SIZE), 0, 0, ctx.canvas.height / (height * TILE_SIZE), 0, 0)
+    this.drawBaseLayer(ctx, mapGrid, 0, 0, width, height, 0, 0, useTexture, waterFrame)
+    this.drawDecorativeLayer(ctx, mapGrid, 0, 0, width, height, 0, 0, useTexture)
+  }
+
   drawBaseLayer(ctx, mapGrid, startTileX, startTileY, endTileX, endTileY, offsetX, offsetY, useTexture, currentWaterFrame, options = {}) {
     const { skipWaterBase = false, skipWaterSot = false, skipResourceOverlays = false } = options
     if (!mapGrid.length || !mapGrid[0]?.length) return

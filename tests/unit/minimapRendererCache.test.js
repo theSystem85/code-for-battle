@@ -6,6 +6,7 @@ import { renderProfiler } from '../../src/performance/renderProfiler.js'
 import { PROFILER_SPAN_IDS } from '../../src/performance/profilerIds.js'
 import { videoOverlay } from '../../src/ui/videoOverlay.js'
 import { MILESTONE_VIDEO_CROPS } from '../../src/ui/milestoneVideoCrop.js'
+import { PARTY_COLORS, TILE_SIZE } from '../../src/config.js'
 
 function createCanvas(width, height, density, playableWidth = width, playableHeight = height) {
   const canvas = document.createElement('canvas')
@@ -109,6 +110,37 @@ describe('MinimapRenderer prepared caches', () => {
     visibilityMap[0][0].visible = false
     renderer.render(minimapCtx, minimapCanvas, mapGrid, { x: 64, y: 32 }, gameCanvas, [], [], state)
     expect(fogClear).toHaveBeenCalledTimes(fogAfterFirstRender + 1)
+  })
+
+  it('[U07247] uses the satellite image beneath the existing fog and entity markers', () => {
+    const renderer = new MinimapRenderer()
+    const minimap = createCanvas(160, 96, 2)
+    const ctx = minimap.getContext('2d')
+    const map = createMap()
+    const satellite = createCanvas(80, 48, 1)
+    const gameCanvas = createCanvas(400, 240, 1)
+    const state = { radarActive: true, shadowOfWarEnabled: true, visibilityMap: createVisibilityMap(), humanPlayer: 'player1' }
+    const units = [{ owner: 'player1', x: 0, y: 0 }, { owner: 'player2', x: 0, y: TILE_SIZE }]
+    const buildings = [{ owner: 'player2', x: 1, y: 1, width: 1, height: 1 }]
+    const drawImage = vi.spyOn(ctx, 'drawImage')
+    const arc = vi.spyOn(ctx, 'arc')
+    const stroke = vi.spyOn(ctx, 'strokeRect')
+    const buildingFills = []
+    vi.spyOn(ctx, 'fillRect').mockImplementation((...bounds) => {
+      buildingFills.push([ctx.fillStyle, ...bounds])
+    })
+    renderer.satelliteEnabled = true
+    renderer.satelliteImage = { grid: map, canvas: satellite }
+
+    renderer.render(ctx, minimap, map, { x: 0, y: 0 }, gameCanvas, units, buildings, state)
+
+    expect(drawImage.mock.calls).toEqual([
+      [satellite, 0, 0, 320, 192],
+      [renderer.visibilityCacheCanvas, 0, 0]
+    ])
+    expect(arc.mock.calls).toEqual([[40, 24, 3, 0, 2 * Math.PI]])
+    expect(buildingFills).toEqual([[PARTY_COLORS.player2, 80, 48, 80, 48]])
+    expect(stroke).toHaveBeenCalledTimes(1)
   })
 
   it('[U02946] attributes video rendering only to the minimap video span', () => {

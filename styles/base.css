@@ -2482,6 +2482,40 @@ body.mobile-portrait.sidebar-condensed #mobileBuildMenuContainer .tab-content.ac
   border-bottom: 2px solid #4f9cff;
 }
 
+.sidebar-minimap {
+  position: relative;
+}
+
+.sidebar-minimap #minimap {
+  display: block;
+}
+
+#minimapSatelliteToggle {
+  position: absolute;
+  right: 4px;
+  bottom: 16px;
+  padding: 4px 8px;
+  border: 1px solid #70808c;
+  border-radius: 3px;
+  background: #172026;
+  color: #fff;
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+#minimapSatelliteToggle[aria-pressed="true"] {
+  background: #dcecf6;
+  color: #172026;
+}
+
+body.sidebar-collapsed #minimapSatelliteToggle,
+body.sidebar-condensed #minimapSatelliteToggle,
+#sidebar:not(.expanded-left-sidebar) #minimapSatelliteToggle,
+.sidebar-minimap:not(:has(#minimap)) #minimapSatelliteToggle {
+  display: none;
+}
+
 #minimap {
   width: 100%;
   height: 150px;

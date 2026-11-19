@@ -25,6 +25,7 @@ import {
   notifyDecalTileMutation
 } from '../rendering/prepared/mapMutationNotifier.js'
 import { bindRenderingDensityPreparation } from '../rendering/prepared/renderingPipeline.js'
+import { withPreparedRendering } from '../rendering/prepared/runtimeGraphicsPreparation.js'
 
 // Re-export COMMAND_TYPES for convenience (will need to import from gameCommandSync or define here)
 // For now, we'll assume it's imported where needed
@@ -863,12 +864,23 @@ function syncClientMap(seed, width, height, playerCount, mapOreFieldCount, mapOr
     const restoredGrid = gameState.mapGrid
     if (Array.isArray(restoredGrid) && restoredGrid.length) {
       bindRenderingDensityPreparation()
-      const sheetPreparation = typeof terrainSettings?.useIntegratedSpriteSheetMode === 'boolean'
-        ? import('../ui/mapEditorControls.js').then(module => module.applyIntegratedSpriteSheetRuntime(null, { preserveTopology: true, authoritative: true, sheetsOverride: terrainSettings.mapTopologySheets }))
-        : import('../rendering.js').then(module => module.publishPreparedRuntimeMap(restoredGrid))
-      // Sheet application already publishes runtime pages. A descriptor-only
-      // generation here would dispose those freshly uploaded GPU resources.
-      sheetPreparation.catch(error => {
+      const firstRow = restoredGrid[0]
+      const isCurrentMap = () => restoredGrid === gameState.mapGrid && restoredGrid[0] === firstRow
+      withPreparedRendering(async() => {
+        if (!isCurrentMap()) return
+        if (typeof terrainSettings?.useIntegratedSpriteSheetMode === 'boolean') {
+          const { applyIntegratedSpriteSheetRuntime } = await import('../ui/mapEditorControls.js')
+          if (!isCurrentMap()) return
+          await applyIntegratedSpriteSheetRuntime(null, { preserveTopology: true, authoritative: true, sheetsOverride: terrainSettings.mapTopologySheets })
+        } else {
+          const { publishPreparedRuntimeMap } = await import('../rendering.js')
+          if (!isCurrentMap()) return
+          await publishPreparedRuntimeMap(restoredGrid)
+        }
+        if (!isCurrentMap()) return
+        const { prepareSatelliteMinimap } = await import('../rendering.js')
+        if (isCurrentMap()) await prepareSatelliteMinimap(restoredGrid)
+      }).catch(error => {
         window.logger?.warn?.('Prepared map generation failed after network restore', error)
       })
     }
