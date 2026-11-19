@@ -87,8 +87,9 @@
        Consume it now so a manual reload always uses the normal loading screen. -->
   <script>
     try {
-      const raw = sessionStorage.getItem('cfb-update-frame')
-      sessionStorage.removeItem('cfb-update-frame')
+      const benchmarkFrame = parent !== window && new URL(location.href).searchParams.has('graphics-tuner')
+      const raw = benchmarkFrame ? null : sessionStorage.getItem('cfb-update-frame')
+      if (!benchmarkFrame) sessionStorage.removeItem('cfb-update-frame')
       const frame = JSON.parse(raw || 'null')
       const navigation = performance.getEntriesByType('navigation')[0]
       const handoff = frame && Date.now() - frame.createdAt < 120000
@@ -871,10 +872,13 @@
             <button id="openSpriteSheetEditorBtn" class="action-button" type="button">Sprite Sheet Editor</button>
             <button id="openSaveGameEditorBtn" class="action-button" type="button">Save Game Editor</button>
           </div>
-          <label class="sidebar-check-row">
+          <div class="sidebar-check-row">
             <input type="checkbox" id="integratedSpriteSheetModeCheckbox">
-            <span>Custom sprite sheets</span>
-          </label>
+            <span class="graphics-tuner-label">
+              <label for="integratedSpriteSheetModeCheckbox">Custom sprite sheets</label>
+              <button type="button" id="graphics-tuner-info-customSprites" class="graphics-tuner-info" hidden>ⓘ</button>
+            </span>
+          </div>
           <div id="integratedSpriteSheetSelectionContainer" class="sidebar-field" hidden>
             <div class="sidebar-hint">Sprite sheets to use</div>
             <div id="integratedSpriteSheetSelectionList" class="integrated-sheet-selection-list"></div>
@@ -1290,6 +1294,7 @@
                 <option value="">Choose a benchmark…</option>
                 <option value="standard">Map scroll benchmark</option>
                 <option value="heavy">Heavy battle (320 units)</option>
+                <option value="graphics">Graphics tuner (60 FPS)</option>
               </select>
             </label>
           </div>
@@ -1502,6 +1507,22 @@
           </div>
         </div>
         <div class="config-modal__content" data-config-tab-panel="graphics" hidden>
+          <div class="config-modal__actions">
+            <button id="settingsRunGraphicsTuner" class="config-modal__button config-modal__button--primary" type="button">Tune graphics for 60 FPS</button>
+            <button id="settingsGraphicsTunerReport" class="config-modal__button" type="button" hidden>Last graphics report</button>
+          </div>
+          <div class="config-modal__field">
+            <span class="graphics-tuner-label">
+              <label for="settingsRenderPixelDensity">Render pixel density</label>
+              <button type="button" id="graphics-tuner-info-density" class="graphics-tuner-info" hidden>ⓘ</button>
+            </span>
+            <select id="settingsRenderPixelDensity">
+              <option value="auto">Automatic</option>
+              <option value="1">1×</option>
+              <option value="2">2×</option>
+              <option value="3">3×</option>
+            </select>
+          </div>
           <label class="config-modal__checkbox-row" for="settingsSeamlessUpdates">
             <input id="settingsSeamlessUpdates" type="checkbox">
             <span>Seamless updates (experimental)</span>
@@ -1521,10 +1542,13 @@
           <div class="config-modal__section">
             <h3 class="config-modal__section-title">Water and terrain</h3>
             <p class="config-modal__hint">Coastal Shallows reveals sand through the water near the coast. Water is fully transparent at the coast and transitions to opaque offshore (1 tile is 10 m). Tone and saturation apply to Ocean Surface Water and Classic Water.</p>
-            <label class="config-modal__field config-modal__field--toggle">
+            <div class="config-modal__field config-modal__field--toggle">
               <input type="checkbox" id="settingsCoastalShallowsToggle" checked>
-              <span>Coastal Shallows (sandy seabed and coastal transparency)</span>
-            </label>
+              <span class="graphics-tuner-label">
+                <label for="settingsCoastalShallowsToggle">Coastal Shallows (sandy seabed and coastal transparency)</label>
+                <button type="button" id="graphics-tuner-info-coastalShallows" class="graphics-tuner-info" hidden>ⓘ</button>
+              </span>
+            </div>
             <label class="config-modal__field" for="settingsCoastalShallowsLengthRange">
               <span class="config-modal__range-label-row">
                 <span>Coastal shallows length</span>
@@ -1537,10 +1561,13 @@
               <input type="range" id="settingsWaterDirectionRange" min="0" max="360" step="1" value="0">
             </label>
 
-            <label class="config-modal__field config-modal__field--toggle">
+            <div class="config-modal__field config-modal__field--toggle">
               <input type="checkbox" id="settingsOceanWaterToggle" aria-describedby="settingsOceanWaterHint" checked>
-              <span>Ocean Surface Water</span>
-            </label>
+              <span class="graphics-tuner-label">
+                <label for="settingsOceanWaterToggle">Ocean Surface Water</label>
+                <button type="button" id="graphics-tuner-info-oceanWater" class="graphics-tuner-info" hidden>ⓘ</button>
+              </span>
+            </div>
             <p id="settingsOceanWaterHint" class="config-modal__hint">Uncheck for Classic Water. Both styles share the tone, saturation and wave controls. Classic Water is used automatically when a hardware GPU is unavailable.</p>
             <label class="config-modal__field" for="settingsWaterHeightRange">
               <span class="config-modal__range-label-row">
@@ -1616,6 +1643,13 @@
           </div>
           <div class="config-modal__section">
             <h3 class="config-modal__section-title">Selection appearance</h3>
+            <div class="config-modal__field config-modal__field--toggle">
+              <input type="checkbox" id="settingsDetailedSelectionHud" checked>
+              <span class="graphics-tuner-label">
+                <label for="settingsDetailedSelectionHud">Detailed selection HUD</label>
+                <button type="button" id="graphics-tuner-info-selectionHud" class="graphics-tuner-info" hidden>ⓘ</button>
+              </span>
+            </div>
             <div class="config-modal__hud-settings-row">
               <div class="config-modal__hud-settings-controls">
                 <label class="config-modal__field">
@@ -1639,10 +1673,20 @@
           </div>
           <div class="config-modal__section">
             <h3 class="config-modal__section-title">Effects</h3>
-            <label class="config-modal__field config-modal__field--toggle">
+            <div class="config-modal__field config-modal__field--toggle">
               <input type="checkbox" id="settingsUnitShadowsToggle" checked>
-              <span>Unit shadows</span>
-            </label>
+              <span class="graphics-tuner-label">
+                <label for="settingsUnitShadowsToggle">Unit shadows</label>
+                <button type="button" id="graphics-tuner-info-shadows" class="graphics-tuner-info" hidden>ⓘ</button>
+              </span>
+            </div>
+            <div class="config-modal__field config-modal__field--toggle">
+              <input type="checkbox" id="settingsSmokeToggle" checked>
+              <span class="graphics-tuner-label">
+                <label for="settingsSmokeToggle">Smoke particles</label>
+                <button type="button" id="graphics-tuner-info-smoke" class="graphics-tuner-info" hidden>ⓘ</button>
+              </span>
+            </div>
             <label class="config-modal__field config-modal__field--toggle">
               <input type="checkbox" id="settingsCrystalGlowToggle" checked>
               <span>Crystal glow</span>
@@ -1928,6 +1972,7 @@
     </div>
   </div>
 
+  <div id="graphics-tuner-tip" class="offline-mode-tip graphics-tuner-tip" role="tooltip" hidden></div>
   <div id="benchmarkModal" class="benchmark-modal modal-hidden" aria-hidden="true">
     <div class="benchmark-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="benchmarkModalTitle">
       <div class="benchmark-modal__header">
@@ -1936,7 +1981,8 @@
           aria-label="Close benchmark results">×</button>
       </div>
       <div class="benchmark-modal__body">
-        <p id="benchmarkModalStatus">Preparing benchmark…</p>
+        <p id="benchmarkModalStatus" role="status">Preparing benchmark…</p>
+        <div id="benchmarkGraphicsReport" hidden></div>
         <div id="benchmarkResultsContainer" hidden>
           <div class="benchmark-modal__summary">
             <div class="benchmark-modal__metric">Min FPS: <span id="benchmarkMinFps">--</span></div>
@@ -1949,6 +1995,7 @@
         </div>
       </div>
       <div class="benchmark-modal__footer">
+        <button id="benchmarkApplyGraphicsBtn" class="benchmark-modal__button benchmark-modal__button--primary" type="button" hidden>Apply settings</button>
         <button id="benchmarkRunAgainBtn" class="benchmark-modal__button">Run Again</button>
         <button id="benchmarkModalCloseFooterBtn"
           class="benchmark-modal__button benchmark-modal__button--primary">Close</button>

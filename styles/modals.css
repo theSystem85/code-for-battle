@@ -985,6 +985,10 @@ body.benchmark-modal-open {
   font-family: var(--game-font-family);
 }
 
+.benchmark-modal--over-settings {
+  z-index: var(--z-modal-raised);
+}
+
 .benchmark-modal.modal-hidden {
   display: none;
 }
@@ -2320,4 +2324,82 @@ body.mobile-portrait .tutorial-card {
   padding: 4px 8px;
   border-radius: 5px;
   font-size: 14px;
+}
+
+.graphics-tuner-stage {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) 4.5rem;
+  z-index: 2147483000;
+  background: #182126;
+}
+
+.graphics-tuner-stage iframe {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  border: 0;
+  pointer-events: none;
+}
+
+.graphics-tuner-stage__controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 3.5rem;
+  padding: 0.5rem 1rem max(0.5rem, env(safe-area-inset-bottom));
+  color: #f1f5f7;
+  background: #25323b;
+}
+
+.graphics-tuner-stage__controls p { margin: 0; }
+
+#benchmarkGraphicsReport table {
+  width: 100%;
+  margin-block: 0.75rem;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+#benchmarkGraphicsReport caption,
+#benchmarkGraphicsReport th,
+#benchmarkGraphicsReport td {
+  padding: 0.4rem;
+  border-bottom: 1px solid #41505c;
+  text-align: left;
+  vertical-align: top;
+  white-space: pre-line;
+}
+
+.graphics-tuner-label {
+  display: flex;
+  align-items: center;
+  gap: 0.25em;
+  min-width: 0;
+}
+
+.graphics-tuner-info {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 1.65rem;
+  height: 1.65rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #8bc6ff;
+  vertical-align: middle;
+  cursor: pointer;
+}
+
+.graphics-tuner-info[hidden] { display: none; }
+.graphics-tuner-info:hover { background: #24384d; }
+.graphics-tuner-info:focus-visible { outline: 2px solid currentColor; }
+
+.offline-mode-tip.graphics-tuner-tip {
+  z-index: var(--z-modal-popover);
+  pointer-events: auto;
 }

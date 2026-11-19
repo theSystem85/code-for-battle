@@ -2,6 +2,7 @@ import { showUpdateRecovery } from './pwa/updateRecovery.js'
 import { checkStartupUpdate } from './pwa/startupUpdate.js'
 import { showLoadingScreen, updateLoadingScreen, waitForLoadingPaint } from './ui/loadingScreen.js'
 import { LAST_VERSION_KEY, readBootStorage, writeBootStorage } from './ui/releaseDigest.js'
+import { isGraphicsTunerFrame } from './benchmark/graphicsTunerFrame.js'
 
 async function rememberInstalledVersion() {
   const controller = navigator.serviceWorker?.controller
@@ -25,6 +26,10 @@ async function start() {
   // Delay all game imports until the HTML has parsed and update preflight completes.
   if (document.readyState === 'loading') {
     await new Promise(resolve => document.addEventListener('DOMContentLoaded', resolve, { once: true }))
+  }
+  if (isGraphicsTunerFrame()) {
+    await import('./benchmark/graphicsTunerSandbox.js')
+    return
   }
   showLoadingScreen({ phase: 'update-check', detail: 'Checking for updates', progress: null })
   await waitForLoadingPaint()

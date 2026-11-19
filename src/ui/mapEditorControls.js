@@ -524,6 +524,33 @@ export function applyIntegratedSpriteSheetRuntime(metadata = null, options = {})
   return withPreparedRendering(() => applyIntegratedSpriteSheetConfiguration(metadata, options))
 }
 
+export async function setIntegratedSpriteSheetMode(enabled, options = {}) {
+  if (!topologyChangesAllowed(gameState)) {
+    throw new Error('Map sheet changes are controlled by the host before the match starts.')
+  }
+  const previous = gameState.useIntegratedSpriteSheetMode
+  const previousSelections = gameState.activeSpriteSheetSelections
+  const resetSelection = enabled && previousSelections?.length === 0 && options.restoreDefaults
+  if (previous === enabled && !resetSelection) return
+  gameState.useIntegratedSpriteSheetMode = enabled
+  if (resetSelection) gameState.activeSpriteSheetSelections = null
+  try {
+    await applyIntegratedSpriteSheetRuntime(null, options)
+  } catch (error) {
+    gameState.useIntegratedSpriteSheetMode = previous
+    gameState.activeSpriteSheetSelections = previousSelections
+    throw error
+  } finally {
+    if (integratedSpriteSheetModeCheckbox) integratedSpriteSheetModeCheckbox.checked = gameState.useIntegratedSpriteSheetMode
+    updateIntegratedSheetSelectionVisibility()
+  }
+  setStoredItem(INTEGRATED_MODE_STORAGE_KEY, String(enabled))
+  if (resetSelection) {
+    removeStoredItem(DISABLED_SHEETS_STORAGE_KEY)
+    renderIntegratedSheetSelectionList(gameState.availableStaticSpriteSheets)
+  }
+}
+
 async function applyIntegratedSpriteSheetConfiguration(metadata, { preserveTopology = false, authoritative = false, sheetsOverride = null }) {
   if (!preserveTopology && !topologyChangesAllowed(gameState, authoritative)) {
     showNotification('Map sheet changes are controlled by the host before the match starts.')

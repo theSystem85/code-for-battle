@@ -1,6 +1,6 @@
 import { ImpactVfx, isLowImpactQuality } from './vfx/impactVfx.js'
 // rendering/effectsRenderer.js
-import { TILE_SIZE } from '../config.js'
+import { SMOKE_RENDERING_ENABLED, TILE_SIZE } from '../config.js'
 import { drawTeslaCoilLightning, getCanvasLogicalSize } from './renderingUtils.js'
 import { getSimulationTime } from '../game/time.js'
 import { computeSweepDustRadius, getDustEffectNow } from '../game/mineSweeperBehavior.js'
@@ -587,7 +587,7 @@ export class EffectsRenderer {
     const span = renderProfiler.startSpan(PROFILER_SPAN_IDS.EFFECTS)
     try {
       this.renderBullets(ctx, bullets, scrollOffset)
-      this.renderSmoke(ctx, gameState, scrollOffset)
+      if (SMOKE_RENDERING_ENABLED) this.renderSmoke(ctx, gameState, scrollOffset)
       this.renderDust(ctx, gameState, scrollOffset)
       this.renderDustParticles(ctx, gameState, scrollOffset)
       this.renderExplosions(ctx, gameState, scrollOffset)

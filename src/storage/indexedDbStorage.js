@@ -1,4 +1,5 @@
 import { withTimeout } from '../utils/assetLoading.js'
+import { isGraphicsTunerFrame } from '../benchmark/graphicsTunerFrame.js'
 const DB_NAME = 'code-for-battle-storage'
 const DB_VERSION = 1
 const STORE_NAME = 'keyValue'
@@ -6,6 +7,7 @@ const LEGACY_MIGRATION_FLAG_KEY = 'rts_indexeddb_migrated_from_local_storage'
 
 const cache = new Map()
 const pendingWrites = new Set()
+const temporaryStorage = isGraphicsTunerFrame()
 
 let databasePromise = null
 let initialized = false
@@ -17,6 +19,7 @@ function getLogger() {
 }
 
 function getLegacyStorage() {
+  if (temporaryStorage) return null
   try {
     return globalThis.window?.['local' + 'Storage'] || globalThis['local' + 'Storage'] || null
   } catch {
@@ -52,7 +55,7 @@ function mirrorFallbackRemoveFromLegacyStorage(key) {
 }
 
 function supportsIndexedDb() {
-  return typeof globalThis.indexedDB !== 'undefined'
+  return !temporaryStorage && typeof globalThis.indexedDB !== 'undefined'
 }
 
 function openDatabase() {

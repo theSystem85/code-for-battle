@@ -7,8 +7,9 @@ import { gameRandom } from './utils/gameRandom.js'
 import { isHeadlessAudioMuted } from './utils/headlessAudioMute.js'
 import { configureAudioElement } from './pwa/audioElementPolicy.js'
 import { getStoredItem, setStoredItem } from './storage/indexedDbStorage.js'
+import { isGraphicsTunerFrame } from './benchmark/graphicsTunerFrame.js'
 
-const suppressAudioForAutomation = isHeadlessAudioMuted()
+const suppressAudioForAutomation = isHeadlessAudioMuted() || isGraphicsTunerFrame()
 
 let audioContext = null
 if (!suppressAudioForAutomation) {

@@ -16,6 +16,8 @@ const countdownTextId = 'benchmarkCountdownText'
 
 let closeHandlersBound = false
 let runAgainHandler = null
+let focusBeforeReport = null
+let coveredSettings = null
 let countdownAnimation = null
 let countdownAverageFps = null
 let countdownEndTime = null
@@ -106,9 +108,14 @@ export function initializeBenchmarkModal({ onRunAgain, onClose } = {}) {
     closeFooterBtn.addEventListener('click', handleClose)
 
     modal.addEventListener('click', (event) => {
-      if (event.target === modal) {
+      if (event.target === modal && !closeBtn.disabled) {
         handleClose()
       }
+    })
+    modal.addEventListener('keydown', event => {
+      if (event.key !== 'Escape') return
+      event.stopPropagation()
+      if (!closeBtn.disabled) handleClose()
     })
 
     closeHandlersBound = true
@@ -126,19 +133,33 @@ export function initializeBenchmarkModal({ onRunAgain, onClose } = {}) {
 }
 
 export function openBenchmarkModal() {
-  const { modal } = getModalElements()
+  const { modal, closeBtn } = getModalElements()
+  if (modal.getAttribute('aria-hidden') === 'false') return
+  focusBeforeReport = document.activeElement
+  const settings = document.getElementById('configSettingsModal')
+  const overSettings = settings?.getAttribute('aria-hidden') === 'false'
+  if (overSettings && !settings.inert) {
+    settings.inert = true
+    coveredSettings = settings
+  }
   modal.classList.remove('modal-hidden')
   modal.classList.add('benchmark-modal--open')
+  modal.classList.toggle('benchmark-modal--over-settings', overSettings)
   modal.setAttribute('aria-hidden', 'false')
   toggleBodyScroll(true)
+  closeBtn.focus()
 }
 
 export function closeBenchmarkModal() {
   const { modal } = getModalElements()
-  modal.classList.remove('benchmark-modal--open')
+  modal.classList.remove('benchmark-modal--open', 'benchmark-modal--over-settings')
   modal.classList.add('modal-hidden')
   modal.setAttribute('aria-hidden', 'true')
   toggleBodyScroll(false)
+  if (coveredSettings) coveredSettings.inert = false
+  coveredSettings = null
+  if (focusBeforeReport?.isConnected) focusBeforeReport.focus()
+  focusBeforeReport = null
 }
 
 export function setBenchmarkRunningState(isRunning) {
@@ -235,6 +256,14 @@ export function showBenchmarkStatus(message) {
   const { status, results } = getModalElements()
   status.textContent = message
   results.hidden = true
+  hideGraphicsReport()
+}
+
+function hideGraphicsReport() {
+  const report = document.getElementById('benchmarkGraphicsReport')
+  const apply = document.getElementById('benchmarkApplyGraphicsBtn')
+  if (report) report.hidden = true
+  if (apply) apply.hidden = true
 }
 
 function formatFps(value) {
@@ -329,6 +358,7 @@ function drawBenchmarkChart(canvas, data, summary) {
 }
 
 export function showBenchmarkResults(result) {
+  hideGraphicsReport()
   const {
     status,
     results,
@@ -378,6 +408,7 @@ export function formatHeavyBattlePhases(phases) {
 }
 
 export function showHeavyBattleResults(result) {
+  hideGraphicsReport()
   const {
     status,
     results,

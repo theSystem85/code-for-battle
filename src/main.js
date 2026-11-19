@@ -36,6 +36,7 @@ import {
   clearSoundCache
 } from './sound.js'
 import { startOfflineMode } from './pwa/offlineController.js'
+import { isGraphicsTunerFrame } from './benchmark/graphicsTunerFrame.js'
 import {
   Game,
   getCurrentGame,
@@ -60,12 +61,6 @@ import {
   MAP_HEIGHT_TILES_STORAGE_KEY
 } from './game/gameOrchestrator.js'
 
-startOfflineMode()
-
-initializeMobileViewportLock()
-registerMapEditorRendering(getTextureManager, notifyTileMutation)
-setMobileLayoutGameAccessor(() => getCurrentGame())
-
 function requestRenderAfterResize() {
   const game = getCurrentGame()
   if (game && game.gameLoop && typeof game.gameLoop.requestRender === 'function') {
@@ -73,10 +68,16 @@ function requestRenderAfterResize() {
   }
 }
 
-initDeviceLifecycle({
-  getGameInstanceAccessor: getCurrentGame,
-  requestRender: requestRenderAfterResize
-})
+if (!isGraphicsTunerFrame()) {
+  startOfflineMode()
+  initializeMobileViewportLock()
+  registerMapEditorRendering(getTextureManager, notifyTileMutation)
+  setMobileLayoutGameAccessor(() => getCurrentGame())
+  initDeviceLifecycle({
+    getGameInstanceAccessor: getCurrentGame,
+    requestRender: requestRenderAfterResize
+  })
+}
 
 function setupAudioUnlock() {
   const unlock = () => {

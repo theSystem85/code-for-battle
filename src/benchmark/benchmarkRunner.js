@@ -15,6 +15,7 @@ import {
   startBenchmarkCountdown
 } from '../ui/benchmarkModal.js'
 import { gameState } from '../gameState.js'
+import { loadGraphicsTunerReport, storeGraphicsTunerReport } from './graphicsTunerReportStore.js'
 
 const BENCHMARK_DURATION_MS = 60_000
 const AUTO_IOS_BENCHMARK_PARAM = 'e2eIosBenchmark'
@@ -28,6 +29,7 @@ let buttonInitialized = false
 let autoBenchmarkStarted = false
 let heavyBattleStarted = false
 let heavyBattleRunning = false
+let graphicsTunerRunning = false
 let lastBenchmarkKind = 'standard'
 
 const SETTINGS_HEAVY_BATTLE = Object.freeze({
@@ -318,7 +320,7 @@ async function maybeRunAutoIosBenchmark() {
 }
 
 async function runBenchmarkInternal(durationMs = BENCHMARK_DURATION_MS, options = {}) {
-  if (isBenchmarkRunning()) {
+  if (isBenchmarkRunning() || graphicsTunerRunning || heavyBattleRunning) {
     return null
   }
 
@@ -525,7 +527,7 @@ function applyBenchmarkSelectLabels(select) {
 }
 
 async function runHeavyBattleFromSettings() {
-  if (heavyBattleRunning || isBenchmarkRunning()) return null
+  if (heavyBattleRunning || isBenchmarkRunning() || graphicsTunerRunning) return null
   heavyBattleRunning = true
   lastBenchmarkKind = 'heavy'
   const select = document.getElementById('settingsBenchmarkSelect')
@@ -552,6 +554,33 @@ async function runHeavyBattleFromSettings() {
   }
 }
 
+async function runGraphicsFromSettings() {
+  if (graphicsTunerRunning || heavyBattleRunning || isBenchmarkRunning()) return
+  graphicsTunerRunning = true
+  lastBenchmarkKind = 'graphics'
+  const select = document.getElementById('settingsBenchmarkSelect')
+  if (select) select.disabled = true
+  try {
+    const { runDeviceGraphicsTuner } = await import('./graphicsTunerRunner.js')
+    const report = await runDeviceGraphicsTuner()
+    if (!report) return
+    storeGraphicsTunerReport(report)
+    const { refreshGraphicsTunerControls } = await import('../ui/graphicsTunerSettings.js')
+    refreshGraphicsTunerControls(report)
+    const { showGraphicsTunerReport } = await import('../ui/graphicsTunerReport.js')
+    showGraphicsTunerReport(report)
+  } catch (error) {
+    if (error.name !== 'GraphicsTunerCancelled') {
+      console.error('Graphics tuner failed:', error)
+      showBenchmarkStatus(error.message || 'Graphics tuner failed.')
+      openBenchmarkModal()
+    }
+  } finally {
+    graphicsTunerRunning = false
+    if (select) select.disabled = false
+  }
+}
+
 export function attachBenchmarkButton() {
   if (buttonInitialized) {
     maybeRunAutoIosBenchmark()
@@ -568,6 +597,10 @@ export function attachBenchmarkButton() {
 
   initializeBenchmarkModal({
     onRunAgain: () => {
+      if (lastBenchmarkKind === 'graphics') {
+        void runGraphicsFromSettings()
+        return
+      }
       if (lastBenchmarkKind === 'heavy') {
         void runHeavyBattleFromSettings()
         return
@@ -581,13 +614,27 @@ export function attachBenchmarkButton() {
 
   select.addEventListener('change', () => {
     const kind = select.value
-    if (kind !== 'standard' && kind !== 'heavy') return
+    if (kind !== 'standard' && kind !== 'heavy' && kind !== 'graphics') return
     select.value = ''
+    if (kind === 'graphics') {
+      void runGraphicsFromSettings()
+      return
+    }
     if (kind === 'heavy') {
       void runHeavyBattleFromSettings()
       return
     }
     void runBenchmarkInternal()
+  })
+
+  document.getElementById('settingsRunGraphicsTuner')?.addEventListener('click', () => { void runGraphicsFromSettings() })
+  document.getElementById('settingsGraphicsTunerReport')?.addEventListener('click', async() => {
+    if (graphicsTunerRunning || heavyBattleRunning || isBenchmarkRunning()) return
+    const report = loadGraphicsTunerReport()
+    if (!report) return
+    lastBenchmarkKind = 'graphics'
+    const { showGraphicsTunerReport } = await import('../ui/graphicsTunerReport.js')
+    showGraphicsTunerReport(report)
   })
 
   buttonInitialized = true

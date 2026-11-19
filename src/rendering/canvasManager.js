@@ -1,6 +1,6 @@
 // canvasManager.js
 // Handle canvas setup, resizing, and management
-import { MOBILE_CANVAS_PIXEL_RATIO_CAP } from '../config.js'
+import { MOBILE_CANVAS_PIXEL_RATIO_CAP, RENDER_PIXEL_DENSITY } from '../config.js'
 import { publishCanvasViewport } from './prepared/canvasViewportRegistry.js'
 
 export class CanvasManager {
@@ -45,6 +45,7 @@ export class CanvasManager {
   }
 
   resolvePixelRatio(rawPixelRatio = (typeof window !== 'undefined' && window.devicePixelRatio) || 1) {
+    if (RENDER_PIXEL_DENSITY !== null) return RENDER_PIXEL_DENSITY
     const touchLayout = this.isTouchLayout()
     const configuredCap = touchLayout && Number.isFinite(MOBILE_CANVAS_PIXEL_RATIO_CAP)
       ? MOBILE_CANVAS_PIXEL_RATIO_CAP
@@ -58,7 +59,7 @@ export class CanvasManager {
   }
 
   resolveOverlayPixelRatio(rawPixelRatio = (typeof window !== 'undefined' && window.devicePixelRatio) || 1) {
-    return Math.max(1, rawPixelRatio || 1)
+    return RENDER_PIXEL_DENSITY ?? Math.max(1, rawPixelRatio || 1)
   }
 
   resetAdaptivePixelRatioCap() {
@@ -84,6 +85,7 @@ export class CanvasManager {
     const rawPixelRatio = (typeof window !== 'undefined' && window.devicePixelRatio) || 1
     if (
       !this.automaticDensityAdjustmentEnabled ||
+      RENDER_PIXEL_DENSITY !== null ||
       !this.isTouchLayout() ||
       rawPixelRatio <= 1 ||
       !Number.isFinite(fps) ||
@@ -154,6 +156,7 @@ export class CanvasManager {
     const governor = this.terrainGovernor
     if (
       this.automaticDensityAdjustmentEnabled ||
+      RENDER_PIXEL_DENSITY !== null ||
       !this.isTouchLayout() ||
       rawPixelRatio <= 1 ||
       this.adaptivePixelRatioCap <= 1 ||
@@ -223,7 +226,7 @@ export class CanvasManager {
     this.resizeObserver = null
   }
 
-  resizeCanvases() {
+  resizeCanvases({ notifyDensity = true } = {}) {
     const rawPixelRatio = window.devicePixelRatio || 1
     const terrainPixelRatio = this.resolvePixelRatio(rawPixelRatio)
     const overlayPixelRatio = this.resolveOverlayPixelRatio(rawPixelRatio)
@@ -474,7 +477,7 @@ export class CanvasManager {
           layoutGeneration: this.layoutGeneration
         }
       }))
-      if (densityChanged) {
+      if (densityChanged && notifyDensity) {
         document.dispatchEvent(new CustomEvent('canvas-density-changed', {
           detail: {
             generation: this.densityGeneration,

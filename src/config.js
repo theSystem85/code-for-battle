@@ -375,6 +375,9 @@ function saveGraphicsSettingsToIndexedDb() {
         coastalShallowsLength: COASTAL_SHALLOWS_LENGTH,
         waterWaveDirection: WATER_WAVE_DIRECTION,
         unitShadowsEnabled: UNIT_SHADOWS_ENABLED,
+        detailedSelectionHudEnabled: DETAILED_SELECTION_HUD_ENABLED,
+        smokeRenderingEnabled: SMOKE_RENDERING_ENABLED,
+        renderPixelDensity: RENDER_PIXEL_DENSITY,
         crystalGlowEnabled: CRYSTAL_GLOW_ENABLED,
         largeExplosionVisualRadius: LARGE_EXPLOSION_VISUAL_RADIUS,
         unitShadowOffset: UNIT_SHADOW_OFFSET,
@@ -403,9 +406,9 @@ function requestGraphicsSettingsRender() {
   window.gameInstance?.gameLoop?.requestRender?.()
 }
 
-export function loadGraphicsSettingsFromIndexedDb() {
+export function loadGraphicsSettingsFromIndexedDb(serialized = undefined) {
   try {
-    const stored = getStoredItem(GRAPHICS_SETTINGS_STORAGE_KEY)
+    const stored = serialized === undefined ? getStoredItem(GRAPHICS_SETTINGS_STORAGE_KEY) : serialized
     if (!stored) {
       return
     }
@@ -425,6 +428,9 @@ export function loadGraphicsSettingsFromIndexedDb() {
     COASTAL_SHALLOWS_LENGTH = clampNumber(parsed?.coastalShallowsLength, 10, 100, COASTAL_SHALLOWS_LENGTH)
     WATER_WAVE_DIRECTION = clampNumber(parsed?.waterWaveDirection, 0, 360, WATER_WAVE_DIRECTION)
     UNIT_SHADOWS_ENABLED = typeof parsed?.unitShadowsEnabled === 'boolean' ? parsed.unitShadowsEnabled : UNIT_SHADOWS_ENABLED
+    DETAILED_SELECTION_HUD_ENABLED = parsed?.detailedSelectionHudEnabled !== false
+    SMOKE_RENDERING_ENABLED = parsed?.smokeRenderingEnabled !== false
+    RENDER_PIXEL_DENSITY = normalizeRenderPixelDensity(parsed?.renderPixelDensity)
     CRYSTAL_GLOW_ENABLED = typeof parsed?.crystalGlowEnabled === 'boolean' ? parsed.crystalGlowEnabled : CRYSTAL_GLOW_ENABLED
     LARGE_EXPLOSION_VISUAL_RADIUS = clampNumber(parsed?.largeExplosionVisualRadius, 16, 160, LARGE_EXPLOSION_VISUAL_RADIUS)
     UNIT_SHADOW_OFFSET = clampNumber(parsed?.unitShadowOffset ?? parsed?.unitShadowLength, 0, 1.5, UNIT_SHADOW_OFFSET)
@@ -689,6 +695,24 @@ export let COASTAL_SHALLOWS_ENABLED = true
 export let COASTAL_SHALLOWS_LENGTH = 15
 export let WATER_WAVE_DIRECTION = 0
 export let UNIT_SHADOWS_ENABLED = true
+export let DETAILED_SELECTION_HUD_ENABLED = true
+export let SMOKE_RENDERING_ENABLED = true
+export let RENDER_PIXEL_DENSITY = null
+
+function normalizeRenderPixelDensity(value) {
+  return value === 1 || value === 2 || value === 3 ? value : null
+}
+
+export function setGraphicsTunerOptions(values, { persist = true, notify = true } = {}) {
+  if (typeof values.shadows === 'boolean') UNIT_SHADOWS_ENABLED = values.shadows
+  if (typeof values.selectionHud === 'boolean') DETAILED_SELECTION_HUD_ENABLED = values.selectionHud
+  if (typeof values.smoke === 'boolean') SMOKE_RENDERING_ENABLED = values.smoke
+  if (typeof values.oceanWater === 'boolean') USE_OCEAN_WATER_RENDERING = values.oceanWater
+  if (typeof values.coastalShallows === 'boolean') COASTAL_SHALLOWS_ENABLED = values.coastalShallows
+  if (Object.hasOwn(values, 'density')) RENDER_PIXEL_DENSITY = normalizeRenderPixelDensity(values.density)
+  if (persist) saveGraphicsSettingsToIndexedDb()
+  if (notify) requestGraphicsSettingsRender()
+}
 export let CRYSTAL_GLOW_ENABLED = true
 // Cosmetic only: tank shell impacts render at half this large-blast baseline.
 export let LARGE_EXPLOSION_VISUAL_RADIUS = TILE_SIZE * 2

@@ -27,6 +27,7 @@ import { getCanvasLogicalSize } from './renderingUtils.js'
 import { describeActivePolicies, shouldShowPolicyIndicator } from '../policies/policyActivity.js'
 import { drawStatusBar, fillStatusBar, paintStatusBarOutline, paintStatusBarTrack, strokeStatusArc, strokeStatusRailArc } from '../utils/statusBarGradient.js'
 import { drawCachedUnitShadow, usesUnitGroundShadow } from './unitShadow.js'
+import { DETAILED_SELECTION_HUD_ENABLED } from '../config.js'
 
 const POLICY_ICON_SIZE = 10
 const HUD_EDGE_QUARTERS = Object.freeze({ right: 0, bottom: 1, left: 2, top: 3 })
@@ -830,7 +831,7 @@ export class UnitRenderer {
   }
 
   getSelectionHudMode() {
-    return gameState.selectionHudMode || 'modern-donut'
+    return DETAILED_SELECTION_HUD_ENABLED ? gameState.selectionHudMode || 'modern-donut' : 'legacy'
   }
 
   getSelectionHudBarThickness() {
@@ -2095,13 +2096,15 @@ export class UnitRenderer {
       if (unit.selected) this.renderSelection(ctx, unit, centerX, centerY)
       this.renderHealthBar(ctx, unit, scrollOffset, true)
     } else this.renderHealthBar(ctx, unit, scrollOffset)
-    this.renderGasBar(ctx, unit, scrollOffset)
-    this.renderAmmunitionBar(ctx, unit, scrollOffset)
+    if (DETAILED_SELECTION_HUD_ENABLED) {
+      this.renderGasBar(ctx, unit, scrollOffset)
+      this.renderAmmunitionBar(ctx, unit, scrollOffset)
+      this.renderCrewStatus(ctx, unit, scrollOffset)
+    }
     this.renderLevelStars(ctx, unit, scrollOffset)
     this.renderHarvesterProgress(ctx, unit, scrollOffset)
     this.renderQueueNumber(ctx, unit, scrollOffset)
     this.renderGroupNumber(ctx, unit, scrollOffset)
-    this.renderCrewStatus(ctx, unit, scrollOffset)
     this.renderPolicyActiveIcon(ctx, unit, scrollOffset)
     this.renderAttackTargetIndicator(ctx, unit, centerX, centerY, entityIndex)
     this.renderUtilityServiceIndicator(ctx, unit, centerX, centerY, entityIndex)
@@ -2137,7 +2140,7 @@ export class UnitRenderer {
       this.renderUnitOverlay(ctx, unit, scrollOffset, viewportWidth, viewportHeight, alreadyVisible, entityIndex)
       this.renderApacheRemoteReticle(ctx, unit, scrollOffset)
     })
-    this.renderHudHoverTooltip(ctx, units, scrollOffset, entityIndex)
+    if (DETAILED_SELECTION_HUD_ENABLED) this.renderHudHoverTooltip(ctx, units, scrollOffset, entityIndex)
   }
 
   renderApacheRemoteReticle(ctx, unit, scrollOffset) {

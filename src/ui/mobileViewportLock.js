@@ -71,7 +71,7 @@ function handleTouchEnd(event) {
 
   const target = event.target
   if (target && typeof target.closest === 'function') {
-    const interactive = target.closest('input, textarea, select, [contenteditable="true"], [contenteditable=""]')
+    const interactive = target.closest('input, textarea, select, [contenteditable="true"], [contenteditable=""], .graphics-tuner-info')
     if (interactive) {
       return
     }

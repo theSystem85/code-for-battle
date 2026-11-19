@@ -2,6 +2,7 @@ import { isSeamlessUpdateEnabled, setSeamlessUpdateEnabled } from '../pwa/seamle
 import { createUnitShadowCanvas, rebuildUnitShadowCaches } from '../rendering/unitShadow.js'
 import { getRocketTankBaseImage, preloadRocketTankImage } from '../rendering/rocketTankImageRenderer.js'
 import { getProductionPlacementSettings, setProductionPlacementSetting } from './productionPlacementSettings.js'
+import { applyGraphicsTunerSettings, refreshGraphicsTunerControls } from './graphicsTunerSettings.js'
 // settingsModal.js
 // Tabbed settings modal that hosts runtime config shortcuts and the keybindings editor
 
@@ -331,6 +332,7 @@ function openModal(modal, defaultTab = 'keybindings') {
     radarOfflineAnimationToggle.checked = gameState.radarOfflineAnimationEnabled !== false
   }
   refreshRendererBackendControls(modal)
+  refreshGraphicsTunerControls()
   syncTrackMarkControls(modal)
   bindMixBalanceControl(modal)
   if (keybindingsPanel) {
@@ -480,6 +482,22 @@ export function initSettingsModal() {
   }
   bindTabs(modal)
   bindGraphicsEffects(modal)
+  for (const [key, id] of [['density', 'settingsRenderPixelDensity'], ['selectionHud', 'settingsDetailedSelectionHud'], ['smoke', 'settingsSmokeToggle']]) {
+    const input = modal.querySelector(`#${id}`)
+    input?.addEventListener('change', async() => {
+      input.disabled = true
+      try {
+        const value = key === 'density' ? (input.value === 'auto' ? null : Number(input.value)) : input.checked
+        await applyGraphicsTunerSettings({ [key]: value })
+      } catch (error) {
+        refreshGraphicsTunerControls()
+        window.logger?.warn('Could not apply graphics setting:', error)
+      } finally {
+        input.disabled = false
+      }
+    })
+  }
+  refreshGraphicsTunerControls()
   syncUnitShadowControls(modal)
   preloadRocketTankImage(() => renderUnitShadowPreview(modal))
   modal.querySelector('#settingsUnitShadowsToggle')?.addEventListener('change', event => {

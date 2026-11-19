@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('../../src/config.js', () => ({
+  DETAILED_SELECTION_HUD_ENABLED: true,
   TILE_SIZE: 32,
   HARVESTER_CAPPACITY: 100,
   HARVESTER_UNLOAD_TIME: 1000,
