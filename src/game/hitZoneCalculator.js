@@ -1,6 +1,12 @@
 // hitZoneCalculator.js - Calculates damage multipliers based on hit angle
 import { HIT_ZONE_DAMAGE_MULTIPLIERS } from '../config.js'
 
+
+const tankTypes = new Set([
+  'tank', 'tank_v1', 'tank_v2', 'tank_v3',
+  'tank-v2', 'tank-v3', 'lightTank', 'rocketTank'
+])
+
 /**
  * Determine if a unit is a tank that should have hit zone damage multipliers
  * @param {Object} unit - The unit being hit
@@ -9,12 +15,7 @@ import { HIT_ZONE_DAMAGE_MULTIPLIERS } from '../config.js'
 export function isTankUnit(unit) {
   if (!unit || !unit.type) return false
 
-  const tankTypes = [
-    'tank', 'tank_v1', 'tank_v2', 'tank_v3',
-    'tank-v2', 'tank-v3', 'lightTank', 'rocketTank'
-  ]
-
-  return tankTypes.includes(unit.type)
+  return tankTypes.has(unit.type)
 }
 
 /**

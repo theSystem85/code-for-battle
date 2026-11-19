@@ -129,6 +129,7 @@ export const NUMERIC_FIELDS = Object.freeze({
   enemyUnitCount: { group: 'sensing', buildGroup: 'enemies', variants: AUTOMATION_ONLY, label: 'Number of visible enemy units', modes: [ABSOLUTE], absRange: [0, 1000], absTolerance: 0, params: [{ key: 'unitType', label: 'of type', options: ENEMY_UNIT_TYPES, default: 'any' }] },
   enemyBuildingCount: { group: 'sensing', buildGroup: 'enemies', variants: AUTOMATION_ONLY, label: 'Number of visible enemy buildings', modes: [ABSOLUTE], absRange: [0, 1000], absTolerance: 0, params: [{ key: 'buildingType', label: 'of type', options: BUILDING_TYPES, default: 'any' }] },
   buildingCount: { group: 'external', buildGroup: 'base', variants: BOTH_VARIANTS, label: 'Number of my buildings', modes: [ABSOLUTE], absRange: [0, 1000], absTolerance: 0, params: [{ key: 'buildingType', label: 'of type', options: BUILDING_TYPES, default: 'any' }] },
+  burningBuildingCount: { group: 'external', buildGroup: 'base', variants: AUTOMATION_ONLY, label: 'Number of my burning buildings', modes: [ABSOLUTE], absRange: [0, 1000], absTolerance: 0, params: [{ key: 'buildingType', label: 'of type', options: BUILDING_TYPES, default: 'any' }] },
   distance: { variants: [VARIANT_UNIT, VARIANT_DEFENCE], group: 'sensing', label: 'Distance to a visible…', modes: [ABSOLUTE], absRange: [0, 1000], absTolerance: 0.25, absSuffix: 'tiles', params: [{ key: 'kind', label: 'target', options: KIND_OPTIONS.map(item => ({ value: item.value, label: item.label })), default: 'unit' }, { key: 'targetType', label: 'of type', options: ENEMY_UNIT_TYPES, default: 'any' }] },
   enemyDistance: { variants: [VARIANT_UNIT, VARIANT_DEFENCE], group: 'sensing', label: 'Nearest enemy (tiles)', modes: [ABSOLUTE], absRange: [0, 1000], absTolerance: 0.25, absSuffix: 'tiles', legacy: true }
 })
@@ -139,6 +140,7 @@ const SERVICE_PARAM = { key: 'building', label: 'of a', options: SERVICE_BUILDIN
 /** Yes/no checks. `available` lists unit types that can show the condition; empty means all. */
 export const CHECKS = Object.freeze({
   ownUnitDestroyed: { group: 'external', buildGroup: 'base', variants: [VARIANT_UNIT_BUILD], label: 'My unit was destroyed', params: [{ key: 'unitType', label: 'of type', options: ENEMY_UNIT_TYPES, default: 'any' }] },
+  onFire: { variants: [VARIANT_UNIT, VARIANT_DEFENCE], group: 'external', label: 'Is on fire' },
   airborne: { group: 'internal', label: 'Is airborne' },
   moving: { group: 'internal', label: 'Is moving' },
   attacking: { variants: [VARIANT_UNIT, VARIANT_DEFENCE], group: 'internal', label: 'Is attacking', params: [{ key: 'kind', label: 'a', options: KIND_OPTIONS, default: 'unit' }] },

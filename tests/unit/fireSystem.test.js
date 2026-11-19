@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { TILE_SIZE, WIND_DIRECTION, setFireSpreadProbability, setFireDamagePerSecond } from '../../src/config.js'
 vi.mock('../../src/game/cityBuildings.js', () => ({ getCityAtWorld: () => null, applyCityDamage: vi.fn() }))
-import { igniteTile, igniteApacheImpact, igniteFromProjectile, restoreFires, updateFireSystem } from '../../src/game/fireSystem.js'
+import { igniteTile, igniteApacheImpact, igniteDecorationImpact, NON_STRUCTURE_BURN_SECONDS, igniteFromProjectile, restoreFires, updateFireSystem } from '../../src/game/fireSystem.js'
+import { registerDecorationLayout } from '../../src/game/decorationLayoutRegistry.js'
+import { getValidDecorationCell } from '../../src/rendering/decorationLayout.js'
 import { migrations } from '../../src/gameStateMigrations.js'
 import { productionUnlockRules } from '../../src/production/techTree.js'
 
@@ -162,10 +164,70 @@ it('[U07179] ignites combustible terrain at Apache ground impacts and rejects wa
 })
 it('[U07180] increases spread probability with severity and keeps saved age', () => {
   const { grid, state } = world()
-  grid[4][4].type = 'woods'
+  building(grid, state, 4, 4)
   grid[4][5].type = 'woods'
   restoreFires(state, grid, [{ x: 4, y: 4, age: 80 }])
   updateFireSystem([], state, grid, 5000, null, () => 0.8)
   expect(grid[4][5].fire).toBeDefined()
   expect(state.fires[0].age).toBe(85)
+})
+
+it('[U07228] strengthens an existing fire after a successful neighbouring spread without duplicating it', () => {
+  const { grid, state } = world()
+  grid[4][4].type = 'woods'
+  grid[4][5].type = 'woods'
+  igniteTile(state, grid, 4, 4)
+  igniteTile(state, grid, 5, 4)
+  state.fires[1].spreadElapsed = -100
+  updateFireSystem([], state, grid, 5000, null, () => 0)
+  expect(state.fires).toHaveLength(2)
+  expect(grid[4][5].fire.spreadBoost).toBe(1)
+})
+
+it('[U07229] damages units on and adjacent to fires and protects tanks on the burning tile', () => {
+  const { grid, state } = world()
+  grid[4][4].type = 'woods'
+  igniteTile(state, grid, 4, 4)
+  const onFire = { ...engine(4, 4), type: 'truck', health: 100 }
+  const tank = { ...engine(4, 4), type: 'tank_v1', health: 100 }
+  const adjacent = { ...engine(5, 4), type: 'truck', health: 100 }
+  updateFireSystem([onFire, tank, adjacent], state, grid, 1000)
+  expect(onFire.health).toBeCloseTo(98.8)
+  expect(tank.health).toBeCloseTo(99.76)
+  expect(adjacent.health).toBeCloseTo(99.4)
+})
+
+it('[U07230] consumes vegetation and prevents ignition after burnout', () => {
+  const { grid, state } = world()
+  grid[4][4].type = 'woods'
+  grid[4][4].tags = ['trees']
+  expect(igniteTile(state, grid, 4, 4)).toBe(true)
+  updateFireSystem([], state, grid, (NON_STRUCTURE_BURN_SECONDS - 1) * 1000)
+  expect(grid[4][4].fire).toBeDefined()
+  updateFireSystem([], state, grid, 1000)
+  expect(grid[4][4]).toMatchObject({ type: 'land', tags: [], burnedFuel: true })
+  expect(state.fires).toHaveLength(0)
+  expect(igniteTile(state, grid, 4, 4)).toBe(false)
+})
+
+it('[U07231] ignites a decorative farm from a shell impact and removes the whole footprint on burnout', () => {
+  const { grid, state } = world()
+  const group = { width: 2, height: 1, tagSet: new Set(['decorative', 'farm']) }
+  const layout = { width: 16, height: 16, cells: [] }
+  for (let x = 4; x <= 5; x++) {
+    layout.cells[4 * 16 + x] = { group, anchorX: 4, anchorY: 4, biome: 'grass', offsetX: x - 4, offsetY: 0 }
+  }
+  registerDecorationLayout(grid, layout)
+  expect(igniteDecorationImpact(state, grid, { originType: 'tank_v1' }, 4 * TILE_SIZE, 4 * TILE_SIZE, () => 0)).toBe(true)
+  updateFireSystem([], state, grid, NON_STRUCTURE_BURN_SECONDS * 1000)
+  expect(getValidDecorationCell(layout, grid, 5, 4)).toBeNull()
+  expect(igniteTile(state, grid, 5, 4)).toBe(false)
+})
+
+it('[U07232] restores one fire per tile with its spread boost', () => {
+  const { grid, state } = world()
+  grid[4][4].type = 'woods'
+  restoreFires(state, grid, [{ x: 4, y: 4, age: 3, spreadBoost: 2 }, { x: 4, y: 4 }])
+  expect(state.fires).toHaveLength(1)
+  expect(grid[4][4].fire).toMatchObject({ age: 3, spreadBoost: 2 })
 })

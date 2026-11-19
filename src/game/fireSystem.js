@@ -3,6 +3,14 @@ import { TILE_SIZE, FIRE_SPREAD_PROBABILITY, FIRE_DAMAGE_PER_SECOND, FIRE_WATER_
 import { getRegisteredDecorationLayout } from './decorationLayoutRegistry.js'
 import { gameRandom } from '../utils/gameRandom.js'
 import { getCityAtWorld, applyCityDamage } from './cityBuildings.js'
+import { isTankUnit } from './hitZoneCalculator.js'
+import { getValidDecorationCell } from '../rendering/decorationLayout.js'
+import { notifyTopologyMutation } from '../rendering/prepared/mapMutationNotifier.js'
+import { addFixedOccupancy } from './occupancyTags.js'
+import { clearPathCache } from './pathCache.js'
+import { clearFlowFields } from './flowField.js'
+import { hasBuildingFire } from './fireQueries.js'
+import { notifyBuildingFire } from '../ui/fireNotifications.js'
 
 const neighbours = [[1, 0], [-1, 0], [0, 1], [0, -1]]
 const stationIndex = new Map()
@@ -13,16 +21,63 @@ const nextFreeStation = new Map()
 function structure(grid, x, y) {
   return grid?.[y]?.[x]?.building || getCityAtWorld(grid, (x + 0.5) * TILE_SIZE, (y + 0.5) * TILE_SIZE)
 }
+export const NON_STRUCTURE_BURN_SECONDS = 30
+const vegetationTags = ['tree', 'trees', 'woods']
+
+function combustibleDecoration(grid, x, y) {
+  const layout = getRegisteredDecorationLayout(grid)
+  const cell = layout?.cells[y * layout.width + x]
+  const tags = cell?.group.tagSet
+  if (!tags || !(tags.has('trees') || tags.has('woods') || tags.has('farm') || tags.has('ruins') || tags.has('roadside'))) return null
+  return getValidDecorationCell(layout, grid, x, y, cell.biome)
+}
+
+function isVegetation(tile) {
+  return vegetationTags.includes(tile.type) || vegetationTags.some(tag => tile.tags?.includes(tag))
+}
+
 export function isFlammable(grid, x, y) {
   const tile = grid?.[y]?.[x]
-  if (!tile) return false
+  if (!tile || tile.type === 'water') return false
   const building = structure(grid, x, y)
-  const cell = getRegisteredDecorationLayout(grid)?.cells?.[y * (grid[0]?.length || 0) + x]
-  return building ? building.health > 0 && building.type !== 'street' && building.type !== 'concreteWall' : tile.type === 'tree' || tile.type === 'woods' || tile.tags?.includes('trees') || tile.tags?.includes('woods') || cell?.group?.tagSet?.has('trees') || cell?.group?.tagSet?.has('woods')
+  if (building) return building.health > 0 && building.type !== 'street' && building.type !== 'concreteWall'
+  return !tile.burnedFuel && (isVegetation(tile) || Boolean(combustibleDecoration(grid, x, y)))
 }
+
+export function burnOut(state, grid, x, y) {
+  const source = grid?.[y]?.[x]
+  if (!source || source.burnedFuel) return
+  const cell = combustibleDecoration(grid, x, y)
+  const layout = cell ? getRegisteredDecorationLayout(grid) : null
+  const left = cell?.anchorX ?? x
+  const top = cell?.anchorY ?? y
+  const right = left + (cell?.footprintWidth || cell?.group.width || 1) - 1
+  const bottom = top + (cell?.footprintHeight || cell?.group.height || 1) - 1
+  for (let ty = top; ty <= bottom; ty++) {
+    for (let tx = left; tx <= right; tx++) {
+      const tile = grid[ty][tx]
+      tile.burnedFuel = true
+      if (vegetationTags.includes(tile.type)) tile.type = 'land'
+      if (tile.tags) tile.tags = tile.tags.filter(tag => !vegetationTags.includes(tag))
+      if (layout && state.occupancyMap?.[ty] && !tile.building) {
+        const decorationTile = layout.cells[ty * layout.width + tx]
+        const offset = `${decorationTile?.offsetX},${decorationTile?.offsetY}`
+        if (cell.group.tilesByOffset?.[offset]?.tags?.includes('impassable')) {
+          state.occupancyMap[ty][tx] = addFixedOccupancy(state.occupancyMap[ty][tx], -1)
+        }
+      }
+    }
+  }
+  notifyTopologyMutation(grid, { left, top, right: right + 1, bottom: bottom + 1 })
+  clearPathCache()
+  clearFlowFields()
+}
+
 export function igniteTile(state, grid, x, y) {
   const tile = grid?.[y]?.[x]
   if (!tile || tile.fire || !isFlammable(grid, x, y)) return false
+  const building = structure(grid, x, y)
+  if (building && building.owner === state.humanPlayer && !hasBuildingFire(grid, building)) notifyBuildingFire(state, grid, building)
   const fire = { x, y, age: 0, spreadElapsed: 0, suppression: 0 }
   tile.fire = fire
   // Fire is an overlay tag; underlying terrain and footprint stay intact.
@@ -30,6 +85,18 @@ export function igniteTile(state, grid, x, y) {
   if (!tile.tags.includes('fire')) tile.tags.push('fire')
   ;(state.fires ||= []).push(fire)
   return true
+}
+function activeSeverity(fire) {
+  if (!fire) return 0
+  const severity = getFireSeverity(fire)
+  return fire.suppression >= FIRE_EXTINGUISH_SECONDS * severity ? 0 : severity
+}
+
+function spreadToTile(state, grid, x, y) {
+  const existing = grid[y][x].fire
+  if (existing) {
+    if (getFireSeverity(existing) < 5) existing.spreadBoost = (existing.spreadBoost || 0) + 1
+  } else igniteTile(state, grid, x, y)
 }
 function clearFire(grid, fire) {
   const tile = grid?.[fire.y]?.[fire.x]
@@ -42,8 +109,9 @@ export function restoreFires(state, grid, records) {
   for (const fire of state.fires || []) clearFire(grid, fire)
   state.fires = []
   for (const saved of records) {
-    if (!Number.isInteger(saved.x) || !Number.isInteger(saved.y) || !grid?.[saved.y]?.[saved.x]) continue
+    if (!Number.isInteger(saved.x) || !Number.isInteger(saved.y) || !grid?.[saved.y]?.[saved.x] || grid[saved.y][saved.x].fire) continue
     const fire = { x: saved.x, y: saved.y, age: Math.max(0, Number(saved.age) || 0), spreadElapsed: Math.max(0, Number(saved.spreadElapsed) || 0), suppression: Math.max(0, Number(saved.suppression) || 0) }
+    if (saved.spreadBoost > 0) fire.spreadBoost = Math.min(4, Math.floor(saved.spreadBoost))
     grid[fire.y][fire.x].fire = fire
     const tile = grid[fire.y][fire.x]
     tile.tags ||= []
@@ -53,7 +121,7 @@ export function restoreFires(state, grid, records) {
 }
 export function igniteFromProjectile(state, grid, building, bullet, random = gameRandom) {
   if (!(building.health > 0) || bullet.noBuildingDamage) return false
-  const kind = `${bullet.originType || ''} ${bullet.projectileType || ''}`
+  const kind = `${bullet.originType || bullet.shooter?.type || ''} ${bullet.projectileType || ''}`
   if (!/tank|howitzer|artillery|rocket|grenade|shell/i.test(kind)) return false
   const damageRatio = 1 - building.health / (building.maxHealth || 300)
   if (random() >= 0.08 + 0.52 * Math.max(0, Math.min(1, damageRatio))) return false
@@ -167,6 +235,22 @@ export function updateFireSystem(units, state, grid, delta, findPath, random = g
     }
   }
   if (!fires?.length) return
+  // One bounded lookup per occupied tile and four neighbours per unit per tick.
+  for (const unit of units) {
+    if (!unit || unit.health <= 0 || unit.embarkedOnId || (unit.isAirUnit && unit.altitude > 0)) continue
+    const x = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
+    const y = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
+    const ownFire = grid?.[y]?.[x]?.fire
+    let damage = ownFire ? FIRE_DAMAGE_PER_SECOND * activeSeverity(ownFire) * 0.6 * (isTankUnit(unit) ? 0.2 : 1) : 0
+    for (const [dx, dy] of neighbours) {
+      const adjacent = grid?.[y + dy]?.[x + dx]?.fire
+      if (adjacent) damage += FIRE_DAMAGE_PER_SECOND * activeSeverity(adjacent) * 0.3
+    }
+    damage *= seconds
+    if (damage <= 0) continue
+    if (unit.owner === state.humanPlayer && globalThis.window?.cheatSystem) damage = window.cheatSystem.preventDamage(unit, damage)
+    if (damage > 0) unit.health = Math.max(0, unit.health - damage)
+  }
   // Fix the count so newly spread fires cannot spread/damage again in this tick.
   const count = fires.length
   const attackTime = performance.now()
@@ -191,6 +275,12 @@ export function updateFireSystem(units, state, grid, delta, findPath, random = g
         building.needsRepairPause = true
       }
     }
+    if (!building && fire.age >= NON_STRUCTURE_BURN_SECONDS) {
+      burnOut(state, grid, fire.x, fire.y)
+      clearFire(grid, fire)
+      fires.splice(i, 1)
+      continue
+    }
     if (fire.sprayed) { fire.spreadElapsed = 0; continue }
     fire.spreadElapsed += seconds
     if (fire.spreadElapsed < 5) continue
@@ -198,10 +288,12 @@ export function updateFireSystem(units, state, grid, delta, findPath, random = g
     for (const [dx, dy] of neighbours) {
       const nx = fire.x + dx, ny = fire.y + dy
       if (isFlammable(grid, nx, ny)) {
-        if (random() < Math.min(1, FIRE_SPREAD_PROBABILITY * severity * Math.max(0.25, 1 + dx * WIND_DIRECTION.x + dy * WIND_DIRECTION.y))) igniteTile(state, grid, nx, ny)
+        if (random() < Math.min(1, FIRE_SPREAD_PROBABILITY * severity * Math.max(0.25, 1 + dx * WIND_DIRECTION.x + dy * WIND_DIRECTION.y))) {
+          spreadToTile(state, grid, nx, ny)
+        }
       } else if (building && dx * WIND_DIRECTION.x + dy * WIND_DIRECTION.y > 0 && !grid?.[ny]?.[nx]?.building) {
         const other = structure(grid, nx + dx, ny + dy)
-        if (other && other !== building && random() < Math.min(1, FIRE_SPREAD_PROBABILITY * severity * Math.max(0.25, 1 + dx * WIND_DIRECTION.x + dy * WIND_DIRECTION.y))) igniteTile(state, grid, nx + dx, ny + dy)
+        if (other && other !== building && random() < Math.min(1, FIRE_SPREAD_PROBABILITY * severity * Math.max(0.25, 1 + dx * WIND_DIRECTION.x + dy * WIND_DIRECTION.y))) spreadToTile(state, grid, nx + dx, ny + dy)
       }
     }
   }
@@ -213,4 +305,12 @@ export function igniteApacheImpact(state, grid, bullet, random = gameRandom) {
   const building = structure(grid, x, y)
   if (building) return igniteFromProjectile(state, grid, building, bullet, random)
   return random() < 0.25 && igniteTile(state, grid, x, y)
+}
+
+// Ground impacts on prepared decorative footprints have no building entity.
+export function igniteDecorationImpact(state, grid, bullet, x, y, random = gameRandom) {
+  if (bullet.noBuildingDamage || !/tank|howitzer|artillery|rocket|grenade|shell/i.test(`${bullet.originType || bullet.shooter?.type || ''} ${bullet.projectileType || ''}`)) return false
+  const tx = Math.floor(x / TILE_SIZE), ty = Math.floor(y / TILE_SIZE)
+  if (structure(grid, tx, ty) || !combustibleDecoration(grid, tx, ty) || grid[ty][tx].fire) return false
+  return random() < 0.25 && igniteTile(state, grid, tx, ty)
 }

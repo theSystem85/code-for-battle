@@ -18,6 +18,7 @@
 // Not measurable and therefore not offered: income of AI factions (the game
 // keeps no earnings counter for them), and a building count "under construction".
 
+import { hasBuildingFire } from '../game/fireQueries.js'
 import { paramValue } from './policyConditions.js'
 import { entityCenter, sameParty } from './policyWorld.js'
 
@@ -31,12 +32,14 @@ const scope = {
   owner: null,
   now: 0,
   ownValid: false,
+  burningValid: false,
   enemyValid: false
 }
 
 const counts = {
   ownUnits: new Map(),
   ownBuildings: new Map(),
+  burningBuildings: new Map(),
   enemyUnits: new Map(),
   enemyBuildings: new Map()
 }
@@ -59,6 +62,7 @@ export function resetBaseSensors() {
   history.size = 0
   scope.context = null
   scope.ownValid = false
+  scope.burningValid = false
   scope.enemyValid = false
   previousOwnUnits.clear()
   destroyedOwnTypes.clear()
@@ -116,6 +120,7 @@ export function beginBaseScope(context, owner, now) {
   scope.owner = owner
   scope.now = now
   scope.ownValid = false
+  scope.burningValid = false
   scope.enemyValid = false
   destroyedOwnTypes.clear()
   const current = new Map()
@@ -201,6 +206,19 @@ function ensureEnemy() {
   }
 }
 
+function ensureBurningBuildings() {
+  if (scope.burningValid) return
+  scope.burningValid = true
+  counts.burningBuildings.clear()
+  const { buildings, mapGrid } = scope.context
+  if (!mapGrid) return
+  for (const building of buildings || []) {
+    if (!(building?.health > 0) || !sameParty(building.owner, scope.owner) || !hasBuildingFire(mapGrid, building)) continue
+    bump(counts.burningBuildings, building.type)
+    bump(counts.burningBuildings, 'any')
+  }
+}
+
 export function measureBaseLeaf(condition) {
   if (condition.type === 'check' && condition.check === 'ownUnitDestroyed') {
     return destroyedOwnTypes.has(paramValue(condition, 'unitType'))
@@ -215,6 +233,9 @@ export function measureBaseLeaf(condition) {
       return context.getPower ? context.getPower(owner) : undefined
     case 'moneyPerMinute':
       return moneyPerMinute()
+    case 'burningBuildingCount':
+      ensureBurningBuildings()
+      return counts.burningBuildings.get(paramValue(condition, 'buildingType')) || 0
     case 'buildingCount':
       ensureOwn()
       return counts.ownBuildings.get(paramValue(condition, 'buildingType')) || 0

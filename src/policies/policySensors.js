@@ -15,6 +15,7 @@
 
 import { TANK_FIRE_RANGE, TILE_SIZE, BUILDING_PROXIMITY_RANGE } from '../config.js'
 import { getServiceRadiusPixels } from '../utils/serviceRadius.js'
+import { isUnitOnFire } from '../game/fireQueries.js'
 import { getSpatialQuadtree } from '../game/spatialQuadtree.js'
 import { DEFENSE_BUILDING_TYPES, effectiveMode, paramValue } from './policyConditions.js'
 import {
@@ -494,6 +495,8 @@ function myUnitsInEnemyRange(type) {
 function measureCheck(condition) {
   const { unit, context } = scope
   switch (condition.check) {
+    case 'onFire':
+      return isUnitOnFire(context.mapGrid, unit)
     case 'airborne':
       return AIR_TYPES.has(unit.type) && unit.flightState !== 'grounded'
     case 'moving':

@@ -1003,6 +1003,26 @@ describe('multiplayer client snapshot sync', () => {
     expect(gameState.mapGrid[0][0].decal.tag).toBe('debris')
   })
 
+  it('[U07234] replicates fire intensity and consumed fuel from the host to a client', () => {
+    const fire = { x: 0, y: 0, age: 9, spreadElapsed: 1, suppression: 0.25, spreadBoost: 2 }
+    gameState.mapGrid = [[{ type: 'woods', fire }, { type: 'land', burnedFuel: true }]]
+    gameState.fires = [fire]
+    const snapshot = JSON.parse(JSON.stringify(commandSync.createGameStateSnapshot()))
+    expect(snapshot.burnedFuel).toEqual([{ x: 1, y: 0 }])
+
+    asClient()
+    gameState.fires = []
+    gameState.mapGrid = [[{ type: 'woods' }, { type: 'woods' }]]
+    commandSync.applyGameStateSnapshot({
+      fires: snapshot.fires,
+      burnedFuel: snapshot.burnedFuel,
+      units: [{ id: 'engine-1', type: 'fireEngine', x: 0, y: 0, water: 75, maxWater: 1800 }]
+    })
+    expect(gameState.fires).toEqual([fire])
+    expect(gameState.mapGrid[0][0].fire).toBe(gameState.fires[0])
+    expect(gameState.mapGrid[0][1]).toMatchObject({ type: 'land', burnedFuel: true })
+  })
+
   it('[U00967] serializes and restores selling with simulation time rather than wall time', () => {
     gameState.simulationTime = 10000
     gameState.buildings = [{

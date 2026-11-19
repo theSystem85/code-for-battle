@@ -1,4 +1,5 @@
 import { TILE_SIZE } from '../config.js'
+import { hasBuildingFire } from '../game/fireQueries.js'
 import { getSpatialQuadtree } from '../game/spatialQuadtree.js'
 import { effectiveMode, paramValue } from './policyConditions.js'
 import { isHostile, sameParty } from './policyWorld.js'
@@ -111,6 +112,7 @@ export function measureDefenceLeaf(building, leaf, context) {
   if (leaf.type === 'check') {
     if (defenceCapabilityReason(building, 'checks', leaf.check)) return undefined
     switch (leaf.check) {
+      case 'onFire': return hasBuildingFire(context.mapGrid, building)
       case 'enemyVisible': return Boolean(nearestDefenceEnemy(building, context, false, paramValue(leaf, 'targetType')))
       case 'enemyInFireRange': return Boolean(nearestDefenceEnemy(building, context, true, paramValue(leaf, 'targetType')))
       case 'canAttack': return paramValue(leaf, 'kind') === 'unit' && !building.holdFire && !(building.automationIntent?.action === 'holdFire') && !(typeof building.maxAmmo === 'number' && building.ammo <= 0) && !((building.type === 'rocketTurret' || building.type === 'teslaCoil') && context.getPower?.(building.owner) < 0) && Boolean(nearestDefenceEnemy(building, context, true))

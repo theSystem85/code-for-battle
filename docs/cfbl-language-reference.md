@@ -82,6 +82,7 @@ U = control unit; B = build building; P = build unit; D = control defence-buildi
 | `unitCount` | absolute 0…1000 | `unitType=any` | B,P |
 | `enemyUnitCount` | absolute 0…1000, visible only | `unitType=any` | B,P |
 | `buildingCount` | absolute 0…1000 | `buildingType=any` | U,B,P,D |
+| `burningBuildingCount` | absolute 0…1000, owned buildings with at least one burning tile | `buildingType=any` | B,P |
 | `enemyBuildingCount` | absolute 0…1000, visible only | `buildingType=any` | B,P |
 | `distance` | absolute 0…1000 tiles | `kind=unit,targetType=any` | U,D |
 | `enemyDistance` | absolute 0…1000 tiles, legacy nearest-enemy field | none | U,D |
@@ -97,6 +98,7 @@ All listed calls use `()`, including parameterless checks. U-only unless categor
 | Terminal | Parameters and defaults | Meaning |
 | --- | --- | --- |
 | `ownUnitDestroyed` | `unitType=any` | P only: owned unit loss in one gated 1-second pass; preserve tank production/sensor alias |
+| `onFire` | none | The unit stands on a burning tile, or at least one tile of the defence footprint is burning. U,D |
 | `airborne` | none | Is airborne |
 | `moving` | none | Is moving |
 | `attacking` | `kind=unit` | Attacking a unit/building; U,D |
@@ -148,13 +150,13 @@ All zero-parameter effects require `()`. U-only except explicit D/B/P entries. �
 
 ## All enum terminals
 
-- **Sensor unit type** (`unitType` for count/loss/myUnits checks; `targetType` for sensing): `any`, `tank_v1`, `tank-v2`, `tank-v3`, `rocketTank`, `howitzer`, `harvester`, `ambulance`, `tankerTruck`, `ammunitionTruck`, `recoveryTank`, `mineLayer`, `mineSweeper`, `apache`, `f22Raptor`, `f35`, `destroyer`, `battleship`, `submarine`, `aircraftCarrier`, `supplyShip`, `hovercraft`, `vehicleFerry`, `navalMineLayer`.
+- **Sensor unit type** (`unitType` for count/loss/myUnits checks; `targetType` for sensing): `any`, `tank_v1`, `tank-v2`, `tank-v3`, `rocketTank`, `howitzer`, `harvester`, `ambulance`, `tankerTruck`, `ammunitionTruck`, `fireEngine`, `recoveryTank`, `mineLayer`, `mineSweeper`, `apache`, `f22Raptor`, `f35`, `destroyer`, `battleship`, `submarine`, `aircraftCarrier`, `supplyShip`, `hovercraft`, `vehicleFerry`, `navalMineLayer`.
 - **Production unit type** (`buildUnits.unitType`): the same list without `any`, and **`tank` instead of `tank_v1`**. Keep this distinction visible in the typed catalog. Control-unit capability is the narrower set in spec 099.
-- **Sensor building type** (`buildingCount`/`enemyBuildingCount`): `any`, `constructionYard`, `powerPlant`, `oreRefinery`, `vehicleFactory`, `vehicleWorkshop`, `hospital`, `gasStation`, `ammunitionFactory`, `radarStation`, `helipad`, `airstrip`, `turretGunV1`, `turretGunV2`, `turretGunV3`, `rocketTurret`, `teslaCoil`, `artilleryTurret`.
+- **Sensor building type** (`buildingCount`/`burningBuildingCount`/`enemyBuildingCount`): `any`, `constructionYard`, `powerPlant`, `oreRefinery`, `vehicleFactory`, `vehicleWorkshop`, `fireDepartment`, `hospital`, `gasStation`, `ammunitionFactory`, `radarStation`, `helipad`, `airstrip`, `turretGunV1`, `turretGunV2`, `turretGunV3`, `rocketTurret`, `teslaCoil`, `artilleryTurret`.
 - **Production building type** (`buildBuilding.buildingType`): all sensor building types except `any`, plus `concreteWall`. Shipyards and streets require placement workflows unavailable in the present DAV and remain excluded.
 - **Delivery**: `factoryRally`, `attackNearest`, `attackHarvester`, `attackBase`, `defendHarvester`, `defendBase`.
 - **Kind/by**: `unit` or `building` where its catalog entry permits it.
-- **Service building**: `hospital`, `ammunitionFactory`, `gasStation`, `vehicleWorkshop`.
+- **Service building**: `hospital`, `ammunitionFactory`, `gasStation`, `vehicleWorkshop`, `fireDepartment`.
 - **Parking place**: `airstrip`, `helipad`, `vehicleWorkshop`.
 - **Resource**: `ammo`, `health`, `fuel`.
 

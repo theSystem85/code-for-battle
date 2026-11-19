@@ -334,22 +334,31 @@ async function runBenchmarkInternal(durationMs = BENCHMARK_DURATION_MS, options 
   let scenarioInitialized = false
   let stopCountdown = null
 
-  lastBenchmarkKind = 'standard'
+  const fireBenchmark = options.fireBenchmark === true
+  lastBenchmarkKind = fireBenchmark ? 'fire' : 'standard'
+  let stopScroll
 
   try {
     setBenchmarkRunningState(true)
-    showBenchmarkStatus('Preparing benchmark scenario…')
-    showBenchmarkCountdownMessage('Benchmark: preparing scenario…')
+    const scenarioName = fireBenchmark ? uiText('settings.benchmark.fire') : 'Benchmark'
+    showBenchmarkStatus(`Preparing ${scenarioName.toLowerCase()} scenario…`)
+    showBenchmarkCountdownMessage(`${scenarioName}: preparing scenario…`)
 
-    setupBenchmarkScenario()
+    if (fireBenchmark) {
+      const { seedBenchmarkFires } = await import('./fireBenchmarkScenario.js')
+      setupBenchmarkScenario({ seedFires: seedBenchmarkFires })
+    } else setupBenchmarkScenario()
     scenarioInitialized = true
     await waitForAnimationFrames(2)
+    if (fireBenchmark) stopScroll = startAutoBenchmarkScroll()
     options.onScenarioReady?.()
 
     showBenchmarkStatus(`Running benchmark (${Math.round(benchmarkDurationMs / 1000)}s)…`)
     stopCountdown = startBenchmarkCountdown(benchmarkDurationMs)
 
-    const resultPromise = startBenchmarkSession(benchmarkDurationMs)
+    const resultPromise = fireBenchmark
+      ? startBenchmarkSession(benchmarkDurationMs, 1000, { autoFocus: false })
+      : startBenchmarkSession(benchmarkDurationMs)
     if (!resultPromise) {
       throw new Error('Benchmark session already running')
     }
@@ -379,6 +388,7 @@ async function runBenchmarkInternal(durationMs = BENCHMARK_DURATION_MS, options 
     openBenchmarkModal()
     return null
   } finally {
+    stopScroll?.()
     if (scenarioInitialized) {
       teardownBenchmarkScenario()
     }
@@ -524,6 +534,8 @@ function applyBenchmarkSelectLabels(select) {
   if (options[0]) options[0].textContent = uiText('settings.benchmark.placeholder')
   if (options[1]) options[1].textContent = uiText('settings.benchmark.standard')
   if (options[2]) options[2].textContent = uiText('settings.benchmark.heavy')
+  const fireOption = select.querySelector?.('[value="fire"]')
+  if (fireOption) fireOption.textContent = uiText('settings.benchmark.fire')
 }
 
 async function runHeavyBattleFromSettings() {
@@ -605,7 +617,8 @@ export function attachBenchmarkButton() {
         void runHeavyBattleFromSettings()
         return
       }
-      void runBenchmarkInternal()
+      if (lastBenchmarkKind === 'fire') void runBenchmarkInternal(20000, { fireBenchmark: true })
+      else void runBenchmarkInternal()
     },
     onClose: () => {
       select.disabled = false
@@ -614,7 +627,7 @@ export function attachBenchmarkButton() {
 
   select.addEventListener('change', () => {
     const kind = select.value
-    if (kind !== 'standard' && kind !== 'heavy' && kind !== 'graphics') return
+    if (kind !== 'standard' && kind !== 'heavy' && kind !== 'graphics' && kind !== 'fire') return
     select.value = ''
     if (kind === 'graphics') {
       void runGraphicsFromSettings()
@@ -624,7 +637,8 @@ export function attachBenchmarkButton() {
       void runHeavyBattleFromSettings()
       return
     }
-    void runBenchmarkInternal()
+    if (kind === 'fire') void runBenchmarkInternal(20000, { fireBenchmark: true })
+    else void runBenchmarkInternal()
   })
 
   document.getElementById('settingsRunGraphicsTuner')?.addEventListener('click', () => { void runGraphicsFromSettings() })

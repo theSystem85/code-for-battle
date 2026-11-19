@@ -1,4 +1,4 @@
-import { igniteApacheImpact, igniteFromProjectile } from './fireSystem.js'
+import { igniteApacheImpact, igniteDecorationImpact, igniteFromProjectile } from './fireSystem.js'
 import { COMBAT_CONFIG } from './unitCombat/combatConfig.js'
 import { getCityAtWorld, applyCityDamage } from './cityBuildings.js'
 import { gameState } from '../gameState.js'
@@ -74,6 +74,7 @@ function getDecalTagForBullet(bullet) {
 }
 
 function spawnImpactDecal(gameState, mapGrid, bullet, x, y) {
+  if (bullet.originType !== 'apacheRocket') igniteDecorationImpact(gameState, mapGrid, bullet, x, y)
   if (!shouldSpawnImpactDecal(bullet)) return
   setWorldDecal(mapGrid, gameState, x, y, getDecalTagForBullet(bullet))
 }

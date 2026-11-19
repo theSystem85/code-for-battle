@@ -343,6 +343,7 @@ export function computeStateHash(gameState, tick) {
     hash = hashCombine(hash, quantize(fire.age, 1000))
     hash = hashCombine(hash, quantize(fire.spreadElapsed, 1000))
     hash = hashCombine(hash, quantize(fire.suppression, 1000))
+    hash = hashCombine(hash, fire.spreadBoost || 0)
   }
 
   // Hash global money

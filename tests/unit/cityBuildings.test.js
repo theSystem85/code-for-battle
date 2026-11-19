@@ -3,7 +3,8 @@ import { buildDecorationLayout, buildDecorationPools, getValidDecorationCell, bu
 import { DECORATION_PART_KEYS, DECORATION_SETTINGS, normalizeDecorationSettings } from '../../src/game/decorationSettings.js'
 import { prepareCityBuildings, getCityBuildings, applyCityDamage, applyCitySnapshot, getCityAtWorld, renderCityHealthBars, findCityBuildingById, getAttackableCityAtWorld, isCityBuildingTarget } from '../../src/game/cityBuildings.js'
 import { createReplayEntityReference } from '../../src/replayCommandPrimitives.js'
-import { CITY_BUILDING_HEALTH } from '../../src/config.js'
+import { igniteFromProjectile, igniteTile, updateFireSystem } from '../../src/game/fireSystem.js'
+import { CITY_BUILDING_HEALTH, TILE_SIZE } from '../../src/config.js'
 import { pathCache } from '../../src/game/pathCache.js'
 import { setTileDecal } from '../../src/game/tileDecals.js'
 
@@ -158,4 +159,16 @@ describe('city structure lifecycle', () => {
     expect(map[building.y][building.x].decal.tag).toBe('debris')
     expect(setTileDecal(map, {}, building.x, building.y, 'crater')?.tag).toBe('crater')
   })
+})
+
+it('[U07235] ignites the city footprint from a shell hit and spreads fire to another tile of the structure', () => {
+  const { map, buildings } = prepared()
+  const city = buildings[0]
+  const state = { buildings: [], fires: [] }
+  const bullet = { originType: 'tank_v1', x: (city.x + 0.5) * TILE_SIZE, y: (city.y + 0.5) * TILE_SIZE }
+  expect(igniteFromProjectile(state, map, city, bullet, () => 0)).toBe(true)
+  expect(igniteTile(state, map, city.x, city.y)).toBe(false)
+  updateFireSystem([], state, map, 5000, null, () => 0)
+  expect(city.health).toBeLessThan(city.maxHealth)
+  expect(map[city.y][city.x + 1].fire).toBeDefined()
 })

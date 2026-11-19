@@ -173,3 +173,53 @@ test('[E00268] the running game saves a fully burning factory with one engine', 
   expect(result.health).toBeGreaterThan(0)
   expect(result.water).toBeGreaterThan(0)
 })
+
+test('[E00269] an owned building fire alert focuses the building and does not repeat for another burning tile', async({ page }) => {
+  await prepareRegressionScenario(page, '419&size=64&players=2')
+  await page.evaluate(async() => {
+    const { igniteTile } = await import('/src/game/fireSystem.js')
+    const state = window.gameState
+    window.__regression.building('vehicleFactory', window.__regression.human, 40, 40)
+    state.smoothScroll.active = false
+    igniteTile(state, state.mapGrid, 40, 40)
+    window.__fireAlert = document.querySelector('.notification')
+    igniteTile(state, state.mapGrid, 41, 40)
+  })
+  const alert = page.locator('.notification').filter({ hasText: 'caught fire' })
+  await expect(alert).toBeVisible()
+  expect(await alert.evaluate(element => element === window.__fireAlert)).toBe(true)
+  await alert.getByRole('button', { name: 'Vehicle Factory' }).click()
+  expect(await page.evaluate(() => window.gameState.smoothScroll.targetX)).toBeGreaterThan(0)
+})
+
+test('[E00270] replays the burnout of a fire already active when recording started', async({ page }) => {
+  await prepareRegressionScenario(page, '419&size=64&players=2')
+  await page.evaluate(async() => {
+    const { igniteTile, NON_STRUCTURE_BURN_SECONDS } = await import('/src/game/fireSystem.js')
+    const { startReplayRecording } = await import('/src/replaySystem.js')
+    const state = window.gameState
+    const tile = state.mapGrid[24][24]
+    tile.type = 'woods'
+    if (!igniteTile(state, state.mapGrid, 24, 24)) throw new Error('Replay fixture did not ignite')
+    tile.fire.age = NON_STRUCTURE_BURN_SECONDS - 1
+    tile.fire.spreadBoost = 2
+    startReplayRecording()
+    if (!state.replay?.recordingActive) throw new Error('Replay recording did not start')
+    state.gamePaused = false
+  })
+
+  await expect.poll(() => page.evaluate(() => window.gameState.mapGrid[24][24].burnedFuel)).toBe(true)
+  await page.evaluate(async() => {
+    const { stopReplayRecording, listReplays, loadReplay } = await import('/src/replaySystem.js')
+    const state = window.gameState
+    state.gamePaused = true
+    stopReplayRecording()
+    const [replay] = listReplays()
+    await loadReplay(replay.key)
+  })
+  await expect.poll(() => page.evaluate(() => {
+    const state = window.gameState
+    const tile = state.mapGrid[24][24]
+    return { finished: state.replay.playbackFinished, burned: tile.burnedFuel, burning: Boolean(tile.fire) }
+  }), { timeout: 30000 }).toEqual({ finished: true, burned: true, burning: false })
+})

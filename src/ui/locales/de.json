@@ -41,6 +41,7 @@
       "placeholder": "Benchmark wählen…",
       "standard": "Karten-Scroll-Benchmark",
       "heavy": "Schwere Schlacht (320 Einheiten)",
+      "fire": "Feuer-Benchmark",
       "heavyComplete": "Schwere Schlacht abgeschlossen",
       "heavyFailed": "Schwere Schlacht fehlgeschlagen. Details stehen in der Konsole.",
       "phasesTitle": "Phasen (Mittel / p95 ms)",

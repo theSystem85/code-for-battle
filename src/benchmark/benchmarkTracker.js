@@ -301,7 +301,7 @@ export function notifyBenchmarkFrame({ timestamp, frameTime }) {
   }
 }
 
-export function startBenchmarkSession(durationMs = 60000, intervalMs = 1000) {
+export function startBenchmarkSession(durationMs = 60000, intervalMs = 1000, { autoFocus = true } = {}) {
   if (activeSession) {
     return Promise.resolve(null)
   }
@@ -326,7 +326,7 @@ export function startBenchmarkSession(durationMs = 60000, intervalMs = 1000) {
     resolve
   }
 
-  cameraFocusState.active = true
+  cameraFocusState.active = autoFocus
   cameraFocusState.manualOverride = false
 
   return promise

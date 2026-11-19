@@ -311,11 +311,12 @@ describe('saveGame.js', () => {
     const oldSpread = config.FIRE_SPREAD_PROBABILITY
     const oldDamage = config.FIRE_DAMAGE_PER_SECOND
     try {
-      const fire = { x: 3, y: 3, age: 4, spreadElapsed: 2, suppression: 1 }
+      const fire = { x: 3, y: 3, age: 4, spreadElapsed: 2, suppression: 1, spreadBoost: 2 }
       gameState.fires = [fire]
       mapGrid[3][3].type = 'woods'
       mapGrid[3][3].fire = fire
       mapGrid[3][3].tags = ['fire']
+      mapGrid[3][4].burnedFuel = true
       units.push({ id: 'saved-engine', type: 'fireEngine', owner: 'player1', x: 64, y: 64, health: 60, maxHealth: 60, path: [], water: 123, maxWater: 1000, fireHomeId: 'fire-station', fireRepathAt: 2500 })
       config.setFireSpreadProbability(0.75)
       config.setFireDamagePerSecond(4)
@@ -323,12 +324,14 @@ describe('saveGame.js', () => {
       saveGameModule.saveGame('FireRoundTrip')
       gameState.fires = []
       delete mapGrid[3][3].fire
+      delete mapGrid[3][4].burnedFuel
       units.length = 0
       config.setWindDirectionX(2)
       saveGameModule.loadGame('rts_save_FireRoundTrip')
       expect(gameState.fires[0]).toMatchObject(fire)
       expect(mapGrid[3][3].fire).toBe(gameState.fires[0])
       expect(mapGrid[3][3].tags).toContain('fire')
+      expect(mapGrid[3][4].burnedFuel).toBe(true)
       expect(units.find(unit => unit.type === 'fireEngine')).toMatchObject({ water: 123, maxWater: 1000, fireHomeId: 'fire-station', fireRepathAt: 2500 })
       expect(config.WIND_DIRECTION.x).toBe(-0.5)
       expect(config.FIRE_SPREAD_PROBABILITY).toBe(0.75)

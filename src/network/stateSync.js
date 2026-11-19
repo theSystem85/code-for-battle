@@ -1,5 +1,6 @@
 import { FIRE_SPREAD_PROBABILITY, FIRE_DAMAGE_PER_SECOND, setFireSpreadProbability, setFireDamagePerSecond, WIND_DIRECTION, setWindDirectionX, setWindDirectionY } from '../config.js'
-import { restoreFires } from '../game/fireSystem.js'
+import { burnOut, restoreFires } from '../game/fireSystem.js'
+import { notifyBuildingFire } from '../ui/fireNotifications.js'
 import { normalizeDecorationSettings } from '../game/decorationSettings.js'
 import { getCityBuildings, applyCitySnapshot } from '../game/cityBuildings.js'
 import { applyProductionCompletionAck, getCompletionReceipt } from '../policies/completionReceipts.js'
@@ -30,6 +31,7 @@ import { bindRenderingDensityPreparation } from '../rendering/prepared/rendering
 
 // Interval for game state snapshots (ms) - 100ms for smoother movement sync
 const GAME_STATE_SYNC_INTERVAL_MS = 100
+const previouslyBurningBuildingIds = new Set()
 
 // Handle for periodic state sync
 let stateSyncHandle = null
@@ -247,13 +249,14 @@ function serializeExplosion(exp, explosionTime) {
   return payload
 }
 
-function serializeMapDecals(mapGrid) {
+function serializeMapDecals(mapGrid, burnedFuel) {
   if (!Array.isArray(mapGrid)) return []
   const decals = []
   for (let y = 0; y < mapGrid.length; y++) {
     const row = mapGrid[y]
     if (!Array.isArray(row)) continue
     for (let x = 0; x < row.length; x++) {
+      if (row[x]?.burnedFuel) burnedFuel.push({ x, y })
       const decal = row[x]?.decal
       if (!decal || typeof decal !== 'object' || !decal.tag) continue
       decals.push({
@@ -697,6 +700,7 @@ export function createGameStateSnapshot({ fullAutomation = false } = {}) {
   const automationVersion = getPolicyStoreVersion()
   if (!fullAutomation && lastAutomationSourceVersion === automationVersion) delete automationSession.records
   lastAutomationSourceVersion = automationVersion
+  const burnedFuel = []
   return {
     automationSession,
     units,
@@ -744,7 +748,8 @@ export function createGameStateSnapshot({ fullAutomation = false } = {}) {
     oreSpreadInterval: ORE_SPREAD_INTERVAL,
     fireSettings: { spread: FIRE_SPREAD_PROBABILITY, damage: FIRE_DAMAGE_PER_SECOND, windX: WIND_DIRECTION.x, windY: WIND_DIRECTION.y },
     fires: gameState.fires || [],
-    mapDecals: serializeMapDecals(gameState.mapGrid),
+    mapDecals: serializeMapDecals(gameState.mapGrid, burnedFuel),
+    burnedFuel,
     simulationTime: simNow,
     shadowOfWarEnabled: gameState.shadowOfWarEnabled,
     showEnemyResources: gameState.showEnemyResources,
@@ -944,7 +949,15 @@ export function applyGameStateSnapshot(snapshot) {
   }
 
   if (snapshot.fireSettings) { setFireSpreadProbability(snapshot.fireSettings.spread); setFireDamagePerSecond(snapshot.fireSettings.damage); if (Number.isFinite(snapshot.fireSettings.windX)) setWindDirectionX(snapshot.fireSettings.windX); if (Number.isFinite(snapshot.fireSettings.windY)) setWindDirectionY(snapshot.fireSettings.windY) }
+  previouslyBurningBuildingIds.clear()
+  if (gameState.fires?.length) {
+    for (const { x, y } of gameState.fires) {
+      const building = gameState.mapGrid?.[y]?.[x]?.building
+      if (building?.id && building.owner === gameState.humanPlayer) previouslyBurningBuildingIds.add(building.id)
+    }
+  }
   restoreFires(gameState, gameState.mapGrid, snapshot.fires || [])
+  for (const { x, y } of snapshot.burnedFuel || []) burnOut(gameState, gameState.mapGrid, x, y)
   if (Array.isArray(snapshot.cityBuildings)) applyCitySnapshot(gameState.mapGrid, gameState, snapshot.cityBuildings)
 
   if (Array.isArray(snapshot.mapDecals)) {
@@ -1194,6 +1207,14 @@ export function applyGameStateSnapshot(snapshot) {
       }
     } else if (newBuildings.length > 0) {
       window.logger.warn('[GameCommandSync] Cannot place buildings - mapGrid not ready. newBuildings:', newBuildings.length, 'mapGrid length:', gameState.mapGrid?.length)
+    }
+  }
+
+  for (const { x, y } of gameState.fires) {
+    const building = gameState.mapGrid?.[y]?.[x]?.building
+    if (building?.id && building.owner === gameState.humanPlayer && !previouslyBurningBuildingIds.has(building.id)) {
+      previouslyBurningBuildingIds.add(building.id)
+      notifyBuildingFire(gameState, gameState.mapGrid, building)
     }
   }
 

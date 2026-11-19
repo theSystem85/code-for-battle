@@ -109,6 +109,9 @@ export function getMissingMigrationVersions(toVersion = GAME_STATE_SCHEMA_VERSIO
   return missing
 }
 
+// Missing spread boosts and burned-fuel flags retain their default values.
+migrations[8] = state => ({ ...state })
+
 export function migrateLiveState(state, fromVersion, toVersion) {
   assertSchemaVersion(fromVersion, 'source version')
   assertSchemaVersion(toVersion, 'target version')

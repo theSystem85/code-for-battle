@@ -132,3 +132,25 @@ describe('CFBL language v1', () => {
     expect(fuzzyOptions([{ value: 'autoAttackInRange', label: 'Attack enemies in range' }], 'aa ir')).toHaveLength(1)
   })
 })
+
+it('[U07233] offers fire units and departments in CFBL conditions and measures active fires', async() => {
+  const { beginUnitScope, measureLeaf } = await import('../../src/policies/policySensors.js')
+  const { beginBaseScope, measureBaseLeaf } = await import('../../src/policies/basePolicySensors.js')
+  const onFire = parse(program('onFire()')).states[0].transitions[0].when
+  parse(program('unitCount(unitType=fireEngine).absolute >= 1', 'wait', 'build unit'))
+  parse(program('burningBuildingCount(buildingType=fireDepartment).absolute >= 1', 'wait', 'build building'))
+
+  const mapGrid = [[{ fire: {} }, { fire: {} }]]
+  const engine = { type: 'fireEngine', x: 0, y: 0 }
+  beginUnitScope(engine, { mapGrid }, 0)
+  expect(measureLeaf(onFire)).toBe(true)
+  delete mapGrid[0][0].fire
+  expect(measureLeaf(onFire)).toBe(false)
+
+  const buildings = [
+    { type: 'fireDepartment', owner: 'player1', health: 50, x: 0, y: 0, width: 2, height: 1 },
+    { type: 'fireDepartment', owner: 'player2', health: 50, x: 1, y: 0, width: 1, height: 1 }
+  ]
+  beginBaseScope({ buildings, mapGrid }, 'player1', 0)
+  expect(measureBaseLeaf({ type: 'compare', field: 'burningBuildingCount', buildingType: 'fireDepartment' })).toBe(1)
+})

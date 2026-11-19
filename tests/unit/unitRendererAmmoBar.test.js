@@ -451,3 +451,23 @@ describe('UnitRenderer policy-control icon', () => {
     expect(second.x).toBe(96 + 32 - second.width + 2 - scroll.x)
   })
 })
+
+it('[U07236] uses the normal ammo slot for the selected fire engine water reserve', () => {
+  const renderer = new UnitRenderer()
+  const drawBar = vi.spyOn(renderer, 'drawHudEdgeBar').mockImplementation(() => {})
+  const engine = { type: 'fireEngine', selected: true, x: 0, y: 0, health: 60, maxWater: 1800, water: 450 }
+  const scroll = { x: 0, y: 0 }
+
+  expect(renderer.hasHudAmmoBar(engine)).toBe(true)
+  renderer.renderAmmunitionBar({}, engine, scroll)
+  expect(drawBar).toHaveBeenLastCalledWith(expect.anything(), expect.anything(), 'left', 0.25, '#45c9ed')
+  expect(renderer.getHudAbsoluteTooltipText(engine, 'ammo')).toBe('water 450/1800')
+
+  engine.water = 0
+  renderer.renderAmmunitionBar({}, engine, scroll)
+  expect(drawBar).toHaveBeenLastCalledWith(expect.anything(), expect.anything(), 'left', 0, '#45c9ed')
+
+  engine.water = 1800
+  renderer.renderAmmunitionBar({}, engine, scroll)
+  expect(drawBar).toHaveBeenLastCalledWith(expect.anything(), expect.anything(), 'left', 1, '#45c9ed')
+})

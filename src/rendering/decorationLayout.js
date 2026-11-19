@@ -345,7 +345,7 @@ export function getValidDecorationCell(layout, mapGrid, x, y, defaultBiome = 'gr
         if (tile?.type !== 'water' || tile.building || tile.ore || tile.seedCrystal) return null
         continue
       }
-      if (!isDecoratableLand(tile) || resolveBiome(tile, defaultBiome) !== biome) return null
+      if (tile?.burnedFuel || !isDecoratableLand(tile) || resolveBiome(tile, defaultBiome) !== biome) return null
     }
   }
   return cell

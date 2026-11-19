@@ -179,10 +179,11 @@ function placePlayerBuildings(playerId, factory) {
   })
 }
 
-function spawnSupportUnits(factory, supportAnchor) {
+function spawnSupportUnits(factory, supportAnchor, fireBenchmark) {
   if (!supportAnchor) return
 
   const supportTypes = ['harvester', 'tankerTruck', 'ambulance', 'recoveryTank']
+  if (fireBenchmark) supportTypes.push('fireEngine')
   const mapWidth = mapGrid[0]?.length || 0
   const mapHeight = mapGrid.length || 0
   const baseX = clamp(supportAnchor.x, 0, Math.max(0, mapWidth - 1))
@@ -273,7 +274,7 @@ function assignBattleTargets(anchorEntries) {
   })
 }
 
-export function setupBenchmarkScenario() {
+export function setupBenchmarkScenario({ seedFires } = {}) {
   const game = getCurrentGame()
   if (!game) {
     throw new Error('Game instance not available')
@@ -405,7 +406,7 @@ export function setupBenchmarkScenario() {
     if (!factory) return
 
     placePlayerBuildings(playerId, factory)
-    spawnSupportUnits(factory, supportAnchors[playerId])
+    spawnSupportUnits(factory, supportAnchors[playerId], Boolean(seedFires))
 
     const battleUnits = spawnBattleUnits(factory, anchor)
     anchor.units.push(...battleUnits)
@@ -418,6 +419,8 @@ export function setupBenchmarkScenario() {
 
   gameState.occupancyMap = initializeOccupancyMap(units, mapGrid, getTextureManager())
   updateDangerZoneMaps(gameState)
+
+  seedFires?.(gameState, mapGrid)
 
   gameState.gamePaused = false
   gameState.gameStarted = true

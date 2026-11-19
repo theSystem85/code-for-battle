@@ -41,6 +41,7 @@
       "placeholder": "Choose a benchmark…",
       "standard": "Map scroll benchmark",
       "heavy": "Heavy battle (320 units)",
+      "fire": "Fire benchmark",
       "heavyComplete": "Heavy battle complete",
       "heavyFailed": "Heavy battle failed. Check the console for details.",
       "phasesTitle": "Phase breakdown (avg / p95 ms)",

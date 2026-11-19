@@ -1,6 +1,6 @@
 import { drawPreparedSpriteCentered, getPreparedSprite } from './prepared/preparedSpritePipeline.js'
 // rendering/unitRenderer.js
-import { TILE_SIZE, HARVESTER_CAPPACITY, HARVESTER_UNLOAD_TIME, RECOIL_DISTANCE, RECOIL_DURATION, MUZZLE_FLASH_DURATION, MUZZLE_FLASH_SIZE, TANK_FIRE_RANGE, ATTACK_TARGET_INDICATOR_SIZE, ATTACK_TARGET_BOUNCE_SPEED, UNIT_TYPE_COLORS, PARTY_COLORS, TANKER_SUPPLY_CAPACITY, UTILITY_SERVICE_INDICATOR_SIZE, UTILITY_SERVICE_INDICATOR_BOUNCE_SPEED, SERVICE_DISCOVERY_RANGE, SERVICE_SERVING_RANGE, MINE_DEPLOY_STOP_TIME, VIEW_FRUSTUM_MARGIN, CURSOR_METERS_PER_TILE, BATTLESHIP_FIRE_RANGE, SUBMARINE_TORPEDO_RANGE, UNIT_SHADOWS_ENABLED, UNIT_SHADOW_OFFSET, UNIT_SHADOW_DIRECTION, UNIT_SHADOW_START_STRETCH, UNIT_SHADOW_END_STRETCH, UNIT_SHADOW_SIZE, UNIT_SHADOW_OPACITY, UNIT_SHADOW_BLUR } from '../config.js'
+import { TILE_SIZE, HARVESTER_CAPPACITY, HARVESTER_UNLOAD_TIME, RECOIL_DISTANCE, RECOIL_DURATION, MUZZLE_FLASH_DURATION, MUZZLE_FLASH_SIZE, TANK_FIRE_RANGE, ATTACK_TARGET_INDICATOR_SIZE, ATTACK_TARGET_BOUNCE_SPEED, UNIT_TYPE_COLORS, PARTY_COLORS, TANKER_SUPPLY_CAPACITY, UTILITY_SERVICE_INDICATOR_SIZE, UTILITY_SERVICE_INDICATOR_BOUNCE_SPEED, SERVICE_DISCOVERY_RANGE, SERVICE_SERVING_RANGE, MINE_DEPLOY_STOP_TIME, VIEW_FRUSTUM_MARGIN, CURSOR_METERS_PER_TILE, BATTLESHIP_FIRE_RANGE, SUBMARINE_TORPEDO_RANGE, UNIT_SHADOWS_ENABLED, UNIT_SHADOW_OFFSET, UNIT_SHADOW_DIRECTION, UNIT_SHADOW_START_STRETCH, UNIT_SHADOW_END_STRETCH, UNIT_SHADOW_SIZE, UNIT_SHADOW_OPACITY, UNIT_SHADOW_BLUR, FIRE_WATER_CAPACITY } from '../config.js'
 import { isCityOccludedAtTile } from './cityOcclusionIndex.js'
 import { gameState } from '../gameState.js'
 import { selectedUnits } from '../inputHandler.js'
@@ -411,6 +411,7 @@ export class UnitRenderer {
   hasHudAmmoBar(unit) {
     return unit.selected && (
       unit.type === 'harvester' ||
+      unit.type === 'fireEngine' ||
       typeof unit.maxAmmunition === 'number' ||
       typeof unit.maxRocketAmmo === 'number' ||
       unit.type === 'mineLayer' ||
@@ -442,6 +443,11 @@ export class UnitRenderer {
   }
 
   getHudAmmoTooltipValue(unit) {
+    if (unit.type === 'fireEngine') {
+      const capacity = unit.maxWater ?? FIRE_WATER_CAPACITY
+      return `water ${this.roundHudValue(unit.water ?? capacity)}/${this.roundHudValue(capacity)}`
+    }
+
     if (unit.type === 'harvester') {
       return `load ${this.roundHudValue(unit.oreCarried ?? 0)}`
     }
@@ -1275,7 +1281,12 @@ export class UnitRenderer {
     let barColor = '#FFA500' // Default orange color for ammunition
     let reloadRatio = null // Additional reload indicator for rocket tanks
 
-    if (unit.type === 'harvester') {
+    if (unit.type === 'fireEngine') {
+      const capacity = unit.maxWater ?? FIRE_WATER_CAPACITY
+      ratio = Math.max(0, Math.min(1, (unit.water ?? capacity) / Math.max(1, capacity)))
+      hasAmmo = true
+      barColor = '#45c9ed'
+    } else if (unit.type === 'harvester') {
       const cargoCapacity = Math.max(1, Number.isFinite(unit.cargoCapacity) ? unit.cargoCapacity : HARVESTER_CAPPACITY)
       ratio = Math.max(0, Math.min(1, (unit.oreCarried ?? 0) / cargoCapacity))
       hasAmmo = true
@@ -1933,12 +1944,6 @@ export class UnitRenderer {
         drawPreparedSpriteCentered(ctx, sprite, 0, 0)
         ctx.restore()
         this.renderSelection(ctx, unit, centerX, centerY)
-        if (unit.selected) {
-          ctx.fillStyle = '#12333d'
-          ctx.fillRect(centerX - 14, centerY + 20, 28, 4)
-          ctx.fillStyle = '#45c9ed'
-          ctx.fillRect(centerX - 14, centerY + 20, 28 * Math.max(0, unit.water / (unit.maxWater || 1000)), 4)
-        }
         return
       }
     }

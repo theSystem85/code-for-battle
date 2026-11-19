@@ -6,7 +6,7 @@ const COMMON_FIELDS = ['hp', 'reload', 'money', 'power', 'buildingCount', 'enemy
 export const DEFENCE_CAPABILITIES = Object.freeze(Object.fromEntries(DEFENSE_BUILDING_TYPES.map(type => [type, Object.freeze({
   actions: Object.freeze([...COMMON_ACTIONS, ...(type === 'teslaCoil' ? [] : ['turretLeft', 'turretRight']), ...(type.startsWith('turretGun') ? ['fireForward'] : [])]),
   fields: Object.freeze([...COMMON_FIELDS, ...(type === 'teslaCoil' ? [] : ['turretRotation']), ...(type === 'teslaCoil' ? [] : ['ammo'])]),
-  checks: Object.freeze(['enemyVisible', 'enemyInFireRange', 'canAttack', 'attacking'])
+  checks: Object.freeze(['onFire', 'enemyVisible', 'enemyInFireRange', 'canAttack', 'attacking'])
 })])))
 
 export function isProgrammableDefence(building) { return Boolean(building) && TYPES.has(building.type) }
