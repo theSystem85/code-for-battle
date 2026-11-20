@@ -636,6 +636,7 @@ function buildSaveObject(label, { includeMap = true, includeStaticConfiguration 
       type: u.type,
       owner: u.owner,
       productionCompletedAt: u.productionCompletedAt ?? null,
+      unitCreatedAt: u.unitCreatedAt ?? null,
       x: u.x,
       y: u.y,
       tileX: u.tileX,
@@ -1517,6 +1518,7 @@ function loadGameFromSaveObject(saveObj, key) {
       const defaultReplaySpawnOrdinal = hydrated.replaySpawnOrdinal
       // Copy over all saved properties (health, id, etc.)
       Object.assign(hydrated, u)
+      hydrated.unitCreatedAt = u.unitCreatedAt ?? null
       // Ensure maxHealth is valid (fix for older save games that may not have saved maxHealth)
       if (!Number.isFinite(hydrated.maxHealth) || hydrated.maxHealth <= 0) {
         hydrated.maxHealth = defaultMaxHealth || hydrated.health || 100

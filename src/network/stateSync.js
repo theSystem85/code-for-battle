@@ -502,6 +502,7 @@ export function createGameStateSnapshot({ fullAutomation = false } = {}) {
     type: unit.type,
     owner: unit.owner,
     productionCompletedAt: unit.productionCompletedAt ?? null,
+    unitCreatedAt: unit.unitCreatedAt ?? null,
     x: unit.x,
     y: unit.y,
     tileX: unit.tileX,

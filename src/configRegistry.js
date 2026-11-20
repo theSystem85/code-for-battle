@@ -92,6 +92,10 @@ import {
   LONG_PRESS_MS,
   MAP_ACTION_LONG_PRESS_MS,
   setMapActionLongPressMs,
+  UNIT_PICKER_VISIBLE_ROWS,
+  UNIT_PICKER_SCROLL_SPEED,
+  setUnitPickerVisibleRows,
+  setUnitPickerScrollSpeed,
   setLongPressMs,
   CHEAT_CONSOLE_HISTORY_LIMIT,
   setCheatConsoleHistoryLimit,
@@ -1046,6 +1050,30 @@ export const configRegistry = {
     min: 300,
     max: 5000,
     step: 50,
+    category: 'Controls'
+  },
+
+  unitPickerVisibleRows: {
+    name: 'Unit Picker Visible Rows',
+    description: 'Maximum number of unit rows visible in the Units tab hold menu',
+    type: 'number',
+    get: () => UNIT_PICKER_VISIBLE_ROWS,
+    set: setUnitPickerVisibleRows,
+    min: 1,
+    max: 15,
+    step: 1,
+    category: 'Controls'
+  },
+
+  unitPickerScrollSpeed: {
+    name: 'Unit Picker Scroll Speed',
+    description: 'Maximum Units tab hold menu scroll speed in units per second',
+    type: 'number',
+    get: () => UNIT_PICKER_SCROLL_SPEED,
+    set: setUnitPickerScrollSpeed,
+    min: 1,
+    max: 40,
+    step: 1,
     category: 'Controls'
   },
 

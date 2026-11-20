@@ -19,6 +19,7 @@ import { getUniqueId, updateUnitSpeedModifier, getUnitCost, getBuildingIdentifie
 import { initializeUnitMovement } from './game/unifiedMovement.js'
 import { initializeHowitzerGun } from './game/howitzerGunController.js'
 import { gameState } from './gameState.js'
+import { getSimulationTime } from './game/time.js'
 import { getHelipadLandingCenter, getHelipadLandingTile, getHelipadLandingTopLeft } from './utils/helipadUtils.js'
 import { isFriendlyMineBlocking } from './game/mineSystem.js'
 import { pathOptionsIgnoringOwnMines } from './game/ownMineSafety.js'
@@ -1133,6 +1134,7 @@ export function createUnit(factory, unitType, x, y, options = {}) {
     // Determine owner based on factory's 'owner' property (for buildings) or 'id' (for initial factories)
     owner,
     replaySpawnOrdinal,
+    unitCreatedAt: getSimulationTime(gameState),
     tileX,
     tileY,
     x: initialX,

@@ -921,6 +921,28 @@ export function loadMapActionLongPressSetting() {
   }
 }
 
+export let UNIT_PICKER_VISIBLE_ROWS = 5
+export let UNIT_PICKER_SCROLL_SPEED = 12
+
+export function setUnitPickerVisibleRows(value) {
+  if (!Number.isFinite(value)) return
+  UNIT_PICKER_VISIBLE_ROWS = Math.max(1, Math.min(15, Math.round(value)))
+  setStoredItem('rts_unit_picker_visible_rows', String(UNIT_PICKER_VISIBLE_ROWS))
+}
+
+export function setUnitPickerScrollSpeed(value) {
+  if (!Number.isFinite(value)) return
+  UNIT_PICKER_SCROLL_SPEED = Math.max(1, Math.min(40, value))
+  setStoredItem('rts_unit_picker_scroll_speed', String(UNIT_PICKER_SCROLL_SPEED))
+}
+
+export function loadUnitPickerSettings() {
+  const rows = getStoredItem('rts_unit_picker_visible_rows')
+  const speed = getStoredItem('rts_unit_picker_scroll_speed')
+  if (rows !== null) setUnitPickerVisibleRows(Number(rows))
+  if (speed !== null) setUnitPickerScrollSpeed(Number(speed))
+}
+
 // Long-press duration to show production tooltips (in milliseconds)
 export let LONG_PRESS_MS = 250
 

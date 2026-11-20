@@ -1,16 +1,20 @@
 import { productionQueue } from '../productionQueue.js'
 import { playSound } from '../sound.js'
 import { focusProducedUnit } from './productionUnitFocus.js'
+import { bindUnitPicker } from './unitPicker.js'
 import { gameState } from '../gameState.js'
 
 export function ensureMobileToggle(controller) {
   if (!controller.mobileCategoryToggle || !controller.mobileCategoryToggle.isConnected) {
     controller.mobileCategoryToggle = document.getElementById('mobileCategoryToggle')
+    controller.disposeMobileUnitPicker?.()
     controller.mobileCategoryToggleListenerAdded = false
   }
 
   if (controller.mobileCategoryToggle && !controller.mobileCategoryToggleListenerAdded) {
     controller.mobileCategoryToggle.addEventListener('click', () => controller.handleMobileCategoryToggle())
+    const toggle = controller.mobileCategoryToggle
+    controller.disposeMobileUnitPicker = bindUnitPicker(toggle, () => toggle.dataset.activeTab === 'units')
     controller.mobileCategoryToggleListenerAdded = true
   }
 }
@@ -129,13 +133,16 @@ export function updateMobileCategoryToggle(controller, activeTabName) {
   const currentLabel = activeTab === 'units' ? 'UNITS' : 'BUILDINGS'
   const otherLabel = otherTab === 'units' ? 'UNITS' : 'BUILDINGS'
 
-  controller.mobileCategoryToggle.disabled = otherDisabled
+  controller.mobileCategoryToggle.dataset.activeTab = activeTab
+  controller.mobileCategoryToggle.disabled = otherDisabled && activeTab !== 'units'
   controller.mobileCategoryToggle.tabIndex = otherDisabled ? -1 : 0
   controller.mobileCategoryToggle.textContent = currentLabel
   controller.mobileCategoryToggle.setAttribute('aria-pressed', activeTab === 'buildings' ? 'true' : 'false')
   controller.mobileCategoryToggle.setAttribute(
     'aria-label',
-    otherDisabled ? `${currentLabel} build options` : `Switch to ${otherLabel} build options`
+    activeTab === 'units'
+      ? (otherDisabled ? 'Units. Hold to browse your units.' : 'Units. Tap for buildings or hold to browse your units.')
+      : (otherDisabled ? `${currentLabel} build options` : `Switch to ${otherLabel} build options`)
   )
 }
 
@@ -146,6 +153,10 @@ export function initProductionTabs(controller) {
     // Resetting a game can initialize these same buttons again.
     if (button._productionTabClickHandler) {
       button.removeEventListener('click', button._productionTabClickHandler)
+    }
+    if (button.dataset.tab === 'units') {
+      button._disposeUnitPicker?.()
+      button._disposeUnitPicker = bindUnitPicker(button, () => true)
     }
     button._productionTabClickHandler = () => {
       if (button.classList.contains('disabled')) {

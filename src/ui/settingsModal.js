@@ -92,6 +92,12 @@ function rendererBackendSelectValue(value) {
   return value === 'webgl' || value === 'webgpu' || value === 'auto' ? value : 'auto'
 }
 
+const CONTROL_NUMBER_INPUTS = [
+  ['mapActionLongPressMs', 'settingsMapActionLongPressMs'],
+  ['unitPickerVisibleRows', 'settingsUnitPickerVisibleRows'],
+  ['unitPickerScrollSpeed', 'settingsUnitPickerScrollSpeed']
+]
+
 const EXTRA_WATER_CONTROLS = [
   ['Direction', 'waterWaveDirection', '°']
 ]
@@ -317,8 +323,10 @@ function openModal(modal, defaultTab = 'keybindings') {
     const input = modal.querySelector(`#${id}`)
     if (input) input.checked = getProductionPlacementSettings()[name]
   }
-  const mapHoldInput = modal.querySelector('#settingsMapActionLongPressMs')
-  if (mapHoldInput) mapHoldInput.value = String(getConfigValue('mapActionLongPressMs'))
+  for (const [configId, inputId] of CONTROL_NUMBER_INPUTS) {
+    const input = modal.querySelector(`#${inputId}`)
+    if (input) input.value = String(getConfigValue(configId))
+  }
   modal.classList.add('config-modal--open')
   modal.setAttribute('aria-hidden', 'false')
   document.body.classList.add('config-modal-open')
@@ -466,12 +474,13 @@ export function initSettingsModal() {
     window.logger.warn('Failed to load decorative fade setting:', error)
   }
 
-  const mapHoldInput = modal.querySelector('#settingsMapActionLongPressMs')
-  if (mapHoldInput) {
-    mapHoldInput.value = String(getConfigValue('mapActionLongPressMs'))
-    mapHoldInput.addEventListener('change', () => {
-      setConfigValue('mapActionLongPressMs', Number(mapHoldInput.value))
-      mapHoldInput.value = String(getConfigValue('mapActionLongPressMs'))
+  for (const [configId, inputId] of CONTROL_NUMBER_INPUTS) {
+    const input = modal.querySelector(`#${inputId}`)
+    if (!input) continue
+    input.value = String(getConfigValue(configId))
+    input.addEventListener('change', () => {
+      if (input.value !== '') setConfigValue(configId, Number(input.value))
+      input.value = String(getConfigValue(configId))
     })
   }
   for (const [name, id] of [['autoActivate', 'settingsAutoActivatePlacement'], ['autoAdvance', 'settingsAutoAdvancePlacement']]) {

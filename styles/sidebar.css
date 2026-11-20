@@ -2151,3 +2151,70 @@ body.save-game-editor-open { overflow: hidden; }
   z-index: 7;
   pointer-events: none;
 }
+
+#productionTabs [data-tab="units"],
+#mobileCategoryToggle[data-active-tab="units"] {
+  touch-action: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.unit-picker {
+  position: fixed;
+  z-index: var(--z-hud-popover);
+  overflow: hidden;
+  pointer-events: none;
+  contain: strict;
+  box-sizing: border-box;
+  background: #181e26;
+  color: #ebf0f7;
+  border-radius: 6px;
+  outline: 1px solid #566579;
+  box-shadow: 0 4px 16px #0009;
+  font-family: var(--game-font-family);
+}
+
+.unit-picker__track {
+  position: absolute;
+  inset-inline: 0;
+  will-change: transform;
+}
+
+.unit-picker__row {
+  box-sizing: border-box;
+  display: grid;
+  align-content: center;
+  gap: 3px;
+  height: var(--unit-picker-row-height);
+  padding: 0 9px;
+  border-bottom: 1px solid #34404f;
+  border-inline-start: 3px solid transparent;
+  font-size: 13px;
+}
+
+.unit-picker__row[aria-selected="true"] {
+  background: #244062;
+  border-inline-start-color: #79b9ff;
+}
+
+.unit-picker__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 700;
+}
+
+.unit-picker__stats {
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+  color: #d2dcea;
+  font: 11px/1.1 system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.unit-picker__stats > span > span {
+  margin-inline-end: 3px;
+  color: #98c8ff;
+}

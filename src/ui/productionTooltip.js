@@ -127,7 +127,7 @@ function formatPower(value) {
   return `${sign}${power}`
 }
 
-function getUnitLabel(unitType) {
+export function getUnitLabel(unitType) {
   return unitDisplayNames[unitType] || unitType.replace(/[_-]/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase())
 }
 
@@ -143,7 +143,7 @@ function getUnitStatus(unit) {
   return 'idle'
 }
 
-function getFuelDisplay(unit) {
+export function getFuelDisplay(unit) {
   if (typeof unit.maxGas === 'number') {
     const percent = Math.max(0, Math.min(100, Math.round((unit.gas / unit.maxGas) * 100)))
     return `${percent}%`
@@ -151,7 +151,7 @@ function getFuelDisplay(unit) {
   return '--'
 }
 
-function getAmmoDisplay(unit) {
+export function getAmmoDisplay(unit) {
   if (typeof unit.maxAmmunition === 'number') {
     return `${Math.max(0, Math.round(unit.ammunition || 0))}/${unit.maxAmmunition}`
   }
