@@ -12,7 +12,7 @@ import {
   MILESTONE_SIGNAL_RELEASE_CLASS,
   MILESTONE_PRESENTATION_FADE_MS,
   PORTRAIT_COLLAPSED_RADAR_BOTTOM,
-  PORTRAIT_CONDENSED_RADAR_BOTTOM,
+  PORTRAIT_CONDENSED_VIDEO_TOP,
   PORTRAIT_RADAR_RIGHT,
   PORTRAIT_RADAR_VIDEO_HEIGHT_PX,
   PORTRAIT_RADAR_VIDEO_WIDTH_PX,
@@ -65,14 +65,15 @@ describe('milestone video presentation', () => {
     expect(PORTRAIT_RADAR_VIDEO_WIDTH_PX / PORTRAIT_RADAR_VIDEO_HEIGHT_PX).toBeCloseTo(5 / 3, 5)
   })
 
-  it('[U05474] anchors condensed portrait video on the bottom-right radar', () => {
+  it('[U05474] anchors condensed portrait video below the protected top area', () => {
     const condensed = portraitMinimapPlacement('condensed')
     expect(condensed).toMatchObject({
       ...RADAR_SIZE,
       mode: 'portrait-minimap',
       layout: 'condensed',
-      right: PORTRAIT_RADAR_RIGHT,
-      bottom: PORTRAIT_CONDENSED_RADAR_BOTTOM
+      anchor: 'top-left',
+      left: 'var(--safe-area-left, 0px)',
+      top: PORTRAIT_CONDENSED_VIDEO_TOP
     })
     expect(PORTRAIT_RADAR_VIDEO_WIDTH_PX).toBe(250)
     expect(PORTRAIT_RADAR_VIDEO_HEIGHT_PX).toBe(150)
@@ -96,10 +97,10 @@ describe('milestone video presentation', () => {
     }
     const css = overlayCss()
     const baseCss = readFileSync(resolve(process.cwd(), 'styles/base.css'), 'utf8')
-    expectPortraitRadarRule(css, 'sidebar-condensed', PORTRAIT_CONDENSED_RADAR_BOTTOM)
+    expect(css).toContain(`top: ${PORTRAIT_CONDENSED_VIDEO_TOP};`)
+    expect(css).toContain('left: var(--safe-area-left, 0px);')
     expectPortraitRadarRule(css, 'sidebar-collapsed', PORTRAIT_COLLAPSED_RADAR_BOTTOM)
     expect(baseCss).toMatch(/body\.mobile-portrait\.sidebar-condensed #mobileMinimapOverlay\.visible\s*\{[^}]*width:\s*250px;[^}]*height:\s*150px;[^}]*right:\s*var\(--safe-area-right\)/)
-    expect(baseCss).toContain(PORTRAIT_CONDENSED_RADAR_BOTTOM)
     expect(baseCss).toContain(PORTRAIT_COLLAPSED_RADAR_BOTTOM)
     expect(css).toMatch(/body\.mobile-portrait #video-overlay\.native-video\.show\s*\{[^}]*pointer-events:\s*auto;/)
     expect(css).not.toMatch(/width:\s*50vw/)

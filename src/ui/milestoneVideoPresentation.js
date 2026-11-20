@@ -27,8 +27,9 @@ export const PORTRAIT_RADAR_VIDEO_WIDTH_PX = 250
 export const PORTRAIT_RADAR_VIDEO_HEIGHT_PX = 150
 export const PORTRAIT_RADAR_VIDEO_ASPECT = '5 / 3'
 export const PORTRAIT_RADAR_RIGHT = 'var(--safe-area-right)'
-export const PORTRAIT_CONDENSED_RADAR_BOTTOM =
-  'calc(var(--safe-area-bottom) + var(--portrait-condensed-bar-height) + var(--mobile-action-size) + 24px)'
+export const PORTRAIT_CONDENSED_VIDEO_TOP =
+  'calc(12px + max(var(--safe-area-top, 0px), env(safe-area-inset-top, 0px)))'
+export const PORTRAIT_VIDEO_SLIDE_MS = 400
 export const PORTRAIT_COLLAPSED_RADAR_BOTTOM =
   'calc(var(--safe-area-bottom) + var(--mobile-action-size) + 24px)'
 
@@ -36,11 +37,11 @@ const PORTRAIT_MINIMAP_PLACEMENTS = Object.freeze({
   condensed: Object.freeze({
     mode: 'portrait-minimap',
     layout: 'condensed',
-    anchor: 'bottom-right',
+    anchor: 'top-left',
     width: PORTRAIT_RADAR_VIDEO_WIDTH_PX,
     height: PORTRAIT_RADAR_VIDEO_HEIGHT_PX,
-    right: PORTRAIT_RADAR_RIGHT,
-    bottom: PORTRAIT_CONDENSED_RADAR_BOTTOM
+    top: PORTRAIT_CONDENSED_VIDEO_TOP,
+    left: 'var(--safe-area-left, 0px)'
   }),
   collapsed: Object.freeze({
     mode: 'portrait-minimap',
@@ -68,10 +69,10 @@ export function portraitMinimapOverlayCss(layout) {
   const sidebar = layout === 'collapsed' ? 'sidebar-collapsed' : 'sidebar-condensed'
   return `
       body.mobile-portrait.${sidebar} #video-overlay.native-video {
-        top: auto;
-        left: auto;
-        right: ${placement.right};
-        bottom: ${placement.bottom};
+        top: ${placement.top || 'auto'};
+        left: ${placement.left || 'auto'};
+        right: ${placement.right || 'auto'};
+        bottom: ${placement.bottom || 'auto'};
         width: ${placement.width}px;
         height: ${placement.height}px;
         aspect-ratio: ${PORTRAIT_RADAR_VIDEO_ASPECT};

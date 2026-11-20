@@ -9,7 +9,8 @@ import {
   MILESTONE_SIGNAL_CHIRP_VOLUME,
   MILESTONE_SIGNAL_RELEASE_CLASS,
   MILESTONE_SIGNAL_RELEASE_MS,
-  portraitMinimapOverlayCss
+  portraitMinimapOverlayCss,
+  PORTRAIT_VIDEO_SLIDE_MS
 } from './milestoneVideoPresentation.js'
 // ui/videoOverlay.js
 import { MILESTONE_VIDEO_CROPS } from './milestoneVideoCrop.js'
@@ -70,6 +71,7 @@ export class VideoOverlay {
     this.overlayElement = null
     this.videoQueue = []
     this.playbackStartedAt = 0
+    this.entranceAnimation = null
     this.usesEmbeddedAudio = false
     this.lastAudioFade = 1
     this.milestoneAudioMuted = false
@@ -272,12 +274,16 @@ export class VideoOverlay {
         transform: none;
       }
       .video-overlay.native-video { box-shadow: none; }
-      /* Portrait condensed and collapsed: the same bottom-right box as
-         #mobileMinimapOverlay.visible (250×150, 5:3), including safe-area
-         insets. CSS owns the edges so a late safe-area update can move the
-         clip. 50vw is wider or narrower than that radar and is not used. */
       ${portraitMinimapOverlayCss('condensed')}
       ${portraitMinimapOverlayCss('collapsed')}
+      body.mobile-portrait.sidebar-condensed #video-overlay.native-video.entering {
+        background: #000;
+        opacity: 1;
+        transition: none;
+      }
+      body.mobile-portrait.sidebar-condensed #video-overlay.native-video.entering .milestone-video {
+        visibility: hidden;
+      }
       body.mobile-portrait #video-overlay.native-video.show {
         pointer-events: auto;
         cursor: pointer;
@@ -597,9 +603,6 @@ export class VideoOverlay {
       video.style.height = crop ? `${crop.frameHeight / crop.height * 100}%` : '100%'
       video.style.marginLeft = crop ? `${-crop.x / crop.width * 100}%` : '0'
       this.updateVideoPlacement()
-      video.addEventListener('playing', () => {
-        this.revealPlayingVideo(video)
-      }, { once: true })
       video.ontimeupdate = () => {
         if (this.currentVideo === video && this.nativePresentation &&
           Number.isFinite(video.duration) && video.duration - video.currentTime <= 0.4) {
@@ -607,6 +610,7 @@ export class VideoOverlay {
         }
       }
       configureMilestoneVideo(video)
+      video.removeAttribute('autoplay')
       this.usesEmbeddedAudio = !this.currentAudio
       this.lastAudioFade = 0
       this.rememberMilestoneMute()
@@ -622,6 +626,23 @@ export class VideoOverlay {
         if (this.isPlaying && this.currentVideo === video && video.src) this.stopCurrentVideo()
       }
 
+      const overlay = this.overlayElement
+      const placement = milestoneVideoPlacement(document.body, null)
+      if (placement?.layout === 'condensed' && milestoneSignalMotionEnabled() && overlay.animate) {
+        overlay.classList.add('entering')
+        const entrance = overlay.animate([
+          { transform: 'translateX(calc(-100% - var(--safe-area-left, 0px)))' },
+          { transform: 'translateX(0)' }
+        ], { duration: PORTRAIT_VIDEO_SLIDE_MS, easing: 'ease-out' })
+        this.entranceAnimation = entrance
+        await entrance.finished.catch(() => {})
+        if (this.entranceAnimation !== entrance) return
+        this.entranceAnimation = null
+      }
+
+      video.addEventListener('playing', () => {
+        this.revealPlayingVideo(video)
+      }, { once: true })
       try {
         const playback = await playMilestoneVideoWithAudioPolicy(
           video,
@@ -668,6 +689,7 @@ export class VideoOverlay {
     this.playbackStartedAt = performance.now()
     // Drop the inline none left by the previous clip so the portrait tap rule can apply.
     this.overlayElement.style.pointerEvents = ''
+    this.overlayElement.classList.remove('entering')
     this.overlayElement.classList.add('show')
     this.beginSignalAcquire()
   }
@@ -721,7 +743,7 @@ export class VideoOverlay {
     this.overlayElement.classList.toggle('native-video', this.nativePresentation)
     if (!placement) return
     if (placement.mode === 'portrait-minimap') {
-      // CSS owns the bottom-right radar anchor, including safe-area insets.
+      // CSS owns the portrait anchor, including safe-area insets.
       // Inline pixel styles would freeze the old edge.
       for (const key of ['left', 'top', 'right', 'bottom', 'width', 'height']) {
         this.overlayElement.style[key] = ''
@@ -753,6 +775,9 @@ export class VideoOverlay {
     clearTimeout(this.fadeOutTimer)
     this.fadeOutTimer = 0
     this.clearSignalMotion()
+    this.entranceAnimation?.cancel()
+    this.entranceAnimation = null
+    this.overlayElement?.classList.remove('entering')
     // Prevent multiple calls during cleanup
     if (!this.isPlaying) {
       return
