@@ -49,24 +49,24 @@ describe('npm run release', () => {
 
   it('[U05188] prints the next version on --dry-run without touching files', () => {
     const root = scratchRepo()
-    expect(release(root, '--dry-run')).toContain('v0.62.0 -> v0.63.0')
-    expect(existsSync(join(root, 'features', '0.63.0.json'))).toBe(false)
+    expect(release(root, '--dry-run')).toContain('v0.62.0 -> v0.63.1')
+    expect(existsSync(join(root, 'features', '0.63.1.json'))).toBe(false)
     expect(git(root, 'status', '--porcelain')).toBe('')
   })
 
   it('[U05189] folds entries into features/<version>.json, bumps package.json and the lockfile, commits and tags', () => {
     const root = scratchRepo()
     release(root)
-    expect(JSON.parse(readFileSync(join(root, 'features', '0.63.0.json'), 'utf8'))).toEqual({
-      version: '0.63.0', features: ['New maps.'], improvements: [], bugfixes: ['Fixed a crash.']
+    expect(JSON.parse(readFileSync(join(root, 'features', '0.63.1.json'), 'utf8'))).toEqual({
+      version: '0.63.1', features: ['New maps.'], improvements: [], bugfixes: ['Fixed a crash.']
     })
     expect(existsSync(join(root, 'features', 'unreleased', 'features', '758-maps.json'))).toBe(false)
     expect(existsSync(join(root, 'features', 'unreleased', 'features', '.gitkeep'))).toBe(true)
-    expect(JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).version).toBe('0.63.0')
+    expect(JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).version).toBe('0.63.1')
     const lock = JSON.parse(readFileSync(join(root, 'package-lock.json'), 'utf8'))
-    expect([lock.version, lock.packages[''].version]).toEqual(['0.63.0', '0.63.0'])
-    expect(git(root, 'log', '-1', '--format=%s')).toBe('chore(release): 0.63.0')
-    expect(git(root, 'rev-list', '-n', '1', 'v0.63.0')).toBe(git(root, 'rev-parse', 'HEAD'))
+    expect([lock.version, lock.packages[''].version]).toEqual(['0.63.1', '0.63.1'])
+    expect(git(root, 'log', '-1', '--format=%s')).toBe('chore(release): 0.63.1')
+    expect(git(root, 'rev-list', '-n', '1', 'v0.63.1')).toBe(git(root, 'rev-parse', 'HEAD'))
     expect(git(root, 'status', '--porcelain')).toBe('')
   })
 
@@ -87,7 +87,7 @@ describe('npm run release', () => {
     git(root, 'commit', '-q', '--amend', '--no-edit', '--date=2030-01-01T00:00:00Z')
     const rewritten = git(root, 'rev-parse', 'HEAD')
     expect(rewritten).not.toBe(original)
-    expect(release(root, '--tag')).toContain('v0.63.0')
-    expect(git(root, 'rev-list', '-n', '1', 'v0.63.0')).toBe(rewritten)
+    expect(release(root, '--tag')).toContain('v0.63.1')
+    expect(git(root, 'rev-list', '-n', '1', 'v0.63.1')).toBe(rewritten)
   })
 })
