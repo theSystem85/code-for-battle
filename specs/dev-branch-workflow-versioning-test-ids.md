@@ -14,7 +14,7 @@ Decided by Patrick on 2026-10-18 (brainstorm item B-007). AGENTS.md ("Deployment
 ## Versioning
 
 - `package.json` = last released version. Each change adds `features/unreleased/<features|improvements|bugfixes>/<name>.json` with `{ "description": "...", "breaking"?: true }`.
-- Build-time version (`scripts/versioning.mjs`, Vite `define` `__APP_VERSION__`): breaking -> major, feature -> minor, improvement/bugfix -> patch, at most one bump per build.
+- Build-time version (`scripts/versioning.mjs`, Vite `define` `__APP_VERSION__`): each breaking entry increments major, each non-breaking feature increments minor, and each non-breaking improvement/bugfix increments patch. Reset base minor and patch after a major bump and base patch after a minor bump, then count all applicable entries.
 - Display: every build, deploy previews included, shows only the plain version (for example `v0.62.1`) on the loading screen, the update heading and the sidebar. The PR number of a preview appears only in its Netlify URL prefix (`deploy-preview-<n>--`). Patrick's decision, 2026-10-18.
 - `npm run release` folds entries into `features/<version>.json` (same format as earlier releases, so the loading screen and User Manual digest keep working), deletes entry files, bumps `package.json` and the lockfile, commits `chore(release): X.Y.Z`, tags `vX.Y.Z`; it never pushes.
 - The release digest treats unreleased entries as part of the current build version.

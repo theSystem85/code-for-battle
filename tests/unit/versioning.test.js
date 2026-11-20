@@ -39,9 +39,17 @@ describe('build-time versioning', () => {
 
   it('[U05198] bumps patch for fixes and improvements, minor for features and major for breaking entries', () => {
     expect(bumpVersion('0.62.0', [])).toBe('0.62.0')
-    expect(bumpVersion('0.62.0', [{ category: 'bugfixes' }, { category: 'improvements' }])).toBe('0.62.1')
-    expect(bumpVersion('0.62.3', [{ category: 'bugfixes' }, { category: 'features' }])).toBe('0.63.0')
-    expect(bumpVersion('0.62.3', [{ category: 'bugfixes', breaking: true }, { category: 'features' }])).toBe('1.0.0')
+    expect(bumpVersion('0.62.0', [{ category: 'bugfixes' }, { category: 'improvements' }])).toBe('0.62.2')
+    expect(bumpVersion('0.62.3', [{ category: 'bugfixes' }, { category: 'features' }])).toBe('0.63.1')
+    expect(bumpVersion('0.62.3', [{ category: 'bugfixes', breaking: true }, { category: 'features' }])).toBe('1.1.0')
+  })
+
+  it('[U07271] increments the appropriate component for each additional entry regardless of category order', () => {
+    const entries = [{ category: 'features' }, { category: 'bugfixes' }]
+    expect(bumpVersion('0.62.4', entries)).toBe('0.63.1')
+    expect(bumpVersion('0.62.4', [...entries, { category: 'improvements' }])).toBe('0.63.2')
+    expect(bumpVersion('0.62.4', [...entries, { category: 'features' }])).toBe('0.64.1')
+    expect(bumpVersion('0.62.4', [...entries, { category: 'bugfixes', breaking: true }])).toBe('1.1.1')
   })
 
   it('[U05199] validates entry files: a description string, optional boolean breaking, nothing else', () => {
@@ -60,7 +68,7 @@ describe('build-time versioning', () => {
     })
     const result = computeAppVersion(root)
     expect(result.baseVersion).toBe('0.62.0')
-    expect(result.version).toBe('0.62.1')
+    expect(result.version).toBe('0.62.3')
     expect(result.entries.map(entry => entry.description)).toEqual(['First', 'Second', 'Fix'])
     expect(computeAppVersion(scratchRepo('0.62.0')).version).toBe('0.62.0')
   })

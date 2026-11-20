@@ -5,8 +5,8 @@
 // JSON file under features/unreleased/<category>/ instead of editing a shared
 // version number, so parallel branches never conflict on the version.
 // The displayed version is package.json plus the unreleased entries:
-// any breaking entry bumps major, any feature bumps minor, any improvement or
-// bugfix bumps patch. `npm run release` folds the entries into
+// each breaking entry bumps major, each feature bumps minor, and each
+// improvement or bugfix bumps patch. `npm run release` folds the entries into
 // features/<version>.json and writes that version into package.json.
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join, relative } from 'node:path'
@@ -25,10 +25,10 @@ export function parseVersion(version) {
 // entries: [{ category, breaking }]
 export function bumpVersion(baseVersion, entries = []) {
   const [major, minor, patch] = parseVersion(baseVersion)
-  if (!entries.length) return `${major}.${minor}.${patch}`
-  if (entries.some(entry => entry.breaking === true)) return `${major + 1}.0.0`
-  if (entries.some(entry => entry.category === 'features')) return `${major}.${minor + 1}.0`
-  return `${major}.${minor}.${patch + 1}`
+  const breaking = entries.filter(entry => entry.breaking === true).length
+  const features = entries.filter(entry => !entry.breaking && entry.category === 'features').length
+  const fixes = entries.filter(entry => !entry.breaking && entry.category !== 'features').length
+  return `${major + breaking}.${(breaking ? 0 : minor) + features}.${(breaking || features ? 0 : patch) + fixes}`
 }
 
 export function validateEntry(data, file = 'entry') {
