@@ -263,6 +263,12 @@ async function playEntry(entry, resumePromise) {
     renderTransport()
     return
   }
+  if (!activeEntry || activeEntry.id !== entry.id) {
+    playing = false
+    offset = 0
+    stopSource()
+    cancelVisual()
+  }
   activeEntry = entry
   const status = element('.audio-catalogue__status')
   if (!buffer || decoded.get(entry.id) !== buffer) {
@@ -287,6 +293,15 @@ async function playEntry(entry, resumePromise) {
   } catch (error) {
     if (token !== playToken) return
     playing = false
+    stopSource()
+    cancelVisual()
+    if (decoded.get(entry.id) !== buffer) {
+      buffer = null
+      peaks = null
+      spectrogram = null
+      spectrogramImage = null
+      offset = 0
+    }
     if (status) status.textContent = error && error.message ? error.message : 'Playback failed'
     renderTransport()
   }

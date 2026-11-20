@@ -81,6 +81,13 @@
   outline-offset: -2px;
 }
 
+.audio-catalogue__row[hidden],
+.audio-catalogue__detail[hidden],
+.audio-catalogue__section[hidden],
+.audio-catalogue__empty[hidden] {
+  display: none;
+}
+
 .audio-catalogue__row {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
