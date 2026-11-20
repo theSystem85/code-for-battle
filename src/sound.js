@@ -9,6 +9,7 @@ import { configureAudioElement } from './pwa/audioElementPolicy.js'
 import { getStoredItem, setStoredItem } from './storage/indexedDbStorage.js'
 import { SOUND_VERSION_PAIRS } from './audio/soundVersionPairs.js'
 import { onSoundVersionChange, registerSoundVersionPairs, resolveSoundAssetPath } from './audio/soundVersionPreference.js'
+import { createDecodedSoundCache, shareInflightDecode } from './audio/decodedSoundCache.js'
 import { isGraphicsTunerFrame } from './benchmark/graphicsTunerFrame.js'
 
 registerSoundVersionPairs(SOUND_VERSION_PAIRS)
@@ -286,36 +287,13 @@ export const backgroundMusicFiles = [
   'music08.mp3'
 ]
 
-// Cache audio buffers using Web Audio API for true zero-network caching
-const audioBufferCache = new Map()
+// Cache audio buffers using Web Audio API for true zero-network caching.
+// The map is a byte-capped LRU. One in-flight decode is shared per path.
+export const decodedSoundCache = createDecodedSoundCache()
 const loadingPromises = new Map() // Track files currently being loaded
 
-async function getCachedAudioBuffer(soundPath) {
-  // Check if already cached
-  let buffer = audioBufferCache.get(soundPath)
-  if (buffer) {
-    return buffer
-  }
-
-  // Check if currently loading
-  let loadPromise = loadingPromises.get(soundPath)
-  if (loadPromise) {
-    return await loadPromise
-  }
-
-  // Start loading
-  loadPromise = loadAudioBuffer(soundPath)
-  loadingPromises.set(soundPath, loadPromise)
-
-  try {
-    buffer = await loadPromise
-    audioBufferCache.set(soundPath, buffer)
-    loadingPromises.delete(soundPath)
-    return buffer
-  } catch (error) {
-    loadingPromises.delete(soundPath)
-    throw error
-  }
+function getCachedAudioBuffer(soundPath) {
+  return shareInflightDecode(decodedSoundCache, soundPath, () => loadAudioBuffer(soundPath))
 }
 
 async function loadAudioBuffer(soundPath) {
@@ -352,6 +330,7 @@ function playAudioBuffer(audioBuffer, volume = 1.0, onEnded, options = {}) {
 
     source.buffer = audioBuffer
     source.loop = loop
+    source.__cfbSoundPath = options.soundPath || null
     if (typeof audioContext.createStereoPanner === 'function') {
       panner = audioContext.createStereoPanner()
       panner.pan.value = pan
@@ -417,9 +396,19 @@ function _getCachedAudioElement(soundPath) {
 const soundElementCache = new Map()
 
 // Drop decoded copies when the player switches takes so the next playback fetches the chosen file.
+function releaseDecodedSound(soundPath, retained) {
+  if (retained && soundPath) decodedSoundCache.release(soundPath)
+}
+
 onSoundVersionChange(fileName => {
-  for (const key of [`sound/${fileName}`, `sound/legacy/${fileName}`, fileName]) {
-    audioBufferCache.delete(key)
+  const keys = [`sound/${fileName}`, `sound/legacy/${fileName}`, fileName]
+  for (const [audioId, source] of activeAudioElements) {
+    if (!keys.includes(source?.__cfbSoundPath)) continue
+    try { source.stop() } catch { /* already stopped */ }
+    activeAudioElements.delete(audioId)
+  }
+  for (const key of keys) {
+    decodedSoundCache.delete(key)
     loadingPromises.delete(key)
     const element = soundElementCache.get(key)
     if (element) {
@@ -464,16 +453,20 @@ async function playAssetSound(eventName, volume = 1.0, onEnded, options = {}) {
       // Track this audio instance
       const audioId = soundPath + '_' + Date.now() + '_' + gameRandom()
 
+      const looping = Boolean(options.playLoop)
+      if (looping) decodedSoundCache.retain(soundPath)
       const cleanup = () => {
         activeAudioElements.delete(audioId)
+        releaseDecodedSound(soundPath, looping)
         if (onEnded) onEnded()
       }
 
-      const nodes = playAudioBuffer(audioBuffer, volume, cleanup, { ...options, loop: options.playLoop })
+      const nodes = playAudioBuffer(audioBuffer, volume, cleanup, { ...options, loop: looping, soundPath })
       if (nodes) {
         activeAudioElements.set(audioId, nodes.source)
         return nodes
       }
+      releaseDecodedSound(soundPath, looping)
     } catch (error) {
       console.error('Error playing cached audio buffer:', soundPath, error)
       if (onEnded) onEnded()
@@ -613,13 +606,23 @@ function notifyAudioSessionReset() {
 function startFixedBuffer(eventName, volume, pan, loop) {
   const file = soundFiles[eventName]?.[0]
   if (!file || !audioContext || audioContext.state === 'suspended') return Promise.resolve(null)
-  return getCachedAudioBuffer(resolveSoundAssetPath(`sound/${file}`)).then(buffer => {
+  const soundPath = resolveSoundAssetPath(`sound/${file}`)
+  return getCachedAudioBuffer(soundPath).then(buffer => {
     const audioId = `fixed:${eventName}:${++fixedAudioSerial}`
-    const cleanup = () => { activeAudioElements.delete(audioId) }
-    const nodes = playAudioBuffer(buffer, volume, loop ? undefined : cleanup, { pan, loop })
-    if (!nodes) return null
+    if (loop) decodedSoundCache.retain(soundPath)
+    const cleanup = () => {
+      activeAudioElements.delete(audioId)
+      releaseDecodedSound(soundPath, loop)
+    }
+    const nodes = playAudioBuffer(buffer, volume, loop ? undefined : cleanup, { pan, loop, soundPath })
+    if (!nodes) {
+      releaseDecodedSound(soundPath, loop)
+      return null
+    }
     activeAudioElements.set(audioId, nodes.source)
     nodes.audioId = audioId
+    nodes.soundPath = soundPath
+    nodes.retained = loop
     return nodes
   }).catch(() => null)
 }
@@ -647,6 +650,8 @@ export function updateFixedPositionalGain(handle, x, y, volume = 1) {
 export function stopFixedSound(handle) {
   if (!handle?.source) return
   if (handle.audioId) activeAudioElements.delete(handle.audioId)
+  releaseDecodedSound(handle.soundPath, handle.retained)
+  handle.retained = false
   try { handle.source.stop() } catch { /* already stopped */ }
 }
 
@@ -1578,10 +1583,10 @@ export async function preloadSounds() {
 
 // Get cache status for debugging
 export function getSoundCacheStatus() {
-  const bufferCacheSize = audioBufferCache.size
+  const bufferCacheSize = decodedSoundCache.size
   const elementCacheSize = soundElementCache.size
-  const loadingCount = loadingPromises.size
-  const cachedBuffers = Array.from(audioBufferCache.keys())
+  const loadingCount = loadingPromises.size + decodedSoundCache.pending.size
+  const cachedBuffers = Array.from(decodedSoundCache.keys())
   const cachedElements = Array.from(soundElementCache.keys())
 
   window.logger('Sound cache status:')
@@ -1613,8 +1618,8 @@ export function clearSoundCache() {
   manualTrack = false
   directedState = 'normal'
   resetMusicDirector()
-  window.logger(`Clearing sound cache (${audioBufferCache.size} buffers, ${soundElementCache.size} elements)...`)
-  audioBufferCache.clear()
+  window.logger(`Clearing sound cache (${decodedSoundCache.size} buffers, ${soundElementCache.size} elements)...`)
+  decodedSoundCache.clear()
   soundElementCache.clear()
   loadingPromises.clear()
 

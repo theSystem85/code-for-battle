@@ -2,6 +2,7 @@
 // Handle canvas setup, resizing, and management
 import { MOBILE_CANVAS_PIXEL_RATIO_CAP, RENDER_PIXEL_DENSITY } from '../config.js'
 import { publishCanvasViewport } from './prepared/canvasViewportRegistry.js'
+import { IOS_MAX_CANVAS_PIXEL_RATIO, isIosWebKit } from './iosCanvasBudget.js'
 
 export class CanvasManager {
   constructor() {
@@ -14,6 +15,7 @@ export class CanvasManager {
     this.minimapCtx = this.minimapCanvas ? this.minimapCanvas.getContext('2d') : null
     this.adaptivePixelRatioCap = MOBILE_CANVAS_PIXEL_RATIO_CAP
     this.graphicsPixelRatioCap = Infinity
+    this.platformPixelRatioCap = isIosWebKit() ? IOS_MAX_CANVAS_PIXEL_RATIO : Infinity
     this.automaticDensityAdjustmentEnabled = false
     this.pixelRatio = this.resolvePixelRatio()
     this.overlayPixelRatio = this.resolveOverlayPixelRatio()
@@ -54,12 +56,15 @@ export class CanvasManager {
       ? this.adaptivePixelRatioCap
       : Infinity
     const graphicsCap = Number.isFinite(this.graphicsPixelRatioCap) ? this.graphicsPixelRatioCap : configuredCap
-    const cap = Math.min(configuredCap, adaptiveCap, graphicsCap)
+    const platformCap = Number.isFinite(this.platformPixelRatioCap) ? this.platformPixelRatioCap : Infinity
+    const cap = Math.min(configuredCap, adaptiveCap, graphicsCap, platformCap)
     return Math.max(1, Math.min(rawPixelRatio || 1, cap))
   }
 
   resolveOverlayPixelRatio(rawPixelRatio = (typeof window !== 'undefined' && window.devicePixelRatio) || 1) {
-    return RENDER_PIXEL_DENSITY ?? Math.max(1, rawPixelRatio || 1)
+    const ratio = RENDER_PIXEL_DENSITY ?? Math.max(1, rawPixelRatio || 1)
+    const platformCap = Number.isFinite(this.platformPixelRatioCap) ? this.platformPixelRatioCap : Infinity
+    return Math.max(1, Math.min(ratio, platformCap))
   }
 
   resetAdaptivePixelRatioCap() {

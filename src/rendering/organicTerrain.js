@@ -494,6 +494,7 @@ export class OrganicTerrain {
     if (alphaMask) return alphaMask
     alphaMask = this.acquireRaster(this.biomeBlendMasks, key, size)
     const context = alphaMask.getContext('2d')
+    if (!context) return null
     const pixels = this.getMaskPixels(context, size)
     for (let py = 0; py < size; py++) for (let px = 0; px < size; px++) {
       pixels.data[(py * size + px) * 4 + 3] = Math.round(255 * shorelineCoverage(
@@ -517,6 +518,7 @@ export class OrganicTerrain {
       const alphaMask = this.getShorelineMask(size, mask, 0.2, patternVariant)
       canvas = this.acquireRaster(this.biomeTransitionTileCache, key, size)
       const context = canvas.getContext('2d')
+      if (!context || !alphaMask) return
       this.drawBiome(context, x, y, 0, 0, size, biome)
       context.globalCompositeOperation = 'destination-in'
       context.drawImage(alphaMask, 0, 0)

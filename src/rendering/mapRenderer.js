@@ -9,8 +9,10 @@ import {
   WATER_EFFECT_ZOOM,
   WATER_EFFECT_STRENGTH,
   WATER_EFFECT_SPEED,
-  CRYSTAL_GLOW_ENABLED
+  CRYSTAL_GLOW_ENABLED,
+  MOBILE_CANVAS_PIXEL_RATIO_CAP
 } from '../config.js'
+import { IOS_MAX_CANVAS_PIXEL_RATIO, isIosWebKit, terrainCacheLimits } from './iosCanvasBudget.js'
 import { getSotDrawOffset, OrganicTerrain, shorelineCornerMask } from './organicTerrain.js'
 import { getTileDecalSignature, isDecalBlockedTile } from '../game/tileDecals.js'
 import { hasFixedOccupancy, hasMovableOccupancy } from '../game/occupancyTags.js'
@@ -261,7 +263,16 @@ export class MapRenderer {
     this.maxCachedChunks = this.mobileMemoryProfile ? 56 : 48
     this.maxChunkWarmQueue = this.mobileMemoryProfile ? 40 : 96
     const maximumChunkPixels = this.chunkSize * TILE_SIZE + this.chunkPadding * 2 + 1
-    const maximumChunkBytes = getTerrainRasterBytes(maximumChunkPixels, maximumChunkPixels)
+    const iosCanvasBudget = isIosWebKit()
+    const terrainLimits = terrainCacheLimits({
+      logicalChunkPixels: maximumChunkPixels,
+      density: iosCanvasBudget
+        ? Math.min(MOBILE_CANVAS_PIXEL_RATIO_CAP, IOS_MAX_CANVAS_PIXEL_RATIO)
+        : 1,
+      maxCachedChunks: this.maxCachedChunks,
+      ios: iosCanvasBudget
+    })
+    this.maxCachedChunks = terrainLimits.maxCachedChunks
     this.chunkCache = new Map()
     this.chunkCanvasStats = { created: 0, reused: 0 }
     this.rasterBakeCount = 0
@@ -274,8 +285,8 @@ export class MapRenderer {
     })
     this.terrainRevisions = new TerrainRevisionState({ chunkSize: this.chunkSize })
     this.terrainByteBudget = createTerrainByteBudget({
-      residentBytes: maximumChunkBytes * this.maxCachedChunks * 2,
-      stagingBytes: maximumChunkBytes
+      residentBytes: terrainLimits.residentBytes,
+      stagingBytes: terrainLimits.stagingBytes
     })
     this.chunkWarmScheduled = false
     this.chunkWarmGeneration = 0
