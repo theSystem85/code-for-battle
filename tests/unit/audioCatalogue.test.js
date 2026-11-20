@@ -23,11 +23,12 @@ function shippedAudioFiles(dir, prefix = '') {
 describe('audio catalogue', () => {
   it('[U07254] lists every shipped audio file exactly once', () => {
     const shipped = shippedAudioFiles(path.join(root, 'public')).sort()
-    const listed = AUDIO_CATALOGUE.map(entry => entry.file).sort()
+    const listed = AUDIO_CATALOGUE.flatMap(entry => entry.legacyFile ? [entry.file, entry.legacyFile] : [entry.file]).sort()
     const missing = shipped.filter(file => !listed.includes(file))
     const extra = listed.filter(file => !shipped.includes(file))
     expect(missing, 'add these files to src/audio/audioCatalogue.js').toEqual([])
     expect(extra, 'catalogue entries point at files that are not shipped').toEqual([])
+    expect(new Set(listed).size, 'a shipped file is listed more than once').toBe(listed.length)
     expect(new Set(AUDIO_CATALOGUE.map(entry => entry.id)).size).toBe(AUDIO_CATALOGUE.length)
   })
 

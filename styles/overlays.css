@@ -273,6 +273,18 @@ body.config-modal-open {
   color: #ffcc66;
 }
 
+#configSettingsModal .config-modal__header {
+  position: relative;
+  padding-right: 56px;
+}
+
+#configModalCloseBtn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+}
+
 .config-modal__checkbox-row {
   display: inline-flex;
   align-items: center;

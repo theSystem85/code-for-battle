@@ -7,7 +7,11 @@ import { gameRandom } from './utils/gameRandom.js'
 import { isHeadlessAudioMuted } from './utils/headlessAudioMute.js'
 import { configureAudioElement } from './pwa/audioElementPolicy.js'
 import { getStoredItem, setStoredItem } from './storage/indexedDbStorage.js'
+import { SOUND_VERSION_PAIRS } from './audio/soundVersionPairs.js'
+import { onSoundVersionChange, registerSoundVersionPairs, resolveSoundAssetPath } from './audio/soundVersionPreference.js'
 import { isGraphicsTunerFrame } from './benchmark/graphicsTunerFrame.js'
+
+registerSoundVersionPairs(SOUND_VERSION_PAIRS)
 
 const suppressAudioForAutomation = isHeadlessAudioMuted() || isGraphicsTunerFrame()
 
@@ -412,6 +416,19 @@ function _getCachedAudioElement(soundPath) {
 // Keep legacy element cache for background music
 const soundElementCache = new Map()
 
+// Drop decoded copies when the player switches takes so the next playback fetches the chosen file.
+onSoundVersionChange(fileName => {
+  for (const key of [`sound/${fileName}`, `sound/legacy/${fileName}`, fileName]) {
+    audioBufferCache.delete(key)
+    loadingPromises.delete(key)
+    const element = soundElementCache.get(key)
+    if (element) {
+      try { element.pause() } catch { /* already stopped */ }
+      soundElementCache.delete(key)
+    }
+  }
+})
+
 function calculatePositionalAudio(x, y) {
   const canvas = document.getElementById('gameCanvas')
   if (!canvas) {
@@ -438,7 +455,7 @@ async function playAssetSound(eventName, volume = 1.0, onEnded, options = {}) {
   const files = soundFiles[eventName]
   if (files && files.length > 0) {
     const file = files[Math.floor(gameRandom() * files.length)]
-    const soundPath = 'sound/' + file
+    const soundPath = resolveSoundAssetPath('sound/' + file)
 
     try {
       // Use Web Audio API buffer for zero-network cached playback
@@ -596,7 +613,7 @@ function notifyAudioSessionReset() {
 function startFixedBuffer(eventName, volume, pan, loop) {
   const file = soundFiles[eventName]?.[0]
   if (!file || !audioContext || audioContext.state === 'suspended') return Promise.resolve(null)
-  return getCachedAudioBuffer(`sound/${file}`).then(buffer => {
+  return getCachedAudioBuffer(resolveSoundAssetPath(`sound/${file}`)).then(buffer => {
     const audioId = `fixed:${eventName}:${++fixedAudioSerial}`
     const cleanup = () => { activeAudioElements.delete(audioId) }
     const nodes = playAudioBuffer(buffer, volume, loop ? undefined : cleanup, { pan, loop })

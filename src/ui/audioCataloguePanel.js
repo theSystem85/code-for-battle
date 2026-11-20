@@ -3,7 +3,19 @@
 
 import './audioCatalogue.css'
 import { AUDIO_CATALOGUE, AUDIO_CATALOGUE_SECTIONS } from '../audio/audioCatalogue.js'
+import { SOUND_VERSION_PAIRS } from '../audio/soundVersionPairs.js'
+import {
+  downloadSoundVersionConfig,
+  onSoundVersionChange,
+  prefersNewSound,
+  registerSoundVersionPairs,
+  resolveSoundAssetPath,
+  setSoundVersion,
+  soundFileName
+} from '../audio/soundVersionPreference.js'
 import { computeSpectrogram, computeWaveformPeaks } from './audioCatalogueVisual.js'
+
+registerSoundVersionPairs(SOUND_VERSION_PAIRS)
 
 const PEAK_BUCKETS = 480
 const SPEC_COLUMNS = 280
@@ -190,6 +202,15 @@ function markActiveRow() {
   })
 }
 
+function selectedCatalogueFile(entry) {
+  if (!entry.legacyFile) return entry.file
+  return resolveSoundAssetPath(entry.file)
+}
+
+function bufferCacheId(entry) {
+  return `${entry.id}\n${selectedCatalogueFile(entry)}`
+}
+
 function rememberBuffer(id, decodedBuffer) {
   decoded.delete(id)
   decoded.set(id, decodedBuffer)
@@ -197,16 +218,18 @@ function rememberBuffer(id, decodedBuffer) {
 }
 
 async function loadBuffer(entry) {
-  const cached = decoded.get(entry.id)
+  const cacheId = bufferCacheId(entry)
+  const cached = decoded.get(cacheId)
   if (cached) {
-    rememberBuffer(entry.id, cached)
+    rememberBuffer(cacheId, cached)
     return cached
   }
-  const response = await fetch(`/${entry.file}`)
-  if (!response.ok) throw new Error(`Could not load ${entry.file} (${response.status})`)
+  const file = selectedCatalogueFile(entry)
+  const response = await fetch(`/${file}`)
+  if (!response.ok) throw new Error(`Could not load ${file} (${response.status})`)
   const bytes = await response.arrayBuffer()
   const decodedBuffer = await catalogueContext().decodeAudioData(bytes.slice(0))
-  rememberBuffer(entry.id, decodedBuffer)
+  rememberBuffer(cacheId, decodedBuffer)
   return decodedBuffer
 }
 
@@ -271,7 +294,7 @@ async function playEntry(entry, resumePromise) {
   }
   activeEntry = entry
   const status = element('.audio-catalogue__status')
-  if (!buffer || decoded.get(entry.id) !== buffer) {
+  if (!buffer || decoded.get(bufferCacheId(entry)) !== buffer) {
     if (status) status.textContent = 'Loading…'
   }
   renderTransport()
@@ -295,7 +318,7 @@ async function playEntry(entry, resumePromise) {
     playing = false
     stopSource()
     cancelVisual()
-    if (decoded.get(entry.id) !== buffer) {
+    if (decoded.get(bufferCacheId(entry)) !== buffer) {
       buffer = null
       peaks = null
       spectrogram = null
@@ -363,7 +386,7 @@ function buildRow(entry) {
   }
   const file = document.createElement('span')
   file.className = 'audio-catalogue__file'
-  file.textContent = entry.file
+  file.textContent = selectedCatalogueFile(entry)
   expand.append(nameLine, file)
   expand.addEventListener('click', () => {
     const detail = row.nextElementSibling
@@ -375,7 +398,38 @@ function buildRow(entry) {
   const time = document.createElement('span')
   time.className = 'audio-catalogue__row-time'
   time.textContent = '—'
-  row.append(play, expand, time)
+  row.append(play, expand)
+  if (entry.legacyFile) {
+    row.classList.add('audio-catalogue__row--versioned')
+    const version = document.createElement('label')
+    version.className = 'audio-catalogue__version'
+    const checkbox = document.createElement('input')
+    checkbox.type = 'checkbox'
+    checkbox.dataset.id = entry.id
+    checkbox.checked = prefersNewSound(soundFileName(entry.file))
+    checkbox.setAttribute('aria-label', `Use the new ${entry.name} sound`)
+    checkbox.addEventListener('change', () => {
+      setSoundVersion(soundFileName(entry.file), checkbox.checked)
+      file.textContent = selectedCatalogueFile(entry)
+      if (!activeEntry || activeEntry.id !== entry.id) return
+      const wasPlaying = playing
+      playing = false
+      stopSource()
+      cancelVisual()
+      buffer = null
+      peaks = null
+      spectrogram = null
+      spectrogramImage = null
+      offset = 0
+      if (wasPlaying) onPlay(entry)
+      else renderTransport()
+    })
+    const caption = document.createElement('span')
+    caption.textContent = 'New'
+    version.append(checkbox, caption)
+    row.append(version)
+  }
+  row.append(time)
 
   const detail = document.createElement('div')
   detail.className = 'audio-catalogue__detail'
@@ -406,7 +460,7 @@ function build(panel) {
     <div class="audio-catalogue__toolbar">
       <label class="audio-catalogue__search-label" for="audioCatalogueSearch">Search the catalogue</label>
       <input id="audioCatalogueSearch" class="audio-catalogue__search" type="search" placeholder="Search name, file, or when it plays" autocomplete="off">
-      <p class="audio-catalogue__count">${AUDIO_CATALOGUE.length} sounds. Nothing is downloaded until you press play.</p>
+      <p class="audio-catalogue__count">${AUDIO_CATALOGUE.length} sounds. Nothing is downloaded until you press play. Regenerated effects use the previous take until New is checked.</p>
     </div>
     <div class="audio-catalogue__list"></div>
     <p class="audio-catalogue__empty" hidden>No sounds match that search.</p>
@@ -434,6 +488,9 @@ function build(panel) {
         </label>
       </div>
     </section>
+    <div class="audio-catalogue__footer">
+      <button type="button" class="audio-catalogue__download">Download config</button>
+    </div>
   `
   const list = wrap.querySelector('.audio-catalogue__list')
   for (const section of AUDIO_CATALOGUE_SECTIONS) {
@@ -449,6 +506,16 @@ function build(panel) {
     list.append(details)
   }
   wrap.querySelector('.audio-catalogue__search').addEventListener('input', applyFilter)
+  wrap.querySelector('.audio-catalogue__download').addEventListener('click', () => downloadSoundVersionConfig())
+  onSoundVersionChange(() => {
+    wrap.querySelectorAll('.audio-catalogue__version input').forEach(input => {
+      const entry = AUDIO_CATALOGUE.find(item => item.id === input.dataset.id)
+      if (!entry) return
+      input.checked = prefersNewSound(soundFileName(entry.file))
+      const fileNode = input.closest('.audio-catalogue__row')?.querySelector('.audio-catalogue__file')
+      if (fileNode) fileNode.textContent = selectedCatalogueFile(entry)
+    })
+  })
   wrap.querySelector('.audio-catalogue__transport-play').addEventListener('click', () => {
     if (!activeEntry) return
     onPlay(activeEntry)

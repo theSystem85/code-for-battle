@@ -1,5 +1,5 @@
 {
-  "description": "Prompt mapping for every sound effect in the repo (music and voice lines are excluded; see the exclusion lists in tests/unit/soundEffectsPromptMapping.test.js). Every new or changed sound effect under public/sound/ (or public/mine_explosion.mp3) must get an entry here in the same commit.",
+  "description": "Prompt mapping for every sound effect in the repo (music and voice lines are excluded; see the exclusion lists in tests/unit/soundEffectsPromptMapping.test.js). Every new or changed sound effect under public/sound/ (or public/mine_explosion.mp3) must get an entry here in the same commit. Pre-v3 copies of regenerated effects live in public/sound/legacy/ and are recorded on previous.legacy_path; that folder is not a new effect.",
   "provider": "ElevenLabs Sound Effects (owner's ElevenLabs Starter plan, commercial license)",
   "current_model_id": "eleven_text_to_sound_v3",
   "status_values": {
@@ -55,6 +55,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/achievementStinger.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-11-15",
         "flow_id": "JbDThbAmeAhvxSLb7ZiX",
@@ -108,6 +109,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/ambienceWindDesert.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-11-15",
         "flow_id": "JbDThbAmeAhvxSLb7ZiX",
@@ -161,6 +163,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/ambienceWindOpen.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-11-15",
         "flow_id": "JbDThbAmeAhvxSLb7ZiX",
@@ -214,6 +217,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/ambienceWindSnow.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-11-15",
         "flow_id": "JbDThbAmeAhvxSLb7ZiX",
@@ -267,6 +271,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/ammoReloadClunk.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-11-15",
         "flow_id": "JbDThbAmeAhvxSLb7ZiX",
@@ -318,6 +323,7 @@
         "processing": null
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/apacheRocketLaunch1.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-11-15",
         "flow_id": "JbDThbAmeAhvxSLb7ZiX",
@@ -369,6 +375,7 @@
         "processing": null
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/apacheRocketLaunch2.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-11-15",
         "flow_id": "JbDThbAmeAhvxSLb7ZiX",
@@ -422,6 +429,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/apacheRotorSpoolUp.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-11-15",
         "flow_id": "JbDThbAmeAhvxSLb7ZiX",
@@ -473,6 +481,7 @@
         "processing": null
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/artilleryShellImpact1.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-11-15",
         "flow_id": "JbDThbAmeAhvxSLb7ZiX",
@@ -524,6 +533,7 @@
         "processing": null
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/artilleryShellImpact2.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-11-15",
         "flow_id": "JbDThbAmeAhvxSLb7ZiX",
@@ -578,6 +588,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/battleshipCruise.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-09-23",
         "flow_id": "ogzmAY8104vlhjUpxrGi",
@@ -631,6 +642,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/battleshipFire1.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-09-23",
         "flow_id": "ogzmAY8104vlhjUpxrGi",
@@ -684,6 +696,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/battleshipFire2.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-09-23",
         "flow_id": "ogzmAY8104vlhjUpxrGi",
@@ -737,6 +750,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/battleshipFire3.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-09-23",
         "flow_id": "ogzmAY8104vlhjUpxrGi",
@@ -790,6 +804,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/buildingCollapse1.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-11-15",
         "flow_id": "JbDThbAmeAhvxSLb7ZiX",
@@ -843,6 +858,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/buildingCollapse2.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-11-15",
         "flow_id": "JbDThbAmeAhvxSLb7ZiX",
@@ -896,6 +912,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/buildingCollapse3.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-11-15",
         "flow_id": "JbDThbAmeAhvxSLb7ZiX",
@@ -953,6 +970,7 @@
         "processing": null
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/crewRestored.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-11-15",
         "flow_id": "JbDThbAmeAhvxSLb7ZiX",
@@ -1012,6 +1030,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/depthChargeDetonation.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-11-15",
         "flow_id": "JbDThbAmeAhvxSLb7ZiX",
@@ -1065,6 +1084,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/error1.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-11-15",
         "flow_id": "JbDThbAmeAhvxSLb7ZiX",
@@ -1116,6 +1136,7 @@
         "processing": null
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/error2.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-11-15",
         "flow_id": "JbDThbAmeAhvxSLb7ZiX",
@@ -1169,6 +1190,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/fireHoseLoop.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-11-16",
         "flow_id": "kjK5LtJd50M0hGaoGr7i",
@@ -1223,6 +1245,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/fireLoop.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-11-16",
         "flow_id": "T36jpRCsmyA9V3kLmIWC",
@@ -1276,6 +1299,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/hovercraftMoving.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-09-23",
         "flow_id": "ogzmAY8104vlhjUpxrGi",
@@ -1335,6 +1359,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/howitzerFire1.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-11-15",
         "flow_id": "JbDThbAmeAhvxSLb7ZiX",
@@ -1388,6 +1413,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/howitzerFire2.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-11-15",
         "flow_id": "JbDThbAmeAhvxSLb7ZiX",
@@ -1439,6 +1465,7 @@
         "processing": null
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/lowPowerAlarm.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-11-15",
         "flow_id": "JbDThbAmeAhvxSLb7ZiX",
@@ -1490,6 +1517,7 @@
         "processing": null
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/m2AutocannonBurst1.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-11-15",
         "flow_id": "JbDThbAmeAhvxSLb7ZiX",
@@ -1543,6 +1571,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/m2AutocannonBurst2.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-11-15",
         "flow_id": "JbDThbAmeAhvxSLb7ZiX",
@@ -1594,6 +1623,7 @@
         "processing": null
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/m2AutocannonBurst3.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-11-15",
         "flow_id": "JbDThbAmeAhvxSLb7ZiX",
@@ -1647,6 +1677,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/mineDetonation1.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-11-15",
         "flow_id": "JbDThbAmeAhvxSLb7ZiX",
@@ -1700,6 +1731,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/mineDetonation2.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-11-15",
         "flow_id": "JbDThbAmeAhvxSLb7ZiX",
@@ -1751,6 +1783,7 @@
         "processing": null
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/mineSweeperDefuse1.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-11-15",
         "flow_id": "JbDThbAmeAhvxSLb7ZiX",
@@ -1804,6 +1837,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/mineSweeperDefuse2.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-11-15",
         "flow_id": "JbDThbAmeAhvxSLb7ZiX",
@@ -1855,6 +1889,7 @@
         "processing": null
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/radarOffline.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-11-15",
         "flow_id": "JbDThbAmeAhvxSLb7ZiX",
@@ -1912,6 +1947,7 @@
         "processing": null
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/radarOnline.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-11-15",
         "flow_id": "JbDThbAmeAhvxSLb7ZiX",
@@ -1963,6 +1999,7 @@
         "processing": null
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/recoveryWinchHook.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-11-15",
         "flow_id": "JbDThbAmeAhvxSLb7ZiX",
@@ -2016,6 +2053,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/refuelPumpLoop.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-11-15",
         "flow_id": "JbDThbAmeAhvxSLb7ZiX",
@@ -2067,6 +2105,7 @@
         "processing": null
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/rocketTankLaunch1.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-11-15",
         "flow_id": "JbDThbAmeAhvxSLb7ZiX",
@@ -2120,6 +2159,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/rocketTankLaunch2.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-11-15",
         "flow_id": "JbDThbAmeAhvxSLb7ZiX",
@@ -2173,6 +2213,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/shipSinking.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-09-23",
         "flow_id": "ogzmAY8104vlhjUpxrGi",
@@ -2226,6 +2267,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/smallShipCruise.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-11-15",
         "flow_id": "JbDThbAmeAhvxSLb7ZiX",
@@ -2277,6 +2319,7 @@
         "processing": null
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/submarineDiving.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-09-23",
         "flow_id": "ogzmAY8104vlhjUpxrGi",
@@ -2330,6 +2373,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/submarineSurfacing.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-09-23",
         "flow_id": "ogzmAY8104vlhjUpxrGi",
@@ -2381,6 +2425,7 @@
         "processing": null
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/submarineTorpedo.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-09-23",
         "flow_id": "ogzmAY8104vlhjUpxrGi",
@@ -2432,6 +2477,7 @@
         "processing": null
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/uiPartyJoin.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-11-15",
         "flow_id": "JbDThbAmeAhvxSLb7ZiX",
@@ -2483,6 +2529,7 @@
         "processing": null
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/uiTabSwitch.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-11-15",
         "flow_id": "JbDThbAmeAhvxSLb7ZiX",
@@ -2540,6 +2587,7 @@
         "processing": null
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/uiToggleOff.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-11-15",
         "flow_id": "JbDThbAmeAhvxSLb7ZiX",
@@ -2593,6 +2641,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/uiToggleOn.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-11-15",
         "flow_id": "JbDThbAmeAhvxSLb7ZiX",
@@ -2646,6 +2695,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/waterMineBlast1.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-11-15",
         "flow_id": "JbDThbAmeAhvxSLb7ZiX",
@@ -2699,6 +2749,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/waterMineBlast2.mp3",
         "model_id": "eleven_text_to_sound_v2",
         "generated_on": "2026-11-15",
         "flow_id": "JbDThbAmeAhvxSLb7ZiX",
@@ -2792,6 +2843,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/F22Flight.mp3",
         "model_id": "unknown",
         "added_in_commit": "2026-02-25 5e8d7dd8",
         "duration_s": 5.04,
@@ -2883,6 +2935,7 @@
         "envelope_correlation_with_previous": 0.61
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/F22Landing.mp3",
         "model_id": "unknown",
         "added_in_commit": "2026-02-25 5e8d7dd8",
         "duration_s": 5.04,
@@ -2971,6 +3024,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/F22TakeOff_1.mp3",
         "model_id": "unknown",
         "added_in_commit": "2026-02-25 5e8d7dd8",
         "duration_s": 5.04,
@@ -3059,6 +3113,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/F22TakeOff_2.mp3",
         "model_id": "unknown",
         "added_in_commit": "2026-02-25 5e8d7dd8",
         "duration_s": 5.04,
@@ -3147,6 +3202,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/F35BombDetonation.mp3",
         "model_id": "unknown",
         "added_in_commit": "2026-03-08 100389f5",
         "duration_s": 2.04,
@@ -3234,6 +3290,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/F35BombDrop.mp3",
         "model_id": "unknown",
         "added_in_commit": "2026-03-08 100389f5",
         "duration_s": 3.024,
@@ -3322,6 +3379,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/F35Landing.mp3",
         "model_id": "unknown",
         "added_in_commit": "2026-03-08 100389f5",
         "duration_s": 5.04,
@@ -3416,6 +3474,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/F35TakeOff.mp3",
         "model_id": "unknown",
         "added_in_commit": "2026-03-08 100389f5",
         "duration_s": 5.04,
@@ -3505,6 +3564,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/apache_fly.mp3",
         "model_id": "unknown",
         "added_in_commit": "2025-10-31 a1bbfe33",
         "duration_s": 4.032,
@@ -3592,6 +3652,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/buildingPlaced.mp3",
         "model_id": "unknown",
         "added_in_commit": "2025-03-24 c7b1cbc8",
         "duration_s": 1.567,
@@ -3687,6 +3748,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/bulletHit01.mp3",
         "model_id": "unknown",
         "added_in_commit": "2025-02-12 c41891b7",
         "duration_s": 2.09,
@@ -3774,6 +3836,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/deposit.mp3",
         "model_id": "unknown",
         "added_in_commit": "2025-02-12 c41891b7",
         "duration_s": 1.567,
@@ -3861,6 +3924,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/explosion01.mp3",
         "model_id": "unknown",
         "added_in_commit": "2025-02-12 c41891b7",
         "duration_s": 2.09,
@@ -3948,6 +4012,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/explosion02.mp3",
         "model_id": "unknown",
         "added_in_commit": "2025-02-12 c41891b7",
         "duration_s": 2.09,
@@ -4036,6 +4101,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/explosion03.mp3",
         "model_id": "unknown",
         "added_in_commit": "2025-02-12 c41891b7",
         "duration_s": 2.09,
@@ -4123,6 +4189,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/explosion04.mp3",
         "model_id": "unknown",
         "added_in_commit": "2025-02-12 c41891b7",
         "duration_s": 1.071,
@@ -4214,6 +4281,7 @@
         "envelope_correlation_with_previous": 0.49
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/harvest.mp3",
         "model_id": "unknown",
         "added_in_commit": "2025-03-24 c7b1cbc8",
         "duration_s": 1.567,
@@ -4302,6 +4370,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/mine_explosion.mp3",
         "model_id": "unknown",
         "added_in_commit": "2025-11-06 abcfce80",
         "duration_s": 1.512,
@@ -4390,6 +4459,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/patriotMissile01.mp3",
         "model_id": "unknown",
         "added_in_commit": "2025-03-05 05d3af46",
         "duration_s": 1.567,
@@ -4478,6 +4548,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/patriotMissile02.mp3",
         "model_id": "unknown",
         "added_in_commit": "2025-03-05 05d3af46",
         "duration_s": 1.567,
@@ -4566,6 +4637,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/tankDrive4sLoop.mp3",
         "model_id": "unknown",
         "added_in_commit": "2025-07-24 26044ba6",
         "duration_s": 4.075,
@@ -4660,6 +4732,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/tankEngineStart01.mp3",
         "model_id": "unknown",
         "added_in_commit": "2025-02-12 c41891b7",
         "duration_s": 3.056,
@@ -4744,6 +4817,7 @@
         "envelope_correlation_with_previous": 0.05
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/tankMove01.mp3",
         "model_id": "unknown",
         "added_in_commit": "2025-02-12 c41891b7",
         "duration_s": 6.087,
@@ -4832,6 +4906,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/tankShot01.mp3",
         "model_id": "unknown",
         "added_in_commit": "2025-02-12 c41891b7",
         "duration_s": 3.056,
@@ -4919,6 +4994,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/tankShot02.mp3",
         "model_id": "unknown",
         "added_in_commit": "2025-02-12 c41891b7",
         "duration_s": 1.071,
@@ -5006,6 +5082,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/tankShot03.mp3",
         "model_id": "unknown",
         "added_in_commit": "2025-02-12 c41891b7",
         "duration_s": 2.09,
@@ -5101,6 +5178,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/teslacoil_firing.mp3",
         "model_id": "unknown",
         "added_in_commit": "2025-05-20 818a399a",
         "duration_s": 1.567,
@@ -5196,6 +5274,7 @@
         ]
       },
       "previous": {
+        "legacy_path": "public/sound/legacy/teslacoil_loading.mp3",
         "model_id": "unknown",
         "added_in_commit": "2025-05-20 818a399a",
         "duration_s": 1.071,

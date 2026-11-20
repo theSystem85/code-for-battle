@@ -97,6 +97,26 @@
   border-top: 1px solid rgba(255, 255, 255, 0.04);
 }
 
+.audio-catalogue__row--versioned {
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+}
+
+.audio-catalogue__version {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #c7d2de;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.audio-catalogue__version input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: #4da3ff;
+}
+
 .audio-catalogue__name-line {
   display: flex;
   align-items: center;
@@ -263,7 +283,26 @@
   accent-color: #4da3ff;
 }
 
+.audio-catalogue__footer {
+  display: flex;
+  justify-content: flex-end;
+  flex: 0 0 auto;
+}
+
+.audio-catalogue__download {
+  background: #1a2430;
+  border: 1px solid #35506c;
+  color: #d7e8f8;
+  border-radius: 6px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 8px 12px;
+}
+
 .audio-catalogue__row-play:focus-visible,
+.audio-catalogue__version input:focus-visible,
+.audio-catalogue__download:focus-visible,
 .audio-catalogue__expand:focus-visible,
 .audio-catalogue__mode:focus-visible,
 .audio-catalogue__transport-play:focus-visible,

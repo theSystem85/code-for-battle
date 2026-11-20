@@ -10,7 +10,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const mappingPath = path.join(root, 'docs/asset-sources/sound-effects-prompts.json')
 
 // Folders under public/sound/ that hold music or narration only.
-const EXCLUDED_DIRS = new Set(['music', 'story', 'tutorial'])
+const EXCLUDED_DIRS = new Set(['music', 'story', 'tutorial', 'legacy'])
 
 // Voice lines (announcer, acknowledgements, unit callouts) directly in public/sound/.
 const VOICE_LINES = new Set([
@@ -78,6 +78,21 @@ describe('sound effects prompt mapping', () => {
     for (const name of VOICE_LINES) {
       expect(fs.existsSync(path.join(root, 'public/sound', `${name}.mp3`)), `stale voice line ${name}`).toBe(true)
     }
+  })
+
+  it('[U07258] keeps every pre-v3 copy paired with the effect it replaced', () => {
+    const legacyDir = path.join(root, 'public/sound/legacy')
+    const onDisk = fs.readdirSync(legacyDir).filter(name => name.endsWith('.mp3')).sort()
+    const recorded = []
+    for (const [name, entry] of entries) {
+      const legacyPath = entry.previous && entry.previous.legacy_path
+      if (!legacyPath) continue
+      expect(legacyPath, name).toBe(`public/sound/legacy/${name}.mp3`)
+      expect(fs.existsSync(path.join(root, legacyPath)), legacyPath).toBe(true)
+      recorded.push(`${name}.mp3`)
+    }
+    expect(recorded.sort()).toEqual(onDisk)
+    expect(onDisk).toHaveLength(79)
   })
 
   it('[U07253] records prompt, model and generation for every traced entry', () => {
