@@ -505,8 +505,11 @@ export class Renderer {
       this.textureManager.preloadAllTextures()
     }
 
-    const { width: logicalCanvasWidth, height: logicalCanvasHeight } = getCanvasLogicalSize(gameCanvas)
+    const { width: logicalCanvasWidth, height: logicalCanvasHeight, pixelRatio } = getCanvasLogicalSize(gameCanvas)
     if (mapGrid?.length && this.mapRenderer.preparedPages?.gpuRasterPass) this.mapRenderer.attachMutationStore(mapGrid)
+    // A backing-store reset can discard the transform before the canvas
+    // restoration event. Terrain, entities and the HUD all use logical pixels.
+    gameCtx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0)
     gameCtx.clearRect(0, 0, logicalCanvasWidth, logicalCanvasHeight)
 
     // Check for game over first

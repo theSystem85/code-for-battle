@@ -379,7 +379,8 @@ export class OrganicTerrain {
     await this.biomeBlendMasks.prepare(size, yieldTask)
     await this.biomeTransitionTileCache.prepare(size, yieldTask)
     await this.biomeSotTileCache.prepare(size, yieldTask)
-    this.getMaskPixels(this.biomeBlendMasks.spares[0]?.getContext('2d'), size)
+    const context = this.biomeBlendMasks.spares[0]?.getContext('2d')
+    if (context) this.getMaskPixels(context, size)
   }
 
   acquireRaster(cache, key, size) {
@@ -432,6 +433,7 @@ export class OrganicTerrain {
     if (this.biomeBlendMasks.has(key)) return this.biomeBlendMasks.get(key)
     const canvas = this.acquireRaster(this.biomeBlendMasks, key, size)
     const context = canvas.getContext('2d')
+    if (!context) return null
     const pixels = this.getMaskPixels(context, size)
     const threshold = (coverage / 8 - 0.5) * size * 1.35
     for (let py = 0; py < size; py++) for (let px = 0; px < size; px++) {
@@ -455,6 +457,7 @@ export class OrganicTerrain {
     if (alphaMask) return alphaMask
     alphaMask = this.acquireRaster(this.biomeBlendMasks, key, size)
     const context = alphaMask.getContext('2d')
+    if (!context) return null
     const pixels = this.getMaskPixels(context, size)
     for (let py = 0; py < size; py++) for (let px = 0; px < size; px++) {
       pixels.data[(py * size + px) * 4 + 3] = Math.round(255 * biomeTransitionCoverage(
@@ -474,13 +477,16 @@ export class OrganicTerrain {
     const key = `${size}|${x}|${y}|${blend.biome}|${blend.alpha}|${blend.angle}|${blend.featherPixels || 0}|${cornerWeights?.join(':') || 'directional'}|${blend.underlayWeights?.join(':') || 'legacy'}`
     let canvas = this.biomeTransitionTileCache.get(key)
     if (!canvas) {
+      const mask = cornerWeights === null
+        ? this.getBiomeBlendMask(size, x, y, blend)
+        : this.getBiomeTransitionMask(size, cornerWeights, blend.underlayWeights)
+      if (!mask) return
       canvas = this.acquireRaster(this.biomeTransitionTileCache, key, size)
       const blendContext = canvas.getContext('2d')
+      if (!blendContext) return
       this.drawBiome(blendContext, x, y, 0, 0, size, blend.biome)
       blendContext.globalCompositeOperation = 'destination-in'
-      blendContext.drawImage(cornerWeights === null
-        ? this.getBiomeBlendMask(size, x, y, blend)
-        : this.getBiomeTransitionMask(size, cornerWeights, blend.underlayWeights), 0, 0)
+      blendContext.drawImage(mask, 0, 0)
       blendContext.globalCompositeOperation = 'source-over'
       this.biomeTransitionTileCache.set(key, canvas)
     }
@@ -535,6 +541,7 @@ export class OrganicTerrain {
     if (!canvas) {
       canvas = this.acquireRaster(this.biomeSotTileCache, key, size)
       const sotContext = canvas.getContext('2d')
+      if (!sotContext) return
       this.drawBiome(sotContext, x, y, 0, 0, size, biome)
       sotContext.globalCompositeOperation = 'destination-in'
       const variant = terrainHash(x, y) % 4

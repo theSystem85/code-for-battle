@@ -216,6 +216,30 @@ describe('prepared terrain residency', () => {
     expect(budget.usage.terrainStaging).toBe(0)
     expect(renderer.preparedPages).toBeNull()
   })
+
+  it('[U07272] discards the entire prepared generation when a terrain canvas fails during allocation', async() => {
+    const renderer = readyRenderer()
+    const grid = makeMap(32, 16)
+    const budget = createTerrainByteBudget({ residentBytes: 4 * 1024 * 1024, stagingBytes: 2 * 1024 * 1024 })
+    const createChunk = renderer.createChunk.bind(renderer)
+    vi.spyOn(renderer, 'createChunk').mockImplementation((...args) => {
+      const chunk = createChunk(...args)
+      if (chunk.chunkX === 1) chunk.canvas.getContext = () => null
+      return chunk
+    })
+    const bitmap = { close: vi.fn() }
+    const createBitmap = vi.fn(async() => bitmap)
+    vi.stubGlobal('createImageBitmap', createBitmap)
+    try {
+      expect(await renderer.prepareStaticTerrain(grid, { budget, yieldTask: async() => {} })).toBeNull()
+      expect(createBitmap).toHaveBeenCalledTimes(1)
+      expect(bitmap.close).toHaveBeenCalledOnce()
+      expect(budget.usage.terrainResident).toBe(0)
+      expect(budget.usage.terrainStaging).toBe(0)
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
 })
 
 describe('MapRenderer revisioned terrain cache', () => {
@@ -489,7 +513,8 @@ describe('MapRenderer revisioned terrain cache', () => {
     expect(output.drawImage).not.toHaveBeenCalled()
     expect(drawBase).toHaveBeenCalledWith(output, mapGrid, 0, 0, 16, 16, 0, 0, false, null, renderer.chunkOptions)
     expect(chunk.everRendered).toBe(false)
-    expect(renderer.updateChunkCache(chunk, mapGrid, false, null)).toBe(false)
+    // An unavailable page requests direct drawing, while false means a cache hit.
+    expect(renderer.updateChunkCache(chunk, mapGrid, false, null)).toBeNull()
     chunk.ctx.isContextLost = () => false
     chunk.canvas.dispatchEvent(new Event('contextrestored'))
     drawBase.mockRestore()

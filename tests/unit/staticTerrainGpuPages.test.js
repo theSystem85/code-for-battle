@@ -1,6 +1,19 @@
 import { expect, it, vi } from 'vitest'
 import { StaticTerrainGpuPages } from '../../src/rendering/prepared/staticTerrainGpuPages.js'
 
+it('[U07273] yields the terrain frame to the CPU when a visible page cannot be refreshed', () => {
+  const chunk = { key: '0,0', chunkX: 0, chunkY: 0 }
+  const pages = new StaticTerrainGpuPages({ pages: new Map([[chunk.key, chunk]]) }, null)
+  pages.glState = { gl: { isContextLost: () => false } }
+  const draw = vi.spyOn(pages, 'renderGl')
+  const grid = [[{ type: 'land' }]]
+  const mapRenderer = { chunkSize: 16, updateChunkCache: vi.fn(() => null) }
+
+  expect(pages.render('webgl', {}, {}, { x: 0, y: 0 }, 32, 32, mapRenderer, grid)).toBe(false)
+  expect(mapRenderer.updateChunkCache).toHaveBeenCalledOnce()
+  expect(draw).not.toHaveBeenCalled()
+})
+
 it('[U07208] uploads visible terrain uniforms together and reuses them until the viewport changes', () => {
   const pages = new StaticTerrainGpuPages({ pages: new Map() }, null)
   const uploads = []

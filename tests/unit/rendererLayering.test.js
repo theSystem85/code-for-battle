@@ -226,6 +226,7 @@ describe('Renderer airborne layering', () => {
       globalAlpha: 1,
       save: vi.fn(() => callOrder.push('ctx.save')),
       restore: vi.fn(() => callOrder.push('ctx.restore')),
+      setTransform: vi.fn(),
       clearRect: vi.fn(),
       fillRect: vi.fn(),
       strokeRect: vi.fn(),
@@ -306,6 +307,7 @@ describe('Renderer airborne layering', () => {
   it('[U03716] keeps GPU procedural water active in water-only mode when custom sheets have no water tags', () => {
     const renderer = new Renderer()
     const gameCtx = {
+      setTransform: vi.fn(),
       clearRect: vi.fn(),
       save: vi.fn(),
       restore: vi.fn(),
@@ -371,6 +373,7 @@ describe('Renderer airborne layering', () => {
     const renderer = new Renderer()
     renderer.textureManager.integratedSpriteSheetMode = false
     const gameCtx = {
+      setTransform: vi.fn(),
       clearRect: vi.fn(),
       save: vi.fn(),
       restore: vi.fn(),
@@ -441,6 +444,7 @@ describe('Renderer airborne layering', () => {
   it('[U03718] does not use legacy GPU terrain when integrated custom water tiles are available', () => {
     const renderer = new Renderer()
     const gameCtx = {
+      setTransform: vi.fn(),
       clearRect: vi.fn(),
       save: vi.fn(),
       restore: vi.fn(),

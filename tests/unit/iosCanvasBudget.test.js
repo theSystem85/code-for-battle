@@ -75,6 +75,7 @@ describe('iOS canvas budget', () => {
       expect(renderer.maxCachedChunks).toBeLessThan(56)
       expect(renderer.terrainByteBudget.limits.terrainStaging).toBe(chunkCanvasBytes(logicalChunk, IOS_MAX_CANVAS_PIXEL_RATIO))
       expect(renderer.terrainByteBudget.limits.terrainResident).toBeLessThanOrEqual(IOS_TERRAIN_RESIDENT_BUDGET_BYTES)
+      expect(renderer.staticTerrainPageLimit).toBe(IOS_TERRAIN_RESIDENT_BUDGET_BYTES)
     } finally {
       if (descriptor) Object.defineProperty(navigator, 'userAgent', descriptor)
     }

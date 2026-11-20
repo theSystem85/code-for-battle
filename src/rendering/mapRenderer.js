@@ -12,7 +12,7 @@ import {
   CRYSTAL_GLOW_ENABLED,
   MOBILE_CANVAS_PIXEL_RATIO_CAP
 } from '../config.js'
-import { IOS_MAX_CANVAS_PIXEL_RATIO, isIosWebKit, terrainCacheLimits } from './iosCanvasBudget.js'
+import { IOS_MAX_CANVAS_PIXEL_RATIO, IOS_TERRAIN_RESIDENT_BUDGET_BYTES, isIosWebKit, terrainCacheLimits } from './iosCanvasBudget.js'
 import { getSotDrawOffset, OrganicTerrain, shorelineCornerMask } from './organicTerrain.js'
 import { getTileDecalSignature, isDecalBlockedTile } from '../game/tileDecals.js'
 import { hasFixedOccupancy, hasMovableOccupancy } from '../game/occupancyTags.js'
@@ -264,6 +264,7 @@ export class MapRenderer {
     this.maxChunkWarmQueue = this.mobileMemoryProfile ? 40 : 96
     const maximumChunkPixels = this.chunkSize * TILE_SIZE + this.chunkPadding * 2 + 1
     const iosCanvasBudget = isIosWebKit()
+    this.staticTerrainPageLimit = iosCanvasBudget ? IOS_TERRAIN_RESIDENT_BUDGET_BYTES : STATIC_TERRAIN_PAGE_LIMIT
     const terrainLimits = terrainCacheLimits({
       logicalChunkPixels: maximumChunkPixels,
       density: iosCanvasBudget
@@ -956,7 +957,7 @@ export class MapRenderer {
     chunk.onContextRestored = () => {
       chunk.contextLost = false
       chunk.everRendered = false
-      chunk.ctx = canvas.getContext('2d')
+      chunk.ctx = chunk.canvas.getContext('2d')
     }
     canvas?.addEventListener?.('contextlost', chunk.onContextLost)
     canvas?.addEventListener?.('contextrestored', chunk.onContextRestored)
@@ -983,7 +984,7 @@ export class MapRenderer {
     if (!budget || !this.canUseOffscreen || !this.useOrganicTerrain(useTexture)) return null
     this.ensureCacheValidity(mapGrid, useTexture)
     const bytes = staticTerrainPageBytes(mapGrid[0].length, mapGrid.length, { tileSize: TILE_SIZE, chunkSize: this.chunkSize, padding: this.chunkPadding, density })
-    if (bytes > STATIC_TERRAIN_PAGE_LIMIT || bytes > budget.limits.terrainResident - budget.usage.terrainResident) return null
+    if (bytes > this.staticTerrainPageLimit || bytes > budget.limits.terrainResident - budget.usage.terrainResident) return null
     if (!this.sotMask) this.computeSOTMask(mapGrid)
     for (const type of ['ore', 'seedCrystal']) {
       for (let level = 1; level <= 5; level++) this.crystalGlowRenderer.getSprite(type, level, this.createGlowCanvas)
@@ -991,7 +992,7 @@ export class MapRenderer {
     }
     const sequence = ++this.preparationSequence
     const stagingBytes = Math.ceil((Math.min(this.chunkSize, mapGrid[0].length) * TILE_SIZE + this.chunkPadding * 2 + 1) * density) * Math.ceil((Math.min(this.chunkSize, mapGrid.length) * TILE_SIZE + this.chunkPadding * 2 + 1) * density) * 4
-    const pages = new StaticTerrainPages({ grid: mapGrid, density, bytes, budget, stagingBytes })
+    const pages = new StaticTerrainPages({ grid: mapGrid, density, bytes, budget, stagingBytes, limit: this.staticTerrainPageLimit })
     try {
       for (let y = 0; y < mapGrid.length; y += this.chunkSize) for (let x = 0; x < mapGrid[0].length; x += this.chunkSize) {
         signal?.throwIfAborted()
@@ -999,7 +1000,13 @@ export class MapRenderer {
         const chunk = this.createChunk(x / this.chunkSize, y / this.chunkSize, x, y, Math.min(x + this.chunkSize, mapGrid[0].length), Math.min(y + this.chunkSize, mapGrid.length))
         chunk.preparedRaster = { owner: pages, image: null, density }
         pages.pages.set(chunk.key, chunk)
-        this.updateChunkCache(chunk, mapGrid, useTexture, null, { skipWaterBase: true, skipWaterSot: true, countHit: false, countMiss: false })
+        const rendered = this.updateChunkCache(chunk, mapGrid, useTexture, null, { skipWaterBase: true, skipWaterSot: true, countHit: false, countMiss: false })
+        if (!rendered) {
+          // The browser may refuse a backing store under memory pressure.
+          // Publish only complete generations and let the live cache draw land.
+          pages.close()
+          return null
+        }
         for (let ry = chunk.startY; ry < chunk.endY; ry++) for (let rx = chunk.startX; rx < chunk.endX; rx++) {
           const tile = mapGrid[ry][rx]
           if (tile.seedCrystal || tile.ore) this.getResourceSprite(tile.seedCrystal ? 'seedCrystal' : 'ore', rx, ry, tile.seedCrystal ? tile.seedCrystalDensity || tile.oreDensity || 1 : tile.oreDensity || 1)
@@ -1009,6 +1016,8 @@ export class MapRenderer {
         const image = typeof globalThis.createImageBitmap === 'function' ? await globalThis.createImageBitmap(chunk.canvas, bitmapOptions) : chunk.canvas
         chunk.preparedRaster.image = image
         if (image !== chunk.canvas) {
+          chunk.canvas.removeEventListener('contextlost', chunk.onContextLost)
+          chunk.canvas.removeEventListener('contextrestored', chunk.onContextRestored)
           chunk.canvas.width = chunk.canvas.height = 1
           chunk.canvas = null
           chunk.ctx = null
@@ -1646,12 +1655,16 @@ export class MapRenderer {
       return false
     }
 
-    if (!chunk.canvas || !chunk.ctx) {
-      if (!chunk.preparedRaster) return false
+    if (!chunk.canvas && chunk.preparedRaster) {
       chunk.canvas = document.createElement('canvas')
-      chunk.ctx = chunk.canvas.getContext('2d')
+      chunk.canvas.addEventListener('contextlost', chunk.onContextLost)
+      chunk.canvas.addEventListener('contextrestored', chunk.onContextRestored)
     }
-    if (chunk.contextLost || chunk.ctx.isContextLost?.()) { chunk.everRendered = false; return false }
+    if (chunk.canvas && !chunk.ctx) chunk.ctx = chunk.canvas.getContext('2d')
+    if (!chunk.ctx || chunk.contextLost || chunk.ctx.isContextLost?.()) {
+      chunk.everRendered = false
+      return null
+    }
 
     if (countMiss) {
       if (!chunk.everRendered) {
@@ -1683,6 +1696,10 @@ export class MapRenderer {
       } else {
         chunk.ctx.clearRect(0, 0, width, height)
       }
+      if (!chunk.ctx || chunk.contextLost || chunk.ctx.isContextLost?.()) {
+        chunk.everRendered = false
+        return null
+      }
 
       chunk.ctx.setTransform?.(density, 0, 0, density, 0, 0)
       chunk.ctx.imageSmoothingEnabled = false
@@ -1702,6 +1719,10 @@ export class MapRenderer {
         currentWaterFrame,
         { skipWaterBase, skipWaterSot, skipResourceOverlays: Boolean(chunk.preparedRaster) }
       )
+      if (chunk.contextLost || chunk.ctx.isContextLost?.()) {
+        chunk.everRendered = false
+        return null
+      }
       if (chunk.preparedRaster) {
         const previous = chunk.preparedRaster.image
         if (previous && previous !== chunk.canvas) previous.close?.()
@@ -2336,15 +2357,17 @@ export class MapRenderer {
     if (!this.integratedBiomeBlendCanvas) {
       this.integratedBiomeBlendCanvas = document.createElement('canvas')
       this.integratedBiomeBlendCanvas.width = this.integratedBiomeBlendCanvas.height = TILE_SIZE
-      this.integratedBiomeBlendContext = this.integratedBiomeBlendCanvas.getContext('2d')
     }
-    const blendContext = this.integratedBiomeBlendContext
+    const blendContext = this.integratedBiomeBlendContext ||= this.integratedBiomeBlendCanvas.getContext('2d')
+    if (!blendContext) return false
+    const mask = Array.isArray(blend.cornerWeights) && blend.cornerWeights.length === 4
+      ? this.organicTerrain.getBiomeTransitionMask(TILE_SIZE, blend.cornerWeights, blend.underlayWeights)
+      : this.organicTerrain.getBiomeBlendMask(TILE_SIZE, tileX, tileY, blend)
+    if (!mask) return false
     blendContext.clearRect(0, 0, TILE_SIZE, TILE_SIZE)
     this.drawIntegratedTileImage(blendContext, integratedTile, 0, 0)
     blendContext.globalCompositeOperation = 'destination-in'
-    blendContext.drawImage(Array.isArray(blend.cornerWeights) && blend.cornerWeights.length === 4
-      ? this.organicTerrain.getBiomeTransitionMask(TILE_SIZE, blend.cornerWeights, blend.underlayWeights)
-      : this.organicTerrain.getBiomeBlendMask(TILE_SIZE, tileX, tileY, blend), 0, 0)
+    blendContext.drawImage(mask, 0, 0)
     blendContext.globalCompositeOperation = 'source-over'
     ctx.drawImage(this.integratedBiomeBlendCanvas, screenX, screenY)
     return true

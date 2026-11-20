@@ -2,7 +2,7 @@
 import { Renderer } from './rendering/renderer.js'
 import { TILE_SIZE } from './config.js'
 import { getCanvasLogicalSize, getCanvasPixelRatio } from './rendering/renderingUtils.js'
-import { STATIC_TERRAIN_PAGE_LIMIT, staticTerrainPageBytes } from './rendering/prepared/staticTerrainPages.js'
+import { staticTerrainPageBytes } from './rendering/prepared/staticTerrainPages.js'
 import { RENDER_REVISION_DOMAINS } from './rendering/prepared/renderRevisionStore.js'
 import { addMapReplacedListener } from './rendering/prepared/mapMutationNotifier.js'
 import { getLoadingScreenState, updateLoadingScreen, waitForLoadingPaint } from './ui/loadingScreen.js'
@@ -168,11 +168,17 @@ export function publishPreparedRuntimeMap(mapGrid) {
       await mapRenderer.organicTerrain.prepareRasterCaches(TILE_SIZE, undefined, budget)
       signal?.throwIfAborted()
       const nativeBytes = staticTerrainPageBytes(mapGrid[0].length, mapGrid.length, { density })
-      const gpuWorldRaster = nativeBytes > STATIC_TERRAIN_PAGE_LIMIT && await gameRenderer.prepareTerrainGpuBackend()
+      const gpuWorldRaster = nativeBytes > mapRenderer.staticTerrainPageLimit && await gameRenderer.prepareTerrainGpuBackend()
       const pages = await mapRenderer.prepareStaticTerrain(mapGrid, { budget, density: gpuWorldRaster ? 1 : density, signal,
         bitmapOptions: gpuWorldRaster ? { premultiplyAlpha: 'none' } : undefined })
       if (pages && gpuWorldRaster) {
-        try { await gameRenderer.prepareTerrainGpuPages(pages, budget) } catch (error) { pages.close(); throw error }
+        try {
+          await gameRenderer.prepareTerrainGpuPages(pages, budget)
+        } catch (error) {
+          pages.gpuRasterPass?.close()
+          pages.gpuRasterPass = null
+          window.logger?.warn?.('Terrain GPU upload failed; using CPU pages', error)
+        }
       }
       return pages
     }

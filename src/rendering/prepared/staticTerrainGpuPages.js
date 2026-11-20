@@ -114,6 +114,8 @@ export class StaticTerrainGpuPages {
         this.uploadGl(record, true)
       }
       gl.bindVertexArray(null)
+      const uploadError = gl.getError()
+      if (uploadError !== gl.NO_ERROR) throw new Error(`WebGL terrain upload failed (${uploadError})`)
       this.stats.bytes = bytes + (this.gpuState?.bytes || 0)
     } catch (error) { this.releaseGl(); throw error }
   }
@@ -227,7 +229,9 @@ export class StaticTerrainGpuPages {
     for (const record of this.records.values()) {
       const chunk = record.chunk
       if (chunk.chunkX < firstX || chunk.chunkX > lastX || chunk.chunkY < firstY || chunk.chunkY > lastY) continue
-      if (mapRenderer.updateChunkCache(chunk, grid, true, null, RETAINED_OPTIONS)) this.stats.rebuilds++
+      const refreshed = mapRenderer.updateChunkCache(chunk, grid, true, null, RETAINED_OPTIONS)
+      if (refreshed === null) return false
+      if (refreshed) this.stats.rebuilds++
       if (this.glState && (record.glImage !== chunk.preparedRaster.image || record.glRevision !== chunk.preparedRaster.revision)) this.uploadGl(record)
       if (this.gpuState && (record.gpuImage !== chunk.preparedRaster.image || record.gpuRevision !== chunk.preparedRaster.revision)) this.uploadGpu(record)
       this.visible.push(record)
