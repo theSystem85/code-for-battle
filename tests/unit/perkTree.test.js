@@ -30,6 +30,22 @@ describe('perk tree overlay', () => {
     expect(document.querySelector('.perk-tree__cc-state').textContent).toContain('View only')
     expect(document.querySelector('[data-perk-id="cc.base.start"]')?.classList.contains('is-no-command-center')).toBe(true)
   })
+  it('[U07304] opens tooltips by pointer-compatible click and closes the previous node', () => {
+    openPerkTree()
+    const first = document.querySelector('[data-perk-id="cc.base.start"]')
+    const second = document.querySelector('[data-perk-id="cc.prod.start"]')
+    first.click(); expect(first.classList.contains('show-tooltip')).toBe(true)
+    second.click(); expect(first.classList.contains('show-tooltip')).toBe(false)
+    expect(second.classList.contains('show-tooltip')).toBe(true)
+  })
+  it('[U07305] requires two clicks and purchases exactly once', () => {
+    openPerkTree()
+    const node = document.querySelector('[data-perk-id="cc.base.start"]')
+    node.click(); const buy = node.querySelector('.perk-buy')
+    buy.click(); expect(document.querySelector('[data-perk-id="cc.base.start"]').classList.contains('is-owned')).toBe(false)
+    buy.click(); expect(document.querySelector('[data-perk-id="cc.base.start"]').classList.contains('is-owned')).toBe(true)
+    expect(document.querySelector('.perk-ledger').textContent).toContain('8 available')
+  })
   it('[U07302] uses eight live SVG merge lanes and an inline purchase confirmation', () => {
     openPerkTree()
     expect(document.querySelectorAll('.perk-capstone__merge path')).toHaveLength(8)

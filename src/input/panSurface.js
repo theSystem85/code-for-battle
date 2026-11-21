@@ -10,12 +10,22 @@ export function normalizePanWheel(event, width, height, invert = false) {
   }
 }
 
+export function stepPanInertia(velocity, elapsedMs, friction = 0.92, stopSpeed = 0.02) {
+  const factor = Math.pow(friction, elapsedMs / (1000 / 60))
+  const x = velocity.x * factor
+  const y = velocity.y * factor
+  return { x: Math.abs(x) < stopSpeed ? 0 : x, y: Math.abs(y) < stopSpeed ? 0 : y }
+}
+
 export function createPanSurface(element, {
   content,
   initialX = 0,
   initialY = 0,
   invert = false,
   keyboard = true,
+  speed = 1,
+  inertia = true,
+  inertiaFriction = 0.92,
   onChange
 } = {}) {
   let x = initialX
@@ -23,6 +33,12 @@ export function createPanSurface(element, {
   let dragging = false
   let pointerX = 0
   let pointerY = 0
+  let lastPointerTime = 0
+  let velocityX = 0
+  let velocityY = 0
+  let frame = 0
+  let frameTime = 0
+  const reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
 
   const bounds = () => ({
     maxX: Math.max(0, (content?.scrollWidth || content?.offsetWidth || 0) - element.clientWidth),
@@ -36,6 +52,16 @@ export function createPanSurface(element, {
     onChange?.({ x, y })
   }
   const panBy = (dx, dy) => { x += dx; y += dy; apply() }
+  const stopInertia = () => { if (frame) cancelAnimationFrame(frame); frame = 0; velocityX = 0; velocityY = 0 }
+  const animate = time => {
+    const elapsed = Math.min(50, time - frameTime)
+    frameTime = time
+    const next = stepPanInertia({ x: velocityX, y: velocityY }, elapsed, inertiaFriction)
+    velocityX = next.x; velocityY = next.y
+    if (!velocityX && !velocityY) { frame = 0; return }
+    panBy(velocityX * elapsed, velocityY * elapsed)
+    frame = requestAnimationFrame(animate)
+  }
   const wheel = event => {
     if (event.ctrlKey || event.metaKey) return
     event.preventDefault()
@@ -46,19 +72,34 @@ export function createPanSurface(element, {
     if (event.pointerType === 'mouse' && event.button !== 0 && event.button !== 2) return
     if (event.target.closest?.('button, a, input, select, textarea')) return
     dragging = true
+    stopInertia()
     pointerX = event.clientX
     pointerY = event.clientY
+    lastPointerTime = event.timeStamp
     element.setPointerCapture?.(event.pointerId)
     element.classList.add('is-panning')
   }
   const move = event => {
     if (!dragging) return
-    const speed = invert ? -1 : 1
-    panBy((pointerX - event.clientX) * speed, (pointerY - event.clientY) * speed)
+    const direction = invert ? -speed : speed
+    const dx = (pointerX - event.clientX) * direction
+    const dy = (pointerY - event.clientY) * direction
+    const elapsed = Math.max(1, event.timeStamp - lastPointerTime)
+    panBy(dx, dy)
+    velocityX = dx / elapsed
+    velocityY = dy / elapsed
     pointerX = event.clientX
     pointerY = event.clientY
+    lastPointerTime = event.timeStamp
   }
-  const up = () => { dragging = false; element.classList.remove('is-panning') }
+  const up = () => {
+    if (!dragging) return
+    dragging = false; element.classList.remove('is-panning')
+    if (inertia && !reducedMotion && (velocityX || velocityY)) {
+      frameTime = performance.now()
+      frame = requestAnimationFrame(animate)
+    }
+  }
   const keydown = event => {
     if (!keyboard || event.target.matches?.('input, textarea, select')) return
     const step = 64
@@ -80,6 +121,7 @@ export function createPanSurface(element, {
     getPosition: () => ({ x, y }),
     setPosition: (nextX, nextY) => { x = nextX; y = nextY; apply() },
     destroy() {
+      stopInertia()
       element.removeEventListener('wheel', wheel)
       element.removeEventListener('pointerdown', down)
       element.removeEventListener('pointermove', move)

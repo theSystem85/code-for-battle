@@ -1,11 +1,13 @@
 ---
 name: new-unit
-description: Add or revise a Code for Battle unit with complete data, production, movement-domain pathfinding, combat, service, HUD, rendering, audio, cheats, AI, persistence, tests, specs, and prompt history. Use for any new ground, air, or water unit or when auditing an incomplete unit integration.
+description: Add or revise a Code for Battle unit with complete data and art approval. For buildings, use the linked new-building skill. Use for any new ground, air, or water unit or when auditing an incomplete unit integration.
 ---
 
 # New Unit Implementation Checklist
 
 Use this checklist when adding any new unit type to Code for Battle.
+
+For structures, use [New Building](../new-building/SKILL.md). Both workflows have the same mandatory, user-gated art sequence: first show one proposal sheet containing every map-sprite option and wait for the user to choose; then show one proposal sheet containing every matching build-button option and wait for another choice. Show previews of both selected crops and obtain approval **before implementation begins**. Never generate or implement the two assets in one unreviewed step.
 
 ## Data and production
 - Add unit stats: cost, health/maxHealth, armor, speed, turn speed/rotation behavior, firepower, weapon ranges, reload times, projectile types, sight/radar visibility, crew capacity, fuel, ammo, repairability, and destruction behavior.

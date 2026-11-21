@@ -10,6 +10,8 @@ let cleanupViewport = null
 let cleanupPan = null
 let unsubscribe = null
 let pauseWasRunning = false
+let openTooltip = null
+let confirmTimer = null
 
 const owner = () => gameState.humanPlayer || 'player1'
 const star = (gold = true) => `<svg class="perk-star${gold ? '' : ' is-dim'}" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2.5 2.8 5.7 6.3.9-4.6 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2-4.6-4.4 6.3-.9z"/></svg>`
@@ -35,22 +37,37 @@ function node(perk, ledger) {
   tooltip.className = 'perk-tooltip'
   tooltip.innerHTML = `<button class="perk-tooltip__close" type="button" aria-label="Close tooltip">×</button><h3>${perk.name}</h3><p>${perk.summary}</p><p><b>How to use:</b> ${perk.howTo}</p><p><b>Unlocks:</b> ${unlockedItems(perk)}</p><p class="perk-tooltip__state">${owned ? 'Owned' : status.ok ? `${perk.cost}★ · ready to unlock` : reasonText[status.reason] || 'Locked'}</p><a href="/docs/user-documentation.html#${perk.manualAnchor}">Manual →</a>${status.ok ? '<button type="button" class="perk-buy">Unlock perk</button>' : ''}`
   button.appendChild(tooltip)
-  tooltip.querySelector('.perk-tooltip__close').addEventListener('click', event => { event.stopPropagation(); button.classList.remove('show-tooltip') })
+  const closeTooltip = () => {
+    button.classList.remove('show-tooltip')
+    if (openTooltip === button) openTooltip = null
+    clearTimeout(confirmTimer); confirmTimer = null
+    const buy = tooltip.querySelector('.perk-buy')
+    if (buy) { delete buy.dataset.confirm; buy.textContent = 'Unlock perk' }
+  }
+  tooltip.querySelector('.perk-tooltip__close').addEventListener('click', event => { event.stopPropagation(); closeTooltip() })
   button.addEventListener('click', event => {
     if (event.target.closest('a')) return
     if (event.target.closest('.perk-buy')) {
       event.stopPropagation()
       const available = getPerkLedger(owner()).available
       const buy = event.target.closest('.perk-buy')
-      if (buy.dataset.confirm === 'true') requestPerkPurchase(perk.id)
+      if (buy.dataset.confirm === 'true') {
+        clearTimeout(confirmTimer); confirmTimer = null
+        delete buy.dataset.confirm
+        requestPerkPurchase(perk.id)
+      }
       else {
         buy.dataset.confirm = 'true'
         buy.textContent = `Unlock ${perk.name} for ${perk.cost}★? ${available}★ → ${available - perk.cost}★`
         buy.focus()
+        clearTimeout(confirmTimer)
+        confirmTimer = setTimeout(closeTooltip, 5000)
       }
       return
     }
-    button.classList.toggle('show-tooltip')
+    if (openTooltip && openTooltip !== button) openTooltip.classList.remove('show-tooltip')
+    const opening = !button.classList.contains('show-tooltip')
+    if (opening) { button.classList.add('show-tooltip'); openTooltip = button } else closeTooltip()
   })
   return button
 }
@@ -101,10 +118,18 @@ export function openPerkTree() {
   document.body.appendChild(overlay)
   cleanupViewport = attachAutomationViewport(overlay, overlay.querySelector('.perk-tree'))
   const viewport = overlay.querySelector('.perk-tree__viewport')
-  cleanupPan = createPanSurface(viewport, { content: overlay.querySelector('.perk-tree__canvas'), initialX: 450 })
+  cleanupPan = createPanSurface(viewport, { content: overlay.querySelector('.perk-tree__canvas'), initialX: 450, speed: 1.2, inertia: true })
   overlay.querySelector('.perk-tree__close').addEventListener('click', closePerkTree)
   overlay.addEventListener('keydown', event => { if (event.key === 'Escape') closePerkTree() })
-  overlay.addEventListener('mousedown', event => { if (event.target === overlay) closePerkTree() })
+  overlay.addEventListener('pointerup', event => {
+    if (event.target === overlay) closePerkTree()
+    else if (openTooltip && !event.target.closest('.perk-node')) {
+      openTooltip.classList.remove('show-tooltip'); openTooltip = null
+      clearTimeout(confirmTimer); confirmTimer = null
+    }
+  })
+  overlay.addEventListener('selectstart', event => event.preventDefault())
+  overlay.addEventListener('dragstart', event => event.preventDefault())
   unsubscribe = subscribePerks(render)
   pauseWasRunning = !gameState.multiplayerSession?.isRemote && gameState.gamePaused === false
   if (pauseWasRunning) gameState.gamePaused = true
@@ -118,6 +143,7 @@ export function closePerkTree() {
   unsubscribe?.(); unsubscribe = null
   cleanupPan?.destroy(); cleanupPan = null
   cleanupViewport?.(); cleanupViewport = null
+  clearTimeout(confirmTimer); confirmTimer = null; openTooltip = null
   overlay.remove(); overlay = null
   if (pauseWasRunning) gameState.gamePaused = false
   pauseWasRunning = false
