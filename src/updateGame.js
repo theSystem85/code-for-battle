@@ -563,7 +563,7 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
         updateAirGuard(unit, units, now)
       })
       updateNavalFleet(units, bullets, mapGrid, gameState, now, delta)
-      updateC5GalaxySystem(units, mapGrid, gameState, Math.floor(now / (1000 / 60)))
+      updateC5GalaxySystem(units, mapGrid, gameState, gameState.frameCount || 0)
       framePhases.begin(FRAME_PHASE.movement)
       updateUnitMovement(units, mapGrid, occupancyMap, gameState, now, factories)
       updateSpawnExit(units, factories, mapGrid, occupancyMap)
