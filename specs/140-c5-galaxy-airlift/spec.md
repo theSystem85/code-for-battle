@@ -1,6 +1,6 @@
 # Spec 140: C-5 Galaxy airlift (draft)
 
-**Branch:** `dev`  
+**Branch:** `dev` (implementation in progress on `feat/c5-galaxy-airlift`; see `docs/galaxy-handoff.md` there)  
 **Status:** Draft — Patrick's requirements below are decided; several implementation details are still open  
 **Created:** 2026-11-21 (Europe/Berlin)  
 **Last Updated:** 2026-11-21 (Europe/Berlin)  
