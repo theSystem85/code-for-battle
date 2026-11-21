@@ -80,10 +80,16 @@ When a spec exists, replace `Spec: none` with a relative link such as `[Title](.
 - [ ] **Add F35 stealth strike fighter unit with generated sidebar/map assets, VTOL landing** — on helipads/airstrip parking/empty ground, JDAM multi-target AGF bombing, radar stealth, F22-relative speed/cost tuning, ground-only attack rules, landed logistics servicing/refill, crash wreck recovery parity, build prerequisites ((airstrip OR helipad) AND ammo fab), F35 sound hooks, and cheat-spawn support.
   - Spec: [F35 VTOL Stealth Strike Fighter](../specs/052-f35-unit.md)
 
+- [ ] **C-5 Galaxy airlift** — a large airstrip-produced transport with realistic vehicle weights, a 122 t weight-based cargo capacity (any mix that fits), and parachute airdrop. Art must be Grok Imagine only; proposals were shown 2026-11-21 and picks are still pending, so implementation uses placeholders until Patrick approves the images.
+  - Spec: [C-5 Galaxy airlift (draft)](../specs/140-c5-galaxy-airlift/spec.md)
+
 ## Economy and Buildings
 
 - [x] **Add long-press production tooltips that show unit/building stats, damage totals, and clickable** — focus rows aligned to the money bar tooltip style.
   - Spec: none
+
+- [ ] **Technology Center (draft)** — a research building using the existing unused Technology Center art. It unlocks the Drone Factory, AI Center (AI data center), Rocket Launch Base (Mechazilla-style launch tower with the rocket / Starship), and Spaceship Factory. Costs, further prerequisites, and what each follow-on building enables are still open.
+  - Spec: [Technology Center (draft)](../specs/139-technology-center/spec.md)
 
 ## AI
 

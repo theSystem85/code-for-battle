@@ -1,8 +1,8 @@
 # Command Center, Stars Ledger, Veterancy and Automation Perk Tree — Final v1
 
-Status: **Final v1.** Patrick approved every recommendation on 2026-11-21 (t620u) and the art on 2026-11-21 (t621u): Command Center variant 2 and all 35 perk badges. The final assets are committed (see §9). The implementation is split into three Codex tasks (§12).
-Source requests: Patrick, chat messages t619u and t620u (2026-11-21).
-Researched against `origin/dev` @ `c6cf8266` (2026-11-20 18:51 Berlin time, "fix(ios): recover startup terrain and sprite alignment").
+Status: **Final v1** for the original tree (decisions D1–D14 and §§1–15). Follow-up polish after `d052b13e` is specified in **§16** and is not yet done.
+Source requests: Patrick, chat messages t619u and t620u (2026-11-21); follow-up items from the perk-polish pass and the 2026-11-21 voice call.
+Researched against `origin/dev` @ `c6cf8266` (2026-11-20 18:51 Berlin time, "fix(ios): recover startup terrain and sprite alignment"). §16 was checked against `origin/dev` @ `d052b13e` (2026-11-21, Europe/Berlin).
 Repo location: `specs/command-center-perks.md` (AGENTS rule 3).
 
 ## Decisions (all final)
@@ -760,3 +760,149 @@ export function exportPerkState() / restorePerkState(payload) / resetPerkState()
 
 - `openPerkTree()` and `closePerkTree()`, exported from `src/ui/perks/perkTree.js`.
 - B's Command Center selection action and the automation-panel lock banners call `openPerkTree` through a dynamic import, so B never statically depends on C.
+
+---
+
+## 16. Follow-up after `d052b13e` (2026-11-21)
+
+The original tree, ledger, overlay, and gating landed in `254b6255`, `fcdc77fd`, `db7f3d44`, and the polish commit `d052b13e` (Codex task behind the GB-2 pass). This section is the leftover work so it is not forgotten. It does not reopen D1–D14 unless an item below explicitly changes a shipped behaviour.
+
+**Status:** open follow-up. Do not treat this section as already implemented.
+
+GB-2 items already done and **not** repeated here: 1, 3, 4, 9 (`skills/new-building/SKILL.md` two-stage art flow, also linked from `skills/new-unit/SKILL.md`), and 10. Item 2 is only done for the perk overlay, not for the automation editor. Item 5 has no touch-sequence tests and no recorded iPhone verification.
+
+### 16.1 Current facts on `origin/dev` @ `d052b13e`
+
+- Perk overlay panning uses `createPanSurface` with `inertia: true` (`src/ui/perks/perkTree.js`). The automation editor mounts `attachAutomationViewport` only (`src/ui/policies/policyEditorModal.js`) and does **not** use `createPanSurface`, so inertia / faster editor scrolling is still missing.
+- The action bar still has `<button id="commandCenterPerksBtn" … hidden>★ Perks</button>` in `index.html`, shown and wired from `src/ui/moneyBar.js` when a Command Center is selected. The `K` keybinding `open-perk-tree` and the money-bar star chip also open the tree. Patrick's follow-up is to open the perk menu **only** from a small context menu on the Command Center and to **remove** the ★ Perks action-bar button. Whether `K` and the star chip remain is an open question.
+- Landing / marketing copy is still one shared paragraph in `src/landing/locales/en.json` and `de.json` (around the feature body and the later `lead`), with **no** perk badge images.
+- Badge files already exist at `public/images/perks/*.webp` (35 badges).
+- The user manual (`public/docs/user-documentation.html`, section `#perks`) has headings for all 35 perks. **34** of them share the same placeholder sentence: "This command perk unlocks the matching conditions, actions, or option values shown in its in-game tooltip. Normal technology and production requirements still apply." Only the Turret Veterancy capstone (`#perk-cc.def.capstone`) has its own real text. None of the perk headings include badge images.
+- Automation UI gating today depends on perks for individual conditions/actions, but the automation **menu** itself is still reachable without a Command Center that owns at least one perk.
+
+### 16.2 User stories
+
+#### User Story F1: Faster automation-editor panning (GB-2 item 2)
+
+**Priority:** P1  
+**As a** player editing automations  
+**I want** the editor canvas to pan with the same inertia and a quicker feel than a static drag  
+**So that** moving around a large policy is as comfortable as panning the perk tree
+
+**Acceptance Criteria:**
+
+- [ ] The automation editor pan surface supports inertia (and a faster/more usable scroll feel) consistent with the shared pan helper, including reduced-motion behaviour already used by `createPanSurface`.
+- [ ] The perk overlay keeps the inertia behaviour it already has; this item is about the editor, not about regressing the overlay.
+
+#### User Story F2: Touch and iPhone verification (GB-2 item 5)
+
+**Priority:** P1  
+**As a** player on an iPhone  
+**I want** opening, panning, and purchasing perks to work reliably on the device  
+**So that** the overlay is not desktop-only in practice
+
+**Acceptance Criteria:**
+
+- [ ] Automated touch-sequence tests cover the perk overlay activation / pan / purchase path at the level the repo's test stack allows.
+- [ ] The overlay is verified on Patrick's iPhone (13 Pro Max is the recorded target in §11). The result of that check is recorded (pass, fail, or remaining issue).
+
+#### User Story F3: Open perks from the Command Center context menu (GB-2 item 6)
+
+**Priority:** P0  
+**As a** player  
+**I want** to open the perk tree from a small context menu on the Command Center, and I do not want a ★ Perks button on the action bar  
+**So that** perks live on the building instead of occupying the unit action bar
+
+**Acceptance Criteria:**
+
+- [ ] A small context menu on the Command Center includes an action that opens the perk tree.
+- [ ] The `★ Perks` action-bar button (`#commandCenterPerksBtn`) is removed from the action bar and from the code that shows or wires it.
+- [ ] The context-menu flow works with mouse and with the existing long-press / touch map-action patterns.
+- [ ] Whether the `K` hotkey and the star chip still open the tree is decided (see Open questions) and then implemented consistently, including keybinding UI and the manual.
+
+#### User Story F4: Landing-page perk section with badges (GB-2 items 7 and 8)
+
+**Priority:** P1  
+**As a** visitor of the marketing landing page  
+**I want** a compact Command Center perk section that shows the badge images  
+**So that** I can see the automation perk tree is a real feature, not only a paragraph of text
+
+**Acceptance Criteria:**
+
+- [ ] `/en/landing` and `/de/landing` gain a compact perk section (not only the existing single paragraph in `src/landing/locales/en.json` and `de.json`).
+- [ ] The section uses the existing badge images at `public/images/perks/*.webp`.
+- [ ] English and German copy are both present. Exact layout, which badges are shown (all 35 vs a subset), and wording are still open if Patrick wants to direct them; a compact, non-overwhelming section is the requirement.
+
+#### User Story F5: Hide or lock automations until a perk is owned (GB-2 item 11)
+
+**Priority:** P0  
+**As a** player who has not yet started the perk tree  
+**I want** the automation menu hidden or locked until I have a Command Center with at least one owned perk  
+**So that** automations do not appear as a usable system before the Command Center perk gate is in play
+
+**Acceptance Criteria:**
+
+- [ ] The automation menu is not freely usable until the human player has a living Command Center **and** at least one owned perk. Buying a start perk already auto-owns its first IF and DO, so one start-perk purchase satisfies "at least one owned perk" once that rule remains in force.
+- [ ] After the condition is met, the existing perk locks on individual conditions and actions still apply.
+- [ ] "All unlocked" mode, multiplayer spectators, and old saves need a decided behaviour (see Open questions) before this ships.
+- [ ] If the Command Center is later destroyed, existing decision D5 still applies to running automations; how the menu itself looks in that state should be consistent with D5 and with this item.
+
+#### User Story F6: Real manual text and badges for every perk
+
+**Priority:** P1  
+**As a** player reading the user manual  
+**I want** each perk to have its own short explanation and badge  
+**So that** the manual matches the in-game tooltips instead of repeating one placeholder 34 times
+
+**Acceptance Criteria:**
+
+- [ ] Each of the 34 non-capstone perk entries in `public/docs/user-documentation.html` has its own description, not the shared placeholder sentence. The capstone already has unique text and must not be reduced to the placeholder.
+- [ ] Badge images (`public/images/perks/*.webp`) appear with the perk entries.
+- [ ] Text stays accurate to the catalog (`src/perks/perkCatalog.js` summaries / how-to). Exact wording can follow the in-game `summary` and `howTo` fields unless Patrick wants a rewrite.
+
+### 16.3 Functional requirements
+
+#### FR-F01: Automation editor inertia
+The automation editor uses the shared pan surface (or equivalent behaviour) so inertia and a faster scroll feel exist there, not only on the perk overlay. (GB-2 item 2.)
+
+#### FR-F02: Touch-sequence tests and iPhone check
+Add touch-sequence coverage for perk overlay activation and record an iPhone verification pass or remaining issues. (GB-2 item 5.)
+
+#### FR-F03: Context menu entry; remove the action-bar button
+The perk tree is opened from a small context menu on the Command Center. Remove the ★ Perks action-bar button. (GB-2 item 6.)
+
+#### FR-F04: Compact landing section with badges
+Add a compact perk section with badge images on the EN and DE landing pages. (GB-2 items 7 and 8.)
+
+#### FR-F05: Automation menu gated on CC + one owned perk
+Lock or hide the automation menu until a Command Center exists for the player and that player owns at least one perk. (GB-2 item 11.)
+
+#### FR-F06: Manual perk entries
+Replace the 34 shared placeholder perk paragraphs in the user manual with unique text, and show badge images. Keep the capstone's unique text.
+
+### 16.4 To-do checklist
+
+- [ ] Item 2 — inertia / faster scrolling on the **automation editor** pan surface.
+- [ ] Item 5 — touch-sequence tests and iPhone activation verification, with the result recorded.
+- [ ] Item 6 — Command Center context menu opens the perk tree; remove `★ Perks` from the action bar; decide what happens to `K` and the star chip.
+- [ ] Items 7 and 8 — compact landing / marketing perk section with badges, EN and DE.
+- [ ] Item 11 — lock or hide the automation menu until a Command Center with at least one owned perk exists; decide hide vs lock and All-unlocked behaviour.
+- [ ] Manual — unique text + badge images for the 34 placeholder perk entries; do not strip the capstone's real text.
+
+### 16.5 Open questions
+
+1. **Item 2 feel.** How much faster should the editor pan than today? Should it match the perk overlay (`speed: 1.2`, inertia on) exactly, or should the editor use different values?
+2. **Item 5 scope.** Which gestures must the automated tests cover (open via the new context menu, pan, pinch if any, purchase confirm, close)? Is a physical iPhone check by Patrick required before this item is closed, or is a simulator plus later manual check enough?
+3. **Item 6 and other entry points.** After the action-bar button is removed, should the `K` keybinding and the money-bar star chip still open the tree, or is the Command Center context menu the only opener?
+4. **Context-menu shape.** Reuse the existing long-press / right-click unit or building menu, or a smaller CC-only menu? Which label ("Perks", "Automation Perks", something else)?
+5. **Landing section layout.** All 35 badges, one badge per start branch, or a compact strip? How much text besides the badges? Any link into the in-game manual?
+6. **Item 11 hide vs lock.** Should the automation menu be omitted entirely, or shown disabled with an explanation ("Build a Command Center and buy a perk")?
+7. **Item 11 and "All unlocked" mode.** Does that setting bypass the menu gate (because every perk is treated as owned), or does the player still need a Command Center?
+8. **Item 11 and destroyed Command Center.** D5 suspends automations and blocks purchases until a CC is rebuilt. Should the menu hide again, stay visible but locked, or stay open on already-owned perks?
+9. **Manual tone and length.** Use the catalog `summary` / `howTo` text verbatim, or write shorter/longer manual prose? Any language besides the existing English manual?
+10. **Priority / grouping.** Can these leftovers ship in one pass or in several small commits? No sequence was mandated.
+
+### 16.6 Out of scope
+
+- Re-opening the 35-perk catalog, star economy, or capstone rules from §§4–5 unless a leftover item cannot be done otherwise.
+- Generating new badge art (the 35 badges are already committed). If a badge must be redone, the 2026-11-21 rule applies: Grok Imagine only, previewed and approved before commit.

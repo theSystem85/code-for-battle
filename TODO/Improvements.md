@@ -96,6 +96,9 @@ When a spec exists, replace `Spec: none` with a relative link such as `[Title](.
 
 ## UI, Sidebar, and Settings
 
+- [ ] **Command Center perk polish leftovers (after d052b13e)** — add inertia / faster scrolling to the automation editor pan surface; add touch-sequence tests and verify iPhone activation; open the perk tree only from a small Command Center context menu and remove the ★ Perks action-bar button; add a compact landing-page perk section with badge images (EN/DE); lock or hide the automation menu until a Command Center with at least one owned perk exists; replace the 34 shared placeholder perk entries in the user manual with real text and badge images (the capstone already has unique text).
+  - Spec: [Command Center perk follow-up](../specs/command-center-perks.md#16-follow-up-after-d052b13e-2026-11-21)
+
 - [x] **Add HUD mode 4 with quarter-donut corner bars and crew at top/right/bottom/left** — centers with 3px spacing from arc starts; refine HUD 3 corner-centering and HUD 2 outline/bar alignment.
   - Spec: [Selected Unit HUD Refactor](../specs/034-selected-unit-hud-refactor.md)
 
@@ -177,6 +180,7 @@ When a spec exists, replace `Spec: none` with a relative link such as `[Title](.
 
 - [ ] **Add a JSON file that determines the whole tech tree. Refactor the code to obey this file.**
   - Spec: none
+  - Related (does not replace this item): [Technology Center (draft)](../specs/139-technology-center/spec.md)
 
 ## Done
 
