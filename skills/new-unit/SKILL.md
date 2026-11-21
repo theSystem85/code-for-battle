@@ -7,7 +7,27 @@ description: Add or revise a Code for Battle unit with complete data and art app
 
 Use this checklist when adding any new unit type to Code for Battle.
 
-For structures, use [New Building](../new-building/SKILL.md). Both workflows have the same mandatory, user-gated art sequence: first show one proposal sheet containing every map-sprite option and wait for the user to choose; then show one proposal sheet containing every matching build-button option and wait for another choice. Show previews of both selected crops and obtain approval **before implementation begins**. Never generate or implement the two assets in one unreviewed step.
+For structures, use [New Building](../new-building/SKILL.md). Both workflows follow the same mandatory, user-gated art sequence below. Never generate or implement the two assets in one unreviewed step.
+
+## Mandatory art approval (before implementation)
+
+Generate every game-asset image with **Grok Imagine only**. Never use ChatGPT, OpenAI image models, or any other image generator. Grok Bot uses the built-in GenerateImage tool; a coding agent prompted directly uses the xAI Grok Imagine API.
+
+### Who generates the art
+
+- If a coding agent (Codex or any other vendor) is prompted directly, with no Grok Bot involved, that agent runs this entire art-approval flow itself (8 map options, user pick, 8 fresh button options, user pick) before implementing.
+- If Grok Bot is orchestrating the task, Grok Bot runs the art flow with the user first, then hands the coding agent only the picked final images (paths or already-committed files). The coding agent must not generate or replace art; it only wires the provided images into the game.
+
+Show the user the contact sheets themselves, not file paths. Check every generated image before showing it: correct silhouette, scale of details, no stray flags or logos, and the correct real-world reference. Regenerate mismatches. When presenting a sheet, mention weak options honestly.
+
+Units do **not** need a separate construction icon; the build button serves as that icon. Do not generate construction-icon options.
+
+Nothing is committed or implemented until the user picks. After they pick, commit images only if they ask, and reference the chosen files in the spec.
+
+1. Inventory existing art and visual references. Generate **8 varied map-sprite options** and show them as **one numbered contact sheet**. Wait for an explicit choice.
+2. If the user asks for a tweak of a pick, generate about **4 close variants** of that option and let them pick again. Do not start build-button art until the map sprite is chosen.
+3. Only after the map pick, generate **8 build-button options** based on the chosen map design and show them as **one numbered contact sheet**. Each button must be a **completely new generation** that matches the unit's shape and silhouette but uses its **own camera angle** (a ground-level or eye-level hero shot) and lighting. Never paste or composite the map sprite onto a desert background, and never keep the map-sprite camera. Buttons are opaque, square, with desert ground under a blue sky.
+4. Show that button sheet and wait for an explicit choice. Crop and show previews of the chosen map sprite and chosen build button together. Obtain approval **before implementation begins**.
 
 ## Data and production
 - Add unit stats: cost, health/maxHealth, armor, speed, turn speed/rotation behavior, firepower, weapon ranges, reload times, projectile types, sight/radar visibility, crew capacity, fuel, ammo, repairability, and destruction behavior.
@@ -80,7 +100,7 @@ These rules come from the tank image overhaul (#740, #742) and the light tank. E
   - Generated turrets are often oversized relative to the hull: scale the turret so it matches the real vehicle's proportions (for a Bradley about 40–45% of the hull length) and put the pivot at the turret-ring centre, padding the turret image if a side box (TOW launcher) shifts its centre.
   - Thin parts (barrels) are mostly edge pixels: despill hard (for tan paint clamp blue below green below red) and check them on a dark background.
   - Say explicitly "the hull has NO turret and NO gun" — models tend to bake the turret into the hull.
-  - Build button: photorealistic elevated three-quarter view in the desert with the horizon in the 25–50% band. A 16:9 result must be extended to the square button (extend sky/ground, do not stretch the vehicle) and checked in the sidebar.
+  - Build button: a completely new ground-level or eye-level hero shot in the desert under a blue sky (horizon often in the 25–50% band). Do not composite or reuse the map sprite. Follow the 8-option approval flow above. A 16:9 result must be extended to the square button (extend sky/ground, do not stretch the vehicle) and checked in the sidebar.
   - Keep the raw sheet in `docs/asset-sources/` and record the prompt in `prompt-history/`.
 
 ## Validation
