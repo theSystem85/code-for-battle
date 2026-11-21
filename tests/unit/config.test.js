@@ -293,6 +293,7 @@ describe('config.js', () => {
     it('[U00985] should have speed properties for units', () => {
       expect(UNIT_PROPERTIES.tank_v1.speed).toBeGreaterThan(0)
       expect(UNIT_PROPERTIES.harvester.speed).toBeGreaterThan(0)
+      expect(UNIT_PROPERTIES.lightTank.speed).toBeCloseTo(UNIT_PROPERTIES.tank_v1.speed * 1.3)
     })
 
     it('[U00986] should keep harvester rotation only 50% faster than a tank', () => {

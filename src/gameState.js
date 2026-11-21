@@ -1,5 +1,6 @@
 // gameState.js
 import { DEFAULT_MAP_TILES_X, DEFAULT_MAP_TILES_Y } from './config.js'
+import { normalizeDecorationSettings } from './game/decorationSettings.js'
 
 export const gameState = {
   money: 20000,
@@ -308,20 +309,7 @@ export const gameState = {
 
   // Number of generated ore fields for map generation
   mapTopologyFingerprint: null,
-  citySeeds: 4,
-  cityClusterSize: 8,
-  cityDensityFactor: 100,
-  ruinSeeds: 3,
-  ruinClusterSize: 7,
-  lakeCount: 110,
-  decorativeTileCount: 34,
-  stoneCount: 1,
-  woodClusterCount: 4,
-  woodClusterRadius: 11,
-  singleTreeCount: 11,
-  woodsCount: 1,
-  otherVegetationCount: 6,
-  groundDetailCount: 15,
+  ...normalizeDecorationSettings(),
   mapOreFieldCount: 8,
   mapOreTotalValue: 64000,
   mapWaterPercent: 10,

@@ -64,17 +64,26 @@ describe('MapRenderer water rendering', () => {
     )
   })
 
-  it('[U02666] keeps street SOT transitions on street material instead of painting land', () => {
+  it('[U02666] draws the natural shore underneath a connected street corner in the organic road pass', () => {
     const mapRenderer = new MapRenderer(makeTextureManager())
-    mapRenderer.sotMask = [[null, { orientation: 'top-left', type: 'street' }], [null, null]]
-    mapRenderer.organicTerrain.drawBiomeTransition = vi.fn()
+    const mapGrid = [
+      [{ type: 'street' }, { type: 'street' }, { type: 'water' }],
+      [{ type: 'street' }, { type: 'water' }, { type: 'land', biome: 'sand' }],
+      [{ type: 'water' }, { type: 'water' }, { type: 'water' }]
+    ]
+    mapRenderer.computeSOTMask(mapGrid)
+    mapRenderer.organicTerrain.drawBiomeShore = vi.fn()
     mapRenderer.organicTerrain.drawTriangle = vi.fn()
 
-    mapRenderer.drawOrganicLandTransition({}, [[{ type: 'street' }, { type: 'water' }], [{ type: 'water' }, { type: 'water' }]], 1, 0, 20, 0)
+    mapRenderer.drawOrganicLandTransition({}, mapGrid, 1, 1, 32, 32)
+    expect(mapRenderer.organicTerrain.drawBiomeShore).toHaveBeenCalledWith(
+      expect.anything(), 1, 1, 32, 32, expect.any(Number), 6, 'sand'
+    )
+    expect(mapRenderer.organicTerrain.drawTriangle).not.toHaveBeenCalled()
 
-    expect(mapRenderer.organicTerrain.drawBiomeTransition).not.toHaveBeenCalled()
-    expect(mapRenderer.organicTerrain.drawTriangle).toHaveBeenCalledWith(
-      expect.anything(), 1, 0, 20, 0, expect.any(Number), 'top-left', 'street'
+    mapRenderer.organicTerrain.drawRoadFringe({}, mapGrid, 1, 1, 32, 32, 32)
+    expect(mapRenderer.organicTerrain.drawTriangle).toHaveBeenCalledExactlyOnceWith(
+      expect.anything(), 1, 1, 32, 32, 32, 'top-left', 'street'
     )
   })
 
@@ -996,7 +1005,7 @@ describe('MapRenderer water rendering', () => {
     expect(mapRenderer.sotMask[2][2]).toEqual({ orientation: 'top-left', type: 'street' })
   })
 
-  it('[U02706] gives street material ownership to mixed street-land corners over water', () => {
+  it('[U02706] keeps asphalt out of mixed street-land corners over water', () => {
     const mapRenderer = new MapRenderer(makeTextureManager())
     const mapGrid = Array.from({ length: 5 }, () => Array.from({ length: 5 }, () => ({ type: 'water' })))
     mapGrid[1][2] = { type: 'street' }
@@ -1004,7 +1013,7 @@ describe('MapRenderer water rendering', () => {
 
     mapRenderer.computeSOTMask(mapGrid)
 
-    expect(mapRenderer.sotMask[2][2]).toEqual({ orientation: 'top-left', type: 'street' })
+    expect(mapRenderer.sotMask[2][2]).toBeNull()
   })
 
   it('[U02707] does not add street SOT for non-full street corners', () => {

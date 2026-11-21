@@ -54,7 +54,7 @@ function findForcedAttackTargetForBuilding(worldX, worldY, units, selectionManag
 
   if (gameState.buildings && gameState.buildings.length > 0) {
     for (const building of gameState.buildings) {
-      if (!building || building.health <= 0 || selectionManager.isHumanPlayerBuilding(building)) {
+      if (!building || building.type === 'street' || building.health <= 0 || selectionManager.isHumanPlayerBuilding(building)) {
         continue
       }
       const buildingX = building.x * TILE_SIZE
@@ -96,7 +96,7 @@ export function handleForceAttackCommand(handler, worldX, worldY, units, selecte
     } else {
       if (gameState.buildings && gameState.buildings.length > 0) {
         for (const building of gameState.buildings) {
-          if (selectionManager.isHumanPlayerBuilding(building)) {
+          if (building.type !== 'street' && selectionManager.isHumanPlayerBuilding(building)) {
             const buildingX = building.x * TILE_SIZE
             const buildingY = building.y * TILE_SIZE
             const buildingWidth = building.width * TILE_SIZE
@@ -136,6 +136,8 @@ export function handleForceAttackCommand(handler, worldX, worldY, units, selecte
     }
 
     if (!forceAttackTarget) {
+      if (mapGrid[targetTileY]?.[targetTileX]?.building?.type === 'street') return false
+
       forceAttackTarget = {
         id: `ground_${targetTileX}_${targetTileY}_${Date.now()}`,
         type: 'groundTarget',
@@ -433,7 +435,7 @@ export function handleStandardCommands(handler, worldX, worldY, selectedUnits, u
     })
 
     const clickedFriendlyBuilding = (gameState.buildings || []).some(building => {
-      if (!building || building.health <= 0) return false
+      if (!building || building.type === 'street' || building.health <= 0) return false
       const isFriendly =
         building.owner === humanPlayer ||
         (humanPlayer === 'player1' && building.owner === 'player')

@@ -13,8 +13,8 @@ export const DECORATION_PART_KEYS = Object.freeze([
 ])
 
 // Piece counts from the legacy probabilistic placer on an open 200×200 map.
-// Defaults are about 3% of that mix. Lakes default to about 30% of the legacy
-// lake count. Raising a control restores the fuller map.
+// Minor ground details start sparse, with higher budgets for trees and woods
+// and a small number of decorative lakes.
 export const DECORATION_FULL_REFERENCE = Object.freeze({
   stoneCount: 40,
   singleTreeCount: 350,
@@ -25,14 +25,14 @@ export const DECORATION_FULL_REFERENCE = Object.freeze({
 })
 
 export const DECORATION_DEFAULT_SCALE = 0.03
-export const LAKE_DEFAULT_SCALE = 0.3
+export const LAKE_DEFAULT_SCALE = 0.05
 
 const scaledReference = (key, scale) => Math.round(DECORATION_FULL_REFERENCE[key] * scale)
 
 const PART_DEFAULTS = Object.freeze({
   stoneCount: scaledReference('stoneCount', DECORATION_DEFAULT_SCALE),
-  singleTreeCount: scaledReference('singleTreeCount', DECORATION_DEFAULT_SCALE),
-  woodsCount: scaledReference('woodsCount', DECORATION_DEFAULT_SCALE),
+  singleTreeCount: 80,
+  woodsCount: 10,
   otherVegetationCount: scaledReference('otherVegetationCount', DECORATION_DEFAULT_SCALE),
   groundDetailCount: scaledReference('groundDetailCount', DECORATION_DEFAULT_SCALE)
 })
@@ -49,7 +49,7 @@ export const DECORATION_SETTINGS = Object.freeze({
   lakeCount: { default: scaledReference('lakeCount', LAKE_DEFAULT_SCALE), min: 0, max: 800 },
   decorativeTileCount: { default: DECORATIVE_TILE_DEFAULT, min: 0, max: DECORATIVE_TILE_MAX },
   stoneCount: { default: PART_DEFAULTS.stoneCount, min: 0, max: 400 },
-  woodClusterCount: { default: 4, min: 0, max: 24 },
+  woodClusterCount: { default: 8, min: 0, max: 24 },
   woodClusterRadius: { default: 11, min: 3, max: 30 },
   singleTreeCount: { default: PART_DEFAULTS.singleTreeCount, min: 0, max: 2000 },
   woodsCount: { default: PART_DEFAULTS.woodsCount, min: 0, max: 400 },

@@ -139,7 +139,7 @@ export function handleContextMenu(e, gameCanvas) {
 export function findEnemyTarget(worldX, worldY, gameFactories, units) {
   if (gameState.buildings && gameState.buildings.length > 0) {
     for (const building of gameState.buildings) {
-      if (isEnemyRelativeToHuman(building.owner)) {
+      if (building.type !== 'street' && isEnemyRelativeToHuman(building.owner)) {
         const buildingX = building.x * TILE_SIZE
         const buildingY = building.y * TILE_SIZE
         const buildingWidth = building.width * TILE_SIZE

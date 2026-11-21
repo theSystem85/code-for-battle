@@ -28,12 +28,14 @@ function sprite(id, tags, width = 1, height = width) {
 const anchors = layout => layout.cells.filter(cell => cell && cell.offsetX === 0 && cell.offsetY === 0)
 
 describe('decoration count settings', () => {
-  it('[U05498] defaults to about 3% of the legacy decoration mix and 30% of the legacy lakes', () => {
+  it('[U05498] defaults to more trees and woods, sparse ground details, and fewer lakes', () => {
     const defaults = normalizeDecorationSettings()
-    const full = DECORATION_PART_KEYS.reduce((sum, key) => sum + DECORATION_FULL_REFERENCE[key], 0)
-    expect(defaults.decorativeTileCount / full).toBeCloseTo(DECORATION_DEFAULT_SCALE, 2)
     expect(defaults.lakeCount / DECORATION_FULL_REFERENCE.lakeCount).toBeCloseTo(LAKE_DEFAULT_SCALE, 2)
-    for (const key of DECORATION_PART_KEYS) {
+    expect(defaults.lakeCount).toBe(18)
+    expect(defaults.singleTreeCount).toBe(80)
+    expect(defaults.woodsCount).toBe(10)
+    expect(defaults.woodClusterCount).toBe(8)
+    for (const key of ['stoneCount', 'otherVegetationCount', 'groundDetailCount']) {
       expect(defaults[key]).toBe(Math.round(DECORATION_FULL_REFERENCE[key] * DECORATION_DEFAULT_SCALE))
     }
     expect(defaults.decorativeTileCount).toBe(DECORATION_PART_KEYS.reduce((sum, key) => sum + defaults[key], 0))
@@ -64,7 +66,7 @@ describe('decoration count settings', () => {
     }
     const original = computeMapTopologyFingerprint({ enabled: true, sheets: [sheet] })
     expect(computeMapTopologyFingerprint({ enabled: true, sheets: [sheet], decorativeTileCount: 999 })).toBe(original)
-    expect(computeMapTopologyFingerprint({ enabled: true, sheets: [sheet], singleTreeCount: 80 })).not.toBe(original)
+    expect(computeMapTopologyFingerprint({ enabled: true, sheets: [sheet], singleTreeCount: 81 })).not.toBe(original)
     expect(computeMapTopologyFingerprint({ enabled: true, sheets: [sheet], lakeCount: 3 })).not.toBe(original)
   })
 

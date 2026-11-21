@@ -293,7 +293,7 @@ export function updateEnemyHover(handler, worldX, worldY, units, factories, sele
     if (!isOverEnemy && gameState.buildings && gameState.buildings.length > 0) {
       const humanPlayer = gameState.humanPlayer || 'player1'
       for (const building of gameState.buildings) {
-        if (building.owner !== humanPlayer && !(humanPlayer === 'player1' && building.owner === 'player')) {
+        if (building.type !== 'street' && building.owner !== humanPlayer && !(humanPlayer === 'player1' && building.owner === 'player')) {
           const buildingX = building.x * TILE_SIZE
           const buildingY = building.y * TILE_SIZE
           const buildingWidth = building.width * TILE_SIZE
@@ -332,7 +332,7 @@ export function updateEnemyHover(handler, worldX, worldY, units, factories, sele
         const isFriendlyBuilding =
           building.owner === humanPlayer ||
           (humanPlayer === 'player1' && building.owner === 'player')
-        if (!isFriendlyBuilding || building.health <= 0) {
+        if (!isFriendlyBuilding || building.type === 'street' || building.health <= 0) {
           continue
         }
 
@@ -1205,7 +1205,7 @@ function handleUnitSelection(handler, worldX, worldY, e, units, factories, selec
   let clickedBuilding = null
   if (gameState.buildings && gameState.buildings.length > 0) {
     for (const building of gameState.buildings) {
-      if (!building || building.health <= 0 || building.selectable === false) continue
+      if (!building || building.type === 'street' || building.health <= 0 || building.selectable === false) continue
 
       const buildingX = building.x * TILE_SIZE
       const buildingY = building.y * TILE_SIZE

@@ -13,7 +13,7 @@ import {
   MOBILE_CANVAS_PIXEL_RATIO_CAP
 } from '../config.js'
 import { IOS_MAX_CANVAS_PIXEL_RATIO, IOS_TERRAIN_RESIDENT_BUDGET_BYTES, isIosWebKit, terrainCacheLimits } from './iosCanvasBudget.js'
-import { getSotDrawOffset, OrganicTerrain, shorelineCornerMask } from './organicTerrain.js'
+import { getSotDrawOffset, OrganicTerrain, roadFringeMask, shorelineCornerMask } from './organicTerrain.js'
 import { getTileDecalSignature, isDecalBlockedTile } from '../game/tileDecals.js'
 import { hasFixedOccupancy, hasMovableOccupancy } from '../game/occupancyTags.js'
 import { getCanvasLogicalSize } from './renderingUtils.js'
@@ -546,32 +546,14 @@ export class MapRenderer {
 
     const isLandLike = tile => tile && (tile.type === 'land' || tile.type === 'street' || tile.type === 'rock')
 
-    // Coastline smoothing for water tiles near land/street/rock: draw biome land triangles on water,
-    // i.e. the ground cuts into water instead of water cutting street overlays.
+    // Only draw asphalt over water when both legs connect through the diagonal.
     if (tileType === 'water') {
-      const streetSotInfo = this.computeFullStreetSOTForTile(mapGrid, x, y, top, right, bottom, left)
-      if (streetSotInfo) return streetSotInfo
+      const fringe = roadFringeMask(mapGrid, x, y)
+      if (fringe & 1) return { orientation: 'top-left', type: 'street' }
+      if (fringe & 2) return { orientation: 'top-right', type: 'street' }
+      if (fringe & 4) return { orientation: 'bottom-right', type: 'street' }
+      if (fringe & 8) return { orientation: 'bottom-left', type: 'street' }
 
-      if (isLandLike(top) && isLandLike(left) && (top.type === 'street' || left.type === 'street')) {
-        return canApplySotCorner(mapGrid, x, y, tileType, 'top-left', top, right, bottom, left, analysisCache)
-          ? { orientation: 'top-left', type: 'street' }
-          : null
-      }
-      if (isLandLike(top) && isLandLike(right) && (top.type === 'street' || right.type === 'street')) {
-        return canApplySotCorner(mapGrid, x, y, tileType, 'top-right', top, right, bottom, left, analysisCache)
-          ? { orientation: 'top-right', type: 'street' }
-          : null
-      }
-      if (isLandLike(bottom) && isLandLike(left) && (bottom.type === 'street' || left.type === 'street')) {
-        return canApplySotCorner(mapGrid, x, y, tileType, 'bottom-left', top, right, bottom, left, analysisCache)
-          ? { orientation: 'bottom-left', type: 'street' }
-          : null
-      }
-      if (isLandLike(bottom) && isLandLike(right) && (bottom.type === 'street' || right.type === 'street')) {
-        return canApplySotCorner(mapGrid, x, y, tileType, 'bottom-right', top, right, bottom, left, analysisCache)
-          ? { orientation: 'bottom-right', type: 'street' }
-          : null
-      }
       if ((top?.type === 'rock' || left?.type === 'rock') && isLandLike(top) && isLandLike(left)) {
         return canApplySotCorner(mapGrid, x, y, tileType, 'top-left', top, right, bottom, left, analysisCache)
           ? { orientation: 'top-left', type: 'land' }
@@ -2299,11 +2281,6 @@ export class MapRenderer {
   drawOrganicLandTransition(ctx, mapGrid, tileX, tileY, screenX, screenY) {
     const tile = mapGrid?.[tileY]?.[tileX]
     if (!tile || tile.type !== 'water' || tile.airstripStreet) return
-    const sot = this.sotMask?.[tileY]?.[tileX]
-    if (sot?.type === 'street') {
-      this.organicTerrain.drawTriangle(ctx, tileX, tileY, screenX, screenY, TILE_SIZE, sot.orientation, 'street')
-      return
-    }
     const mask = shorelineCornerMask(mapGrid, tileX, tileY)
     if (!mask) return
     for (const [dx, dy] of SHORE_SOURCE_OFFSETS) {

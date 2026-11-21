@@ -196,7 +196,7 @@ export class AttackGroupHandler {
 
     if (gameState.buildings) {
       for (const building of gameState.buildings) {
-        if (!isHumanPlayerTarget(building) && building.health > 0) {
+        if (building.type !== 'street' && !isHumanPlayerTarget(building) && building.health > 0) {
           const buildingCenterX = (building.x + building.width / 2) * TILE_SIZE
           const buildingCenterY = (building.y + building.height / 2) * TILE_SIZE
 

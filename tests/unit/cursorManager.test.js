@@ -341,6 +341,22 @@ describe('CursorManager', () => {
     expect(canvas.classList.contains('attack-out-of-range-mode')).toBe(true)
   })
 
+  it('[U07309] uses the default cursor when force attack is held over a built street', () => {
+    const manager = new CursorManager()
+    const canvas = createCanvas()
+    const mapGrid = createTestMapGrid(5, 5)
+    const selectedUnits = [{ owner: 'player1', type: 'tank' }]
+    setTileAt(mapGrid, 1, 1, { type: 'street', building: { type: 'street' }, buildOnlyOccupied: 1 })
+    manager.updateForceAttackMode(true)
+
+    manager.updateCustomCursor(createMouseEvent(TILE_SIZE + 1, TILE_SIZE + 1), mapGrid, [], selectedUnits)
+    expect(canvas.style.cursor).toBe(GAME_DEFAULT_CURSOR)
+    expect(canvas.classList.contains('attack-mode')).toBe(false)
+
+    manager.updateCustomCursor(createMouseEvent(TILE_SIZE * 2 + 1, TILE_SIZE + 1), mapGrid, [], selectedUnits)
+    expect(canvas.classList.contains('attack-mode')).toBe(true)
+  })
+
   it('[U01124] shows guard cursor when guard mode is active', () => {
     const manager = new CursorManager()
     const canvas = createCanvas()

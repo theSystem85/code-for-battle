@@ -16,6 +16,8 @@ function canCommandUnitAttackTarget(unit, target) {
 }
 
 export function handleAttackCommand(handler, selectedUnits, target, mapGrid, isForceAttack = false, skipQueueClear = false) {
+  if (target?.type === 'street') return
+
   const now = performance.now()
   if (!handler.isAttackGroupOperation) {
     clearAttackGroupState(selectedUnits)

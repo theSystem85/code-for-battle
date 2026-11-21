@@ -993,7 +993,7 @@ export function setServiceDiscoveryRange(value) {
 }
 
 // Effective service range for utility vehicles (defaults to close support distance)
-export let SERVICE_SERVING_RANGE = 1.75
+export let SERVICE_SERVING_RANGE = 1.75 * 1.25
 
 export function setServiceServingRange(value) {
   SERVICE_SERVING_RANGE = value
@@ -1338,7 +1338,7 @@ export const UNIT_PROPERTIES = {
     impactVfxProfile: 'sparky',
     health: 70,
     maxHealth: 70,
-    speed: 0.46, // ~1.4x tank_v1 speed
+    speed: 0.429, // 30% faster than the standard tank (0.33)
     rotationSpeed: TANK_WAGON_ROT * 1.3,
     turretRotationSpeed: TANK_TURRET_ROT * 1.5,
     armor: 0.8 // light armor: damage is divided by armor, so it takes 25% more damage
@@ -1737,7 +1737,7 @@ export function setAmmoFactoryRange(value) {
   AMMO_FACTORY_RANGE = value
 }
 
-export let AMMO_TRUCK_RANGE = 1.75 // tiles for ammunition supply truck resupply range
+export let AMMO_TRUCK_RANGE = 1.75 * 1.25 // tiles for ammunition supply truck resupply range
 
 export function setAmmoTruckRange(value) {
   AMMO_TRUCK_RANGE = value

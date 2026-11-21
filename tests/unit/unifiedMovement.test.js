@@ -138,11 +138,13 @@ describe('unifiedMovement.js', () => {
   })
 
   it.each([0, Math.PI / 4])('[U07090] bounds a fast ambulance step before it reaches its patient at angle %s', angle => {
+    const servingDistance = 70
+    const startingDistance = servingDistance + 14
     const map = Array.from({ length: 20 }, () => Array.from({ length: 20 }, () => ({ type: 'street' })))
     const target = { id: 'patient', type: 'tank_v1', owner: 'player1', x: 320, y: 320, tileX: 10, tileY: 10 }
     const unit = {
       id: 'provider', type: 'ambulance', owner: 'player1', health: 100,
-      x: 320 - 70 * Math.cos(angle), y: 320 - 70 * Math.sin(angle), tileX: 8, tileY: 10, direction: angle,
+      x: 320 - startingDistance * Math.cos(angle), y: 320 - startingDistance * Math.sin(angle), tileX: 8, tileY: 10, direction: angle,
       path: [{ x: 10, y: 10 }], moveTarget: { x: 10, y: 10 }, healingTarget: target
     }
     initializeUnitMovement(unit)
@@ -151,11 +153,11 @@ describe('unifiedMovement.js', () => {
     unit.movement.isMoving = true
     for (let tick = 0; tick < 10; tick++) {
       updateUnitPosition(unit, map, null, tick * 16, [unit, target], { buildings: [], unitWrecks: [] })
-      expect(Math.hypot(unit.x - target.x, unit.y - target.y)).toBeGreaterThanOrEqual(56 - 0.002)
+      expect(Math.hypot(unit.x - target.x, unit.y - target.y)).toBeGreaterThanOrEqual(servingDistance - 0.002)
       expect(target.x).toBe(320)
       expect(target.moveTarget).toBeUndefined()
     }
-    expect(Math.hypot(unit.x - target.x, unit.y - target.y)).toBeLessThanOrEqual(56)
+    expect(Math.hypot(unit.x - target.x, unit.y - target.y)).toBeLessThanOrEqual(servingDistance)
     expect(unit.movement.isMoving).toBe(false)
     expect(unit.moveTarget).toBeNull()
   })

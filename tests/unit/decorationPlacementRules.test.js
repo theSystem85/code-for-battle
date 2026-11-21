@@ -156,15 +156,16 @@ describe('natural decoration preparation', () => {
 
   it('[U01209] grows separate seeded forest, rock and farm patches on matching biomes', () => {
     const map = grid()
-    const clusters = buildCategoryClusters(map, { salt: 688, woodClusterCount: 4, woodClusterRadius: 11 })
-    expect(buildCategoryClusters(map, { salt: 688, woodClusterCount: 4, woodClusterRadius: 11 })).toEqual(clusters)
+    const settings = { salt: 688, woodClusterCount: 4, woodClusterRadius: 11 }
+    const clusters = buildCategoryClusters(map, settings)
+    expect(buildCategoryClusters(map, settings)).toEqual(clusters)
     expect(buildCategoryClusters(map, { salt: 689 }).trees.centers).not.toEqual(clusters.trees.centers)
     expect(clusters.trees.centers).not.toEqual(clusters.rocks.centers)
     for (const category of ['trees', 'rocks', 'farm']) {
       const center = clusters[category].centers[0]
       expect(categoryClusterAllows(group(category, [category]), center.x, center.y, 'grass', clusters)).toBe(true)
       expect(categoryClusterAllows(group(category, [category]), center.x, center.y, 'snow', clusters)).toBe(false)
-      const layout = buildDecorationLayout(map, buildDecorationPools([group(category, [category])]), { salt: 688 })
+      const layout = buildDecorationLayout(map, buildDecorationPools([group(category, [category])]), settings)
       expect(anchors(layout).length).toBeGreaterThan(0)
       for (const cell of anchors(layout)) expect(categoryClusterAllows(cell.group, cell.anchorX, cell.anchorY, cell.biome, clusters)).toBe(true)
     }

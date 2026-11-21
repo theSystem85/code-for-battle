@@ -207,3 +207,30 @@ describe('mouseCommands fallback defense-building targeting', () => {
     expect(wing.guardTarget).toBe(friendly)
   })
 })
+
+describe('built streets in mouse commands', () => {
+  it.each(['player1', 'enemy'])('[U07306] moves onto a %s street on normal click and ignores force attack', owner => {
+    const street = { type: 'street', owner, x: 0, y: 0, width: 1, height: 1, health: 100 }
+    const unit = { id: 'tank', type: 'tank_v1', owner: 'player1' }
+    const mapGrid = [[{ type: 'street', building: street }]]
+    const buildings = gameState.buildings
+    gameState.buildings = [street]
+    const selectionManager = {
+      isCommandableUnit: () => true,
+      isHumanPlayerBuilding: building => building.owner === 'player1',
+      isHumanPlayerUnit: () => false,
+      clearWreckSelection: vi.fn()
+    }
+    const handler = { selectionManager, gameUnits: [unit], gameFactories: [] }
+    const unitCommands = { handleMovementCommand: vi.fn(), handleAttackCommand: vi.fn() }
+
+    try {
+      handleStandardCommands(handler, 5, 5, [unit], unitCommands, mapGrid)
+      expect(unitCommands.handleMovementCommand).toHaveBeenCalledOnce()
+      expect(handleForceAttackCommand(handler, 5, 5, [unit], [unit], unitCommands, mapGrid, selectionManager)).toBe(false)
+      expect(unitCommands.handleAttackCommand).not.toHaveBeenCalled()
+    } finally {
+      gameState.buildings = buildings
+    }
+  })
+})

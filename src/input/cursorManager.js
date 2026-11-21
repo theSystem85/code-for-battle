@@ -1208,6 +1208,10 @@ export class CursorManager {
       }
 
       if (this.isForceAttackMode) {
+        if (hoveredTile?.building?.type === 'street' && !this.isOverEnemy && !this.isOverFriendlyUnit && !findWreckAtTile(gameState, tileX, tileY)) {
+          setCursor('default')
+          return
+        }
         if (isArtilleryTurretSelected) {
           if (this.isInArtilleryRange) {
             setAttackCursor()

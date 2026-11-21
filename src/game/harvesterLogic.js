@@ -26,6 +26,7 @@ import {
 } from './harvesterEligibility.js'
 import { notifyResourceTileMutation } from '../rendering/prepared/mapMutationNotifier.js'
 import { grantHarvesterStars } from './veterancy.js'
+import { HARVESTER_BASE_CARGO_VALUE } from './oreValue.js'
 
 // Track tiles currently being harvested
 const harvestedTiles = new Set()
@@ -50,7 +51,6 @@ const HARVESTER_MANUAL_REPATH_INTERVAL_MS = 1000
 const HARVESTER_LONG_TERM_STAGNATION_MS = 60000
 const HARVESTER_LONG_TERM_RECOVERY_COOLDOWN_MS = 5000
 const HARVESTER_GOAL_PROGRESS_EPSILON_TILES = 0.2
-const HARVESTER_BASE_CARGO_VALUE = 1000
 
 function getHarvesterCargoCapacity(unit) {
   const level = Math.max(0, Math.min(3, Number.isFinite(unit?.level) ? unit.level : 0))

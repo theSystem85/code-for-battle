@@ -193,7 +193,7 @@ test('[E00084] shoreline water is composited before the terrain transition pass'
       [{ type: 'land' }, { type: 'water' }],
       [{ type: 'water' }, { type: 'water' }]
     ]
-    renderer.render({}, grid, { x: 0, y: 0 }, canvas, {}, null, { separateWaterLayer: true })
+    renderer.render(canvas.getContext('2d'), grid, { x: 0, y: 0 }, canvas, {}, null, { separateWaterLayer: true })
 
     const sotRenderer = new MapRenderer(new TextureManager())
     sotRenderer.sotMask = [[null, null], [null, { type: 'land', orientation: 'top-left' }]]
@@ -204,19 +204,23 @@ test('[E00084] shoreline water is composited before the terrain transition pass'
       [{ type: 'water' }, { type: 'water' }]
     ], 1, 1, 32, 32)
 
-    sotRenderer.sotMask[1][1] = { type: 'street', orientation: 'bottom-right' }
-    let streetSot = null
-    sotRenderer.organicTerrain.drawTriangle = (_ctx, _x, _y, _sx, _sy, _size, orientation, type) => { streetSot = { orientation, type } }
-    sotRenderer.drawOrganicLandTransition({}, [
-      [{ type: 'water' }, { type: 'water' }],
-      [{ type: 'water' }, { type: 'water' }]
-    ], 1, 1, 32, 32)
-    return { events, landSot, streetSot }
+    const naturalShore = landSot
+    const mixedCoast = [
+      [{ type: 'street' }, { type: 'street' }],
+      [{ type: 'land', biome: 'sand' }, { type: 'water' }]
+    ]
+    sotRenderer.computeSOTMask(mixedCoast)
+    let asphaltDraws = 0
+    sotRenderer.organicTerrain.drawTriangle = () => { asphaltDraws++ }
+    sotRenderer.drawOrganicLandTransition({}, mixedCoast, 1, 1, 32, 32)
+    sotRenderer.organicTerrain.drawRoadFringe({}, mixedCoast, 1, 1, 32, 32, 32)
+    return { events, landSot: naturalShore, asphaltDraws, mixedCorner: sotRenderer.sotMask[1][1] }
   })
 
   expect(result.events).toEqual(['water', 'terrain'])
   expect(result.landSot).toEqual({ mask: 1, biome: 'sand' })
-  expect(result.streetSot).toEqual({ orientation: 'bottom-right', type: 'street' })
+  expect(result.asphaltDraws).toBe(0)
+  expect(result.mixedCorner).toBeNull()
 })
 
 test('[E00085] terrain combat performance at DPR 2', async({ page }, testInfo) => {

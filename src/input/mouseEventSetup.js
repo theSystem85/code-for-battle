@@ -2,6 +2,7 @@ import { TILE_SIZE } from '../config.js'
 import { gameState } from '../gameState.js'
 import { handlePointerDown as handleMapEditPointerDown, handlePointerMove as handleMapEditPointerMove, handlePointerUp as handleMapEditPointerUp } from '../mapEditor.js'
 import { setupMapPanning } from './mapPanning.js'
+import { setupOreTooltip } from './oreTooltip.js'
 import { hideLlmQueueTooltip } from '../ui/llmQueueTooltip.js'
 import { isLocalPartyAutomationLocked } from '../network/multiplayerStore.js'
 import { keybindingManager, KEYBINDING_CONTEXTS } from './keybindings.js'
@@ -12,6 +13,7 @@ export function setupMouseEvents(handler, gameCanvas, units, factories, mapGrid,
   handler.gameUnits = units
   handler.selectionManager = selectionManager
   setupMapPanning(gameCanvas, mapGrid, () => handler.requestRenderFrame?.())
+  setupOreTooltip(gameCanvas, mapGrid)
 
   gameCanvas.addEventListener('click', event => {
     if (event.isTrusted && performance.now() < (handler.touchModeClickUntil || 0)) {
