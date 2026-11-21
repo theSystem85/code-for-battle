@@ -5,6 +5,7 @@ import { normalizeDecorationSettings } from '../game/decorationSettings.js'
 import { getCityBuildings, applyCitySnapshot } from '../game/cityBuildings.js'
 import { applyProductionCompletionAck, getCompletionReceipt } from '../policies/completionReceipts.js'
 import { exportAutomationSession, restoreAutomationSession, getPolicyStoreVersion } from '../policies/policyStore.js'
+import { exportPerkState, restorePerkState } from '../perks/perkState.js'
 /**
  * Game State Synchronization Module
  * Handles state snapshots, interpolation, and synchronization between host and clients
@@ -704,6 +705,7 @@ export function createGameStateSnapshot({ fullAutomation = false } = {}) {
   lastAutomationSourceVersion = automationVersion
   const burnedFuel = []
   return {
+    perks: exportPerkState(),
     automationSession,
     units,
     buildings,
@@ -1343,6 +1345,7 @@ export function applyGameStateSnapshot(snapshot) {
     gameState.unitWrecks = updatedWrecks
   }
 
+  if (snapshot.perks) restorePerkState(snapshot.perks)
   if (snapshot.automationSession) restoreAutomationSession(snapshot.automationSession, [...mainUnits, ...(gameState.buildings || []), ...mainFactories], { authority: 'host-snapshot' })
   lastSnapshotTime = now
 }

@@ -536,6 +536,11 @@
                   <div class="batch-counter" style="display:none">0</div>
                   <div class="new-label" style="display:none">NEW</div>
                 </button>
+                <button class="production-button" data-building-type="commandCenter">
+                  <img draggable="true" src="images/sidebar/placeholder.webp" data-src="images/sidebar/command_center.webp" alt="Command Center" loading="lazy">
+                  <span class="building-name">Command Center</span><span class="building-cost"></span><span class="building-power"></span>
+                  <div class="production-progress"></div><div class="batch-counter" style="display:none">0</div><div class="new-label" style="display:none">NEW</div>
+                </button>
                 <button class="production-button" data-building-type="shipyard">
                   <img draggable="true" src="images/sidebar/placeholder.webp" data-src="images/sidebar/shipyard_sidebar.webp"
                     alt="Shipyard" loading="lazy">
@@ -1288,6 +1293,9 @@
       </div>
       <div class="config-modal__body">
         <div class="config-modal__content config-modal__content--active" data-config-tab-panel="runtime">
+          <label class="config-modal__field" for="settingsAutomationPerkMode"><span>Automation perks</span>
+            <select id="settingsAutomationPerkMode"><option value="required">Required</option><option value="allUnlocked">All unlocked (sandbox)</option></select>
+          </label>
           <p class="config-modal__hint">
             Runtime configuration editing still uses the advanced dialog. Open it to tweak live values without
             restarting the match.

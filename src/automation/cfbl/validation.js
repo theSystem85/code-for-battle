@@ -1,5 +1,7 @@
 import { getCatalog } from './catalog.js'
 import { completionWaitKind } from '../../policies/policyEffects.js'
+import { gameState } from '../../gameState.js'
+import { isItemUnlocked } from '../../perks/perkState.js'
 
 export function validateCFBL(ast) {
   const diagnostics = []
@@ -9,6 +11,7 @@ export function validateCFBL(ast) {
   }
   if (!ast || !['unit', 'build', 'unitBuild', 'defence'].includes(ast.variant)) { issue('category', 'Unknown automation category.'); return diagnostics }
   const catalog = getCatalog(ast.variant)
+  const ownerId = gameState.humanPlayer || 'player1'
   if (!['global', 'perUnit'].includes(ast.scope) || ['build', 'unitBuild'].includes(ast.variant) && ast.scope !== 'global') issue('scope', 'Production automation requires global scope.')
   if (!['continuous', 'oneTime'].includes(ast.execution)) issue('execution', 'Unknown execution mode.')
   const states = ast.states || []
@@ -30,6 +33,7 @@ export function validateCFBL(ast) {
       if (!Array.isArray(children) || !children.length) { issue('condition', 'Empty boolean group.', node); return }
       children.forEach(child => condition(child, depth + 1))
     } else if (node.type === 'compare') {
+      if (!isItemUnlocked(ownerId, ast.variant, 'condition', node.field)) issue('perk-locked', `${node.field} requires a Command Center perk.`, node)
       const meta = catalog.fields[node.field]
       params(node, meta, ['type', 'field', 'mode', 'op', 'value', 'range'])
       if (!meta) return
@@ -37,12 +41,16 @@ export function validateCFBL(ast) {
       if (!meta.modes.includes(mode)) issue('comparison_mode', 'Unavailable comparison mode.', node)
       const range = mode === 'relative' ? meta.range : meta.absRange
       if (!['==', '<=', '>=', '<', '>'].includes(node.op) || !Number.isFinite(node.value) || range && (node.value < range[0] || node.value > range[1])) issue('comparison_domain', 'Invalid comparison operator or value.', node)
-    } else if (node.type === 'check') params(node, catalog.checks[node.check], ['type', 'check', 'range'])
-    else if (!['always', ...(['unit', 'defence'].includes(ast.variant) ? ['enemyInRange', 'underFire'] : [])].includes(node.type)) issue('condition', 'Unknown or unavailable condition.', node)
+    } else if (node.type === 'check') {
+      if (!isItemUnlocked(ownerId, ast.variant, 'condition', node.check)) issue('perk-locked', `${node.check} requires a Command Center perk.`, node)
+      params(node, catalog.checks[node.check], ['type', 'check', 'range'])
+    } else if (!['always', ...(['unit', 'defence'].includes(ast.variant) ? ['enemyInRange', 'underFire'] : [])].includes(node.type)) issue('condition', 'Unknown or unavailable condition.', node)
+    else if (!isItemUnlocked(ownerId, ast.variant, 'condition', node.type)) issue('perk-locked', `${node.type} requires a Command Center perk.`, node)
   }
   states.forEach((state, index) => {
     if (state.id !== index + 1) issue('state_index', 'States must be declared in contiguous index order 1 through n.', state)
     if (state.effect) {
+      if (!isItemUnlocked(ownerId, ast.variant, 'effect', state.effect.type)) issue('perk-locked', `${state.effect.type} requires a Command Center perk.`, state.effect)
       params(state.effect, catalog.effects[state.effect.type], ['type', 'range', 'waitForCompletion'])
       if (state.effect.waitForCompletion !== undefined && typeof state.effect.waitForCompletion !== 'boolean') issue('completion_wait', 'Completion wait must be a boolean.', state)
       if (state.effect.waitForCompletion === true && !completionWaitKind(state.effect.type, ast.variant)) issue('completion_wait', 'This action has no finite completion objective.', state)

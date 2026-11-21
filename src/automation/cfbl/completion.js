@@ -2,6 +2,8 @@ import { CFBLParser, parseCFBL } from './parser.js'
 import { getCatalog } from './catalog.js'
 import { lexCFBL } from './lexer.js'
 import { decimal } from './printer.js'
+import { gameState } from '../../gameState.js'
+import { isItemUnlocked } from '../../perks/perkState.js'
 
 /** Fuzzy subsequence ranking shared by all contextual flyouts. */
 export function fuzzyOptions(options, query = '') {
@@ -55,7 +57,9 @@ export function completionContext(source, selection = source.length) {
         insertText += `.${mode} < ${decimal(Math.max(bounds[0], Math.min(bounds[1], 0)))}`
       }
     }
-    return { value, label: meta?.label || value, insertText, description: meta?.label || value }
+    const kind = expected?.slot === 'effects' ? 'effect' : 'condition'
+    const locked = ['effects', 'condition'].includes(expected?.slot) && !isItemUnlocked(gameState.humanPlayer || 'player1', parser.variant, kind, value)
+    return { value, label: `${locked ? '🔒 ' : ''}${meta?.label || value}`, insertText, description: meta?.label || value, disabled: locked, locked }
   })
   // On an accepted document, offer atomic complete edits, never a half-written call.
   if (complete) {
@@ -71,5 +75,6 @@ export function completionContext(source, selection = source.length) {
   if (complete && expected?.slot === 'state-index') numericDomain = undefined
   if (complete && expected?.slot === 'state-reference') numericDomain = { ...numericDomain, max: complete.states.length }
   const query = complete ? '' : token?.[0] || ''
+  options.sort((a, b) => Number(a.locked) - Number(b.locked))
   return { slot: expected?.slot || 'complete', legalOptions: fuzzyOptions(options, query), numericDomain, edits: { start, end }, query, variant: parser.variant }
 }

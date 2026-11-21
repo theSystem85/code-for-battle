@@ -49,6 +49,7 @@ export const BUILDABLE_TYPES = Object.freeze([
   { value: 'vehicleWorkshop', label: 'Vehicle workshop' },
   { value: 'constructionYard', label: 'Construction yard' },
   { value: 'radarStation', label: 'Radar station' },
+  { value: 'commandCenter', label: 'Command Center' },
   { value: 'hospital', label: 'Hospital' },
   { value: 'gasStation', label: 'Fuel station' },
   { value: 'ammunitionFactory', label: 'Ammo factory' },

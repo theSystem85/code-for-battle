@@ -3,6 +3,7 @@ import { compareValues, compareTolerance, conditionNeeds, defaultParams, effecti
 import { validatePolicy } from './policySchema.js'
 import { effectNeedsEnemy } from './policyEffects.js'
 import { stepPolicy } from './policyStep.js'
+import { requiredPerksForPolicy } from '../perks/perkState.js'
 
 export const COMPILED_PROGRAM_VERSION = 1
 const preparedStepOptions = new WeakMap()
@@ -97,6 +98,7 @@ export function compilePolicyProgram(policy, metadata = {}) {
     stateIndexToInternalId: Object.freeze(document.states.map(state => state.id)),
     conditionInstructions: Object.freeze(conditionInstructions),
     sensorDependencyMask: dependencies.enemy ? 1 : 0
+    , requiredPerks: requiredPerksForPolicy(document)
   })
   const gates = Object.create(null)
   for (const gate of ['open', 'orderRunning', 'paused']) gates[gate] = Object.freeze({ gate, program, evaluate: evaluatePrepared })

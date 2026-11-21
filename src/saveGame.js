@@ -7,6 +7,7 @@ import { BIOMES, biomeLayersSignature, upgradeBiomeTransitions } from './game/ma
 import { findCityBuildingById } from './game/cityBuildings.js'
 import { normalizeDecorationSettings } from './game/decorationSettings.js'
 import { exportAutomationSession, restoreAutomationSession, resetPolicyStore } from './policies/policyStore.js'
+import { exportPerkState, restorePerkState } from './perks/perkState.js'
 // saveGame.js
 import { clearChainBuildState, gameState } from './gameState.js'
 import { GAME_STATE_SCHEMA_VERSION } from './gameStateSchema.js'
@@ -885,6 +886,7 @@ function buildSaveObject(label, { includeMap = true, includeStaticConfiguration 
 
   const saveData = {
     schemaVersion: GAME_STATE_SCHEMA_VERSION,
+    perks: exportPerkState(),
     automationSession: exportAutomationSession([...units, ...gameState.buildings, ...factories]),
     gameState: {
       money: gameState.money,
@@ -1227,6 +1229,7 @@ function loadGameFromSaveObject(saveObj, key) {
     if (!loaded.automationSession) resetPolicyStore() // Old saves/replays cannot execute unrelated local automations.
     const previousTopologyFingerprint = gameState.mapTopologyFingerprint
     Object.assign(gameState, loaded.gameState)
+    restorePerkState(loaded.perks || loaded.gameState?.perks)
 
     gameState.speedMultiplier = Number.isFinite(loaded.gameState?.speedMultiplier)
       ? Math.max(0.5, Math.min(5, loaded.gameState.speedMultiplier))

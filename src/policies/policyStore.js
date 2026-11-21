@@ -11,6 +11,7 @@ import { compilePolicyProgram } from './policyCompiler.js'
 import { reconcileAutomationIdentity } from '../automation/automationIdentity.js'
 import { createPolicyRuntime } from './policyStep.js'
 import { parseCFBL, printCFBL, toMachine, fromLegacyMachine } from '../automation/cfbl/index.js'
+import { getAutomationPerkMode, hasLivingCommandCenter, ownsPerk, requiredPerksForPolicy } from '../perks/perkState.js'
 
 const LEGACY_STORAGE_KEY = 'cfb-unit-policies-v1'
 const STORAGE_KEY = 'cfb-automations-v2'
@@ -25,6 +26,9 @@ let receivedBindingSequence = null
 const runtimeProviders = new Map()
 const compiledPrograms = new Map()
 const DEFENCE_TYPES = new Set(['turretGunV1', 'turretGunV2', 'turretGunV3', 'rocketTurret', 'teslaCoil', 'artilleryTurret'])
+function automationUnlocked(ownerId, policy) {
+  return getAutomationPerkMode() === 'allUnlocked' || (hasLivingCommandCenter(ownerId) && [...requiredPerksForPolicy(policy)].every(perkId => ownsPerk(ownerId, perkId)))
+}
 function clearDefenceIntent(policyId) {
   boundEntities.forEach(entity => {
     if (entity.automationIntent?.issuerId === policyId) entity.automationIntent = null
@@ -468,6 +472,7 @@ export function isBuildAutomationOptedIn(ownerId) {
 export function setBuildAutomationOptIn(actorId, enabled, ownerId = actorId) {
   if (!restoring && !authoringAllowed()) return { ok: false, reason: 'replay-locked' }
   if (!actorId || !canCommandPolicy(actorId, ownerId)) return { ok: false, reason: 'not-owner' }
+  if (enabled && (getAutomationPerkMode() !== 'allUnlocked' && (!hasLivingCommandCenter(ownerId) || !ownsPerk(ownerId, 'cc.base.start')))) return { ok: false, reason: 'perk-locked' }
   const owner = normalizePolicyOwner(ownerId)
   if (enabled) buildOptIn.add(owner)
   else buildOptIn.delete(owner)
@@ -483,6 +488,7 @@ export function isUnitBuildAutomationOptedIn(ownerId) {
 export function setUnitBuildAutomationOptIn(actorId, enabled, ownerId = actorId) {
   if (!restoring && !authoringAllowed()) return { ok: false, reason: 'replay-locked' }
   if (!actorId || !canCommandPolicy(actorId, ownerId)) return { ok: false, reason: 'not-owner' }
+  if (enabled && (getAutomationPerkMode() !== 'allUnlocked' && (!hasLivingCommandCenter(ownerId) || !ownsPerk(ownerId, 'cc.prod.start')))) return { ok: false, reason: 'perk-locked' }
   const owner = normalizePolicyOwner(ownerId)
   if (enabled) unitBuildOptIn.add(owner)
   else unitBuildOptIn.delete(owner)
@@ -593,6 +599,7 @@ export function setPolicyEnabled(actorId, policyId, enabled) {
   if (!entry) return { ok: false, reason: 'missing' }
   if (!canCommandPolicy(actorId, entry.ownerId)) return { ok: false, reason: 'not-owner' }
   if (entry.policy.scope !== 'global') return { ok: false, reason: 'not-global' }
+  if (enabled && !automationUnlocked(entry.ownerId, entry.policy)) return { ok: false, reason: 'perk-locked' }
   if (enabled) globalEnabled.add(policyId)
   else { globalEnabled.delete(policyId); clearDefenceIntent(policyId) }
   if (entry.policy.variant === 'defence') boundEntities.forEach(entity => {
@@ -633,6 +640,7 @@ export function applyPolicyToUnit(actorId, unit, policyId) {
   if (!entry) return { ok: false, reason: 'missing' }
   if (entry.policy.variant !== 'unit') return { ok: false, reason: 'build-policy' }
   if (entry.policy.scope !== 'perUnit') return { ok: false, reason: 'not-per-unit' }
+  if (!automationUnlocked(entry.ownerId, entry.policy)) return { ok: false, reason: 'perk-locked' }
   if (!unit || !canCommandPolicy(actorId, unit.owner) || !canCommandPolicy(actorId, entry.ownerId)) {
     return { ok: false, reason: 'not-owner' }
   }
@@ -673,6 +681,7 @@ export function applyPolicyToBuilding(actorId, building, policyId) {
   const entry = documents.get(policyId)
   if (!entry) return { ok: false, reason: 'missing' }
   if (entry.policy.variant !== 'defence' || entry.policy.scope !== 'perUnit') return { ok: false, reason: 'not-defence-control' }
+  if (!automationUnlocked(entry.ownerId, entry.policy)) return { ok: false, reason: 'perk-locked' }
   if (!building?.isBuilding || !canCommandPolicy(actorId, building.owner) || !canCommandPolicy(actorId, entry.ownerId)) return { ok: false, reason: 'not-owner' }
   if (!DEFENCE_TYPES.has(building.type) || !(building.health > 0) || building.constructionFinished === false || building.isBeingSold || building.selling) return { ok: false, reason: 'inactive-defence' }
   registerAutomationEntity(building)

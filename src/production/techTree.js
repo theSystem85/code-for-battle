@@ -17,7 +17,7 @@ export const productionUnlockRules = [
   { requires: ['shipyard'], units: ['destroyer', 'hovercraft', 'vehicleFerry', 'aircraftCarrier', 'navalMineLayer', 'battleship', 'submarine'] },
   { requires: ['shipyard', ['gasStation', 'hospital', 'ammunitionFactory', 'vehicleWorkshop']], units: ['supplyShip'] },
   { requires: ['rocketTurret'], units: ['rocketTank'] },
-  { requires: ['radarStation'], units: ['tank-v2'], buildings: ['airstrip', 'turretGunV2', 'turretGunV3', 'rocketTurret', 'teslaCoil', 'artilleryTurret'] },
+  { requires: ['radarStation'], units: ['tank-v2'], buildings: ['commandCenter', 'airstrip', 'turretGunV2', 'turretGunV3', 'rocketTurret', 'teslaCoil', 'artilleryTurret'] },
   { requires: ['radarStation', 'vehicleFactory'], buildings: ['shipyard'] },
   { requires: ['radarStation', 'vehicleFactory', 'artilleryTurret'], units: ['howitzer'] }
 ]

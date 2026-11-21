@@ -109,6 +109,11 @@ export function getMissingMigrationVersions(toVersion = GAME_STATE_SCHEMA_VERSIO
   return missing
 }
 
+migrations[9] = state => {
+  const perks = state.perks || state.gameState?.perks || { automationPerkMode: 'allUnlocked', owners: {} }
+  return { ...state, perks, automationPerkMode: perks.automationPerkMode, gameState: { ...state.gameState, perks } }
+}
+
 // Missing spread boosts and burned-fuel flags retain their default values.
 migrations[8] = state => ({ ...state })
 

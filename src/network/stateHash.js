@@ -1,4 +1,5 @@
 import { getAutomationBehaviorHash } from '../policies/policyStore.js'
+import { getPerkStateHash } from '../perks/perkState.js'
 /**
  * State Hash System for Deterministic Lockstep
  *
@@ -299,6 +300,7 @@ export function computeStateHash(gameState, tick) {
   let hash = 2166136261
 
   hash = hashCombine(hash, getAutomationBehaviorHash())
+  hash = hashCombine(hash, getPerkStateHash())
 
   // Include tick number
   hash = hashCombine(hash, tick)

@@ -5,6 +5,7 @@
 
 // Command types for synchronization
 export const COMMAND_TYPES = {
+  PERK_PURCHASE: 'perk-purchase',
   AUTOMATION_EDIT: 'automation-edit',
   AUTOMATION_COMPLETION_ACK: 'automation-completion-ack',
   MAP_ACTION: 'map-action',

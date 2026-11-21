@@ -9,6 +9,7 @@ const FULL_BUILDING_TECH_TREE = [
   { type: 'fireDepartment', req: 'vehicleWorkshop' },
   { type: 'vehicleWorkshop', req: '-' },
   { type: 'radarStation', req: '-' },
+  { type: 'commandCenter', req: 'radarStation' },
   { type: 'hospital', req: '-' },
   { type: 'helipad', req: '-' },
   { type: 'shipyard', req: 'radarStation+vehicleFactory' },
@@ -90,6 +91,7 @@ export function computeAvailableBuildingTypes(buildings, factories, owner) {
   if (hasFactory) available.add('ammunitionFactory')
   if (owned.some(building => building.type === 'vehicleWorkshop')) available.add('fireDepartment')
   if (hasRadar) {
+    available.add('commandCenter')
     available.add('turretGunV2')
     available.add('turretGunV3')
     available.add('rocketTurret')

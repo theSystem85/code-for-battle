@@ -42,6 +42,7 @@ const buildingDescriptions = {
   vehicleWorkshop: 'Repairs damaged vehicles and restores wrecks.',
   constructionYard: 'Constructs new buildings and expands your base footprint.',
   radarStation: 'Extends battlefield intel and enables advanced tech.',
+  commandCenter: 'Unlocks command perks and advanced battlefield automation.',
   hospital: 'Restores crew for damaged vehicles and supports medics.',
   helipad: 'Hosts and resupplies Apache helicopters with fuel and ammo.',
   airstrip: 'Hosts and resupplies military jets with fuel and ammo.',

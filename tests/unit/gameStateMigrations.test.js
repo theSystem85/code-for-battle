@@ -104,4 +104,10 @@ describe('live game-state migrations', () => {
     expect(result).toEqual({ ...legacy, schemaVersion: 1 })
     expect(result.gameState).toBe(legacy.gameState)
   })
+
+  it('[U07287] migrates schema 8 saves with sandbox automation perks', () => {
+    const result = migrateLiveState({ schemaVersion: 8, gameState: { money: 25 } }, 8, 9)
+    expect(result.gameState.perks).toEqual({ automationPerkMode: 'allUnlocked', owners: {} })
+    expect(result.perks).toEqual(result.gameState.perks)
+  })
 })

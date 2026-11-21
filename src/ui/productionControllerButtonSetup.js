@@ -38,6 +38,7 @@ export function handleProductionStackWheel(event, { increase, decrease }) {
 const mobileLandscapeBuildingLabelMap = {
   vehicleFactory: 'Vehicle Fab',
   radarStation: 'Radar',
+  commandCenter: 'Command',
   vehicleWorkshop: 'Workshop',
   ammunitionFactory: 'Ammo Fab',
   turretGunV1: 'Turret V1',

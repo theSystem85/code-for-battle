@@ -352,3 +352,6 @@ globalThis.visualViewport = {
 }
 
 console.log('[TEST SETUP] Headless test environment initialized')
+// Existing automation suites predate command perks and intentionally exercise
+// the sandbox fixture where every catalog item is available.
+globalThis.__AUTOMATION_PERK_MODE__ = 'allUnlocked'

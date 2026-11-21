@@ -84,6 +84,19 @@ export const buildingData = {
     health: 350,
     smokeSpots: []
   },
+  commandCenter: {
+    width: 3,
+    height: 3,
+    cost: 3500,
+    power: -100,
+    image: 'command_center.webp',
+    displayName: 'Command Center',
+    health: 400,
+    armor: 2,
+    requiresRadar: true,
+    limit: 1,
+    smokeSpots: [{ x: 190, y: 40 }]
+  },
   radarStation: {
     width: 2,
     height: 2,

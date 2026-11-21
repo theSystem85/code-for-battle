@@ -2,6 +2,7 @@ import { applyProductionCompletionAck } from '../policies/completionReceipts.js'
 import { units as automationEntities } from '../main.js'
 import { applyAutomationMutation, subscribeAutomationMutations, setAutomationAuthoringGuard } from '../policies/policyStore.js'
 import { recordReplayCommand } from '../replayCommandPrimitives.js'
+import { applyPerkPurchase, canPurchasePerk } from '../perks/perkState.js'
 /**
  * Game Command Synchronization Module - Coordinator
  *
@@ -217,6 +218,16 @@ export function handleReceivedCommand(command, _sourceId) {
       return
     }
 
+    if (command.commandType === COMMAND_TYPES.PERK_PURCHASE) {
+      const payload = command.payload || {}
+      if (payload.actorId !== sourceParty || !canPurchasePerk(sourceParty, payload.perkId).ok) return
+      const result = applyPerkPurchase(sourceParty, payload.perkId, payload.expectedCost)
+      if (!result.ok) return
+      recordReplayCommand({ type: COMMAND_TYPES.PERK_PURCHASE, payload: { ...payload } })
+      broadcastToAllPeers({ ...command, isHost: true })
+      return
+    }
+
     // Queue the command for processing
     pendingRemoteCommands.push({
       ...command,
@@ -253,6 +264,11 @@ export function handleReceivedCommand(command, _sourceId) {
 function applyCommand(command) {
   // Commands are applied based on type
   switch (command.commandType) {
+    case COMMAND_TYPES.PERK_PURCHASE:
+      if (command.isHost && command.payload?.actorId === command.sourcePartyId) {
+        applyPerkPurchase(command.payload.actorId, command.payload.perkId, command.payload.expectedCost)
+      }
+      break
     case COMMAND_TYPES.AUTOMATION_COMPLETION_ACK:
       if (command.isHost) applyProductionCompletionAck(command.payload || {})
       break

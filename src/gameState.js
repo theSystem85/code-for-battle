@@ -71,6 +71,7 @@ export const gameState = {
   simulationStepMs: 1000 / 60,
   // Building related properties
   buildings: [],
+  perks: { automationPerkMode: 'required', owners: {} },
   units: [], // Add units array to gameState
   factories: [], // Add factories array to gameState
   mapGrid: [], // Add mapGrid array to gameState

@@ -28,6 +28,7 @@ import { recordAutomationRuntime } from './automationReplay.js'
 import { stepCompiledPolicy } from './policyCompiler.js'
 import { STEP_GATE } from './policyStep.js'
 import { executeUnitCommand, findServiceTarget } from './unitCommandApi.js'
+import { getAutomationPerkMode, hasLivingCommandCenter, ownsPerk } from '../perks/perkState.js'
 import { ENEMY_SCAN_TILES, findNearestEnemy, findNearestFriendly, isHostile, unitCenter } from './policyWorld.js'
 import {
   canCommandPolicy,
@@ -413,6 +414,10 @@ function processUnit(unit, context, now) {
     }
     const program = getCompiledPolicyProgram(binding.policyId)
     if (!program) continue // Invalid/unprepared revisions never execute partially.
+    if (getAutomationPerkMode() !== 'allUnlocked' && (!hasLivingCommandCenter(unit.owner) || [...program.requiredPerks].some(perkId => !ownsPerk(unit.owner, perkId)))) {
+      binding.active = false
+      continue
+    }
     if (binding.docRef !== doc) {
       refreshAutomationBinding(binding, doc)
       binding.docRef = doc

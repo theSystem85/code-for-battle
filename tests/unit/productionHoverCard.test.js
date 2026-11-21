@@ -32,7 +32,7 @@ describe('production hover card data', () => {
     const index = buildProductionUnlockIndex()
     expect(index.get('radarStation')).toEqual({
       units: ['tank-v2', 'howitzer'],
-      buildings: ['shipyard', 'helipad', 'airstrip', 'turretGunV2', 'turretGunV3', 'rocketTurret', 'teslaCoil', 'artilleryTurret']
+      buildings: ['commandCenter', 'shipyard', 'helipad', 'airstrip', 'turretGunV2', 'turretGunV3', 'rocketTurret', 'teslaCoil', 'artilleryTurret']
     })
     expect(index.get('vehicleFactory').units).toEqual(expect.arrayContaining(['tank', 'lightTank', 'tank-v3', 'harvester', 'mineLayer']))
     expect(index.get('vehicleFactory').units).not.toContain('tank_v1')
@@ -48,7 +48,7 @@ describe('production hover card data', () => {
     ['powerPlant', 0, ['oreRefinery']],
     ['oreRefinery', 1, ['vehicleFactory']],
     ['vehicleFactory', 11, ['radarStation', 'gasStation', 'vehicleWorkshop', 'ammunitionFactory', 'hospital', 'turretGunV1', 'concreteWall']],
-    ['radarStation', 2, ['shipyard', 'helipad', 'airstrip', 'turretGunV2', 'turretGunV3', 'rocketTurret', 'teslaCoil', 'artilleryTurret']],
+    ['radarStation', 2, ['commandCenter', 'shipyard', 'helipad', 'airstrip', 'turretGunV2', 'turretGunV3', 'rocketTurret', 'teslaCoil', 'artilleryTurret']],
     ['vehicleWorkshop', 4, ['constructionYard', 'fireDepartment']]
   ])('[U03476] attributes %s unlocks to the last normal-build-order prerequisite', (type, units, buildings) => {
     const unlocks = buildProductionUnlockIndex().get(type)

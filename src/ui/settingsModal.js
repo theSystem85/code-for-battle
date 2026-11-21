@@ -18,6 +18,7 @@ import { initLlmSettingsPanel
 } from './llmSettingsPanel.js'
 import { gameState
 } from '../gameState.js'
+import { getAutomationPerkMode, setAutomationPerkMode } from '../perks/perkState.js'
 import { configRegistry, getConfigValue, setConfigValue
 } from '../configRegistry.js'
 import { getRendererBackendStatusText, whenRendererBackendResolved
@@ -467,9 +468,14 @@ export function initSettingsModal() {
   const waterSaturationRange = document.getElementById('settingsWaterSaturationRange')
   const mobilePixelDensityRange = document.getElementById('settingsMobilePixelDensityRange')
   const rendererBackendSelect = document.getElementById('settingsRendererBackend')
+  const automationPerkMode = document.getElementById('settingsAutomationPerkMode')
 
   if (!modal || initializedSettingsModals.has(modal)) return
   initializedSettingsModals.add(modal)
+  if (automationPerkMode) {
+    automationPerkMode.value = getAutomationPerkMode()
+    automationPerkMode.addEventListener('change', () => setAutomationPerkMode(automationPerkMode.value))
+  }
   const seamless = modal.querySelector('#settingsSeamlessUpdates')
   if (seamless) {
     seamless.checked = isSeamlessUpdateEnabled()

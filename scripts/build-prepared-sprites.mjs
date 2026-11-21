@@ -172,6 +172,7 @@ const definitions = [
     ['vehicleWorkshop', 'vehicle_workshop.webp', 3, 3],
     ['constructionYard', 'construction_yard.webp', 3, 3],
     ['radarStation', 'radar_station.webp', 2, 2],
+    ['commandCenter', 'command_center.webp', 3, 3],
     ['hospital', 'hospital.webp', 3, 3],
     ['helipad', 'helipad_map.webp', 2, 2],
     ['airstrip', 'airstrip_map.webp', 12, 6],

@@ -71,6 +71,7 @@ export const BUILDING_TYPES = Object.freeze([
   { value: 'gasStation', label: 'Fuel station' },
   { value: 'ammunitionFactory', label: 'Ammo factory' },
   { value: 'radarStation', label: 'Radar station' },
+  { value: 'commandCenter', label: 'Command Center' },
   { value: 'helipad', label: 'Helipad' },
   { value: 'airstrip', label: 'Airstrip' },
   { value: 'turretGunV1', label: 'Turret gun V1' },
