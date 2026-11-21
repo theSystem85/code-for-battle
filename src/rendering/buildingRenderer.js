@@ -12,8 +12,10 @@ import { getCanvasLogicalSize } from './renderingUtils.js'
 import { getShipyardServiceWaterTiles } from '../utils/navalUtils.js'
 import { getPreparedSprite as getPublishedPreparedSprite } from './prepared/preparedSpritePipeline.js'
 import { drawStatusBar, fillStatusBar, paintStatusBarOutline, paintStatusBarTrack } from '../utils/statusBarGradient.js'
+import { DEFENCE_VETERANCY_TYPES, drawLevelStars } from '../game/veterancy.js'
 
 const AMMO_TURRET_TYPES = new Set(['turretGunV1', 'turretGunV2', 'turretGunV3', 'rocketTurret', 'artilleryTurret'])
+const VETERAN_TURRET_TYPES = new Set(DEFENCE_VETERANCY_TYPES)
 
 export class BuildingRenderer {
   constructor() {
@@ -213,6 +215,13 @@ export class BuildingRenderer {
     const height = building.height * TILE_SIZE
 
     this.renderHealthBar(ctx, building, screenX, screenY, width)
+    if (building.level > 0 && VETERAN_TURRET_TYPES.has(building.type)) {
+      drawLevelStars(ctx, screenX + width / 2, screenY - 13, building.level)
+    }
+    if (building.selected && building.level < 3 && building.baseCost > 0 && VETERAN_TURRET_TYPES.has(building.type)) {
+      const required = [2, 4, 6][building.level || 0] * building.baseCost
+      drawStatusBar(ctx, screenX, screenY - 4, width, 3, Math.min((building.experience || 0) / required, 1), '#FFFF00', 'horizontal')
+    }
     this.renderHelipadFuel(ctx, building, screenX, screenY, width, height)
     this.renderHelipadAmmo(ctx, building, screenX, screenY, width, height)
     this.renderTurretAmmo(ctx, building, screenX, screenY, width, height)

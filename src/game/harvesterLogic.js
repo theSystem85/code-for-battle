@@ -25,6 +25,7 @@ import {
   getTileDensity
 } from './harvesterEligibility.js'
 import { notifyResourceTileMutation } from '../rendering/prepared/mapMutationNotifier.js'
+import { grantHarvesterStars } from './veterancy.js'
 
 // Track tiles currently being harvested
 const harvestedTiles = new Set()
@@ -212,12 +213,15 @@ function updateHarvesterExperience(unit, moneyEarned, gameState = null) {
 
   unit.experience += getHarvesterExperienceGain(unit, deliveredMoney)
 
+  let starsGained = 0
   while (unit.level < 3 && unit.experience >= HARVESTER_XP_FULL_UNLOADS_PER_STAR) {
     unit.experience -= HARVESTER_XP_FULL_UNLOADS_PER_STAR
     unit.level += 1
+    starsGained += 1
     recalculateHarvesterLevelBonuses(unit)
     showHarvesterPromotionNotification(unit, unit.level, gameState)
   }
+  grantHarvesterStars(unit, starsGained)
 
   if (unit.level >= 3) {
     unit.experience = 0

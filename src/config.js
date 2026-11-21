@@ -232,9 +232,14 @@ async function loadOverridesFromFile() {
 
 // Experience system multiplier (adjusts how quickly units gain XP)
 export let XP_MULTIPLIER = 3
+export let BUILDING_KILL_XP_FACTOR = 1.0
 
 export function setXpMultiplier(value) {
   XP_MULTIPLIER = value
+}
+
+export function setBuildingKillXpFactor(value) {
+  BUILDING_KILL_XP_FACTOR = value
 }
 
 // config.js
@@ -2045,6 +2050,7 @@ export const BATTLESHIP_FIRE_RANGE = TILE_SIZE * 36
 
 const EXPORTED_CONFIG_VARIABLES = [
   'XP_MULTIPLIER',
+  'BUILDING_KILL_XP_FACTOR',
   'TILE_SIZE',
   'MIN_MAP_TILES',
   'DEFAULT_MAP_TILES_X',

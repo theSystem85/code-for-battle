@@ -1,5 +1,6 @@
 // utils.js
-import { TILE_SIZE, XP_MULTIPLIER, UNIT_COSTS, HARVESTER_XP_FULL_UNLOADS_PER_STAR } from './config.js'
+import { BUILDING_KILL_XP_FACTOR, TILE_SIZE, XP_MULTIPLIER, UNIT_COSTS, HARVESTER_XP_FULL_UNLOADS_PER_STAR } from './config.js'
+import { applyKillBonus, applyLevelUps, canEarnVeterancy, getKillValue } from './game/veterancy.js'
 import { deterministicRNG, gameRandom } from './utils/gameRandom.js'
 import { addMovableOccupancy } from './game/occupancyTags.js'
 
@@ -104,15 +105,17 @@ export function getExperienceRequiredForLevel(currentLevel, baseCost) {
  * @param {Object} killedUnit - The unit that was killed
  */
 export function awardExperience(unit, killedUnit) {
-  if (!unit || !killedUnit || unit.type === 'harvester') {
-    return
+  if (!unit || !killedUnit || !canEarnVeterancy(unit)) return
+  if (Object.hasOwn(UNIT_COSTS, unit.type)) initializeUnitLeveling(unit)
+  else {
+    unit.level ||= 0
+    unit.experience ||= 0
   }
-  initializeUnitLeveling(unit)
-  // Award experience equal to the cost of the killed unit, multiplied by XP_MULTIPLIER
-  const experienceGained = Math.round(getUnitCost(killedUnit.type) * XP_MULTIPLIER)
+  const factor = Object.hasOwn(UNIT_COSTS, killedUnit.type) ? 1 : BUILDING_KILL_XP_FACTOR
+  const experienceGained = Math.round(getKillValue(killedUnit) * XP_MULTIPLIER * factor)
   unit.experience += experienceGained
-  // Check for level up immediately
-  checkLevelUp(unit)
+  applyLevelUps(unit)
+  applyKillBonus(unit, killedUnit)
 }
 
 /**
@@ -120,18 +123,7 @@ export function awardExperience(unit, killedUnit) {
  * @param {Object} unit - The unit to check for level up
  */
 export function checkLevelUp(unit) {
-  if (!unit || unit.level >= 3) return
-
-  const experienceRequired = getExperienceRequiredForLevel(unit.level, unit.baseCost)
-  if (experienceRequired && unit.experience >= experienceRequired) {
-    unit.level++
-    unit.experience = 0 // Reset experience for next level
-
-    // Apply level bonuses
-    applyLevelBonuses(unit)
-
-    // Play level up sound or effect here if desired
-  }
+  return applyLevelUps(unit)
 }
 
 /**

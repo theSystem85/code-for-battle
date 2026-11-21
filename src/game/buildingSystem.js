@@ -23,9 +23,20 @@ import { setBuildingDebrisDecals } from './tileDecals.js'
 import { getAircraftAltitudeLift } from './aircraftTargeting.js'
 import { teardownDefenceAutomation } from '../policies/defencePolicyEngine.js'
 import { defenceTargetById, prepareDefenceWorld } from '../policies/defenceSensors.js'
+import { DEFENCE_VETERANCY_TYPES } from './veterancy.js'
 
 const defenceCombatWorld = { units: null, now: 0 }
 const forwardAim = { x: 0, y: 0, tileX: 0, tileY: 0, health: 1 }
+const veteranDefenceTypes = new Set(DEFENCE_VETERANCY_TYPES)
+
+function isBuildingBurning(building, mapGrid) {
+  for (let y = building.y; y < building.y + building.height; y++) {
+    for (let x = building.x; x < building.x + building.width; x++) {
+      if (mapGrid?.[y]?.[x]?.fire) return true
+    }
+  }
+  return false
+}
 
 
 /**
@@ -257,6 +268,13 @@ const updateDefensiveBuildings = logPerformance(function updateDefensiveBuilding
   const _teslaCoils = buildings.filter(b => b.type === 'teslaCoil' && b.health > 0)
 
   buildings.forEach(building => {
+    if (veteranDefenceTypes.has(building.type) && building.selfRepair && building.health < building.maxHealth && !isBuildingBurning(building, gameState.mapGrid)) {
+      if (!Number.isFinite(building.lastRepairTime)) building.lastRepairTime = now
+      if (now - building.lastRepairTime >= 3000) {
+        building.health = Math.min(building.maxHealth, building.health + building.maxHealth * 0.01)
+        building.lastRepairTime = now
+      }
+    }
     // Defensive buildings: turrets and tesla coil
     if ((building.type === 'rocketTurret' || building.type.startsWith('turretGun') || building.type === 'teslaCoil' || building.type === 'artilleryTurret') && building.health > 0) {
       if (building.holdFire) {
@@ -275,7 +293,7 @@ const updateDefensiveBuildings = logPerformance(function updateDefensiveBuilding
       const centerX = (building.x + building.width / 2) * TILE_SIZE
       const centerY = (building.y + building.height / 2) * TILE_SIZE
       // Find closest enemy for all defensive buildings
-      const maxRange = building.fireRange * TILE_SIZE
+      const maxRange = building.fireRange * (building.rangeMultiplier || 1) * TILE_SIZE
       const minRange = (building.minFireRange || 0) * TILE_SIZE
       let closestEnemy = null
       let closestDistance = Infinity
@@ -455,7 +473,7 @@ const updateDefensiveBuildings = logPerformance(function updateDefensiveBuilding
           return
         }
 
-        const effectiveCooldown = building.fireCooldown
+        const effectiveCooldown = building.fireCooldown / (building.fireRateMultiplier || 1)
         if ((!building.lastShotTime || now - building.lastShotTime >= effectiveCooldown) && closestEnemy) {
           playPositionalSound('teslacoil_loading', centerX, centerY, 1.0)
           building.teslaState = 'charging'
@@ -512,7 +530,7 @@ const updateDefensiveBuildings = logPerformance(function updateDefensiveBuilding
           }
         } else {
           // Normal firing cooldown check
-          const effectiveCooldown = building.fireCooldown
+          const effectiveCooldown = building.fireCooldown / (building.fireRateMultiplier || 1)
           if (!building.lastShotTime || now - building.lastShotTime >= effectiveCooldown) {
             // We already have closestEnemy from the shared enemy detection code above
 

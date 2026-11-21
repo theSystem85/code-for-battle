@@ -7,6 +7,8 @@ import { FIRE_SPREAD_PROBABILITY, FIRE_DAMAGE_PER_SECOND, setFireSpreadProbabili
 import {
   XP_MULTIPLIER,
   setXpMultiplier,
+  BUILDING_KILL_XP_FACTOR,
+  setBuildingKillXpFactor,
   ORE_SPREAD_ENABLED,
   setOreSpreadEnabled,
   ENABLE_ENEMY_CONTROL,
@@ -470,6 +472,17 @@ export const configRegistry = {
     min: 0,
     max: 10,
     step: 0.5,
+    category: 'Game Balance'
+  },
+  buildingKillXpFactor: {
+    name: 'Building Kill XP Factor',
+    description: 'Scales experience awarded for destroying buildings',
+    type: 'number',
+    get: () => BUILDING_KILL_XP_FACTOR,
+    set: setBuildingKillXpFactor,
+    min: 0,
+    max: 10,
+    step: 0.1,
     category: 'Game Balance'
   },
 

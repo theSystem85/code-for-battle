@@ -16,7 +16,8 @@ import { findPath } from '../../src/units.js'
 import { findClosestOre } from '../../src/logic.js'
 
 // Mock dependencies
-vi.mock('../../src/config.js', () => ({
+vi.mock('../../src/config.js', async importOriginal => ({
+  ...await importOriginal(),
   TILE_SIZE: 32,
   HARVESTER_CAPPACITY: 1,
   HARVESTER_UNLOAD_TIME: 5000,

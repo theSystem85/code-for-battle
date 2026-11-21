@@ -860,7 +860,15 @@ function buildSaveObject(label, { includeMap = true, includeStaticConfiguration 
     ammoReloadTime: typeof b.ammoReloadTime === 'number' ? b.ammoReloadTime : undefined,
     needsAmmo: typeof b.needsAmmo === 'boolean' ? b.needsAmmo : undefined,
     landedUnitId: b.landedUnitId,
-    damageValue: b.damageValue
+    damageValue: b.damageValue,
+    level: b.level || 0,
+    experience: b.experience || 0,
+    baseCost: b.baseCost,
+    rangeMultiplier: b.rangeMultiplier,
+    fireRateMultiplier: b.fireRateMultiplier,
+    armor: b.armor,
+    selfRepair: b.selfRepair,
+    lastRepairTime: b.lastRepairTime
   }))
 
   const factoryRallyPoints = factories.map(f => ({
@@ -1856,7 +1864,14 @@ function loadGameFromSaveObject(saveObj, key) {
         building.minFireRange = data.minFireRange || 0
         building.fireCooldown = data.fireCooldown
         building.damage = data.damage
-        building.armor = data.armor || 1
+        building.armor = Number.isFinite(b.armor) ? b.armor : (data.armor || 1)
+        building.level = Number.isFinite(b.level) ? Math.max(0, Math.min(3, b.level)) : 0
+        building.experience = building.level >= 3 ? 0 : (Number.isFinite(b.experience) ? Math.max(0, b.experience) : 0)
+        building.baseCost = Number.isFinite(b.baseCost) ? b.baseCost : data.cost
+        building.rangeMultiplier = Number.isFinite(b.rangeMultiplier) ? b.rangeMultiplier : 1
+        building.fireRateMultiplier = Number.isFinite(b.fireRateMultiplier) ? b.fireRateMultiplier : 1
+        building.selfRepair = Boolean(b.selfRepair)
+        if (Number.isFinite(b.lastRepairTime)) building.lastRepairTime = b.lastRepairTime
         building.projectileType = data.projectileType
         building.projectileSpeed = data.projectileSpeed
         if (typeof building.lastShotTime !== 'number') building.lastShotTime = 0

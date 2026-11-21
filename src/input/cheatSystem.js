@@ -16,7 +16,7 @@ import {
 } from '../config.js'
 import { createUnit, updateUnitOccupancy } from '../units.js'
 import { buildingData, createBuilding, placeBuilding, updatePowerSupply } from '../buildings.js'
-import { checkLevelUp, initializeUnitLeveling, updateUnitSpeedModifier } from '../utils.js'
+import { checkLevelUp, getExperienceRequiredForLevel, initializeUnitLeveling, updateUnitSpeedModifier } from '../utils.js'
 import { deployMine } from '../game/mineSystem.js'
 import { getWreckById, removeWreckById } from '../game/unitWreckManager.js'
 import { stopApacheRotorSound } from '../game/movementApache.js'
@@ -230,6 +230,7 @@ export class CheatSystem {
             <li><code>ammo [value|percent%|+/-value|+/-percent%]</code> - Set or adjust ammo for selected units/buildings with ammo bars</li>
             <li><code>ammo load [amount|percent%]</code> - Set ammo cargo of selected ammunition trucks or ammo reserves of selected helipads and airstrips</li>
             <li><code>xp [amount]</code> / <code>xp +[amount]</code> / <code>xp -[amount]</code> - Set or adjust XP for selected combat units</li>
+            <li><code>stars [number]</code> - Grant stars to selected combat units</li>
             <li><code>partyme [party]</code> - Switch your player party (reassigns your forces)</li>
             <li><code>party [color|player]</code> - Change party of selected unit(s)</li>
             <li><code>kill</code> - Destroy all selected units or buildings</li>
@@ -468,6 +469,10 @@ export class CheatSystem {
         } else {
           this.showError('Invalid amount. Use: xp [number], xp +[number], or xp -[number]')
         }
+      } else if (normalizedCode.startsWith('stars ')) {
+        const count = Number.parseInt(normalizedCode.substring(6).trim(), 10)
+        if (Number.isInteger(count) && count > 0) this.grantSelectedUnitStars(count)
+        else this.showError('Invalid amount. Use: stars [positive number]')
       } else if (normalizedCode === 'kill') {
         this.killSelectedTargets()
       } else if (normalizedCode.startsWith('recover')) {
@@ -1277,6 +1282,22 @@ export class CheatSystem {
     } else {
       this.showError('No combat units selected')
     }
+  }
+
+  grantSelectedUnitStars(count) {
+    let appliedCount = 0
+    for (const unit of this.selectedUnits || []) {
+      if (!unit || unit.type === 'harvester') continue
+      initializeUnitLeveling(unit)
+      for (let i = 0; i < count && unit.level < 3; i++) {
+        unit.experience += getExperienceRequiredForLevel(unit.level, unit.baseCost)
+        checkLevelUp(unit)
+      }
+      appliedCount++
+    }
+    if (!appliedCount) return this.showError('No combat units selected')
+    showNotification(`⭐ Granted up to ${count} star${count === 1 ? '' : 's'} to ${appliedCount} unit${appliedCount === 1 ? '' : 's'}`, 3000)
+    playSound('confirmed', 0.5)
   }
 
   enableEnemyControl() {

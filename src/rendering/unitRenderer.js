@@ -28,6 +28,7 @@ import { describeActivePolicies, shouldShowPolicyIndicator } from '../policies/p
 import { drawStatusBar, fillStatusBar, paintStatusBarOutline, paintStatusBarTrack, strokeStatusArc, strokeStatusRailArc } from '../utils/statusBarGradient.js'
 import { drawCachedUnitShadow, usesUnitGroundShadow } from './unitShadow.js'
 import { DETAILED_SELECTION_HUD_ENABLED } from '../config.js'
+import { drawLevelStars } from '../game/veterancy.js'
 
 const POLICY_ICON_SIZE = 10
 const HUD_EDGE_QUARTERS = Object.freeze({ right: 0, bottom: 1, left: 2, top: 3 })
@@ -1829,46 +1830,12 @@ export class UnitRenderer {
     const hudBounds = this.getSelectedHudBounds(centerX, centerY, unit)
 
     // Position stars directly over the health bar with slight overlap
-    const starSize = 6
-    const starSpacing = 8
-    const totalWidth = (unit.level * starSpacing) - (starSpacing - starSize)
-    const startX = (centerX - totalWidth / 2) + (this.isDonutSelectionHud() ? 2 : 0)
     const starY = this.isLegacySelectionHud()
       ? unit.y - 20 - scrollOffset.y
       : this.isDonutSelectionHud()
         ? hudBounds.top - 12
         : hudBounds.top - 3
-    ctx.save()
-    ctx.fillStyle = '#FFD700' // Gold color for stars
-    ctx.strokeStyle = '#FFA500' // Orange outline
-    ctx.lineWidth = 1
-
-    for (let i = 0; i < unit.level; i++) {
-      const starX = startX + (i * starSpacing)
-
-      // Draw a simple 5-pointed star
-      ctx.beginPath()
-      for (let j = 0; j < 5; j++) {
-        const angle = (j * 4 * Math.PI) / 5 - Math.PI / 2 // Start at top
-        const outerRadius = starSize / 2
-        const innerRadius = starSize / 4
-
-        if (j === 0) {
-          ctx.moveTo(starX + outerRadius * Math.cos(angle), starY + outerRadius * Math.sin(angle))
-        } else {
-          ctx.lineTo(starX + outerRadius * Math.cos(angle), starY + outerRadius * Math.sin(angle))
-        }
-
-        // Inner point
-        const innerAngle = angle + (2 * Math.PI) / 10
-        ctx.lineTo(starX + innerRadius * Math.cos(innerAngle), starY + innerRadius * Math.sin(innerAngle))
-      }
-      ctx.closePath()
-      ctx.fill()
-      ctx.stroke()
-    }
-
-    ctx.restore()
+    drawLevelStars(ctx, centerX + (this.isDonutSelectionHud() ? 2 : 0), starY, unit.level)
   }
 
   renderUnitShadow(ctx, unit, scrollOffset) {
