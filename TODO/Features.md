@@ -91,6 +91,9 @@ When a spec exists, replace `Spec: none` with a relative link such as `[Title](.
 - [ ] **Technology Center (draft)** — a research building using the existing unused Technology Center art. It unlocks the Drone Factory, AI Center (AI data center), Rocket Launch Base (Mechazilla-style launch tower with the rocket / Starship), and Spaceship Factory. Costs, further prerequisites, and what each follow-on building enables are still open.
   - Spec: [Technology Center (draft)](../specs/139-technology-center/spec.md)
 
+- [ ] **Plane Factory (draft)** — a dedicated jet assembly building. Art (map option 4, build button 5) was picked 2026-11-21 and is committed unused; jets currently spawn from the airstrip. What it produces versus the airstrip, footprint, cost, prerequisites, relation to the Technology Center, and AI use are still open.
+  - Spec: [Plane Factory (draft)](../specs/141-plane-factory/spec.md)
+
 ## AI
 
 - [ ] **Add LLM strategic AI settings + provider model pickers, commentary toggle/TTS, cost** — tracking, and in-game usage overlays.
