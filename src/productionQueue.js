@@ -73,7 +73,7 @@ export const productionQueue = {
     let candidates = []
     let available = null
     let nextIndex = 0
-    if (current.type === 'f22Raptor') {
+    if ((current.type === 'f22Raptor' || current.type === 'c5Galaxy')) {
       candidates = buildings.filter(b => b.type === 'airstrip' && b.owner === gameState.humanPlayer && b.health > 0)
       available = candidates.filter(building => {
         ensureAirstripOperations(building)
@@ -762,7 +762,7 @@ export const productionQueue = {
     let spawnFactory = null
     let rallyPointTarget = this.currentUnit.rallyPoint || null // Rally point from drag&drop
 
-    if (unitType === 'f22Raptor') {
+    if ((unitType === 'f22Raptor' || unitType === 'c5Galaxy')) {
       const allAirstrips = (gameState.buildings || []).filter(
         b => b.type === 'airstrip' && b.owner === gameState.humanPlayer && b.health > 0
       )
@@ -1906,7 +1906,7 @@ const unitLaneMethods = {
   getSerializableState: productionQueue.getSerializableState,
   restoreFromSerializableState: productionQueue.restoreFromSerializableState
 }
-const airUnitTypes = new Set(['apache', 'f22Raptor', 'f35'])
+const airUnitTypes = new Set(['apache', 'f22Raptor', 'f35', 'c5Galaxy'])
 const unitProductionLaneForType = type => navalUnitTypes.includes(type) ? 'naval' : airUnitTypes.has(type) ? 'air' : 'ground'
 const createUnitLane = () => {
   const lane = Object.create(productionQueue)

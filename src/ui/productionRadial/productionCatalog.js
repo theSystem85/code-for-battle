@@ -18,7 +18,7 @@ export const VEHICLE_FACTORY_UNITS = Object.freeze([
 ])
 
 export const HELIPAD_UNITS = Object.freeze(['apache', 'f35'])
-export const AIRSTRIP_UNITS = Object.freeze(['f22Raptor', 'f35'])
+export const AIRSTRIP_UNITS = Object.freeze(['f22Raptor', 'c5Galaxy', 'f35'])
 export const SHIPYARD_UNITS = Object.freeze([
   'destroyer',
   'supplyShip',

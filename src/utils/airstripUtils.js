@@ -184,6 +184,31 @@ export function clearAirstripSlotOccupant(airstrip, unitId) {
   }
 }
 
+export const C5_LOWER_SLOT_INDICES = Object.freeze([0, 1, 2])
+
+export function reserveC5ParkingSlots(airstrip, unitId) {
+  ensureAirstripOperations(airstrip)
+  if (!unitId || !C5_LOWER_SLOT_INDICES.every(index =>
+    (!airstrip.f22OccupiedSlotUnitIds[index] || airstrip.f22OccupiedSlotUnitIds[index] === unitId) &&
+    (!airstrip.f22ReservedSlotUnitIds[index] || airstrip.f22ReservedSlotUnitIds[index] === unitId))) return null
+  C5_LOWER_SLOT_INDICES.forEach(index => { airstrip.f22ReservedSlotUnitIds[index] = unitId })
+  return [...C5_LOWER_SLOT_INDICES]
+}
+
+export function setC5ParkingOccupant(airstrip, unitId) {
+  if (!reserveC5ParkingSlots(airstrip, unitId)) return false
+  C5_LOWER_SLOT_INDICES.forEach(index => { airstrip.f22OccupiedSlotUnitIds[index] = unitId })
+  return true
+}
+
+export function releaseC5ParkingSlots(airstrip, unitId) {
+  ensureAirstripOperations(airstrip)
+  C5_LOWER_SLOT_INDICES.forEach(index => {
+    if (airstrip.f22OccupiedSlotUnitIds[index] === unitId) airstrip.f22OccupiedSlotUnitIds[index] = null
+    if (airstrip.f22ReservedSlotUnitIds[index] === unitId) airstrip.f22ReservedSlotUnitIds[index] = null
+  })
+}
+
 function ensureRunwayQueue(airstrip, operationType) {
   ensureAirstripOperations(airstrip)
   if (operationType === 'landing') {

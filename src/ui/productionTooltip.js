@@ -27,6 +27,7 @@ const unitDisplayNames = {
   recoveryTank: 'Recovery Tank',
   apache: 'Apache',
   f22Raptor: 'F22 Raptor',
+  c5Galaxy: 'C-5 Galaxy',
   f35: 'F35',
   mineLayer: 'Mine Layer',
   mineSweeper: 'Mine Sweeper',

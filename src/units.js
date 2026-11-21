@@ -54,6 +54,8 @@ import {
   ensureAirstripOperations,
   claimAirstripParkingSlot,
   setAirstripSlotOccupant,
+  reserveC5ParkingSlots,
+  setC5ParkingOccupant,
   getAirstripRunwayPoints
 } from './utils/airstripUtils.js'
 import { createBattleshipTurrets } from './game/battleshipTurrets.js'
@@ -856,7 +858,7 @@ export function spawnUnit(factory, type, units, mapGrid, rallyPointTarget = null
   let worldPositionOverride = null
   const isHelipadApache = factory.type === 'helipad' && type === 'apache'
   const isPadF35 = (factory.type === 'helipad' || factory.type === 'airstrip') && type === 'f35'
-  const isAirstripF22 = factory.type === 'airstrip' && type === 'f22Raptor'
+  const isAirstripF22 = factory.type === 'airstrip' && (type === 'f22Raptor' || type === 'c5Galaxy')
   const isShipyardNavalUnit = factory.type === 'shipyard' && isNavalUnitType(type)
 
   if (isHelipadApache || (isPadF35 && factory.type === 'helipad')) {
@@ -882,7 +884,10 @@ export function spawnUnit(factory, type, units, mapGrid, rallyPointTarget = null
     ensureAirstripOperations(factory)
     gameState.nextAirstripSpawnPointIndex = gameState.nextAirstripSpawnPointIndex ?? 0
     const preferredSlot = gameState.nextAirstripSpawnPointIndex % factory.f22ParkingSpots.length
-    let slotIndex = claimAirstripParkingSlot(factory, preferredSlot)
+    let slotIndex = type === 'c5Galaxy'
+      ? ([0, 1, 2].every(index => !factory.f22OccupiedSlotUnitIds[index] && !factory.f22ReservedSlotUnitIds[index]) ? 0 : null)
+      : claimAirstripParkingSlot(factory, preferredSlot)
+    if (type === 'c5Galaxy' && slotIndex === null) return null
     if (slotIndex < 0) {
       slotIndex = preferredSlot
     }
@@ -995,7 +1000,10 @@ export function spawnUnit(factory, type, units, mapGrid, rallyPointTarget = null
     const airstripId = getBuildingIdentifier(factory)
     ensureAirstripOperations(factory)
     const parkingSlotIndex = Number.isInteger(options.airstripParkingSlotIndex) ? options.airstripParkingSlotIndex : 0
-    setAirstripSlotOccupant(factory, parkingSlotIndex, newUnit.id)
+    if (newUnit.type === 'c5Galaxy') {
+      reserveC5ParkingSlots(factory, newUnit.id)
+      setC5ParkingOccupant(factory, newUnit.id)
+    } else setAirstripSlotOccupant(factory, parkingSlotIndex, newUnit.id)
     const runwayPoints = getAirstripRunwayPoints(factory)
 
     newUnit.flightPlan = null
@@ -1168,6 +1176,8 @@ export function createUnit(factory, unitType, x, y, options = {}) {
     currentCommand: null,
     buildDuration: determineBuildDuration(actualType, options.buildDuration || null)
   }
+  unit.weight = unitProps.weight
+  unit.airliftable = unitProps.airliftable === true
 
   const utilityUnitTypes = ['ambulance', 'fireEngine', 'tankerTruck', 'ammunitionTruck', 'recoveryTank']
   unit.isUtilityUnit = utilityUnitTypes.includes(actualType)
@@ -1206,7 +1216,7 @@ export function createUnit(factory, unitType, x, y, options = {}) {
   const loaderUnits = ['fireEngine', 'mineLayer', 'tankerTruck', 'ammunitionTruck', 'ambulance', 'recoveryTank', 'harvester', 'rocketTank', 'hovercraft', 'vehicleFerry', 'navalMineLayer']
 
   // Apache helicopters and F22 Raptors don't have the crew system
-  if (actualType !== 'apache' && actualType !== 'f22Raptor' && actualType !== 'f35') {
+  if (actualType !== 'apache' && actualType !== 'f22Raptor' && actualType !== 'f35' && actualType !== 'c5Galaxy') {
     unit.crew = { driver: true, commander: true }
 
     if (fullCrewTanks.includes(actualType)) {
@@ -1330,6 +1340,15 @@ export function createUnit(factory, unitType, x, y, options = {}) {
     unit.landedHelipadId = null
     unit.maxRocketAmmo = 38
     unit.rocketAmmo = unit.maxRocketAmmo
+  }
+
+  if (actualType === 'c5Galaxy') {
+    Object.assign(unit, {
+      isAirUnit: true, flightState: 'grounded', altitude: 0, targetAltitude: 0,
+      maxAltitude: TILE_SIZE * 4.5, airCruiseSpeed: unitProps.speed, shadow: { offset: 0, scale: 1 },
+      requiresAirstrip: true, embarkedUnitIds: [], embarkedUnitTypes: [], pendingLoadUnitIds: [],
+      dropQueueState: null, cargoWeightCapacity: 122, footprintTiles: 3, renderScale: 3.5
+    })
   }
 
   if (actualType === 'f22Raptor') {

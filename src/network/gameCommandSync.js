@@ -4,6 +4,7 @@ import { applyAutomationMutation, getPolicyDocument, subscribeAutomationMutation
 import { recordReplayCommand } from '../replayCommandPrimitives.js'
 import { applyPerkPurchase, canPurchasePerk, getPolicyLock, hasLivingCommandCenter, ownsPerk } from '../perks/perkState.js'
 import { START_PERK_BY_VARIANT } from '../perks/perkCatalog.js'
+import { beginC5Airdrop, embarkC5Vehicle } from '../game/c5Cargo.js'
 
 export function isAutomationEditPerkAllowed(command) {
   if (['buildOptIn', 'unitBuildOptIn'].includes(command?.operation) && command.payload?.enabled !== false) {
@@ -289,6 +290,20 @@ function applyCommand(command) {
         applyAutomationMutation(command.payload, [...automationEntities, ...(gameState.buildings || [])])
       }
       break
+    case COMMAND_TYPES.C5_LOAD: {
+      const galaxy = automationEntities.find(unit => unit.id === command.payload?.galaxyId && unit.type === 'c5Galaxy')
+      const vehicle = automationEntities.find(unit => unit.id === command.payload?.unitId)
+      if (galaxy?.flightState === 'grounded' && vehicle) embarkC5Vehicle(galaxy, vehicle, automationEntities)
+      break
+    }
+    case COMMAND_TYPES.C5_AIRDROP: {
+      const galaxy = automationEntities.find(unit => unit.id === command.payload?.galaxyId && unit.type === 'c5Galaxy')
+      if (galaxy && command.payload?.target) {
+        galaxy.flightState = galaxy.flightState === 'grounded' ? 'takingOff' : galaxy.flightState
+        beginC5Airdrop(galaxy, command.payload.target, command.payload.tick || 0)
+      }
+      break
+    }
     case COMMAND_TYPES.GAME_PAUSE:
       if (!isHost()) {
         gameState.gamePaused = true

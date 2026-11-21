@@ -10,6 +10,7 @@ import {
 import { gameState } from '../gameState.js'
 import { findPathForOwner, removeUnitOccupancy } from '../units.js'
 import { addMovableOccupancy } from './occupancyTags.js'
+import { embarkC5Vehicle, evaluateC5Load } from './c5Cargo.js'
 export { cancelTransportOperations } from './transportOperationCancellation.js'
 import { getBuildingIdentifier } from '../utils.js'
 import { shouldAircraftReturnForFuel } from './jetFuel.js'
@@ -39,7 +40,7 @@ import {
   updateWaterMines
 } from './waterMineSystem.js'
 
-const TRANSPORT_TYPES = new Set(['hovercraft', 'vehicleFerry'])
+const TRANSPORT_TYPES = new Set(['hovercraft', 'vehicleFerry', 'c5Galaxy'])
 export const AIRCRAFT_SLOT_WEIGHT = CARRIER_AIRCRAFT_SLOT_WEIGHT
 const CARRIER_APPROACH_MS = 1800
 const CARRIER_ROLL_MS = 1800
@@ -389,6 +390,22 @@ export function isTransportableGroundUnit(target, owner, pendingTransportId = nu
 
 export function requestTransportLoadGroup(transport, targets, mapGrid, occupancyMap = gameState.occupancyMap, allUnits = targets) {
   if (!TRANSPORT_TYPES.has(transport?.type) || transport.transportOperation || !Array.isArray(targets)) return false
+  if (transport.type === 'c5Galaxy') {
+    if (transport.flightState !== 'grounded') return false
+    let accepted = false
+    for (const target of targets) {
+      const result = evaluateC5Load(transport, target, allUnits)
+      if (!result.allowed) {
+        gameState.showNotification?.(result.message)
+        continue
+      }
+      embarkC5Vehicle(transport, target, allUnits)
+      removeUnitOccupancy(target, occupancyMap)
+      target.pendingTransportId = null
+      accepted = true
+    }
+    return accepted
+  }
   transport.embarkedUnitIds = Array.isArray(transport.embarkedUnitIds) ? transport.embarkedUnitIds : []
   const requestedExistingIds = Array.isArray(transport.pendingLoadUnitIds)
     ? transport.pendingLoadUnitIds
@@ -1791,7 +1808,7 @@ export function updateNavalFleet(units, bullets, mapGrid, state, now, delta) {
   // full unit list for each waiting vehicle.
   let transportIndexReady = false
   ;(units || []).forEach(unit => {
-    if (TRANSPORT_TYPES.has(unit.type)) {
+    if (TRANSPORT_TYPES.has(unit.type) && unit.type !== 'c5Galaxy') {
       if (!transportIndexReady) {
         transportUnitsById.clear()
         for (const candidate of units) transportUnitsById.set(candidate.id, candidate)

@@ -52,6 +52,7 @@ import { updateTankerTruckLogic } from './game/tankerTruckLogic.js'
 import { updateAmmunitionTruckLogic } from './game/ammunitionTruckLogic.js'
 import { updateRecoveryTankLogic } from './game/recoveryTankSystem.js'
 import { updateMines } from './game/mineSystem.js'
+import { updateC5GalaxySystem } from './game/c5GalaxySystem.js'
 import { updateMineLayerBehavior } from './game/mineLayerBehavior.js'
 import { updateMineSweeperBehavior } from './game/mineSweeperBehavior.js'
 import { setBattleshipTarget, updateNavalFleet } from './game/navalFleetSystem.js'
@@ -562,6 +563,7 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
         updateAirGuard(unit, units, now)
       })
       updateNavalFleet(units, bullets, mapGrid, gameState, now, delta)
+      updateC5GalaxySystem(units, mapGrid, gameState, Math.floor(now / (1000 / 60)))
       framePhases.begin(FRAME_PHASE.movement)
       updateUnitMovement(units, mapGrid, occupancyMap, gameState, now, factories)
       updateSpawnExit(units, factories, mapGrid, occupancyMap)

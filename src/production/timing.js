@@ -2,7 +2,7 @@
 export const vehicleFactorySpeedUnitTypes = [
   'tank', 'tank-v2', 'rocketTank', 'tank_v1', 'tank-v3', 'lightTank', 'harvester',
   'ambulance', 'fireEngine', 'tankerTruck', 'ammunitionTruck', 'recoveryTank', 'howitzer',
-  'mineLayer', 'mineSweeper', 'apache', 'f22Raptor', 'f35'
+  'mineLayer', 'mineSweeper', 'apache', 'f22Raptor', 'f35', 'c5Galaxy'
 ]
 
 /** Production duration in simulation milliseconds, shared by queues and card estimates. */

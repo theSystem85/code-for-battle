@@ -147,7 +147,8 @@ const definitions = [
   },
   ...[
     ['f22', 'f22_raptor_map.webp', TILE_SIZE * 1.4, { rocketSource: [32, 39.68] }],
-    ['f35', 'f35_map.webp', TILE_SIZE * 1.32, { bombSource: [32, 35.2] }]
+    ['f35', 'f35_map.webp', TILE_SIZE * 1.32, { bombSource: [32, 35.2] }],
+    ['c5Galaxy', 'c5_galaxy_map.webp', TILE_SIZE * 3.5, {}]
   ].flatMap(([type, filename, flightWidth, anchors]) => [
     {
       id: `aircraft:${type}:ground`,

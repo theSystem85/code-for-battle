@@ -160,7 +160,7 @@ function updateF22CrashState(unit, movement, now) {
 }
 
 export function beginF22CrashSequence(unit, now = performance.now()) {
-  if (!unit || (unit.type !== 'f22Raptor' && unit.type !== 'f35')) return false
+  if (!unit || (unit.type !== 'f22Raptor' && unit.type !== 'f35' && unit.type !== 'c5Galaxy')) return false
   if (unit.f22State === 'crashing' || unit.f22State === 'crashed') return true
   if (unit.flightState === 'grounded') return false
 

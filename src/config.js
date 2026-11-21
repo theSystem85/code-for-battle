@@ -1249,6 +1249,9 @@ export function setStreetSpeedMultiplier(value) {
 
 export const STREET_PATH_COST = 1 / STREET_SPEED_MULTIPLIER  // Prefer streets in pathfinding
 
+// C-5M maximum payload in metric tons.
+export const C5_MAX_PAYLOAD_TONS = 122
+
 // Unit costs
 export let HOWITZER_COST = 2500
 
@@ -1272,6 +1275,7 @@ export const UNIT_COSTS = {
   recoveryTank: 3000,
   apache: 3000,
   f22Raptor: 6000,
+  c5Galaxy: 6000,
   f35: 3000,
   howitzer: HOWITZER_COST,
   mineLayer: 1000,
@@ -1298,6 +1302,8 @@ export const UNIT_PROPERTIES = {
   },
   // Harvester properties
   harvester: {
+    weight: 35,
+    airliftable: true,
     health: 150,
     maxHealth: 150,
     speed: 0.4,  // 50% slower: 0.8 * 0.5 = 0.4
@@ -1306,6 +1312,8 @@ export const UNIT_PROPERTIES = {
   },
   // Tank properties
   tank_v1: {
+    weight: 42,
+    airliftable: true,
     impactVfxProfile: 'blasty',
     health: 100,
     maxHealth: 100,
@@ -1315,6 +1323,8 @@ export const UNIT_PROPERTIES = {
   },
   // Tank V2 properties
   'tank-v2': {
+    weight: 60,
+    airliftable: true,
     impactVfxProfile: 'blasty',
     health: 150,
     maxHealth: 150,
@@ -1325,6 +1335,8 @@ export const UNIT_PROPERTIES = {
   },
   // Tank V3 properties
   'tank-v3': {
+    weight: 73,
+    airliftable: true,
     impactVfxProfile: 'blasty',
     health: 200,
     maxHealth: 200,
@@ -1335,6 +1347,8 @@ export const UNIT_PROPERTIES = {
   },
   // Light tank / IFV (M2 Bradley style): fast, lightly armored, rapid-fire autocannon
   lightTank: {
+    weight: 20,
+    airliftable: true,
     impactVfxProfile: 'sparky',
     health: 70,
     maxHealth: 70,
@@ -1345,6 +1359,8 @@ export const UNIT_PROPERTIES = {
   },
   // Rocket tank properties
   rocketTank: {
+    weight: 25,
+    airliftable: true,
     health: 100,
     maxHealth: 100,
     speed: 0.35,  // 50% slower: 0.7 * 0.5 = 0.35
@@ -1352,6 +1368,8 @@ export const UNIT_PROPERTIES = {
     turretRotationSpeed: TANK_TURRET_ROT
   },
   recoveryTank: {
+    weight: 64,
+    airliftable: true,
     health: 150,
     maxHealth: 150,
     speed: 0.525, // 50% faster than rocket tank when unloaded
@@ -1361,6 +1379,8 @@ export const UNIT_PROPERTIES = {
     armor: 3
   },
   ambulance: {
+    weight: 4,
+    airliftable: true,
     health: 25,
     maxHealth: 25,
     speed: 0.175, // 65% slower than previous base (0.5 -> 0.175) for reduced mobility
@@ -1370,8 +1390,10 @@ export const UNIT_PROPERTIES = {
     maxMedics: 10,
     medics: 10 // Initial crew capacity
   },
-  fireEngine: { health: 60, maxHealth: 60, speed: 0.66, rotationSpeed: TANK_WAGON_ROT, turretRotationSpeed: 0, armor: 1 },
+  fireEngine: { weight: 20, airliftable: true, health: 60, maxHealth: 60, speed: 0.66, rotationSpeed: TANK_WAGON_ROT, turretRotationSpeed: 0, armor: 1 },
   tankerTruck: {
+    weight: 28,
+    airliftable: true,
     health: 20,
     maxHealth: 20,
     speed: 0.66,
@@ -1379,6 +1401,8 @@ export const UNIT_PROPERTIES = {
     turretRotationSpeed: 0
   },
   ammunitionTruck: {
+    weight: 30,
+    airliftable: true,
     health: 30,
     maxHealth: 30,
     speed: 0.66, // 2x tank speed (tank_v1 is 0.33)
@@ -1386,6 +1410,8 @@ export const UNIT_PROPERTIES = {
     turretRotationSpeed: 0
   },
   apache: {
+    weight: 5.2,
+    airliftable: false,
     isAirUnit: true,
     health: 40,
     maxHealth: 40,
@@ -1395,6 +1421,8 @@ export const UNIT_PROPERTIES = {
     accelerationMultiplier: 1.25
   },
   f22Raptor: {
+    weight: 19.7,
+    airliftable: false,
     isAirUnit: true,
     health: 80,
     maxHealth: 80,
@@ -1404,6 +1432,8 @@ export const UNIT_PROPERTIES = {
     accelerationMultiplier: 1.5
   },
   f35: {
+    weight: 13.3,
+    airliftable: false,
     isAirUnit: true,
     health: 70,
     maxHealth: 70,
@@ -1412,7 +1442,13 @@ export const UNIT_PROPERTIES = {
     turretRotationSpeed: 0,
     accelerationMultiplier: 1.35
   },
+  c5Galaxy: {
+    weight: 172, airliftable: false, isAirUnit: true, health: 300, maxHealth: 300, speed: 2.2,
+    rotationSpeed: 0.035, turretRotationSpeed: 0, accelerationMultiplier: 0.55, armor: 1, footprintTiles: 3, renderScale: 3.5
+  },
   howitzer: {
+    weight: 32,
+    airliftable: true,
     health: 160,
     maxHealth: 160,
     speed: 0.22,
@@ -1422,6 +1458,8 @@ export const UNIT_PROPERTIES = {
     armor: 2
   },
   mineLayer: {
+    weight: 28,
+    airliftable: true,
     health: 30,
     maxHealth: 30,
     speed: 0.528, // 80% of tanker truck speed (0.66 * 0.8)
@@ -1431,6 +1469,8 @@ export const UNIT_PROPERTIES = {
     mineCapacity: 20
   },
   supplyShip: {
+    weight: 1800,
+    airliftable: false,
     health: 260,
     maxHealth: 260,
     speed: 0.546,
@@ -1447,6 +1487,8 @@ export const UNIT_PROPERTIES = {
     maxSupplyRepairTools: 260
   },
   destroyer: {
+    weight: 8300,
+    airliftable: false,
     health: 250,
     maxHealth: 250,
     speed: 0.42,
@@ -1458,6 +1500,8 @@ export const UNIT_PROPERTIES = {
     isNaval: true
   },
   hovercraft: {
+    weight: 185,
+    airliftable: false,
     health: 140,
     maxHealth: 140,
     speed: 0.72,
@@ -1470,6 +1514,8 @@ export const UNIT_PROPERTIES = {
     transportCapacity: 4
   },
   vehicleFerry: {
+    weight: 1200,
+    airliftable: false,
     health: 520,
     maxHealth: 520,
     speed: 0.3,
@@ -1482,6 +1528,8 @@ export const UNIT_PROPERTIES = {
     transportCapacity: 10
   },
   aircraftCarrier: {
+    weight: 100000,
+    airliftable: false,
     health: 1100,
     maxHealth: 1100,
     speed: 0.24,
@@ -1496,6 +1544,8 @@ export const UNIT_PROPERTIES = {
     maxCarrierAmmo: 64
   },
   navalMineLayer: {
+    weight: 600,
+    airliftable: false,
     health: 280,
     maxHealth: 280,
     speed: 0.4,
@@ -1508,6 +1558,8 @@ export const UNIT_PROPERTIES = {
     waterMineCapacity: 20
   },
   battleship: {
+    weight: 58000,
+    airliftable: false,
     health: 950,
     maxHealth: 950,
     speed: 0.26,
@@ -1519,6 +1571,8 @@ export const UNIT_PROPERTIES = {
     isNaval: true
   },
   submarine: {
+    weight: 7800,
+    airliftable: false,
     health: 260,
     maxHealth: 260,
     speed: 0.36,
@@ -1530,6 +1584,8 @@ export const UNIT_PROPERTIES = {
     isNaval: true
   },
   mineSweeper: {
+    weight: 53,
+    airliftable: true,
     health: 200,
     maxHealth: 200,
     speed: 0.231, // 70% of tank_v1 speed (0.33 * 0.7)
