@@ -57,7 +57,7 @@ Pick one canonical type id and display name before implementation. Do not leave 
 - `src/game/attackNotifications.js`: `'techCenter'` is listed as a player base structure for under-attack notifications.
 - Command Center perk research notes (`specs/command-center-perks.md` §3.1) already flag the unused Technology Center art as a style reference. That note is historical; this spec is the building's own draft.
 
-The four follow-on buildings have **no** art, type ids, or code yet.
+The four follow-on buildings now have committed map and sidebar art (see [Art assets](#art-assets)). They still have no type ids or gameplay code.
 
 ---
 
@@ -107,8 +107,9 @@ The four follow-on buildings have **no** art, type ids, or code yet.
 
 - [ ] Any **new** game-asset images (map sprite, build-button icon, construction icon) are generated with **Grok Imagine only**, never ChatGPT, OpenAI, or any other image model. This is a standing rule for all future code-for-battle game-asset images, not only this building.
 - [ ] New art is shown to Patrick as previews and approved before anything is committed. For new buildings the usual two-stage flow applies: map-sprite proposals first, then build-button proposals, then implementation (`skills/new-building/SKILL.md`).
-- [ ] The Rocket Launch Base, when its art is made, is a launch tower in the style of SpaceX's "Mechazilla", with the rocket / Starship as part of the building — that visual direction is already decided. Exact composition, footprint, and whether the rocket is decorative or a unit are not.
-- [ ] The AI Center is visually an AI data center. Exact composition is not decided.
+- [x] The Rocket Launch Base, AI Center, Drone Factory, and Spaceship Factory map and build-button art was picked on 2026-11-21 and is listed under [Art assets](#art-assets). Gameplay meaning of each building is still open.
+- [ ] The Rocket Launch Base remains a launch tower in the style of SpaceX's "Mechazilla", with the rocket / Starship as part of the building. Whether the rocket is decorative or a unit is not decided.
+- [ ] The AI Center is visually an AI data center.
 - [ ] Existing Technology Center art may be kept or replaced; that choice is open. If it is kept, no new generation is required for that building.
 
 ---
@@ -169,7 +170,7 @@ Drone Factory, AI Center, Rocket Launch Base, and Spaceship Factory cannot be st
 Every numeric or gameplay value that ships is written into this spec or a dated amendment after Patrick's decision.
 
 ### SC-004: Art approval
-No new image files for these buildings are committed without a Grok Imagine preview and Patrick's explicit pick.
+Follow-on building map sprites and build buttons were picked on 2026-11-21 (see Art assets). Further new images still need a Grok Imagine preview and Patrick's explicit pick.
 
 ---
 
@@ -193,7 +194,7 @@ Use this list to continue the work in a later session. Check items off only when
 ### Implementation (after the decisions above)
 
 - [ ] Write decided values back into this spec (move them out of Open questions) before or with the implementation commit.
-- [ ] Generate any missing art with Grok Imagine, show proposals, get Patrick's pick, then commit images.
+- [x] Commit the picked follow-on map sprites and build buttons (done 2026-11-21; see Art assets). Construction icons were not requested.
 - [ ] Implement the Technology Center via `skills/new-building/SKILL.md`.
 - [ ] Implement each follow-on building only after its purpose and art (if new) are approved. Prefer separate follow-up specs if a building grows its own systems (drones, launches, spaceships).
 - [ ] Reconcile `attackNotifications.js` with the canonical type id.
@@ -201,6 +202,46 @@ Use this list to continue the work in a later session. Check items off only when
 - [ ] Tests: placement, prerequisites, save/load, multiplayer sync, AI prerequisite behaviour if the AI is allowed to build this tier.
 
 ---
+
+
+## Art assets
+
+Patrick picked the follow-on building art on 2026-11-21 (Europe/Berlin). Every image below was generated with **Grok Imagine** only. The files are committed as unused assets: this change does not register them in production, the tech tree, or `scripts/build-prepared-sprites.mjs`. No construction-yard icons were made for these buildings.
+
+| Building | Map sprite (192×192 RGBA) | Sidebar / build button (256×256 RGB, matching existing building buttons) |
+|---|---|---|
+| Drone Factory | `public/images/map/buildings/drone_factory_map.webp` | `public/images/sidebar/drone_factory_sidebar.webp` |
+| AI Center | `public/images/map/buildings/ai_center_map.webp` | `public/images/sidebar/ai_center_sidebar.webp` |
+| Spaceship Factory | `public/images/map/buildings/spaceship_factory_map.webp` | `public/images/sidebar/spaceship_factory_sidebar.webp` |
+| Rocket Launch Base | `public/images/map/buildings/rocket_launch_base_map.webp` | `public/images/sidebar/rocket_launch_base_sidebar.webp` |
+
+Picks: Drone Factory map option 4 and build-button v3 option 5; AI Center map option 1 and build-button v2 option 4; Spaceship Factory map option 3 and build-button v2 option 2; Rocket Launch Base map v2 option 1 (two chopstick-arm pairs) and build-button v2 option 2.
+
+### Drone Factory
+
+![Drone Factory map sprite](../../public/images/map/buildings/drone_factory_map.webp)
+
+![Drone Factory build button](../../public/images/sidebar/drone_factory_sidebar.webp)
+
+### AI Center
+
+![AI Center map sprite](../../public/images/map/buildings/ai_center_map.webp)
+
+![AI Center build button](../../public/images/sidebar/ai_center_sidebar.webp)
+
+### Spaceship Factory
+
+![Spaceship Factory map sprite](../../public/images/map/buildings/spaceship_factory_map.webp)
+
+![Spaceship Factory build button](../../public/images/sidebar/spaceship_factory_sidebar.webp)
+
+### Rocket Launch Base
+
+The map sprite is the two-pair Mechazilla variant (standalone truss tower beside a stainless full stack, upper arms at the Ship, lower arms at mid-booster).
+
+![Rocket Launch Base map sprite](../../public/images/map/buildings/rocket_launch_base_map.webp)
+
+![Rocket Launch Base build button](../../public/images/sidebar/rocket_launch_base_sidebar.webp)
 
 ## Open questions
 
@@ -229,7 +270,7 @@ Do not treat any of the following as decided.
 - Implementing any of these buildings in this documentation change.
 - Inventing placeholder stats so coding can start without Patrick.
 - Editing `docs/brainstorm.md`.
-- Regenerating or committing new art before Patrick approves a proposal.
+- Implementing the four follow-on buildings or registering their sprites in production data.
 
 ---
 
