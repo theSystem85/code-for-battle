@@ -22,7 +22,8 @@ const DEFAULT_BINDINGS = {
   keyboard: [
     { id: 'toggle-help', label: 'Open Settings (Keybindings Tab)', input: 'i', context: KEYBINDING_CONTEXTS.DEFAULT },
     { id: 'open-cheats', label: 'Open Cheat Console', input: 'c', context: KEYBINDING_CONTEXTS.DEFAULT },
-    { id: 'open-runtime-config', label: 'Open Runtime Config', input: 'k', context: KEYBINDING_CONTEXTS.DEFAULT },
+    { id: 'open-perk-tree', label: 'Open Command Center Perk Tree', input: 'k', context: KEYBINDING_CONTEXTS.DEFAULT },
+    { id: 'open-runtime-config', label: 'Open Runtime Config', input: 'Shift+K', context: KEYBINDING_CONTEXTS.DEFAULT },
     { id: 'toggle-grid', label: 'Toggle Grid', input: 'g', context: KEYBINDING_CONTEXTS.DEFAULT },
     { id: 'toggle-occupancy', label: 'Toggle Occupancy Map', input: 'o', context: KEYBINDING_CONTEXTS.DEFAULT },
     { id: 'toggle-dzm', label: 'Cycle Danger Zone Map', input: 'z', context: KEYBINDING_CONTEXTS.DEFAULT },

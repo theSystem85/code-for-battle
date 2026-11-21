@@ -4,6 +4,7 @@ import { suspendRemoteControlAutoFocus } from '../game/remoteControl.js'
 import { notifyBenchmarkManualCameraControl } from '../benchmark/benchmarkTracker.js'
 import { getPlayableViewportHeight, getPlayableViewportWidth } from '../utils/layoutMetrics.js'
 import { notifyMapEditorWheel } from '../ui/mapEditorControls.js'
+import { normalizePanWheel } from './panSurface.js'
 
 // Input-event work only: constant cost, independent of unit count and canvas DPR.
 // Pixel wheel deltas already include the OS's natural-scroll direction and momentum.
@@ -40,12 +41,8 @@ export function setupMapPanning(canvas, mapGrid, requestRenderFrame) {
       requestRenderFrame?.()
       return
     }
-    const scaleX = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? getPlayableViewportWidth(canvas) : 1
-    const scaleY = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? getPlayableViewportHeight(canvas) : 1
-    const horizontalFallback = event.shiftKey && event.deltaX === 0
-    const direction = INVERT_TOUCH_MAP_SCROLL ? -1 : 1
-    pan(direction * (horizontalFallback ? event.deltaY * scaleX : event.deltaX * scaleX),
-      direction * (horizontalFallback ? 0 : event.deltaY * scaleY))
+    const delta = normalizePanWheel(event, getPlayableViewportWidth(canvas), getPlayableViewportHeight(canvas), INVERT_TOUCH_MAP_SCROLL)
+    pan(delta.x, delta.y)
   }, { passive: false })
 
 }

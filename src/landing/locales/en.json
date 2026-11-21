@@ -95,7 +95,7 @@
         },
         "automation": {
           "title": "Automation",
-          "body": "Automation gives Code for Battle its name: build a state machine that makes ordinary game commands for you. Send damaged units for repairs, replace a lost tank, maintain power, or control turret fire."
+          "body": "Build a Command Center, earn veterancy stars, and unlock a four-branch perk tree. Automation gives Code for Battle its name: build a state machine that makes ordinary game commands for you. Send damaged units for repairs, replace a lost tank, maintain power, or control turret fire."
         }
       }
     },
@@ -248,7 +248,7 @@
     },
     "automation": {
       "title": "Code your battle",
-      "lead": "Automation gives Code for Battle its name: build a state machine that makes ordinary game commands for you. Send damaged units for repairs, replace a lost tank, maintain power, or control turret fire.",
+      "lead": "Build a Command Center, earn veterancy stars, and unlock a four-branch perk tree. Automation gives Code for Battle its name: build a state machine that makes ordinary game commands for you. Send damaged units for repairs, replace a lost tank, maintain power, or control turret fire.",
       "categoriesTitle": "Four ways to automate",
       "categoriesBody": "Control supported units or defence buildings; build units or buildings. Production still needs money, technology, facilities, queue space and a legal placement. Weapon rules and manual commands keep their priority.",
       "editorTitle": "Buttons or CFBL",

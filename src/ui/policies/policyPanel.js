@@ -26,6 +26,8 @@ import { describeRuleTrigger } from './conditionRows.js'
 import { attachPolicyTooltip } from './policyTooltip.js'
 import { openPolicyEditor } from './policyEditorModal.js'
 import { showNotification } from '../notifications.js'
+import { START_PERK_BY_VARIANT, getPerk } from '../../perks/perkCatalog.js'
+import { getAutomationPerkMode, hasLivingCommandCenter, ownsPerk, requiredPerksForPolicy, subscribePerks } from '../../perks/perkState.js'
 
 let panel = null
 let list = null
@@ -37,6 +39,22 @@ export const PANEL_REFRESH_MS = 500
 
 function humanPlayer() {
   return gameState.humanPlayer || 'player1'
+}
+
+function lockForPolicy(policy) {
+  if (getAutomationPerkMode() === 'allUnlocked') return null
+  if (!hasLivingCommandCenter(humanPlayer())) return 'Command link lost: rebuild the Command Center'
+  const missing = [...requiredPerksForPolicy(policy)].find(id => !ownsPerk(humanPlayer(), id))
+  return missing ? `Locked: needs ${getPerk(missing)?.name || missing}` : null
+}
+
+function openTree() { import('../perks/perkTree.js').then(module => module.openPerkTree()) }
+
+function variantOption(variant, label) {
+  const perk = getPerk(START_PERK_BY_VARIANT[variant])
+  const locked = getAutomationPerkMode() !== 'allUnlocked' && !ownsPerk(humanPlayer(), perk.id)
+  const hint = `needs ${perk.name} (${perk.cost}★)`
+  return h('option', { value: variant, disabled: locked, 'aria-description': locked ? hint : '', text: `${locked ? '🔒 ' : ''}${label}${locked ? `: ${hint}` : ''}` })
 }
 
 export function describePolicyRules(policy) {
@@ -94,7 +112,9 @@ function policyCard(entry) {
   const isUnitBuild = policy.variant === 'unitBuild'
   const isDefence = policy.variant === 'defence'
   const card = h('article', { class: `policy-card${enabled ? ' is-on' : ''}`, dataset: { policyId: policy.id } })
+  const lock = lockForPolicy(policy)
   const top = h('div', { class: 'policy-card__top' }, h('span', { text: policy.name }))
+  if (lock) top.appendChild(h('span', { class: 'policy-card__lock', text: lock, 'aria-description': lock }))
   if (isGlobal) {
     top.appendChild(h('button', {
       class: 'policy-switch',
@@ -102,6 +122,7 @@ function policyCard(entry) {
       role: 'switch',
       'aria-checked': String(enabled),
       'aria-label': `${enabled ? 'Disable' : 'Enable'} ${policy.name}`,
+      disabled: Boolean(lock), 'aria-description': lock || '',
       onClick: () => {
         const result = setPolicyEnabled(humanPlayer(), policy.id, !enabled)
         if (!result.ok) showNotification('Only the commanding player can switch this automation.', 2200)
@@ -209,6 +230,9 @@ function renderList() {
   const unitBuildEntries = entries.filter(entry => entry.policy.variant === 'unitBuild')
   const defenceEntries = entries.filter(entry => entry.policy.variant === 'defence')
   list.replaceChildren(
+    ...(getAutomationPerkMode() !== 'allUnlocked' && !hasLivingCommandCenter(humanPlayer())
+      ? [h('section', { class: 'policy-recovery policy-lock-banner' }, h('strong', { text: 'Command link lost: rebuild the Command Center' }), h('button', { class: 'policy-btn', type: 'button', text: 'Open Perk Tree', onClick: openTree }))]
+      : []),
     ...recoveryNotice(),
     sectionHeading('Unit automations', 'unitPoliciesHeading'),
     ...(unitEntries.length
@@ -307,10 +331,10 @@ export function installPolicyPanel() {
           }
         },
         h('option', { value: '', text: 'Choose…', disabled: true, selected: true, hidden: true }),
-        h('option', { value: 'unitBuild', text: 'build unit' }),
-        h('option', { value: 'build', text: 'build base' }),
-        h('option', { value: 'unit', text: 'control unit' }),
-        h('option', { value: 'defence', text: 'control base defence' })))))
+        variantOption('unitBuild', 'build unit'),
+        variantOption('build', 'build base'),
+        variantOption('unit', 'control unit'),
+        variantOption('defence', 'control base defence')))))
   document.body.appendChild(panel)
 
   if (button) {
@@ -331,4 +355,5 @@ export function installPolicyPanel() {
   subscribePolicyStore(() => {
     if (panel.classList.contains('is-open')) renderList()
   })
+  subscribePerks(() => { if (panel.classList.contains('is-open')) renderList() })
 }

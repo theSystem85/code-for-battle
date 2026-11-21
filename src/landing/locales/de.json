@@ -95,7 +95,7 @@
         },
         "automation": {
           "title": "Automation",
-          "body": "Automation gibt Code for Battle seinen Namen: Erstelle einen Zustandsautomaten, der normale Spielbefehle für dich ausführt. Schicke beschädigte Einheiten zur Reparatur, ersetze einen verlorenen Panzer, sichere die Stromversorgung oder steuere Geschützfeuer."
+          "body": "Baue ein Kommandozentrum, verdiene Veteranensterne und schalte einen vierteiligen Perk-Baum frei. Automation gibt Code for Battle seinen Namen: Erstelle einen Zustandsautomaten, der normale Spielbefehle für dich ausführt. Schicke beschädigte Einheiten zur Reparatur, ersetze einen verlorenen Panzer, sichere die Stromversorgung oder steuere Geschützfeuer."
         }
       }
     },
@@ -248,7 +248,7 @@
     },
     "automation": {
       "title": "Programmiere deinen Kampf",
-      "lead": "Automation gibt Code for Battle seinen Namen: Erstelle einen Zustandsautomaten, der normale Spielbefehle für dich ausführt. Schicke beschädigte Einheiten zur Reparatur, ersetze einen verlorenen Panzer, sichere die Stromversorgung oder steuere Geschützfeuer.",
+      "lead": "Baue ein Kommandozentrum, verdiene Veteranensterne und schalte einen vierteiligen Perk-Baum frei. Automation gibt Code for Battle seinen Namen: Erstelle einen Zustandsautomaten, der normale Spielbefehle für dich ausführt. Schicke beschädigte Einheiten zur Reparatur, ersetze einen verlorenen Panzer, sichere die Stromversorgung oder steuere Geschützfeuer.",
       "categoriesTitle": "Vier Arten der Automation",
       "categoriesBody": "Steuere unterstützte Einheiten oder Verteidigungsgebäude; produziere Einheiten oder Gebäude. Produktion benötigt weiterhin Geld, Technologie, Fabriken, freie Warteschlangen und einen erlaubten Bauplatz. Waffenregeln und manuelle Befehle behalten ihre Priorität.",
       "editorTitle": "Buttons oder CFBL",

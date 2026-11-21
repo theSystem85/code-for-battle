@@ -75,3 +75,7 @@ On a phone the Automation dialog is full screen in portrait and landscape, with 
 - **A machine will not act:** confirm save, enablement, binding, category opt-in, ownership and normal game requirements. Inspect direct-order conflicts and failure/retry status.
 - **An imported automation needs repair:** preserve the original import, follow its validation report and save only after repairing unsupported data. Unknown future source versions must not be silently overwritten.
 - **A state number changed:** insertion or removal regenerates contiguous indexes. References update with the edit; use undo to restore the earlier machine.
+
+## Command Center perks and locks
+
+In games with **Automation perks: Required**, build a Command Center and spend veterancy stars in its perk tree before enabling automation. Locked categories, conditions, actions and values remain visible so you can plan a program, but cannot run until their named perk is owned. A destroyed Command Center suspends automation without deleting it; rebuild the building to restore the command link. Imported `.cfbl` files are retained even when their features are locked.

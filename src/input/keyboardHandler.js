@@ -141,6 +141,13 @@ export class KeyboardHandler {
         return
       }
 
+      if (keybindingManager.matchesKeyboardAction(e, 'open-perk-tree', kbContext)) {
+        e.preventDefault()
+        e.stopPropagation()
+        import('../ui/perks/perkTree.js').then(({ openPerkTree }) => openPerkTree())
+        return
+      }
+
       const isEscapeKey = e.key === 'Escape' || keybindingManager.matchesKeyboardAction(e, 'escape', kbContext)
       const hasCancelableEscapeState = Boolean(
         gameState.chainBuildMode ||
