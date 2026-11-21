@@ -1,10 +1,12 @@
+import { TILE_SIZE } from '../config.js'
 import { applyProductionCompletionAck } from '../policies/completionReceipts.js'
 import { units as automationEntities } from '../main.js'
 import { applyAutomationMutation, getPolicyDocument, subscribeAutomationMutations, setAutomationAuthoringGuard } from '../policies/policyStore.js'
 import { recordReplayCommand } from '../replayCommandPrimitives.js'
 import { applyPerkPurchase, canPurchasePerk, getPolicyLock, hasLivingCommandCenter, ownsPerk } from '../perks/perkState.js'
 import { START_PERK_BY_VARIANT } from '../perks/perkCatalog.js'
-import { beginC5Airdrop, embarkC5Vehicle } from '../game/c5Cargo.js'
+import { embarkC5Vehicle, unloadC5Cargo } from '../game/c5Cargo.js'
+import { startC5Mission } from '../game/c5GalaxySystem.js'
 
 export function isAutomationEditPerkAllowed(command) {
   if (['buildOptIn', 'unitBuildOptIn'].includes(command?.operation) && command.payload?.enabled !== false) {
@@ -293,15 +295,39 @@ function applyCommand(command) {
     case COMMAND_TYPES.C5_LOAD: {
       const galaxy = automationEntities.find(unit => unit.id === command.payload?.galaxyId && unit.type === 'c5Galaxy')
       const vehicle = automationEntities.find(unit => unit.id === command.payload?.unitId)
-      if (galaxy?.flightState === 'grounded' && vehicle) embarkC5Vehicle(galaxy, vehicle, automationEntities)
+      if (galaxy?.flightState === 'grounded' && vehicle) {
+        const result = embarkC5Vehicle(galaxy, vehicle, automationEntities)
+        if (!result.allowed) gameState.showNotification?.(result.message)
+      }
+      break
+    }
+    case COMMAND_TYPES.C5_UNLOAD: {
+      const galaxy = automationEntities.find(unit => unit.id === command.payload?.galaxyId && unit.type === 'c5Galaxy')
+      if (galaxy) {
+        const originX = Math.floor((galaxy.x + TILE_SIZE / 2) / TILE_SIZE)
+        const originY = Math.floor((galaxy.y + TILE_SIZE / 2) / TILE_SIZE)
+        const used = new Set()
+        const findTile = () => {
+          for (let radius = 2; radius <= 8; radius++) {
+            for (let dy = -radius; dy <= radius; dy++) {
+              for (let dx = -radius; dx <= radius; dx++) {
+                if (Math.max(Math.abs(dx), Math.abs(dy)) !== radius) continue
+                const tx = originX + dx; const ty = originY + dy; const key = `${tx},${ty}`
+                if (tx < 0 || ty < 0 || used.has(key) || gameState.occupancyMap?.[ty]?.[tx]) continue
+                used.add(key)
+                return { x: tx * TILE_SIZE, y: ty * TILE_SIZE }
+              }
+            }
+          }
+          return null
+        }
+        unloadC5Cargo(galaxy, automationEntities, findTile)
+      }
       break
     }
     case COMMAND_TYPES.C5_AIRDROP: {
       const galaxy = automationEntities.find(unit => unit.id === command.payload?.galaxyId && unit.type === 'c5Galaxy')
-      if (galaxy && command.payload?.target) {
-        galaxy.flightState = galaxy.flightState === 'grounded' ? 'takingOff' : galaxy.flightState
-        beginC5Airdrop(galaxy, command.payload.target, command.payload.tick || 0)
-      }
+      if (galaxy && command.payload?.target) startC5Mission(galaxy, command.payload.target, gameState.frameCount || 0)
       break
     }
     case COMMAND_TYPES.GAME_PAUSE:
