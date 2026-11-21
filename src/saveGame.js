@@ -716,7 +716,7 @@ function buildSaveObject(label, { includeMap = true, includeStaticConfiguration 
       serialized.sweeping = Boolean(u.sweeping)
     }
 
-    if (u.type === 'hovercraft' || u.type === 'vehicleFerry') {
+    if (u.type === 'hovercraft' || u.type === 'vehicleFerry' || u.type === 'c5Galaxy') {
       serialized.transportCapacity = u.transportCapacity
       serialized.embarkedUnitIds = [...(u.embarkedUnitIds || [])]
       serialized.pendingLoadUnitId = u.pendingLoadUnitId || null
@@ -724,6 +724,7 @@ function buildSaveObject(label, { includeMap = true, includeStaticConfiguration 
       serialized.embarkedUnitTypes = [...(u.embarkedUnitTypes || [])]
       serialized.pendingUnloadTile = u.pendingUnloadTile || null
       serialized.transportOperation = u.transportOperation ? { ...u.transportOperation } : null
+      if (u.type === 'c5Galaxy') serialized.dropQueueState = u.dropQueueState ? JSON.parse(JSON.stringify(u.dropQueueState)) : null
     }
 
     if (u.type === 'aircraftCarrier') {
@@ -736,7 +737,7 @@ function buildSaveObject(label, { includeMap = true, includeStaticConfiguration 
       serialized.carrierStrikeTargetIds = [...(u.carrierStrikeTargetIds || [])]
     }
 
-    if (u.type === 'f22Raptor' || u.type === 'f35' || u.type === 'apache') {
+    if (u.type === 'f22Raptor' || u.type === 'f35' || u.type === 'apache' || u.type === 'c5Galaxy') {
       serialized.carrierId = u.carrierId || null
       serialized.carrierDeckSlotIndex = Number.isInteger(u.carrierDeckSlotIndex) ? u.carrierDeckSlotIndex : null
       serialized.carrierOperation = u.carrierOperation ? { ...u.carrierOperation } : null
@@ -786,7 +787,7 @@ function buildSaveObject(label, { includeMap = true, includeStaticConfiguration 
     if (u.embarkedOnId) serialized.embarkedOnId = u.embarkedOnId
     if (u.transportTransfer) serialized.transportTransfer = { ...u.transportTransfer }
 
-    if (u.type === 'f22Raptor' || u.type === 'f35' || u.type === 'apache') {
+    if (u.type === 'f22Raptor' || u.type === 'f35' || u.type === 'apache' || u.type === 'c5Galaxy') {
       serialized.f22State = u.f22State
       serialized.airstripId = u.airstripId
       serialized.airstripParkingSlotIndex = u.airstripParkingSlotIndex

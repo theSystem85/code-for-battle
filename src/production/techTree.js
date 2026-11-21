@@ -12,7 +12,7 @@ export const productionUnlockRules = [
   { requires: ['vehicleFactory', 'vehicleWorkshop'], units: ['recoveryTank', 'mineSweeper'] },
   { requires: ['vehicleFactory', 'vehicleWorkshop', 'ammunitionFactory'], units: ['mineLayer'] },
   { requires: ['helipad'], units: ['apache'] },
-  { requires: ['airstrip'], units: ['f22Raptor'] },
+  { requires: ['airstrip'], units: ['f22Raptor', 'c5Galaxy'] },
   { requires: [['helipad', 'airstrip'], 'ammunitionFactory'], units: ['f35'] },
   { requires: ['vehicleFactory'], count: 2, units: ['tank-v3'] },
   { requires: ['shipyard'], units: ['destroyer', 'hovercraft', 'vehicleFerry', 'aircraftCarrier', 'navalMineLayer', 'battleship', 'submarine'] },

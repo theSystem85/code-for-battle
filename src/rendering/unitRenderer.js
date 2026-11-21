@@ -17,6 +17,7 @@ import { renderMineSweeperWithImage, isMineSweeperImageLoaded } from './mineSwee
 import { renderApacheWithImage } from './apacheImageRenderer.js'
 import { renderF22WithImage } from './f22ImageRenderer.js'
 import { renderF35WithImage } from './f35ImageRenderer.js'
+import { renderC5GalaxyWithImage } from './c5GalaxyImageRenderer.js'
 import { renderDestroyerWithImage, isDestroyerImageLoaded } from './destroyerImageRenderer.js'
 import { renderSupplyShipWithImage, isSupplyShipImageLoaded } from './supplyShipImageRenderer.js'
 import { renderNavalFleetUnit } from './navalFleetImageRenderer.js'
@@ -91,6 +92,11 @@ export class UnitRenderer {
       }
     }
 
+    if (unit.type === 'c5Galaxy' && renderC5GalaxyWithImage(ctx, unit, centerX, centerY)) {
+      this.renderSelection(ctx, unit, centerX, centerY - (unit.altitude || 0) * 0.4)
+      return
+    }
+
     if (unit.type === 'f35') {
       const rendered = renderF35WithImage(ctx, unit, centerX, centerY)
       if (rendered) {
@@ -134,7 +140,7 @@ export class UnitRenderer {
   }
 
   renderTurret(ctx, unit, centerX, centerY) {
-    if (unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35') {
+    if (unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35' || unit.type === 'c5Galaxy') {
       return
     }
     // Harvesters use image rendering. Show mining bar only if image not loaded
@@ -353,7 +359,7 @@ export class UnitRenderer {
   }
 
   getHudCenter(unit, scrollOffset) {
-    const altitudeLift = ((unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35') && unit.altitude) ? unit.altitude * 0.4 : 0
+    const altitudeLift = ((unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35' || unit.type === 'c5Galaxy') && unit.altitude) ? unit.altitude * 0.4 : 0
     const centerX = unit.x + TILE_SIZE / 2 - scrollOffset.x
     const centerY = unit.y + TILE_SIZE / 2 - scrollOffset.y - altitudeLift
     return { centerX, centerY, altitudeLift }
@@ -653,7 +659,7 @@ export class UnitRenderer {
   getHudHoverLabelForUnit(unit, scrollOffset, mouseScreenX, mouseScreenY) {
     if (!unit?.selected || unit.health <= 0) return null
 
-    const altitudeLift = ((unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35') && unit.altitude) ? unit.altitude * 0.4 : 0
+    const altitudeLift = ((unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35' || unit.type === 'c5Galaxy') && unit.altitude) ? unit.altitude * 0.4 : 0
     const centerX = unit.x + TILE_SIZE / 2 - scrollOffset.x
     const centerY = unit.y + TILE_SIZE / 2 - scrollOffset.y - altitudeLift
     const hudBounds = this.getSelectedHudBounds(centerX, centerY, unit)
@@ -1030,7 +1036,7 @@ export class UnitRenderer {
     }
 
     // Apply altitude adjustment for Apache helicopters to align with selection markers
-    const altitudeLift = ((unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35') && unit.altitude) ? unit.altitude * 0.4 : 0
+    const altitudeLift = ((unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35' || unit.type === 'c5Galaxy') && unit.altitude) ? unit.altitude * 0.4 : 0
 
     // Draw health bar with party colors for owner distinction
     const unitHealthRatio = unit.health / unit.maxHealth
@@ -1152,7 +1158,7 @@ export class UnitRenderer {
 
     if (shouldShowBar) {
       if (unit.selected && !this.isLegacySelectionHud()) {
-        const altitudeLift = ((unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35') && unit.altitude) ? unit.altitude * 0.4 : 0
+        const altitudeLift = ((unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35' || unit.type === 'c5Galaxy') && unit.altitude) ? unit.altitude * 0.4 : 0
         const centerX = unit.x + TILE_SIZE / 2 - scrollOffset.x
         const centerY = unit.y + TILE_SIZE / 2 - scrollOffset.y - altitudeLift
         const hudBounds = this.getSelectedHudBounds(centerX, centerY, unit)
@@ -1166,7 +1172,7 @@ export class UnitRenderer {
       }
 
       // Apply altitude adjustment for Apache helicopters to align with health bar
-      const altitudeLift = ((unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35') && unit.altitude) ? unit.altitude * 0.4 : 0
+      const altitudeLift = ((unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35' || unit.type === 'c5Galaxy') && unit.altitude) ? unit.altitude * 0.4 : 0
 
       const progressBarWidth = TILE_SIZE * 0.8
       const progressBarHeight = unit.selected ? this.getSelectionHudBarThickness() : 3
@@ -1250,7 +1256,7 @@ export class UnitRenderer {
     const ratio = unit.gas / unit.maxGas
 
     // Apply altitude adjustment for Apache helicopters to align with selection
-    const altitudeLift = ((unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35') && unit.altitude) ? unit.altitude * 0.4 : 0
+    const altitudeLift = ((unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35' || unit.type === 'c5Galaxy') && unit.altitude) ? unit.altitude * 0.4 : 0
 
     const centerX = unit.x + TILE_SIZE / 2 - scrollOffset.x
     const centerY = unit.y + TILE_SIZE / 2 - scrollOffset.y - altitudeLift
@@ -1313,7 +1319,7 @@ export class UnitRenderer {
       } else {
         reloadRatio = Math.min(1, timeSinceLastShot / fireRate) // Progress toward next shot
       }
-    } else if (unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35') {
+    } else if (unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35' || unit.type === 'c5Galaxy') {
       if (typeof unit.maxRocketAmmo === 'number') {
         ratio = Math.max(0, Math.min(1, (unit.rocketAmmo ?? 0) / unit.maxRocketAmmo))
         hasAmmo = true
@@ -1343,7 +1349,7 @@ export class UnitRenderer {
     if (!hasAmmo) return
 
     // Apply altitude adjustment for Apache helicopters to align with selection
-    const altitudeLift = ((unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35') && unit.altitude) ? unit.altitude * 0.4 : 0
+    const altitudeLift = ((unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35' || unit.type === 'c5Galaxy') && unit.altitude) ? unit.altitude * 0.4 : 0
     const centerX = unit.x + TILE_SIZE / 2 - scrollOffset.x
     const centerY = unit.y + TILE_SIZE / 2 - scrollOffset.y - altitudeLift
 
@@ -1424,7 +1430,7 @@ export class UnitRenderer {
 
   getPolicyIconRect(unit, scrollOffset) {
     const rect = this.policyIconRect
-    const lift = ((unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35') && unit.altitude) ? unit.altitude * 0.4 : 0
+    const lift = ((unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35' || unit.type === 'c5Galaxy') && unit.altitude) ? unit.altitude * 0.4 : 0
     rect.width = POLICY_ICON_SIZE
     rect.height = POLICY_ICON_SIZE
     rect.x = unit.x + TILE_SIZE - POLICY_ICON_SIZE + 2 - scrollOffset.x
@@ -1826,7 +1832,7 @@ export class UnitRenderer {
       initializeUnitLeveling(unit)
     }
 
-    const altitudeLift = ((unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35') && unit.altitude) ? unit.altitude * 0.4 : 0
+    const altitudeLift = ((unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35' || unit.type === 'c5Galaxy') && unit.altitude) ? unit.altitude * 0.4 : 0
     const centerX = unit.x + TILE_SIZE / 2 - scrollOffset.x
     const centerY = unit.y + TILE_SIZE / 2 - scrollOffset.y - altitudeLift
     const hudBounds = this.getSelectedHudBounds(centerX, centerY, unit)
@@ -2035,6 +2041,15 @@ export class UnitRenderer {
         this.renderUtilityServiceRange(ctx, unit, centerX, adjustedCenterY)
         this.renderSelection(ctx, unit, centerX, adjustedCenterY)
         this.renderAlertMode(ctx, unit, centerX, adjustedCenterY)
+        return
+      }
+    }
+
+    if (unit.type === 'c5Galaxy') {
+      const rendered = renderC5GalaxyWithImage(ctx, unit, centerX, centerY)
+      if (rendered) {
+        const adjustedCenterY = centerY - (unit.altitude || 0) * 0.4
+        this.renderSelection(ctx, unit, centerX, adjustedCenterY)
         return
       }
     }

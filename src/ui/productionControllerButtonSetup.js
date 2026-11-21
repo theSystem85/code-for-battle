@@ -230,7 +230,7 @@ export function setupUnitButtons(controller) {
           requirementsMet = false
           requirementText = 'Requires Helipad'
         }
-      } else if (unitType === 'f22Raptor') {
+      } else if ((unitType === 'f22Raptor' || unitType === 'c5Galaxy')) {
         const hasAirstrip = gameState.buildings.some(b => b.type === 'airstrip' && b.owner === gameState.humanPlayer)
         if (!hasAirstrip) {
           requirementsMet = false

@@ -114,6 +114,19 @@ migrations[9] = state => {
   return { ...state, perks, automationPerkMode: perks.automationPerkMode, gameState: { ...state.gameState, perks } }
 }
 
+migrations[10] = state => ({
+  ...state,
+  units: Array.isArray(state.units) ? state.units.map(unit => unit?.type === 'c5Galaxy' ? {
+    ...unit,
+    embarkedUnitIds: unit.embarkedUnitIds || [],
+    embarkedUnitTypes: unit.embarkedUnitTypes || [],
+    pendingLoadUnitIds: unit.pendingLoadUnitIds || [],
+    dropQueueState: unit.dropQueueState || null,
+    flightState: unit.flightState || 'grounded',
+    altitude: unit.altitude || 0
+  } : unit) : state.units
+})
+
 // Missing spread boosts and burned-fuel flags retain their default values.
 migrations[8] = state => ({ ...state })
 

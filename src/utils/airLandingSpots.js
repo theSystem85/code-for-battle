@@ -3,7 +3,7 @@ import { getBuildingIdentifier } from '../utils.js'
 import { getAirstripParkingSpots } from './airstripUtils.js'
 import { getHelipadLandingCenter } from './helipadUtils.js'
 
-export const LANDING_AIRCRAFT_TYPES = new Set(['apache', 'f22Raptor', 'f35'])
+export const LANDING_AIRCRAFT_TYPES = new Set(['apache', 'f22Raptor', 'f35', 'c5Galaxy'])
 export const CARRIER_AIRCRAFT_SLOT_WEIGHT = Object.freeze({ f22Raptor: 1, f35: 2, apache: 2 })
 
 function carrierCenter(carrier) {
