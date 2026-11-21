@@ -263,6 +263,9 @@ function calculateInitialTurretDirection(buildingX, buildingY, owner) {
 
 // Place building in the map grid
 export function placeBuilding(building, mapGrid, occupancyMap = gameState.occupancyMap, options = {}) {
+  const limit = buildingData[building.type]?.limit
+  const owner = building.owner === 'player' ? 'player1' : building.owner
+  if (Number.isFinite(limit) && (gameState.buildings || []).filter(item => item !== building && item.type === building.type && (item.owner === 'player' ? 'player1' : item.owner) === owner && item.health > 0).length >= limit) return false
   // Create an array to store original tile types
   building.originalTiles = []
   const transaction = beginMapMutationTransaction(mapGrid)

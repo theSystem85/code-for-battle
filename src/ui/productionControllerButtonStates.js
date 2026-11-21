@@ -1,5 +1,6 @@
 import { gameState } from '../gameState.js'
 import { getMissingBuildingRequirements } from '../production/buildingRequirements.js'
+import { buildingData } from '../data/buildingData.js'
 
 export function updateVehicleButtonStates(controller) {
   // In edit mode, enable all units regardless of tech tree
@@ -201,6 +202,15 @@ export function updateBuildingButtonStates(controller) {
     }
 
     const req = getMissingBuildingRequirements(type, ownedTypes)
+    const limit = buildingData[type]?.limit
+    const count = playerBuildings.filter(building => building.type === type).length + controller.getBuildingProductionCount(button)
+    if (Number.isFinite(limit) && count >= limit) {
+      button.classList.add('disabled')
+      button.dataset.requirement = `Limit ${limit} per player`
+      button.title = button.dataset.requirement
+      button.style.display = ''
+      return
+    }
 
     if (req.length > 0) {
       button.classList.add('disabled')

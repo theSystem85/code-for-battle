@@ -5,9 +5,20 @@ import { gameState } from '../gameState.js'
 import { selectedUnits } from '../inputHandler.js'
 import { TILE_SIZE } from '../config.js'
 import { focusCameraOnPoint } from './tutorialSystem/helpers.js'
+import { canPurchasePerk, getPerkLedger, subscribePerks } from '../perks/perkState.js'
+import { PERKS } from '../perks/perkCatalog.js'
 
 let tooltipListenersAttached = false
 let tooltipOpen = false
+let unsubscribePerkChip = null
+
+function renderPerkStarChip() {
+  const chip = document.getElementById('perkStarChip')
+  if (!chip) return
+  const owner = gameState.humanPlayer || 'player1'
+  chip.textContent = `★ ${getPerkLedger(owner).available}`
+  chip.classList.toggle('is-affordable', PERKS.some(perk => canPurchasePerk(owner, perk.id).ok))
+}
 
 function getMoneyBarGradient() {
   return 'linear-gradient(90deg, #d18100 0%, #ffd489 100%)'
@@ -254,6 +265,11 @@ export function addMoneyIndicator() {
     window.logger.warn('Money bar container not found!')
     return
   }
+  const selectionPerksButton = document.getElementById('commandCenterPerksBtn')
+  if (selectionPerksButton && !selectionPerksButton.dataset.perkHandler) {
+    selectionPerksButton.dataset.perkHandler = 'true'
+    selectionPerksButton.addEventListener('click', () => import('./perks/perkTree.js').then(module => module.openPerkTree()))
+  }
 
   // Clear any existing content to prevent duplicates
   moneyBarContainer.innerHTML = ''
@@ -303,6 +319,16 @@ export function addMoneyIndicator() {
 
   // Add elements to container
   moneyBarContainer.appendChild(moneyTrack)
+  const perkChip = document.createElement('button')
+  perkChip.id = 'perkStarChip'
+  perkChip.className = 'perk-star-chip'
+  perkChip.type = 'button'
+  perkChip.title = 'Available Command Center perk stars'
+  perkChip.addEventListener('click', () => import('./perks/perkTree.js').then(module => module.openPerkTree()))
+  moneyBarContainer.appendChild(perkChip)
+  unsubscribePerkChip?.()
+  unsubscribePerkChip = subscribePerks(renderPerkStarChip)
+  renderPerkStarChip()
 
   // Make sure the container itself is visible and properly styled
   moneyBarContainer.style.display = 'block'
@@ -320,6 +346,8 @@ export function addMoneyIndicator() {
 
 // Update the money bar display
 export function updateMoneyBar() {
+  const perksButton = document.getElementById('commandCenterPerksBtn')
+  if (perksButton) perksButton.hidden = !selectedUnits.some(entity => entity.type === 'commandCenter' && entity.owner === (gameState.humanPlayer || 'player1'))
   const moneyBar = document.getElementById('moneyBar')
   const moneyText = document.getElementById('moneyText')
 

@@ -1,8 +1,19 @@
 import { applyProductionCompletionAck } from '../policies/completionReceipts.js'
 import { units as automationEntities } from '../main.js'
-import { applyAutomationMutation, subscribeAutomationMutations, setAutomationAuthoringGuard } from '../policies/policyStore.js'
+import { applyAutomationMutation, getPolicyDocument, subscribeAutomationMutations, setAutomationAuthoringGuard } from '../policies/policyStore.js'
 import { recordReplayCommand } from '../replayCommandPrimitives.js'
-import { applyPerkPurchase, canPurchasePerk } from '../perks/perkState.js'
+import { applyPerkPurchase, canPurchasePerk, getPolicyLock, hasLivingCommandCenter, ownsPerk } from '../perks/perkState.js'
+import { START_PERK_BY_VARIANT } from '../perks/perkCatalog.js'
+
+export function isAutomationEditPerkAllowed(command) {
+  if (['buildOptIn', 'unitBuildOptIn'].includes(command?.operation) && command.payload?.enabled !== false) {
+    const variant = command.operation === 'buildOptIn' ? 'build' : 'unitBuild'
+    return hasLivingCommandCenter(command.actorId) && ownsPerk(command.actorId, START_PERK_BY_VARIANT[variant])
+  }
+  if (!['enable', 'apply', 'applyBuilding'].includes(command?.operation) || command.payload?.enabled === false) return true
+  const policy = getPolicyDocument(command.payload?.policyId)?.policy
+  return Boolean(policy) && !getPolicyLock(command.actorId, policy)
+}
 /**
  * Game Command Synchronization Module - Coordinator
  *
@@ -211,6 +222,7 @@ export function handleReceivedCommand(command, _sourceId) {
 
     if (command.commandType === COMMAND_TYPES.AUTOMATION_EDIT) {
       if (command.payload?.actorId !== sourceParty || command.payload?.languageVersion !== 1) return
+      if (!isAutomationEditPerkAllowed(command.payload)) return
       const result = applyAutomationMutation(command.payload, [...automationEntities, ...(gameState.buildings || [])])
       if (!result.ok) return
       recordReplayCommand({ type: 'automation-edit', payload: command.payload })

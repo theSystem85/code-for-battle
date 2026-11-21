@@ -41,7 +41,13 @@ function node(perk, ledger) {
     if (event.target.closest('.perk-buy')) {
       event.stopPropagation()
       const available = getPerkLedger(owner()).available
-      if (window.confirm(`Unlock ${perk.name} for ${perk.cost}★? ${available}★ → ${available - perk.cost}★`)) requestPerkPurchase(perk.id)
+      const buy = event.target.closest('.perk-buy')
+      if (buy.dataset.confirm === 'true') requestPerkPurchase(perk.id)
+      else {
+        buy.dataset.confirm = 'true'
+        buy.textContent = `Unlock ${perk.name} for ${perk.cost}★? ${available}★ → ${available - perk.cost}★`
+        buy.focus()
+      }
       return
     }
     button.classList.toggle('show-tooltip')
@@ -79,7 +85,8 @@ function render() {
   const capstone = getPerk('cc.def.capstone')
   const cap = document.createElement('section')
   cap.className = 'perk-capstone'
-  cap.innerHTML = '<span class="perk-capstone__merge" aria-hidden="true"></span>'
+  const ends = ['cc.unit.if.sensing', 'cc.unit.do.air', 'cc.def.if.world', 'cc.def.do.manual', 'cc.base.if.enemies', 'cc.base.do.defence', 'cc.prod.if.enemies', 'cc.prod.do.naval']
+  cap.innerHTML = `<svg class="perk-capstone__merge" viewBox="0 0 800 100" preserveAspectRatio="none" aria-hidden="true">${ends.map((id, index) => `<path class="${ledger.owned.includes(id) ? 'is-lit' : ''}" d="M${50 + index * 100} 0 L${50 + index * 100} 45 L400 95"/>`).join('')}</svg>`
   cap.appendChild(node(capstone, ledger))
   canvas.appendChild(cap)
   overlay.querySelector('.perk-ledger').innerHTML = `${star()} <b>${ledger.available} available</b> · ${ledger.earned} earned · ${ledger.spent} used <small>Earn stars when units gain veterancy.</small>`

@@ -77,6 +77,18 @@ export function isItemUnlocked(ownerId, variant, kind, id, option) {
     ? perk.unlocks.conditions.includes(id) : kind === 'effect' ? perk.unlocks.effects.includes(id)
       : perk.unlocks.options.some(entry => entry.effect === id && entry.values.includes(option))))
 }
+export function getItemUnlockPerk(variant, kind, id, option) {
+  return PERKS.find(perk => perk.variant === variant && (kind === 'condition'
+    ? perk.unlocks.conditions.includes(id) : kind === 'effect' ? perk.unlocks.effects.includes(id)
+      : perk.unlocks.options.some(entry => entry.effect === id && entry.values.includes(option)))) || getPerk(START_PERK_BY_VARIANT[variant])
+}
+export function getPolicyLock(ownerId, policy) {
+  if (getAutomationPerkMode() === 'allUnlocked') return null
+  if (!hasLivingCommandCenter(ownerId)) return 'needs an operational Command Center'
+  const missing = [...requiredPerksForPolicy(policy)].find(id => !ownsPerk(ownerId, id))
+  const perk = getPerk(missing)
+  return perk ? `needs ${perk.name} (${perk.cost}★)` : null
+}
 function visitCondition(condition, required, variant) {
   if (!condition) return
   if (condition.type === 'and' || condition.type === 'or') for (const child of condition.of || []) visitCondition(child, required, variant)

@@ -198,6 +198,9 @@ export function isBuildingFootprintInBuildRange(type, tileX, tileY, buildings, f
  */
 export function canPlaceBuilding(type, tileX, tileY, mapGrid, units, buildings, factories, owner = 'player', options = {}) {
   if (!buildingData[type]) return false
+  const limit = buildingData[type].limit
+  const normalizedOwner = owner === 'player' ? 'player1' : owner
+  if (Number.isFinite(limit) && (buildings || []).filter(building => building.type === type && (building.owner === 'player' ? 'player1' : building.owner) === normalizedOwner && building.health > 0).length >= limit) return false
 
   // Validate mapGrid parameter
   if (!mapGrid || !Array.isArray(mapGrid) || mapGrid.length === 0 || !mapGrid[0]) {

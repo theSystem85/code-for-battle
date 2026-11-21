@@ -24,6 +24,7 @@ import { showNotification } from '../notifications.js'
 import { h } from './policyDom.js'
 import { isPolicyMachineViewOpen, togglePolicyMachineView } from './policyMachineView.js'
 import { describePolicyRules, openPolicyPanel } from './policyPanel.js'
+import { getPolicyLock } from '../../perks/perkState.js'
 
 const RIGHT_CLICK_MOVE_PX = 6
 const MANAGE_ID = '__manage'
@@ -54,15 +55,17 @@ export function buildUnitPolicyItems(unit, onApplied) {
   const summary = defence ? getDefencePolicySummary(unit) : getUnitPolicySummary(unit)
   const items = entries.map(entry => {
     const applied = summary.find(item => item.policyId === entry.policy.id && item.source === (defence ? 'building' : 'unit'))
+    const perkLock = getPolicyLock(owner, entry.policy)
     return {
       id: entry.policy.id,
       label: entry.policy.name,
       text: shortLabel(entry.policy.name),
       customTooltip: true,
       ready: Boolean(applied),
-      disabled: !canCommandPolicy(owner, unit.owner),
+      disabled: !canCommandPolicy(owner, unit.owner) || Boolean(perkLock),
       tooltipTitle: entry.policy.name,
       tooltipLines: [
+        ...(perkLock ? [`🔒 ${perkLock}`] : []),
         ...(applied?.completionStatus ? [applied.completionStatus === 'failed'
           ? `Blocked: ${applied.completionReason || 'the action did not complete'}` : 'Waiting for the issued action to finish.'] : []),
         ...(defence && applied ? [`State ${applied.stateIndex} · ${applied.status}${applied.pending ? ' · AFTER pending' : ''}${applied.holding ? ' · WHILE held' : ''}`] : []),

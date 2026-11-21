@@ -30,4 +30,12 @@ describe('perk tree overlay', () => {
     expect(document.querySelector('.perk-tree__cc-state').textContent).toContain('View only')
     expect(document.querySelector('[data-perk-id="cc.base.start"]')?.classList.contains('is-no-command-center')).toBe(true)
   })
+  it('[U07302] uses eight live SVG merge lanes and an inline purchase confirmation', () => {
+    openPerkTree()
+    expect(document.querySelectorAll('.perk-capstone__merge path')).toHaveLength(8)
+    const buy = document.querySelector('[data-perk-id="cc.base.start"] .perk-buy')
+    buy.click()
+    expect(buy.textContent).toContain('Unlock Base Planner for 2★? 10★ → 8★')
+    expect(document.querySelector('[data-perk-id="cc.base.start"]')?.classList.contains('is-owned')).toBe(false)
+  })
 })

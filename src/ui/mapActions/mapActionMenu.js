@@ -9,6 +9,7 @@ import { broadcastGameCommand } from '../../network/commandBroadcast.js'
 import { COMMAND_TYPES } from '../../network/commandTypes.js'
 import { isLocalPartyAutomationLocked } from '../../network/multiplayerStore.js'
 import { fitMapActionLabels } from './mapActionLabels.js'
+import { getPolicyLock } from '../../perks/perkState.js'
 import './mapActionMenu.css'
 
 const installedMenus = new WeakMap()
@@ -86,6 +87,8 @@ export function installMapActionMenu(canvas, { selection, units, commands, handl
         if (id === 'applyAutomationOnArrival') {
           menu.open(anchor, applicableAutomations(selection, owner()).map(entry => ({
             id: entry.policy.id, label: entry.policy.name, text: entry.policy.name, customTooltip: true,
+            disabled: Boolean(getPolicyLock(owner(), entry.policy)),
+            tooltipLines: getPolicyLock(owner(), entry.policy) ? [`🔒 ${getPolicyLock(owner(), entry.policy)}`] : [],
             onSelect: () => { dispatch(id, { ...origin, policyId: entry.policy.id }); close() }
           })))
           fitMapActionLabels(menu.element)

@@ -2,6 +2,7 @@ import { gameState } from '../../gameState.js'
 import { isPolicyEnabled, listPolicies, setPolicyEnabled, subscribePolicyStore } from '../../policies/policyStore.js'
 import { automationFilename, importAutomationFile, serializeAutomationFile } from '../../automation/automationFiles.js'
 import { showNotification } from '../notifications.js'
+import { getPolicyLock, subscribePerks } from '../../perks/perkState.js'
 
 const selected = new Set()
 
@@ -44,9 +45,10 @@ function render() {
     const enabled = document.createElement('input')
     enabled.type = 'checkbox'
     enabled.checked = isPolicyEnabled(entry.id)
-    enabled.disabled = entry.policy.scope !== 'global'
+    const lock = getPolicyLock(owner(), entry.policy)
+    enabled.disabled = entry.policy.scope !== 'global' || Boolean(lock)
     enabled.setAttribute('aria-label', `${enabled.checked ? 'Disable' : 'Enable'} ${entry.displayName}`)
-    enabled.title = entry.policy.scope === 'global' ? 'Enable automation' : 'Per-unit automations are enabled when applied to a unit'
+    enabled.title = lock ? `🔒 ${lock}` : entry.policy.scope === 'global' ? 'Enable automation' : 'Per-unit automations are enabled when applied to a unit'
     enabled.addEventListener('change', () => setPolicyEnabled(owner(), entry.id, enabled.checked))
     row.append(choose, name, enabled)
     return row
@@ -68,12 +70,18 @@ export function installAutomationSidebar() {
   importButton.addEventListener('click', () => input.click())
   input.addEventListener('change', async() => {
     let imported = 0
+    const locked = []
     try {
       for (const file of input.files || []) {
         const results = await importAutomationFile(await file.text(), owner(), resolveConflict)
-        imported += results.filter(result => result.status !== 'cancelled').length
+        const accepted = results.filter(result => result.status !== 'cancelled')
+        imported += accepted.length
+        for (const result of accepted) {
+          const entry = result.id && listPolicies(owner()).find(item => item.id === result.id)
+          if (entry && getPolicyLock(owner(), entry.policy)) locked.push(entry.displayName)
+        }
       }
-      showNotification(imported ? `Imported ${imported} automation${imported === 1 ? '' : 's'}.` : 'No automations were imported.', 2600)
+      showNotification(imported ? `Imported ${imported} automation${imported === 1 ? '' : 's'}.${locked.length ? ` Locked: ${locked.join(', ')}.` : ''}` : 'No automations were imported.', 2600)
     } catch (error) { showNotification(`Automation import failed: ${error.message}`, 4500) }
     input.value = ''
   })
@@ -86,5 +94,6 @@ export function installAutomationSidebar() {
     try { download(entries) } catch (error) { showNotification(error.message, 2600) }
   })
   subscribePolicyStore(render)
+  subscribePerks(render)
   render()
 }

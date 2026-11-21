@@ -187,6 +187,8 @@ export function refreshBasePolicyStatus() {
 
 function baseAutomationSwitch() {
   const optedIn = isBuildAutomationOptedIn(humanPlayer())
+  const perk = getPerk(START_PERK_BY_VARIANT.build)
+  const lock = getAutomationPerkMode() !== 'allUnlocked' && (!hasLivingCommandCenter(humanPlayer()) || !ownsPerk(humanPlayer(), perk.id)) ? (!hasLivingCommandCenter(humanPlayer()) ? 'needs an operational Command Center' : `needs ${perk.name} (${perk.cost}★)`) : null
   return h('div', { class: `policy-base-optin${optedIn ? ' is-on' : ''}`, id: 'baseAutomationOptIn' },
     h('div', { class: 'policy-card__top' },
       h('span', { text: 'Base automation' }),
@@ -197,6 +199,7 @@ function baseAutomationSwitch() {
         id: 'baseAutomationSwitch',
         'aria-checked': String(optedIn),
         'aria-label': 'Run build automations on my base',
+        disabled: Boolean(lock), 'aria-description': lock ? `🔒 ${lock}` : '',
         onClick: () => setBuildAutomationOptIn(humanPlayer(), !optedIn)
       },
       h('span', { class: 'policy-switch__track', 'aria-hidden': 'true' }),
@@ -206,12 +209,15 @@ function baseAutomationSwitch() {
 
 function unitBuildAutomationSwitch() {
   const optedIn = isUnitBuildAutomationOptedIn(humanPlayer())
+  const perk = getPerk(START_PERK_BY_VARIANT.unitBuild)
+  const lock = getAutomationPerkMode() !== 'allUnlocked' && (!hasLivingCommandCenter(humanPlayer()) || !ownsPerk(humanPlayer(), perk.id)) ? (!hasLivingCommandCenter(humanPlayer()) ? 'needs an operational Command Center' : `needs ${perk.name} (${perk.cost}★)`) : null
   return h('div', { class: `policy-base-optin${optedIn ? ' is-on' : ''}`, id: 'unitBuildAutomationOptIn' },
     h('div', { class: 'policy-card__top' },
       h('span', { text: 'Unit build automation' }),
       h('button', {
         class: 'policy-switch', type: 'button', role: 'switch', id: 'unitBuildAutomationSwitch',
         'aria-checked': String(optedIn), 'aria-label': 'Run unit build automations',
+        disabled: Boolean(lock), 'aria-description': lock ? `🔒 ${lock}` : '',
         onClick: () => setUnitBuildAutomationOptIn(humanPlayer(), !optedIn)
       }, h('span', { class: 'policy-switch__track', 'aria-hidden': 'true' }),
       h('span', { class: 'policy-switch__label', text: optedIn ? 'On · my factories' : 'Off · click to opt in' }))),

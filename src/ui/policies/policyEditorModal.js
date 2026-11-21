@@ -32,6 +32,7 @@ import {
 import { CHECKS, NUMERIC_FIELDS, effectiveMode, fieldModes } from '../../policies/policyConditions.js'
 import { EFFECTS, defaultEffectParams, completionWaitKind } from '../../policies/policyEffects.js'
 import { defenceCapabilityReason } from '../../policies/defenceCapabilities.js'
+import { getItemUnlockPerk, isItemUnlocked, subscribePerks } from '../../perks/perkState.js'
 
 let active = null
 let pausedByEditor = false
@@ -110,9 +111,13 @@ export function openPolicyEditor(options = {}) {
   }
   const textView = createCFBLEditor(controller, { capabilityReason })
   function capabilityOption(value, label, selected, kind, name = value) {
-    const reason = capabilityReason(kind, name)
-    const control = option(value, reason ? `${label} — ${reason.replaceAll('-', ' ')}` : label, selected)
+    const perkKind = kind === 'actions' ? 'effect' : 'condition'
+    const perk = getItemUnlockPerk(draft.variant, perkKind, name)
+    const perkReason = !isItemUnlocked(owner, draft.variant, perkKind, name) && perk ? `needs ${perk.name} (${perk.cost}★)` : null
+    const reason = capabilityReason(kind, name) || perkReason
+    const control = option(value, reason ? `🔒 ${label} — ${reason.replaceAll('-', ' ')}` : label, selected)
     control.disabled = Boolean(reason)
+    if (reason) control.title = reason
     return control
   }
   let templateChoice = ''
@@ -192,7 +197,10 @@ export function openPolicyEditor(options = {}) {
   }
 
   function optionGroup(label, options) {
-    return h('optgroup', { label }, options)
+    const locked = options.length > 0 && options.every(item => item.disabled)
+    const group = h('optgroup', { label: `${locked ? '🔒 ' : ''}${label}` }, options)
+    group.disabled = locked
+    return group
   }
 
   function paramSelects(meta, atom, label, commit) {
@@ -351,7 +359,15 @@ export function openPolicyEditor(options = {}) {
           class: 'policy-field__control policy-state__param',
           'aria-label': `State ${index + 1} ${param.label}`,
           onChange: e => { state.effect[param.key] = e.target.value; render() }
-        }, param.options.map(item => option(item.value, item.label, item.value === value)))
+        }, param.options.map(item => {
+          const perk = getItemUnlockPerk(draft.variant, 'option', state.effect.type, item.value)
+          const locked = !isItemUnlocked(owner, draft.variant, 'option', state.effect.type, item.value)
+          const hint = perk ? `needs ${perk.name} (${perk.cost}★)` : ''
+          const control = option(item.value, locked ? `🔒 ${item.label} — ${hint}` : item.label, item.value === value)
+          control.disabled = locked
+          if (locked) control.title = hint
+          return control
+        }))
       }
       return h('span', { class: 'policy-state__param-wrap' },
         h('input', {
@@ -761,6 +777,7 @@ export function openPolicyEditor(options = {}) {
     if (!active) return
     document.removeEventListener('keydown', onKeyDown, true)
     unsubscribeDraft()
+    unsubscribePerks()
     textView.destroy()
     controller.cancel()
     cleanupViewport()
@@ -794,6 +811,7 @@ export function openPolicyEditor(options = {}) {
   const unsubscribeDraft = controller.subscribe(snapshot => {
     if (view === 'atv') { draft = snapshot.policy; updateTitle(); updateValidity() }
   })
+  const unsubscribePerks = subscribePerks(render)
 
   closeButton.addEventListener('click', () => close(false))
   cancelButton.addEventListener('click', () => close(false))
