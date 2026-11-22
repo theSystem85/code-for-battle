@@ -62,7 +62,7 @@ import { updateDangerZoneMaps } from './game/dangerZoneMap.js'
 import { getKeyboardHandler } from './inputHandler.js'
 import { ensurePlayerBuildHistoryLoaded } from './savePlayerBuildPatterns.js'
 import { getUniqueId, getBuildingIdentifier } from './utils.js'
-import { ensureAirstripOperations, getAirstripParkingSpots, getAirstripRunwayPoints, setAirstripSlotOccupant } from './utils/airstripUtils.js'
+import { ensureAirstripOperations, getAirstripParkingSpots, getAirstripRunwayPoints, setAirstripSlotOccupant, setC5ParkingOccupant, reserveC5ParkingSlots } from './utils/airstripUtils.js'
 import { getHelipadLandingCenter } from './utils/helipadUtils.js'
 import { rebuildMineLookup } from './game/mineSystem.js'
 import { rebuildWaterMineLookup } from './game/waterMineSystem.js'
@@ -693,6 +693,9 @@ function buildSaveObject(label, { includeMap = true, includeStaticConfiguration 
       rangeMultiplier: u.rangeMultiplier,
       fireRateMultiplier: u.fireRateMultiplier,
       armor: u.armor,
+      weight: u.weight,
+      ...(u.c5Drop ? { c5Drop: globalThis.structuredClone(u.c5Drop), altitude: u.altitude } : {}),
+      ...(u.c5Boarding ? { c5Boarding: globalThis.structuredClone(u.c5Boarding) } : {}),
       selfRepair: u.selfRepair,
       damageValue: u.damageValue,
       totalRepairPaid: u.totalRepairPaid,
@@ -724,7 +727,12 @@ function buildSaveObject(label, { includeMap = true, includeStaticConfiguration 
       serialized.embarkedUnitTypes = [...(u.embarkedUnitTypes || [])]
       serialized.pendingUnloadTile = u.pendingUnloadTile || null
       serialized.transportOperation = u.transportOperation ? { ...u.transportOperation } : null
-      if (u.type === 'c5Galaxy') serialized.dropQueueState = u.dropQueueState ? JSON.parse(JSON.stringify(u.dropQueueState)) : null
+      if (u.type === 'c5Galaxy') {
+        serialized.dropQueueState = u.dropQueueState ? globalThis.structuredClone(u.dropQueueState) : null
+        serialized.c5Mission = u.c5Mission ? globalThis.structuredClone(u.c5Mission) : null
+        serialized.cargoWeight = u.cargoWeight
+        serialized.c5GroundOccupancy = u.c5GroundOccupancy
+      }
     }
 
     if (u.type === 'aircraftCarrier') {
@@ -862,6 +870,13 @@ function buildSaveObject(label, { includeMap = true, includeStaticConfiguration 
     ammoReloadTime: typeof b.ammoReloadTime === 'number' ? b.ammoReloadTime : undefined,
     needsAmmo: typeof b.needsAmmo === 'boolean' ? b.needsAmmo : undefined,
     landedUnitId: b.landedUnitId,
+    ...(b.type === 'airstrip' ? {
+      f22OccupiedSlotUnitIds: b.f22OccupiedSlotUnitIds?.slice(),
+      f22ReservedSlotUnitIds: b.f22ReservedSlotUnitIds?.slice(),
+      f22RunwayOperation: b.f22RunwayOperation ? { ...b.f22RunwayOperation } : null,
+      f22RunwayTakeoffQueue: b.f22RunwayTakeoffQueue?.slice(),
+      f22RunwayLandingQueue: b.f22RunwayLandingQueue?.slice()
+    } : {}),
     damageValue: b.damageValue,
     level: b.level || 0,
     experience: b.experience || 0,
@@ -2038,6 +2053,17 @@ function loadGameFromSaveObject(saveObj, key) {
       // Use the new method to set milestones
       milestoneSystem.setAchievedMilestones(loaded.achievedMilestones)
     }
+
+    // Restore Galaxy reservations before assigning fallback fighter parking.
+    units.forEach(unit => {
+      if (unit.type !== 'c5Galaxy' || unit.health <= 0) return
+      const airstrip = gameState.buildings.find(building => building.type === 'airstrip' &&
+        getBuildingIdentifier(building) === (unit.homeAirstripId ?? unit.airstripId))
+      if (!airstrip) return
+      if (unit.flightState === 'grounded' || unit.c5GroundOccupancy) setC5ParkingOccupant(airstrip, unit.id)
+      else reserveC5ParkingSlots(airstrip, unit.id)
+      unit.occupancyRemoved = true
+    })
 
     // Restore F22/F35 airstrip state after all buildings are loaded
     units.forEach(unit => {

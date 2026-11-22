@@ -1,6 +1,6 @@
 // bulletCollision.js - Handles bullet collision detection
 import { TILE_SIZE } from '../config.js'
-import { getAircraftAltitudeLift } from './aircraftTargeting.js'
+import { getAircraftAltitudeLift, isAntiAirWeapon } from './aircraftTargeting.js'
 
 /**
  * Checks if a bullet collides with a specific unit
@@ -12,6 +12,7 @@ export function checkUnitCollision(bullet, unit) {
   try {
     // Validate inputs
     if (!bullet || !unit || unit.health <= 0 || unit.factoryExit || unit.embarkedOnId || unit.transportTransfer) return false
+    if ((unit.c5Drop || (unit.type === 'c5Galaxy' && unit.altitude > 0)) && !isAntiAirWeapon(bullet.shooter)) return false
     if (bullet.navalOnly && !unit.isNaval) return false
     if (bullet.strictTarget && bullet.target?.id && unit.id !== bullet.target.id) return false
     if (unit.type === 'submarine' && unit.depthState !== 'surfaced' && bullet.originType !== 'depthCharge') return false
@@ -46,7 +47,7 @@ export function checkUnitCollision(bullet, unit) {
     const distance = Math.hypot(dx, dy)
 
     // Return true if collision detected (within threshold)
-    return distance < 10 // 10-pixel threshold for collision
+    return distance < (unit.type === 'c5Galaxy' ? TILE_SIZE * 1.5 : 10)
   } catch (error) {
     console.error('Error in checkUnitCollision:', error)
     return false

@@ -234,10 +234,10 @@ export function handleGuardCommand(_handler, worldX, worldY, units, selectedUnit
 }
 
 export function handleGuardTargetCommand(selectedUnits, guardTarget, selectionManager) {
-  if (NAVAL_TRANSPORT_TYPES.has(guardTarget?.type)) return false
+  if (NAVAL_TRANSPORT_TYPES.has(guardTarget?.type) || guardTarget?.type === 'c5Galaxy') return false
   const commandableUnits = selectedUnits.filter(u =>
     u.id !== guardTarget?.id &&
-    !NAVAL_TRANSPORT_TYPES.has(u.type) &&
+    !NAVAL_TRANSPORT_TYPES.has(u.type) && u.type !== 'c5Galaxy' &&
     selectionManager.isCommandableUnit(u) &&
     u.isBuilding !== true
   )

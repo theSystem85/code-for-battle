@@ -47,7 +47,6 @@ const FULL_UNIT_TECH_TREE = [
   { type: 'battleship', req: 'shipyard', spawn: 'shipyard' },
   { type: 'submarine', req: 'shipyard', spawn: 'shipyard' },
   { type: 'f22Raptor', req: 'airstrip', spawn: 'airstrip' },
-  { type: 'c5Galaxy', req: 'airstrip', spawn: 'airstrip' },
   { type: 'f35', req: 'airstrip', spawn: 'airstrip' },
   { type: 'tank-v3', req: '2xvehicleFactory', spawn: 'vehicleFactory' },
   { type: 'lightTank', req: 'vehicleFactory', spawn: 'vehicleFactory' },

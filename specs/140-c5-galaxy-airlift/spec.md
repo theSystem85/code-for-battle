@@ -2,7 +2,7 @@
 
 **Branch:** `feat/c5-galaxy-airlift`
 
-**Status:** Requirements updated after Patrick's review. One cargo-destruction case is open.
+**Status:** Requirements approved. Implementation validation is tracked in the [Galaxy handoff](../../docs/galaxy-handoff.md).
 
 **Created:** 2026-11-21 (Europe/Berlin)
 
@@ -80,7 +80,7 @@ The Grok Imagine rule applies to **any future game-asset images** as well, not o
 - [ ] Vehicles leave the aircraft and descend on parachutes onto the battlefield (the visual treatment can be simple, but it must read as a parachute airdrop).
 - [ ] Vehicles become ordinary controllable units after they have landed.
 - [ ] The player picks an exact target tile. Drops use free, passable land within three tiles of the target. Water targets are rejected. Valid targets inside enemy bases are allowed.
-- [ ] Only anti-air weapons can damage descending vehicles. Cargo aboard a destroyed Galaxy is destroyed and leaves wrecks on the ground.
+- [ ] Only anti-air weapons can damage descending vehicles. Cargo aboard a destroyed Galaxy is destroyed and leaves wrecks on the ground. Vehicles already released continue descending.
 
 ---
 
@@ -168,7 +168,7 @@ The Grok Imagine rule applies to **any future game-asset images** as well, not o
 
 **Priority:** P0
 
-**Description:** Cargo aboard the Galaxy takes no damage. If the aircraft is destroyed, destroy all cargo still aboard and leave wrecks on the ground. During descent, only anti-air weapons can damage vehicles. Normal damage rules apply after landing.
+**Description:** Cargo aboard the Galaxy takes no damage. If the aircraft is destroyed, destroy all cargo still aboard and leave wrecks on the ground. During descent, only anti-air weapons can damage vehicles. Released cargo keeps descending if the Galaxy is destroyed. Normal damage rules apply after landing.
 
 ### FR-014: Sounds and presentation
 
@@ -211,12 +211,6 @@ Patrick picked the C-5 Galaxy art on 2026-11-21 (Europe/Berlin). Both committed 
 ![C-5 Galaxy build button](../../public/images/sidebar/c5_galaxy_sidebar.webp)
 
 The parachute needs a dedicated canopy image generated with Grok Imagine. Use the same canopy image for each of the four parachutes. Render the suspension lines in the game.
-
----
-
-## Open question
-
-**Cargo already released when the Galaxy is destroyed.** Should vehicles already under parachutes continue their descent after the aircraft is destroyed? Cargo still aboard is destroyed and leaves wrecks on the ground.
 
 ---
 

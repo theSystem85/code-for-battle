@@ -75,7 +75,6 @@ const UNIT_ROLE_LABELS = {
   howitzer: 'long-range-artillery',
   apache: 'air-attack',
   f22Raptor: 'air-superiority',
-  c5Galaxy: 'heavy-airlift',
   f35: 'strike-aircraft',
   destroyer: 'naval-combat',
   hovercraft: 'naval-transport',
@@ -97,7 +96,6 @@ const UNIT_SPAWN_BUILDINGS = {
   battleship: 'shipyard',
   submarine: 'shipyard',
   f22Raptor: 'airstrip',
-  c5Galaxy: 'airstrip',
   f35: 'airstrip'
 }
 const BUILDING_ROLE_LABELS = {

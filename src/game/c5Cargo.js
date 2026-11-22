@@ -1,5 +1,7 @@
 import { C5_MAX_PAYLOAD_TONS, TILE_SIZE, UNIT_PROPERTIES } from '../config.js'
+import { addFixedOccupancy, addMovableOccupancy } from './occupancyTags.js'
 
+export const C5_DROP_RADIUS = 3
 export const C5_DROP_INTERVAL_TICKS = 30
 export const C5_DROP_DESCENT_TICKS = 90
 
@@ -16,7 +18,10 @@ export function evaluateC5Load(galaxy, vehicle, units) {
   const loaded = getC5CargoWeight(galaxy, units)
   const weight = Number(vehicle?.weight ?? UNIT_PROPERTIES[vehicle?.type]?.weight ?? 0)
   const free = C5_MAX_PAYLOAD_TONS - loaded
-  if (!vehicle || UNIT_PROPERTIES[vehicle.type]?.airliftable !== true) {
+  if (!vehicle || UNIT_PROPERTIES[vehicle.type]?.airliftable !== true ||
+    vehicle.health <= 0 || galaxy.owner !== vehicle.owner || vehicle.factoryExit ||
+    vehicle.embarkedOnId || vehicle.c5Drop || vehicle.transportTransfer ||
+    vehicle.embarkedUnitIds?.length || vehicle.towedWreck) {
     return { allowed: false, loaded, free, weight, message: 'Cannot be airlifted' }
   }
   if (weight > free) return { allowed: false, loaded, free, weight, message: `Too heavy: needs ${weight} t, ${free} t free (${loaded}/${C5_MAX_PAYLOAD_TONS} t)` }
@@ -31,66 +36,106 @@ export function embarkC5Vehicle(galaxy, vehicle, units) {
   if (!galaxy.embarkedUnitIds.includes(vehicle.id)) {
     galaxy.embarkedUnitIds.push(vehicle.id)
     galaxy.embarkedUnitTypes.push(vehicle.type)
+    galaxy.cargoWeight = result.loaded + result.weight
   }
   vehicle.embarkedOnId = galaxy.id
   vehicle.hidden = true
+  vehicle.selected = false
+  vehicle.path = []
+  vehicle.moveTarget = null
+  vehicle.target = null
   return result
 }
 
-export function findC5DropTile(target, isPassable, maxRadius = 8) {
-  for (let radius = 0; radius <= maxRadius; radius++) for (let y = -radius; y <= radius; y++) for (let x = -radius; x <= radius; x++) {
-    if (radius && Math.max(Math.abs(x), Math.abs(y)) !== radius) continue
-    if (isPassable(target.x + x, target.y + y)) return { x: target.x + x, y: target.y + y }
+export function findC5DropTile(target, isPassable, maxRadius = C5_DROP_RADIUS, minRadius = 0) {
+  for (let radius = minRadius; radius <= maxRadius; radius++) {
+    for (let y = -radius; y <= radius; y++) {
+      const tileY = target.y + y
+      if (Math.abs(y) === radius) {
+        for (let x = target.x - radius; x <= target.x + radius; x++) {
+          if (isPassable(x, tileY)) return { x, y: tileY }
+        }
+      } else {
+        if (isPassable(target.x - radius, tileY)) return { x: target.x - radius, y: tileY }
+        if (isPassable(target.x + radius, tileY)) return { x: target.x + radius, y: tileY }
+      }
+    }
   }
   return null
 }
 
+export function changeC5GroundOccupancy(unit, occupancy, amount) {
+  const centerX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
+  const centerY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
+  for (let y = centerY - 1; y <= centerY + 1; y++) {
+    for (let x = centerX - 1; x <= centerX + 1; x++) {
+      if (occupancy?.[y]?.[x] !== undefined) occupancy[y][x] = addFixedOccupancy(occupancy[y][x], amount)
+    }
+  }
+  unit.c5GroundOccupancy = amount > 0
+  unit.occupancyRemoved = true
+}
+
+export function placeC5Cargo(unit, tile, occupancy) {
+  unit.x = tile.x * TILE_SIZE
+  unit.y = tile.y * TILE_SIZE
+  unit.tileX = tile.x
+  unit.tileY = tile.y
+  unit.embarkedOnId = null
+  unit.hidden = false
+  if (occupancy?.[tile.y]?.[tile.x] !== undefined) {
+    occupancy[tile.y][tile.x] = addMovableOccupancy(occupancy[tile.y][tile.x], 1)
+    unit.occupancyRemoved = false
+  }
+}
+
 export function beginC5Airdrop(galaxy, target, tick) {
-  galaxy.dropQueueState = { target: { x: target.x, y: target.y }, queuedUnitIds: [...(galaxy.embarkedUnitIds || [])], nextDropTick: tick, descending: [] }
+  galaxy.dropQueueState = { target: { ...target }, queuedUnitIds: [...(galaxy.embarkedUnitIds || [])], nextDropTick: tick }
 }
 
-export function advanceC5Airdrop(galaxy, tick, units, isPassable, notify = () => {}) {
+export function advanceC5Airdrop(galaxy, tick, units, isPassable, notify = () => {}, wind = null) {
   const state = galaxy.dropQueueState
-  if (!state) return []
-  const landed = []
-  for (let index = state.descending.length - 1; index >= 0; index--) {
-    const drop = state.descending[index]
-    if (tick < drop.landTick) continue
-    const unit = lookup(units, drop.unitId)
-    if (unit) {
-      unit.x = drop.tile.x * TILE_SIZE
-      unit.y = drop.tile.y * TILE_SIZE
-      unit.tileX = drop.tile.x
-      unit.tileY = drop.tile.y
-      unit.hidden = false
-      unit.invulnerable = false
-      unit.embarkedOnId = null
-      landed.push(unit)
-    }
-    state.descending.splice(index, 1)
-  }
-  if (state.queuedUnitIds.length && tick >= state.nextDropTick) {
-    const tile = findC5DropTile(state.target, (x, y) => isPassable(x, y) && !state.descending.some(drop => drop.tile.x === x && drop.tile.y === y))
-    if (!tile) notify('No clear land tile for airdrop; vehicle remains aboard')
-    else {
-      const unitId = state.queuedUnitIds.shift()
-      const unit = lookup(units, unitId)
-      state.descending.push({ unitId, tile, startTick: tick, landTick: tick + C5_DROP_DESCENT_TICKS })
-      galaxy.embarkedUnitIds = galaxy.embarkedUnitIds.filter(id => id !== unitId)
-      galaxy.embarkedUnitTypes = galaxy.embarkedUnitIds.map(id => lookup(units, id)?.type).filter(Boolean)
-      if (unit) unit.invulnerable = true
-      state.nextDropTick = tick + C5_DROP_INTERVAL_TICKS
+  if (!state || tick < state.nextDropTick) return
+  const unit = lookup(units, state.queuedUnitIds.shift())
+  let tile
+  if (unit?.health > 0) {
+    tile = findC5DropTile(state.target, isPassable)
+    if (tile) {
+      placeC5Cargo(unit, tile)
+      unit.altitude = galaxy.altitude || TILE_SIZE * 4.5
+      unit.c5Drop = {
+        tile, target: state.target, startTick: tick, landTick: tick + C5_DROP_DESCENT_TICKS,
+        altitude: galaxy.altitude || TILE_SIZE * 4.5, windX: wind?.x || 0, windY: wind?.y || 0
+      }
+      const manifestIndex = galaxy.embarkedUnitIds.indexOf(unit.id)
+      galaxy.embarkedUnitIds.splice(manifestIndex, 1)
+      galaxy.embarkedUnitTypes.splice(manifestIndex, 1)
+      galaxy.cargoWeight = getC5CargoWeight(galaxy, units)
+    } else {
+      notify('No clear land tile for airdrop. Remaining vehicles stay aboard.')
+      state.queuedUnitIds.length = 0
     }
   }
-  if (!state.queuedUnitIds.length && !state.descending.length) galaxy.dropQueueState = null
-  return landed
+  state.nextDropTick = tick + C5_DROP_INTERVAL_TICKS
+  if (!state.queuedUnitIds.length) galaxy.dropQueueState = null
+  return tile
 }
 
-export function destroyC5Cargo(galaxy, units) {
-  const ids = new Set([...(galaxy.embarkedUnitIds || []), ...(galaxy.dropQueueState?.queuedUnitIds || [])])
-  ids.forEach(id => { const unit = lookup(units, id); if (unit) unit.health = 0 })
+export function destroyC5Cargo(galaxy, units, findWreckTile) {
+  for (const id of galaxy.embarkedUnitIds || []) {
+    const unit = lookup(units, id)
+    if (!unit) continue
+    const tile = findWreckTile?.(unit) || {
+      x: Math.floor((galaxy.x + TILE_SIZE / 2) / TILE_SIZE),
+      y: Math.floor((galaxy.y + TILE_SIZE / 2) / TILE_SIZE)
+    }
+    placeC5Cargo(unit, tile)
+    unit.c5CargoDestroyed = true
+    unit.health = 0
+  }
   galaxy.embarkedUnitIds = []
   galaxy.embarkedUnitTypes = []
+  galaxy.cargoWeight = 0
   galaxy.dropQueueState = null
 }
 
@@ -104,6 +149,7 @@ export function unloadC5Cargo(galaxy, units, findTile) {
     unloaded.push(unit); galaxy.embarkedUnitIds = galaxy.embarkedUnitIds.filter(unitId => unitId !== id)
   }
   galaxy.embarkedUnitTypes = galaxy.embarkedUnitIds.map(id => lookup(units, id)?.type).filter(Boolean)
+  galaxy.cargoWeight = getC5CargoWeight(galaxy, units)
   return unloaded
 }
 

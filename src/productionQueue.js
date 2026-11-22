@@ -17,7 +17,7 @@ import { constructPlayerBuilding } from './game/playerBuildingLifecycle.js'
 import { broadcastUnitSpawn, isHost } from './network/gameCommandSync.js'
 import { gameRandom } from './utils/gameRandom.js'
 import { mapBlueprintsToFootprints } from './planning/blueprintPlanning.js'
-import { ensureAirstripOperations, claimAirstripParkingSlot } from './utils/airstripUtils.js'
+import { ensureAirstripOperations, claimAirstripParkingSlot, canReserveC5ParkingSlots } from './utils/airstripUtils.js'
 import { getSimulationTime } from './game/time.js'
 import { isLocalPartyAutomationLocked } from './network/multiplayerStore.js'
 import { isReplayInteractionLocked, isReplayModeActive, recordReplayCommand } from './replaySystem.js'
@@ -73,11 +73,11 @@ export const productionQueue = {
     let candidates = []
     let available = null
     let nextIndex = 0
-    if ((current.type === 'f22Raptor' || current.type === 'c5Galaxy')) {
+    if (current.type === 'f22Raptor' || current.type === 'c5Galaxy') {
       candidates = buildings.filter(b => b.type === 'airstrip' && b.owner === gameState.humanPlayer && b.health > 0)
       available = candidates.filter(building => {
         ensureAirstripOperations(building)
-        return claimAirstripParkingSlot(building) >= 0
+        return current.type === 'c5Galaxy' ? canReserveC5ParkingSlots(building) : claimAirstripParkingSlot(building) >= 0
       })
       nextIndex = gameState.nextAirstripIndex ?? 0
     } else if (current.type === 'apache') {
@@ -100,7 +100,8 @@ export const productionQueue = {
       candidates = buildings.filter(b => b.type === 'vehicleFactory' && b.owner === gameState.humanPlayer)
       nextIndex = gameState.nextVehicleFactoryIndex ?? 0
     }
-    return resolveSpawnFactory(candidates, available || candidates, current.factoryId, nextIndex).factory
+    const resolution = resolveSpawnFactory(candidates, available || candidates, current.factoryId, nextIndex)
+    return current.type === 'c5Galaxy' && resolution.status === 'unavailable' ? null : resolution.factory
   },
 
   updateMapProductionProgress: function(progress) {
@@ -700,6 +701,7 @@ export const productionQueue = {
         progressBar.style.width = `${progress * 100}%`
       }
       if (progress >= 1) {
+        if (item.type === 'c5Galaxy' && !this.resolveCurrentUnitSpawnBuilding()) return
         this.completeCurrentUnitProduction()
       }
     }
@@ -762,7 +764,7 @@ export const productionQueue = {
     let spawnFactory = null
     let rallyPointTarget = this.currentUnit.rallyPoint || null // Rally point from drag&drop
 
-    if ((unitType === 'f22Raptor' || unitType === 'c5Galaxy')) {
+    if (unitType === 'f22Raptor' || unitType === 'c5Galaxy') {
       const allAirstrips = (gameState.buildings || []).filter(
         b => b.type === 'airstrip' && b.owner === gameState.humanPlayer && b.health > 0
       )
@@ -780,7 +782,7 @@ export const productionQueue = {
 
       const availableAirstrips = allAirstrips.filter(airstrip => {
         ensureAirstripOperations(airstrip)
-        return claimAirstripParkingSlot(airstrip) >= 0
+        return unitType === 'c5Galaxy' ? canReserveC5ParkingSlots(airstrip) : claimAirstripParkingSlot(airstrip) >= 0
       })
 
       if (!availableAirstrips.length) {

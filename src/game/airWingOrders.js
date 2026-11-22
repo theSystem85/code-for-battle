@@ -10,7 +10,7 @@ import {
   reserveAirstripParkingSlot
 } from '../utils/airstripUtils.js'
 
-export const AIR_WING_TYPES = new Set(['apache', 'f22Raptor', 'f35', 'c5Galaxy'])
+export const AIR_WING_TYPES = new Set(['apache', 'f22Raptor', 'f35'])
 const F22_LANDING_STATES = new Set(['wait_landing_clearance', 'approach_runway', 'landing_roll', 'taxi_to_parking'])
 
 function entityCenter(entity) {

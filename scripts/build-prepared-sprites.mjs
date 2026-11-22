@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
@@ -26,6 +27,7 @@ const APACHE_BUCKET_DEGREES = Object.freeze(Array.from({ length: 48 }, (_, index
 const APACHE_TILT_STATES = Object.freeze(['neutral', 'forward', 'backward', 'left', 'right'])
 
 const unitSource = name => `images/map/units/${name}`
+const c5CanopySource = unitSource('c5_parachute_canopy.webp')
 const buildingSource = name => `images/map/buildings/${name}`
 
 const tankMount = (variant, key) => {
@@ -165,6 +167,13 @@ const definitions = [
       states: ['airborne', 'takeoff-resize', 'landing-resize']
     }
   ]),
+  ...(existsSync(path.join(ROOT, 'public', c5CanopySource)) ? [{
+    id: 'effect:c5:parachute',
+    source: c5CanopySource,
+    target: { width: 18, preserveAspect: true },
+    anchors: { center: [0.5, 0.5] },
+    states: ['descending']
+  }] : []),
   ...[
     ['powerPlant', 'power_plant.webp', 3, 3],
     ['oreRefinery', 'refinery.webp', 3, 3],

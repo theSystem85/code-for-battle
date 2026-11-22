@@ -1,3 +1,4 @@
+import { playC5TransitionSound } from '../game/c5GalaxySystem.js'
 import { FIRE_SPREAD_PROBABILITY, FIRE_DAMAGE_PER_SECOND, setFireSpreadProbability, setFireDamagePerSecond, WIND_DIRECTION, setWindDirectionX, setWindDirectionY } from '../config.js'
 import { burnOut, restoreFires } from '../game/fireSystem.js'
 import { notifyBuildingFire } from '../ui/fireNotifications.js'
@@ -562,7 +563,13 @@ export function createGameStateSnapshot({ fullAutomation = false } = {}) {
     transportOperation: unit.transportOperation,
     transportTransfer: unit.transportTransfer,
     transportCapacity: unit.transportCapacity,
-    dropQueueState: unit.dropQueueState ? JSON.parse(JSON.stringify(unit.dropQueueState)) : null,
+    weight: unit.weight,
+    cargoWeight: unit.cargoWeight,
+    c5Mission: unit.c5Mission ?? null,
+    c5GroundOccupancy: unit.c5GroundOccupancy,
+    c5Drop: unit.c5Drop ?? null,
+    c5Boarding: unit.c5Boarding ?? null,
+    dropQueueState: unit.dropQueueState ?? null,
     flightState: unit.flightState,
     altitude: unit.altitude,
     carrierId: unit.carrierId,
@@ -624,6 +631,8 @@ export function createGameStateSnapshot({ fullAutomation = false } = {}) {
       isBeingSold: building.isBeingSold,
       sellStartTime: building.sellStartTime,
       sellElapsed,
+      f22OccupiedSlotUnitIds: building.f22OccupiedSlotUnitIds,
+      f22ReservedSlotUnitIds: building.f22ReservedSlotUnitIds,
       ammo: building.ammo,
       maxAmmo: building.maxAmmo,
       turretDirection: building.turretDirection,
@@ -1077,7 +1086,10 @@ export function applyGameStateSnapshot(snapshot) {
 
         // Merge all snapshot data EXCEPT position (which we'll interpolate) and elapsed times (already converted)
         const { x, y, tileX, tileY, direction, turretDirection, muzzleFlashElapsed: _mfe, recoilElapsed: _re, ...nonPositionData } = snapshotUnit
+        const previousFlightState = existing.flightState
+        const wasDescending = Boolean(existing.c5Drop)
         Object.assign(existing, nonPositionData)
+        if (existing.type === 'c5Galaxy' || existing.c5Drop) playC5TransitionSound(existing, previousFlightState, wasDescending)
         // Apply converted animation times
         existing.muzzleFlashStartTime = muzzleFlashStartTime
         existing.recoilStartTime = recoilStartTime

@@ -33,7 +33,7 @@ import { recordDamageValue } from '../utils/combatStats.js'
 import { recordDamage } from '../ai-api/transitionCollector.js'
 import { getSimulationTime } from './time.js'
 import { setWorldDecal } from './tileDecals.js'
-import { getAircraftAltitudeLift } from './aircraftTargeting.js'
+import { getAircraftAltitudeLift, isAirborneCombatTarget } from './aircraftTargeting.js'
 import { isIndirectShooter, recordUnitHit } from './hitRecord.js'
 
 const APACHE_REMOTE_DAMAGE = 10
@@ -491,9 +491,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
           const explosionY = bullet.y
 
           const targetIsAirborneApache =
-            apacheTargetUnit &&
-            (apacheTargetUnit.type === 'apache' || apacheTargetUnit.type === 'f22Raptor' || apacheTargetUnit.type === 'f35') &&
-            apacheTargetUnit.flightState !== 'grounded'
+            isAirborneCombatTarget(apacheTargetUnit)
 
           const airborneTargetStillNearImpact = targetIsAirborneApache && apacheTargetUnit && (() => {
             const targetCenterX = apacheTargetUnit.x + TILE_SIZE / 2
@@ -1355,5 +1353,5 @@ export function fireBullet(unit, target, bullets, now) {
 }
 
 function targetIsAirborneImpact(target) {
-  return target && (target.type === 'apache' || target.type === 'f22Raptor' || target.type === 'f35') && target.flightState !== 'grounded'
+  return isAirborneCombatTarget(target)
 }

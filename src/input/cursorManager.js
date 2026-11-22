@@ -1,3 +1,4 @@
+import { evaluateC5Load } from '../game/c5Cargo.js'
 import { needsAmmo as targetNeedsAmmo, getAmmoCapacityKey, getAmmoCurrentKey } from '../utils/ammunition.js'
 import { unitContainsPoint } from './unitHitTest.js'
 import { canSupplyShipServe } from '../game/shipyardServiceLogic.js'
@@ -36,6 +37,7 @@ const AIRSTRIP_SUPPLY_UNIT_TYPES = new Set([
   'recoveryTank'
 ])
 const NAVAL_TRANSPORT_TYPES = new Set(['hovercraft', 'vehicleFerry'])
+const isBoardableTransport = unit => NAVAL_TRANSPORT_TYPES.has(unit?.type) || unit?.type === 'c5Galaxy'
 const CARRIER_AIRCRAFT_SLOT_WEIGHT = Object.freeze({ f22Raptor: 1, f35: 2, apache: 2 })
 
 export class CursorManager {
@@ -471,7 +473,7 @@ export class CursorManager {
       .map(unit => {
         const centerX = unit.x + TILE_SIZE / 2
         const centerY = unit.y + TILE_SIZE / 2
-        const radius = unit.isNaval
+        const radius = unit.type === 'c5Galaxy' ? TILE_SIZE * 1.5 : unit.isNaval
           ? TILE_SIZE * Math.max(0.8, getNavalRenderLengthTiles(unit.type) / 2)
           : TILE_SIZE * 0.8
         return { unit, score: Math.hypot(worldX - centerX, worldY - centerY) / radius }
@@ -488,13 +490,13 @@ export class CursorManager {
       !unit?.embarkedOnId &&
       isFriendlyOwner(unit?.owner)
     )
-    const selectedTransports = selectedUnits.filter(unit => NAVAL_TRANSPORT_TYPES.has(unit?.type) && isFriendlyOwner(unit.owner))
+    const selectedTransports = selectedUnits.filter(unit => isBoardableTransport(unit) && isFriendlyOwner(unit.owner))
     const selectedCarrierAircraft = selectedUnits.filter(unit => CARRIER_AIRCRAFT_SLOT_WEIGHT[unit?.type] && isFriendlyOwner(unit.owner))
     this.isOverFleetBoardingTarget = false
     this.isOverBlockedFleetBoardingTarget = false
 
     const hoveredTransport = selectedGroundCargo.length > 0
-      ? hoveredUnits.find(unit => NAVAL_TRANSPORT_TYPES.has(unit.type))
+      ? hoveredUnits.find(isBoardableTransport)
       : null
     const hoveredGroundCargo = selectedTransports.length > 0
       ? hoveredUnits.find(unit =>
@@ -508,10 +510,15 @@ export class CursorManager {
 
     if (hoveredTransport) {
       const reserved = (hoveredTransport.embarkedUnitIds?.length || 0) + (hoveredTransport.pendingLoadUnitIds?.length || (hoveredTransport.pendingLoadUnitId ? 1 : 0))
-      this.isOverFleetBoardingTarget = reserved < (hoveredTransport.transportCapacity || 0)
+      this.isOverFleetBoardingTarget = hoveredTransport.type === 'c5Galaxy'
+        ? hoveredTransport.flightState === 'grounded' && selectedGroundCargo.some(unit => evaluateC5Load(hoveredTransport, unit, units).allowed)
+        : reserved < (hoveredTransport.transportCapacity || 0)
       this.isOverBlockedFleetBoardingTarget = !this.isOverFleetBoardingTarget
     } else if (hoveredGroundCargo && selectedGroundCargo.length === 0) {
       this.isOverFleetBoardingTarget = selectedTransports.some(transport => {
+        if (transport.type === 'c5Galaxy') {
+          return transport.flightState === 'grounded' && evaluateC5Load(transport, hoveredGroundCargo, units).allowed
+        }
         const reserved = (transport.embarkedUnitIds?.length || 0) + (transport.pendingLoadUnitIds?.length || (transport.pendingLoadUnitId ? 1 : 0))
         return reserved < (transport.transportCapacity || 0)
       })
@@ -530,7 +537,7 @@ export class CursorManager {
       this.isOverBlockedFleetBoardingTarget = !this.isOverFleetBoardingTarget
     }
 
-    this.isOverFleetDisembarkTarget = selectedTransports.some(transport => (transport.embarkedUnitIds?.length || 0) > 0) &&
+    this.isOverFleetDisembarkTarget = selectedTransports.some(transport => NAVAL_TRANSPORT_TYPES.has(transport.type) && (transport.embarkedUnitIds?.length || 0) > 0) &&
       hoveredTile &&
       (hoveredTile.type === 'land' || hoveredTile.type === 'street') &&
       !hoveredTile.building &&

@@ -110,7 +110,10 @@ function hashUnit(unit) {
   hash = hashCombine(hash, hashString(unit.embarkedOnId || ''))
   ;(unit.embarkedUnitIds || []).forEach(id => { hash = hashCombine(hash, hashString(id)) })
   ;(unit.pendingLoadUnitIds || []).forEach(id => { hash = hashCombine(hash, hashString(id)) })
-  hash = hashCombine(hash, hashString(JSON.stringify(unit.dropQueueState || null)))
+  hash = hashCombine(hash, quantize(unit.weight || 0, 100))
+  if (unit.c5Mission || unit.dropQueueState || unit.c5Drop || unit.c5Boarding) {
+    hash = hashCombine(hash, hashString(JSON.stringify([unit.c5Mission, unit.dropQueueState, unit.c5Drop, unit.c5Boarding])))
+  }
   hash = hashCombine(hash, quantize(unit.cargoWeightCapacity || 0, 1))
   hash = hashCombine(hash, hashString(unit.transportOperation?.kind || ''))
   hash = hashCombine(hash, hashString(unit.transportOperation?.phase || ''))
@@ -166,6 +169,11 @@ function hashBuilding(building) {
 
   // Hash sell state
   hash = hashCombine(hash, building.isBeingSold ? 1 : 0)
+
+  if (building.type === 'airstrip') {
+    for (const id of building.f22OccupiedSlotUnitIds || []) hash = hashCombine(hash, hashString(id || ''))
+    for (const id of building.f22ReservedSlotUnitIds || []) hash = hashCombine(hash, hashString(id || ''))
+  }
 
   // Hash turret direction if applicable
   if (building.turretDirection !== undefined) {

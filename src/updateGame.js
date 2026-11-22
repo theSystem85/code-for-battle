@@ -1,3 +1,5 @@
+import { COMMAND_TYPES as C5_COMMAND_TYPES } from './network/commandTypes.js'
+import { canReserveC5ParkingSlots } from './utils/airstripUtils.js'
 import { updateFireSystem } from './game/fireSystem.js'
 import { findCityBuildingById } from './game/cityBuildings.js'
 import { applyMapAction } from './ui/mapActions/mapActionCommands.js'
@@ -85,7 +87,7 @@ import { updateGlobalPathfinding } from './game/pathfinding.js'
 import { logUnitStatus } from './utils/logger.js'
 import { updateRemoteControlledUnits } from './game/remoteControl.js'
 import { updateShadowOfWar } from './game/shadowOfWar.js'
-import { processPendingRemoteCommands, isHost, COMMAND_TYPES, updateUnitInterpolation } from './network/gameCommandSync.js'
+import { processPendingRemoteCommands, applyC5Command, isHost, COMMAND_TYPES, updateUnitInterpolation } from './network/gameCommandSync.js'
 import { createBuilding, placeBuilding, updatePowerSupply } from './buildings.js'
 import { buildingCosts } from './main.js'
 import { unitCosts } from './units.js'
@@ -103,6 +105,10 @@ import {
   updateReplayPlayback,
   finalizeReplayPlaybackIfPending
 } from './replaySystem.js'
+
+const c5CommandTypes = new Set([
+  C5_COMMAND_TYPES.C5_LOAD, C5_COMMAND_TYPES.C5_UNLOAD, C5_COMMAND_TYPES.C5_AIRDROP, C5_COMMAND_TYPES.C5_MOVE
+])
 
 const factoryExitFindPath = (...args) => findFactoryExitPath(...args)
 const factoryExitCompleted = (unit, state) => { if (state.delivery) applyUnitBuildDelivery(unit, state.delivery) }
@@ -221,8 +227,10 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
       }
 
       remoteCommands.forEach(cmd => {
-        if (cmd.commandType === COMMAND_TYPES.MAP_ACTION && cmd.payload) {
-          applyMapAction(cmd.payload, cmd.sourcePartyId, { units: mainUnits, buildings: gameState.buildings, mapGrid, commands: getUnitCommandsHandler() })
+        if (c5CommandTypes.has(cmd.commandType) && cmd.payload) {
+          applyC5Command(cmd.commandType, cmd.payload, cmd.sourcePartyId, units, { ...gameState, mapGrid, occupancyMap })
+        } else if (cmd.commandType === COMMAND_TYPES.MAP_ACTION && cmd.payload) {
+          applyMapAction(cmd.payload, cmd.sourcePartyId, { units: mainUnits, buildings: gameState.buildings, mapGrid, occupancyMap, commands: getUnitCommandsHandler() })
         } else if (cmd.commandType === COMMAND_TYPES.BUILDING_PLACE && cmd.payload) {
           const { buildingType, x, y, automationCompletion } = cmd.payload
           const owner = cmd.sourcePartyId
@@ -434,6 +442,11 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
           const partyId = cmd.sourcePartyId
           const unitCost = Number(unitCosts?.[unitType]) || 0
 
+          if (unitType === 'c5Galaxy' && !gameState.buildings.some(building => building.id === factoryId &&
+            building.type === 'airstrip' && building.owner === partyId && building.health > 0 && canReserveC5ParkingSlots(building))) {
+            completionAck('failed', 'three lower airstrip parking slots are required')
+            return
+          }
           if (!chargePartyProductionCost(partyId, unitCost)) {
             window.logger.warn('[Host] Rejecting UNIT_SPAWN due to insufficient funds:', partyId, unitType, unitCost)
             completionAck('failed', 'insufficient funds at the authoritative spawn')

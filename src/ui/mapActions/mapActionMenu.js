@@ -16,6 +16,7 @@ const installedMenus = new WeakMap()
 
 const labels = {
   attackUnit: 'Attack', forceAttackUnit: 'Force attack', guardUnit: 'Guard', serveUnit: 'Serve', followUnit: 'Follow', landOnUnit: 'Land on', embarkUnit: 'Embark',
+  c5Airdrop: 'Airdrop here', c5Unload: 'Unload / cancel',
   forceAttackAt: 'Force attack here', defendHoldAt: 'Defend and hold here',
   applyAutomationOnArrival: 'Automation on arrival', holdFire: 'Hold fire', clearTarget: 'Clear target'
 }
@@ -70,7 +71,9 @@ export function installMapActionMenu(canvas, { selection, units, commands, handl
   }
   function close() { menu.close(); targetUnit = null }
   function optionsForTarget() {
-    return targetUnit ? unitActionOptions(selection, targetUnit, owner(), gameState.buildings) : mapActionOptions(selection, owner())
+    const tileOptions = mapActionOptions(selection, owner())
+    if (!targetUnit) return tileOptions
+    return [...unitActionOptions(selection, targetUnit, owner(), gameState.buildings), ...tileOptions.filter(action => action === 'c5Airdrop')]
   }
   function open(point) {
     if (locked() || !Number.isFinite(point?.x) || !Number.isFinite(point?.y)) return false

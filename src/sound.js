@@ -476,6 +476,40 @@ async function playAssetSound(eventName, volume = 1.0, onEnded, options = {}) {
   return null
 }
 
+const galaxySoundCues = Object.freeze({
+  c5Takeoff: { from: 48, to: 112, duration: 1.65, type: 'sawtooth' },
+  c5Touchdown: { from: 99, to: 42, duration: 0.9, type: 'triangle' },
+  c5CargoRelease: { from: 230, to: 54, duration: 0.32, type: 'square' }
+})
+
+function playGalaxySound(cue, volume, pan) {
+  const now = audioContext.currentTime
+  const end = now + cue.duration
+  const oscillator = audioContext.createOscillator()
+  const filter = audioContext.createBiquadFilter()
+  const gain = audioContext.createGain()
+  oscillator.type = cue.type
+  oscillator.frequency.setValueAtTime(cue.from, now)
+  oscillator.frequency.exponentialRampToValueAtTime(cue.to, end)
+  filter.type = 'lowpass'
+  filter.frequency.value = 580
+  gain.gain.setValueAtTime(0, now)
+  gain.gain.linearRampToValueAtTime(volume * getEffectsVolume() * 0.38, now + cue.duration * 0.18)
+  gain.gain.linearRampToValueAtTime(0, end)
+  oscillator.connect(filter)
+  filter.connect(gain)
+  if (typeof audioContext.createStereoPanner === 'function') {
+    const panner = audioContext.createStereoPanner()
+    panner.pan.value = pan || 0
+    gain.connect(panner)
+    panner.connect(audioContext.destination)
+  } else {
+    gain.connect(audioContext.destination)
+  }
+  oscillator.start(now)
+  oscillator.stop(end)
+}
+
 function playImmediate(eventName, volume = 1.0, throttleSeconds = 0, onEnded, options = {}) {
   if (!audioContext) {
     if (onEnded) setTimeout(onEnded, 0)
@@ -497,6 +531,11 @@ function playImmediate(eventName, volume = 1.0, throttleSeconds = 0, onEnded, op
     }
     // Update timestamp for this sound
     soundThrottleTimestamps.set(eventName, now)
+  }
+
+  if (Object.hasOwn(galaxySoundCues, eventName)) {
+    if (typeof audioContext.createBiquadFilter === 'function') playGalaxySound(galaxySoundCues[eventName], volume, options.pan)
+    return Promise.resolve(null)
   }
 
   // Use eventName directly with soundFiles instead of mapping

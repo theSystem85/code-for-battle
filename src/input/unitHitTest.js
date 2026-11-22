@@ -9,9 +9,11 @@ import { getNavalRenderLengthTiles, hasNativeNavalSprite, NAVAL_SPRITE_NATIVE_DE
 
 // Source-alpha runs are prepared offline. Pointer queries allocate no canvas or mask.
 export function unitContainsPoint(unit, worldX, worldY, radius = TILE_SIZE / 2) {
-  if (!unit || unit.health <= 0 || unit.factoryExit || unit.embarkedOnId || unit.transportTransfer) return false
+  if (!unit || unit.health <= 0 || unit.factoryExit || unit.embarkedOnId || unit.transportTransfer || (unit.c5Drop && unit.owner === gameState.humanPlayer)) return false
   const dx = worldX - unit.x - TILE_SIZE / 2
   let dy = worldY - unit.y - TILE_SIZE / 2
+  if (unit.c5Drop) dy += (unit.altitude || 0) * 0.4
+  if (unit.type === 'c5Galaxy') return Math.hypot(dx, dy + (unit.altitude || 0) * 0.4) < TILE_SIZE * 1.5
   const mask = masks[unit.type]
   if (!mask) {
     if (unit.isAirUnit || ['apache', 'f22Raptor', 'f35'].includes(unit.type)) dy += (unit.altitude || 0) * 0.4

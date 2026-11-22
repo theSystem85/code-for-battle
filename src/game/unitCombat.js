@@ -36,7 +36,7 @@ export const updateUnitCombat = logPerformance(function updateUnitCombat(units, 
 
   units.forEach(unit => {
     if (!unit || unit.health <= 0) return
-    if (unit.factoryExit || unit.embarkedOnId || unit.carrierOperation || unit.transportTransfer) return
+    if (unit.factoryExit || unit.type === 'c5Galaxy' || unit.c5Drop || unit.c5Boarding || unit.embarkedOnId || unit.carrierOperation || unit.transportTransfer) return
 
     // Skip if unit has no combat capabilities
     if (unit.type === 'harvester') return

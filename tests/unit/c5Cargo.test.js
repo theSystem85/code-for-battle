@@ -10,7 +10,7 @@ import {
 } from '../../src/game/c5Cargo.js'
 
 const galaxy = () => ({ id: 'c5', embarkedUnitIds: [], embarkedUnitTypes: [] })
-const vehicle = (id, type, weight) => ({ id, type, weight })
+const vehicle = (id, type, weight) => ({ id, type, weight, health: 100 })
 
 describe('C-5 Galaxy cargo', () => {
   it('[U07306] defines weight and airlift eligibility for every playable unit', () => {

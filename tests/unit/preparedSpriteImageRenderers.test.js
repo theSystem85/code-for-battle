@@ -1,3 +1,4 @@
+import { renderC5GalaxyWithImage } from '../../src/rendering/c5GalaxyImageRenderer.js'
 import { readFile, stat } from 'node:fs/promises'
 import path from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -274,4 +275,19 @@ describe('prepared aircraft rendering states', () => {
       tag: AIRCRAFT_RESIZE_AUDIT_TAGS.TAKEOFF
     }))
   })
+})
+
+it('[U07319] draws the prepared Galaxy at native size on the ground and audits resizing during climb', () => {
+  publishPreparedSpriteRegistry(createPreparedSet([
+    { id: 'aircraft:c5Galaxy:ground', logicalWidth: 84, logicalHeight: 84, backingWidth: 168, backingHeight: 168 },
+    { id: 'aircraft:c5Galaxy:flight', logicalWidth: 112, logicalHeight: 112, backingWidth: 224, backingHeight: 224 }
+  ]))
+  const ctx = createCanvasContext()
+  const audit = vi.fn()
+  setAircraftResizeAuditSink(audit)
+  expect(renderC5GalaxyWithImage(ctx, { flightState: 'grounded', altitude: 0 }, 60, 60)).toBe(true)
+  expect(ctx.scale).toHaveBeenLastCalledWith(0.5, 0.5)
+  expect(audit).not.toHaveBeenCalled()
+  expect(renderC5GalaxyWithImage(ctx, { flightState: 'climb', altitude: 72, maxAltitude: 144 }, 60, 60)).toBe(true)
+  expect(audit).toHaveBeenCalledWith({ id: 'aircraft:c5Galaxy:flight', scale: 0.875, tag: AIRCRAFT_RESIZE_AUDIT_TAGS.TAKEOFF })
 })

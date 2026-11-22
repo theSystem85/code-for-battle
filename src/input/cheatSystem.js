@@ -1,3 +1,4 @@
+import { changeC5GroundOccupancy } from '../game/c5Cargo.js'
 // cheatSystem.js
 import { gameState } from '../gameState.js'
 import { units, factories } from '../main.js'
@@ -617,7 +618,7 @@ export class CheatSystem {
     // Create a case-insensitive map of allowed unit types on first use
     if (!this.unitTypeMap) {
       this.unitTypeMap = Object.keys(UNIT_PROPERTIES).reduce((acc, key) => {
-        acc[key.toLowerCase()] = key
+        acc[key === 'c5Galaxy' ? 'c5' : key.toLowerCase()] = key
         return acc
       }, {})
     }
@@ -650,7 +651,7 @@ export class CheatSystem {
 
     if (!this.buildingTypeMap) {
       this.buildingTypeMap = Object.keys(buildingData).reduce((acc, key) => {
-        acc[key.toLowerCase()] = key
+        acc[key === 'c5Galaxy' ? 'c5' : key.toLowerCase()] = key
         return acc
       }, {})
     }
@@ -761,7 +762,8 @@ export class CheatSystem {
       // Update the occupancy map for the newly spawned unit
       // Avoid double incrementing the spawn tile by letting
       // updateUnitOccupancy handle the addition.
-      updateUnitOccupancy(newUnit, -1, -1, gameState.occupancyMap)
+      if (unitType === 'c5Galaxy') changeC5GroundOccupancy(newUnit, gameState.occupancyMap, 1)
+      else updateUnitOccupancy(newUnit, -1, -1, gameState.occupancyMap)
       this.updateNewUnit(newUnit)
 
       // Special initialization for recovery tanks

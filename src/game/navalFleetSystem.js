@@ -10,7 +10,8 @@ import {
 import { gameState } from '../gameState.js'
 import { findPathForOwner, removeUnitOccupancy } from '../units.js'
 import { addMovableOccupancy } from './occupancyTags.js'
-import { embarkC5Vehicle, evaluateC5Load } from './c5Cargo.js'
+import { COMMAND_TYPES } from '../network/commandTypes.js'
+import { dispatchC5Command } from '../network/gameCommandSync.js'
 export { cancelTransportOperations } from './transportOperationCancellation.js'
 import { getBuildingIdentifier } from '../utils.js'
 import { shouldAircraftReturnForFuel } from './jetFuel.js'
@@ -382,7 +383,7 @@ export function isTransportableGroundUnit(target, owner, pendingTransportId = nu
     target.type !== 'f35' &&
     !target.embarkedOnId &&
     (!target.pendingTransportId || target.pendingTransportId === pendingTransportId) &&
-    !target.transportTransfer &&
+    !target.transportTransfer && !target.c5Drop &&
     target.owner === owner &&
     target.health > 0
   )
@@ -391,20 +392,8 @@ export function isTransportableGroundUnit(target, owner, pendingTransportId = nu
 export function requestTransportLoadGroup(transport, targets, mapGrid, occupancyMap = gameState.occupancyMap, allUnits = targets) {
   if (!TRANSPORT_TYPES.has(transport?.type) || transport.transportOperation || !Array.isArray(targets)) return false
   if (transport.type === 'c5Galaxy') {
-    if (transport.flightState !== 'grounded') return false
-    let accepted = false
-    for (const target of targets) {
-      const result = evaluateC5Load(transport, target, allUnits)
-      if (!result.allowed) {
-        gameState.showNotification?.(result.message)
-        continue
-      }
-      embarkC5Vehicle(transport, target, allUnits)
-      removeUnitOccupancy(target, occupancyMap)
-      target.pendingTransportId = null
-      accepted = true
-    }
-    return accepted
+    if (transport.flightState !== 'grounded' || !targets.length) return false
+    return dispatchC5Command(COMMAND_TYPES.C5_LOAD, { galaxyId: transport.id, unitIds: targets.map(unit => unit.id) }, allUnits, mapGrid)
   }
   transport.embarkedUnitIds = Array.isArray(transport.embarkedUnitIds) ? transport.embarkedUnitIds : []
   const requestedExistingIds = Array.isArray(transport.pendingLoadUnitIds)
@@ -1831,7 +1820,7 @@ export function updateNavalFleet(units, bullets, mapGrid, state, now, delta) {
 export function tryHandleFleetCommand(commandableUnits, worldX, worldY, units, mapGrid, options = {}) {
   const hitCandidates = (units || [])
     .map(unit => {
-      const interactionRadius = unit.isNaval
+      const interactionRadius = unit.type === 'c5Galaxy' ? TILE_SIZE * 1.5 : unit.isNaval
         ? TILE_SIZE * Math.max(0.8, getNavalRenderLengthTiles(unit.type) / 2)
         : TILE_SIZE * 0.8
       return {
@@ -1839,10 +1828,10 @@ export function tryHandleFleetCommand(commandableUnits, worldX, worldY, units, m
         score: Math.hypot(worldX - centerOf(unit).x, worldY - centerOf(unit).y) / interactionRadius
       }
     })
-    .filter(({ unit, score }) => unit.health > 0 && !unit.embarkedOnId && score <= 1 && unitContainsPoint(unit, worldX, worldY, TILE_SIZE * 0.8))
+    .filter(({ unit, score }) => unit.health > 0 && !unit.embarkedOnId && !unit.c5Drop && score <= 1 && unitContainsPoint(unit, worldX, worldY, TILE_SIZE * 0.8))
     .sort((a, b) => a.score - b.score)
     .map(({ unit }) => unit)
-  const clickedTransport = hitCandidates.find(unit => TRANSPORT_TYPES.has(unit.type))
+  const clickedTransport = hitCandidates.find(unit => TRANSPORT_TYPES.has(unit.type) && (unit.type !== 'c5Galaxy' || unit.flightState === 'grounded'))
   const selectedGroundCandidates = commandableUnits.filter(unit =>
     unit &&
     !unit.isBuilding &&
@@ -1850,14 +1839,14 @@ export function tryHandleFleetCommand(commandableUnits, worldX, worldY, units, m
     !unit.isAirUnit &&
     !AIRCRAFT_SLOT_WEIGHT[unit.type]
   )
-  if (clickedTransport && selectedGroundCandidates.length) {
+  if (clickedTransport && selectedGroundCandidates.length && (clickedTransport.type !== 'c5Galaxy' || options.boardingOnly)) {
     const selectedGroundUnits = selectedGroundCandidates.filter(unit =>
       isTransportableGroundUnit(unit, clickedTransport.owner, clickedTransport.id)
     )
     requestTransportLoadGroup(clickedTransport, selectedGroundUnits, mapGrid, gameState.occupancyMap, units)
     return true
   }
-  const transports = commandableUnits.filter(unit => TRANSPORT_TYPES.has(unit.type))
+  const transports = commandableUnits.filter(unit => TRANSPORT_TYPES.has(unit.type) && (unit.type !== 'c5Galaxy' || unit.flightState === 'grounded'))
   const clickedGroundCargo = transports.length
     ? hitCandidates.find(unit =>
       !transports.includes(unit) &&
@@ -1869,7 +1858,9 @@ export function tryHandleFleetCommand(commandableUnits, worldX, worldY, units, m
     )
     : null
   if (clickedGroundCargo) {
-    transports.some(transport => requestTransportLoad(transport, clickedGroundCargo, mapGrid, gameState.occupancyMap, units))
+    if (!options.boardingOnly && transports.every(transport => transport.type === 'c5Galaxy')) return false
+    transports.some(transport => (transport.type !== 'c5Galaxy' || options.boardingOnly) &&
+      requestTransportLoad(transport, clickedGroundCargo, mapGrid, gameState.occupancyMap, units))
     return true
   }
   const clickedUnit = hitCandidates[0]
@@ -1877,7 +1868,7 @@ export function tryHandleFleetCommand(commandableUnits, worldX, worldY, units, m
   const clickedTileY = Math.floor(worldY / TILE_SIZE)
   const clickedSelectedTransportHull = clickedUnit && transports.includes(clickedUnit)
   if (transports.length && (!clickedUnit || clickedSelectedTransportHull) &&
-    transports.some(transport => requestTransportUnload(transport, clickedTileX, clickedTileY, mapGrid))) return true
+    transports.some(transport => transport.type !== 'c5Galaxy' && requestTransportUnload(transport, clickedTileX, clickedTileY, mapGrid))) return true
 
   const carrier = clickedUnit?.type === 'aircraftCarrier' ? clickedUnit : null
   const aircraft = commandableUnits.filter(unit => AIRCRAFT_SLOT_WEIGHT[unit.type])
