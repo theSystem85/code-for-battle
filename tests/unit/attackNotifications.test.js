@@ -120,7 +120,7 @@ describe('attackNotifications', () => {
         'vehicleFactory',
         'barracks',
         'warFactory',
-        'techCenter',
+        'technologyResearchCenter',
         'communications',
         'radar'
       ]

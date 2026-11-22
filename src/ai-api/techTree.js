@@ -1,4 +1,5 @@
 import { UNIT_COSTS } from '../config.js'
+import { hasResearchCenterPrerequisites } from '../production/researchCenterRequirements.js'
 import { buildingData } from '../data/buildingData.js'
 
 const FULL_BUILDING_TECH_TREE = [
@@ -10,6 +11,7 @@ const FULL_BUILDING_TECH_TREE = [
   { type: 'vehicleWorkshop', req: '-' },
   { type: 'radarStation', req: '-' },
   { type: 'commandCenter', req: 'radarStation' },
+  { type: 'technologyResearchCenter', req: 'radarStation+commandCenter' },
   { type: 'hospital', req: '-' },
   { type: 'helipad', req: '-' },
   { type: 'shipyard', req: 'radarStation+vehicleFactory' },
@@ -92,6 +94,7 @@ export function computeAvailableBuildingTypes(buildings, factories, owner) {
   if (owned.some(building => building.type === 'vehicleWorkshop')) available.add('fireDepartment')
   if (hasRadar) {
     available.add('commandCenter')
+    if (hasResearchCenterPrerequisites(owned, owner)) available.add('technologyResearchCenter')
     available.add('turretGunV2')
     available.add('turretGunV3')
     available.add('rocketTurret')

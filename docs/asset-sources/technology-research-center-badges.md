@@ -1,0 +1,5 @@
+# Technology Research Center badges
+
+The four badges were generated with OpenAI ImageGen on 2026-11-22 with Patrick's authorization. The four quadrants were cropped and encoded as 192×192 WebP images at quality 85. Reading order is Research Program, Autonomous Systems, Orbital Engineering, and Aerospace Engineering.
+
+> Create a square game asset sheet with exactly four ornate, individual RTS technology perk emblems in a precise 2 by 2 grid, centered in four equal quadrants, generous margin. No text or lettering, no numbers, no logos. Military strategy game inventory badge, sculpted brass and gunmetal shield crests with engraved edges, dark navy backgrounds and warm gold highlights. Top left: compound laboratory microscope and circuit. Top right: four rotor drone silhouette and chip. Bottom left: a crescent orbital arc and sleek rocket. Bottom right: a swept wing aircraft over a blue radar dial. Consistent polished illustrated game inventory icon finish, no shared frame, each badge on flat dark navy.

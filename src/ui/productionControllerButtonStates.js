@@ -1,3 +1,5 @@
+import { updateResearchBuildCards } from './researchBuildCards.js'
+import { hasResearchCenterPrerequisites } from '../production/researchCenterRequirements.js'
 import { gameState } from '../gameState.js'
 import { getMissingBuildingRequirements } from '../production/buildingRequirements.js'
 import { buildingData } from '../data/buildingData.js'
@@ -170,6 +172,7 @@ export function updateVehicleButtonStates(controller) {
 }
 
 export function updateBuildingButtonStates(controller) {
+  updateResearchBuildCards()
   // In edit mode, enable all buildings regardless of tech tree
   if (gameState.mapEditMode) {
     const buildingButtons = document.querySelectorAll('.production-button[data-building-type]')
@@ -202,6 +205,9 @@ export function updateBuildingButtonStates(controller) {
     }
 
     const req = getMissingBuildingRequirements(type, ownedTypes)
+    if (type === 'technologyResearchCenter' && !hasResearchCenterPrerequisites(playerBuildings, gameState.humanPlayer) && req.length === 0) {
+      req.push('operational Radar Station and Command Center')
+    }
     const limit = buildingData[type]?.limit
     const count = playerBuildings.filter(building => building.type === type).length + controller.getBuildingProductionCount(button)
     if (Number.isFinite(limit) && count >= limit) {

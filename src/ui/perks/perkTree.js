@@ -1,11 +1,14 @@
 import '../../../styles/perks.css'
+import { isMultiplayerActive } from '../../pwa/liveUpdate.js'
 import { gameState } from '../../gameState.js'
 import { createPanSurface } from '../../input/panSurface.js'
+import { RESEARCH_PERKS } from '../../perks/researchCatalog.js'
 import { PERKS, getPerk } from '../../perks/perkCatalog.js'
-import { canPurchasePerk, getPerkLedger, hasLivingCommandCenter, requestPerkPurchase, subscribePerks } from '../../perks/perkState.js'
+import { canPurchasePerk, getPerkLedger, hasLivingCommandCenter, hasLivingResearchCenter, requestPerkPurchase, subscribePerks } from '../../perks/perkState.js'
 import { attachAutomationViewport } from '../policies/automationViewport.js'
 
 let overlay = null
+let activeTree = 'command'
 let cleanupViewport = null
 let cleanupPan = null
 let unsubscribe = null
@@ -15,9 +18,10 @@ let confirmTimer = null
 
 const owner = () => gameState.humanPlayer || 'player1'
 const star = (gold = true) => `<svg class="perk-star${gold ? '' : ' is-dim'}" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2.5 2.8 5.7 6.3.9-4.6 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2-4.6-4.4 6.3-.9z"/></svg>`
-const reasonText = { noCommandCenter: 'Rebuild the Command Center to purchase.', missingPrerequisite: 'Complete the previous perk in this lane.', insufficientStars: 'Earn more stars with unit veterancy.', owned: 'Owned' }
+const reasonText = { noResearchCenter: 'Build a Technology Research Center to purchase.', noCommandCenter: 'Rebuild the Command Center to purchase.', missingPrerequisite: 'Complete the previous perk in this lane.', insufficientStars: 'Earn more stars with unit veterancy.', owned: 'Owned' }
 
 function unlockedItems(perk) {
+  if (perk.blueprints?.length) return perk.blueprints.map(blueprint => blueprint.name).join(' · ')
   const items = [...perk.unlocks.conditions, ...perk.unlocks.effects]
   for (const option of perk.unlocks.options) items.push(`${option.param}: ${option.values.join(', ')}`)
   return items.length ? items.join(' · ') : perk.summary
@@ -26,7 +30,7 @@ function unlockedItems(perk) {
 function node(perk, ledger) {
   const status = canPurchasePerk(owner(), perk.id)
   const owned = ledger.owned.includes(perk.id)
-  const state = owned ? 'owned' : status.ok ? 'available' : status.reason === 'insufficientStars' ? 'unaffordable' : status.reason === 'noCommandCenter' ? 'no-command-center' : 'locked'
+  const state = owned ? 'owned' : status.ok ? 'available' : status.reason === 'insufficientStars' ? 'unaffordable' : ['noCommandCenter', 'noResearchCenter'].includes(status.reason) ? 'no-command-center' : 'locked'
   const button = document.createElement('button')
   button.type = 'button'
   button.className = `perk-node perk-node--${perk.lane} is-${state}`
@@ -85,6 +89,27 @@ function render() {
   const ledger = getPerkLedger(owner())
   const canvas = overlay.querySelector('.perk-tree__canvas')
   canvas.replaceChildren()
+  if (activeTree === 'research') {
+    const section = document.createElement('section')
+    section.className = 'perk-branch perk-branch--research'
+    const [start, ...branches] = RESEARCH_PERKS
+    const foundation = document.createElement('div')
+    foundation.className = 'perk-branch__start'
+    foundation.appendChild(node(start, ledger))
+    const lanes = document.createElement('div')
+    lanes.className = 'research-perk-lanes'
+    for (const perk of branches) lanes.appendChild(node(perk, ledger))
+    section.append(foundation, lanes)
+    canvas.appendChild(section)
+  } else renderCommandTree(canvas, ledger)
+  overlay.querySelector('.perk-ledger').innerHTML = `${star()} <b>${ledger.available} available</b> · ${ledger.earned} earned · ${ledger.spent} used <small>Earn stars when units gain veterancy.</small>`
+  const research = activeTree === 'research'
+  const online = research ? hasLivingResearchCenter(owner()) : hasLivingCommandCenter(owner())
+  const name = research ? 'Technology Research Center' : 'Command Center'
+  overlay.querySelector('.perk-tree__cc-state').textContent = online ? `${name} online` : `View only · rebuild the ${name} to purchase perks`
+}
+
+function renderCommandTree(canvas, ledger) {
   for (const tree of ['base', 'prod', 'unit', 'def']) {
     const perks = PERKS.filter(perk => perk.tree === tree && perk.lane !== 'capstone')
     const column = document.createElement('section')
@@ -106,19 +131,25 @@ function render() {
   cap.innerHTML = `<svg class="perk-capstone__merge" viewBox="0 0 800 100" preserveAspectRatio="none" aria-hidden="true">${ends.map((id, index) => `<path class="${ledger.owned.includes(id) ? 'is-lit' : ''}" d="M${50 + index * 100} 0 L${50 + index * 100} 45 L400 95"/>`).join('')}</svg>`
   cap.appendChild(node(capstone, ledger))
   canvas.appendChild(cap)
-  overlay.querySelector('.perk-ledger').innerHTML = `${star()} <b>${ledger.available} available</b> · ${ledger.earned} earned · ${ledger.spent} used <small>Earn stars when units gain veterancy.</small>`
-  overlay.querySelector('.perk-tree__cc-state').textContent = hasLivingCommandCenter(owner()) ? 'Command Center online' : 'View only · rebuild the Command Center to purchase perks'
 }
 
-export function openPerkTree() {
-  if (overlay) return overlay
+export function openPerkTree(tree = 'command') {
+  if (overlay && activeTree === tree) return overlay
+  if (overlay) closePerkTree()
+  activeTree = tree
+  const research = tree === 'research'
   overlay = document.createElement('div')
   overlay.className = 'perk-tree-overlay'
   overlay.innerHTML = '<main class="perk-tree" role="dialog" aria-modal="true" aria-labelledby="perkTreeTitle"><header><div><p>COMMAND CENTER</p><h1 id="perkTreeTitle">Automation Perks</h1><span class="perk-tree__cc-state"></span></div><button class="perk-tree__close" type="button" aria-label="Close perk tree">×</button></header><div class="perk-tree__viewport" tabindex="0"><div class="perk-tree__canvas"></div></div><footer class="perk-ledger"></footer></main>'
+  if (research) {
+    overlay.classList.add('research-perk-overlay')
+    overlay.querySelector('header p').textContent = 'TECHNOLOGY RESEARCH CENTER'
+    overlay.querySelector('#perkTreeTitle').textContent = 'Research Perks'
+  }
   document.body.appendChild(overlay)
   cleanupViewport = attachAutomationViewport(overlay, overlay.querySelector('.perk-tree'))
   const viewport = overlay.querySelector('.perk-tree__viewport')
-  cleanupPan = createPanSurface(viewport, { content: overlay.querySelector('.perk-tree__canvas'), initialX: 450, speed: 1.2, inertia: true })
+  cleanupPan = createPanSurface(viewport, { content: overlay.querySelector('.perk-tree__canvas'), initialX: research ? 0 : 450, speed: 1.2, inertia: true })
   overlay.querySelector('.perk-tree__close').addEventListener('click', closePerkTree)
   overlay.addEventListener('keydown', event => { if (event.key === 'Escape') closePerkTree() })
   overlay.addEventListener('pointerup', event => {
@@ -131,7 +162,7 @@ export function openPerkTree() {
   overlay.addEventListener('selectstart', event => event.preventDefault())
   overlay.addEventListener('dragstart', event => event.preventDefault())
   unsubscribe = subscribePerks(render)
-  pauseWasRunning = !gameState.multiplayerSession?.isRemote && gameState.gamePaused === false
+  pauseWasRunning = (research ? !isMultiplayerActive(gameState) : !gameState.multiplayerSession?.isRemote) && gameState.gamePaused === false
   if (pauseWasRunning) gameState.gamePaused = true
   render()
   viewport.focus()

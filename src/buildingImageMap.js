@@ -16,6 +16,7 @@ export const buildingImageMap = {
   fireDepartment: 'images/map/buildings/fire_department.webp',
   vehicleWorkshop: 'images/map/buildings/vehicle_workshop.webp',
   radarStation: 'images/map/buildings/radar_station.webp',
+  technologyResearchCenter: 'images/map/buildings/technology_research_center_map.webp',
   commandCenter: 'images/map/buildings/command_center.webp',
   hospital: 'images/map/buildings/hospital.webp',
   helipad: 'images/map/buildings/helipad_map.webp',

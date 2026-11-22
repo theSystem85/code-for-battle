@@ -97,6 +97,20 @@ export const buildingData = {
     limit: 1,
     smokeSpots: [{ x: 190, y: 40 }]
   },
+  technologyResearchCenter: {
+    width: 3,
+    height: 3,
+    cost: 5000,
+    power: -100,
+    image: 'technology_research_center_map.webp',
+    displayName: 'Technology Research Center',
+    health: 500,
+    armor: 2,
+    requiresRadar: true,
+    requiresCommandCenter: true,
+    limit: 1,
+    smokeSpots: []
+  },
   radarStation: {
     width: 2,
     height: 2,

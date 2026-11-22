@@ -2218,3 +2218,26 @@ body.save-game-editor-open { overflow: hidden; }
   margin-inline-end: 3px;
   color: #98c8ff;
 }
+
+.research-build-card[hidden] { display: none !important; }
+.research-build-card__status {
+  position: absolute;
+  z-index: 3;
+  inset: auto 0 0;
+  padding: 3px;
+  color: #fff;
+  background: #101c2a;
+  font-size: 10px;
+  line-height: 1.2;
+}
+
+.research-build-card { cursor: default; }
+.research-build-card .building-name,
+.research-build-card .unit-name {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  inset-inline: 0;
+  height: auto;
+  background: #101c2a;
+}

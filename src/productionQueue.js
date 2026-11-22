@@ -1,5 +1,6 @@
 import { bindStackedPlacementCancellation } from './ui/productionPlacementBridge.js'
 import { getProductionPlacementSettings } from './ui/productionPlacementSettings.js'
+import { hasResearchCenterPrerequisites } from './production/researchCenterRequirements.js'
 import { getProductionDuration, vehicleFactorySpeedUnitTypes } from './production/timing.js'
 import { completeProductionItem, failCompletionReceipt, noteProductionBlocked } from './policies/completionReceipts.js'
 import { spawnUnit, findPath } from './units.js'
@@ -339,6 +340,10 @@ export const productionQueue = {
   },
 
   addItem: function(type, button, isBuilding = false, blueprint = null, rallyPoint = null, options = {}) {
+    if (type === 'technologyResearchCenter' && !gameState.mapEditMode && !hasResearchCenterPrerequisites(gameState.buildings, gameState.humanPlayer)) {
+      showNotification('Requires an operational Radar Station and Command Center.')
+      return
+    }
     if (type === 'fireEngine') {
       const capacity = gameState.buildings.filter(b => b.type === 'fireDepartment' && b.health > 0 && b.owner === gameState.humanPlayer).length * 4
       const existing = units.filter(u => u.type === 'fireEngine' && u.health > 0 && u.owner === gameState.humanPlayer).length

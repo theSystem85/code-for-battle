@@ -11,6 +11,7 @@ const BASE = [
   ['powerPlant', 12, 19], ['powerPlant', 15, 19],
   ['vehicleFactory', 19, 13], ['vehicleWorkshop', 24, 13], ['hospital', 24, 7],
   ['airstrip', 29, 6], ['helipad', 29, 14], ['radarStation', 33, 14], ['commandCenter', 8, 4],
+  ['technologyResearchCenter', 8, 8],
   ['gasStation', 19, 18], ['ammunitionFactory', 24, 18], ['fireDepartment', 29, 18],
   ['turretGunV1', 34, 17], ['turretGunV2', 35, 19], ['turretGunV3', 36, 21],
   ['teslaCoil', 36, 12], ['artilleryTurret', 24, 23], ['rocketTurret', 33, 23],

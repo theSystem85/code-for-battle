@@ -7,6 +7,7 @@ const requirementsByType = new Map(Object.keys(buildingData).map(type => {
   if (type !== 'street') {
     if (type !== 'constructionYard') requirements.push({ type: 'constructionYard' })
     if (buildingData[type].requiresRadar) requirements.push({ type: 'radarStation' })
+    if (buildingData[type].requiresCommandCenter) requirements.push({ type: 'commandCenter' })
     if (buildingData[type].requiresVehicleFactory) requirements.push({ type: 'vehicleFactory' })
     if (type !== 'powerPlant' && type !== 'constructionYard') {
       requirements.push({ type: 'powerPlant' })
