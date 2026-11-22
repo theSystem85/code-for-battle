@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "assetVersion": "509421be0a0098db",
+  "assetVersion": "b9f053a6f73f7233",
   "generatedBy": "scripts/build-prepared-sprites.mjs",
   "webpQuality": 85,
   "unitWebpQuality": 95,
@@ -10,10 +10,10 @@
     3
   ],
   "inventory": {
-    "entryCount": 309,
-    "sourceCount": 68,
-    "generatedVariantCount": 927,
-    "decodedVariantBytes": 50939984
+    "entryCount": 317,
+    "sourceCount": 70,
+    "generatedVariantCount": 951,
+    "decodedVariantBytes": 54365052
   },
   "entries": [
     {
@@ -14943,6 +14943,97 @@
       ]
     },
     {
+      "id": "aircraft:c5Galaxy:flight",
+      "category": "aircraft",
+      "source": "/images/map/units/c5_galaxy_map.webp",
+      "sourceWidth": 512,
+      "sourceHeight": 512,
+      "logicalWidth": 112,
+      "logicalHeight": 112,
+      "hasAlpha": true,
+      "alphaMode": "straight",
+      "anchorSpace": "logical-pixels",
+      "anchors": {
+        "center": {
+          "x": 56,
+          "y": 56
+        }
+      },
+      "states": [
+        "airborne",
+        "takeoff-resize",
+        "landing-resize"
+      ],
+      "variants": [
+        {
+          "density": 1,
+          "path": "/images/prepared/aircraft/c5Galaxy/flight@1x.webp",
+          "backingWidth": 112,
+          "backingHeight": 112,
+          "decodedBytes": 50176
+        },
+        {
+          "density": 2,
+          "path": "/images/prepared/aircraft/c5Galaxy/flight@2x.webp",
+          "backingWidth": 224,
+          "backingHeight": 224,
+          "decodedBytes": 200704
+        },
+        {
+          "density": 3,
+          "path": "/images/prepared/aircraft/c5Galaxy/flight@3x.webp",
+          "backingWidth": 336,
+          "backingHeight": 336,
+          "decodedBytes": 451584
+        }
+      ]
+    },
+    {
+      "id": "aircraft:c5Galaxy:ground",
+      "category": "aircraft",
+      "source": "/images/map/units/c5_galaxy_map.webp",
+      "sourceWidth": 512,
+      "sourceHeight": 512,
+      "logicalWidth": 84,
+      "logicalHeight": 84,
+      "hasAlpha": true,
+      "alphaMode": "straight",
+      "anchorSpace": "logical-pixels",
+      "anchors": {
+        "center": {
+          "x": 42,
+          "y": 42
+        }
+      },
+      "states": [
+        "grounded",
+        "taxi"
+      ],
+      "variants": [
+        {
+          "density": 1,
+          "path": "/images/prepared/aircraft/c5Galaxy/ground@1x.webp",
+          "backingWidth": 84,
+          "backingHeight": 84,
+          "decodedBytes": 28224
+        },
+        {
+          "density": 2,
+          "path": "/images/prepared/aircraft/c5Galaxy/ground@2x.webp",
+          "backingWidth": 168,
+          "backingHeight": 168,
+          "decodedBytes": 112896
+        },
+        {
+          "density": 3,
+          "path": "/images/prepared/aircraft/c5Galaxy/ground@3x.webp",
+          "backingWidth": 252,
+          "backingHeight": 252,
+          "decodedBytes": 254016
+        }
+      ]
+    },
+    {
       "id": "aircraft:f22:flight",
       "category": "aircraft",
       "source": "/images/map/units/f22_raptor_map.webp",
@@ -16671,6 +16762,245 @@
           "backingWidth": 288,
           "backingHeight": 288,
           "decodedBytes": 331776
+        }
+      ]
+    },
+    {
+      "id": "effect:c5:parachute",
+      "category": "effect",
+      "source": "/images/effects/c5_parachute_canopy.webp",
+      "sourceWidth": 192,
+      "sourceHeight": 99,
+      "logicalWidth": 18,
+      "logicalHeight": 9.28125,
+      "hasAlpha": true,
+      "alphaMode": "straight",
+      "anchorSpace": "logical-pixels",
+      "anchors": {
+        "center": {
+          "x": 9,
+          "y": 4.640625
+        }
+      },
+      "states": [
+        "descending"
+      ],
+      "variants": [
+        {
+          "density": 1,
+          "path": "/images/prepared/effect/c5/parachute@1x.webp",
+          "backingWidth": 18,
+          "backingHeight": 9,
+          "decodedBytes": 648
+        },
+        {
+          "density": 2,
+          "path": "/images/prepared/effect/c5/parachute@2x.webp",
+          "backingWidth": 36,
+          "backingHeight": 19,
+          "decodedBytes": 2736
+        },
+        {
+          "density": 3,
+          "path": "/images/prepared/effect/c5/parachute@3x.webp",
+          "backingWidth": 54,
+          "backingHeight": 28,
+          "decodedBytes": 6048
+        }
+      ]
+    },
+    {
+      "id": "effect:c5:shadow:0",
+      "category": "effect",
+      "source": "/images/map/units/c5_galaxy_map.webp",
+      "sourceWidth": 512,
+      "sourceHeight": 512,
+      "logicalWidth": 77.28,
+      "logicalHeight": 77.28,
+      "hasAlpha": true,
+      "alphaMode": "straight",
+      "anchorSpace": "logical-pixels",
+      "anchors": {},
+      "states": [
+        "shadow"
+      ],
+      "variants": [
+        {
+          "density": 1,
+          "path": "/images/prepared/effect/c5/shadow/0@1x.webp",
+          "backingWidth": 77,
+          "backingHeight": 77,
+          "decodedBytes": 23716
+        },
+        {
+          "density": 2,
+          "path": "/images/prepared/effect/c5/shadow/0@2x.webp",
+          "backingWidth": 155,
+          "backingHeight": 155,
+          "decodedBytes": 96100
+        },
+        {
+          "density": 3,
+          "path": "/images/prepared/effect/c5/shadow/0@3x.webp",
+          "backingWidth": 232,
+          "backingHeight": 232,
+          "decodedBytes": 215296
+        }
+      ]
+    },
+    {
+      "id": "effect:c5:shadow:1",
+      "category": "effect",
+      "source": "/images/map/units/c5_galaxy_map.webp",
+      "sourceWidth": 512,
+      "sourceHeight": 512,
+      "logicalWidth": 97.44,
+      "logicalHeight": 97.44,
+      "hasAlpha": true,
+      "alphaMode": "straight",
+      "anchorSpace": "logical-pixels",
+      "anchors": {},
+      "states": [
+        "shadow"
+      ],
+      "variants": [
+        {
+          "density": 1,
+          "path": "/images/prepared/effect/c5/shadow/1@1x.webp",
+          "backingWidth": 97,
+          "backingHeight": 97,
+          "decodedBytes": 37636
+        },
+        {
+          "density": 2,
+          "path": "/images/prepared/effect/c5/shadow/1@2x.webp",
+          "backingWidth": 195,
+          "backingHeight": 195,
+          "decodedBytes": 152100
+        },
+        {
+          "density": 3,
+          "path": "/images/prepared/effect/c5/shadow/1@3x.webp",
+          "backingWidth": 292,
+          "backingHeight": 292,
+          "decodedBytes": 341056
+        }
+      ]
+    },
+    {
+      "id": "effect:c5:shadow:2",
+      "category": "effect",
+      "source": "/images/map/units/c5_galaxy_map.webp",
+      "sourceWidth": 512,
+      "sourceHeight": 512,
+      "logicalWidth": 95.2,
+      "logicalHeight": 95.2,
+      "hasAlpha": true,
+      "alphaMode": "straight",
+      "anchorSpace": "logical-pixels",
+      "anchors": {},
+      "states": [
+        "shadow"
+      ],
+      "variants": [
+        {
+          "density": 1,
+          "path": "/images/prepared/effect/c5/shadow/2@1x.webp",
+          "backingWidth": 95,
+          "backingHeight": 95,
+          "decodedBytes": 36100
+        },
+        {
+          "density": 2,
+          "path": "/images/prepared/effect/c5/shadow/2@2x.webp",
+          "backingWidth": 190,
+          "backingHeight": 190,
+          "decodedBytes": 144400
+        },
+        {
+          "density": 3,
+          "path": "/images/prepared/effect/c5/shadow/2@3x.webp",
+          "backingWidth": 286,
+          "backingHeight": 286,
+          "decodedBytes": 327184
+        }
+      ]
+    },
+    {
+      "id": "effect:c5:shadow:3",
+      "category": "effect",
+      "source": "/images/map/units/c5_galaxy_map.webp",
+      "sourceWidth": 512,
+      "sourceHeight": 512,
+      "logicalWidth": 92.96,
+      "logicalHeight": 92.96,
+      "hasAlpha": true,
+      "alphaMode": "straight",
+      "anchorSpace": "logical-pixels",
+      "anchors": {},
+      "states": [
+        "shadow"
+      ],
+      "variants": [
+        {
+          "density": 1,
+          "path": "/images/prepared/effect/c5/shadow/3@1x.webp",
+          "backingWidth": 93,
+          "backingHeight": 93,
+          "decodedBytes": 34596
+        },
+        {
+          "density": 2,
+          "path": "/images/prepared/effect/c5/shadow/3@2x.webp",
+          "backingWidth": 186,
+          "backingHeight": 186,
+          "decodedBytes": 138384
+        },
+        {
+          "density": 3,
+          "path": "/images/prepared/effect/c5/shadow/3@3x.webp",
+          "backingWidth": 279,
+          "backingHeight": 279,
+          "decodedBytes": 311364
+        }
+      ]
+    },
+    {
+      "id": "effect:c5:shadow:4",
+      "category": "effect",
+      "source": "/images/map/units/c5_galaxy_map.webp",
+      "sourceWidth": 512,
+      "sourceHeight": 512,
+      "logicalWidth": 90.72,
+      "logicalHeight": 90.72,
+      "hasAlpha": true,
+      "alphaMode": "straight",
+      "anchorSpace": "logical-pixels",
+      "anchors": {},
+      "states": [
+        "shadow"
+      ],
+      "variants": [
+        {
+          "density": 1,
+          "path": "/images/prepared/effect/c5/shadow/4@1x.webp",
+          "backingWidth": 91,
+          "backingHeight": 91,
+          "decodedBytes": 33124
+        },
+        {
+          "density": 2,
+          "path": "/images/prepared/effect/c5/shadow/4@2x.webp",
+          "backingWidth": 181,
+          "backingHeight": 181,
+          "decodedBytes": 131044
+        },
+        {
+          "density": 3,
+          "path": "/images/prepared/effect/c5/shadow/4@3x.webp",
+          "backingWidth": 272,
+          "backingHeight": 272,
+          "decodedBytes": 295936
         }
       ]
     },

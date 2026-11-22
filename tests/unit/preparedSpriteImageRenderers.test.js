@@ -86,8 +86,8 @@ describe('prepared sprite generation and registry', () => {
 
     expect(manifest.webpQuality).toBe(85)
     expect(manifest.densities).toEqual([1, 2, 3])
-    expect(manifest.inventory.entryCount).toBe(312)
-    expect(manifest.entries).toHaveLength(312)
+    expect(manifest.inventory.entryCount).toBe(317)
+    expect(manifest.entries).toHaveLength(317)
     expect(manifest.entries.every(entry =>
       entry.hasAlpha &&
       entry.alphaMode === 'straight' &&
@@ -304,4 +304,18 @@ it('[U07320] draws four prepared canopies with four suspension lines per canopy'
   expect(ctx.moveTo).toHaveBeenCalledTimes(16)
   expect(ctx.lineTo).toHaveBeenCalledTimes(16)
   expect(ctx.scale).toHaveBeenLastCalledWith(0.5, 0.5)
+})
+
+it('[U07325] draws the prepared airborne silhouette below the Galaxy at the same heading', () => {
+  publishPreparedSpriteRegistry(createPreparedSet([
+    { id: 'aircraft:c5Galaxy:flight', logicalWidth: 112, logicalHeight: 112, backingWidth: 224, backingHeight: 224 },
+    { id: 'effect:c5:shadow:4', logicalWidth: 90.72, logicalHeight: 90.72, backingWidth: 181, backingHeight: 181 }
+  ]))
+  const ctx = createCanvasContext()
+  const direction = 0.8
+  renderC5GalaxyWithImage(ctx, { flightState: 'airborne', direction, altitude: 144, maxAltitude: 144 }, 60, 60)
+  expect(ctx.drawImage).toHaveBeenCalledTimes(2)
+  expect(ctx.drawImage.mock.calls[0][0].width).toBe(181)
+  expect(ctx.drawImage.mock.calls[1][0].width).toBe(224)
+  expect(ctx.rotate.mock.calls).toEqual([[direction + Math.PI / 2], [direction + Math.PI / 2]])
 })

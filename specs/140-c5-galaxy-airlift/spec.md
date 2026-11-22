@@ -125,7 +125,7 @@ Patrick authorized ImageGen for the parachute canopy on 2026-11-22. The standing
 ### FR-005: Produced at the airstrip
 
 **Priority:** P0  
-**Description:** The airstrip is the sole production prerequisite. The Galaxy costs 4,000 and uses the standard cost-based build time. It has 300 HP, twice the F-22’s armour, the draft speed of 2.2, and enough fuel to fly 800 tiles without refuelling. It is unarmed. Enemy and LLM-controlled AI production are outside v1.
+**Description:** The airstrip is the sole production prerequisite. The Galaxy costs 4,000 and uses the standard cost-based build time. It has 300 HP, twice the F-22’s armour, a flight speed of 3.3 pixels per simulation tick, and enough fuel to fly 800 tiles without refuelling. It is unarmed. Enemy and LLM-controlled AI production are outside v1.
 
 ### FR-006: Approved Grok Imagine art
 
@@ -156,13 +156,13 @@ Patrick authorized ImageGen for the parachute canopy on 2026-11-22. The standing
 
 **Priority:** P0
 
-**Description:** Match the hovercraft’s reciprocal left-click boarding controls. With an eligible ground vehicle selected, show the move-into cursor over a grounded Galaxy and board on left-click. Support the reciprocal flow when the Galaxy is selected and the player hovers and left-clicks an eligible vehicle. Animate vehicles approaching and boarding. Use the context menu on a free ground tile to cancel boarding or unload a grounded Galaxy. Use the selected tile as the disembarking vehicles’ gathering point.
+**Description:** Match the hovercraft’s reciprocal left-click boarding controls. With an eligible ground vehicle selected, show the move-into cursor over a grounded Galaxy and board on left-click. Support the reciprocal flow when the Galaxy is selected and the player hovers and left-clicks an eligible vehicle. Turn the grounded Galaxy toward the boarding vehicle. Animate the vehicle entering through the nose and render it beneath the aircraft. Use the context menu on a free ground tile to cancel boarding or unload a grounded Galaxy. Use the selected tile as the disembarking vehicles’ gathering point.
 
 ### FR-012: Flight and parachute animation
 
 **Priority:** P0
 
-**Description:** Animate takeoff and landing. Use one dedicated canopy image without suspension lines. Render four parachutes per descending vehicle, initially one over each cargo corner. Draw each canopy’s lines from four fixed mounting points to a single attachment point on the cargo at its corresponding corner. The canopies slowly circle around the attached cargo as it descends. Account for wind direction during descent.
+**Description:** Roll to the right end of the runway before lifting off. Fly forward through curved turns. Arrive from the left and descend before touching down on the runway. Draw a semi-transparent, altitude-scaled silhouette prepared from the aircraft sprite at the aircraft’s heading. The parachute descent lasts 270 simulation ticks. Use one dedicated canopy image without suspension lines. Render four parachutes per descending vehicle, initially one over each cargo corner. Draw each canopy’s lines from four fixed mounting points to a single attachment point on the cargo at its corresponding corner. The canopies slowly circle around the attached cargo as it descends. Account for wind direction during descent.
 
 ### FR-013: Cargo damage and wrecks
 

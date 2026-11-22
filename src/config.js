@@ -1443,7 +1443,7 @@ export const UNIT_PROPERTIES = {
     accelerationMultiplier: 1.35
   },
   c5Galaxy: {
-    weight: 172, airliftable: false, isAirUnit: true, health: 300, maxHealth: 300, speed: 2.2,
+    weight: 172, airliftable: false, isAirUnit: true, health: 300, maxHealth: 300, speed: 3.3,
     rotationSpeed: 0.035, turretRotationSpeed: 0, accelerationMultiplier: 0.55, armor: 2, footprintTiles: 3, renderScale: 3.5
   },
   howitzer: {

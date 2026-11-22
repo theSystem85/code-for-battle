@@ -16,7 +16,7 @@ async function clickUnit(page, id) {
   await page.mouse.click(point.x, point.y)
 }
 
-test('[E00273] produces the Galaxy, boards by left click and airdrops through the context menu', async({ page }) => {
+test('[E00274] produces the Galaxy, boards by left click and airdrops through the context menu', async({ page }) => {
   test.setTimeout(180000)
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.addInitScript(() => {
@@ -90,7 +90,7 @@ test('[E00273] produces the Galaxy, boards by left click and airdrops through th
     return cargo && !cargo.c5Drop && !cargo.embarkedOnId && [cargo.tileX, cargo.tileY]
   }), { timeout: 12000 }).toEqual([29, 25])
   await page.waitForTimeout(600)
-  const targetOnCanvas = await position(page, target.x, target.y)
-  await page.mouse.click(targetOnCanvas.x, targetOnCanvas.y)
+  await page.keyboard.press('Escape')
+  await clickUnit(page, 'galaxy-cargo')
   await expect.poll(() => page.evaluate(() => window.selectedUnitsRef[0]?.id)).toBe('galaxy-cargo')
 })

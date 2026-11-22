@@ -1,3 +1,4 @@
+import { advanceC5FlightPath, createC5FlightPath } from './c5FlightPath.js'
 import { TILE_SIZE, UNIT_GAS_PROPERTIES, UNIT_PROPERTIES, WIND_DIRECTION } from '../config.js'
 import { findPathForOwner, removeUnitOccupancy } from '../units.js'
 import { hasBlockingBuilding } from '../utils/buildingPassability.js'
@@ -11,10 +12,14 @@ import {
 } from './c5Cargo.js'
 
 const speed = UNIT_PROPERTIES.c5Galaxy.speed
+const turnRate = UNIT_PROPERTIES.c5Galaxy.rotationSpeed
+const approachLength = TILE_SIZE * 9
+const noseDistance = TILE_SIZE * 1.1
 const cruiseAltitude = TILE_SIZE * 4.5
 const fuelRate = UNIT_GAS_PROPERTIES.c5Galaxy.consumption / TILE_SIZE
 const cargoUnitIndex = new Map()
 const airstripIndex = new Map()
+const boardingUnits = new Map()
 
 function indexCargoUnits(units) {
   cargoUnitIndex.clear()
@@ -72,7 +77,7 @@ export function startC5Mission(galaxy, target, tick, options = {}) {
   const targetX = target.x * TILE_SIZE
   const targetY = target.y * TILE_SIZE
   const required = (Math.hypot(galaxy.x - targetX, galaxy.y - targetY) +
-    Math.hypot(returnPoint.x - targetX, returnPoint.y - targetY) + (home ? TILE_SIZE * 32 : 0)) * fuelRate
+    Math.hypot(returnPoint.x - targetX, returnPoint.y - targetY) + (home ? TILE_SIZE * 50 : 0)) * fuelRate
   if (Number.isFinite(galaxy.gas) && galaxy.gas < required) return false
   galaxy.c5Mission = { phase: 'outbound', target: { ...target }, returnPoint, startedTick: tick, drop }
   if (galaxy.flightState === 'grounded') galaxy.flightState = 'taxiOut'
@@ -128,17 +133,29 @@ function updateBoarding(unit, galaxy, units, state) {
     cancelBoarding(unit, state)
     return
   }
+  if (boardingUnits.get(galaxy.id) !== unit) return
   if (!boarding.loading) {
+    const desired = Math.atan2(unit.y - galaxy.y, unit.x - galaxy.x)
+    const error = desired - (galaxy.direction || 0)
+    const turn = Math.atan2(Math.sin(error), Math.cos(error))
+    galaxy.direction = (galaxy.direction || 0) + Math.max(-turnRate, Math.min(turnRate, turn))
     const tileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
     const tileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
     if (tileX !== boarding.tile.x || tileY !== boarding.tile.y) {
       if (!unit.path?.length) cancelBoarding(unit, state)
       return
     }
+    if (Math.abs(turn) > turnRate) return
     removeUnitOccupancy(unit, state.occupancyMap)
     unit.occupancyRemoved = true
     boarding.loading = true
     unit.path = []
+  }
+  if (!boarding.atNose) {
+    const noseX = galaxy.x + Math.cos(galaxy.direction) * noseDistance
+    const noseY = galaxy.y + Math.sin(galaxy.direction) * noseDistance
+    if (!moveToward(unit, noseX, noseY, 1.2)) return
+    boarding.atNose = true
   }
   if (!moveToward(unit, galaxy.x, galaxy.y, 1.2)) return
   const result = embarkC5Vehicle(galaxy, unit, units)
@@ -204,11 +221,33 @@ export function applyC5Order(action, payload, owner, units, state) {
   return cancelled || unloaded.length > 0
 }
 
+function smoothstep(progress) {
+  const t = Math.max(0, Math.min(1, progress))
+  return t * t * (3 - 2 * t)
+}
+
+function finishOutbound(galaxy, mission, grid, tick) {
+  if (mission.drop !== false && terrainAt(grid, mission.target.x, mission.target.y) !== 'water') {
+    beginC5Airdrop(galaxy, mission.target, tick)
+    mission.phase = 'dropping'
+  } else {
+    mission.phase = 'return'
+  }
+  mission.path = null
+}
+
+function followOutbound(galaxy, mission) {
+  mission.path ??= createC5FlightPath(galaxy, mission.target.x * TILE_SIZE, mission.target.y * TILE_SIZE)
+  return advanceC5FlightPath(galaxy, mission.path, speed)
+}
+
 function updateFlight(galaxy, home, grid, occupancy, tick) {
   const mission = galaxy.c5Mission
   if (!mission) return
   const runway = home && (home.runwayPoints ?? getAirstripRunwayPoints(home))
   const maxAltitude = galaxy.maxAltitude || cruiseAltitude
+  const thresholdX = runway ? runway.runwayStart.worldX - TILE_SIZE / 2 : mission.returnPoint?.x ?? galaxy.x
+  const thresholdY = runway ? runway.runwayStart.worldY - TILE_SIZE / 2 : mission.returnPoint?.y ?? galaxy.y
   switch (galaxy.flightState) {
     case 'taxiOut':
       if (home && !tryClaimAirstripRunwayOperation(home, galaxy.id, 'takeoff')) break
@@ -216,43 +255,90 @@ function updateFlight(galaxy, home, grid, occupancy, tick) {
       if (home && home.f22OccupiedSlotUnitIds?.[0] === galaxy.id) {
         for (const index of C5_LOWER_SLOT_INDICES) home.f22OccupiedSlotUnitIds[index] = null
       }
-      if (!runway || moveToRunwayPoint(galaxy, runway.runwayStart, speed * 0.45)) galaxy.flightState = 'takeoffRoll'
+      if (!runway || moveToRunwayPoint(galaxy, runway.runwayStart, speed * 0.3)) {
+        if (runway) galaxy.direction = 0
+        galaxy.flightState = 'takeoffRoll'
+      }
       break
     case 'takeoffRoll':
-      if (!runway || moveToRunwayPoint(galaxy, runway.runwayLiftOff, speed)) galaxy.flightState = 'climb'
+      if (!runway || moveToRunwayPoint(galaxy, runway.runwayExit, speed * 0.8)) galaxy.flightState = 'climb'
       break
-    case 'climb':
-      galaxy.altitude = Math.min(maxAltitude, (galaxy.altitude || 0) + maxAltitude / 90)
-      if (runway) moveToRunwayPoint(galaxy, runway.runwayExit, speed)
+    case 'climb': {
+      if (!mission.path) {
+        const dx = mission.target.x * TILE_SIZE - galaxy.x
+        const dy = mission.target.y * TILE_SIZE - galaxy.y
+        if (Math.hypot(dx, dy) < approachLength) {
+          const heading = galaxy.direction || 0
+          const error = Math.atan2(dy, dx) - heading
+          const turn = Math.atan2(Math.sin(error), Math.cos(error))
+          const lead = heading + Math.max(-Math.PI / 3, Math.min(Math.PI / 3, turn))
+          mission.path = createC5FlightPath(galaxy, galaxy.x + Math.cos(lead) * approachLength,
+            galaxy.y + Math.sin(lead) * approachLength, lead)
+          mission.climbLead = true
+        }
+      }
+      const arrived = followOutbound(galaxy, mission)
+      const path = mission.path
+      const climbDistance = Math.min(approachLength, path.lengths.at(-1))
+      galaxy.altitude = maxAltitude * smoothstep(climbDistance ? path.traveled / climbDistance : 1)
       if (galaxy.altitude >= maxAltitude) {
         if (home) releaseAirstripRunwayOperation(home, galaxy.id)
-        galaxy.flightState = 'airborne'
+        if (!mission.climbLead || arrived) galaxy.flightState = 'airborne'
       }
+      if (arrived && mission.climbLead) {
+        mission.path = null
+        mission.climbLead = false
+      } else if (arrived) finishOutbound(galaxy, mission, grid, tick)
       break
+    }
     case 'airborne':
-      if (mission.phase === 'outbound' && moveToward(galaxy, mission.target.x * TILE_SIZE, mission.target.y * TILE_SIZE, speed)) {
-        if (mission.drop !== false && terrainAt(grid, mission.target.x, mission.target.y) !== 'water') {
-          beginC5Airdrop(galaxy, mission.target, tick)
-          mission.phase = 'dropping'
-        } else {
-          mission.phase = 'return'
-        }
-      } else if (mission.phase === 'dropping' && !galaxy.dropQueueState) {
-        mission.phase = 'return'
+      if (mission.phase === 'outbound') {
+        if (followOutbound(galaxy, mission)) finishOutbound(galaxy, mission, grid, tick)
+      } else if (mission.phase === 'dropping') {
+        // Continue flying around the drop point until the last vehicle releases.
+        galaxy.direction = (galaxy.direction || 0) + turnRate
+        galaxy.x += Math.cos(galaxy.direction) * speed
+        galaxy.y += Math.sin(galaxy.direction) * speed
+        if (!galaxy.dropQueueState) mission.phase = 'return'
       } else if (mission.phase === 'return') {
-        const point = mission.returnPoint || { x: galaxy.x, y: galaxy.y }
-        const arrived = runway
-          ? moveToRunwayPoint(galaxy, runway.runwayExit, speed)
-          : moveToward(galaxy, point.x, point.y, speed)
-        if (arrived && (!home || tryClaimAirstripRunwayOperation(home, galaxy.id, 'landing'))) galaxy.flightState = 'approach'
+        const approachX = thresholdX - approachLength
+        if (!mission.path) {
+          // Set up the eastbound approach outside the runway. A second leg
+          // avoids reversing along the same line when returning from the east.
+          mission.returnDetour = galaxy.x >= approachX && Math.abs(galaxy.y - thresholdY) < TILE_SIZE * 4
+          const detourX = approachX - TILE_SIZE * 5
+          const detourY = thresholdY + (galaxy.y > thresholdY ? -1 : 1) * TILE_SIZE * 5
+          mission.path = mission.returnDetour
+            ? createC5FlightPath(galaxy, detourX, detourY, Math.atan2(thresholdY - detourY, approachX - detourX))
+            : createC5FlightPath(galaxy, approachX, thresholdY, 0)
+        }
+        if (advanceC5FlightPath(galaxy, mission.path, speed)) {
+          if (mission.returnDetour) {
+            mission.returnDetour = false
+            mission.path = createC5FlightPath(galaxy, approachX, thresholdY, 0)
+          } else {
+            mission.path = null
+            if (!home || tryClaimAirstripRunwayOperation(home, galaxy.id, 'landing')) {
+              mission.approachReady = true
+              galaxy.flightState = 'approach'
+            }
+          }
+        }
       }
       break
-    case 'approach':
-      galaxy.altitude = Math.max(0, galaxy.altitude - maxAltitude / 90)
-      if ((!runway || moveToRunwayPoint(galaxy, runway.runwayStart, speed)) && galaxy.altitude === 0) galaxy.flightState = 'touchdown'
+    case 'approach': {
+      if (!mission.approachReady && galaxy.x > thresholdX) {
+        galaxy.flightState = 'airborne'
+        mission.phase = 'return'
+        break
+      }
+      const arrived = moveToward(galaxy, thresholdX, thresholdY, speed)
+      galaxy.altitude = maxAltitude * smoothstep((thresholdX - galaxy.x) / approachLength)
+      if (arrived) galaxy.flightState = 'touchdown'
       break
+    }
     case 'touchdown':
-      if (!runway || moveToRunwayPoint(galaxy, runway.runwayLiftOff, speed * 0.7)) galaxy.flightState = 'taxiIn'
+      if (!runway || moveToRunwayPoint(galaxy, runway.runwayExit, speed * 0.55)) galaxy.flightState = 'taxiIn'
       break
     case 'taxiIn': {
       const point = home && (mission.parkingPoint ??= getC5ParkingPosition(home))
@@ -307,7 +393,12 @@ export function updateC5GalaxySystem(units, mapGrid, gameState, tick) {
   let occupiedDrops
   let airstripsById
   // At simulation frequency. Build lookup tables only while boarding or releasing cargo.
+  boardingUnits.clear()
   for (const unit of units) {
+    if (unit.health > 0 && unit.c5Boarding) {
+      const id = unit.c5Boarding.galaxyId
+      if (!boardingUnits.has(id) || unit.c5Boarding.loading) boardingUnits.set(id, unit)
+    }
     if (unit.c5Drop) updateDescendingCargo(unit, mapGrid, occupancy, tick)
     if (unit.type === 'c5Galaxy' && unit.dropQueueState?.descending?.length) {
       unitsById ??= indexCargoUnits(units)
@@ -386,8 +477,5 @@ export function updateC5GalaxySystem(units, mapGrid, gameState, tick) {
         playPositionalSound('c5CargoRelease', galaxy.x, galaxy.y, 0.45, 0, true)
       }
     }
-    const shadow = galaxy.shadow ??= {}
-    shadow.offset = (galaxy.altitude || 0) * 0.25
-    shadow.scale = 1 + (galaxy.altitude || 0) / (galaxy.maxAltitude || cruiseAltitude) * 0.35
   }
 }

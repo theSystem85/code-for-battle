@@ -8,7 +8,7 @@ import { builtinMissions, getBuiltinMissionById } from '../../../src/missions/in
 
 const PLAYER = 'player1'
 const ENEMY = 'player2'
-const AIR_UNIT_TYPES = new Set(['apache', 'f22Raptor', 'f35'])
+const AIR_UNIT_TYPES = new Set(['apache', 'f22Raptor', 'f35', 'c5Galaxy'])
 
 function playerPower(buildings) {
   let supply = 0
@@ -151,7 +151,9 @@ describe('Full Base Test locked save', () => {
     expect(apache.landedHelipadId).toBe(helipad.id)
 
     const airstrip = playerBuildings.find(building => building.type === 'airstrip')
-    ;['f22Raptor', 'f35'].forEach(type => {
+    const galaxy = units.find(unit => unit.type === 'c5Galaxy')
+    expect(airstrip.f22OccupiedSlotUnitIds.slice(0, 3)).toEqual(Array(3).fill(galaxy.id))
+    ;['f22Raptor', 'f35', 'c5Galaxy'].forEach(type => {
       const jet = units.find(unit => unit.type === type)
       expect(jet.airstripId).toBe(airstrip.id)
       expect(jet.flightState).toBe('grounded')

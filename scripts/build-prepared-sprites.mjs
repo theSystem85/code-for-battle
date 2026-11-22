@@ -165,6 +165,13 @@ const definitions = [
       states: ['airborne', 'takeoff-resize', 'landing-resize']
     }
   ]),
+  ...[0.69, 0.87, 0.85, 0.83, 0.81].map((scale, band) => ({
+    id: `effect:c5:shadow:${band}`,
+    source: unitSource('c5_galaxy_map.webp'),
+    target: { width: TILE_SIZE * 3.5 * scale, preserveAspect: true },
+    alphaMask: true,
+    states: ['shadow']
+  })),
   {
     id: 'effect:c5:parachute',
     source: 'images/effects/c5_parachute_canopy.webp',
@@ -307,9 +314,10 @@ async function buildSpriteVariant(definition, logicalSize, density) {
   const relativeOutput = outputName(definition.id, density)
   const output = path.join(OUTPUT_ROOT, relativeOutput)
   await mkdir(path.dirname(output), { recursive: true })
-  await sharp(absolutePublicPath(definition.source))
+  const pipeline = sharp(absolutePublicPath(definition.source))
     .resize(width, height, { fit: 'fill', kernel: sharp.kernel.lanczos3 })
-    .webp(webpOptionsForSprite(definition.id))
+  if (definition.alphaMask) pipeline.recomb([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
+  await pipeline.webp(webpOptionsForSprite(definition.id))
     .toFile(output)
   return {
     density,

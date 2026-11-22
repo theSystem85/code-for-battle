@@ -6,9 +6,12 @@ import { TILE_SIZE, UNIT_GAS_PROPERTIES, UNIT_PROPERTIES } from '../src/config.j
 import { getShipyardWaterLocalTiles, NAVAL_RENDER_LENGTH_TILES } from '../src/utils/navalUtils.js'
 import { ensureServiceRadius } from '../src/utils/serviceRadius.js'
 import {
+  C5_LOWER_SLOT_INDICES,
   ensureAirstripOperations,
   getAirstripParkingSpots,
-  setAirstripSlotOccupant
+  getC5ParkingPosition,
+  setAirstripSlotOccupant,
+  setC5ParkingOccupant
 } from '../src/utils/airstripUtils.js'
 import { getHelipadLandingTile, getHelipadLandingTopLeft } from '../src/utils/helipadUtils.js'
 
@@ -17,7 +20,7 @@ const MAP_HEIGHT = 100
 const WATER_START_Y = 72
 const PLAYER = 'player1'
 const ENEMY = 'player2'
-const KNOWN_AIR_UNIT_TYPES = new Set(['apache', 'f22Raptor', 'f35'])
+const KNOWN_AIR_UNIT_TYPES = new Set(['apache', 'f22Raptor', 'f35', 'c5Galaxy'])
 
 const grid = Array.from({ length: MAP_HEIGHT }, (_, y) => (
   Array.from({ length: MAP_WIDTH }, () => (y >= WATER_START_Y ? 'water' : 'land'))
@@ -323,12 +326,13 @@ const apache = createUnit('apache', helipadTile.x, helipadTile.y, {
 helipad.landedUnitId = apache.id
 units.push(apache)
 
-function placeParkedJet(type, slotIndex) {
+function placeParkedAircraft(type, slotIndex) {
   const spot = parkingSpots[slotIndex]
+  const isGalaxy = type === 'c5Galaxy'
+  const position = isGalaxy ? getC5ParkingPosition(airstrip) : { x: spot.worldX, y: spot.worldY }
   const unit = createUnit(type, spot.x, spot.y, {
     id: `fullbase-player-${type}`,
-    x: spot.worldX,
-    y: spot.worldY,
+    ...position,
     direction: spot.facing,
     fields: {
       flightState: 'grounded',
@@ -338,17 +342,21 @@ function placeParkedJet(type, slotIndex) {
       landedHelipadId: airstrip.id,
       helipadTargetId: airstrip.id,
       groundedOccupancyApplied: true,
-      ...(type === 'f22Raptor' ? { f22State: 'parked', f22PendingTakeoff: false } : {})
+      ...(type === 'f22Raptor' ? { f22State: 'parked', f22PendingTakeoff: false } : {}),
+      ...(isGalaxy ? { homeAirstripId: airstrip.id, c5GroundOccupancy: true } : {})
     }
   })
-  setAirstripSlotOccupant(airstrip, slotIndex, unit.id)
+  if (isGalaxy) setC5ParkingOccupant(airstrip, unit.id)
+  else setAirstripSlotOccupant(airstrip, slotIndex, unit.id)
   units.push(unit)
 }
 
-const parkedAirTypes = airTypes.filter(type => type !== 'apache')
+placeParkedAircraft('c5Galaxy', C5_LOWER_SLOT_INDICES[1])
+const parkedAirTypes = airTypes.filter(type => type !== 'apache' && type !== 'c5Galaxy')
 parkedAirTypes.forEach((type, index) => {
-  if (index >= parkingSpots.length) throw new Error(`Not enough airstrip parking for ${type}`)
-  placeParkedJet(type, index)
+  const slotIndex = index + C5_LOWER_SLOT_INDICES.length
+  if (slotIndex >= parkingSpots.length) throw new Error(`Not enough airstrip parking for ${type}`)
+  placeParkedAircraft(type, slotIndex)
 })
 
 let navalCursorX = 8
