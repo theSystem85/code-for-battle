@@ -8,6 +8,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { gameState } from '../../src/gameState.js'
 import { TILE_SIZE, TANK_FIRE_RANGE, TURRET_AIMING_THRESHOLD } from '../../src/config.js'
+import { updateGuardTargeting } from '../../src/game/unitCombat/combatState.js'
 
 // Mock the gameState for testing
 beforeEach(() => {
@@ -18,6 +19,21 @@ beforeEach(() => {
   gameState.shadowOfWarEnabled = false
   gameState.occupancyMap = null
   gameState.mapGrid = []
+})
+
+it('[U07344] ignores enemy streets in guard mode and acquires the next hostile building', () => {
+  const street = { type: 'street', owner: 'enemy', health: 100, x: 6, y: 5, width: 1, height: 1 }
+  const turret = { ...street, type: 'turretGunV1', x: 7 }
+  const tank = createCombatUnit({ guardMode: true, guardTarget: createCombatUnit() })
+
+  gameState.buildings = [street]
+  tank.target = street
+  updateGuardTargeting(tank, [])
+  expect(tank.target).toBeNull()
+
+  gameState.buildings.push(turret)
+  updateGuardTargeting(tank, [])
+  expect(tank.target).toBe(turret)
 })
 
 /**

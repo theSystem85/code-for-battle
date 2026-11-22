@@ -49,4 +49,28 @@ test.describe('Cheat console history navigation', () => {
     const storedHistory = await page.evaluate(() => JSON.parse(localStorage.getItem('rts-cheat-console-history') || '[]'))
     expect(storedHistory).toEqual(['give 999', 'godmode on', 'money 1'])
   })
+
+  test('[E00275] the single sidebar star badge sits left of Online and reflects signed account cheats', async({ page }) => {
+    await page.goto('/?seed=11')
+    await page.waitForFunction(() => window.gameState?.gameStarted && !window.gameState.gamePaused && window.cheatSystem)
+
+    const badge = page.locator('#sidebarStatusRow > #perkStarChip')
+    const online = page.locator('#offlineModeButton')
+    await expect(badge).toHaveText('★ 0')
+    await expect(page.locator('.perk-star-chip')).toHaveCount(1)
+    const badgeBounds = await badge.boundingBox()
+    const onlineBounds = await online.boundingBox()
+    const minimapBounds = await page.locator('#minimap').boundingBox()
+    expect(badgeBounds.x + badgeBounds.width).toBeLessThanOrEqual(onlineBounds.x)
+    expect(badgeBounds.y).toBeGreaterThanOrEqual(minimapBounds.y + minimapBounds.height)
+
+    await page.keyboard.press('c')
+    const input = page.locator('#cheat-input')
+    await input.fill('stars 3')
+    await input.press('Enter')
+    await expect(badge).toHaveText('★ 3')
+    await input.fill('stars -3')
+    await input.press('Enter')
+    await expect(badge).toHaveText('★ 0')
+  })
 })

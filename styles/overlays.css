@@ -1138,8 +1138,8 @@ body.mobile-portrait.sidebar-condensed .hud-status-cluster {
 }
 
 .sidebar-status-row > .offline-mode-button {
-  margin-left: auto;
   max-width: 100%;
+  flex-shrink: 0;
 }
 
 .offline-mode-button {

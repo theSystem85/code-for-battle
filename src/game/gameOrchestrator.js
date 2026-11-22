@@ -122,6 +122,7 @@ import { GameLoop } from '../game/gameLoop.js'
 import { setupMinimapHandlers } from '../ui/minimap.js'
 import { addPowerIndicator } from '../ui/energyBar.js'
 import { addMoneyIndicator } from '../ui/moneyBar.js'
+import { initPerkStarChip } from '../ui/perks/perkStarChip.js'
 import { closeMobileSidebarModal, isMobileSidebarModalVisible } from '../ui/mobileLayout.js'
 import { resetLlmUsage } from '../ai/llmUsage.js'
 import { terminateAllSounds } from '../sound.js'
@@ -933,6 +934,7 @@ class Game {
 
     addPowerIndicator()
     addMoneyIndicator()
+    initPerkStarChip()
 
     this.setupSpeedControl()
     this.setupMapShuffle()

@@ -49,7 +49,7 @@ export function isAirborneCombatTarget(target) {
 }
 
 export function canUnitTargetEntity(unit, target) {
-  if (!unit || !target) return false
+  if (!unit || !target || target.type === 'street') return false
   if (target.factoryExit || target.embarkedOnId) return false
   if (unit.type === 'submarine') {
     return canSubmarineTargetEntity(unit, target)

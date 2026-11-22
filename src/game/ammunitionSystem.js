@@ -96,15 +96,9 @@ function processAmmunitionResupply(source, units, delta) {
 
     if (inArea && stationary) {
       if (currentAmmo < maxAmmo) {
-        if (!unit.resupplyingAmmo) {
-          unit.resupplyingAmmo = true
-          playVisiblePositionalSound('ammoReloadClunk', unitCenterX, unitCenterY, 0.65, unit.owner)
-        }
-
         const baseRefillRate = maxAmmo / AMMO_RESUPPLY_TIME
         const refillRate = baseRefillRate / powerMultiplier
-        unit.ammoRefillTimer = (unit.ammoRefillTimer || 0) + delta
-        unit[getAmmoCurrentKey(unit)] = Math.min(maxAmmo, currentAmmo + refillRate * delta)
+        applyAmmoResupply(unit, currentAmmo, maxAmmo, refillRate * delta, delta, unitCenterX, unitCenterY)
       } else {
         unit.ammoRefillTimer = 0
         unit.resupplyingAmmo = false
@@ -114,6 +108,18 @@ function processAmmunitionResupply(source, units, delta) {
       unit.resupplyingAmmo = false
     }
   })
+}
+
+function applyAmmoResupply(unit, currentAmmo, maxAmmo, transfer, delta, centerX, centerY) {
+  const updatedAmmo = Math.min(maxAmmo, currentAmmo + transfer)
+  unit.resupplyingAmmo = true
+  unit.ammoRefillTimer = (unit.ammoRefillTimer || 0) + delta
+  unit[getAmmoCurrentKey(unit)] = updatedAmmo
+  // Other sources can clear resupplyingAmmo during the same tick. Play the
+  // clunk only when the magazine actually transitions to full.
+  if (updatedAmmo === maxAmmo) {
+    playVisiblePositionalSound('ammoReloadClunk', centerX, centerY, 0.65, unit.owner)
+  }
 }
 
 /**
@@ -145,18 +151,12 @@ function processAmmunitionTruckResupply(truck, units, delta) {
     const maxAmmo = unit[getAmmoCapacityKey(unit)]
     const currentAmmo = unit[getAmmoCurrentKey(unit)]
 
-    if (inRange && stationary && currentAmmo < maxAmmo) {
-      if (!unit.resupplyingAmmo) {
-        unit.resupplyingAmmo = true
-        playVisiblePositionalSound('ammoReloadClunk', unitCenterX, unitCenterY, 0.65, unit.owner)
-      }
-
+    if (inRange && stationary && currentAmmo < maxAmmo && truck.ammoCargo > 0) {
       const refillRate = maxAmmo / AMMO_RESUPPLY_TIME
       const ammoNeeded = (refillRate * delta)
       const ammoToTransfer = Math.min(ammoNeeded, truck.ammoCargo, maxAmmo - currentAmmo)
 
-      unit.ammoRefillTimer = (unit.ammoRefillTimer || 0) + delta
-      unit[getAmmoCurrentKey(unit)] = Math.min(maxAmmo, currentAmmo + ammoToTransfer)
+      applyAmmoResupply(unit, currentAmmo, maxAmmo, ammoToTransfer, delta, unitCenterX, unitCenterY)
       truck.ammoCargo = Math.max(0, truck.ammoCargo - ammoToTransfer)
     } else if (!inRange || !stationary) {
       if (unit.resupplyingAmmo) {

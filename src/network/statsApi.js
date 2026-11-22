@@ -14,6 +14,13 @@ export async function postStats(path, body, fetchImpl = fetch) {
   if (!response.ok) {
     const error = new Error('stats request failed')
     error.status = response.status
+    if (path === '/presence' && response.status === 429) {
+      const retryAfter = response.headers.get('Retry-After')
+      if (retryAfter) {
+        const delay = /^\d+$/.test(retryAfter) ? Number(retryAfter) * 1000 : Date.parse(retryAfter) - Date.now()
+        if (Number.isFinite(delay) && delay > 0) error.retryAfterMs = delay
+      }
+    }
     throw error
   }
   return response.json()

@@ -1,5 +1,5 @@
-import { advancedBuildingTypes } from '../production/advancedBuildingAccess.js'
-import { subscribePerks, ownsResearchPerk } from '../perks/perkState.js'
+import { advancedBuildingTypes, hasBuildingBlueprint } from '../production/advancedBuildingAccess.js'
+import { subscribePerks } from '../perks/perkState.js'
 import { setupProductionHoverCard } from './productionHoverCard.js'
 import { failCompletionReceipt } from '../policies/completionReceipts.js'
 import { gameState } from '../gameState.js'
@@ -141,7 +141,7 @@ export function setupAllProductionButtons(controller) {
   controller.setupBuildingButtons()
   subscribePerks(() => {
     const owner = gameState.humanPlayer || 'player1'
-    if (advancedBuildingTypes.some(type => ownsResearchPerk(owner, buildingData[type].researchPerk) !== gameState.availableBuildingTypes.has(type))) {
+    if (advancedBuildingTypes.some(type => hasBuildingBlueprint(type, owner) !== gameState.availableBuildingTypes.has(type))) {
       controller.syncTechTreeWithBuildings()
     }
   })

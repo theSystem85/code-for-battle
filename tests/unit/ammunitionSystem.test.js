@@ -3,6 +3,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { updateAmmunitionSystem } from '../../src/game/ammunitionSystem.js'
 import { gameState } from '../../src/gameState.js'
 import { getServiceRadiusPixels } from '../../src/utils/serviceRadius.js'
+import { playVisiblePositionalSound } from '../../src/audio/worldSound.js'
+
+vi.mock('../../src/audio/worldSound.js', () => ({ playVisiblePositionalSound: vi.fn() }))
 
 // Mock dependencies
 vi.mock('../../src/config.js', async(importOriginal) => {
@@ -51,6 +54,24 @@ describe('Ammunition System', () => {
 
     // Default mock for getServiceRadiusPixels
     getServiceRadiusPixels.mockReturnValue(5 * TILE_SIZE)
+  })
+
+  it('[U07340] plays the reload clunk once at completion even when a distant truck resets the service flag', () => {
+    const tank = { id: 'tank', type: 'tank', owner: 'player', health: 100, x: 32, y: 32,
+      ammunition: 0, maxAmmunition: 100 }
+    const truck = { id: 'near', type: 'ammunitionTruck', owner: 'player', health: 100, x: 0, y: 32,
+      ammoCargo: 500, maxAmmoCargo: 500 }
+    const distantTruck = { ...truck, id: 'far', x: 640 }
+    const group = [tank, truck, distantTruck]
+
+    for (let i = 0; i < 3; i++) updateAmmunitionSystem(group, [], gameState, 250)
+    expect(tank.ammunition).toBe(75)
+    expect(playVisiblePositionalSound).not.toHaveBeenCalled()
+
+    updateAmmunitionSystem(group, [], gameState, 250)
+    updateAmmunitionSystem(group, [], gameState, 250)
+    expect(tank.ammunition).toBe(100)
+    expect(playVisiblePositionalSound).toHaveBeenCalledExactlyOnceWith('ammoReloadClunk', 48, 48, 0.65, 'player')
   })
 
   it.each(['factory', 'truck'])('[U07120] refills mine storage from a nearby %s and respects capacity and cargo', sourceType => {

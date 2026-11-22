@@ -1,4 +1,5 @@
 import { UNIT_COSTS } from '../config.js'
+import { HARVESTER_BASE_CARGO_VALUE } from './oreValue.js'
 
 export const DEFENCE_VETERANCY_TYPES = Object.freeze([
   'turretGunV1', 'turretGunV2', 'turretGunV3', 'rocketTurret', 'teslaCoil', 'artilleryTurret'
@@ -51,27 +52,50 @@ function requiredExperience(entity) {
   return [2, 4, 6][entity.level] * entity.baseCost
 }
 
-function applyLevelBonus(entity) {
+function scaleLevelBonus(value, factor, enabled) {
+  return enabled ? (value || 1) * factor : (value || factor) / factor
+}
+
+function applyLevelBonus(entity, enabled = true) {
   if (defenceTypes.has(entity.type)) {
-    if (entity.level === 1) entity.rangeMultiplier = (entity.rangeMultiplier || 1) * 1.2
-    if (entity.level === 2) entity.fireRateMultiplier = (entity.fireRateMultiplier || 1) * 1.33
+    if (entity.level === 1) entity.rangeMultiplier = scaleLevelBonus(entity.rangeMultiplier, 1.2, enabled)
+    if (entity.level === 2) entity.fireRateMultiplier = scaleLevelBonus(entity.fireRateMultiplier, 1.33, enabled)
     if (entity.level === 3) {
-      entity.selfRepair = true
-      entity.armor = (entity.armor || 1) * 1.5
+      entity.selfRepair = enabled
+      entity.armor = scaleLevelBonus(entity.armor, 1.5, enabled)
     }
     return
   }
   if (entity.type === 'howitzer') {
-    if (entity.level === 1) entity.fireRateMultiplier = (entity.fireRateMultiplier || 1) * 1.33
-    if (entity.level === 2) entity.damageMultiplier = (entity.damageMultiplier || 1) * 1.33
-    if (entity.level === 3) entity.rangeMultiplier = (entity.rangeMultiplier || 1) * 1.33
+    if (entity.level === 1) entity.fireRateMultiplier = scaleLevelBonus(entity.fireRateMultiplier, 1.33, enabled)
+    if (entity.level === 2) entity.damageMultiplier = scaleLevelBonus(entity.damageMultiplier, 1.33, enabled)
+    if (entity.level === 3) entity.rangeMultiplier = scaleLevelBonus(entity.rangeMultiplier, 1.33, enabled)
     return
   }
-  if (entity.level === 1) entity.rangeMultiplier = (entity.rangeMultiplier || 1) * 1.2
-  if (entity.level === 2) entity.armor = (entity.armor || 1) * 1.5
+  if (entity.level === 1) entity.rangeMultiplier = scaleLevelBonus(entity.rangeMultiplier, 1.2, enabled)
+  if (entity.level === 2) entity.armor = scaleLevelBonus(entity.armor, 1.5, enabled)
   if (entity.level === 3) {
-    entity.selfRepair = true
-    entity.fireRateMultiplier = (entity.fireRateMultiplier || 1) * 1.33
+    entity.selfRepair = enabled
+    entity.fireRateMultiplier = scaleLevelBonus(entity.fireRateMultiplier, 1.33, enabled)
+  }
+}
+
+export function adjustUnitVeterancyLevel(unit, delta) {
+  if (!canEarnVeterancy(unit)) return
+  unit.level ||= 0
+  const level = Math.max(0, Math.min(3, unit.level + delta))
+  if (unit.level > level) {
+    while (unit.level > level) {
+      applyLevelBonus(unit, false)
+      unit.level--
+    }
+    unit.experience = 0
+  } else if (unit.level < level) {
+    while (unit.level < level) {
+      unit.level++
+      applyLevelBonus(unit)
+    }
+    if (unit.level === 3) unit.experience = 0
   }
 }
 
@@ -131,6 +155,29 @@ export function drawLevelStars(ctx, centerX, topY, count, size = 6) {
     ctx.stroke()
   }
   ctx.restore()
+}
+
+export function getHarvesterCargoCapacity(unit) {
+  const level = Math.max(0, Math.min(3, Number.isFinite(unit?.level) ? unit.level : 0))
+  return HARVESTER_BASE_CARGO_VALUE * (1 + (level * 0.5))
+}
+
+export function recalculateHarvesterLevelBonuses(unit) {
+  if (!unit || unit.type !== 'harvester') return
+  const level = Math.max(0, Math.min(3, Number.isFinite(unit.level) ? unit.level : 0))
+  const baseSpeed = Number.isFinite(unit.baseHarvesterSpeed) ? unit.baseHarvesterSpeed : unit.speed
+  const baseArmor = Number.isFinite(unit.baseHarvesterArmor) ? unit.baseHarvesterArmor : unit.armor
+
+  if (!Number.isFinite(unit.baseHarvesterSpeed)) {
+    unit.baseHarvesterSpeed = baseSpeed
+  }
+  if (!Number.isFinite(unit.baseHarvesterArmor)) {
+    unit.baseHarvesterArmor = baseArmor
+  }
+
+  unit.cargoCapacity = getHarvesterCargoCapacity(unit)
+  unit.speed = level >= 3 ? unit.baseHarvesterSpeed * 1.25 : unit.baseHarvesterSpeed
+  unit.armor = level >= 2 ? unit.baseHarvesterArmor * 1.25 : unit.baseHarvesterArmor
 }
 
 export function grantHarvesterStars(entity, count) {

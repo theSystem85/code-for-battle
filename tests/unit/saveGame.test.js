@@ -914,6 +914,7 @@ describe('saveGame.js', () => {
 
     it('[U03863] should restore Set properties from arrays', async() => {
       const { gameState } = await import('../../src/gameState.js')
+      const { subscribePerks } = await import('../../src/perks/perkState.js')
 
       const saveData = {
         gameState: {
@@ -934,7 +935,14 @@ describe('saveGame.js', () => {
       }
       localStorage.setItem('rts_save_SetTest', JSON.stringify(userSave))
 
-      saveGameModule.loadGame('rts_save_SetTest')
+      const availableOnPerkRestore = vi.fn()
+      const unsubscribe = subscribePerks(() => availableOnPerkRestore(gameState.availableBuildingTypes.has('constructionYard')))
+      try {
+        expect(saveGameModule.loadGame('rts_save_SetTest')).toBe(true)
+        expect(availableOnPerkRestore).toHaveBeenCalledWith(true)
+      } finally {
+        unsubscribe()
+      }
 
       expect(gameState.defeatedPlayers instanceof Set).toBe(true)
     })

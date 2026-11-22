@@ -1090,6 +1090,13 @@ function executeReplayCommand(entry) {
     }
 
     if (command.type === 'cheat_code') {
+      const code = command.code || ''
+      let targetUnits
+      if (/^stars(?:\s|$)/i.test(code.trim())) {
+        if (!Array.isArray(command.starTargetRefs)) return
+        targetUnits = command.starTargetRefs.map(resolveReplayEntityReference).filter(Boolean)
+        if (command.starTargetRefs.length && !targetUnits.length) return
+      }
       if (!executeReplayCommand.cheatSystemInstance) {
         executeReplayCommand.cheatSystemInstance = new CheatSystem()
       }
@@ -1101,7 +1108,7 @@ function executeReplayCommand(entry) {
         gameState.cursorX = replayCursor.x
         gameState.cursorY = replayCursor.y
       }
-      executeReplayCommand.cheatSystemInstance.processCheatCode(command.code || '')
+      executeReplayCommand.cheatSystemInstance.processCheatCode(code, { targetUnits })
       if (hasReplayCursor) {
         gameState.cursorX = previousCursorX
         gameState.cursorY = previousCursorY

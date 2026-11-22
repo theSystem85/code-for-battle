@@ -5,21 +5,9 @@ import { gameState } from '../gameState.js'
 import { selectedUnits } from '../inputHandler.js'
 import { TILE_SIZE } from '../config.js'
 import { focusCameraOnPoint } from './tutorialSystem/helpers.js'
-import { canPurchasePerk, getPerkLedger, subscribePerks } from '../perks/perkState.js'
-import { PERKS } from '../perks/perkCatalog.js'
-import { RESEARCH_PERKS } from '../perks/researchCatalog.js'
 
 let tooltipListenersAttached = false
 let tooltipOpen = false
-let unsubscribePerkChip = null
-
-function renderPerkStarChip() {
-  const chip = document.getElementById('perkStarChip')
-  if (!chip) return
-  const owner = gameState.humanPlayer || 'player1'
-  chip.textContent = `★ ${getPerkLedger(owner).available}`
-  chip.classList.toggle('is-affordable', [PERKS, RESEARCH_PERKS].some(tree => tree.some(perk => canPurchasePerk(owner, perk.id).ok)))
-}
 
 function getMoneyBarGradient() {
   return 'linear-gradient(90deg, #d18100 0%, #ffd489 100%)'
@@ -314,14 +302,6 @@ export function addMoneyIndicator() {
 
   // Add elements to container
   moneyBarContainer.appendChild(moneyTrack)
-  const perkChip = document.createElement('span')
-  perkChip.id = 'perkStarChip'
-  perkChip.className = 'perk-star-chip'
-  perkChip.title = 'Available veterancy stars'
-  moneyBarContainer.appendChild(perkChip)
-  unsubscribePerkChip?.()
-  unsubscribePerkChip = subscribePerks(renderPerkStarChip)
-  renderPerkStarChip()
 
   // Make sure the container itself is visible and properly styled
   moneyBarContainer.style.display = 'block'

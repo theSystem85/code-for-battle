@@ -5,6 +5,7 @@ import { TILE_SIZE } from '../config.js'
 import { getSpatialQuadtree } from './spatialQuadtree.js'
 import { getFlowFieldManager } from './flowField.js'
 import { hasFixedOccupancy } from './occupancyTags.js'
+import { hasBlockingBuilding } from '../utils/buildingPassability.js'
 
 // Steering configuration - exported for config.js integration
 export const STEERING_CONFIG = {
@@ -318,7 +319,7 @@ export function calculateObstacleAvoidance(unit, mapGrid, occupancyMap) {
         blocked = tile === 1
       } else if (tile) {
         blocked = tile.type === 'water' || tile.type === 'rock' ||
-                  tile.building || tile.seedCrystal
+                  hasBlockingBuilding(tile) || tile.seedCrystal
       }
     }
 
@@ -354,7 +355,7 @@ export function calculateObstacleAvoidance(unit, mapGrid, occupancyMap) {
           leftClear = leftTile === 0
         } else if (leftTile) {
           leftClear = leftTile.type !== 'water' && leftTile.type !== 'rock' &&
-                      !leftTile.building && !leftTile.seedCrystal
+                      !hasBlockingBuilding(leftTile) && !leftTile.seedCrystal
         }
       } else {
         leftClear = false
@@ -366,7 +367,7 @@ export function calculateObstacleAvoidance(unit, mapGrid, occupancyMap) {
           rightClear = rightTile === 0
         } else if (rightTile) {
           rightClear = rightTile.type !== 'water' && rightTile.type !== 'rock' &&
-                       !rightTile.building && !rightTile.seedCrystal
+                       !hasBlockingBuilding(rightTile) && !rightTile.seedCrystal
         }
       } else {
         rightClear = false

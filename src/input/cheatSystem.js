@@ -17,11 +17,14 @@ import {
 } from '../config.js'
 import { createUnit, updateUnitOccupancy } from '../units.js'
 import { buildingData, createBuilding, placeBuilding, updatePowerSupply } from '../buildings.js'
-import { checkLevelUp, getExperienceRequiredForLevel, initializeUnitLeveling, updateUnitSpeedModifier } from '../utils.js'
+import { checkLevelUp, initializeUnitLeveling, updateUnitSpeedModifier } from '../utils.js'
 import { deployMine } from '../game/mineSystem.js'
 import { getWreckById, removeWreckById } from '../game/unitWreckManager.js'
 import { stopApacheRotorSound } from '../game/movementApache.js'
 import { getStoredItem, setStoredItem } from '../storage/indexedDbStorage.js'
+import { adjustPerkStars, getPerkLedger } from '../perks/perkState.js'
+import { adjustUnitVeterancyLevel, canEarnVeterancy, recalculateHarvesterLevelBonuses } from '../game/veterancy.js'
+import { createReplayEntityReference } from '../replayCommandPrimitives.js'
 
 export class CheatSystem {
   constructor() {
@@ -231,7 +234,7 @@ export class CheatSystem {
             <li><code>ammo [value|percent%|+/-value|+/-percent%]</code> - Set or adjust ammo for selected units/buildings with ammo bars</li>
             <li><code>ammo load [amount|percent%]</code> - Set ammo cargo of selected ammunition trucks or ammo reserves of selected helipads and airstrips</li>
             <li><code>xp [amount]</code> / <code>xp +[amount]</code> / <code>xp -[amount]</code> - Set or adjust XP for selected combat units</li>
-            <li><code>stars [number]</code> - Grant stars to selected combat units</li>
+            <li><code>stars 3</code> / <code>stars -3</code> - Add or remove stars on selected units or your account</li>
             <li><code>partyme [party]</code> - Switch your player party (reassigns your forces)</li>
             <li><code>party [color|player]</code> - Change party of selected unit(s)</li>
             <li><code>kill</code> - Destroy all selected units or buildings</li>
@@ -342,6 +345,8 @@ export class CheatSystem {
 
   processCheatCode(code, { targetUnits, silent = false } = {}) {
     const normalizedCode = code.toLowerCase().trim()
+    const isStars = /^stars(?:\s|$)/.test(normalizedCode)
+    const starTargets = isStars ? (targetUnits || this.selectedUnits || []).filter(unit => unit && !unit.isBuilding) : null
     if (normalizedCode && !gameState.replay?.isApplyingReplayCommand) {
       const replayCursor = {}
       if (Number.isFinite(gameState.cursorX) && Number.isFinite(gameState.cursorY)) {
@@ -354,6 +359,7 @@ export class CheatSystem {
       window.recordReplayCommand?.({
         type: 'cheat_code',
         code: normalizedCode,
+        ...(isStars ? { starTargetRefs: starTargets.map(createReplayEntityReference) } : {}),
         ...replayCursor
       }, { source: 'human-cheat' })
     }
@@ -470,10 +476,11 @@ export class CheatSystem {
         } else {
           this.showError('Invalid amount. Use: xp [number], xp +[number], or xp -[number]')
         }
-      } else if (normalizedCode.startsWith('stars ')) {
-        const count = Number.parseInt(normalizedCode.substring(6).trim(), 10)
-        if (Number.isInteger(count) && count > 0) this.grantSelectedUnitStars(count)
-        else this.showError('Invalid amount. Use: stars [positive number]')
+      } else if (isStars) {
+        const amount = normalizedCode.match(/^stars\s+([+-]?\d+)$/)?.[1]
+        const delta = Number(amount)
+        if (Number.isSafeInteger(delta)) this.adjustStars(delta, starTargets)
+        else this.showError('Invalid amount. Use: stars [signed whole number]')
       } else if (normalizedCode === 'kill') {
         this.killSelectedTargets()
       } else if (normalizedCode.startsWith('recover')) {
@@ -1286,19 +1293,33 @@ export class CheatSystem {
     }
   }
 
-  grantSelectedUnitStars(count) {
+  adjustStars(delta, targets) {
+    if (!targets.length) {
+      const owner = gameState.humanPlayer || 'player1'
+      adjustPerkStars(owner, delta)
+      showNotification(`⭐ Account balance: ${getPerkLedger(owner).available} stars`, 3000)
+      playSound('confirmed', 0.5)
+      return
+    }
+
     let appliedCount = 0
-    for (const unit of this.selectedUnits || []) {
-      if (!unit || unit.type === 'harvester') continue
-      initializeUnitLeveling(unit)
-      for (let i = 0; i < count && unit.level < 3; i++) {
-        unit.experience += getExperienceRequiredForLevel(unit.level, unit.baseCost)
-        checkLevelUp(unit)
+    for (const unit of targets) {
+      if (unit.type === 'harvester') {
+        const currentLevel = unit.level || 0
+        const level = Math.max(0, Math.min(3, currentLevel + delta))
+        if (level !== currentLevel) {
+          unit.level = level
+          if (level < currentLevel || level === 3) unit.experience = 0
+          recalculateHarvesterLevelBonuses(unit)
+        }
+      } else {
+        if (!canEarnVeterancy(unit)) continue
+        adjustUnitVeterancyLevel(unit, delta)
       }
       appliedCount++
     }
-    if (!appliedCount) return this.showError('No combat units selected')
-    showNotification(`⭐ Granted up to ${count} star${count === 1 ? '' : 's'} to ${appliedCount} unit${appliedCount === 1 ? '' : 's'}`, 3000)
+    if (!appliedCount) return this.showError('No eligible units selected')
+    showNotification(`⭐ Adjusted stars for ${appliedCount} unit${appliedCount === 1 ? '' : 's'}`, 3000)
     playSound('confirmed', 0.5)
   }
 

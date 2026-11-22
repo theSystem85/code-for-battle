@@ -372,6 +372,15 @@ describe('Steering Behaviors', () => {
   })
 
   describe('calculateObstacleAvoidance()', () => {
+    it('[U07343] lets a unit steer straight onto streets built by another party', () => {
+      const grid = Array.from({ length: 4 }, () => Array.from({ length: 5 }, () => ({ type: 'land' })))
+      grid[1][2] = { type: 'street', building: { type: 'street', owner: 'player2' }, buildOnlyOccupied: 1 }
+      unit.x = TILE_SIZE
+      unit.y = TILE_SIZE
+      unit.owner = 'player1'
+      unit.movement = { velocity: { x: 2, y: 0 } }
+      expect(calculateObstacleAvoidance(unit, grid, null)).toEqual({ x: 0, y: 0 })
+    })
     it('[U04243] should return zero vector when no mapGrid', () => {
       const result = calculateObstacleAvoidance(unit, null, null)
 

@@ -7,7 +7,7 @@ import {
   readOrCreatePresenceSessionId,
   resolvePresenceStatus
 } from '../../src/network/presenceClient.js'
-import { statsEndpoint } from '../../src/network/statsApi.js'
+import { postStats, statsEndpoint } from '../../src/network/statsApi.js'
 
 function memoryStorage() {
   const values = new Map()
@@ -24,6 +24,7 @@ function memoryStorage() {
 function harness(overrides = {}) {
   const timers = []
   let nextId = 1
+  let now = 0
   const sent = []
   const counts = []
   const unavailable = []
@@ -34,6 +35,7 @@ function harness(overrides = {}) {
     payload: { sessionId: 'session-1234', status: 'menu', openInviteToken: null },
     sendResult: { playing: 1, onlineMultiplayer: 0 },
     failStatus: 0,
+    retryAfterMs: 0,
     ...overrides
   }
   const scheduler = createPresenceScheduler({
@@ -45,6 +47,7 @@ function harness(overrides = {}) {
       if (deps.failStatus) {
         const error = new Error('failed')
         error.status = deps.failStatus
+        error.retryAfterMs = deps.retryAfterMs
         throw error
       }
       return deps.sendResult
@@ -53,10 +56,15 @@ function harness(overrides = {}) {
     onCounts: (value) => counts.push(value),
     onUnavailable: (error) => unavailable.push(error),
     onOffline: () => offline.push(true),
+    now: () => now,
     schedule: (fn, ms) => {
       const id = nextId
       nextId += 1
-      timers.push({ id, fn, ms })
+      timers.push({ id, ms, fn: () => {
+        timers.splice(timers.findIndex(timer => timer.id === id), 1)
+        now += ms
+        fn()
+      } })
       return id
     },
     cancel: (id) => {
@@ -202,5 +210,37 @@ describe('presence client', () => {
     expect(limited.unavailable).toHaveLength(0)
     expect(limited.scheduler.isUnavailable()).toBe(false)
     expect(limited.timers.map(timer => timer.ms)).toEqual([15000])
+
+    for (const delay of [30000, 60000, 120000, 120000]) {
+      const sent = limited.sent.length
+      limited.scheduler.notifyChange()
+      limited.scheduler.setHidden(true)
+      limited.scheduler.setHidden(false)
+      limited.scheduler.setOffline(true)
+      limited.scheduler.setOffline(false)
+      expect(limited.sent).toHaveLength(sent)
+      await limited.timers[0].fn()
+      expect(limited.timers.map(timer => timer.ms)).toEqual([delay])
+    }
+
+    limited.deps.failStatus = 0
+    await limited.timers[0].fn()
+    expect(limited.timers.map(timer => timer.ms)).toEqual([45000])
+
+    limited.deps.failStatus = 429
+    limited.deps.retryAfterMs = 65000
+    limited.scheduler.notifyChange()
+    // Changes queued during an in-flight request also wait for the deadline.
+    limited.scheduler.notifyChange()
+    await Promise.resolve()
+    expect(limited.timers.map(timer => timer.ms)).toEqual([65000])
+    limited.deps.retryAfterMs = 0
+    await limited.timers[0].fn()
+    expect(limited.timers.map(timer => timer.ms)).toEqual([30000])
+  })
+
+  it('[U07342] reads Retry-After from a rate-limited presence request', async() => {
+    const fetchImpl = async() => new Response(null, { status: 429, headers: { 'Retry-After': '90' } })
+    await expect(postStats('/presence', {}, fetchImpl)).rejects.toMatchObject({ status: 429, retryAfterMs: 90000 })
   })
 })

@@ -1245,7 +1245,6 @@ function loadGameFromSaveObject(saveObj, key) {
     if (!loaded.automationSession) resetPolicyStore() // Old saves/replays cannot execute unrelated local automations.
     const previousTopologyFingerprint = gameState.mapTopologyFingerprint
     Object.assign(gameState, loaded.gameState)
-    restorePerkState(loaded.perks || loaded.gameState?.perks)
 
     gameState.speedMultiplier = Number.isFinite(loaded.gameState?.speedMultiplier)
       ? Math.max(0.5, Math.min(5, loaded.gameState.speedMultiplier))
@@ -1392,6 +1391,9 @@ function loadGameFromSaveObject(saveObj, key) {
     if (Array.isArray(loaded.gameState.newBuildingTypes)) {
       gameState.newBuildingTypes = new Set(loaded.gameState.newBuildingTypes)
     }
+
+    // Perk listeners inspect production availability as soon as the ledger is restored.
+    restorePerkState(loaded.perks || loaded.gameState?.perks)
 
     const simulationNowAfterLoad = getSimulationTime(gameState)
 

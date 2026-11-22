@@ -80,8 +80,18 @@ export async function requestPerkPurchase(perkId) {
 }
 export function grantPerkStars(entity, count) {
   if (!entity || !Number.isSafeInteger(count) || count <= 0) return
-  mutableLedger(entity.owner).earned += count
+  adjustPerkStars(entity.owner, count)
+}
+export function adjustPerkStars(ownerId, delta) {
+  if (!Number.isSafeInteger(delta) || delta === 0) return 0
+  const ledger = mutableLedger(ownerId)
+  const adjustment = delta < 0
+    ? Math.max(delta, -Math.max(0, ledger.earned - ledger.spent))
+    : Math.min(delta, Number.MAX_SAFE_INTEGER - ledger.earned)
+  if (!adjustment) return 0
+  ledger.earned += adjustment
   notify()
+  return adjustment
 }
 export const getAutomationPerkMode = () => globalThis.__AUTOMATION_PERK_MODE__ === 'allUnlocked' || state().automationPerkMode === 'allUnlocked' ? 'allUnlocked' : 'required'
 export function setAutomationPerkMode(mode) {
@@ -136,9 +146,13 @@ export function subscribePerks(listener) { listeners.add(listener); return () =>
 export function exportPerkState() {
   return JSON.parse(JSON.stringify(state()))
 }
+function restoreStarCount(count) {
+  const value = Math.trunc(Number(count))
+  return Number.isSafeInteger(value) ? Math.max(0, value) : 0
+}
 export function restorePerkState(payload) {
   gameState.perks = { automationPerkMode: payload?.automationPerkMode === 'allUnlocked' ? 'allUnlocked' : 'required', owners: {} }
-  for (const [owner, value] of Object.entries(payload?.owners || {})) gameState.perks.owners[owner] = { earned: Math.max(0, value.earned | 0), spent: Math.max(0, value.spent | 0), owned: [...new Set((value.owned || []).filter(id => getPerk(id)))].sort(), log: Array.isArray(value.log) ? value.log.map(item => ({ ...item })) : [] }
+  for (const [owner, value] of Object.entries(payload?.owners || {})) gameState.perks.owners[owner] = { earned: restoreStarCount(value.earned), spent: restoreStarCount(value.spent), owned: [...new Set((value.owned || []).filter(id => getPerk(id)))].sort(), log: Array.isArray(value.log) ? value.log.map(item => ({ ...item })) : [] }
   notify()
 }
 export function resetPerkState() { gameState.perks = { automationPerkMode: globalThis.__AUTOMATION_PERK_MODE__ === 'allUnlocked' ? 'allUnlocked' : 'required', owners: {} }; notify() }

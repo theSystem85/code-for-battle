@@ -72,6 +72,7 @@ vi.mock('../../src/config.js', () => ({
     ammunitionTruck: {},
     destroyer: { isNaval: true, movementType: 'water' }
   },
+  UNIT_COSTS: { tank_v1: 1000 },
   HELIPAD_AMMO_RESERVE: 200,
   CHEAT_CONSOLE_HISTORY_LIMIT: 10
 }))
@@ -169,6 +170,7 @@ beforeEach(async() => {
   gameState.money = 100
   gameState.totalMoneyEarned = 0
   gameState.humanPlayer = 'player1'
+  gameState.perks = null
   gameState.factories = []
   gameState.buildings = []
   gameState.units = []
@@ -194,6 +196,39 @@ afterEach(() => {
 })
 
 describe('CheatSystem', () => {
+  it('[U07345] adds and subtracts account stars without taking back spent stars', async() => {
+    const { getPerkLedger } = await import('../../src/perks/perkState.js')
+    const system = new CheatSystem()
+    system.processCheatCode('stars 5')
+    expect(getPerkLedger('player1').available).toBe(5)
+    gameState.perks.owners.player1.spent = 2
+    system.processCheatCode('stars -1')
+    system.processCheatCode('stars 2.5')
+    expect(getPerkLedger('player1').available).toBe(2)
+    system.processCheatCode('stars -10')
+    expect(getPerkLedger('player1')).toMatchObject({ earned: 2, spent: 2, available: 0 })
+  })
+
+  it('[U07346] applies signed stars and their bonuses to selected units only', async() => {
+    const { getPerkLedger } = await import('../../src/perks/perkState.js')
+    const system = new CheatSystem()
+    const tank = { id: 'tank', type: 'tank_v1', owner: 'player1', level: 0, armor: 0.8 }
+    const harvester = { id: 'harvester', type: 'harvester', owner: 'player1', level: 0, speed: 1, armor: 1 }
+    system.setSelectedUnitsRef([tank, harvester])
+
+    system.processCheatCode('stars 3')
+    expect(tank).toMatchObject({ level: 3, selfRepair: true, fireRateMultiplier: 1.33, rangeMultiplier: 1.2 })
+    expect(harvester).toMatchObject({ level: 3, armor: 1.25, speed: 1.25, cargoCapacity: 2500 })
+    expect(window.recordReplayCommand).toHaveBeenCalledWith(expect.objectContaining({ starTargetRefs: [
+      expect.objectContaining({ id: 'tank' }), expect.objectContaining({ id: 'harvester' })
+    ] }), { source: 'human-cheat' })
+
+    system.processCheatCode('stars -4')
+    expect(tank).toMatchObject({ level: 0, selfRepair: false, fireRateMultiplier: 1, rangeMultiplier: 1 })
+    expect(tank.armor).toBeCloseTo(0.8)
+    expect(harvester).toMatchObject({ level: 0, armor: 1, speed: 1, cargoCapacity: 1000 })
+    expect(getPerkLedger('player1').available).toBe(0)
+  })
   it('[U00817] restores cheat command history with ArrowUp and ArrowDown', () => {
     const system = new CheatSystem()
     system.commandHistory = ['give 1000', 'status', 'godmode on']

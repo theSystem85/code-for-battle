@@ -38,6 +38,7 @@ import {
   initializeOccupancyMap
 } from '../../src/units.js'
 import { movableOccupancyCount } from '../../src/game/occupancyTags.js'
+import { createBuilding, placeBuilding } from '../../src/buildings.js'
 import {
   updateGlobalPathfinding,
   createFormationOffsets,
@@ -281,6 +282,24 @@ describe('Pathfinding Core', () => {
       path.forEach(node => {
         expect(node.y).toBe(5)
       })
+    })
+
+    it('[U07341] routes every party across built streets with different owners', () => {
+      const grid = createTestMapGrid(6, 3)
+      for (const row of [0, 2]) grid[row].forEach(tile => { tile.type = 'rock' })
+      const occupancies = buildOccupancyMap([], grid)
+      for (const [x, owner] of [[1, 'player1'], [2, 'player2'], [3, 'player3'], [4, 'player4']]) {
+        placeBuilding(createBuilding('street', x, 1), grid, occupancies, { recordTransition: false })
+        grid[1][x].building.owner = owner
+      }
+      // Legacy tiles can have a street reference without the placement marker.
+      delete grid[1][3].buildOnlyOccupied
+      const rebuiltOccupancies = buildOccupancyMap([], grid)
+      for (const owner of ['player1', 'player2', 'player3', 'player4']) {
+        const path = findPath({ x: 0, y: 1, owner }, { x: 4, y: 1 }, grid, rebuiltOccupancies, undefined, { strictDestination: true })
+        expect(path[0]).toEqual(expect.objectContaining({ x: 0, y: 1 }))
+        expect(path.at(-1)).toEqual({ x: 4, y: 1 })
+      }
     })
 
     it('[U03229] should handle pathfinding around seed crystals', () => {

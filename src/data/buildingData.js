@@ -95,7 +95,7 @@ export const buildingData = {
     armor: 2,
     requiresRadar: true,
     limit: 1,
-    smokeSpots: [{ x: 190, y: 40 }]
+    smokeSpots: []
   },
   technologyResearchCenter: {
     width: 3,

@@ -15,7 +15,7 @@ export function isBuildOnlyOccupiedTile(tile) {
 }
 
 export function hasBlockingBuilding(tile) {
-  return Boolean(tile?.building) && !isBuildOnlyOccupiedTile(tile)
+  return Boolean(tile?.building) && !isBuildOnlyOccupiedTile(tile) && tile.building.type !== 'street'
 }
 
 export function isAirstripBlockedLocalTile(localX, localY, width = AIRSTRIP_DEFAULT_WIDTH, height = AIRSTRIP_DEFAULT_HEIGHT) {

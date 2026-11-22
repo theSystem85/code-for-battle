@@ -41,7 +41,7 @@ function resolveStoredApacheTarget(unit, units) {
 
   if (targetType === 'building') {
     return Array.isArray(gameState.buildings)
-      ? gameState.buildings.find(building => building && building.id === targetId && building.health > 0)
+      ? gameState.buildings.find(building => building && building.id === targetId && building.health > 0 && building.type !== 'street')
       : null
   }
 

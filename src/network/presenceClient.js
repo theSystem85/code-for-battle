@@ -119,8 +119,11 @@ export function createPresenceScheduler(deps) {
   let stopped = true
   let unavailable = false
   let failures = 0
+  let rateLimitDelay = 0
+  let retryAt = 0
   let inFlight = false
   let pending = false
+  const now = deps.now || (() => performance.now())
 
   const clear = () => {
     if (timer != null) deps.cancel(timer)
@@ -131,7 +134,8 @@ export function createPresenceScheduler(deps) {
     clear()
     if (stopped || unavailable) return
     timer = deps.schedule(() => {
-      void tick('interval')
+      timer = null
+      void tick()
     }, delay)
   }
 
@@ -146,15 +150,23 @@ export function createPresenceScheduler(deps) {
       clear()
       return
     }
+    const remaining = retryAt - now()
+    if (remaining > 0) {
+      if (timer == null) arm(remaining)
+      return
+    }
     if (inFlight) {
       pending = true
       return
     }
+    clear()
     inFlight = true
     try {
       const payload = deps.getPayload()
       const counts = await deps.send(payload)
       failures = 0
+      rateLimitDelay = 0
+      retryAt = 0
       unavailable = false
       deps.onCounts(counts)
       if (!stopped && !deps.isOffline() && !deps.isDocumentHidden()) {
@@ -169,7 +181,13 @@ export function createPresenceScheduler(deps) {
         return
       }
       if (status === 429) {
-        arm(PRESENCE_BACKOFF_BASE_MS)
+        rateLimitDelay = Math.min(
+          deps.maxBackoffMs || PRESENCE_MAX_BACKOFF_MS,
+          rateLimitDelay ? rateLimitDelay * 2 : (deps.backoffBaseMs || PRESENCE_BACKOFF_BASE_MS)
+        )
+        const delay = Math.max(rateLimitDelay, error.retryAfterMs || 0)
+        retryAt = now() + delay
+        if (!deps.isOffline() && !deps.isDocumentHidden()) arm(delay)
         return
       }
       failures += 1

@@ -37,8 +37,8 @@ export function processAttackQueue(unit, units, mapGrid) {
     return
   }
 
-  // Remove any dead targets from the queue first
-  unit.attackQueue = unit.attackQueue.filter(target => target && target.health > 0)
+  // Drop destroyed targets and street targets carried over from older saves.
+  unit.attackQueue = unit.attackQueue.filter(target => target && target.health > 0 && target.type !== 'street')
 
   // If queue is now empty, clear everything
   if (unit.attackQueue.length === 0) {
@@ -179,7 +179,7 @@ export function updateGuardTargeting(unit, units) {
 
   if (gameState.buildings) {
     gameState.buildings.forEach(b => {
-      if (b.owner !== unit.owner && b.health > 0) {
+      if (b.type !== 'street' && b.owner !== unit.owner && b.health > 0) {
         const bx = b.x * TILE_SIZE + (b.width * TILE_SIZE) / 2
         const by = b.y * TILE_SIZE + (b.height * TILE_SIZE) / 2
         const d = Math.hypot(bx - unitCenterX, by - unitCenterY)

@@ -25,7 +25,7 @@ import {
   getTileDensity
 } from './harvesterEligibility.js'
 import { notifyResourceTileMutation } from '../rendering/prepared/mapMutationNotifier.js'
-import { grantHarvesterStars } from './veterancy.js'
+import { getHarvesterCargoCapacity, grantHarvesterStars, recalculateHarvesterLevelBonuses } from './veterancy.js'
 import { HARVESTER_BASE_CARGO_VALUE } from './oreValue.js'
 
 // Track tiles currently being harvested
@@ -51,29 +51,6 @@ const HARVESTER_MANUAL_REPATH_INTERVAL_MS = 1000
 const HARVESTER_LONG_TERM_STAGNATION_MS = 60000
 const HARVESTER_LONG_TERM_RECOVERY_COOLDOWN_MS = 5000
 const HARVESTER_GOAL_PROGRESS_EPSILON_TILES = 0.2
-
-function getHarvesterCargoCapacity(unit) {
-  const level = Math.max(0, Math.min(3, Number.isFinite(unit?.level) ? unit.level : 0))
-  return HARVESTER_BASE_CARGO_VALUE * (1 + (level * 0.5))
-}
-
-function recalculateHarvesterLevelBonuses(unit) {
-  if (!unit || unit.type !== 'harvester') return
-  const level = Math.max(0, Math.min(3, Number.isFinite(unit.level) ? unit.level : 0))
-  const baseSpeed = Number.isFinite(unit.baseHarvesterSpeed) ? unit.baseHarvesterSpeed : unit.speed
-  const baseArmor = Number.isFinite(unit.baseHarvesterArmor) ? unit.baseHarvesterArmor : unit.armor
-
-  if (!Number.isFinite(unit.baseHarvesterSpeed)) {
-    unit.baseHarvesterSpeed = baseSpeed
-  }
-  if (!Number.isFinite(unit.baseHarvesterArmor)) {
-    unit.baseHarvesterArmor = baseArmor
-  }
-
-  unit.cargoCapacity = getHarvesterCargoCapacity(unit)
-  unit.speed = level >= 3 ? unit.baseHarvesterSpeed * 1.25 : unit.baseHarvesterSpeed
-  unit.armor = level >= 2 ? unit.baseHarvesterArmor * 1.25 : unit.baseHarvesterArmor
-}
 
 function getHarvesterExperienceGain(unit, moneyEarned) {
   const deliveredMoney = Math.max(0, Number.isFinite(moneyEarned) ? moneyEarned : 0)
