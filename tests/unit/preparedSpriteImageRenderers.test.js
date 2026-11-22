@@ -1,3 +1,4 @@
+import { renderC5Airdrop } from '../../src/rendering/c5AirdropRenderer.js'
 import { renderC5GalaxyWithImage } from '../../src/rendering/c5GalaxyImageRenderer.js'
 import { readFile, stat } from 'node:fs/promises'
 import path from 'node:path'
@@ -65,6 +66,7 @@ function createCanvasContext() {
     lineTo: vi.fn(),
     closePath: vi.fn(),
     fill: vi.fn(),
+    stroke: vi.fn(),
     ellipse: vi.fn()
   }
 }
@@ -84,8 +86,8 @@ describe('prepared sprite generation and registry', () => {
 
     expect(manifest.webpQuality).toBe(85)
     expect(manifest.densities).toEqual([1, 2, 3])
-    expect(manifest.inventory.entryCount).toBe(311)
-    expect(manifest.entries).toHaveLength(311)
+    expect(manifest.inventory.entryCount).toBe(312)
+    expect(manifest.entries).toHaveLength(312)
     expect(manifest.entries.every(entry =>
       entry.hasAlpha &&
       entry.alphaMode === 'straight' &&
@@ -290,4 +292,16 @@ it('[U07319] draws the prepared Galaxy at native size on the ground and audits r
   expect(audit).not.toHaveBeenCalled()
   expect(renderC5GalaxyWithImage(ctx, { flightState: 'climb', altitude: 72, maxAltitude: 144 }, 60, 60)).toBe(true)
   expect(audit).toHaveBeenCalledWith({ id: 'aircraft:c5Galaxy:flight', scale: 0.875, tag: AIRCRAFT_RESIZE_AUDIT_TAGS.TAKEOFF })
+})
+
+it('[U07320] draws four prepared canopies with four suspension lines per canopy', () => {
+  publishPreparedSpriteRegistry(createPreparedSet([
+    { id: 'effect:c5:parachute', logicalWidth: 18, logicalHeight: 9, backingWidth: 36, backingHeight: 18 }
+  ]))
+  const ctx = createCanvasContext()
+  renderC5Airdrop(ctx, { altitude: 72, direction: 0, c5Drop: { altitude: 144, windX: 1, windY: 0 } }, 60, 60)
+  expect(ctx.drawImage).toHaveBeenCalledTimes(4)
+  expect(ctx.moveTo).toHaveBeenCalledTimes(16)
+  expect(ctx.lineTo).toHaveBeenCalledTimes(16)
+  expect(ctx.scale).toHaveBeenLastCalledWith(0.5, 0.5)
 })
