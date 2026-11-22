@@ -1,18 +1,22 @@
 # Spec 140: C-5 Galaxy airlift (draft)
 
-**Branch:** `dev` (implementation in progress on `feat/c5-galaxy-airlift`; see `docs/galaxy-handoff.md` there)  
-**Status:** Draft — Patrick's requirements below are decided; several implementation details are still open  
-**Created:** 2026-11-21 (Europe/Berlin)  
-**Last Updated:** 2026-11-21 (Europe/Berlin)  
-**Source:** voice-call discussion on 2026-11-21
+**Branch:** `feat/c5-galaxy-airlift`
 
-A separate coding agent is implementing a first version via Codex in parallel with this document. **This spec is not an implementation task.** Do not use a documentation change to add unit code or weights. Approved Grok Imagine art is listed under [Art assets](#art-assets). Where an implementation draft filled in numbers that Patrick has not approved, those values are listed under Open questions and are **not** requirements.
+**Status:** Requirements updated after Patrick's review. One cargo-destruction case is open.
+
+**Created:** 2026-11-21 (Europe/Berlin)
+
+**Last Updated:** 2026-11-22 (Europe/Berlin)
+
+**Source:** voice-call discussion on 2026-11-21 and Patrick’s answers on 2026-11-22
+
+Implementation progress is tracked in the [Galaxy handoff](../../docs/galaxy-handoff.md). Approved Grok Imagine art is listed under [Art assets](#art-assets).
 
 ---
 
 ## Overview
 
-There is **no** Galaxy, airlift, or parachute code on `origin/dev` at the time this draft was written (`d052b13e`). The C-5 Galaxy is a new large air transport. Players load ground vehicles by **weight**, fly to a destination, and **airdrop the cargo by parachute**.
+The C-5 Galaxy is a large air transport. Players load eligible ground vehicles by **weight**, fly to a destination, and **airdrop the cargo by parachute**.
 
 Decided requirements from Patrick:
 
@@ -22,7 +26,7 @@ Decided requirements from Patrick:
 - The Galaxy is a **large multi-tile unit**, in the same class of battlefield presence as the existing ships (for example the aircraft-carrier map sprite is 214×857).
 - When parked it occupies space for **3 landing zones on the lower part of the airstrip** (decided 2026-11-21).
 - It is **produced at the airstrip**.
-- Map sprite and build-button art must be generated with **Grok Imagine only**, never ChatGPT or any other image model. Patrick picked the map and build button on 2026-11-21; those files are committed (see [Art assets](#art-assets)). **No construction icon** will be made. Parachute frames and takeoff / landing animation art are not in that assets commit; Patrick asked the follow-up Codex wiring task to produce those.
+- Map sprite and build-button art must be generated with **Grok Imagine only**, never ChatGPT or any other image model. Patrick picked the map and build button on 2026-11-21; those files are committed (see [Art assets](#art-assets)). **No construction icon** will be made. Parachute canopy art and takeoff and landing animation are described in [FR-012](#fr-012-flight-and-parachute-animation).
 
 The Grok Imagine rule applies to **any future game-asset images** as well, not only the Galaxy.
 
@@ -41,7 +45,7 @@ The Grok Imagine rule applies to **any future game-asset images** as well, not o
 
 - [ ] The C-5 Galaxy is a buildable air unit whose production building is the airstrip.
 - [ ] It is visibly a large multi-tile unit on the battlefield, comparable in presence to ships such as the aircraft carrier (`public/images/map/units/aircraft_carrier_map.webp`, 214×857), not a 64×64 fighter-sized sprite at fighter scale.
-- [ ] Selection, occupancy, pathing, takeoff, landing, and parking account for that large footprint. Parked, the Galaxy takes space for 3 landing zones on the lower part of the airstrip. Remaining pixel-level details may still be refined against the committed map sprite.
+- [ ] Selection, occupancy, pathing, takeoff, landing, and parking account for that large footprint. Parked, the Galaxy takes space for 3 landing zones on the lower part of the airstrip. Use a nominal 3×3-tile ground footprint and a render scale of about 3–4× the F-22, with the current draft at 3.5×.
 - [ ] Implementation uses the committed Grok Imagine map sprite and build button listed under Art assets. There is no construction icon.
 
 ---
@@ -59,7 +63,7 @@ The Grok Imagine rule applies to **any future game-asset images** as well, not o
 - [ ] The Galaxy's cargo capacity is 122 t. Loading is allowed for any combination whose summed weight is less than or equal to 122 t.
 - [ ] A vehicle that would exceed remaining capacity cannot be loaded, with clear player feedback.
 - [ ] There is no separate maximum number of cargo vehicles. A single vehicle heavier than 122 t cannot be loaded.
-- [ ] Which unit types are airliftable (ground only, wrecks, etc.) is decided and documented before release if it is not already answered in Open questions.
+- [ ] Only ground vehicles without cargo can board. Wrecks, aircraft, ships, and vehicles already carrying cargo are ineligible.
 
 ---
 
@@ -75,8 +79,8 @@ The Grok Imagine rule applies to **any future game-asset images** as well, not o
 - [ ] The player can order a loaded Galaxy to airdrop its cargo at a target location.
 - [ ] Vehicles leave the aircraft and descend on parachutes onto the battlefield (the visual treatment can be simple, but it must read as a parachute airdrop).
 - [ ] Vehicles become ordinary controllable units after they have landed.
-- [ ] Invalid drop terrain (water, buildings, cliffs, or other blocked tiles) is handled in a decided, documented way — the exact rule is still an open question.
-- [ ] What happens to cargo if the Galaxy is destroyed in flight is decided and documented (still open).
+- [ ] The player picks an exact target tile. Drops use free, passable land within three tiles of the target. Water targets are rejected. Valid targets inside enemy bases are allowed.
+- [ ] Only anti-air weapons can damage descending vehicles. Cargo aboard a destroyed Galaxy is destroyed and leaves wrecks on the ground.
 
 ---
 
@@ -91,7 +95,7 @@ The Grok Imagine rule applies to **any future game-asset images** as well, not o
 
 - [x] The committed map sprite and build button were generated with Grok Imagine only and picked by Patrick on 2026-11-21. There is no construction icon.
 - [ ] Implementation wires those committed files (see [Art assets](#art-assets)), not placeholders and not a replacement generated by another model.
-- [ ] Parachute images and takeoff / landing animation are still to be produced in the follow-up wiring task (Patrick asked Codex to handle those). New game-asset images remain subject to the Grok Imagine rule unless Patrick directs otherwise for that task.
+- [ ] Takeoff, landing, and boarding have visible animations. Descent uses the dedicated canopy image and dynamic lines described in [FR-012](#fr-012-flight-and-parachute-animation).
 - [ ] The same Grok Imagine rule applies to any future code-for-battle game-asset images.
 
 ---
@@ -101,7 +105,7 @@ The Grok Imagine rule applies to **any future game-asset images** as well, not o
 ### FR-001: Weight property on every vehicle
 
 **Priority:** P0  
-**Description:** Every vehicle definition carries a realistic weight in metric tons. The property is part of the unit definition (not a one-off Galaxy table). Air and naval units may also have a weight recorded for completeness; whether they can ever be cargo is an open question, but Patrick's cargo rule is about vehicles and a 122 t airlift capacity.
+**Description:** Every vehicle definition carries a realistic weight in metric tons. The property is part of the unit definition (not a one-off Galaxy table). Patrick approved the draft values in the [vehicle weight table](../../docs/vehicle-weights.md). Only eligible ground vehicles can board.
 
 ### FR-002: 122 t weight-based capacity
 
@@ -111,17 +115,17 @@ The Grok Imagine rule applies to **any future game-asset images** as well, not o
 ### FR-003: Parachute airdrop
 
 **Priority:** P0  
-**Description:** Loaded cargo is delivered by parachute airdrop at a player-ordered location, not by taxiing off a runway at the destination.
+**Description:** The player selects an exact target tile. Release vehicles one by one onto free, passable land within three tiles of the target. Reject water targets and release cargo over land. Allow valid tiles inside enemy bases. If a vehicle has no valid landing tile in range, keep it aboard and notify the player. The drop cannot be cancelled once release begins.
 
 ### FR-004: Large multi-tile unit
 
 **Priority:** P0  
-**Description:** The Galaxy is a large multi-tile unit, in the same size class on the battlefield as existing ships (aircraft carrier map sprite 214×857 is the reference example). It must not be implemented as a fighter-scale air unit with only a label change. When parked it occupies space for **3 landing zones on the lower part of the airstrip**. Render scale should follow the committed 512×512 map sprite; remaining pathing / selection details may still be refined.
+**Description:** The Galaxy is a large multi-tile unit, in the same size class on the battlefield as existing ships (aircraft carrier map sprite 214×857 is the reference example). It must not be implemented as a fighter-scale air unit with only a label change. When parked it occupies space for **3 landing zones on the lower part of the airstrip**. Use the committed 512×512 map sprite at about 3–4× F-22 render scale. Use a nominal 3×3-tile ground footprint for selection, collision, and taxi clearance.
 
 ### FR-005: Produced at the airstrip
 
 **Priority:** P0  
-**Description:** The Galaxy is produced at the airstrip. Further tech-tree prerequisites (if any) are an open question.
+**Description:** The airstrip is the sole production prerequisite. The Galaxy costs 4,000 and uses the standard cost-based build time. It has 300 HP, twice the F-22’s armour, the draft speed of 2.2, and enough fuel to fly 800 tiles without refuelling. It is unarmed. Enemy and LLM-controlled AI production are outside v1.
 
 ### FR-006: Approved Grok Imagine art
 
@@ -136,17 +140,41 @@ The Grok Imagine rule applies to **any future game-asset images** as well, not o
 ### FR-008: Save, sync, and determinism
 
 **Priority:** P0  
-**Description:** Cargo, drop state, and weights participate in save/load and multiplayer command sync / state hash so matches stay deterministic. Exact field layout is an implementation detail, but the behaviour is required once the unit ships.
+**Description:** Cargo, drop state, and weights participate in save/load, multiplayer command sync, and state hashing. Late-join snapshots include vehicles already under parachutes. The cheat-spawn name is `c5`.
 
 ### FR-009: Player-facing cargo feedback
 
 **Priority:** P1  
-**Description:** The player can see how much of the 122 t capacity is used and what is on board. Exact UI treatment (selection panel, bar, tooltip) is an open question, but some clear readout is required.
+**Description:** Use the hovercraft’s cargo UI pattern to show what is aboard and how much of the 122 t capacity is used. Display weight in place of the hovercraft’s occupied-slot count.
 
 ### FR-010: User manual
 
 **Priority:** P1  
-**Description:** The user manual (`public/docs/user-documentation.html`) documents the Galaxy: airstrip production, 122 t capacity, that loading is by weight, and that delivery is a parachute airdrop.
+**Description:** The user manual (`public/docs/user-documentation.html`) covers airstrip production, weight-based capacity, the hovercraft-style controls, airdrop rules, and cargo damage and destruction.
+
+### FR-011: Boarding and grounded unloading
+
+**Priority:** P0
+
+**Description:** Match the hovercraft’s reciprocal left-click boarding controls. With an eligible ground vehicle selected, show the move-into cursor over a grounded Galaxy and board on left-click. Support the reciprocal flow when the Galaxy is selected and the player hovers and left-clicks an eligible vehicle. Animate vehicles approaching and boarding. Use the context menu on a free ground tile to cancel boarding or unload a grounded Galaxy. Use the selected tile as the disembarking vehicles’ gathering point.
+
+### FR-012: Flight and parachute animation
+
+**Priority:** P0
+
+**Description:** Animate takeoff and landing. Use one dedicated canopy image without suspension lines. Render four parachutes per descending vehicle, initially one over each cargo corner. Draw each canopy’s lines from four fixed mounting points to a single attachment point on the cargo at its corresponding corner. The canopies slowly circle around the attached cargo as it descends. Account for wind direction during descent.
+
+### FR-013: Cargo damage and wrecks
+
+**Priority:** P0
+
+**Description:** Cargo aboard the Galaxy takes no damage. If the aircraft is destroyed, destroy all cargo still aboard and leave wrecks on the ground. During descent, only anti-air weapons can damage vehicles. Normal damage rules apply after landing.
+
+### FR-014: Sounds and presentation
+
+**Priority:** P1
+
+**Description:** Include dedicated Galaxy sound effects in v1. The first-Galaxy milestone and landing-page mention are outside v1.
 
 ---
 
@@ -171,7 +199,7 @@ A save taken mid-load or mid-drop restores the same cargo and drop state; multip
 
 ## Art assets
 
-Patrick picked the C-5 Galaxy art on 2026-11-21 (Europe/Berlin). Both committed images were generated with **Grok Imagine** only. They are unused by gameplay code in this change (no unit registration). **No construction icon** is included or planned.
+Patrick picked the C-5 Galaxy art on 2026-11-21 (Europe/Berlin). Both committed images were generated with **Grok Imagine** only. **No construction icon** is included or planned.
 
 | Role | Path | Measured size |
 |---|---|---|
@@ -182,45 +210,13 @@ Patrick picked the C-5 Galaxy art on 2026-11-21 (Europe/Berlin). Both committed 
 
 ![C-5 Galaxy build button](../../public/images/sidebar/c5_galaxy_sidebar.webp)
 
-Follow-up for the wiring task (not in this assets commit): Patrick asked Codex to render parachute images and to build takeoff and landing animation. The parked plane takes space for 3 landing zones on the lower part of the airstrip.
+The parachute needs a dedicated canopy image generated with Grok Imagine. Use the same canopy image for each of the four parachutes. Render the suspension lines in the game.
 
 ---
 
-## Implementation-draft proposals (not decided)
+## Open question
 
-A Codex implementation prompt written the same day suggested values so coding could start. **Patrick has not approved these.** They are recorded only so the next session can accept, change, or reject them:
-
-- Suggested unit id `c5Galaxy`, display name "C-5 Galaxy".
-- Suggested cost 6000, health about 300, unarmed, slower than fighters, armour in line with other aircraft.
-- Suggested ground footprint about 3×3 tiles, with a real-world reminder of roughly 68 m wingspan / 75 m length, rendered at about 3–4× F-22 size. This may be **too small** relative to "like the existing ships" and the 214×857 carrier sprite; treat size as still open.
-- Suggested `airliftable: true` for all ground vehicles and `false` for air and naval units; wrecks not mentioned.
-- Suggested loading only while landed, with vehicles boarding in the same spirit as naval transports (hovercraft capacity 4, vehicle ferry capacity 10 — those are unit-count transports, unlike the Galaxy).
-- Suggested drop: vehicles exit one after another, land on free passable land tiles near the target, stay on board and notify if no tile is free.
-- Suggested UI: "X / 122 t" in the selection panel or tooltip, plus a small bar and a list of loaded vehicles.
-- Suggested AI: need not build the Galaxy in v1.
-- Suggested documentation of each weight with a reference vehicle in `docs/vehicle-weights.md`.
-- Fate of cargo if the Galaxy is destroyed, and whether descending vehicles can be damaged, were explicitly left as "choose and document" in that prompt.
-
-None of the above is a requirement of this spec until Patrick says so.
-
----
-
-## Open questions
-
-1. **Remaining footprint details** (selection box, collision radius, taxi pathing) for a ship-sized air unit. Decided: the parked Galaxy occupies space for 3 landing zones on the lower part of the airstrip. The committed map sprite is 512×512. The carrier sprite (214×857) remains the size-class reference, not a literal pixel size to copy.
-2. **Cost, health, speed, armour, fuel, build time, and whether the Galaxy is armed.**
-3. **Which types are airliftable.** All ground vehicles? Recovery wrecks? Other air units? Naval units? Units already carrying cargo?
-4. **Numeric weight table.** Every vehicle needs a realistic tonnage, but the individual values and reference vehicles have not been approved.
-5. **How loading is ordered and animated** (only while landed, boarding path, player command flow, cancellation).
-6. **Airdrop rules:** drop one-by-one vs all at once; spread pattern; invalid terrain; can the player pick a precise tile; mid-drop cancellation; behaviour over water or enemy bases.
-7. **Combat while loaded or descending:** is the Galaxy unarmed; can cargo or descending vehicles be shot; are they invulnerable until landing.
-8. **Galaxy destroyed with cargo aboard, or during descent.** Cargo destroyed, scattered, or something else?
-9. **Further tech-tree prerequisites** beyond "produced at the airstrip" (for example ammunition factory, radar, Technology Center).
-10. **Enemy / LLM AI production** of the Galaxy in v1.
-11. **UI details** of the 122 t readout and cargo list.
-12. **Multiplayer and cheat-spawn** specifics (cheat id, late-join snapshot of in-air descents).
-13. **Parachute frames and takeoff / landing animation** (Patrick asked the follow-up Codex wiring task to produce these; they are not in the 2026-11-21 assets commit).
-14. **Sounds, milestones, and landing-page mention.**
+**Cargo already released when the Galaxy is destroyed.** Should vehicles already under parachutes continue their descent after the aircraft is destroyed? Cargo still aboard is destroyed and leaves wrecks on the ground.
 
 ---
 

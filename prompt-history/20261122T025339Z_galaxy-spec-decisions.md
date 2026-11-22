@@ -1,0 +1,5 @@
+# 2026-11-22T02:53:39Z
+
+Codex (GPT-6)
+
+1: yes. 2: yes and 2x armor of F-22. fuel should be enough to fly 800 tiles without stop. Build time relative to cost and cost just 4000. 3: no. 4: yes. 5: left click with move-into cursor on hover and vice versa (same behavior like hover craft). Visible animation: yes. Cancel Boarding or unload when grounded via context menu on some free spot to mark disembarking gathering point. 6: yes, no, 3 tiles spread, not over water but inside enemy base is ok. 7: when borded no damage to units until c5 gets destroyed, then all borded units also get destroyed and leave wrecks on the ground. When falling damaging in mid air is possible by anti air weapons only. 9: only airstrip. 10: no. 11: same like on hover craft. 12: just c5 and yes. 13: dedicated image for one parachute without strings. Strings get rendered dynamically with 4 fixed mounting points on parachute converging into one point on cargo. Render 4 parachutes like that for one cargo on each corner one. Ensure to take wind direction into account while decending. Let 4 parachutes slowly circle around bounded cargo on decent. 14: yes, no, no
