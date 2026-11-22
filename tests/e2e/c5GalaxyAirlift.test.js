@@ -76,12 +76,15 @@ test('[E00273] produces the Galaxy, boards by left click and airdrops through th
       const galaxy = window.gameState.units.find(unit => unit.type === 'c5Galaxy')
       return { flightState: galaxy?.flightState, mission: galaxy?.c5Mission, cargoTile: [cargo?.tileX, cargo?.tileY] }
     }
-    const { createGameStateSnapshot } = await import('/src/network/stateSync.js')
+    const [{ createGameStateSnapshot }, { getPreparedSprite }] = await Promise.all([
+      import('/src/network/stateSync.js'),
+      import('/src/rendering/prepared/preparedSpritePipeline.js')
+    ])
     const savedCargo = createGameStateSnapshot({ fullAutomation: true }).units.find(unit => unit.id === cargo.id)
-    return savedCargo?.c5Drop && { x: savedCargo.c5Drop.tile.x, y: savedCargo.c5Drop.tile.y, airborne: savedCargo.altitude > 0 }
+    return savedCargo?.c5Drop && { x: savedCargo.c5Drop.tile.x, y: savedCargo.c5Drop.tile.y, airborne: savedCargo.altitude > 0, canopyWidth: getPreparedSprite('effect:c5:parachute')?.logicalWidth }
   }), {
     timeout: 60000, intervals: [50, 100]
-  }).toEqual({ x: 29, y: 25, airborne: true })
+  }).toEqual({ x: 29, y: 25, airborne: true, canopyWidth: 18 })
   await expect.poll(() => page.evaluate(() => {
     const cargo = window.gameState.units.find(unit => unit.id === 'galaxy-cargo')
     return cargo && !cargo.c5Drop && !cargo.embarkedOnId && [cargo.tileX, cargo.tileY]

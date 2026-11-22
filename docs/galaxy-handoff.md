@@ -6,7 +6,8 @@ The airstrip produces the Galaxy for 4,000 and reserves its three lower parking 
 
 Released cargo owns its descent state so it can finish landing after the aircraft is destroyed. The save format and multiplayer snapshot carry this state along with the cargo manifest and mission. The Galaxy has dedicated synthesized takeoff, touchdown, and cargo release cues.
 
+Each descending vehicle uses four prepared canopy sprites with dynamic suspension lines. [Canopy provenance](asset-sources/c5-parachute.md)
+
 ## Remaining verification
 
-- [ ] Add the approved Grok Imagine canopy at `public/images/map/units/c5_parachute_canopy.webp` and run `npm run make:prepared-sprites`. The preview currently draws temporary canopies and the dynamic suspension lines.
 - [ ] Verify the repository’s 60 FPS acceptance criteria on a physical GPU during a drop with several vehicles descending and during fast map scrolling.
