@@ -7,6 +7,7 @@ import { TILE_SIZE } from '../config.js'
 import { focusCameraOnPoint } from './tutorialSystem/helpers.js'
 import { canPurchasePerk, getPerkLedger, subscribePerks } from '../perks/perkState.js'
 import { PERKS } from '../perks/perkCatalog.js'
+import { RESEARCH_PERKS } from '../perks/researchCatalog.js'
 
 let tooltipListenersAttached = false
 let tooltipOpen = false
@@ -17,7 +18,7 @@ function renderPerkStarChip() {
   if (!chip) return
   const owner = gameState.humanPlayer || 'player1'
   chip.textContent = `★ ${getPerkLedger(owner).available}`
-  chip.classList.toggle('is-affordable', PERKS.some(perk => canPurchasePerk(owner, perk.id).ok))
+  chip.classList.toggle('is-affordable', [PERKS, RESEARCH_PERKS].some(tree => tree.some(perk => canPurchasePerk(owner, perk.id).ok)))
 }
 
 function getMoneyBarGradient() {
@@ -265,18 +266,6 @@ export function addMoneyIndicator() {
     window.logger.warn('Money bar container not found!')
     return
   }
-  const selectionPerksButton = document.getElementById('commandCenterPerksBtn')
-  if (selectionPerksButton && !selectionPerksButton.dataset.perkHandler) {
-    selectionPerksButton.dataset.perkHandler = 'true'
-    selectionPerksButton.addEventListener('click', () => import('./perks/perkTree.js').then(module => module.openPerkTree()))
-  }
-
-  const researchButton = document.getElementById('technologyResearchPerksBtn')
-  if (researchButton && !researchButton.dataset.perkHandler) {
-    researchButton.dataset.perkHandler = 'true'
-    researchButton.addEventListener('click', () => import('./perks/perkTree.js').then(module => module.openPerkTree('research')))
-  }
-
   // Clear any existing content to prevent duplicates
   moneyBarContainer.innerHTML = ''
 
@@ -325,12 +314,10 @@ export function addMoneyIndicator() {
 
   // Add elements to container
   moneyBarContainer.appendChild(moneyTrack)
-  const perkChip = document.createElement('button')
+  const perkChip = document.createElement('span')
   perkChip.id = 'perkStarChip'
   perkChip.className = 'perk-star-chip'
-  perkChip.type = 'button'
-  perkChip.title = 'Available Command Center perk stars'
-  perkChip.addEventListener('click', () => import('./perks/perkTree.js').then(module => module.openPerkTree()))
+  perkChip.title = 'Available veterancy stars'
   moneyBarContainer.appendChild(perkChip)
   unsubscribePerkChip?.()
   unsubscribePerkChip = subscribePerks(renderPerkStarChip)
@@ -352,10 +339,6 @@ export function addMoneyIndicator() {
 
 // Update the money bar display
 export function updateMoneyBar() {
-  const perksButton = document.getElementById('commandCenterPerksBtn')
-  if (perksButton) perksButton.hidden = !selectedUnits.some(entity => entity.type === 'commandCenter' && entity.owner === (gameState.humanPlayer || 'player1'))
-  const researchButton = document.getElementById('technologyResearchPerksBtn')
-  if (researchButton) researchButton.hidden = !selectedUnits.some(entity => entity.type === 'technologyResearchCenter' && entity.owner === (gameState.humanPlayer || 'player1') && entity.health > 0)
   const moneyBar = document.getElementById('moneyBar')
   const moneyText = document.getElementById('moneyText')
 

@@ -1,0 +1,2 @@
+- [x] **Perk access and blueprint cards** — Open each perk tree from its building context menu, display blueprint cards only after their perks are purchased, and center the badge art.
+  - Spec: [Command Center Perks](../../specs/command-center-perks.md) and [Technology Research Center](../../specs/139-technology-center/spec.md)

@@ -12,8 +12,8 @@ This amendment defines the playable center and its blueprint perks. The older dr
 
 - The **Technology Research Center** uses type ID `technologyResearchCenter` and the existing 3×3 map, prepared and sidebar art. It costs $5,000, takes 3.75 simulation seconds at normal speed with one Construction Yard, draws 100 power (half a Power Plant), has 500 HP and armor 2, and is limited to one per player. It uses standard repair and sell rules.
 - An owned, living Radar Station and Command Center must be placed to unlock, queue and place it. Buildings being sold do not qualify. The usual construction requirements still apply.
-- Select the center and open **Research**. Research spends stars from the same per-player veterancy ledger as Command Center perks. An owned, living Technology Research Center is required to buy research. Purchased perks survive sale or destruction and remain in saves and synchronized match state. Rebuild the center to buy more.
-- Follow-on build cards use existing art. They indicate the required perk and show that a researched entity will come later. Entity production, map placement, AI strategies and other entity-specific gameplay arrive separately.
+- Right-click or touch and hold the center and choose **Research Perks**. Research spends stars from the same per-player veterancy ledger as Command Center perks. An owned, living Technology Research Center is required to buy research. Purchased perks survive sale or destruction and remain in saves and synchronized match state. Rebuild the center to buy more.
+- Follow-on build cards use existing art. Each card appears in the build bar only after its perk is purchased and indicates that the researched entity will come later. Entity production, map placement, AI strategies and other entity-specific gameplay arrive separately.
 - All four perk badges were generated for this feature with the image generator authorized by Patrick on 2026-11-22 and encoded as WebP at quality 85.
 
 | Research | Stars | Unlocks |
@@ -21,7 +21,7 @@ This amendment defines the playable center and its blueprint perks. The older dr
 | Research Program | 2 | The three research branches |
 | Autonomous Systems | 3 | Drone Factory, AI Center |
 | Orbital Engineering | 4 | Rocket Launch Base, Spaceship Factory |
-| Aerospace Engineering | 3 | Plane Factory, C-5 Galaxy |
+| Aerospace Engineering | 3 | Plane Factory |
 
 ---
 

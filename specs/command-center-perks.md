@@ -482,7 +482,7 @@ Example: a Tank V1 with 1 star and 1000 of the 4000 XP it needs for star 2 kills
 | build time | ~5.25 s × multipliers | `getProductionDuration(3500, true)` |
 | requires | normal chain + **`requiresRadar: true`** | R1; add to the Radar rule's `buildings` list |
 | limit | **1 per player** (D6) | |
-| selection action | **Open Perk Tree**, hotkey `K` (configurable) | |
+| building context action | **Automation Perks**, via right-click or touch hold | |
 | optional | `commandCenterBuilt` milestone video (HEVC hvc1 960×576 with audio) | later |
 
 **When the CC is destroyed (D5)**
@@ -815,10 +815,10 @@ GB-2 items already done and **not** repeated here: 1, 3, 4, 9 (`skills/new-build
 
 **Acceptance Criteria:**
 
-- [ ] A small context menu on the Command Center includes an action that opens the perk tree.
-- [ ] The `★ Perks` action-bar button (`#commandCenterPerksBtn`) is removed from the action bar and from the code that shows or wires it.
-- [ ] The context-menu flow works with mouse and with the existing long-press / touch map-action patterns.
-- [ ] Whether the `K` hotkey and the star chip still open the tree is decided (see Open questions) and then implemented consistently, including keybinding UI and the manual.
+- [x] A small context menu on the Command Center includes an action that opens the perk tree.
+- [x] The `★ Perks` action-bar button (`#commandCenterPerksBtn`) is removed from the action bar and from the code that shows or wires it.
+- [x] The context-menu flow works with mouse and with the existing long-press / touch map-action patterns.
+- [x] The building context menu is the sole entry point. The `K` binding is removed and the star chip is a read-only balance.
 
 #### User Story F4: Landing-page perk section with badges (GB-2 items 7 and 8)
 
@@ -884,7 +884,7 @@ Replace the 34 shared placeholder perk paragraphs in the user manual with unique
 
 - [ ] Item 2 — inertia / faster scrolling on the **automation editor** pan surface.
 - [ ] Item 5 — touch-sequence tests and iPhone activation verification, with the result recorded.
-- [ ] Item 6 — Command Center context menu opens the perk tree; remove `★ Perks` from the action bar; decide what happens to `K` and the star chip.
+- [x] Item 6 — The Command Center context menu opens the perk tree. The action-bar button and `K` shortcut are removed. The star chip displays the balance.
 - [ ] Items 7 and 8 — compact landing / marketing perk section with badges, EN and DE.
 - [ ] Item 11 — lock or hide the automation menu until a Command Center with at least one owned perk exists; decide hide vs lock and All-unlocked behaviour.
 - [ ] Manual — unique text + badge images for the 34 placeholder perk entries; do not strip the capstone's real text.
@@ -893,8 +893,8 @@ Replace the 34 shared placeholder perk paragraphs in the user manual with unique
 
 1. **Item 2 feel.** How much faster should the editor pan than today? Should it match the perk overlay (`speed: 1.2`, inertia on) exactly, or should the editor use different values?
 2. **Item 5 scope.** Which gestures must the automated tests cover (open via the new context menu, pan, pinch if any, purchase confirm, close)? Is a physical iPhone check by Patrick required before this item is closed, or is a simulator plus later manual check enough?
-3. **Item 6 and other entry points.** After the action-bar button is removed, should the `K` keybinding and the money-bar star chip still open the tree, or is the Command Center context menu the only opener?
-4. **Context-menu shape.** Reuse the existing long-press / right-click unit or building menu, or a smaller CC-only menu? Which label ("Perks", "Automation Perks", something else)?
+3. **Item 6 entry point.** Resolved on 2026-11-22. The Command Center context menu is the only opener.
+4. **Context-menu shape.** Resolved on 2026-11-22. The existing radial menu shows one Automation Perks action over the Command Center.
 5. **Landing section layout.** All 35 badges, one badge per start branch, or a compact strip? How much text besides the badges? Any link into the in-game manual?
 6. **Item 11 hide vs lock.** Should the automation menu be omitted entirely, or shown disabled with an explanation ("Build a Command Center and buy a perk")?
 7. **Item 11 and "All unlocked" mode.** Does that setting bypass the menu gate (because every perk is treated as owned), or does the player still need a Command Center?

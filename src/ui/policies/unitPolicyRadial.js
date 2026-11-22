@@ -210,7 +210,7 @@ export function installUnitPolicyRadial(canvas, getUnits) {
     if (event.button !== 2 || !rightDown) return
     const down = rightDown
     rightDown = null
-    if (!down.unit || event.target !== canvas) return
+    if (!down.unit || event.target !== canvas || gameState.suppressRightClickDeselect) return
     if (Math.hypot(event.clientX - down.x, event.clientY - down.y) > RIGHT_CLICK_MOVE_PX) return
     if (openFor(down.unit, event.clientX, event.clientY)) {
       gameState.suppressRightClickDeselect = true

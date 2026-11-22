@@ -16,3 +16,21 @@
 @media (min-width: 601px) and (pointer: fine) {
   .research-perk-lanes > :last-child .perk-tooltip { left: auto; right: 100%; }
 }
+
+.perk-node__badge img {
+  display: block;
+  object-position: center;
+}
+.perk-node__lock {
+  inset: 50% auto auto 50%;
+  transform: translate(-50%, -50%);
+  line-height: 1;
+}
+.research-perk-overlay .perk-node__badge { background: #080f24; }
+.research-perk-overlay .perk-node__badge img {
+  transform: translate(var(--badge-offset-x, 0%), var(--badge-offset-y, 0%)) scale(.9);
+}
+/* Optical offsets measured from the shield bounds in the four source crops. */
+[data-perk-id="tc.foundation"], [data-perk-id="tc.orbit"] { --badge-offset-x: -3.5%; }
+[data-perk-id="tc.autonomy"], [data-perk-id="tc.aerospace"] { --badge-offset-x: 4.5%; }
+[data-perk-id="tc.orbit"], [data-perk-id="tc.aerospace"] { --badge-offset-y: 3.75%; }

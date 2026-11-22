@@ -48,8 +48,6 @@ function lockForPolicy(policy) {
   return missing ? `Locked: needs ${getPerk(missing)?.name || missing}` : null
 }
 
-function openTree() { import('../perks/perkTree.js').then(module => module.openPerkTree()) }
-
 function variantOption(variant, label) {
   const perk = getPerk(START_PERK_BY_VARIANT[variant])
   const locked = getAutomationPerkMode() !== 'allUnlocked' && !ownsPerk(humanPlayer(), perk.id)
@@ -237,7 +235,7 @@ function renderList() {
   const defenceEntries = entries.filter(entry => entry.policy.variant === 'defence')
   list.replaceChildren(
     ...(getAutomationPerkMode() !== 'allUnlocked' && !hasLivingCommandCenter(humanPlayer())
-      ? [h('section', { class: 'policy-recovery policy-lock-banner' }, h('strong', { text: 'Command link lost: rebuild the Command Center' }), h('button', { class: 'policy-btn', type: 'button', text: 'Open Perk Tree', onClick: openTree }))]
+      ? [h('section', { class: 'policy-recovery policy-lock-banner' }, h('strong', { text: 'Command link lost: rebuild the Command Center' }))]
       : []),
     ...recoveryNotice(),
     sectionHeading('Unit automations', 'unitPoliciesHeading'),

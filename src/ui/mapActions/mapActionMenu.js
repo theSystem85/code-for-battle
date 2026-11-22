@@ -13,6 +13,19 @@ import { getPolicyLock } from '../../perks/perkState.js'
 import './mapActionMenu.css'
 
 const installedMenus = new WeakMap()
+const perkMenus = {
+  commandCenter: { tree: 'command', label: 'Automation Perks' },
+  technologyResearchCenter: { tree: 'research', label: 'Research Perks' }
+}
+
+function perkBuildingAt(point, owner) {
+  const x = Math.floor(point.x / TILE_SIZE)
+  const y = Math.floor(point.y / TILE_SIZE)
+  return gameState.buildings?.find(building => Object.hasOwn(perkMenus, building.type) &&
+    (building.owner === owner || (building.owner === 'player' && owner === 'player1')) &&
+    building.health > 0 && !building.isBeingSold &&
+    x >= building.x && x < building.x + building.width && y >= building.y && y < building.y + building.height)
+}
 
 const labels = {
   attackUnit: 'Attack', forceAttackUnit: 'Force attack', guardUnit: 'Guard', serveUnit: 'Serve', followUnit: 'Follow', landOnUnit: 'Land on', embarkUnit: 'Embark',
@@ -31,6 +44,7 @@ export function installMapActionMenu(canvas, { selection, units, commands, handl
   document.body.appendChild(ring)
   let origin = null
   let targetUnit = null
+  let rightDown = null
   let heldPointer = null
   let pressCamera = null
   let cameraTimer = 0
@@ -75,14 +89,33 @@ export function installMapActionMenu(canvas, { selection, units, commands, handl
     if (!targetUnit) return tileOptions
     return [...unitActionOptions(selection, targetUnit, owner(), gameState.buildings), ...tileOptions.filter(action => action === 'c5Airdrop')]
   }
+  function openPerkBuilding(building, anchor) {
+    if (locked() || !building) return false
+    const { tree, label } = perkMenus[building.type]
+    targetUnit = null
+    origin = null
+    menu.open(anchor, [{
+      id: 'open-building-perks', label, text: 'Perks',
+      onSelect() {
+        close()
+        const current = gameState.buildings?.includes(building) && building.health > 0 && !building.isBeingSold
+        if (current && !locked()) import('../perks/perkTree.js').then(({ openPerkTree }) => openPerkTree(tree))
+      }
+    }])
+    return true
+  }
   function open(point) {
     if (locked() || !Number.isFinite(point?.x) || !Number.isFinite(point?.y)) return false
+    const rect = canvas.getBoundingClientRect()
+    const anchor = { x: rect.left + point.x - gameState.scrollOffset.x, y: rect.top + point.y - gameState.scrollOffset.y }
+    if (openPerkBuilding(perkBuildingAt(point, owner()), anchor)) {
+      resetInput()
+      return true
+    }
     targetUnit = units.find(unit => !selection.includes(unit) && unitContainsPoint(unit, point.x, point.y)) || null
     const options = optionsForTarget()
     if (!options.length) return false
     origin = { x: point.x, y: point.y }
-    const rect = canvas.getBoundingClientRect()
-    const anchor = { x: rect.left + point.x - gameState.scrollOffset.x, y: rect.top + point.y - gameState.scrollOffset.y }
     const items = options.map(id => ({
       id, label: labels[id], text: labels[id], customTooltip: true,
       disabled: id === 'serveUnit' && !selection.some(unit => canServeUnit(unit, targetUnit, gameState.buildings, commands)),
@@ -122,6 +155,23 @@ export function installMapActionMenu(canvas, { selection, units, commands, handl
     cameraTimer = 0
   }
   function stop(event) { event.preventDefault(); event.stopImmediatePropagation() }
+  window.addEventListener('mousedown', event => {
+    rightDown = null
+    if (event.target !== canvas || event.button !== 2 || locked() || menu.isOpen()) return
+    const anchor = { x: event.clientX, y: event.clientY }
+    const building = perkBuildingAt(world(anchor), owner())
+    if (building) rightDown = { ...anchor, building }
+  }, true)
+  window.addEventListener('mouseup', event => {
+    if (event.button !== 2 || !rightDown) return
+    const down = rightDown
+    rightDown = null
+    if (event.target !== canvas || handler.rightWasDragging || Math.hypot(event.clientX - down.x, event.clientY - down.y) > 3) return
+    const anchor = { x: event.clientX, y: event.clientY }
+    if (perkBuildingAt(world(anchor), owner()) === down.building && openPerkBuilding(down.building, anchor)) {
+      gameState.suppressRightClickDeselect = true
+    }
+  }, true)
   window.addEventListener('pointerdown', event => {
     pointers.add(event.pointerId)
     if (pointers.size > 1) { cancel(); close(); return }
@@ -133,7 +183,8 @@ export function installMapActionMenu(canvas, { selection, units, commands, handl
       else close()
       return
     }
-    if (event.target !== canvas || (event.pointerType !== 'touch' && event.button !== 0) || locked() || !mapActionOptions(selection, owner()).length) return
+    if (event.target !== canvas || (event.pointerType !== 'touch' && event.button !== 0) || locked()) return
+    if (!mapActionOptions(selection, owner()).length && !perkBuildingAt(world({ x: event.clientX, y: event.clientY }), owner())) return
     heldPointer = event.pointerId
     pressCamera = { ...gameState.scrollOffset }
     canvas.dataset.mapActionTracking = 'true'
@@ -166,11 +217,12 @@ export function installMapActionMenu(canvas, { selection, units, commands, handl
   window.addEventListener('pointercancel', event => { end(event); close() }, true)
   for (const type of ['mousedown', 'mouseup', 'click', 'contextmenu']) {
     window.addEventListener(type, event => {
-      if (menu.isOpen() || performance.now() < swallowUntil) stop(event)
+      if (type === 'mouseup' && event.button === 2) return
+      if (menu.isOpen() || (event.target === canvas && performance.now() < swallowUntil)) stop(event)
     }, true)
   }
   window.addEventListener('wheel', () => { cancel(); close() }, true)
-  window.addEventListener('blur', () => { cancel(); close(); pointers.clear() })
+  window.addEventListener('blur', () => { cancel(); close(); pointers.clear(); rightDown = null })
   window.addEventListener('keydown', event => { cancel(); if (event.key === 'Escape') close() }, true)
   const api = {
     openMapActionMenu: open,

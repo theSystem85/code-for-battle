@@ -69,15 +69,17 @@ describe('Technology Research Center', () => {
     document.body.innerHTML = '<div id="unitsTabContent"></div><div id="buildingsTabContent"></div>'
     gameState.buildings = [center()]
     setupResearchBuildCards()
-    const card = document.querySelector('[data-research-blueprint="c5Galaxy"]')
-    expect(card.hidden).toBe(false)
-    expect(card.textContent).toContain('Research Aerospace Engineering')
+    const card = document.querySelector('[data-research-blueprint="planeFactory"]')
+    expect(card.hidden).toBe(true)
     grantPerkStars({ owner }, 5)
     applyPerkPurchase(owner, 'tc.foundation')
+    expect(card.hidden).toBe(true)
     applyPerkPurchase(owner, 'tc.aerospace')
+    expect(card.hidden).toBe(false)
+    expect(document.querySelector('[data-research-blueprint="droneFactory"]').hidden).toBe(true)
     expect(card.textContent).toContain('Researched')
     expect(card.getAttribute('aria-disabled')).toBe('true')
-    expect(card.dataset.unitType).toBeUndefined()
+    expect(card.dataset.buildingType).toBeUndefined()
     for (const perk of RESEARCH_PERKS) {
       expect(existsSync(`public/${perk.badge}`)).toBe(true)
       for (const blueprint of perk.blueprints) expect(existsSync(`public/images/sidebar/${blueprint.image}.webp`)).toBe(true)

@@ -37,6 +37,8 @@ describe('map action DOM integration', () => {
     Object.assign(gameState, { humanPlayer: 'player1', paused: false, replayMode: false, mapEditMode: false, buildingPlacementMode: false, isSpectator: false, multiplayerSession: null, scrollOffset: { x: 0, y: 0 }, buildings: [], mapGrid: Array.from({ length: 30 }, () => Array.from({ length: 30 }, () => ({ type: 'grass' }))) })
     allUnits.splice(1)
     handler.wasDragging = false
+    handler.rightWasDragging = false
+    gameState.suppressRightClickDeselect = false
     selected.splice(0, selected.length, unit)
     setMapActionLongPressMs(300)
   })
@@ -45,6 +47,33 @@ describe('map action DOM integration', () => {
     window.dispatchEvent(new Event('blur'))
     vi.useRealTimers()
   })
+  it('[U07331] offers building perk actions from a stationary right click without a selection', () => {
+    selected.length = 0
+    const building = { type: 'commandCenter', owner: 'player2', health: 400, x: 3, y: 3, width: 3, height: 3 }
+    gameState.buildings.push(building)
+    const rightClick = (endX = 110) => {
+      for (const [type, x] of [['mousedown', 110], ['mouseup', endX]]) {
+        canvas.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: 110, button: 2 }))
+      }
+    }
+    rightClick()
+    expect(api.isOpen()).toBe(false)
+    building.owner = 'player1'
+    rightClick(122)
+    expect(api.isOpen()).toBe(false)
+    rightClick()
+    expect(document.querySelector('[data-id="open-building-perks"]')?.getAttribute('aria-label')).toBe('Automation Perks')
+    expect(gameState.suppressRightClickDeselect).toBe(true)
+  })
+
+  it('[U07332] opens research from a touch hold on the center without a selection', () => {
+    selected.length = 0
+    gameState.buildings.push({ type: 'technologyResearchCenter', owner: 'player1', health: 500, x: 3, y: 3, width: 3, height: 3 })
+    pointer('pointerdown', 110, 1, true, 110)
+    vi.advanceTimersByTime(300)
+    expect(document.querySelector('[data-id="open-building-perks"]')?.getAttribute('aria-label')).toBe('Research Perks')
+  })
+
   it('[U02551] consumes pointer and mouse release after a menu opens', () => {
     pointer('pointerdown')
     vi.advanceTimersByTime(300)
