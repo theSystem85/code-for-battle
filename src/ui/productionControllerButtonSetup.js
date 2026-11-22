@@ -1,3 +1,4 @@
+import { setupResearchBuildCards } from './researchBuildCards.js'
 import { setupProductionHoverCard } from './productionHoverCard.js'
 import { failCompletionReceipt } from '../policies/completionReceipts.js'
 import { gameState } from '../gameState.js'
@@ -39,6 +40,7 @@ const mobileLandscapeBuildingLabelMap = {
   vehicleFactory: 'Vehicle Fab',
   radarStation: 'Radar',
   commandCenter: 'Command',
+  technologyResearchCenter: 'Research',
   vehicleWorkshop: 'Workshop',
   ammunitionFactory: 'Ammo Fab',
   turretGunV1: 'Turret V1',
@@ -131,6 +133,7 @@ export function setupAllProductionButtons(controller) {
 
   controller.setupUnitButtons()
   controller.setupBuildingButtons()
+  setupResearchBuildCards()
 
   // Initial update of button states when setting up
   controller.updateVehicleButtonStates()

@@ -1,3 +1,5 @@
+import { applyPerkPurchase } from './perks/perkState.js'
+import { COMMAND_TYPES } from './network/commandTypes.js'
 import { findCityBuildingById } from './game/cityBuildings.js'
 import { restoreBaseAutomationRuntime } from './policies/basePolicyEngine.js'
 import { restoreCompletionReceipt } from './policies/completionReceipts.js'
@@ -910,6 +912,11 @@ function executeReplayCommand(entry) {
     }
     if (command.type === 'automation-unit-command') {
       applyRecordedAutomationUnitCommand(command, resolveReplayEntityReference, replayUnitCommandsHandler)
+      return
+    }
+    if (command.type === COMMAND_TYPES.PERK_PURCHASE && command.payload) {
+      const { actorId, perkId, expectedCost } = command.payload
+      applyPerkPurchase(actorId, perkId, expectedCost)
       return
     }
     if (command.type === 'automation-edit') {

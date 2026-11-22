@@ -1,6 +1,7 @@
 // A requirement is a building type, or a group of alternative building types.
 // These rules drive both gameplay unlocks and the cached build-card summaries.
 export const productionUnlockRules = [
+  { requires: ['radarStation', 'commandCenter'], buildings: ['technologyResearchCenter'], operational: true },
   { requires: ['vehicleWorkshop'], buildings: ['fireDepartment'] },
   { requires: ['vehicleFactory', 'fireDepartment'], units: ['fireEngine'] },
   { requires: ['vehicleFactory'], units: ['tank', 'lightTank'], buildings: ['ammunitionFactory'] },
@@ -25,14 +26,19 @@ export const productionUnlockRules = [
 /** Event-driven tech-tree sync; never called by rendering or simulation updates. */
 export function visitProductionUnlocks(playerBuildings, owner, controller) {
   const counts = Object.create(null)
+  const operationalCounts = Object.create(null)
   for (const building of playerBuildings) {
     if (building.owner !== owner || (building.type === 'airstrip' && !(building.health > 0))) continue
     counts[building.type] = (counts[building.type] || 0) + 1
+    if (building.health > 0 && !building.isBeingSold) {
+      operationalCounts[building.type] = (operationalCounts[building.type] || 0) + 1
+    }
   }
   for (const rule of productionUnlockRules) {
+    const availableCounts = rule.operational ? operationalCounts : counts
     if (!rule.requires.every(requirement => Array.isArray(requirement)
-      ? requirement.some(type => counts[type] > 0)
-      : counts[requirement] >= (rule.count || 1))) continue
+      ? requirement.some(type => availableCounts[type] > 0)
+      : availableCounts[requirement] >= (rule.count || 1))) continue
     if (rule.units) {
       for (const type of rule.units) controller.forceUnlockUnitType(type)
     }

@@ -8,6 +8,7 @@
  */
 
 import { MAX_BUILDING_GAP_TILES, TILE_SIZE } from '../config.js'
+import { hasResearchCenterPrerequisites } from '../production/researchCenterRequirements.js'
 import { buildingData } from '../data/buildingData.js'
 import { getRegisteredDecorationLayout } from '../game/decorationLayoutRegistry.js'
 import { gameState } from '../gameState.js'
@@ -198,6 +199,7 @@ export function isBuildingFootprintInBuildRange(type, tileX, tileY, buildings, f
  */
 export function canPlaceBuilding(type, tileX, tileY, mapGrid, units, buildings, factories, owner = 'player', options = {}) {
   if (!buildingData[type]) return false
+  if (type === 'technologyResearchCenter' && !options.mapEditMode && !hasResearchCenterPrerequisites(buildings, owner)) return false
   const limit = buildingData[type].limit
   const normalizedOwner = owner === 'player' ? 'player1' : owner
   if (Number.isFinite(limit) && (buildings || []).filter(building => building.type === type && (building.owner === 'player' ? 'player1' : building.owner) === normalizedOwner && building.health > 0).length >= limit) return false

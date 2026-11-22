@@ -1,3 +1,4 @@
+import { hasOperationalBuilding } from '../production/researchCenterRequirements.js'
 import { gameState } from '../gameState.js'
 import { CAPSTONE_PERK_ID, PERKS, START_PERK_BY_VARIANT, getPerk } from './perkCatalog.js'
 import { setStarGrantListener, setTurretVeterancyGate } from '../game/veterancy.js'
@@ -26,12 +27,20 @@ export function hasLivingCommandCenter(ownerId) {
   const owner = normalizeOwner(ownerId)
   return (gameState.buildings || []).some(building => building.type === 'commandCenter' && normalizeOwner(building.owner) === owner && building.health > 0)
 }
+export function hasLivingResearchCenter(ownerId) {
+  return hasOperationalBuilding(gameState.buildings || [], 'technologyResearchCenter', ownerId)
+}
+export function ownsResearchPerk(ownerId, perkId) {
+  return getPerk(perkId)?.tree === 'research' && mutableLedger(ownerId).owned.includes(perkId)
+}
 export function canPurchasePerk(ownerId, perkId) {
   const perk = getPerk(perkId)
   if (!perk) return { ok: false, reason: 'unknown' }
   const ledger = mutableLedger(ownerId)
   if (ledger.owned.includes(perkId)) return { ok: false, reason: 'owned' }
-  if (!hasLivingCommandCenter(ownerId)) return { ok: false, reason: 'noCommandCenter' }
+  if (perk.tree === 'research') {
+    if (!hasLivingResearchCenter(ownerId)) return { ok: false, reason: 'noResearchCenter' }
+  } else if (!hasLivingCommandCenter(ownerId)) return { ok: false, reason: 'noCommandCenter' }
   const requirementsMet = perk.requires.all ? perk.requires.all.every(id => ledger.owned.includes(id)) : perk.requires.any.some(id => ledger.owned.includes(id))
   if (!requirementsMet) return { ok: false, reason: 'missingPrerequisite' }
   if (ledger.earned - ledger.spent < perk.cost) return { ok: false, reason: 'insufficientStars' }
@@ -54,11 +63,20 @@ export function applyPerkPurchase(ownerId, perkId, expectedCost = getPerk(perkId
 export async function requestPerkPurchase(perkId) {
   const actorId = normalizeOwner(gameState.humanPlayer || 'player1')
   const expectedCost = getPerk(perkId)?.cost
-  if (!gameState.multiplayerSession) return applyPerkPurchase(actorId, perkId, expectedCost)
-  const { broadcastGameCommand } = await import('../network/commandBroadcast.js')
+  const remote = Boolean(gameState.multiplayerSession?.isRemote)
+  const payload = { actorId, perkId, expectedCost }
+  const result = remote ? { ok: true } : applyPerkPurchase(actorId, perkId, expectedCost)
+  if (!result.ok) return result
   const { COMMAND_TYPES } = await import('../network/commandTypes.js')
-  broadcastGameCommand(COMMAND_TYPES.PERK_PURCHASE, { actorId, perkId, expectedCost }, actorId)
-  return { ok: true }
+  if (!remote) {
+    const { recordReplayCommand } = await import('../replayCommandPrimitives.js')
+    recordReplayCommand({ type: COMMAND_TYPES.PERK_PURCHASE, payload })
+  }
+  if (gameState.multiplayerSession) {
+    const { broadcastGameCommand } = await import('../network/commandBroadcast.js')
+    broadcastGameCommand(COMMAND_TYPES.PERK_PURCHASE, payload, actorId)
+  }
+  return result
 }
 export function grantPerkStars(entity, count) {
   if (!entity || !Number.isSafeInteger(count) || count <= 0) return

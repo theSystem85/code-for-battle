@@ -1,0 +1,2 @@
+- [x] **Technology Research Center** — Build after Radar Station and Command Center, then spend veterancy stars on four research perks for six follow-on blueprint cards. The units and buildings shown on the cards are scheduled for separate implementation.
+  - Spec: [Technology Research Center](../../specs/139-technology-center/spec.md)

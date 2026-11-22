@@ -271,6 +271,12 @@ export function addMoneyIndicator() {
     selectionPerksButton.addEventListener('click', () => import('./perks/perkTree.js').then(module => module.openPerkTree()))
   }
 
+  const researchButton = document.getElementById('technologyResearchPerksBtn')
+  if (researchButton && !researchButton.dataset.perkHandler) {
+    researchButton.dataset.perkHandler = 'true'
+    researchButton.addEventListener('click', () => import('./perks/perkTree.js').then(module => module.openPerkTree('research')))
+  }
+
   // Clear any existing content to prevent duplicates
   moneyBarContainer.innerHTML = ''
 
@@ -348,6 +354,8 @@ export function addMoneyIndicator() {
 export function updateMoneyBar() {
   const perksButton = document.getElementById('commandCenterPerksBtn')
   if (perksButton) perksButton.hidden = !selectedUnits.some(entity => entity.type === 'commandCenter' && entity.owner === (gameState.humanPlayer || 'player1'))
+  const researchButton = document.getElementById('technologyResearchPerksBtn')
+  if (researchButton) researchButton.hidden = !selectedUnits.some(entity => entity.type === 'technologyResearchCenter' && entity.owner === (gameState.humanPlayer || 'player1') && entity.health > 0)
   const moneyBar = document.getElementById('moneyBar')
   const moneyText = document.getElementById('moneyText')
 

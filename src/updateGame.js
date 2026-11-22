@@ -25,7 +25,7 @@ import './game/stuckClusterNotification.js'
 import { noteVisibleEnemies } from './audio/announcerCues.js'
 import { closeRefuelPumpFrame, openRefuelPumpFrame } from './audio/serviceLoops.js'
 import { syncFireAudio } from './audio/fireAudio.js'
-import { updateBuildingsUnderRepair, updateBuildingsAwaitingRepair, buildingData, cacheBuildingSmokeScales } from './buildings.js'
+import { updateBuildingsUnderRepair, updateBuildingsAwaitingRepair, buildingData, cacheBuildingSmokeScales, canPlaceBuilding } from './buildings.js'
 import { handleSelfRepair } from './utils.js'
 import { updateGuardBehavior } from './behaviours/guard.js'
 import { updateAirGuard } from './game/airWingOrders.js'
@@ -225,6 +225,10 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
         } else if (cmd.commandType === COMMAND_TYPES.BUILDING_PLACE && cmd.payload) {
           const { buildingType, x, y, automationCompletion } = cmd.payload
           const owner = cmd.sourcePartyId
+          if (buildingType === 'technologyResearchCenter' && !canPlaceBuilding(buildingType, x, y, mapGrid, mainUnits, gameState.buildings, factories, owner)) {
+            if (automationCompletion) broadcastGameCommand(COMMAND_TYPES.AUTOMATION_COMPLETION_ACK, { ...automationCompletion, ownerId: owner, status: 'failed', reason: 'the authoritative placement was rejected' })
+            return
+          }
           const buildCost = Number(buildingCosts?.[buildingType]) || 0
 
           if (!chargePartyProductionCost(owner, buildCost)) {
