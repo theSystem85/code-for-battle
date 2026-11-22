@@ -155,7 +155,9 @@ export function restorePerkState(payload) {
   for (const [owner, value] of Object.entries(payload?.owners || {})) gameState.perks.owners[owner] = { earned: restoreStarCount(value.earned), spent: restoreStarCount(value.spent), owned: [...new Set((value.owned || []).filter(id => getPerk(id)))].sort(), log: Array.isArray(value.log) ? value.log.map(item => ({ ...item })) : [] }
   notify()
 }
-export function resetPerkState() { gameState.perks = { automationPerkMode: globalThis.__AUTOMATION_PERK_MODE__ === 'allUnlocked' ? 'allUnlocked' : 'required', owners: {} }; notify() }
+export function resetPerkState(mode = globalThis.__AUTOMATION_PERK_MODE__) {
+  restorePerkState({ automationPerkMode: mode })
+}
 export function getPerkStateHash() {
   const text = JSON.stringify(exportPerkState())
   let hash = 2166136261

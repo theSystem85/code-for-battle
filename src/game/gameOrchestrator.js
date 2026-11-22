@@ -9,7 +9,7 @@ import { bindDecorationCountInputs } from '../ui/decorationCountSync.js'
 // Core game orchestration extracted from main.js
 import { setupInputHandlers, setRenderScheduler, selectedUnits } from '../inputHandler.js'
 import { unitCosts, initializeOccupancyMap, rebuildOccupancyMapWithTextures } from '../units.js'
-import { gameState } from '../gameState.js'
+import { gameState, STARTING_BUILDING_TYPES } from '../gameState.js'
 import { buildingData, updatePowerSupply } from '../buildings.js'
 import { productionQueue } from '../productionQueue.js'
 import {
@@ -123,6 +123,7 @@ import { setupMinimapHandlers } from '../ui/minimap.js'
 import { addPowerIndicator } from '../ui/energyBar.js'
 import { addMoneyIndicator } from '../ui/moneyBar.js'
 import { initPerkStarChip } from '../ui/perks/perkStarChip.js'
+import { getAutomationPerkMode, resetPerkState } from '../perks/perkState.js'
 import { closeMobileSidebarModal, isMobileSidebarModalVisible } from '../ui/mobileLayout.js'
 import { resetLlmUsage } from '../ai/llmUsage.js'
 import { terminateAllSounds } from '../sound.js'
@@ -1659,27 +1660,7 @@ class Game {
     gameState.gameStarted = true
     gameState.gamePaused = false
 
-    if (typeof productionQueue !== 'undefined') {
-      productionQueue.unitItems.length = 0
-      productionQueue.buildingItems.length = 0
-      productionQueue.completedBuildings.length = 0
-      productionQueue.stackedPlacementActive = false
-      productionQueue.refreshReadyBuildingTab()
-      productionQueue.currentUnit = null
-      productionQueue.currentBuilding = null
-      productionQueue.pausedUnit = false
-      productionQueue.pausedBuilding = false
-      productionQueue.unitPaid = 0
-      productionQueue.buildingPaid = 0
-    }
-
-    const pauseBtn = document.getElementById('pauseBtn')
-    const playPauseIcon = pauseBtn.querySelector('.play-pause-icon')
-    if (playPauseIcon) {
-      playPauseIcon.textContent = '⏸'
-    }
-
-    productionQueue.resumeProductionAfterUnpause()
+    this.resetMatchProgression()
 
     gameState.occupancyMap = initializeOccupancyMap(units, mapGrid, getTextureManager())
     updateDangerZoneMaps(gameState)
@@ -1761,10 +1742,6 @@ class Game {
     gameState.radarActive = false
     gameState.targetedOreTiles = {}
     gameState.refineryStatus = {}
-    gameState.availableUnitTypes = new Set([])
-    gameState.availableBuildingTypes = new Set(['constructionYard', 'oreRefinery', 'powerPlant', 'vehicleFactory', 'vehicleWorkshop', 'radarStation', 'hospital', 'helipad', 'gasStation', 'turretGunV1', 'concreteWall'])
-    gameState.newUnitTypes = new Set([])
-    gameState.newBuildingTypes = new Set([])
     gameState.defeatedPlayers = new Set()
     gameState.unitWrecks = []
     gameState.selectedWreckId = null
@@ -1827,29 +1804,7 @@ class Game {
     initializeShadowOfWar(gameState, mapGrid)
     updateShadowOfWar(gameState, units, mapGrid, factories)
 
-    if (typeof productionQueue !== 'undefined') {
-      productionQueue.unitItems.length = 0
-      productionQueue.buildingItems.length = 0
-      productionQueue.completedBuildings.length = 0
-      productionQueue.stackedPlacementActive = false
-      productionQueue.refreshReadyBuildingTab()
-      productionQueue.currentUnit = null
-      productionQueue.currentBuilding = null
-      productionQueue.pausedUnit = false
-      productionQueue.pausedBuilding = false
-      productionQueue.unitPaid = 0
-      productionQueue.buildingPaid = 0
-    }
-
-    try {
-      if (milestoneSystem) {
-        milestoneSystem.reset()
-      }
-    } catch (err) {
-      window.logger.warn('Could not reset milestone system:', err)
-    }
-
-    this.updateUIAfterReset()
+    this.resetMatchProgression()
     this.centerOnPlayerFactory()
     this.updateStatsDisplay()
 
@@ -1859,12 +1814,22 @@ class Game {
     window.logger('Game reset complete!')
   }
 
-  updateUIAfterReset() {
-    if (this.productionController) {
-      this.productionController.updateVehicleButtonStates()
-      this.productionController.updateBuildingButtonStates()
-      this.productionController.updateTabStates()
-    }
+  resetMatchProgression() {
+    productionQueue.restoreFromSerializableState(null)
+    milestoneSystem.reset()
+    gameState.availableUnitTypes.clear()
+    gameState.availableBuildingTypes = new Set(STARTING_BUILDING_TYPES)
+    gameState.newUnitTypes.clear()
+    gameState.newBuildingTypes.clear()
+
+    document.querySelectorAll('.production-button').forEach(button => {
+      button.classList.toggle('unlocked', gameState.availableBuildingTypes.has(button.dataset.buildingType))
+      const label = button.querySelector('.new-label')
+      if (label) label.style.display = 'none'
+    })
+
+    resetPerkState(getAutomationPerkMode())
+    this.productionController?.syncTechTreeWithBuildings()
 
     const pauseBtn = document.getElementById('pauseBtn')
     if (pauseBtn) {
@@ -1873,22 +1838,6 @@ class Game {
         playPauseIcon.textContent = '⏸'
       }
     }
-
-    document.querySelectorAll('.production-progress').forEach(bar => {
-      bar.style.width = '0%'
-    })
-
-    document.querySelectorAll('.batch-counter').forEach(counter => {
-      counter.style.display = 'none'
-    })
-
-    document.querySelectorAll('.ready-counter').forEach(counter => {
-      counter.style.display = 'none'
-    })
-
-    document.querySelectorAll('.production-button').forEach(button => {
-      button.classList.remove('active', 'paused', 'ready-for-placement')
-    })
   }
 
   updateStatsDisplay() {

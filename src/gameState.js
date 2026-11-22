@@ -2,6 +2,11 @@
 import { DEFAULT_MAP_TILES_X, DEFAULT_MAP_TILES_Y } from './config.js'
 import { normalizeDecorationSettings } from './game/decorationSettings.js'
 
+export const STARTING_BUILDING_TYPES = Object.freeze([
+  'constructionYard', 'oreRefinery', 'powerPlant', 'vehicleFactory', 'vehicleWorkshop',
+  'radarStation', 'hospital', 'helipad', 'gasStation', 'turretGunV1', 'street', 'concreteWall'
+])
+
 export const gameState = {
   money: 20000,
   startMoney: 20000,
@@ -297,7 +302,7 @@ export const gameState = {
 
   // Initially no units are available (require vehicle factory), only basic buildings
   availableUnitTypes: new Set([]),
-  availableBuildingTypes: new Set(['constructionYard', 'oreRefinery', 'powerPlant', 'vehicleFactory', 'vehicleWorkshop', 'radarStation', 'hospital', 'helipad', 'gasStation', 'turretGunV1', 'street', 'concreteWall']),
+  availableBuildingTypes: new Set(STARTING_BUILDING_TYPES),
   newUnitTypes: new Set(),
   newBuildingTypes: new Set(),
 
