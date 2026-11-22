@@ -55,6 +55,7 @@ test('[E00273] research cards update when the player buys a blueprint branch', a
   await page.getByRole('button', { name: 'Close perk tree' }).click()
   await expect(card).toBeVisible()
   await expect(card).not.toHaveClass(/disabled/)
+  await expect(page.locator('[data-building-type="aiCenter"]')).toBeVisible()
   await expect(card.locator('img')).toHaveAttribute('src', /drone_factory_sidebar\.webp$/)
   await expect(page.locator('[data-research-blueprint="rocketLaunchBase"]')).toBeHidden()
   await page.evaluate(() => {

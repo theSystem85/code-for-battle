@@ -148,5 +148,8 @@ export function getPerkStateHash() {
   for (let index = 0; index < text.length; index++) hash = Math.imul(hash ^ text.charCodeAt(index), 16777619) >>> 0
   return hash
 }
-setStarGrantListener(grantPerkStars)
+setStarGrantListener((entity, count) => {
+  const bonus = entity?.type !== 'harvester' && hasOperationalBuilding(gameState.buildings, 'aiCenter', entity?.owner) ? 1 : 0
+  grantPerkStars(entity, count + bonus)
+})
 setTurretVeterancyGate(ownerId => ownsPerk(ownerId, CAPSTONE_PERK_ID))

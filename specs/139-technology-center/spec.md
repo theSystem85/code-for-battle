@@ -19,7 +19,7 @@ This amendment defines the playable center and its blueprint perks. The older dr
 | Research | Stars | Unlocks |
 | --- | ---: | --- |
 | Research Program | 2 | The three research branches |
-| Autonomous Systems | 3 | [Drone Factory](../142-drone-factory.md), AI Center |
+| Autonomous Systems | 3 | [Drone Factory](../142-drone-factory.md), [AI Center](../143-ai-center.md) |
 | Orbital Engineering | 4 | Rocket Launch Base, Spaceship Factory |
 | Aerospace Engineering | 3 | Plane Factory |
 

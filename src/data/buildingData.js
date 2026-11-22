@@ -124,6 +124,19 @@ export const buildingData = {
     limit: 1,
     smokeSpots: []
   },
+  aiCenter: {
+    width: 3,
+    height: 3,
+    cost: 5500,
+    power: -130,
+    image: 'ai_center_map.webp',
+    displayName: 'AI Center',
+    health: 450,
+    armor: 2,
+    researchPerk: 'tc.autonomy',
+    limit: 1,
+    smokeSpots: []
+  },
   radarStation: {
     width: 2,
     height: 2,
