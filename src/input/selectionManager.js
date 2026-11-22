@@ -66,7 +66,7 @@ export class SelectionManager {
 
   // Determine if a unit can be selected based on configuration
   isSelectableUnit(unit) {
-    if (unit?.embarkedOnId || unit?.transportTransfer) return false
+    if (unit?.embarkedOnId || unit?.c5Drop || unit?.transportTransfer) return false
     if (unit?.type === 'submarine' && unit.depthState === 'submerged' && !this.isHumanPlayerUnit(unit)) return false
     if (this.isHumanPlayerUnit(unit)) {
       return unit.health > 0
@@ -79,7 +79,7 @@ export class SelectionManager {
 
   // Determine if a unit can receive commands
   isCommandableUnit(unit) {
-    if (unit?.transportOperation || unit?.transportTransfer || unit?.transportBoardingLocked) return false
+    if (unit?.embarkedOnId || unit?.c5Drop || unit?.c5Boarding?.loading || unit?.transportOperation || unit?.transportTransfer || unit?.transportBoardingLocked) return false
     return this.isHumanPlayerUnit(unit) || ENABLE_ENEMY_CONTROL
   }
 
@@ -396,7 +396,7 @@ export class SelectionManager {
     try {
       // Filter out any invalid or destroyed units
       const validSelectedUnits = selectedUnits.filter(unit =>
-        unit && typeof unit === 'object' && unit.health > 0)
+        unit && typeof unit === 'object' && unit.health > 0 && !unit.embarkedOnId && !unit.c5Drop)
 
       // If we found units to remove, update the array
       if (validSelectedUnits.length !== selectedUnits.length) {

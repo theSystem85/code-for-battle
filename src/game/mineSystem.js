@@ -177,7 +177,7 @@ function applyMineDamageToTile(tileX, tileY, damage, units, buildings) {
   if (damage <= 0) return
 
   units.forEach(unit => {
-    if (unit.factoryExit) return
+    if (unit.factoryExit || unit.embarkedOnId || unit.c5Drop) return
     const unitTileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
     const unitTileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
 
@@ -355,7 +355,7 @@ function applyMineDamageWithSweeperImmunity(tileX, tileY, damage, units, buildin
   if (damage <= 0) return
 
   units.forEach(unit => {
-    if (unit.factoryExit) return
+    if (unit.factoryExit || unit.embarkedOnId || unit.c5Drop) return
     const unitTileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
     const unitTileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
 

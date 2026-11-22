@@ -615,16 +615,16 @@ export function cleanupDestroyedUnits(units, gameState) {
         })
       }
 
-      if (unit.type === 'ammunitionTruck') {
+      if (unit.type === 'ammunitionTruck' && !unit.c5CargoDestroyed) {
         detonateAmmunitionTruck(unit, units, gameState.factories || [], gameState)
       }
 
-      if (unit.type === 'mineLayer') {
+      if (unit.type === 'mineLayer' && !unit.c5CargoDestroyed) {
         distributeMineLayerPayload(unit, units, gameState.buildings)
       }
 
       // Register a wreck so the destroyed unit leaves recoverable remnants
-      if (unit.type !== 'apache' && unit.type !== 'ammunitionTruck') {
+      if (unit.type !== 'apache' && (unit.type !== 'ammunitionTruck' || unit.c5CargoDestroyed)) {
         if (Number.isFinite(unit.frozenDestructionDirection)) {
           unit.direction = unit.frozenDestructionDirection
         }
@@ -634,7 +634,7 @@ export function cleanupDestroyedUnits(units, gameState) {
         registerUnitWreck(unit, gameState)
       }
 
-      if (unit.type === 'tankerTruck') {
+      if (unit.type === 'tankerTruck' && !unit.c5CargoDestroyed) {
         detonateTankerTruck(unit, units, gameState.factories || [], gameState)
       }
 

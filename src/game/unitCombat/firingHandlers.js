@@ -23,7 +23,7 @@ import {
   isTurretAimedAtTarget
 } from './combatHelpers.js'
 import { canF35ReleaseWeapons, computeF35BombReleasePoint } from '../f35Behavior.js'
-import { getAircraftAltitudeLift } from '../aircraftTargeting.js'
+import { getAircraftAltitudeLift, isAirborneCombatTarget, isAntiAirWeapon } from '../aircraftTargeting.js'
 
 /**
  * Common firing logic helper - handles bullet creation
@@ -66,14 +66,7 @@ export function handleTankFiring(unit, target, bullets, now, fireRate, targetCen
       : (clearShotOverride ?? hasClearShot(unit, target, units, mapGrid))
     const turretAimed = (unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35') ? true : isTurretAimedAtTarget(unit, target)
     if (unit.canFire !== false && clearShot && turretAimed) {
-      const targetIsAirborneApache = target && (target.type === 'apache' || target.type === 'f22Raptor' || target.type === 'f35') && target.flightState !== 'grounded'
-      const shooterCanHitAir =
-        unit.type === 'rocketTank' ||
-        unit.type === 'apache' ||
-        unit.type === 'f22Raptor' ||
-        unit.type === 'rocketTurret' ||
-        unit.type === 'destroyer'
-      if (targetIsAirborneApache && !shooterCanHitAir) {
+      if (target?.embarkedOnId || (isAirborneCombatTarget(target) && !isAntiAirWeapon(unit))) {
         return false
       }
       // Calculate aim position (with predictive aiming if enabled)

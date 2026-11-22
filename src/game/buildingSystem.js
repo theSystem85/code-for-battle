@@ -20,7 +20,7 @@ import { ROCKET_TURRET_IMAGE_COORDS_SIZE, ROCKET_TURRET_MUZZLE_OFFSETS } from '.
 import { spawnDestructionExplosion } from './spriteSheetEffects.js'
 import { createImpactVisual } from '../rendering/vfx/impactVfx.js'
 import { setBuildingDebrisDecals } from './tileDecals.js'
-import { getAircraftAltitudeLift } from './aircraftTargeting.js'
+import { getAircraftAltitudeLift, isAirborneCombatTarget } from './aircraftTargeting.js'
 import { teardownDefenceAutomation } from '../policies/defencePolicyEngine.js'
 import { defenceTargetById, prepareDefenceWorld } from '../policies/defenceSensors.js'
 import { DEFENCE_VETERANCY_TYPES } from './veterancy.js'
@@ -328,14 +328,12 @@ const updateDefensiveBuildings = logPerformance(function updateDefensiveBuilding
 
       if (!closestEnemy && action !== 'aimNearestEnemy' && action !== 'fireAtLocked' && action !== 'fireForward') {
         for (const unit of units) {
-          if (!unit.factoryExit && unit.owner !== building.owner && unit.health > 0) {
+          if (!unit.factoryExit && !unit.embarkedOnId && unit.owner !== building.owner && unit.health > 0) {
             if (isSubmergedSubmarineTarget(unit)) {
               continue
             }
             // Check if target is an airborne Apache - only certain buildings can target them
-            const targetIsAirborneApache =
-              (unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35') &&
-              unit.flightState !== 'grounded'
+            const targetIsAirborneApache = isAirborneCombatTarget(unit)
             const canTargetAir = building.type === 'rocketTurret'
 
             // Skip airborne Apache if this building can't target air units
@@ -360,8 +358,8 @@ const updateDefensiveBuildings = logPerformance(function updateDefensiveBuilding
         prepareDefenceWorld(defenceCombatWorld)
         const locked = defenceTargetById(intent.targetId)
         closestEnemy = null
-        if (locked && locked.health > 0 && locked.owner !== building.owner && !isSubmergedSubmarineTarget(locked)) {
-          const air = (locked.type === 'apache' || locked.type === 'f22Raptor' || locked.type === 'f35') && locked.flightState !== 'grounded'
+        if (locked && locked.health > 0 && locked.owner !== building.owner && !locked.embarkedOnId && !isSubmergedSubmarineTarget(locked)) {
+          const air = isAirborneCombatTarget(locked)
           const distance = Math.hypot(locked.x + TILE_SIZE / 2 - centerX, locked.y + TILE_SIZE / 2 - centerY)
           if ((!air || building.type === 'rocketTurret') && distance >= minRange && distance <= maxRange) closestEnemy = locked
         }

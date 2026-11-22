@@ -225,7 +225,7 @@ export class Renderer {
 
     ;(units || []).forEach(unit => {
       if (unit.factoryExit) { exitingUnits.push(unit); return }
-      if (isAirborneUnit(unit) || unit.carrierId || unit.carrierOperation?.carrierId) {
+      if (unit.c5Drop || isAirborneUnit(unit) || unit.carrierId || unit.carrierOperation?.carrierId) {
         airborneUnits.push(unit)
         return
       }

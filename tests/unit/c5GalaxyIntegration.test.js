@@ -1,6 +1,7 @@
+import { checkUnitCollision } from '../../src/game/bulletCollision.js'
 import { describe, expect, it } from 'vitest'
-import { embarkC5Vehicle } from '../../src/game/c5Cargo.js'
-import { startC5Mission, updateC5GalaxySystem } from '../../src/game/c5GalaxySystem.js'
+import { beginC5Airdrop, embarkC5Vehicle } from '../../src/game/c5Cargo.js'
+import { applyC5Order, startC5Mission, updateC5GalaxySystem } from '../../src/game/c5GalaxySystem.js'
 import { ensureAirstripOperations, setC5ParkingOccupant } from '../../src/utils/airstripUtils.js'
 
 describe('C-5 real simulation wiring', () => {
@@ -31,4 +32,45 @@ describe('C-5 real simulation wiring', () => {
     updateC5GalaxySystem(units, mapGrid, state, tick + 1)
     expect(cargo.health).toBe(0)
   })
+
+  it('[U07316] keeps released cargo descending after the aircraft is destroyed and only accepts anti-air hits in flight', () => {
+    const galaxy = { id: 'galaxy', type: 'c5Galaxy', owner: 'player1', health: 300, flightState: 'airborne',
+      altitude: 144, x: 320, y: 320, c5Mission: { phase: 'dropping' } }
+    const released = { id: 'first', type: 'tank_v1', owner: 'player1', health: 100, weight: 42 }
+    const aboard = { id: 'second', type: 'tank-v2', owner: 'player1', health: 150, weight: 60 }
+    const units = [galaxy, released, aboard]
+    const mapGrid = Array.from({ length: 20 }, () => Array.from({ length: 20 }, () => ({ type: 'land' })))
+    const state = { mapGrid, occupancyMap: mapGrid.map(row => row.map(() => 0)) }
+    embarkC5Vehicle(galaxy, released, units)
+    embarkC5Vehicle(galaxy, aboard, units)
+    beginC5Airdrop(galaxy, { x: 10, y: 10 }, 1)
+
+    updateC5GalaxySystem(units, mapGrid, state, 1)
+    const bullet = { x: released.x + 16, y: released.y + 16 - released.altitude * 0.4 }
+    expect(checkUnitCollision({ ...bullet, shooter: { owner: 'player2', type: 'turretGunV1' } }, released)).toBe(false)
+    expect(checkUnitCollision({ ...bullet, shooter: { owner: 'player2', type: 'rocketTurret' } }, released)).toBe(true)
+    expect(released.c5Drop).toMatchObject({ landTick: 91 })
+    expect(aboard.embarkedOnId).toBe(galaxy.id)
+
+    galaxy.health = 0
+    updateC5GalaxySystem(units, mapGrid, state, 2)
+    expect(aboard).toMatchObject({ health: 0, hidden: false, embarkedOnId: null, c5CargoDestroyed: true })
+    expect(released.c5Drop).not.toBeNull()
+    units.splice(0, 1)
+    updateC5GalaxySystem(units, mapGrid, state, 91)
+    expect(released).toMatchObject({ health: 100, tileX: 10, tileY: 10, c5Drop: null, altitude: 0 })
+  })
+
+  it('[U07317] rejects a water target and orders from another player', () => {
+    const galaxy = { id: 'galaxy', type: 'c5Galaxy', owner: 'player1', health: 300, flightState: 'grounded',
+      x: 0, y: 0, embarkedUnitIds: ['cargo'] }
+    const mapGrid = [[{ type: 'land' }, { type: 'water' }, { type: 'land' }]]
+    const state = { mapGrid }
+    const units = [galaxy]
+    expect(applyC5Order('airdrop', { galaxyId: galaxy.id, target: { x: 1, y: 0 } }, 'player1', units, state)).toBe(false)
+    expect(applyC5Order('airdrop', { galaxyId: galaxy.id, target: { x: 2, y: 0 } }, 'player2', units, state)).toBe(false)
+    expect(applyC5Order('airdrop', { galaxyId: galaxy.id, target: { x: 2, y: 0 } }, 'player1', units, state)).toBe(true)
+    expect(galaxy.c5Mission.target).toEqual({ x: 2, y: 0 })
+  })
+
 })

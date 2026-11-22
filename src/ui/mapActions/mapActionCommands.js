@@ -1,3 +1,5 @@
+import { applyC5Order } from '../../game/c5GalaxySystem.js'
+import { gameState } from '../../gameState.js'
 import { applyUnitAction } from './unitActions.js'
 import { withoutUnitCommandBroadcast } from '../../network/commandBroadcastScope.js'
 import { TILE_SIZE } from '../../config.js'
@@ -28,6 +30,8 @@ export function mapActionOptions(selection, owner) {
   const options = []
   if (entities.some(entity => entity.isBuilding || MAP_COMBAT_TYPES.has(entity.type))) options.push('forceAttackAt')
   if (units) options.push('defendHoldAt')
+  if (entities.some(entity => entity.type === 'c5Galaxy' && !entity.c5Mission && entity.embarkedUnitIds?.length)) options.push('c5Airdrop')
+  if (entities.some(entity => entity.type === 'c5Galaxy' && entity.flightState === 'grounded')) options.push('c5Unload')
   if (applicableAutomations(entities, owner).length) options.push('applyAutomationOnArrival')
   if (defence) options.push('holdFire', 'clearTarget')
   return options
@@ -39,13 +43,24 @@ export function applyMapAction(payload, owner, context) {
   if (typeof action === 'string' && action.endsWith('Unit') && Array.isArray(entityIds)) {
     return withoutUnitCommandBroadcast(() => applyUnitAction(payload, owner, context))
   }
-  if (!['forceAttackAt', 'defendHoldAt', 'applyAutomationOnArrival', 'holdFire', 'clearTarget'].includes(action) ||
+  if (!['forceAttackAt', 'defendHoldAt', 'applyAutomationOnArrival', 'holdFire', 'clearTarget', 'c5Airdrop', 'c5Unload'].includes(action) ||
     !Number.isFinite(x) || !Number.isFinite(y) || !Array.isArray(entityIds)) return false
   const grid = context.mapGrid
   if (x < 0 || y < 0 || x >= (grid?.[0]?.length || 0) * TILE_SIZE || y >= (grid?.length || 0) * TILE_SIZE) return false
   const ids = new Set(entityIds)
   const entities = commandableSelection([...context.units, ...(context.buildings || [])].filter(entity => ids.has(entity.id)), owner)
   if (!entities.length) return false
+  if (action === 'c5Airdrop' || action === 'c5Unload') {
+    const target = { x: Math.floor(x / TILE_SIZE), y: Math.floor(y / TILE_SIZE) }
+    const order = action === 'c5Airdrop' ? 'airdrop' : 'unload'
+    let accepted = false
+    for (const entity of entities) {
+      if (entity.type === 'c5Galaxy' && applyC5Order(order, { galaxyId: entity.id, target }, owner, context.units, {
+        ...gameState, mapGrid: grid, occupancyMap: context.occupancyMap ?? gameState.occupancyMap, buildings: context.buildings
+      })) accepted = true
+    }
+    return accepted
+  }
   if (action === 'applyAutomationOnArrival' && !applicableAutomations(entities, owner).some(entry => entry.policy.id === policyId)) return false
   const target = action === 'forceAttackAt' ? {
     id: `ground_${Math.floor(x / TILE_SIZE)}_${Math.floor(y / TILE_SIZE)}`, type: 'groundTarget',

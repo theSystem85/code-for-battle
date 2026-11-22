@@ -70,7 +70,7 @@ export const updateUnitMovement = logPerformance(function updateUnitMovement(uni
       continue
     }
 
-    if (unit.factoryExit) continue
+    if (unit.factoryExit || unit.type === 'c5Galaxy' || unit.c5Drop || unit.c5Boarding?.loading) continue
     if (unit.embarkedOnId || unit.carrierOperation || unit.transportOperation || unit.transportTransfer || unit.transportBoardingLocked) {
       initializeUnitMovement(unit)
       unit.movement.velocity = { x: 0, y: 0 }

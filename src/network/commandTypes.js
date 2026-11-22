@@ -16,6 +16,7 @@ export const COMMAND_TYPES = {
   C5_LOAD: 'c5-load',
   C5_UNLOAD: 'c5-unload',
   C5_AIRDROP: 'c5-airdrop',
+  C5_MOVE: 'c5-move',
   BUILDING_PLACE: 'building-place',
   BUILDING_SELL: 'building-sell',
   BUILDING_DAMAGE: 'building-damage',

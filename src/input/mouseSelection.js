@@ -354,7 +354,7 @@ export function updateEnemyHover(handler, worldX, worldY, units, factories, sele
     if (!isOverEnemy && !isOverFriendlyUnit) {
       const humanPlayer = gameState.humanPlayer || 'player1'
       for (const unit of units) {
-        if (unit.factoryExit || unit.embarkedOnId || (unit.type === 'submarine' && unit.depthState !== 'surfaced')) continue
+        if (unit.factoryExit || unit.embarkedOnId || unit.c5Drop || (unit.type === 'submarine' && unit.depthState !== 'surfaced')) continue
         if (unit.owner !== humanPlayer && !(humanPlayer === 'player1' && unit.owner === 'player')) {
           if (unitContainsPoint(unit, worldX, worldY)) {
             isOverEnemy = true
@@ -1230,6 +1230,8 @@ function handleUnitSelection(handler, worldX, worldY, e, units, factories, selec
       : findSelectableUnitAt(units, worldX, worldY, selectionManager, isStrikeJet)
 
     if (overlappingAirUnit) {
+      if (overlappingAirUnit.type === 'c5Galaxy' &&
+        tryHandleDirectFleetInteraction(selectedUnits, worldX, worldY, units, mapGrid, selectionManager)) return
       selectPickedUnit(handler, overlappingAirUnit, e, units, factories, selectedUnits, selectionManager)
       return
     }

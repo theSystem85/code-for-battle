@@ -6,7 +6,8 @@ import { gameState } from '../../gameState.js'
 import { findPathForOwner } from '../../units.js'
 import { cancelRetreatForUnits } from '../../behaviours/retreat.js'
 import { clearTankerKamikazeState } from '../../game/tankerTruckUtils.js'
-import { broadcastUnitMove } from '../../network/gameCommandSync.js'
+import { broadcastUnitMove, dispatchC5Command } from '../../network/gameCommandSync.js'
+import { COMMAND_TYPES } from '../../network/commandTypes.js'
 import { resetUnitVelocityForNewPath } from '../../game/unifiedMovement.js'
 import { clearAttackGroupState, cancelRecoveryTask } from './utilityQueue.js'
 import { hasBlockingBuilding } from '../../utils/buildingPassability.js'
@@ -123,6 +124,11 @@ export function handleMovementCommand(handler, selectedUnits, targetX, targetY, 
           break
         }
       }
+    }
+
+    if (unit.type === 'c5Galaxy') {
+      dispatchC5Command(COMMAND_TYPES.C5_MOVE, { galaxyId: unit.id, target: destTile }, gameState.units, mapGrid)
+      return
     }
 
     const gasDepleted = typeof unit.maxGas === 'number' && unit.gas <= 0

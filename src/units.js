@@ -1,3 +1,4 @@
+import { changeC5GroundOccupancy } from './game/c5Cargo.js'
 import { beginFactoryExit } from './game/factoryExit.js'
 // units.js
 import {
@@ -54,7 +55,8 @@ import {
   ensureAirstripOperations,
   claimAirstripParkingSlot,
   setAirstripSlotOccupant,
-  reserveC5ParkingSlots,
+  canReserveC5ParkingSlots,
+  getC5ParkingPosition,
   setC5ParkingOccupant,
   getAirstripRunwayPoints
 } from './utils/airstripUtils.js'
@@ -144,7 +146,12 @@ export function buildOccupancyMap(units, mapGrid, textureManager = null) {
   }
 
   safeUnits.forEach(unit => {
-    if (unit.factoryExit || (unit.isAirUnit && unit.flightState !== 'grounded') || unit.isNaval) {
+    if (unit.type === 'c5Galaxy') {
+      if (unit.health > 0 && (unit.flightState === 'grounded' || unit.c5GroundOccupancy)) changeC5GroundOccupancy(unit, occupancy, 1)
+      return
+    }
+    if (unit.factoryExit || unit.embarkedOnId || unit.c5Drop || unit.c5Boarding?.loading ||
+      (unit.isAirUnit && unit.flightState !== 'grounded') || unit.isNaval) {
       return
     }
     const tileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
@@ -885,16 +892,17 @@ export function spawnUnit(factory, type, units, mapGrid, rallyPointTarget = null
     gameState.nextAirstripSpawnPointIndex = gameState.nextAirstripSpawnPointIndex ?? 0
     const preferredSlot = gameState.nextAirstripSpawnPointIndex % factory.f22ParkingSpots.length
     let slotIndex = type === 'c5Galaxy'
-      ? ([0, 1, 2].every(index => !factory.f22OccupiedSlotUnitIds[index] && !factory.f22ReservedSlotUnitIds[index]) ? 0 : null)
+      ? (canReserveC5ParkingSlots(factory) ? 1 : null)
       : claimAirstripParkingSlot(factory, preferredSlot)
     if (type === 'c5Galaxy' && slotIndex === null) return null
     if (slotIndex < 0) {
+      if (factory.f22ReservedSlotUnitIds[0] && factory.f22ReservedSlotUnitIds[0] === factory.f22ReservedSlotUnitIds[1]) return null
       slotIndex = preferredSlot
     }
     gameState.nextAirstripSpawnPointIndex = (slotIndex + 1) % factory.f22ParkingSpots.length
     const slot = factory.f22ParkingSpots[slotIndex]
     spawnPosition = { x: slot.x, y: slot.y }
-    worldPositionOverride = { x: slot.worldX, y: slot.worldY }
+    worldPositionOverride = type === 'c5Galaxy' ? getC5ParkingPosition(factory) : { x: slot.worldX, y: slot.worldY }
     options.airstripParkingSlotIndex = slotIndex
     options.airstripId = getBuildingIdentifier(factory)
   } else if (isShipyardNavalUnit) {
@@ -1001,8 +1009,8 @@ export function spawnUnit(factory, type, units, mapGrid, rallyPointTarget = null
     ensureAirstripOperations(factory)
     const parkingSlotIndex = Number.isInteger(options.airstripParkingSlotIndex) ? options.airstripParkingSlotIndex : 0
     if (newUnit.type === 'c5Galaxy') {
-      reserveC5ParkingSlots(factory, newUnit.id)
       setC5ParkingOccupant(factory, newUnit.id)
+      changeC5GroundOccupancy(newUnit, occupancyMap, 1)
     } else setAirstripSlotOccupant(factory, parkingSlotIndex, newUnit.id)
     const runwayPoints = getAirstripRunwayPoints(factory)
 
@@ -1634,7 +1642,7 @@ export function resolveUnitCollisions(units, mapGrid) {
 
   for (let i = 0, len = units.length; i < len; i++) {
     const unit1 = units[i]
-    if (!unit1 || unit1.factoryExit || unit1.health <= 0) continue
+    if (!unit1 || unit1.type === 'c5Galaxy' || unit1.factoryExit || unit1.health <= 0 || unit1.embarkedOnId || unit1.c5Drop || unit1.c5Boarding?.loading) continue
     if (unit1.isAirUnit && unit1.flightState !== 'grounded') continue // Skip airborne units (e.g. F22 in flight)
     if (unit1.path && unit1.path.length > 0) continue // Skip moving units
 
@@ -1651,7 +1659,7 @@ export function resolveUnitCollisions(units, mapGrid) {
 
     for (let j = 0, jlen = nearbyUnits.length; j < jlen; j++) {
       const unit2 = nearbyUnits[j]
-      if (unit2.factoryExit) continue
+      if (unit2.factoryExit || unit2.type === 'c5Galaxy' || unit2.c5Drop || unit2.c5Boarding?.loading) continue
       if (unit2.path && unit2.path.length > 0) continue // Skip moving units
 
       // Create a consistent pair key to avoid processing the same pair twice

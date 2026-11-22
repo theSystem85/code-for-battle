@@ -1275,7 +1275,7 @@ export const UNIT_COSTS = {
   recoveryTank: 3000,
   apache: 3000,
   f22Raptor: 6000,
-  c5Galaxy: 6000,
+  c5Galaxy: 4000,
   f35: 3000,
   howitzer: HOWITZER_COST,
   mineLayer: 1000,
@@ -1444,7 +1444,7 @@ export const UNIT_PROPERTIES = {
   },
   c5Galaxy: {
     weight: 172, airliftable: false, isAirUnit: true, health: 300, maxHealth: 300, speed: 2.2,
-    rotationSpeed: 0.035, turretRotationSpeed: 0, accelerationMultiplier: 0.55, armor: 1, footprintTiles: 3, renderScale: 3.5
+    rotationSpeed: 0.035, turretRotationSpeed: 0, accelerationMultiplier: 0.55, armor: 2, footprintTiles: 3, renderScale: 3.5
   },
   howitzer: {
     weight: 32,
@@ -2083,6 +2083,7 @@ export const UNIT_GAS_PROPERTIES = {
   apache: { tankSize: 5200, consumption: 120 },
   f22Raptor: { tankSize: 8000, consumption: 200 },
   f35: { tankSize: 8000, consumption: 180 },
+  c5Galaxy: { tankSize: 800, consumption: 1 },
   mineLayer: { tankSize: 700, consumption: 150 },
   mineSweeper: { tankSize: 1900, consumption: 450 },
   destroyer: { tankSize: 6000, consumption: 220 },

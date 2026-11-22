@@ -1,3 +1,4 @@
+import { isAntiAirWeapon } from './game/aircraftTargeting.js'
 import { igniteFromProjectile } from './game/fireSystem.js'
 import { getCityBuildings, applyCityDamage } from './game/cityBuildings.js'
 // logic.js
@@ -119,11 +120,13 @@ export function triggerExplosion(
 
   // Apply damage to nearby units
   units.forEach(unit => {
-    if (unit.factoryExit) return
+    if (unit.factoryExit || unit.embarkedOnId) return
     if (unit.type === 'submarine' && unit.depthState !== 'surfaced' && !allowSubmergedDamage) return
     const isAirUnit = unit.isAirUnit || unit.type === 'apache' || unit.type === 'f35'
     const airborneStates = ['takeoff', 'airborne', 'landing']
-    const isAirborne = isAirUnit && airborneStates.includes(unit.flightState)
+    const isC5Airborne = unit.c5Drop || (unit.type === 'c5Galaxy' && unit.altitude > 0)
+    if (isC5Airborne && (!allowAirborneDamage || !isAntiAirWeapon(shooter))) return
+    const isAirborne = isC5Airborne || (isAirUnit && airborneStates.includes(unit.flightState))
     const unitCenterX = unit.x + TILE_SIZE / 2
     const unitCenterY = unit.y + TILE_SIZE / 2
     const airborneVisualOffsetY = isAirborne ? (unit.altitude || 0) * 0.4 : 0

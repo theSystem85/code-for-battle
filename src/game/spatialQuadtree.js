@@ -266,7 +266,7 @@ export class SpatialQuadtree {
       unit._cy = unit.y + halfTile
 
       // Categorize by flight state
-      const isAirborne = unit.isAirUnit && unit.flightState !== 'grounded'
+      const isAirborne = unit.c5Drop || (unit.isAirUnit && unit.flightState !== 'grounded')
 
       if (isAirborne) {
         this.airTree.insert(unit)

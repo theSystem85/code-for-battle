@@ -252,7 +252,7 @@ export function updateFireSystem(units, state, grid, delta, findPath, random = g
   if (!fires?.length) return
   // One bounded lookup per occupied tile and four neighbours per unit per tick.
   for (const unit of units) {
-    if (!unit || unit.health <= 0 || unit.embarkedOnId || (unit.isAirUnit && unit.altitude > 0)) continue
+    if (!unit || unit.health <= 0 || unit.embarkedOnId || unit.c5Drop || (unit.isAirUnit && unit.altitude > 0)) continue
     const x = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
     const y = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
     const ownFire = grid?.[y]?.[x]?.fire

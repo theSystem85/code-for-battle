@@ -554,6 +554,36 @@ describe('saveGame.js', () => {
       expect(state.units[0].factoryExit).toEqual(units[0].factoryExit)
     })
 
+    it('[U07318] restores the Galaxy manifest, current mission and an independent cargo descent', async() => {
+      const { units, factories } = await import('../../src/main.js')
+      const { gameState } = await import('../../src/gameState.js')
+      const yard = { id: 'player1', type: 'constructionYard', owner: 'player1', isBuilding: true,
+        x: 0, y: 0, width: 2, height: 2, health: 350, maxHealth: 350 }
+      const airstrip = { id: 'airstrip', type: 'airstrip', owner: 'player1', isBuilding: true,
+        x: 2, y: 2, width: 4, height: 2, health: 500, maxHealth: 500 }
+      factories.push(yard)
+      gameState.buildings = [yard, airstrip]
+      const c5Mission = { phase: 'dropping', target: { x: 6, y: 6 }, startedTick: 2 }
+      const c5Drop = { tile: { x: 6, y: 6 }, target: { x: 6, y: 6 }, startTick: 44, landTick: 134, altitude: 144, windX: 1, windY: 0 }
+      const unit = { owner: 'player1', x: 192, y: 192, tileX: 6, tileY: 6, health: 100, maxHealth: 100, path: [] }
+      units.push(
+        { ...unit, id: 'galaxy', type: 'c5Galaxy', health: 300, maxHealth: 300, altitude: 144,
+          homeAirstripId: airstrip.id, flightState: 'airborne', c5Mission, cargoWeight: 42,
+          embarkedUnitIds: ['aboard'], embarkedUnitTypes: ['tank_v1'],
+          dropQueueState: { target: c5Mission.target, queuedUnitIds: ['aboard'], nextDropTick: 74 } },
+        { ...unit, id: 'aboard', type: 'tank_v1', weight: 42, embarkedOnId: 'galaxy' },
+        { ...unit, id: 'released', type: 'tank_v1', weight: 42, altitude: 120, c5Drop }
+      )
+      saveGameModule.saveGame('GalaxyRoundTrip')
+      expect(saveGameModule.loadGame('rts_save_GalaxyRoundTrip')).toBe(true)
+      expect(units.find(unit => unit.id === 'galaxy')).toMatchObject({
+        c5Mission, embarkedUnitIds: ['aboard'], cargoWeight: 42, dropQueueState: { nextDropTick: 74 }
+      })
+      expect(units.find(unit => unit.id === 'aboard')).toMatchObject({ weight: 42, embarkedOnId: 'galaxy' })
+      expect(units.find(unit => unit.id === 'released')).toMatchObject({ altitude: 120, c5Drop })
+      expect(gameState.buildings.find(building => building.id === airstrip.id).f22ReservedSlotUnitIds.slice(0, 3)).toEqual(['galaxy', 'galaxy', 'galaxy'])
+    })
+
     it('[U07033] round trips Follow target references without serializing circular unit objects', async() => {
       const { units, factories } = await import('../../src/main.js')
       const { gameState } = await import('../../src/gameState.js')

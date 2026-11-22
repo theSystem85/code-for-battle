@@ -1,3 +1,5 @@
+import { renderC5Airdrop } from './c5AirdropRenderer.js'
+import { C5_MAX_PAYLOAD_TONS } from '../config.js'
 import { drawPreparedSpriteCentered, getPreparedSprite } from './prepared/preparedSpritePipeline.js'
 // rendering/unitRenderer.js
 import { TILE_SIZE, HARVESTER_CAPPACITY, HARVESTER_UNLOAD_TIME, RECOIL_DISTANCE, RECOIL_DURATION, MUZZLE_FLASH_DURATION, MUZZLE_FLASH_SIZE, TANK_FIRE_RANGE, ATTACK_TARGET_INDICATOR_SIZE, ATTACK_TARGET_BOUNCE_SPEED, UNIT_TYPE_COLORS, PARTY_COLORS, TANKER_SUPPLY_CAPACITY, UTILITY_SERVICE_INDICATOR_SIZE, UTILITY_SERVICE_INDICATOR_BOUNCE_SPEED, SERVICE_DISCOVERY_RANGE, SERVICE_SERVING_RANGE, AMMO_TRUCK_RANGE, MINE_DEPLOY_STOP_TIME, VIEW_FRUSTUM_MARGIN, CURSOR_METERS_PER_TILE, BATTLESHIP_FIRE_RANGE, SUBMARINE_TORPEDO_RANGE, UNIT_SHADOWS_ENABLED, UNIT_SHADOW_OFFSET, UNIT_SHADOW_DIRECTION, UNIT_SHADOW_START_STRETCH, UNIT_SHADOW_END_STRETCH, UNIT_SHADOW_SIZE, UNIT_SHADOW_OPACITY, UNIT_SHADOW_BLUR, FIRE_WATER_CAPACITY } from '../config.js'
@@ -428,7 +430,7 @@ export class UnitRenderer {
 
   hasHudBottomProgressBar(unit) {
     if (!unit.selected) return false
-    if (unit.type === 'hovercraft' || unit.type === 'vehicleFerry') return true
+    if (unit.type === 'hovercraft' || unit.type === 'vehicleFerry' || unit.type === 'c5Galaxy') return true
     if (unit.type === 'harvester') return (Number.isFinite(unit.level) ? unit.level : 0) < 3
     if (unit.type === 'ambulance' || unit.type === 'tankerTruck' || unit.type === 'ammunitionTruck' || unit.type === 'supplyShip') return true
     if (unit.type === 'mineLayer') return Boolean(unit.deployingMine && unit.deployStartTime)
@@ -509,8 +511,10 @@ export class UnitRenderer {
           .sort(([typeA], [typeB]) => typeA.localeCompare(typeB))
           .map(([type, count]) => `${count}× ${type.replaceAll('_', '-')}`)
           .join('\n')
-        const loaded = unit.embarkedUnitIds?.length || cargoTypes.length
-        return `loaded ${loaded}/${unit.transportCapacity || 0}${manifest ? `\n${manifest}` : '\nempty'}`
+        const amount = unit.type === 'c5Galaxy'
+          ? `${unit.cargoWeight || 0} / ${C5_MAX_PAYLOAD_TONS} t`
+          : `${unit.embarkedUnitIds?.length || cargoTypes.length}/${unit.transportCapacity || 0}`
+        return `loaded ${amount}${manifest ? `\n${manifest}` : '\nempty'}`
       }
       default:
         return label
@@ -554,7 +558,7 @@ export class UnitRenderer {
       angle <= Math.PI - crewHalfSpanAngle
     ) {
       if (unit.type === 'supplyShip') return 'supply'
-      if (unit.type === 'hovercraft' || unit.type === 'vehicleFerry') return 'cargo'
+      if (unit.type === 'hovercraft' || unit.type === 'vehicleFerry' || unit.type === 'c5Galaxy') return 'cargo'
       return 'experience'
     }
     return null
@@ -690,7 +694,7 @@ export class UnitRenderer {
       }
       if (hasBottomProgress && this.isPointInRect(mouseScreenX, mouseScreenY, this.getLegacyProgressBarRect(unit, scrollOffset))) {
         if (unit.type === 'supplyShip') return 'supply'
-        return unit.type === 'hovercraft' || unit.type === 'vehicleFerry' ? 'cargo' : 'experience'
+        return unit.type === 'hovercraft' || unit.type === 'vehicleFerry' || unit.type === 'c5Galaxy' ? 'cargo' : 'experience'
       }
     } else {
       if (this.isPointInRect(mouseScreenX, mouseScreenY, this.getHudBarRect(hudBounds, 'top'))) return 'health'
@@ -698,7 +702,7 @@ export class UnitRenderer {
       if (canShowAmmo && this.isPointInRect(mouseScreenX, mouseScreenY, this.getHudBarRect(hudBounds, 'left'))) return 'ammo'
       if (hasBottomProgress && this.isPointInRect(mouseScreenX, mouseScreenY, this.getHudBarRect(hudBounds, 'bottom'))) {
         if (unit.type === 'supplyShip') return 'supply'
-        return unit.type === 'hovercraft' || unit.type === 'vehicleFerry' ? 'cargo' : 'experience'
+        return unit.type === 'hovercraft' || unit.type === 'vehicleFerry' || unit.type === 'c5Galaxy' ? 'cargo' : 'experience'
       }
     }
 
@@ -1128,9 +1132,11 @@ export class UnitRenderer {
       shouldShowBar = true
       progress = 1
       barColor = '#FFFFFF'
-    } else if (unit.type === 'hovercraft' || unit.type === 'vehicleFerry') {
+    } else if (unit.type === 'hovercraft' || unit.type === 'vehicleFerry' || unit.type === 'c5Galaxy') {
       shouldShowBar = true
-      progress = (unit.embarkedUnitIds?.length || 0) / Math.max(1, unit.transportCapacity || 1)
+      progress = unit.type === 'c5Galaxy'
+        ? (unit.cargoWeight || 0) / C5_MAX_PAYLOAD_TONS
+        : (unit.embarkedUnitIds?.length || 0) / Math.max(1, unit.transportCapacity || 1)
       barColor = '#66D9FF'
     } else if (unit.type === 'mineLayer') {
       // Mine Layer - show deployment progress when deploying
@@ -1864,7 +1870,11 @@ export class UnitRenderer {
     if (!alreadyVisible && !this.shouldRenderUnit(unit, scrollOffset, viewportWidth, viewportHeight)) return
 
     const centerX = unit.x + TILE_SIZE / 2 - scrollOffset.x
-    const centerY = unit.y + TILE_SIZE / 2 - scrollOffset.y
+    let centerY = unit.y + TILE_SIZE / 2 - scrollOffset.y
+    if (unit.c5Drop) {
+      centerY -= (unit.altitude || 0) * 0.4
+      renderC5Airdrop(ctx, unit, centerX, centerY)
+    }
 
     // Check if this is a tank type and if image rendering is enabled
     const isTank = ['tank_v1', 'tank-v2', 'tank-v3', 'tank_v2', 'tank_v3', 'lightTank'].includes(unit.type)
