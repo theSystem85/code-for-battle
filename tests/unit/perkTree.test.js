@@ -3,6 +3,10 @@ import { gameState } from '../../src/gameState.js'
 import { applyPerkPurchase, grantPerkStars, resetPerkState } from '../../src/perks/perkState.js'
 import { closePerkTree, openPerkTree } from '../../src/ui/perks/perkTree.js'
 
+function dispatchPointer(node, type, pointerType = 'mouse') {
+  node.dispatchEvent(new window.PointerEvent(type, { bubbles: true, pointerId: 1, button: 0, isPrimary: true, pointerType }))
+}
+
 describe('perk tree overlay', () => {
   beforeEach(() => {
     document.body.innerHTML = '<button id="outside">outside</button>'
@@ -11,7 +15,7 @@ describe('perk tree overlay', () => {
     resetPerkState(); grantPerkStars({ owner: 'player1' }, 10)
     vi.spyOn(window, 'scrollTo').mockImplementation(() => {})
   })
-  afterEach(() => { closePerkTree(); vi.restoreAllMocks() })
+  afterEach(() => { closePerkTree(); vi.useRealTimers(); vi.restoreAllMocks() })
   it('[U07291] renders every catalog node, ledger and purchasable state, and pauses single player', () => {
     openPerkTree()
     expect(document.querySelectorAll('.perk-node')).toHaveLength(35)
@@ -28,30 +32,57 @@ describe('perk tree overlay', () => {
   it('[U07293] renders view-only state without a living Command Center', () => {
     gameState.buildings = []; openPerkTree()
     expect(document.querySelector('.perk-tree__cc-state').textContent).toContain('View only')
-    expect(document.querySelector('[data-perk-id="cc.base.start"]')?.classList.contains('is-no-command-center')).toBe(true)
+    const node = document.querySelector('[data-perk-id="cc.base.start"]')
+    expect(node.classList.contains('is-no-command-center')).toBe(true)
+    node.click()
+    expect(node.querySelector('.perk-tooltip__hold').textContent).toBe('Hold for 2s to unlock!')
+    expect(node.querySelector('.perk-tooltip__state').textContent).toContain('Rebuild the Command Center')
+    dispatchPointer(node, 'pointerdown')
+    expect(node.classList.contains('is-holding')).toBe(false)
   })
   it('[U07304] opens tooltips by pointer-compatible click and closes the previous node', () => {
     openPerkTree()
     const first = document.querySelector('[data-perk-id="cc.base.start"]')
     const second = document.querySelector('[data-perk-id="cc.prod.start"]')
     first.click(); expect(first.classList.contains('show-tooltip')).toBe(true)
+    expect(first.querySelector('.perk-tooltip__hold').textContent).toBe('Hold for 2s to unlock!')
     second.click(); expect(first.classList.contains('show-tooltip')).toBe(false)
     expect(second.classList.contains('show-tooltip')).toBe(true)
   })
-  it('[U07305] requires two clicks and purchases exactly once', () => {
+  it('[U07305] resets an early mouse release and purchases only after a fresh two-second hold', () => {
+    vi.useFakeTimers()
     openPerkTree()
-    const node = document.querySelector('[data-perk-id="cc.base.start"]')
-    node.click(); const buy = node.querySelector('.perk-buy')
-    buy.click(); expect(document.querySelector('[data-perk-id="cc.base.start"]').classList.contains('is-owned')).toBe(false)
-    buy.click(); expect(document.querySelector('[data-perk-id="cc.base.start"]').classList.contains('is-owned')).toBe(true)
+    const findNode = () => document.querySelector('[data-perk-id="cc.base.start"]')
+    const node = findNode()
+    dispatchPointer(node, 'pointerdown')
+    expect(node.classList.contains('is-holding')).toBe(true)
+    vi.advanceTimersByTime(1500)
+    dispatchPointer(node, 'pointerup')
+    expect(node.classList.contains('is-holding')).toBe(false)
+    vi.advanceTimersByTime(500)
+    expect(findNode()).toBe(node)
+    dispatchPointer(node, 'pointerdown')
+    vi.advanceTimersByTime(1999)
+    expect(findNode()).toBe(node)
+    vi.advanceTimersByTime(1)
+    expect(findNode().classList.contains('is-owned')).toBe(true)
+    vi.advanceTimersByTime(2000)
     expect(document.querySelector('.perk-ledger').textContent).toContain('8 available')
   })
-  it('[U07302] uses eight live SVG merge lanes and an inline purchase confirmation', () => {
+  it('[U07302] keeps the eight live SVG merge lanes and cancels interrupted touch holds', () => {
+    vi.useFakeTimers()
     openPerkTree()
     expect(document.querySelectorAll('.perk-capstone__merge path')).toHaveLength(8)
-    const buy = document.querySelector('[data-perk-id="cc.base.start"] .perk-buy')
-    buy.click()
-    expect(buy.textContent).toContain('Unlock Base Planner for 2★? 10★ → 8★')
-    expect(document.querySelector('[data-perk-id="cc.base.start"]')?.classList.contains('is-owned')).toBe(false)
+    const node = document.querySelector('[data-perk-id="cc.base.start"]')
+    dispatchPointer(node, 'pointerdown', 'touch')
+    expect(node.classList.contains('is-holding')).toBe(true)
+    dispatchPointer(node, 'pointercancel', 'touch')
+    expect(node.classList.contains('is-holding')).toBe(false)
+    vi.advanceTimersByTime(2000)
+    dispatchPointer(node, 'pointerdown', 'touch')
+    closePerkTree()
+    vi.advanceTimersByTime(2000)
+    openPerkTree()
+    expect(document.querySelector('[data-perk-id="cc.base.start"]').classList.contains('is-owned')).toBe(false)
   })
 })

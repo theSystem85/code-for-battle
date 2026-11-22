@@ -14,11 +14,73 @@ let cleanupPan = null
 let unsubscribe = null
 let pauseWasRunning = false
 let openTooltip = null
-let confirmTimer = null
+let activeHold = null
+
+const HOLD_DURATION_MS = 2000
+const HOLD_HINT = 'Hold for 2s to unlock!'
 
 const owner = () => gameState.humanPlayer || 'player1'
 const star = (gold = true) => `<svg class="perk-star${gold ? '' : ' is-dim'}" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2.5 2.8 5.7 6.3.9-4.6 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2-4.6-4.4 6.3-.9z"/></svg>`
 const reasonText = { noResearchCenter: 'Build a Technology Research Center to purchase.', noCommandCenter: 'Rebuild the Command Center to purchase.', missingPrerequisite: 'Complete the previous perk in this lane.', insufficientStars: 'Earn more stars with unit veterancy.', owned: 'Owned' }
+
+function cancelHold() {
+  if (!activeHold) return
+  clearTimeout(activeHold.timer)
+  activeHold.button.classList.remove('is-holding')
+  activeHold = null
+}
+
+function attachPurchaseHold(button, perkId) {
+  const start = input => {
+    if (activeHold) return false
+    const player = owner()
+    if (!canPurchasePerk(player, perkId).ok) return false
+
+    button.classList.add('is-holding')
+    activeHold = {
+      button,
+      input,
+      timer: setTimeout(() => {
+        cancelHold()
+        if (owner() === player && canPurchasePerk(player, perkId).ok) requestPerkPurchase(perkId)
+      }, HOLD_DURATION_MS)
+    }
+    return true
+  }
+  const isHolding = input => activeHold?.button === button && activeHold.input === input
+  const endPointer = event => {
+    if (isHolding(event.pointerId)) cancelHold()
+  }
+  button.addEventListener('pointerdown', event => {
+    if (event.button !== 0 || !event.isPrimary || event.target.closest('.perk-tooltip')) return
+    if (start(event.pointerId)) button.setPointerCapture?.(event.pointerId)
+  })
+  button.addEventListener('pointermove', event => {
+    if (!isHolding(event.pointerId)) return
+    const { left, right, top, bottom } = button.getBoundingClientRect()
+    if (event.clientX < left || event.clientX > right || event.clientY < top || event.clientY > bottom) cancelHold()
+  })
+  for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) {
+    button.addEventListener(type, endPointer)
+  }
+  const isPurchaseKey = event => event.target === button && (event.key === ' ' || event.key === 'Enter')
+  button.addEventListener('keydown', event => {
+    if (!isPurchaseKey(event)) return
+    event.preventDefault()
+    if (!event.repeat) start(event.key)
+  })
+  button.addEventListener('keyup', event => {
+    if (!isPurchaseKey(event)) return
+    event.preventDefault()
+    if (isHolding(event.key)) {
+      cancelHold()
+      button.click()
+    }
+  })
+  button.addEventListener('blur', () => {
+    if (activeHold?.button === button) cancelHold()
+  })
+}
 
 function unlockedItems(perk) {
   if (perk.blueprints?.length) return perk.blueprints.map(blueprint => blueprint.name).join(' · ')
@@ -36,41 +98,22 @@ function node(perk, ledger) {
   button.className = `perk-node perk-node--${perk.lane} is-${state}`
   button.dataset.perkId = perk.id
   button.setAttribute('aria-label', `${perk.name}, ${owned ? 'owned' : `${perk.cost} stars, ${reasonText[status.reason] || 'available'}`}`)
-  button.innerHTML = `<span class="perk-node__badge"><img src="/${perk.badge}" alt=""><span class="perk-node__lock" aria-hidden="true">⌾</span></span><strong>${perk.name}</strong><span class="perk-node__cost">${perk.auto ? 'included' : Array.from({ length: perk.cost }, () => star(owned)).join('')}</span>`
+  const progressRing = status.ok ? '<svg class="perk-node__progress" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="48" pathLength="100"/></svg>' : ''
+  button.innerHTML = `<span class="perk-node__badge"><img src="/${perk.badge}" alt=""><span class="perk-node__lock" aria-hidden="true">⌾</span>${progressRing}</span><strong>${perk.name}</strong><span class="perk-node__cost">${perk.auto ? 'included' : Array.from({ length: perk.cost }, () => star(owned)).join('')}</span>`
   const tooltip = document.createElement('aside')
   tooltip.className = 'perk-tooltip'
-  tooltip.innerHTML = `<button class="perk-tooltip__close" type="button" aria-label="Close tooltip">×</button><h3>${perk.name}</h3><p>${perk.summary}</p><p><b>How to use:</b> ${perk.howTo}</p><p><b>Unlocks:</b> ${unlockedItems(perk)}</p><p class="perk-tooltip__state">${owned ? 'Owned' : status.ok ? `${perk.cost}★ · ready to unlock` : reasonText[status.reason] || 'Locked'}</p><a href="/docs/user-documentation.html#${perk.manualAnchor}">Manual →</a>${status.ok ? '<button type="button" class="perk-buy">Unlock perk</button>' : ''}`
+  tooltip.innerHTML = `<button class="perk-tooltip__close" type="button" aria-label="Close tooltip">×</button><h3>${perk.name}</h3><p>${perk.summary}</p><p><b>How to use:</b> ${perk.howTo}</p><p><b>Unlocks:</b> ${unlockedItems(perk)}</p><p class="perk-tooltip__state">${owned ? 'Owned' : status.ok ? `${perk.cost}★ · ready to unlock` : reasonText[status.reason] || 'Locked'}</p>${owned ? '' : `<p class="perk-tooltip__hold"><b>${HOLD_HINT}</b></p>`}<a href="/docs/user-documentation.html#${perk.manualAnchor}">Manual →</a>`
   button.appendChild(tooltip)
+  if (status.ok) attachPurchaseHold(button, perk.id)
   const closeTooltip = () => {
     button.classList.remove('show-tooltip')
     if (openTooltip === button) openTooltip = null
-    clearTimeout(confirmTimer); confirmTimer = null
-    const buy = tooltip.querySelector('.perk-buy')
-    if (buy) { delete buy.dataset.confirm; buy.textContent = 'Unlock perk' }
   }
   tooltip.querySelector('.perk-tooltip__close').addEventListener('click', event => { event.stopPropagation(); closeTooltip() })
   button.addEventListener('click', event => {
-    if (event.target.closest('a')) return
-    if (event.target.closest('.perk-buy')) {
-      event.stopPropagation()
-      const available = getPerkLedger(owner()).available
-      const buy = event.target.closest('.perk-buy')
-      if (buy.dataset.confirm === 'true') {
-        clearTimeout(confirmTimer); confirmTimer = null
-        delete buy.dataset.confirm
-        requestPerkPurchase(perk.id)
-      }
-      else {
-        buy.dataset.confirm = 'true'
-        buy.textContent = `Unlock ${perk.name} for ${perk.cost}★? ${available}★ → ${available - perk.cost}★`
-        buy.focus()
-        clearTimeout(confirmTimer)
-        confirmTimer = setTimeout(closeTooltip, 5000)
-      }
-      return
-    }
+    if (event.target.closest('.perk-tooltip')) return
     if (openTooltip && openTooltip !== button) openTooltip.classList.remove('show-tooltip')
-    const opening = !button.classList.contains('show-tooltip')
+    const opening = !owned || !button.classList.contains('show-tooltip')
     if (opening) { button.classList.add('show-tooltip'); openTooltip = button } else closeTooltip()
   })
   return button
@@ -86,6 +129,8 @@ function connectors(perks, ledger) {
 
 function render() {
   if (!overlay) return
+  cancelHold()
+  openTooltip = null
   const ledger = getPerkLedger(owner())
   const canvas = overlay.querySelector('.perk-tree__canvas')
   canvas.replaceChildren()
@@ -140,6 +185,7 @@ export function openPerkTree(tree = 'command') {
   const research = tree === 'research'
   overlay = document.createElement('div')
   overlay.className = 'perk-tree-overlay'
+  overlay.style.setProperty('--perk-hold-duration', `${HOLD_DURATION_MS}ms`)
   overlay.innerHTML = '<main class="perk-tree" role="dialog" aria-modal="true" aria-labelledby="perkTreeTitle"><header><div><p>COMMAND CENTER</p><h1 id="perkTreeTitle">Automation Perks</h1><span class="perk-tree__cc-state"></span></div><button class="perk-tree__close" type="button" aria-label="Close perk tree">×</button></header><div class="perk-tree__viewport" tabindex="0"><div class="perk-tree__canvas"></div></div><footer class="perk-ledger"></footer></main>'
   if (research) {
     overlay.classList.add('research-perk-overlay')
@@ -156,11 +202,11 @@ export function openPerkTree(tree = 'command') {
     if (event.target === overlay) closePerkTree()
     else if (openTooltip && !event.target.closest('.perk-node')) {
       openTooltip.classList.remove('show-tooltip'); openTooltip = null
-      clearTimeout(confirmTimer); confirmTimer = null
     }
   })
   overlay.addEventListener('selectstart', event => event.preventDefault())
   overlay.addEventListener('dragstart', event => event.preventDefault())
+  window.addEventListener('blur', cancelHold)
   unsubscribe = subscribePerks(render)
   pauseWasRunning = (research ? !isMultiplayerActive(gameState) : !gameState.multiplayerSession?.isRemote) && gameState.gamePaused === false
   if (pauseWasRunning) gameState.gamePaused = true
@@ -174,7 +220,9 @@ export function closePerkTree() {
   unsubscribe?.(); unsubscribe = null
   cleanupPan?.destroy(); cleanupPan = null
   cleanupViewport?.(); cleanupViewport = null
-  clearTimeout(confirmTimer); confirmTimer = null; openTooltip = null
+  window.removeEventListener('blur', cancelHold)
+  cancelHold()
+  openTooltip = null
   overlay.remove(); overlay = null
   if (pauseWasRunning) gameState.gamePaused = false
   pauseWasRunning = false

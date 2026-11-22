@@ -550,7 +550,7 @@ Single source of truth:
   - a one-line CFBL usage example
   - the prerequisite
   - a "Manual →" link to `/docs/user-documentation.html#perk-<id>`
-- **Buying:** an inline confirm ("Unlock Threat Sensors for 3★? 12★ → 9★") sends `PERK_PURCHASE`. Success flips the badge, lights the connectors and plays an optional unlock SFX.
+- **Buying** takes a continuous two-second hold on an available perk with mouse, touch, Space or Enter. The colored ring fills clockwise during the hold and resets on early release. A click or tap on an unowned perk shows “Hold for 2s to unlock!” in its tooltip. A completed hold sends `PERK_PURCHASE`. Success flips the badge and lights the connectors.
 - **Panning:** uses the extracted `createPanSurface`.
   - Left/right drag on empty space, wheel/trackpad, and one- or two-finger touch.
   - Same speeds, inertia (0.983 / 1) and invert setting as the map.
