@@ -1,2 +1,4 @@
 - [x] **Technology Research Center** — Build after Radar Station and Command Center, then spend veterancy stars on four research perks for six follow-on blueprint cards. The units and buildings shown on the cards are scheduled for separate implementation.
   - Spec: [Technology Research Center](../../specs/139-technology-center/spec.md)
+- [x] **C-5 sprite inventory** — Register the existing nose-up sprite using the same facing metadata as the C-5 feature branch so the sprite integrity check passes.
+  - Spec: [C-5 Galaxy Airlift](../../specs/140-c5-galaxy-airlift/spec.md)
