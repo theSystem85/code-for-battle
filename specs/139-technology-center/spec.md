@@ -3,7 +3,7 @@
 **Branch:** `dev`  
 **Status:** Draft — open questions must be decided before implementation  
 **Created:** 2026-11-21 (Europe/Berlin)  
-**Last Updated:** 2026-11-21 (Europe/Berlin)  
+**Last Updated:** 2026-11-22 (Europe/Berlin)  
 **Source:** voice-call discussion on 2026-11-21; existing unused art already in the repo
 
 This is a **draft**. Do not invent costs, prerequisites, footprints, or gameplay effects to fill gaps. Resolve the Open questions section with Patrick before writing production code.
@@ -262,6 +262,27 @@ Do not treat any of the following as decided.
 13. **Campaign, milestones, and landing-page copy.** Whether this tier gets a milestone video, mission use, or marketing treatment is undecided.
 14. **JSON tech-tree file.** Whether introducing this tier should wait for, or include, the open improvement to drive the whole tech tree from a JSON file is undecided.
 15. **Construction icon.** The existing files listed above are a map sprite, a sidebar image, and prepared base sprites. It is not recorded whether a separate construction-yard icon already exists or still has to be made (if made, Grok Imagine and approval apply).
+
+---
+
+## Reference: real-world AI combat aircraft (inspiration only)
+
+Researched during the 2026-11-21 call as possible inspiration for the **Drone Factory** and **AI Center**. These are not requirements; Patrick has not decided any gameplay from them. Status as reported on 2026-11-21:
+
+- **United States**
+  - **FQ-42A** (General Atomics, USAF Collaborative Combat Aircraft, Increment 1): in production since June 2026, testing alongside F-35 and F-15; fielding expected around the end of the decade.
+  - **FQ-44A Fury** (Anduril, CCA Increment 1): ordered into production; in October 2026 an F-22 pilot gave it tactical commands in flight and its own AI carried them out.
+  - **CCA Increment 2**: concept stage, nine companies until about mid-2027.
+  - **X-62A VISTA** (modified F-16, DARPA AI dogfighting test aircraft): being upgraded with radar and sensors; new autonomy test flights planned for fiscal 2027.
+- **Europe / allies**
+  - **Airbus U740 Valkyrie** (Germany, with Kratos): first European flight October 2026; operational version with the Eurofighter planned by 2029.
+  - **Helsing CA-1 Europa** (Germany): prototype / mock-up; first flight planned early 2027.
+  - **Airbus U760 Ravenstorm**: concept unveiled June 2026, aimed at the early 2030s.
+  - **FCAS remote carriers** (France, Germany, Spain): crewed fighter dropped June 2026; drone part continues as a demonstrator.
+  - **GCAP** (UK, Italy, Japan): crewed sixth-generation fighter in design, aimed at 2035; uncrewed wingmen left to each nation.
+  - **Baykar Kizilelma** (Turkey): series production; first three delivered to the Turkish armed forces on 2026-11-19.
+
+Takeaway noted in the call: nothing fully autonomous is in combat service in the US or Western Europe yet; the two US CCA jets are furthest along. Possible game ideas (AI wingmen produced by the Drone Factory, autonomy upgrades from the AI Center) are open questions, not decisions.
 
 ---
 
