@@ -13,7 +13,7 @@ const galaxy = () => ({ id: 'c5', embarkedUnitIds: [], embarkedUnitTypes: [] })
 const vehicle = (id, type, weight) => ({ id, type, weight, health: 100 })
 
 describe('C-5 Galaxy cargo', () => {
-  it('[U07306] defines weight and airlift eligibility for every playable unit', () => {
+  it('[U07321] defines weight and airlift eligibility for every playable unit', () => {
     for (const [type, properties] of Object.entries(UNIT_PROPERTIES)) {
       if (type === 'base') continue
       expect(properties.weight, type).toBeGreaterThan(0)
@@ -21,7 +21,7 @@ describe('C-5 Galaxy cargo', () => {
     }
   })
 
-  it('[U07307] accepts an exact 122 t manifest without a unit-count limit', () => {
+  it('[U07322] accepts an exact 122 t manifest without a unit-count limit', () => {
     const transport = galaxy()
     const units = new Map()
     for (let index = 0; index < 30; index++) {
@@ -35,7 +35,7 @@ describe('C-5 Galaxy cargo', () => {
     expect(getC5CargoWeight(transport, units)).toBe(C5_MAX_PAYLOAD_TONS)
   })
 
-  it('[U07308] rejects over-limit, individually overweight, and non-airliftable cargo', () => {
+  it('[U07323] rejects over-limit, individually overweight, and non-airliftable cargo', () => {
     const transport = galaxy()
     const units = new Map([['tank', vehicle('tank', 'tank-v3', 73)]])
     transport.embarkedUnitIds.push('tank')
@@ -44,11 +44,11 @@ describe('C-5 Galaxy cargo', () => {
     expect(evaluateC5Load(galaxy(), vehicle('jet', 'f22Raptor', 19.7), new Map()).allowed).toBe(false)
   })
 
-  it('[U07309] chooses the first deterministic free passable land tile', () => {
+  it('[U07324] chooses the first deterministic free passable land tile', () => {
     expect(findC5DropTile({ x: 5, y: 5 }, (x, y) => x === 4 && y === 4)).toEqual({ x: 4, y: 4 })
   })
 
-  it('[U07310] keeps cargo aboard when no drop tile is valid', () => {
+  it('[U07326] keeps cargo aboard when no drop tile is valid', () => {
     const transport = galaxy()
     const unit = vehicle('tank', 'tank_v1', 42)
     const units = new Map([[unit.id, unit]])
@@ -60,7 +60,7 @@ describe('C-5 Galaxy cargo', () => {
     expect(notify).toHaveBeenCalledOnce()
   })
 
-  it('[U07311] round-trips cargo and deterministic drop queue state through JSON', () => {
+  it('[U07327] round-trips cargo and deterministic drop queue state through JSON', () => {
     const transport = galaxy()
     transport.embarkedUnitIds = ['one']
     transport.embarkedUnitTypes = ['tank_v1']
@@ -69,7 +69,7 @@ describe('C-5 Galaxy cargo', () => {
   })
 })
 
-it('[U07312] advances deterministic takeoff and landing altitude state', async() => {
+it('[U07328] advances deterministic takeoff and landing altitude state', async() => {
   const { advanceC5FlightAnimation } = await import('../../src/game/c5Cargo.js')
   const unit = { flightState: 'takingOff', altitude: 0, maxAltitude: 90 }
   for (let tick = 0; tick < 90; tick++) advanceC5FlightAnimation(unit)

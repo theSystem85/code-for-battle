@@ -4,7 +4,7 @@ import { claimAirstripParkingSlot, releaseC5ParkingSlots, reserveC5ParkingSlots,
 const airstrip = () => ({ type: 'airstrip', x: 0, y: 0, width: 12, height: 6 })
 
 describe('C-5 airstrip parking', () => {
-  it('[U07313] reserves and occupies all three lower slots atomically', () => {
+  it('[U07329] reserves and occupies all three lower slots atomically', () => {
     const strip = airstrip()
     expect(reserveC5ParkingSlots(strip, 'galaxy')).toEqual([0, 1, 2])
     expect(setC5ParkingOccupant(strip, 'galaxy')).toBe(true)

@@ -3,7 +3,7 @@ import { addFixedOccupancy, addMovableOccupancy } from './occupancyTags.js'
 
 export const C5_DROP_RADIUS = 3
 export const C5_DROP_INTERVAL_TICKS = 30
-export const C5_DROP_DESCENT_TICKS = 90
+export const C5_DROP_DESCENT_TICKS = 270
 
 const lookup = (units, id) => units instanceof Map ? units.get(id) : Array.isArray(units) ? units.find(unit => unit.id === id) : units?.[id]
 
