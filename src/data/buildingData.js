@@ -152,6 +152,19 @@ export const buildingData = {
     limit: 1,
     smokeSpots: []
   },
+  spaceshipFactory: {
+    width: 3,
+    height: 3,
+    cost: 6500,
+    power: -160,
+    image: 'spaceship_factory_map.webp',
+    displayName: 'Spaceship Factory',
+    health: 650,
+    armor: 2,
+    researchPerk: 'tc.orbit',
+    limit: 1,
+    smokeSpots: []
+  },
   radarStation: {
     width: 2,
     height: 2,

@@ -61,6 +61,7 @@ test('[E00273] research cards update when the player buys a blueprint branch', a
   await expect(card.locator('img')).toHaveAttribute('src', /drone_factory_sidebar\.webp$/)
   await expect(launchCard).toBeVisible()
   await expect(launchCard).not.toHaveClass(/disabled/)
+  await expect(page.locator('[data-building-type="spaceshipFactory"]')).toBeVisible()
   await page.evaluate(() => {
     window.gameState.buildings.find(building => building.id === 'research-fixture').type = 'commandCenter'
   })

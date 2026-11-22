@@ -20,7 +20,7 @@ This amendment defines the playable center and its blueprint perks. The older dr
 | --- | ---: | --- |
 | Research Program | 2 | The three research branches |
 | Autonomous Systems | 3 | [Drone Factory](../142-drone-factory.md), [AI Center](../143-ai-center.md) |
-| Orbital Engineering | 4 | [Rocket Launch Base](../144-rocket-launch-base.md), Spaceship Factory |
+| Orbital Engineering | 4 | [Rocket Launch Base](../144-rocket-launch-base.md), [Spaceship Factory](../145-spaceship-factory.md) |
 | Aerospace Engineering | 3 | Plane Factory |
 
 ---

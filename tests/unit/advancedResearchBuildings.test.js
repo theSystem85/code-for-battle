@@ -6,7 +6,7 @@ import { gameState } from '../../src/gameState.js'
 import { buildingData } from '../../src/data/buildingData.js'
 import { applyPerkPurchase, getPerkLedger, grantPerkStars, resetPerkState } from '../../src/perks/perkState.js'
 import { getAdvancedBuildingRequirement, hasBuildingBlueprint } from '../../src/production/advancedBuildingAccess.js'
-import { getAssemblySpeedMultiplier } from '../../src/production/assemblyBonuses.js'
+import { getAssemblySpeedMultiplier, getConstructionAssemblySpeedMultiplier } from '../../src/production/assemblyBonuses.js'
 import { computeAvailableBuildingTypes } from '../../src/ai-api/techTree.js'
 
 const owner = 'player1'
@@ -79,6 +79,16 @@ describe('advanced research buildings', () => {
     updateShadowOfWar(fog, [], mapGrid)
     expect(fog.visibilityMap[11][24]).toEqual({ visible: false, discovered: true })
     expect(manifest.entries.some(entry => entry.id === 'building:rocketLaunchBase:base')).toBe(true)
+  })
+
+  it('[U07338] applies the Spaceship Factory’s prefab boost only while an owned factory operates', () => {
+    const factory = building('spaceshipFactory')
+    const buildings = [factory]
+    expect(getConstructionAssemblySpeedMultiplier(buildings, owner)).toBe(1.2)
+    expect(getConstructionAssemblySpeedMultiplier(buildings, 'player2')).toBe(1)
+    factory.health = 0
+    expect(getConstructionAssemblySpeedMultiplier(buildings, owner)).toBe(1)
+    expect(manifest.entries.some(entry => entry.id === 'building:spaceshipFactory:base')).toBe(true)
   })
 
 })

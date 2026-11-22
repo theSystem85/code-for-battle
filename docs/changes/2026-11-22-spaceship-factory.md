@@ -1,0 +1,2 @@
+- [x] **Spaceship Factory** — Construct the Orbital Engineering facility to speed new building jobs by 20%.
+  - Spec: [Spaceship Factory](../../specs/145-spaceship-factory.md)

@@ -20,6 +20,7 @@ export const buildingImageMap = {
   droneFactory: 'images/map/buildings/drone_factory_map.webp',
   aiCenter: 'images/map/buildings/ai_center_map.webp',
   rocketLaunchBase: 'images/map/buildings/rocket_launch_base_map.webp',
+  spaceshipFactory: 'images/map/buildings/spaceship_factory_map.webp',
   commandCenter: 'images/map/buildings/command_center.webp',
   hospital: 'images/map/buildings/hospital.webp',
   helipad: 'images/map/buildings/helipad_map.webp',

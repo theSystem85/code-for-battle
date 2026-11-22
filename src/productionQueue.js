@@ -1,4 +1,4 @@
-import { getAssemblySpeedMultiplier } from './production/assemblyBonuses.js'
+import { getAssemblySpeedMultiplier, getConstructionAssemblySpeedMultiplier } from './production/assemblyBonuses.js'
 import { getAdvancedBuildingRequirement } from './production/advancedBuildingAccess.js'
 import { bindStackedPlacementCancellation } from './ui/productionPlacementBridge.js'
 import { getProductionPlacementSettings } from './ui/productionPlacementSettings.js'
@@ -574,7 +574,7 @@ export const productionQueue = {
     if (constructionYards.length === 0) return 0
 
     // Each additional yard speeds up construction by 1x
-    return constructionYards.length + 1
+    return (constructionYards.length + 1) * getConstructionAssemblySpeedMultiplier(gameState.buildings, gameState.humanPlayer)
   },
 
   startNextBuildingProduction: function() {

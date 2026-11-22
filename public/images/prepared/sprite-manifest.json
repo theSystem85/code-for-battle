@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "assetVersion": "7f0c9b2a28fbb788",
+  "assetVersion": "0f6ad62e393acdc7",
   "generatedBy": "scripts/build-prepared-sprites.mjs",
   "webpQuality": 85,
   "unitWebpQuality": 95,
@@ -10,10 +10,10 @@
     3
   ],
   "inventory": {
-    "entryCount": 320,
-    "sourceCount": 73,
-    "generatedVariantCount": 960,
-    "decodedVariantBytes": 55913340
+    "entryCount": 321,
+    "sourceCount": 74,
+    "generatedVariantCount": 963,
+    "decodedVariantBytes": 56429436
   },
   "entries": [
     {
@@ -16286,6 +16286,56 @@
           "backingWidth": 480,
           "backingHeight": 480,
           "decodedBytes": 921600
+        }
+      ]
+    },
+    {
+      "id": "building:spaceshipFactory:base",
+      "category": "building",
+      "source": "/images/map/buildings/spaceship_factory_map.webp",
+      "sourceWidth": 192,
+      "sourceHeight": 192,
+      "logicalWidth": 96,
+      "logicalHeight": 96,
+      "hasAlpha": true,
+      "alphaMode": "straight",
+      "anchorSpace": "logical-pixels",
+      "anchors": {
+        "topLeft": {
+          "x": 0,
+          "y": 0
+        },
+        "center": {
+          "x": 48,
+          "y": 48
+        }
+      },
+      "states": [
+        "base",
+        "construction-clip",
+        "selling-clip"
+      ],
+      "variants": [
+        {
+          "density": 1,
+          "path": "/images/prepared/building/spaceshipFactory/base@1x.webp",
+          "backingWidth": 96,
+          "backingHeight": 96,
+          "decodedBytes": 36864
+        },
+        {
+          "density": 2,
+          "path": "/images/prepared/building/spaceshipFactory/base@2x.webp",
+          "backingWidth": 192,
+          "backingHeight": 192,
+          "decodedBytes": 147456
+        },
+        {
+          "density": 3,
+          "path": "/images/prepared/building/spaceshipFactory/base@3x.webp",
+          "backingWidth": 288,
+          "backingHeight": 288,
+          "decodedBytes": 331776
         }
       ]
     },
