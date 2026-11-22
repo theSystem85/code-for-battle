@@ -1,5 +1,4 @@
 import { getAdvancedBuildingRequirement, hasBuildingBlueprint } from '../production/advancedBuildingAccess.js'
-import { updateResearchBuildCards } from './researchBuildCards.js'
 import { hasResearchCenterPrerequisites } from '../production/researchCenterRequirements.js'
 import { gameState } from '../gameState.js'
 import { getMissingBuildingRequirements } from '../production/buildingRequirements.js'
@@ -173,7 +172,6 @@ export function updateVehicleButtonStates(controller) {
 }
 
 export function updateBuildingButtonStates(controller) {
-  updateResearchBuildCards()
   // In edit mode, enable all buildings regardless of tech tree
   if (gameState.mapEditMode) {
     const buildingButtons = document.querySelectorAll('.production-button[data-building-type]')

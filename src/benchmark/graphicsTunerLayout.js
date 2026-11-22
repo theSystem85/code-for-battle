@@ -12,6 +12,7 @@ const BASE = [
   ['vehicleFactory', 19, 13], ['vehicleWorkshop', 24, 13], ['hospital', 24, 7],
   ['airstrip', 29, 6], ['helipad', 29, 14], ['radarStation', 33, 14], ['commandCenter', 8, 4],
   ['technologyResearchCenter', 8, 8],
+  ['planeFactory', 15, 4],
   ['spaceshipFactory', 12, 4],
   ['rocketLaunchBase', 8, 19],
   ['aiCenter', 8, 15],

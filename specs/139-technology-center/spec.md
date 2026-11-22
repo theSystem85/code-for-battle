@@ -1,19 +1,19 @@
 # Spec 139: Technology Research Center
 
 **Branch:** `dev`  
-**Status:** Technology Research Center v1 implemented. Follow-on entities remain draft.
+**Status:** Technology Research Center and all five building blueprints implemented.
 **Created:** 2026-11-21 (Europe/Berlin)  
 **Last Updated:** 2026-11-22 (Europe/Berlin)  
 **Source:** voice-call discussion on 2026-11-21; existing unused art already in the repo
 
 ## 2026-11-22 implementation amendment
 
-This amendment defines the playable center and its blueprint perks. The older draft below records the original research and the open design questions for the follow-on entities.
+This amendment defines the playable center and its blueprint perks. The building specs below give the final v1 decisions. The original draft is retained under Historical design notes.
 
 - The **Technology Research Center** uses type ID `technologyResearchCenter` and the existing 3×3 map, prepared and sidebar art. It costs $5,000, takes 3.75 simulation seconds at normal speed with one Construction Yard, draws 100 power (half a Power Plant), has 500 HP and armor 2, and is limited to one per player. It uses standard repair and sell rules.
 - An owned, living Radar Station and Command Center must be placed to unlock, queue and place it. Buildings being sold do not qualify. The usual construction requirements still apply.
 - Right-click or touch and hold the center and choose **Research Perks**. Research spends stars from the same per-player veterancy ledger as Command Center perks. An owned, living Technology Research Center is required to buy research. Purchased perks survive sale or destruction and remain in saves and synchronized match state. Rebuild the center to buy more.
-- Follow-on build cards use existing art. Each card appears in the build bar only after its perk is purchased. Implemented entities can be queued and placed while the center and any additional prerequisites are operational. The specific build rules and effects are in each building spec.
+- Follow-on build cards use existing art. Each card appears in the build bar only after its perk is purchased. Implemented entities can be queued and placed while the center and any additional prerequisites are operational. The specific build rules and effects are in each building spec. All five buildings have a 3×3 footprint, a one-per-player limit, and standard building damage, repair and sale rules. Losing the Research Center blocks new queues and placement. It does not erase research or disable a building that was already placed. The C-5 Galaxy remains an Airstrip unit.
 - All four perk badges were generated for this feature with the image generator authorized by Patrick on 2026-11-22 and encoded as WebP at quality 85.
 
 | Research | Stars | Unlocks |
@@ -21,11 +21,15 @@ This amendment defines the playable center and its blueprint perks. The older dr
 | Research Program | 2 | The three research branches |
 | Autonomous Systems | 3 | [Drone Factory](../142-drone-factory.md), [AI Center](../143-ai-center.md) |
 | Orbital Engineering | 4 | [Rocket Launch Base](../144-rocket-launch-base.md), [Spaceship Factory](../145-spaceship-factory.md) |
-| Aerospace Engineering | 3 | Plane Factory |
+| Aerospace Engineering | 3 | [Plane Factory](../141-plane-factory/spec.md) |
 
 ---
 
-## Overview
+## Historical design notes
+
+The following sections preserve the November 21 draft. See the implementation amendment and individual building specs for current gameplay.
+
+### Overview
 
 The **Technology Center** is a late-game research building. Unused art already exists in the repo, and the multi-player AI spec already treats a Tech Center as the prerequisite for "advanced structures" ([Spec 007 FR-013](../007-multi-player-ai-system/spec.md)). The building itself is **not implemented**: nothing in production, tech-tree, or building data references it. `src/game/attackNotifications.js` lists a leftover type id `techCenter` among base buildings, but no building uses that type today.
 

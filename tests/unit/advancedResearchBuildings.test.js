@@ -91,4 +91,20 @@ describe('advanced research buildings', () => {
     expect(manifest.entries.some(entry => entry.id === 'building:spaceshipFactory:base')).toBe(true)
   })
 
+  it('[U07339] requires an Airstrip for the Plane Factory and accelerates fighter production only', () => {
+    const buildings = gameState.buildings
+    grantPerkStars(building('vehicleFactory'), 5)
+    applyPerkPurchase(owner, 'tc.foundation')
+    applyPerkPurchase(owner, 'tc.aerospace')
+    expect(getAdvancedBuildingRequirement('planeFactory', buildings, owner)).toMatch(/Airstrip/)
+    buildings.push(building('airstrip'))
+    expect(getAdvancedBuildingRequirement('planeFactory', buildings, owner)).toBe('')
+    buildings.push(building('planeFactory'))
+    expect(getAssemblySpeedMultiplier('f22Raptor', buildings, owner)).toBe(1.25)
+    expect(getAssemblySpeedMultiplier('f35', buildings, owner)).toBe(1.25)
+    expect(getAssemblySpeedMultiplier('c5Galaxy', buildings, owner)).toBe(1)
+    expect(getAssemblySpeedMultiplier('f22Raptor', buildings, 'player2')).toBe(1)
+    expect(manifest.entries.some(entry => entry.id === 'building:planeFactory:base')).toBe(true)
+  })
+
 })

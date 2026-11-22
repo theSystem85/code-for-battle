@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { gameState } from '../../src/gameState.js'
 import { buildingData } from '../../src/data/buildingData.js'
@@ -6,7 +6,7 @@ import { hasResearchCenterPrerequisites } from '../../src/production/researchCen
 import { computeAvailableBuildingTypes } from '../../src/ai-api/techTree.js'
 import { applyPerkPurchase, canPurchasePerk, exportPerkState, getPerkLedger, grantPerkStars, ownsResearchPerk, requestPerkPurchase, resetPerkState, restorePerkState } from '../../src/perks/perkState.js'
 import { RESEARCH_PERKS } from '../../src/perks/researchCatalog.js'
-import { setupResearchBuildCards } from '../../src/ui/researchBuildCards.js'
+import { updateBuildingButtonStates } from '../../src/ui/productionControllerButtonStates.js'
 
 const { broadcastGameCommand } = vi.hoisted(() => ({ broadcastGameCommand: vi.fn() }))
 vi.mock('../../src/network/commandBroadcast.js', () => ({ broadcastGameCommand }))
@@ -65,23 +65,31 @@ describe('Technology Research Center', () => {
     expect(canPurchasePerk(owner, 'tc.autonomy').reason).toBe('noResearchCenter')
   })
 
-  it('[U07312] updates the follow-on blueprint cards after purchase without making them queueable', () => {
-    document.body.innerHTML = '<div id="unitsTabContent"></div><div id="buildingsTabContent"></div>'
+  it('[U07312] hides real blueprint buttons until the relevant perk and uses the approved images', () => {
+    document.body.innerHTML = '<button class="production-button unlocked" data-building-type="planeFactory"></button>'
     gameState.buildings = [center()]
-    setupResearchBuildCards()
-    const card = document.querySelector('[data-research-blueprint="planeFactory"]')
-    expect(card.hidden).toBe(true)
+    gameState.availableBuildingTypes = new Set(['planeFactory'])
+    const card = document.querySelector('[data-building-type="planeFactory"]')
+    const refresh = () => updateBuildingButtonStates({ getBuildingProductionCount: () => 0 })
+    refresh()
+    expect(card.style.display).toBe('none')
     grantPerkStars({ owner }, 5)
     applyPerkPurchase(owner, 'tc.foundation')
-    expect(card.hidden).toBe(true)
+    refresh()
+    expect(card.style.display).toBe('none')
     applyPerkPurchase(owner, 'tc.aerospace')
-    expect(card.hidden).toBe(false)
-    expect(card.textContent).toContain('Researched')
-    expect(card.getAttribute('aria-disabled')).toBe('true')
-    expect(card.dataset.buildingType).toBeUndefined()
+    refresh()
+    expect(card.style.display).toBe('')
+    expect(card.classList.contains('disabled')).toBe(true)
+    expect(card.dataset.requirement).toMatch(/Airstrip/)
+    const html = readFileSync('index.html', 'utf8')
     for (const perk of RESEARCH_PERKS) {
       expect(existsSync(`public/${perk.badge}`)).toBe(true)
-      for (const blueprint of perk.blueprints) expect(existsSync(`public/images/sidebar/${blueprint.image}.webp`)).toBe(true)
+      for (const blueprint of perk.blueprints) {
+        expect(buildingData[blueprint.type].researchPerk).toBe(perk.id)
+        expect(existsSync(`public/images/sidebar/${blueprint.image}.webp`)).toBe(true)
+        expect(html).toContain(`data-src="images/sidebar/${blueprint.image}.webp"`)
+      }
     }
   })
 })

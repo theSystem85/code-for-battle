@@ -12,6 +12,7 @@ test('[E00273] research cards update when the player buys a blueprint branch', a
   await waitForLoadingScreenHidden(page)
   const skipTutorial = page.getByRole('button', { name: 'Skip tutorial', exact: true })
   if (await skipTutorial.isVisible()) await skipTutorial.click()
+  const planeCard = page.locator('[data-building-type="planeFactory"]')
   const launchCard = page.locator('[data-building-type="rocketLaunchBase"]')
   const card = page.locator('[data-building-type="droneFactory"]')
   await expect(card).toBeHidden()
@@ -21,7 +22,7 @@ test('[E00273] research cards update when the player buys a blueprint branch', a
     const center = { ...yard, id: 'research-fixture', type: 'technologyResearchCenter', health: 500, maxHealth: 500, constructionFinished: true }
     state.buildings.push(center)
     for (const type of ['powerPlant', 'oreRefinery', 'vehicleFactory', 'radarStation']) state.buildings.push({ ...yard, type })
-    state.perks.owners[state.humanPlayer] = { earned: 9, spent: 0, owned: [], log: [] }
+    state.perks.owners[state.humanPlayer] = { earned: 12, spent: 0, owned: [], log: [] }
     window.selectedUnitsRef.length = 0
     window.gameInstance.productionController.updateBuildingButtonStates()
     const worldX = (center.x + center.width / 2) * 32
@@ -46,7 +47,8 @@ test('[E00273] research cards update when the player buys a blueprint branch', a
   await openBuildingPerks('Research Perks')
   await expect(page.getByRole('heading', { name: 'Research Perks' })).toBeVisible()
   await expect(launchCard).toBeHidden()
-  for (const id of ['tc.foundation', 'tc.autonomy', 'tc.orbit']) {
+  await expect(planeCard).toBeHidden()
+  for (const id of ['tc.foundation', 'tc.autonomy', 'tc.orbit', 'tc.aerospace']) {
     const node = page.locator(`[data-perk-id="${id}"]`)
     await node.click()
     const buy = node.locator('.perk-buy')
@@ -62,6 +64,8 @@ test('[E00273] research cards update when the player buys a blueprint branch', a
   await expect(launchCard).toBeVisible()
   await expect(launchCard).not.toHaveClass(/disabled/)
   await expect(page.locator('[data-building-type="spaceshipFactory"]')).toBeVisible()
+  await expect(planeCard).toBeVisible()
+  await expect(planeCard).toHaveAttribute('data-requirement', /Airstrip/)
   await page.evaluate(() => {
     window.gameState.buildings.find(building => building.id === 'research-fixture').type = 'commandCenter'
   })

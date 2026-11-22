@@ -1,0 +1,2 @@
+- [x] **Plane Factory** — Construct the Aerospace Engineering facility to assemble F-22s and F-35s 25% faster. This completes the playable Technology Research Center building tier.
+  - Spec: [Plane Factory](../../specs/141-plane-factory/spec.md)

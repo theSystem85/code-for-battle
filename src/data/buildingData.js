@@ -165,6 +165,20 @@ export const buildingData = {
     limit: 1,
     smokeSpots: []
   },
+  planeFactory: {
+    width: 3,
+    height: 3,
+    cost: 5500,
+    power: -120,
+    image: 'plane_factory_map.webp',
+    displayName: 'Plane Factory',
+    health: 500,
+    armor: 2,
+    researchPerk: 'tc.aerospace',
+    researchPrerequisite: 'airstrip',
+    limit: 1,
+    smokeSpots: []
+  },
   radarStation: {
     width: 2,
     height: 2,

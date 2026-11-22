@@ -1,6 +1,5 @@
 import { advancedBuildingTypes } from '../production/advancedBuildingAccess.js'
 import { subscribePerks, ownsResearchPerk } from '../perks/perkState.js'
-import { setupResearchBuildCards } from './researchBuildCards.js'
 import { setupProductionHoverCard } from './productionHoverCard.js'
 import { failCompletionReceipt } from '../policies/completionReceipts.js'
 import { gameState } from '../gameState.js'
@@ -45,6 +44,7 @@ const mobileLandscapeBuildingLabelMap = {
   aiCenter: 'AI',
   rocketLaunchBase: 'Launch',
   spaceshipFactory: 'Spaceship',
+  planeFactory: 'Plane',
   commandCenter: 'Command',
   technologyResearchCenter: 'Research',
   vehicleWorkshop: 'Workshop',
@@ -139,7 +139,6 @@ export function setupAllProductionButtons(controller) {
 
   controller.setupUnitButtons()
   controller.setupBuildingButtons()
-  setupResearchBuildCards()
   subscribePerks(() => {
     const owner = gameState.humanPlayer || 'player1'
     if (advancedBuildingTypes.some(type => ownsResearchPerk(owner, buildingData[type].researchPerk) !== gameState.availableBuildingTypes.has(type))) {

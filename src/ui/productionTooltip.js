@@ -48,6 +48,7 @@ const buildingDescriptions = {
   aiCenter: 'Awards one extra star per combat veterancy level-up event.',
   rocketLaunchBase: 'Provides reconnaissance within 14 tiles.',
   spaceshipFactory: 'Accelerates building construction by 20%.',
+  planeFactory: 'Accelerates F-22 and F-35 production by 25%.',
   commandCenter: 'Unlocks command perks and advanced battlefield automation.',
   hospital: 'Restores crew for damaged vehicles and supports medics.',
   helipad: 'Hosts and resupplies Apache helicopters with fuel and ammo.',
