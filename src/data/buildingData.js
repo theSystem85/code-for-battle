@@ -137,6 +137,21 @@ export const buildingData = {
     limit: 1,
     smokeSpots: []
   },
+  rocketLaunchBase: {
+    width: 3,
+    height: 3,
+    cost: 7500,
+    power: -180,
+    image: 'rocket_launch_base_map.webp',
+    displayName: 'Rocket Launch Base',
+    health: 650,
+    armor: 2,
+    passiveDiscoveryRadius: 14,
+    researchPerk: 'tc.orbit',
+    researchPrerequisite: 'radarStation',
+    limit: 1,
+    smokeSpots: []
+  },
   radarStation: {
     width: 2,
     height: 2,

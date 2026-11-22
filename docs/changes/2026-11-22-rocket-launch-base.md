@@ -1,0 +1,2 @@
+- [x] **Rocket Launch Base** — Orbital Engineering unlocks this radar-supported structure and its 14-tile reconnaissance radius.
+  - Spec: [Rocket Launch Base](../../specs/144-rocket-launch-base.md)

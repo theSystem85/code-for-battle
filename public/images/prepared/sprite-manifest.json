@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "assetVersion": "08674aff3c28e558",
+  "assetVersion": "7f0c9b2a28fbb788",
   "generatedBy": "scripts/build-prepared-sprites.mjs",
   "webpQuality": 85,
   "unitWebpQuality": 95,
@@ -10,10 +10,10 @@
     3
   ],
   "inventory": {
-    "entryCount": 319,
-    "sourceCount": 72,
-    "generatedVariantCount": 957,
-    "decodedVariantBytes": 55397244
+    "entryCount": 320,
+    "sourceCount": 73,
+    "generatedVariantCount": 960,
+    "decodedVariantBytes": 55913340
   },
   "entries": [
     {
@@ -16136,6 +16136,56 @@
           "backingWidth": 192,
           "backingHeight": 192,
           "decodedBytes": 147456
+        }
+      ]
+    },
+    {
+      "id": "building:rocketLaunchBase:base",
+      "category": "building",
+      "source": "/images/map/buildings/rocket_launch_base_map.webp",
+      "sourceWidth": 192,
+      "sourceHeight": 192,
+      "logicalWidth": 96,
+      "logicalHeight": 96,
+      "hasAlpha": true,
+      "alphaMode": "straight",
+      "anchorSpace": "logical-pixels",
+      "anchors": {
+        "topLeft": {
+          "x": 0,
+          "y": 0
+        },
+        "center": {
+          "x": 48,
+          "y": 48
+        }
+      },
+      "states": [
+        "base",
+        "construction-clip",
+        "selling-clip"
+      ],
+      "variants": [
+        {
+          "density": 1,
+          "path": "/images/prepared/building/rocketLaunchBase/base@1x.webp",
+          "backingWidth": 96,
+          "backingHeight": 96,
+          "decodedBytes": 36864
+        },
+        {
+          "density": 2,
+          "path": "/images/prepared/building/rocketLaunchBase/base@2x.webp",
+          "backingWidth": 192,
+          "backingHeight": 192,
+          "decodedBytes": 147456
+        },
+        {
+          "density": 3,
+          "path": "/images/prepared/building/rocketLaunchBase/base@3x.webp",
+          "backingWidth": 288,
+          "backingHeight": 288,
+          "decodedBytes": 331776
         }
       ]
     },

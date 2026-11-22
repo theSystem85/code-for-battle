@@ -11,7 +11,7 @@ const BUILDING_COSTS = Object.freeze({
   powerPlant: 2000, oreRefinery: 2500, vehicleFactory: 3000, fireDepartment: 2500,
   vehicleWorkshop: 3000, constructionYard: 5000, radarStation: 1500, hospital: 4000,
   helipad: 1000, airstrip: 10000, shipyard: 5000, gasStation: 2000,
-  droneFactory: 4500, aiCenter: 5500,
+  droneFactory: 4500, aiCenter: 5500, rocketLaunchBase: 7500,
   ammunitionFactory: 2000, turretGunV1: 1200, turretGunV2: 2000, turretGunV3: 3000,
   rocketTurret: 4000, teslaCoil: 5000, artilleryTurret: 4000, street: 10, concreteWall: 100
 })

@@ -106,6 +106,9 @@ function isBaseStructure(structure) {
 
 function getBuildingPassiveDiscoveryRange(structure, width, height) {
   if (!structure) return BUILDING_PROXIMITY_RANGE
+  if (structure.type === 'rocketLaunchBase' && structure.health > 0 && !structure.isBeingSold) {
+    return buildingData.rocketLaunchBase.passiveDiscoveryRadius
+  }
 
   const directRadius = [
     structure.passiveDiscoveryRadius,

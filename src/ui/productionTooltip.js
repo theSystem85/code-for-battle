@@ -46,6 +46,7 @@ const buildingDescriptions = {
   technologyResearchCenter: 'Spend veterancy stars to unlock advanced blueprints.',
   droneFactory: 'Accelerates support vehicle production by 25%.',
   aiCenter: 'Awards one extra star per combat veterancy level-up event.',
+  rocketLaunchBase: 'Provides reconnaissance within 14 tiles.',
   commandCenter: 'Unlocks command perks and advanced battlefield automation.',
   hospital: 'Restores crew for damaged vehicles and supports medics.',
   helipad: 'Hosts and resupplies Apache helicopters with fuel and ammo.',

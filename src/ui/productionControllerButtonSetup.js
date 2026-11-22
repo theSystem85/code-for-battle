@@ -43,6 +43,7 @@ const mobileLandscapeBuildingLabelMap = {
   radarStation: 'Radar',
   droneFactory: 'Drone',
   aiCenter: 'AI',
+  rocketLaunchBase: 'Launch',
   commandCenter: 'Command',
   technologyResearchCenter: 'Research',
   vehicleWorkshop: 'Workshop',

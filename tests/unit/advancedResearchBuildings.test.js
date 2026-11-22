@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import manifest from '../../public/images/prepared/sprite-manifest.json'
 import { applyLevelUps, grantHarvesterStars } from '../../src/game/veterancy.js'
+import { updateShadowOfWar } from '../../src/game/shadowOfWar.js'
 import { gameState } from '../../src/gameState.js'
 import { buildingData } from '../../src/data/buildingData.js'
 import { applyPerkPurchase, getPerkLedger, grantPerkStars, resetPerkState } from '../../src/perks/perkState.js'
@@ -58,6 +59,26 @@ describe('advanced research buildings', () => {
     expect(applyLevelUps(tank())).toBe(1)
     expect(getPerkLedger(owner).earned).toBe(4)
     expect(manifest.entries.some(entry => entry.id === 'building:aiCenter:base')).toBe(true)
+  })
+
+  it('[U07337] requires radar to construct the launch base and provides local reconnaissance while it operates', () => {
+    const structures = gameState.buildings
+    grantPerkStars(building('vehicleFactory'), 6)
+    applyPerkPurchase(owner, 'tc.foundation')
+    applyPerkPurchase(owner, 'tc.orbit')
+    expect(getAdvancedBuildingRequirement('rocketLaunchBase', structures, owner)).toMatch(/Radar Station/)
+    structures.push(building('radarStation'))
+    expect(getAdvancedBuildingRequirement('rocketLaunchBase', structures, owner)).toBe('')
+    const launchBase = building('rocketLaunchBase', { x: 10, y: 10, width: 3, height: 3 })
+    const mapGrid = Array.from({ length: 40 }, () => Array.from({ length: 40 }, () => ({ type: 'land' })))
+    const fog = { humanPlayer: owner, buildings: [launchBase], mapGrid }
+    updateShadowOfWar(fog, [], mapGrid)
+    expect(fog.visibilityMap[11][24]).toEqual({ visible: true, discovered: true })
+    expect(fog.visibilityMap[11][28].visible).toBe(false)
+    launchBase.isBeingSold = true
+    updateShadowOfWar(fog, [], mapGrid)
+    expect(fog.visibilityMap[11][24]).toEqual({ visible: false, discovered: true })
+    expect(manifest.entries.some(entry => entry.id === 'building:rocketLaunchBase:base')).toBe(true)
   })
 
 })

@@ -12,6 +12,7 @@ test('[E00273] research cards update when the player buys a blueprint branch', a
   await waitForLoadingScreenHidden(page)
   const skipTutorial = page.getByRole('button', { name: 'Skip tutorial', exact: true })
   if (await skipTutorial.isVisible()) await skipTutorial.click()
+  const launchCard = page.locator('[data-building-type="rocketLaunchBase"]')
   const card = page.locator('[data-building-type="droneFactory"]')
   await expect(card).toBeHidden()
   const point = await page.evaluate(() => {
@@ -19,8 +20,8 @@ test('[E00273] research cards update when the player buys a blueprint branch', a
     const yard = state.buildings.find(building => building.owner === state.humanPlayer && building.type === 'constructionYard')
     const center = { ...yard, id: 'research-fixture', type: 'technologyResearchCenter', health: 500, maxHealth: 500, constructionFinished: true }
     state.buildings.push(center)
-    for (const type of ['powerPlant', 'oreRefinery', 'vehicleFactory']) state.buildings.push({ ...yard, type })
-    state.perks.owners[state.humanPlayer] = { earned: 5, spent: 0, owned: [], log: [] }
+    for (const type of ['powerPlant', 'oreRefinery', 'vehicleFactory', 'radarStation']) state.buildings.push({ ...yard, type })
+    state.perks.owners[state.humanPlayer] = { earned: 9, spent: 0, owned: [], log: [] }
     window.selectedUnitsRef.length = 0
     window.gameInstance.productionController.updateBuildingButtonStates()
     const worldX = (center.x + center.width / 2) * 32
@@ -44,7 +45,8 @@ test('[E00273] research cards update when the player buys a blueprint branch', a
   }
   await openBuildingPerks('Research Perks')
   await expect(page.getByRole('heading', { name: 'Research Perks' })).toBeVisible()
-  for (const id of ['tc.foundation', 'tc.autonomy']) {
+  await expect(launchCard).toBeHidden()
+  for (const id of ['tc.foundation', 'tc.autonomy', 'tc.orbit']) {
     const node = page.locator(`[data-perk-id="${id}"]`)
     await node.click()
     const buy = node.locator('.perk-buy')
@@ -57,7 +59,8 @@ test('[E00273] research cards update when the player buys a blueprint branch', a
   await expect(card).not.toHaveClass(/disabled/)
   await expect(page.locator('[data-building-type="aiCenter"]')).toBeVisible()
   await expect(card.locator('img')).toHaveAttribute('src', /drone_factory_sidebar\.webp$/)
-  await expect(page.locator('[data-research-blueprint="rocketLaunchBase"]')).toBeHidden()
+  await expect(launchCard).toBeVisible()
+  await expect(launchCard).not.toHaveClass(/disabled/)
   await page.evaluate(() => {
     window.gameState.buildings.find(building => building.id === 'research-fixture').type = 'commandCenter'
   })
