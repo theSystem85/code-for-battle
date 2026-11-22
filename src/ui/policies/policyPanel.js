@@ -32,8 +32,15 @@ import { getAutomationPerkMode, hasLivingCommandCenter, ownsPerk, requiredPerksF
 let panel = null
 let list = null
 let button = null
+let automationSelect = null
 let refreshTimer = 0
 const activityScratch = new Map()
+const automationLabels = {
+  unitBuild: 'build unit',
+  build: 'build base',
+  unit: 'control unit',
+  defence: 'control base defence'
+}
 
 export const PANEL_REFRESH_MS = 500
 
@@ -48,11 +55,25 @@ function lockForPolicy(policy) {
   return missing ? `Locked: needs ${getPerk(missing)?.name || missing}` : null
 }
 
-function variantOption(variant, label) {
-  const perk = getPerk(START_PERK_BY_VARIANT[variant])
-  const locked = getAutomationPerkMode() !== 'allUnlocked' && !ownsPerk(humanPlayer(), perk.id)
-  const hint = `needs ${perk.name} (${perk.cost}★)`
-  return h('option', { value: variant, disabled: locked, 'aria-description': locked ? hint : '', text: `${locked ? '🔒 ' : ''}${label}${locked ? `: ${hint}` : ''}` })
+function refreshAutomationOptions() {
+  const owner = humanPlayer()
+  for (const option of automationSelect.options) {
+    if (!option.value) continue
+    const perk = getPerk(START_PERK_BY_VARIANT[option.value])
+    const locked = !ownsPerk(owner, perk.id)
+    if (option.disabled === locked) continue
+
+    const label = automationLabels[option.value]
+    option.disabled = locked
+    if (locked) {
+      const hint = `needs ${perk.name} (${perk.cost}★)`
+      option.textContent = `🔒 ${label}: ${hint}`
+      option.setAttribute('aria-description', hint)
+    } else {
+      option.textContent = label
+      option.removeAttribute('aria-description')
+    }
+  }
 }
 
 export function describePolicyRules(policy) {
@@ -228,6 +249,7 @@ function sectionHeading(text, id) {
 
 function renderList() {
   if (!list) return
+  refreshAutomationOptions()
   const entries = listPolicies(humanPlayer())
   const unitEntries = entries.filter(entry => entry.policy.variant === 'unit')
   const buildEntries = entries.filter(entry => entry.policy.variant === 'build')
@@ -315,6 +337,19 @@ export function installPolicyPanel() {
   if (panel) return
   button = document.getElementById('policiesBtn')
   list = h('div', { class: 'policy-panel__list' })
+  automationSelect = h('select', {
+    id: 'newAutomationSelect', class: 'policy-field__control', 'aria-label': 'Add automation to',
+    onChange: event => {
+      const variant = event.target.value
+      if (!variant) return
+      event.target.value = ''
+      closePolicyPanel()
+      openPolicyEditor({ variant, defenceBuilding: variant === 'defence'
+        ? selectedUnits.find(entity => entity.isBuilding && entity.owner === humanPlayer()) : undefined })
+    }
+  },
+  h('option', { value: '', text: 'Choose…', disabled: true, selected: true, hidden: true }),
+  Object.entries(automationLabels).map(([value, text]) => h('option', { value, text })))
   panel = h('div', { class: 'policy-panel', role: 'dialog', 'aria-label': 'Automation', id: 'policyPanel' },
     h('div', { class: 'policy-panel__header' },
       h('span', { text: 'Automation' }),
@@ -323,22 +358,7 @@ export function installPolicyPanel() {
     h('div', { class: 'policy-panel__footer' },
       h('label', { class: 'policy-field policy-panel__add' },
         h('span', { text: 'Add automation to' }),
-        h('select', {
-          id: 'newAutomationSelect', class: 'policy-field__control', 'aria-label': 'Add automation to',
-          onChange: event => {
-            const variant = event.target.value
-            if (!variant) return
-            event.target.value = ''
-            closePolicyPanel()
-            openPolicyEditor({ variant, defenceBuilding: variant === 'defence'
-              ? selectedUnits.find(entity => entity.isBuilding && entity.owner === humanPlayer()) : undefined })
-          }
-        },
-        h('option', { value: '', text: 'Choose…', disabled: true, selected: true, hidden: true }),
-        variantOption('unitBuild', 'build unit'),
-        variantOption('build', 'build base'),
-        variantOption('unit', 'control unit'),
-        variantOption('defence', 'control base defence')))))
+        automationSelect)))
   document.body.appendChild(panel)
 
   if (button) {

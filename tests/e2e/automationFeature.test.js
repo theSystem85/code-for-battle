@@ -7,6 +7,10 @@ async function startGame(page) {
   })
   await page.goto('/?seed=41&size=64&players=2&oreFields=8')
   await page.waitForFunction(() => window.gameState?.gameStarted && window.gameInstance?.gameLoop)
+  await page.evaluate(async() => {
+    const { setAutomationPerkMode } = await import('/src/perks/perkState.js')
+    setAutomationPerkMode('allUnlocked')
+  })
 }
 
 async function newAutomation(page, variant = 'unit') {
