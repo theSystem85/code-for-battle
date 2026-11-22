@@ -111,6 +111,19 @@ export const buildingData = {
     limit: 1,
     smokeSpots: []
   },
+  droneFactory: {
+    width: 3,
+    height: 3,
+    cost: 4500,
+    power: -80,
+    image: 'drone_factory_map.webp',
+    displayName: 'Drone Factory',
+    health: 425,
+    armor: 2,
+    researchPerk: 'tc.autonomy',
+    limit: 1,
+    smokeSpots: []
+  },
   radarStation: {
     width: 2,
     height: 2,

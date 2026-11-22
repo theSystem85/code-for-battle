@@ -1,3 +1,4 @@
+import { advancedBuildingTypes, getAdvancedBuildingRequirement } from '../production/advancedBuildingAccess.js'
 import { UNIT_COSTS } from '../config.js'
 import { hasResearchCenterPrerequisites } from '../production/researchCenterRequirements.js'
 import { buildingData } from '../data/buildingData.js'
@@ -102,6 +103,9 @@ export function computeAvailableBuildingTypes(buildings, factories, owner) {
     available.add('artilleryTurret')
     available.add('airstrip')
     if (hasFactory) available.add('shipyard')
+  }
+  for (const type of advancedBuildingTypes) {
+    if (!getAdvancedBuildingRequirement(type, owned, owner)) available.add(type)
   }
   return available
 }

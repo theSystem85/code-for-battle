@@ -1,3 +1,5 @@
+import { advancedBuildingTypes } from '../production/advancedBuildingAccess.js'
+import { subscribePerks, ownsResearchPerk } from '../perks/perkState.js'
 import { setupResearchBuildCards } from './researchBuildCards.js'
 import { setupProductionHoverCard } from './productionHoverCard.js'
 import { failCompletionReceipt } from '../policies/completionReceipts.js'
@@ -39,6 +41,7 @@ export function handleProductionStackWheel(event, { increase, decrease }) {
 const mobileLandscapeBuildingLabelMap = {
   vehicleFactory: 'Vehicle Fab',
   radarStation: 'Radar',
+  droneFactory: 'Drone',
   commandCenter: 'Command',
   technologyResearchCenter: 'Research',
   vehicleWorkshop: 'Workshop',
@@ -134,6 +137,12 @@ export function setupAllProductionButtons(controller) {
   controller.setupUnitButtons()
   controller.setupBuildingButtons()
   setupResearchBuildCards()
+  subscribePerks(() => {
+    const owner = gameState.humanPlayer || 'player1'
+    if (advancedBuildingTypes.some(type => ownsResearchPerk(owner, buildingData[type].researchPerk) !== gameState.availableBuildingTypes.has(type))) {
+      controller.syncTechTreeWithBuildings()
+    }
+  })
 
   // Initial update of button states when setting up
   controller.updateVehicleButtonStates()

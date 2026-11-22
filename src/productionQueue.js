@@ -1,3 +1,5 @@
+import { getAssemblySpeedMultiplier } from './production/assemblyBonuses.js'
+import { getAdvancedBuildingRequirement } from './production/advancedBuildingAccess.js'
 import { bindStackedPlacementCancellation } from './ui/productionPlacementBridge.js'
 import { getProductionPlacementSettings } from './ui/productionPlacementSettings.js'
 import { hasResearchCenterPrerequisites } from './production/researchCenterRequirements.js'
@@ -341,6 +343,13 @@ export const productionQueue = {
   },
 
   addItem: function(type, button, isBuilding = false, blueprint = null, rallyPoint = null, options = {}) {
+    if (isBuilding && !gameState.mapEditMode) {
+      const requirement = getAdvancedBuildingRequirement(type, gameState.buildings, gameState.humanPlayer)
+      if (requirement) {
+        showNotification(requirement)
+        return
+      }
+    }
     if (type === 'technologyResearchCenter' && !gameState.mapEditMode && !hasResearchCenterPrerequisites(gameState.buildings, gameState.humanPlayer)) {
       showNotification('Requires an operational Radar Station and Command Center.')
       return
@@ -510,7 +519,8 @@ export const productionQueue = {
       }
     }
 
-    const duration = getProductionDuration(cost, false, vehicleMultiplier,
+    const assemblySpeed = getAssemblySpeedMultiplier(item.type, gameState.buildings, gameState.humanPlayer)
+    const duration = getProductionDuration(cost, false, vehicleMultiplier * assemblySpeed,
       gameState.playerPowerSupply < 0 ? gameState.playerBuildSpeedModifier : 1)
 
 

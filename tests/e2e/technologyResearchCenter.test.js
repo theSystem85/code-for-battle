@@ -12,13 +12,14 @@ test('[E00273] research cards update when the player buys a blueprint branch', a
   await waitForLoadingScreenHidden(page)
   const skipTutorial = page.getByRole('button', { name: 'Skip tutorial', exact: true })
   if (await skipTutorial.isVisible()) await skipTutorial.click()
-  const card = page.locator('[data-research-blueprint="droneFactory"]')
+  const card = page.locator('[data-building-type="droneFactory"]')
   await expect(card).toBeHidden()
   const point = await page.evaluate(() => {
     const state = window.gameState
     const yard = state.buildings.find(building => building.owner === state.humanPlayer && building.type === 'constructionYard')
     const center = { ...yard, id: 'research-fixture', type: 'technologyResearchCenter', health: 500, maxHealth: 500, constructionFinished: true }
     state.buildings.push(center)
+    for (const type of ['powerPlant', 'oreRefinery', 'vehicleFactory']) state.buildings.push({ ...yard, type })
     state.perks.owners[state.humanPlayer] = { earned: 5, spent: 0, owned: [], log: [] }
     window.selectedUnitsRef.length = 0
     window.gameInstance.productionController.updateBuildingButtonStates()
@@ -52,8 +53,8 @@ test('[E00273] research cards update when the player buys a blueprint branch', a
     await expect(node).toHaveClass(/is-owned/)
   }
   await page.getByRole('button', { name: 'Close perk tree' }).click()
-  await expect(card).toContainText('Researched')
-  await expect(card).toHaveAttribute('aria-disabled', 'true')
+  await expect(card).toBeVisible()
+  await expect(card).not.toHaveClass(/disabled/)
   await expect(card.locator('img')).toHaveAttribute('src', /drone_factory_sidebar\.webp$/)
   await expect(page.locator('[data-research-blueprint="rocketLaunchBase"]')).toBeHidden()
   await page.evaluate(() => {

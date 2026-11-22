@@ -44,6 +44,7 @@ const buildingDescriptions = {
   constructionYard: 'Constructs new buildings and expands your base footprint.',
   radarStation: 'Extends battlefield intel and enables advanced tech.',
   technologyResearchCenter: 'Spend veterancy stars to unlock advanced blueprints.',
+  droneFactory: 'Accelerates support vehicle production by 25%.',
   commandCenter: 'Unlocks command perks and advanced battlefield automation.',
   hospital: 'Restores crew for damaged vehicles and supports medics.',
   helipad: 'Hosts and resupplies Apache helicopters with fuel and ammo.',

@@ -1,3 +1,4 @@
+import { buildingData } from '../data/buildingData.js'
 import { gameState } from '../gameState.js'
 import { RESEARCH_PERKS } from '../perks/researchCatalog.js'
 import { ownsResearchPerk, subscribePerks } from '../perks/perkState.js'
@@ -8,6 +9,7 @@ const cards = []
 export function setupResearchBuildCards() {
   if (cards.length) return
   for (const blueprint of blueprints) {
+    if (blueprint.category === 'building' && buildingData[blueprint.type]) continue
     const tab = document.getElementById(blueprint.category === 'unit' ? 'unitsTabContent' : 'buildingsTabContent')
     if (!tab) continue
     const card = document.createElement('button')

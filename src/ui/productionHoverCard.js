@@ -1,3 +1,4 @@
+import { getAssemblySpeedMultiplier } from '../production/assemblyBonuses.js'
 import { UNIT_COSTS } from '../config.js'
 import { buildingData } from '../data/buildingData.js'
 import { getBuildingRequirements } from '../production/buildingRequirements.js'
@@ -76,7 +77,8 @@ export function getCardBuildTime(kind, type, state, queue) {
     multiplier = queue.getVehicleFactoryMultiplier()
   }
   // A missing producer shows the baseline estimate, rather than infinity.
-  const duration = getProductionDuration(cost || 0, isBuilding, multiplier || 1,
+  const assemblySpeed = isBuilding ? 1 : getAssemblySpeedMultiplier(type, state.buildings, state.humanPlayer)
+  const duration = getProductionDuration(cost || 0, isBuilding, (multiplier || 1) * assemblySpeed,
     state.playerPowerSupply < 0 ? state.playerBuildSpeedModifier : 1)
   return `Build time: ${Number((duration / 1000).toFixed(1))}s`
 }

@@ -204,7 +204,8 @@ const definitions = [
     ['concreteWallHorizontal', 'concrete_wall_horizontal.webp', 1, 1],
     ['concreteWallVertical', 'concrete_wall_vertical.webp', 1, 1],
     ['mineClearance', 'mineclearance_map.webp', 1, 1],
-    ['technologyResearchCenter', 'technology_research_center_map.webp', 3, 3]
+    ['technologyResearchCenter', 'technology_research_center_map.webp', 3, 3],
+    ['droneFactory', 'drone_factory_map.webp', 3, 3]
   ].map(([type, filename, widthTiles, heightTiles]) => ({
     id: `building:${type}:base`,
     source: buildingSource(filename),

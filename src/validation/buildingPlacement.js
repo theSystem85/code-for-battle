@@ -1,3 +1,4 @@
+import { getAdvancedBuildingRequirement } from '../production/advancedBuildingAccess.js'
 /**
  * Building placement validation functions
  *
@@ -200,6 +201,7 @@ export function isBuildingFootprintInBuildRange(type, tileX, tileY, buildings, f
 export function canPlaceBuilding(type, tileX, tileY, mapGrid, units, buildings, factories, owner = 'player', options = {}) {
   if (!buildingData[type]) return false
   if (type === 'technologyResearchCenter' && !options.mapEditMode && !hasResearchCenterPrerequisites(buildings, owner)) return false
+  if (!options.mapEditMode && getAdvancedBuildingRequirement(type, buildings, owner)) return false
   const limit = buildingData[type].limit
   const normalizedOwner = owner === 'player' ? 'player1' : owner
   if (Number.isFinite(limit) && (buildings || []).filter(building => building.type === type && (building.owner === 'player' ? 'player1' : building.owner) === normalizedOwner && building.health > 0).length >= limit) return false

@@ -76,7 +76,7 @@ describe('Technology Research Center', () => {
     expect(card.hidden).toBe(true)
     applyPerkPurchase(owner, 'tc.aerospace')
     expect(card.hidden).toBe(false)
-    expect(document.querySelector('[data-research-blueprint="droneFactory"]').hidden).toBe(true)
+    expect(document.querySelector('[data-research-blueprint="rocketLaunchBase"]').hidden).toBe(true)
     expect(card.textContent).toContain('Researched')
     expect(card.getAttribute('aria-disabled')).toBe('true')
     expect(card.dataset.buildingType).toBeUndefined()

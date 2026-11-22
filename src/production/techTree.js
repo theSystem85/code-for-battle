@@ -1,3 +1,5 @@
+import { advancedBuildingTypes, hasBuildingBlueprint } from './advancedBuildingAccess.js'
+
 // A requirement is a building type, or a group of alternative building types.
 // These rules drive both gameplay unlocks and the cached build-card summaries.
 export const productionUnlockRules = [
@@ -25,6 +27,9 @@ export const productionUnlockRules = [
 
 /** Event-driven tech-tree sync; never called by rendering or simulation updates. */
 export function visitProductionUnlocks(playerBuildings, owner, controller) {
+  for (const type of advancedBuildingTypes) {
+    if (hasBuildingBlueprint(type, owner)) controller.forceUnlockBuildingType(type)
+  }
   const counts = Object.create(null)
   const operationalCounts = Object.create(null)
   for (const building of playerBuildings) {

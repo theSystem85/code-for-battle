@@ -195,6 +195,7 @@ function isPlayerBase(entity) {
       'barracks',
       'warFactory',
       'technologyResearchCenter',
+      'droneFactory',
       'communications',
       'radar'
     ]

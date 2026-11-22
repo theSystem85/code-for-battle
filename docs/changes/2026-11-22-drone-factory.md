@@ -1,0 +1,2 @@
+- [x] **Drone Factory** — Construct the Autonomous Systems building and assemble support vehicles 25% faster. Set up the shared research requirements for the advanced tier.
+  - Spec: [Drone Factory](../../specs/142-drone-factory.md)

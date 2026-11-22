@@ -234,7 +234,7 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
         } else if (cmd.commandType === COMMAND_TYPES.BUILDING_PLACE && cmd.payload) {
           const { buildingType, x, y, automationCompletion } = cmd.payload
           const owner = cmd.sourcePartyId
-          if (buildingType === 'technologyResearchCenter' && !canPlaceBuilding(buildingType, x, y, mapGrid, mainUnits, gameState.buildings, factories, owner)) {
+          if ((buildingType === 'technologyResearchCenter' || buildingData[buildingType]?.researchPerk) && !canPlaceBuilding(buildingType, x, y, mapGrid, mainUnits, gameState.buildings, factories, owner)) {
             if (automationCompletion) broadcastGameCommand(COMMAND_TYPES.AUTOMATION_COMPLETION_ACK, { ...automationCompletion, ownerId: owner, status: 'failed', reason: 'the authoritative placement was rejected' })
             return
           }

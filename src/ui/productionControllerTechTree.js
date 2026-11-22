@@ -1,3 +1,4 @@
+import { advancedBuildingTypes, hasBuildingBlueprint } from '../production/advancedBuildingAccess.js'
 import { visitProductionUnlocks } from '../production/techTree.js'
 import { gameState } from '../gameState.js'
 import { playSound } from '../sound.js'
@@ -154,6 +155,9 @@ export function forceUnlockBuildingType(controller, type) {
 
 // Sync tech tree unlocks based on existing player buildings
 export function syncTechTreeWithBuildings(controller) {
+  for (const type of advancedBuildingTypes) {
+    if (!hasBuildingBlueprint(type, gameState.humanPlayer)) gameState.availableBuildingTypes.delete(type)
+  }
   visitProductionUnlocks(gameState.buildings, gameState.humanPlayer, controller)
 
   controller.updateVehicleButtonStates()

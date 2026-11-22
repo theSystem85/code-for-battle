@@ -1,3 +1,4 @@
+import { getAdvancedBuildingRequirement, hasBuildingBlueprint } from '../production/advancedBuildingAccess.js'
 import { updateResearchBuildCards } from './researchBuildCards.js'
 import { hasResearchCenterPrerequisites } from '../production/researchCenterRequirements.js'
 import { gameState } from '../gameState.js'
@@ -198,12 +199,13 @@ export function updateBuildingButtonStates(controller) {
       button.classList.contains('ready-for-placement') ||
       controller.getBuildingProductionCount(button) > 0
 
-    if (!gameState.availableBuildingTypes.has(type)) {
+    if (!hasBuildingBlueprint(type, gameState.humanPlayer) || !gameState.availableBuildingTypes.has(type)) {
       button.classList.add('disabled')
       button.style.display = 'none'
       return
     }
 
+    const advancedRequirement = getAdvancedBuildingRequirement(type, playerBuildings, gameState.humanPlayer)
     const req = getMissingBuildingRequirements(type, ownedTypes)
     if (type === 'technologyResearchCenter' && !hasResearchCenterPrerequisites(playerBuildings, gameState.humanPlayer) && req.length === 0) {
       req.push('operational Radar Station and Command Center')
@@ -218,11 +220,11 @@ export function updateBuildingButtonStates(controller) {
       return
     }
 
-    if (req.length > 0) {
+    if (req.length > 0 || advancedRequirement) {
       button.classList.add('disabled')
-      const requirementText = req.length ? 'Requires ' + req.join(' & ') : ''
+      const requirementText = advancedRequirement || 'Requires ' + req.join(' & ')
       button.dataset.requirement = requirementText
-      if (!shouldForceVisible) {
+      if (!shouldForceVisible && !buildingData[type]?.researchPerk) {
         button.style.display = 'none'
       } else {
         button.style.display = ''
