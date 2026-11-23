@@ -175,7 +175,11 @@ describe('enemyStrategies shouldConductGroupAttack', () => {
     gameState.buildings = [
       createBuilding({ owner: 'enemy', type: 'hospital' }),
       createBuilding({ owner: 'enemy', type: 'vehicleFactory' }),
-      createBuilding({ owner: 'enemy', type: 'oreRefinery' })
+      createBuilding({ owner: 'enemy', type: 'oreRefinery' }),
+      createBuilding({ owner: 'enemy', type: 'turretGunV1' }),
+      createBuilding({ owner: 'enemy', type: 'rocketTurret' }),
+      createBuilding({ owner: 'enemy', type: 'artilleryTurret' }),
+      createBuilding({ owner: 'enemy', type: 'teslaCoil' })
     ]
     const unit = createUnit({ owner: 'enemy' })
     const target = { owner: 'player1', type: 'harvester', tileX: 10, tileY: 10, x: 10, y: 10 }
@@ -187,7 +191,11 @@ describe('enemyStrategies shouldConductGroupAttack', () => {
     gameState.buildings = [
       createBuilding({ owner: 'enemy', type: 'hospital' }),
       createBuilding({ owner: 'enemy', type: 'vehicleFactory' }),
-      createBuilding({ owner: 'enemy', type: 'oreRefinery' })
+      createBuilding({ owner: 'enemy', type: 'oreRefinery' }),
+      createBuilding({ owner: 'enemy', type: 'turretGunV1' }),
+      createBuilding({ owner: 'enemy', type: 'rocketTurret' }),
+      createBuilding({ owner: 'enemy', type: 'artilleryTurret' }),
+      createBuilding({ owner: 'enemy', type: 'teslaCoil' })
     ]
     gameState.dangerZoneMaps = {
       enemy: Array.from({ length: 20 }, () => Array.from({ length: 20 }, () => 999))
@@ -204,6 +212,10 @@ describe('enemyStrategies shouldConductGroupAttack', () => {
       createBuilding({ owner: 'enemy', type: 'hospital' }),
       createBuilding({ owner: 'enemy', type: 'vehicleFactory' }),
       createBuilding({ owner: 'enemy', type: 'oreRefinery' }),
+      createBuilding({ owner: 'enemy', type: 'turretGunV1' }),
+      createBuilding({ owner: 'enemy', type: 'rocketTurret' }),
+      createBuilding({ owner: 'enemy', type: 'artilleryTurret' }),
+      createBuilding({ owner: 'enemy', type: 'teslaCoil' }),
       createBuilding({ owner: 'player1', type: 'powerPlant', x: 4, y: 4 })
     ]
 
@@ -217,7 +229,11 @@ describe('enemyStrategies shouldConductGroupAttack', () => {
     gameState.buildings = [
       createBuilding({ owner: 'enemy', type: 'hospital' }),
       createBuilding({ owner: 'enemy', type: 'vehicleFactory' }),
-      createBuilding({ owner: 'enemy', type: 'oreRefinery' })
+      createBuilding({ owner: 'enemy', type: 'oreRefinery' }),
+      createBuilding({ owner: 'enemy', type: 'turretGunV1' }),
+      createBuilding({ owner: 'enemy', type: 'rocketTurret' }),
+      createBuilding({ owner: 'enemy', type: 'artilleryTurret' }),
+      createBuilding({ owner: 'enemy', type: 'teslaCoil' })
     ]
 
     const unit = createUnit({ owner: 'enemy', type: 'howitzer', x: 8 * 32, y: 8 * 32 })
@@ -572,10 +588,20 @@ describe('enemyStrategies targeting helpers', () => {
     gameState.buildings = [
       createBuilding({ owner: 'enemy', type: 'hospital' }),
       createBuilding({ owner: 'enemy', type: 'vehicleFactory' }),
-      createBuilding({ owner: 'enemy', type: 'oreRefinery' })
+      createBuilding({ owner: 'enemy', type: 'oreRefinery' }),
+      createBuilding({ owner: 'enemy', type: 'turretGunV1' }),
+      createBuilding({ owner: 'enemy', type: 'rocketTurret' }),
+      createBuilding({ owner: 'enemy', type: 'artilleryTurret' }),
+      createBuilding({ owner: 'enemy', type: 'teslaCoil' })
     ]
 
+    const teslaCoil = gameState.buildings.pop()
+    expect(shouldAIStartAttacking('enemy', gameState)).toBe(false)
+    gameState.buildings.push(teslaCoil)
     expect(shouldAIStartAttacking('enemy', gameState)).toBe(true)
+
+    teslaCoil.health = 0
+    expect(shouldAIStartAttacking('enemy', gameState)).toBe(false)
   })
 
   it('[U01426] selects least dangerous attack point near player base', () => {

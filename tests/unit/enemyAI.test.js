@@ -213,11 +213,15 @@ describe('Enemy AI Strategies', () => {
       }
 
       // Add AI buildings to make shouldAIStartAttacking return true
-      // Needs hospital, vehicleFactory, AND oreRefinery
+      // Include the core economy, hospital and a complete base defense.
       gameState.buildings = [
         { type: 'hospital', owner: 'player2', health: 100 },
         { type: 'vehicleFactory', owner: 'player2', health: 100 },
-        { type: 'oreRefinery', owner: 'player2', health: 100 }
+        { type: 'oreRefinery', owner: 'player2', health: 100 },
+        { type: 'turretGunV1', owner: 'player2', health: 100 },
+        { type: 'rocketTurret', owner: 'player2', health: 100 },
+        { type: 'artilleryTurret', owner: 'player2', health: 100 },
+        { type: 'teslaCoil', owner: 'player2', health: 100 }
       ]
     })
 

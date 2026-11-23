@@ -9,7 +9,7 @@ export function isBaseDefence(type) {
 const live = building => building.health > 0 && !building.isBeingSold
 const key = (x, y) => `${x},${y}`
 const matches = (building, slot) => building.x === slot.x && building.y === slot.y &&
-  (building.type === slot.type || (slot.type === 'turretGunV3' && building.type.startsWith('turretGun')))
+  (building.type === slot.type || (slot.type.startsWith('turretGun') && building.type.startsWith('turretGun')))
 
 // Called only on construction decisions (once per six seconds per AI), never per unit/frame.
 // Bounds depend on economic buildings alone: adding a defence cannot expand its own perimeter.
@@ -113,12 +113,16 @@ export function planBaseDefence(owner, mapGrid, buildings, factories) {
   return { bounds, gates, walls: [...walls.values()], slots }
 }
 
-export function nextBaseDefence(plan, owner, mapGrid, units, buildings, factories, budget) {
+export function nextBaseDefence(plan, owner, mapGrid, units, buildings, factories, budget, requiredType = null) {
   if (!plan) return null
   const owned = buildings.filter(b => b.owner === owner && live(b))
   const hasRadar = owned.some(b => b.type === 'radarStation')
   // Complete mixed clusters before filling the rest of the perimeter.
-  for (const slot of [...plan.slots, ...plan.walls]) {
+  for (const planned of [...plan.slots, ...plan.walls]) {
+    const slot = requiredType === 'turretGunV1' && planned.type === 'turretGunV3'
+      ? { ...planned, type: requiredType }
+      : planned
+    if (requiredType && slot.type !== requiredType) continue
     const data = buildingData[slot.type]
     if (owned.some(b => matches(b, slot)) || (data.requiresRadar && !hasRadar) || budget < data.cost) continue
     if (canPlaceBuilding(slot.type, slot.x, slot.y, mapGrid, units, buildings, factories, owner)) return slot
@@ -134,7 +138,9 @@ export function relocateBaseDefences(plan, owner, buildings, factory, now) {
   for (const building of buildings) {
     if (building.owner !== owner || !live(building) || !isBaseDefence(building.type) || slots.some(slot => matches(building, slot))) continue
     if (building.type !== 'concreteWall') {
-      if (soldWeapon || !plan.slots.length || factory.budget < buildingData[building.type].cost) continue
+      const hasBackup = buildings.some(other => other !== building && other.owner === owner && live(other) &&
+        (other.type === building.type || (building.type.startsWith('turretGun') && other.type.startsWith('turretGun'))))
+      if (!hasBackup || soldWeapon || !plan.slots.length || factory.budget < buildingData[building.type].cost) continue
       soldWeapon = true
     }
     building.isBeingSold = true

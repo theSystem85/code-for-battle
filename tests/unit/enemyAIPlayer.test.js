@@ -5,9 +5,9 @@ vi.mock('../../src/performanceUtils.js', () => ({
   logPerformance: (fn) => fn
 }))
 
-vi.mock('../../src/buildings.js', () => ({
+vi.mock('../../src/buildings.js', async() => ({
   buildingData: {
-    street: { cost: 10, width: 1, height: 1, power: 0 },
+    ...(await import('../../src/data/buildingData.js')).buildingData,
     oreRefinery: { cost: 2000, width: 3, height: 3, power: -30 },
     powerPlant: { cost: 500, width: 2, height: 2, power: 100 },
     vehicleFactory: { cost: 1500, width: 3, height: 3, power: -40 },
@@ -120,6 +120,7 @@ import { getUnitCost } from '../../src/utils.js'
 import { gameRandom } from '../../src/utils/gameRandom.js'
 import { findBuildingPosition, isExplosiveBuildingPlacementSafe } from '../../src/ai/enemyBuilding.js'
 import { handleStuckHarvester } from '../../src/game/harvesterLogic.js'
+import { spawnEnemyUnit } from '../../src/ai/enemySpawner.js'
 
 const createMapGrid = (width, height) =>
   Array.from({ length: height }, () =>
@@ -135,6 +136,10 @@ beforeAll(async() => {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  createBuilding.mockImplementation((type, x, y) => ({ type, x, y, health: 100 }))
+  findBuildingPosition.mockReset()
+  canPlaceBuilding.mockReset()
+  spawnEnemyUnit.mockReset()
   isExplosiveBuildingPlacementSafe.mockReturnValue(true)
   getUnitCost.mockImplementation((type) => {
     const costs = {
@@ -144,6 +149,7 @@ beforeEach(() => {
       ammunitionTruck: 200,
       ambulance: 200,
       tank_v1: 300,
+      howitzer: 600,
       'tank-v2': 500,
       'tank-v3': 800,
       rocketTank: 700,
@@ -338,6 +344,55 @@ describe('enemyAIPlayer updateAIPlayer', () => {
     expect(gameState.nextai1VehicleFactoryIndex).toBe(1)
   })
 
+  it('[U07348] builds the opening defenses before expanding and keeps the first two tanks on defense', () => {
+    const aiPlayerId = 'ai1'
+    const aiFactory = { id: aiPlayerId, owner: aiPlayerId, x: 15, y: 15, width: 3, height: 3, health: 100, budget: 50000 }
+    const vehicleFactory = { type: 'vehicleFactory', owner: aiPlayerId, health: 100 }
+    const buildings = [
+      { type: 'powerPlant', owner: aiPlayerId, health: 100, power: 1000 },
+      vehicleFactory,
+      { type: 'oreRefinery', owner: aiPlayerId, health: 100 }
+    ]
+    const units = Array.from({ length: 3 }, () => ({ owner: aiPlayerId, type: 'harvester', health: 100 }))
+    const gameState = { buildings, enemyPowerSupply: 1000 }
+    const mapGrid = createMapGrid(30, 30)
+    const opening = []
+    findBuildingPosition.mockReturnValue({ x: 2, y: 2 })
+    canPlaceBuilding.mockReturnValue(true)
+    spawnEnemyUnit.mockImplementation((factory, type) => {
+      expect(factory).toBe(vehicleFactory)
+      expect(gameState.ai1HarvesterHunterQueued).toBeFalsy()
+      opening.push(type)
+      return { owner: aiPlayerId, type, health: 100 }
+    })
+    createBuilding.mockImplementation((type, x, y) => {
+      opening.push(type)
+      return { type, x, y, health: 100 }
+    })
+
+    const tick = now => updateAIPlayer(aiPlayerId, units, [aiFactory], [], mapGrid, gameState, null, now, {})
+    tick(8000)
+    expect(aiFactory.currentlyBuilding).toBeFalsy()
+    expect(aiFactory.currentlyProducingUnit).toBe('harvester')
+
+    const buildStarts = new Map()
+    for (let now = 18100; now <= 100000; now += 100) {
+      tick(now)
+      if (aiFactory.buildStartTime === now) buildStarts.set(aiFactory.currentlyBuilding, now)
+      if (aiFactory.unitBuildStartTime === now) buildStarts.set(aiFactory.currentlyProducingUnit, now)
+      if (aiFactory.currentlyBuilding === 'concreteWall') break
+    }
+
+    expect(buildStarts.get('turretGunV1') - 18100).toBeLessThanOrEqual(1000)
+    expect(buildStarts.get('howitzer')).toBeLessThan(buildStarts.get('teslaCoil'))
+    expect(opening).toEqual([
+      'harvester', 'turretGunV1', 'radarStation', 'rocketTurret',
+      'tank_v1', 'tank_v1', 'artilleryTurret', 'teslaCoil', 'howitzer'
+    ])
+    expect(aiFactory.currentlyBuilding).toBe('concreteWall')
+    expect(gameState.buildings.some(b => b.type === 'gasStation')).toBe(false)
+  })
+
   it('[U01348] spawns apache production from helipads when capacity exists', () => {
     const aiPlayerId = 'ai1'
     const aiFactory = {
@@ -362,6 +417,11 @@ describe('enemyAIPlayer updateAIPlayer', () => {
         { type: 'vehicleFactory', owner: aiPlayerId, health: 100 },
         { type: 'oreRefinery', owner: aiPlayerId, health: 100 },
         { type: 'hospital', owner: aiPlayerId, health: 100 },
+        { type: 'turretGunV1', owner: aiPlayerId, health: 100 },
+        { type: 'radarStation', owner: aiPlayerId, health: 100 },
+        { type: 'rocketTurret', owner: aiPlayerId, health: 100 },
+        { type: 'teslaCoil', owner: aiPlayerId, health: 100 },
+        { type: 'artilleryTurret', owner: aiPlayerId, health: 100 },
         helipad
       ],
       enemyPowerSupply: 0,
@@ -412,6 +472,11 @@ describe('enemyAIPlayer updateAIPlayer', () => {
         { type: 'vehicleFactory', owner: aiPlayerId, health: 100 },
         { type: 'oreRefinery', owner: aiPlayerId, health: 100 },
         { type: 'hospital', owner: aiPlayerId, health: 100 },
+        { type: 'turretGunV1', owner: aiPlayerId, health: 100 },
+        { type: 'radarStation', owner: aiPlayerId, health: 100 },
+        { type: 'rocketTurret', owner: aiPlayerId, health: 100 },
+        { type: 'teslaCoil', owner: aiPlayerId, health: 100 },
+        { type: 'artilleryTurret', owner: aiPlayerId, health: 100 },
         shipyard
       ],
       enemyPowerSupply: 0,
@@ -452,6 +517,8 @@ describe('enemyAIPlayer updateAIPlayer', () => {
         { type: 'vehicleFactory', owner: aiPlayerId, health: 100 },
         { type: 'oreRefinery', owner: aiPlayerId, health: 100 },
         { type: 'hospital', owner: aiPlayerId, health: 100 },
+        { type: 'turretGunV1', owner: aiPlayerId, health: 100 },
+        { type: 'radarStation', owner: aiPlayerId, health: 100 },
         { type: 'rocketTurret', owner: aiPlayerId, health: 100 },
         { type: 'teslaCoil', owner: aiPlayerId, health: 100 },
         { type: 'artilleryTurret', owner: aiPlayerId, health: 100 },

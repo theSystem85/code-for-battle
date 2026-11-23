@@ -5,6 +5,21 @@ import { getSimulationTime } from '../game/time.js'
 import { gameRandom } from '../utils/gameRandom.js'
 import { isUnitInPlayerBase } from './retreatLogic.js'
 import { getEnemyPlayers, isEnemyTo } from './enemyUtils.js'
+import { isPartyUsingLlmStrategic } from './llmStrategicAccess.js'
+
+const ATTACK_INFRASTRUCTURE = 0b0000111
+const ATTACK_DEFENSES = 0b1111000
+const ATTACK_REQUIREMENTS = {
+  hospital: 0b0000001,
+  vehicleFactory: 0b0000010,
+  oreRefinery: 0b0000100,
+  turretGunV1: 0b0001000,
+  turretGunV2: 0b0001000,
+  turretGunV3: 0b0001000,
+  rocketTurret: 0b0010000,
+  artilleryTurret: 0b0100000,
+  teslaCoil: 0b1000000
+}
 
 // Configuration constants for AI behavior
 const AI_CONFIG = {
@@ -125,19 +140,29 @@ function countNearbyAllies(unit, units) {
   ).length
 }
 
-/**
- * Checks if an AI player should start attacking (has hospital built)
- */
+export function hasCoreBaseDefenses(aiPlayerId, buildings) {
+  let readiness = 0
+  for (const building of buildings) {
+    if (building.owner === aiPlayerId && building.health > 0 && !building.isBeingSold) {
+      readiness |= ATTACK_REQUIREMENTS[building.type] || 0
+      if ((readiness & ATTACK_DEFENSES) === ATTACK_DEFENSES) return true
+    }
+  }
+  return false
+}
+
 export function shouldAIStartAttacking(aiPlayerId, gameState) {
   if (!gameState.buildings) return false
 
-  const aiBuildings = gameState.buildings.filter(b => b.owner === aiPlayerId)
-  const hasHospital = aiBuildings.some(b => b.type === 'hospital' && b.health > 0)
-  const hasVehicleFactory = aiBuildings.some(b => b.type === 'vehicleFactory' && b.health > 0)
-  const hasRefinery = aiBuildings.some(b => b.type === 'oreRefinery' && b.health > 0)
-
-  // AI should only start major attacks after having core infrastructure
-  return hasHospital && hasVehicleFactory && hasRefinery
+  let readiness = 0
+  for (const building of gameState.buildings) {
+    if (building.owner === aiPlayerId && building.health > 0 && !building.isBeingSold) {
+      readiness |= ATTACK_REQUIREMENTS[building.type] || 0
+      if (readiness === (ATTACK_INFRASTRUCTURE | ATTACK_DEFENSES)) return true
+    }
+  }
+  return (readiness & ATTACK_INFRASTRUCTURE) === ATTACK_INFRASTRUCTURE &&
+    isPartyUsingLlmStrategic(aiPlayerId, gameState)
 }
 
 /**
@@ -151,7 +176,12 @@ export function shouldConductGroupAttack(unit, units, gameState, target) {
 
   const now = getSimulationTime(gameState)
 
-  // Prevent AI from attacking before having core infrastructure
+  if (
+    ((unit.defendingBase && target === unit.target) || (unit.isBeingAttacked && target === unit.lastAttacker)) &&
+    isEnemyTo(target, unit.owner)
+  ) return true
+
+  // The base must be ready before launching a raid.
   if (!shouldAIStartAttacking(unit.owner, gameState)) return false
 
   // Allow individual combat if unit is already in player base area

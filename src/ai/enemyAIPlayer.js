@@ -24,6 +24,8 @@ import { createReplayEntityReference, createReplayUnitReference, recordReplayCom
 import { getClosestEnemyFactory } from './enemyUtils.js'
 import { beginBaseDefensePass, beginBaseDefenseUnit, finishBaseDefenseUnit, endBaseDefensePass } from './enemySupportBehavior.js'
 import { ensureAdvancedForcePreference } from './advancedForcePreference.js'
+import { getOpeningDefenseStep, OPENING_HARVESTER_COUNT } from './openingDefense.js'
+import { hasCoreBaseDefenses } from './attackCoordination.js'
 import { chooseNextSquadUnit, updateGroundAssaultStrategy } from './groundAssaultStrategy.js'
 import { isBaseDefence, planBaseDefence, nextBaseDefence, relocateBaseDefences } from './baseDefence.js'
 
@@ -54,6 +56,9 @@ const AI_SELL_PRIORITY_MAP = AI_SELL_PRIORITY.reduce((acc, type, index) => {
 }, {})
 
 const PROTECTED_AI_BUILDINGS = new Set(['constructionYard', 'oreRefinery'])
+const HOLD_ASSAULT = { defensesReady: false }
+const OPENING_BUILD_COOLDOWN = 1000
+const STANDARD_BUILD_COOLDOWN = 6000
 const ENEMY_HARVESTER_STUCK_SCAN_INTERVAL = 60000
 const ENEMY_HARVESTER_STUCK_MOVEMENT_THRESHOLD = 8
 
@@ -467,11 +472,27 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
     ensureAIEconomyRecovery(aiPlayerId, aiFactory, aiBuildings, aiHarvesters, now)
   }
 
-  // Debug logging (enable temporarily to debug building issues)
-  // Enhanced build order: Core buildings -> Defense -> Advanced structures
-  // Building construction runs independently from unit production
-  if (allowStrategicDecisions && now - (gameState[lastBuildingTimeKey] || 0) >= 6000 && aiFactory.budget > 1000 &&
-      !aiFactory.currentlyBuilding) {
+  const finishingOpeningDefense = aiFactory.currentlyBuilding === 'teslaCoil' ||
+    aiFactory.currentlyProducingUnit === 'howitzer'
+  const harvesterGoalMet = aiHarvesters.length >= OPENING_HARVESTER_COUNT
+  const elapsedSinceBuild = now - (gameState[lastBuildingTimeKey] || 0)
+  const canPlanBuilding = allowStrategicDecisions && !aiFactory.currentlyBuilding &&
+    elapsedSinceBuild >= OPENING_BUILD_COOLDOWN
+  const openingStep = canPlanBuilding && harvesterGoalMet
+    ? getOpeningDefenseStep(aiPlayerId, aiBuildings, units, aiFactory)
+    : null
+
+  const waitingForOpeningUnit = openingStep && !buildingData[openingStep]
+  const needsInfrastructure = waitingForOpeningUnit && (
+    gameState.powerSupplyByOwner?.[aiPlayerId] <= 0 ||
+    !aiBuildings.some(b => b.type === 'powerPlant') ||
+    !aiBuildings.some(b => b.type === 'oreRefinery') ||
+    !aiBuildings.some(b => b.type === 'vehicleFactory')
+  )
+
+  if (canPlanBuilding && (!waitingForOpeningUnit || needsInfrastructure) &&
+      (openingStep || elapsedSinceBuild >= STANDARD_BUILD_COOLDOWN)) {
+    gameState[lastBuildingTimeKey] = now
     const powerPlants = aiBuildings.filter(b => b.type === 'powerPlant')
     const vehicleFactories = aiBuildings.filter(b => b.type === 'vehicleFactory')
     const oreRefineries = aiBuildings.filter(b => b.type === 'oreRefinery')
@@ -481,8 +502,6 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
         b.type === 'rocketTurret' ||
         b.type === 'artilleryTurret'
     )
-    const rocketTurrets = aiBuildings.filter(b => b.type === 'rocketTurret')
-    const artilleryTurrets = aiBuildings.filter(b => b.type === 'artilleryTurret')
     const radarStations = aiBuildings.filter(b => b.type === 'radarStation')
     const teslaCoils = aiBuildings.filter(b => b.type === 'teslaCoil')
     const hospitals = aiBuildings.filter(b => b.type === 'hospital')
@@ -509,19 +528,6 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
     const completedAiJets = units.filter(u => u.owner === aiPlayerId && (u.type === 'f22Raptor' || u.type === 'f35') && u.health > 0)
     const advancedForcePreference = ensureAdvancedForcePreference(gameState, aiPlayerId)
 
-    const REQUIRED_HARVESTERS = 4
-    const harvesterGoalMet = aiHarvesters.length >= REQUIRED_HARVESTERS
-    const hasVehicleFactory = vehicleFactories.length > 0
-    const hasOreRefinery = oreRefineries.length > 0
-
-    // Check if first tank has been produced (harvester hunter)
-    const harvesterHunterQueuedKey = `${aiPlayerId}HarvesterHunterQueued`
-    const harvesterHunterExists = units.some(
-      u => u.owner === aiPlayerId && u.harvesterHunter && u.health > 0
-    )
-    const harvesterHunterQueued = Boolean(gameState[harvesterHunterQueuedKey])
-    const firstTankProduced = harvesterHunterExists || (!harvesterHunterQueued && aiTanks.length > 0)
-
     const { totalPower: currentPower } = calculateAIPowerState(aiPlayerId, aiBuildings, aiFactory)
     const canAffordPowerPlant = aiFactory.budget >= buildingData.powerPlant.cost
     const hasPowerPlant = powerPlants.length > 0
@@ -529,27 +535,22 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
     let buildingType = null
     let cost = 0
 
-    // Prevent the AI from pursuing optional buildings until the early economy is established AND first tank is produced
-    const allowAdditionalBuildings = harvesterGoalMet && firstTankProduced
-
-    // Always prioritise power plants if the AI has none or is out of power
-    if (!hasPowerPlant) {
-      if (canAffordPowerPlant) {
-        buildingType = 'powerPlant'
-        cost = buildingData.powerPlant.cost
-      }
-    } else if (currentPower <= 0 && canAffordPowerPlant) {
+    if (!hasPowerPlant || currentPower <= 0) {
       buildingType = 'powerPlant'
       cost = buildingData.powerPlant.cost
-
-    // Early economy - first Ore Refinery once power is secured
-    } else if (oreRefineries.length === 0 && aiFactory.budget >= buildingData.oreRefinery.cost) {
+    } else if (oreRefineries.length === 0) {
       buildingType = 'oreRefinery'
       cost = buildingData.oreRefinery.cost
-    // Production - Vehicle Factory for unit production
-    } else if (vehicleFactories.length === 0 && aiFactory.budget >= buildingData.vehicleFactory.cost) {
+    } else if (vehicleFactories.length === 0) {
       buildingType = 'vehicleFactory'
       cost = buildingData.vehicleFactory.cost
+    } else if (!harvesterGoalMet) {
+      // Reserve the budget for the first four harvesters.
+    } else if (openingStep) {
+      if (buildingData[openingStep]) {
+        buildingType = openingStep
+        cost = buildingData[openingStep].cost
+      }
     } else if (
       vehicleFactories.length > 0 &&
       aiHarvesters.length > 0 &&
@@ -654,20 +655,6 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
         buildingType = 'turretGunV1'
         cost = buildingData.turretGunV1.cost
       }
-    } else if (radarStations.length === 0 && aiFactory.budget >= buildingData.radarStation.cost) {
-      // Radar station for advanced defense and map control
-      buildingType = 'radarStation'
-      cost = buildingData.radarStation.cost
-    } else if (rocketTurrets.length === 0 && radarStations.length > 0 && aiFactory.budget >= 4000) {
-      // Early special defenses - build at least one of each before expansion
-      buildingType = 'rocketTurret'
-      cost = buildingData.rocketTurret.cost
-    } else if (teslaCoils.length === 0 && radarStations.length > 0 && aiFactory.budget >= buildingData.teslaCoil.cost) {
-      buildingType = 'teslaCoil'
-      cost = buildingData.teslaCoil.cost
-    } else if (artilleryTurrets.length === 0 && aiFactory.budget >= buildingData.artilleryTurret.cost) {
-      buildingType = 'artilleryTurret'
-      cost = buildingData.artilleryTurret.cost
     } else if (oreRefineries.length === 1 && aiHarvesters.length >= 4 && aiFactory.budget >= buildingData.oreRefinery.cost) {
       // Second refinery (max 2 before advanced buildings)
       buildingType = 'oreRefinery'
@@ -716,58 +703,23 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
       cost = buildingData.powerPlant.cost
     }
 
-    if (!allowAdditionalBuildings) {
-      // Before the AI has four active harvesters AND first tank, only allow essential economic structures
-      const isPowerPlant = buildingType === 'powerPlant'
-      const isRefinery = buildingType === 'oreRefinery'
-      const isVehicleFactory = buildingType === 'vehicleFactory'
-
-      const allowPowerPlant = isPowerPlant && (!powerPlants.length || currentPower <= 0)
-      const allowRefinery = isRefinery && !hasOreRefinery
-      const allowVehicleFactory = isVehicleFactory && !hasVehicleFactory
-
-      if (!(allowPowerPlant || allowRefinery || allowVehicleFactory)) {
-        buildingType = null
-        cost = 0
-      }
-    }
-
-    if (!buildingType && currentPower <= 0 && canAffordPowerPlant) {
-      buildingType = 'powerPlant'
-      cost = buildingData.powerPlant.cost
-    }
-
-    if (!allowAdditionalBuildings && buildingType) {
-      // Re-validate after any fallback logic assigns a building (must have 4 harvesters AND first tank)
-      const isPowerPlant = buildingType === 'powerPlant'
-      const isRefinery = buildingType === 'oreRefinery'
-      const isVehicleFactory = buildingType === 'vehicleFactory'
-
-      const allowPowerPlant = isPowerPlant && (!powerPlants.length || currentPower <= 0)
-      const allowRefinery = isRefinery && !hasOreRefinery
-      const allowVehicleFactory = isVehicleFactory && !hasVehicleFactory
-
-      if (!(allowPowerPlant || allowRefinery || allowVehicleFactory)) {
-        buildingType = null
-        cost = 0
-      }
-    }
-
     let defencePosition = null
-    if (allowAdditionalBuildings && hasOreRefinery && hasVehicleFactory && currentPower > 0) {
+    const canPlanDefence = harvesterGoalMet && oreRefineries.length > 0 && vehicleFactories.length > 0 &&
+      hasPowerPlant && currentPower > 0 && buildingType !== 'powerPlant'
+    if (canPlanDefence && isBaseDefence(openingStep) && aiFactory.budget >= cost) {
       const plan = planBaseDefence(aiPlayerId, mapGrid, gameState.buildings, factories)
-      relocateBaseDefences(plan, aiPlayerId, gameState.buildings, aiFactory, now)
-      const nextDefence = nextBaseDefence(plan, aiPlayerId, mapGrid, units, gameState.buildings, factories, aiFactory.budget)
-      // Economic/support expansion keeps its priority. Defence choices follow the perimeter plan.
-      if (!buildingType || isBaseDefence(buildingType)) {
-        buildingType = nextDefence?.type || null
-        defencePosition = nextDefence
+      defencePosition = nextBaseDefence(plan, aiPlayerId, mapGrid, units, gameState.buildings, factories, aiFactory.budget, openingStep)
+    } else if (canPlanDefence && !openingStep) {
+      const plan = planBaseDefence(aiPlayerId, mapGrid, gameState.buildings, factories)
+      const firstWall = aiBuildings.some(b => b.type === 'concreteWall') ? null
+        : nextBaseDefence(plan, aiPlayerId, mapGrid, units, gameState.buildings, factories, aiFactory.budget, 'concreteWall')
+      if (firstWall || !buildingType || isBaseDefence(buildingType)) {
+        defencePosition = firstWall ||
+          nextBaseDefence(plan, aiPlayerId, mapGrid, units, gameState.buildings, factories, aiFactory.budget)
+        buildingType = defencePosition?.type || null
         cost = buildingType ? buildingData[buildingType].cost : 0
-        if (!buildingType && radarStations.length === 0 && aiFactory.budget >= buildingData.radarStation.cost) {
-          buildingType = 'radarStation'
-          cost = buildingData.radarStation.cost
-        }
       }
+      relocateBaseDefences(plan, aiPlayerId, gameState.buildings, aiFactory, now)
     }
 
     if (buildingType && buildingType !== 'powerPlant') {
@@ -814,10 +766,8 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
           aiFactory.buildDuration = aiFactory.buildDuration / Math.max(gameState.enemyBuildSpeedModifier, 0.01)
         }
         aiFactory.buildingPosition = position // Store position for completion
-        gameState[lastBuildingTimeKey] = now
       } else {
         window.logger(`AI ${aiPlayerId} failed to find any position for ${buildingType}`)
-        gameState[lastBuildingTimeKey] = now
       }
     }
   }
@@ -857,9 +807,7 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
       // Double-check position is still valid before placing
       const defencePlan = allowStrategicDecisions && isBaseDefence(buildingType)
         ? planBaseDefence(aiPlayerId, mapGrid, gameState.buildings, factories) : null
-      const plannedPlacement = !defencePlan || [...defencePlan.slots, ...defencePlan.walls].some(slot =>
-        slot.type === buildingType && slot.x === position.x && slot.y === position.y)
-      const placementRemainsSafe = plannedPlacement && (!allowStrategicDecisions || keepsBaseRoadsOpen(buildingType, position.x, position.y, mapGrid)) && isExplosiveBuildingPlacementSafe(
+      const placementRemainsSafe = (!allowStrategicDecisions || keepsBaseRoadsOpen(buildingType, position.x, position.y, mapGrid)) && isExplosiveBuildingPlacementSafe(
         position.x,
         position.y,
         buildingData[buildingType].width,
@@ -884,13 +832,16 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
         // Position became invalid, try to find an alternative position immediately
 
         // Try the advanced algorithm first
-        let alternativePosition = defencePlan
-          ? nextBaseDefence({ ...defencePlan, slots: defencePlan.slots.filter(slot => slot.type === buildingType), walls: buildingType === 'concreteWall' ? defencePlan.walls : [] }, aiPlayerId, mapGrid, units, gameState.buildings, factories, Infinity)
-          : findBuildingPosition(buildingType, mapGrid, units, gameState.buildings, factories, aiPlayerId,
+        const plannedAlternative = defencePlan && nextBaseDefence(
+          defencePlan, aiPlayerId, mapGrid, units, gameState.buildings, factories, Infinity, buildingType
+        )
+        let alternativePosition = plannedAlternative
+        if (!alternativePosition && buildingType !== 'concreteWall') {
+          alternativePosition = findBuildingPosition(buildingType, mapGrid, units, gameState.buildings, factories, aiPlayerId,
             (x, y) => keepsBaseRoadsOpen(buildingType, x, y, mapGrid))
+        }
 
-        // If that fails, try the simple algorithm
-        if (!alternativePosition && !defencePlan) {
+        if (!alternativePosition && buildingType !== 'concreteWall') {
           alternativePosition = findSimpleBuildingPosition(
             buildingType,
             mapGrid,
@@ -964,6 +915,11 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
       }
     }
 
+    const harvesterHunterQueuedKey = `${aiPlayerId}HarvesterHunterQueued`
+    if (unitType === 'tank_v1' && gameState[harvesterHunterQueuedKey]) {
+      gameState[harvesterHunterQueuedKey] = false
+    }
+
     // Clear unit production state
     aiFactory.currentlyProducingUnit = null
     aiFactory.unitBuildStartTime = null
@@ -983,21 +939,8 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
       gameState.buildings.filter(b => b.owner === aiPlayerId && b.type === 'vehicleFactory').length > 0 &&
       gameState.buildings.filter(b => b.owner === aiPlayerId && b.type === 'oreRefinery').length > 0) {
 
-    // Check if we need to produce the harvester hunter immediately
-    const harvesterHunterQueuedKey = `${aiPlayerId}HarvesterHunterQueued`
-    const harvesterHunterExists = units.some(
-      u => u.owner === aiPlayerId && u.harvesterHunter && u.health > 0
-    )
-    const harvesterHunterQueued = Boolean(gameState[harvesterHunterQueuedKey])
-    const aiHarvestersForCheck = units.filter(u => u.owner === aiPlayerId && u.type === 'harvester')
-    const needsHarvesterHunter = !harvesterHunterExists && !harvesterHunterQueued && aiHarvestersForCheck.length >= 4
-
-    // Reduce cooldown to 1 second when harvester hunter needs to be produced immediately
-    const productionCooldown = needsHarvesterHunter ? 1000 : 8000
-
-    // Don't produce units if already producing a unit
-    if ( aiFactory && !aiFactory.currentlyProducingUnit && now - (gameState[lastProductionKey] || 0) >= productionCooldown ) {
-      const aiHarvesters = units.filter(u => u.owner === aiPlayerId && u.type === 'harvester')
+    if (!aiFactory.currentlyProducingUnit && now - (gameState[lastProductionKey] || 0) >= 8000) {
+      const aiHarvesters = units.filter(u => u.owner === aiPlayerId && u.type === 'harvester' && u.health > 0)
       const aiAmbulances = units.filter(u => u.owner === aiPlayerId && u.type === 'ambulance')
       const aiTankers = units.filter(u => u.owner === aiPlayerId && u.type === 'tankerTruck')
       const aiApaches = units.filter(u => u.owner === aiPlayerId && u.type === 'apache' && u.health > 0)
@@ -1013,10 +956,13 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
       const helipadsForProduction = aiBuildings.filter(b => b.type === 'helipad' && b.health > 0)
       const shipyardsForProduction = aiBuildings.filter(b => b.type === 'shipyard' && b.health > 0)
       const airstripsForProduction = aiBuildings.filter(b => b.type === 'airstrip' && b.health > 0)
-      const rocketTurretsBuilt = aiBuildings.filter(b => b.type === 'rocketTurret').length
-      const teslaCoilsBuilt = aiBuildings.filter(b => b.type === 'teslaCoil').length
-      const artilleryTurretsBuilt = aiBuildings.filter(b => b.type === 'artilleryTurret').length
-      const specialDefensesReady = rocketTurretsBuilt > 0 && teslaCoilsBuilt > 0 && artilleryTurretsBuilt > 0
+      const harvesterHunterQueuedKey = `${aiPlayerId}HarvesterHunterQueued`
+      const needsHarvesterHunter = !gameState[harvesterHunterQueuedKey] &&
+        aiHarvesters.length >= OPENING_HARVESTER_COUNT &&
+        !units.some(u => u.owner === aiPlayerId && u.harvesterHunter && u.health > 0)
+      const nextOpeningStep = aiHarvesters.length >= OPENING_HARVESTER_COUNT
+        ? getOpeningDefenseStep(aiPlayerId, aiBuildings, units, aiFactory)
+        : null
       let unitType = 'tank_v1'
       let forceHarvesterHunter = false
 
@@ -1025,7 +971,6 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
       // 2. Build a tanker truck when none exists and a harvester is present
       // 3. Always build ambulance if none exists and hospital is available
       // 4. Check if we need recovery tanks based on combat unit ratio
-      // 5. Only build tanks if hospital exists (for crew support)
       // 6. Then build diverse combat units
       // 7. Focus on advanced units when budget is high
       // 8. Maintain harvester count but prioritize combat
@@ -1052,8 +997,14 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
       const totalF22Planned = aiF22s.length + f22CountInProduction
       const needF35 = totalF22Planned > 0 && (aiF35s.length + f35CountInProduction) < totalF22Planned
 
-      // Check if we need to force the harvester hunter (use variables from above)
-      if (needsHarvesterHunter) {
+      if (aiHarvesters.length < OPENING_HARVESTER_COUNT) {
+        unitType = 'harvester'
+      } else if (nextOpeningStep) {
+        unitType = buildingData[nextOpeningStep] ? 'none' : nextOpeningStep
+      } else if (finishingOpeningDefense && !aiBuildings.some(b => b.type === 'concreteWall' || b.type === 'hospital')) {
+        // Let the construction planner start the perimeter before resuming other production.
+        unitType = 'none'
+      } else if (needsHarvesterHunter) {
         unitType = 'tank_v1'
         forceHarvesterHunter = true
       } else if (aiTankers.length === 0 && aiHarvesters.length > 0 && gasStations.length > 0) {
@@ -1089,8 +1040,6 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
 
         if (needsRecoveryTank && aiFactory.budget >= getUnitCost('recoveryTank')) {
           unitType = 'recoveryTank'
-        } else if (!specialDefensesReady) {
-          unitType = 'none'
         } else {
           unitType = chooseNextSquadUnit(units, aiPlayerId, {
             hasHospital,
@@ -1121,9 +1070,7 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
           unitType === 'recoveryTank' ||
           unitType === 'howitzer'
         ) {
-          const aiVehicleFactories = gameState.buildings.filter(
-            b => b.type === 'vehicleFactory' && b.owner === aiPlayerId
-          )
+          const aiVehicleFactories = aiBuildings.filter(b => b.type === 'vehicleFactory')
 
           if (aiVehicleFactories.length > 0) {
             // Use round-robin to select the next vehicle factory
@@ -1219,8 +1166,9 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
 
   scanAndRecoverStuckEnemyHarvesters(aiPlayerId, units, mapGrid, occupancyMap, gameState, factories, now)
 
+  const defensesReady = llmStrategicActive || hasCoreBaseDefenses(aiPlayerId, aiBuildings)
   if (!llmStrategicActive) {
-    updateGroundAssaultStrategy(aiPlayerId, units, gameState, mapGrid, now)
+    updateGroundAssaultStrategy(aiPlayerId, units, gameState, mapGrid, now, defensesReady ? undefined : HOLD_ASSAULT)
   }
 
   // --- Update AI Units ---
@@ -1228,6 +1176,17 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
   try {
     for (const unit of units) {
       if (unit.owner !== aiPlayerId) continue
+      if (!defensesReady && unit.aiAssault) {
+        if (unit.aiAssault.mode === 'attack') {
+          unit.target = null
+          unit.targetId = null
+          unit.targetType = null
+          unit.path = []
+          unit.moveTarget = null
+        }
+        unit.aiAssault = null
+        unit.squadId = null
+      }
       beginBaseDefenseUnit(unit)
       try {
         updateAIUnit(unit, units, gameState, mapGrid, now, aiPlayerId, targetedOreTiles, bullets)

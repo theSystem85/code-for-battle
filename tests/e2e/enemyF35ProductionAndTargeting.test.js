@@ -40,6 +40,10 @@ test.describe('Enemy F35 production parity and strike targeting', () => {
       const buildings = gs.buildings || []
       const humanPlayer = gs.humanPlayer || 'player1'
       const enemyPlayer = humanPlayer === 'player1' ? 'player2' : 'player1'
+      gs.playerCount = 2
+      if (gs.partyStates) {
+        gs.partyStates = gs.partyStates.filter(party => party.partyId === humanPlayer || party.partyId === enemyPlayer)
+      }
       const knownUnitIds = new Set(units.map(u => u.id))
 
       const enemyBaseBuilding = buildings.find(b => b.owner === enemyPlayer && b.health > 0)
@@ -56,11 +60,35 @@ test.describe('Enemy F35 production parity and strike targeting', () => {
 
       const enemyX = enemyBaseBuilding.x + 6
       const enemyY = enemyBaseBuilding.y + 4
-      spawnAt(enemyX + 0, enemyY + 0, `build airstrip ${enemyPlayer}`)
-      spawnAt(enemyX + 4, enemyY + 0, `build hospital ${enemyPlayer}`)
-      spawnAt(enemyX + 8, enemyY + 0, `build rocketTurret ${enemyPlayer}`)
-      spawnAt(enemyX + 10, enemyY + 0, `build teslaCoil ${enemyPlayer}`)
-      spawnAt(enemyX + 12, enemyY + 0, `build artilleryTurret ${enemyPlayer}`)
+      const placeEnemyBuilding = type => {
+        let position = null
+        let nearestDistance = Infinity
+        for (let y = 0; y < gs.mapGrid.length; y++) {
+          for (let x = 0; x < gs.mapGrid[y].length; x++) {
+            const distance = Math.abs(x - enemyX) + Math.abs(y - enemyY)
+            if (distance < nearestDistance && window.cheatSystem.isValidBuildingSpawnPosition(type, x, y)) {
+              position = { x, y }
+              nearestDistance = distance
+            }
+          }
+        }
+        if (position) spawnAt(position.x, position.y, `build ${type} ${enemyPlayer}`)
+        return position
+      }
+      const completedBase = [
+        'airstrip', 'hospital', 'rocketTurret', 'teslaCoil', 'artilleryTurret',
+        'turretGunV1', 'radarStation', 'vehicleFactory', 'oreRefinery'
+      ]
+      for (const type of completedBase) {
+        if (!buildings.some(b => b.owner === enemyPlayer && b.type === type && b.health > 0) &&
+            !placeEnemyBuilding(type)) {
+          return { error: `Missing ${type} in post-opening AI fixture` }
+        }
+      }
+      const powerPlants = buildings.filter(b => b.owner === enemyPlayer && b.type === 'powerPlant' && b.health > 0).length
+      for (let i = powerPlants; i < 4; i++) {
+        if (!placeEnemyBuilding('powerPlant')) return { error: 'Could not supply power to the post-opening AI fixture' }
+      }
 
       spawnAt(enemyX + 2, enemyY + 3, `f22Raptor 1 ${enemyPlayer}`)
       spawnAt(enemyX + 2, enemyY + 4, `harvester 4 ${enemyPlayer}`)
@@ -71,7 +99,7 @@ test.describe('Enemy F35 production parity and strike targeting', () => {
       const humanX = humanBaseBuilding.x + 8
       const humanY = humanBaseBuilding.y + 5
       spawnAt(humanX + 0, humanY + 0, `build powerPlant ${humanPlayer}`)
-      spawnAt(humanX + 6, humanY + 0, `build oreRefinery ${humanPlayer}`)
+      spawnAt(humanX + 20, humanY + 0, `build oreRefinery ${humanPlayer}`)
       spawnAt(humanX + 0, humanY + 1, `rocketTank 1 ${humanPlayer}`)
 
       const spawned = units.filter(u => !knownUnitIds.has(u.id))
@@ -105,6 +133,8 @@ test.describe('Enemy F35 production parity and strike targeting', () => {
       aiFactory.unitBuildDuration = null
       aiFactory.unitSpawnBuilding = null
       gs[`${enemyPlayer}LastProductionTime`] = 0
+      gs.aiAdvancedForcePreferences ||= {}
+      gs.aiAdvancedForcePreferences[enemyPlayer] = 'air-first'
 
       window.__enemyF35ParityE2E = {
         enemyPlayer,

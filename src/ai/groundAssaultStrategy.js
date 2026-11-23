@@ -904,6 +904,10 @@ function followSupportUnit(unit, tile, mapGrid, gameState, now) {
 
 export function updateGroundAssaultStrategy(aiPlayerId, units, gameState, mapGrid, now, options = {}) {
   const bucket = ensureBucket(gameState, aiPlayerId)
+  if (options.defensesReady === false) {
+    evaluationsByState.get(gameState)?.delete(aiPlayerId)
+    return bucket
+  }
   const headroom = options.headroomMs !== undefined ? options.headroomMs : globalThis.__cfbFrameHeadroomMs
   if (!mapGrid?.length || !mapGrid[0]?.length || !hasStrategyCpuBudget(headroom)) return bucket
 
