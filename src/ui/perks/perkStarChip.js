@@ -13,9 +13,19 @@ export function initPerkStarChip() {
   const chip = document.getElementById('perkStarChip')
   const menu = document.getElementById('perkStarMenu')
   if (!chip || !menu) return
+  document.body.appendChild(menu)
   events = new AbortController()
   const signal = events.signal
   const close = () => { menu.hidden = true; chip.setAttribute('aria-expanded', 'false') }
+  const positionMenu = () => {
+    if (menu.hidden) return
+    const anchor = chip.getBoundingClientRect()
+    const gap = 5
+    const width = menu.offsetWidth
+    const height = menu.offsetHeight
+    menu.style.left = `${Math.max(0, Math.min(anchor.right + gap, window.innerWidth - width))}px`
+    menu.style.top = `${Math.max(0, Math.min(anchor.top, window.innerHeight - height))}px`
+  }
   chip.addEventListener('click', () => {
     if (!menu.hidden) return close()
     const owner = gameState.humanPlayer || 'player1'
@@ -25,6 +35,7 @@ export function initPerkStarChip() {
     menu.querySelector('[data-perk-tree="research"]').hidden = !research
     menu.querySelector('.perk-star-menu__empty').hidden = command || research
     menu.hidden = false
+    positionMenu()
     chip.setAttribute('aria-expanded', 'true')
   }, { signal })
   menu.addEventListener('click', event => {
@@ -36,8 +47,10 @@ export function initPerkStarChip() {
     if (available) import('./perkTree.js').then(({ openPerkTree }) => openPerkTree(button.dataset.perkTree))
   }, { signal })
   document.addEventListener('click', event => {
-    if (!chip.parentElement.contains(event.target)) close()
+    if (!chip.contains(event.target) && !menu.contains(event.target)) close()
   }, { signal })
+  window.addEventListener('resize', positionMenu, { signal })
+  document.addEventListener('scroll', positionMenu, { signal, capture: true })
   document.addEventListener('keydown', event => {
     if (event.key === 'Escape' && !menu.hidden) { close(); chip.focus() }
   }, { signal })

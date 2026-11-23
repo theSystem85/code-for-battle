@@ -19,11 +19,10 @@
 }
 
 .perk-star-menu {
-  position: absolute;
-  top: calc(100% + 5px);
-  right: 0;
-  z-index: 10;
-  min-width: 180px;
+  position: fixed;
+  z-index: calc(var(--z-modal-raised) + 1);
+  box-sizing: border-box;
+  width: min(180px, 100vw);
   padding: 4px;
   border: 1px solid #d5a843;
   border-radius: 8px;
