@@ -1,17 +1,50 @@
+.perk-star-control { position: relative; margin-left: auto; flex-shrink: 0; }
 .perk-star-chip {
   display: inline-flex;
   align-items: center;
   min-height: 26px;
-  margin-left: auto;
   border: 1px solid #d5a843;
   border-radius: 999px;
   background: #241d0d;
   color: #ffd75b;
   padding: 3px 8px;
   font-size: 11px;
-  font-weight: 800;
+  font-family: inherit;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.15;
+  cursor: pointer;
+  appearance: none;
   white-space: nowrap;
 }
+
+.perk-star-menu {
+  position: absolute;
+  top: calc(100% + 5px);
+  right: 0;
+  z-index: 10;
+  min-width: 180px;
+  padding: 4px;
+  border: 1px solid #d5a843;
+  border-radius: 8px;
+  background: #171c22;
+  color: #fff;
+}
+.perk-star-menu[hidden] { display: none; }
+.perk-star-menu button, .perk-star-menu__empty {
+  display: block;
+  width: 100%;
+  padding: 8px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  font: inherit;
+}
+.perk-star-menu button { cursor: pointer; }
+.perk-star-menu button:hover, .perk-star-menu button:focus-visible { background: #54431f; }
+.perk-star-menu [hidden] { display: none; }
 
 .perk-star-chip.is-affordable {
   animation: perk-chip-pulse 1.5s ease-in-out infinite;

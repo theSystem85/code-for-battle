@@ -267,7 +267,14 @@
       <div id="offlineUpdatePrompt" class="offline-update-prompt" hidden>
         <button id="offlineUpdateReload" class="offline-update-prompt__button" type="button" data-offline-update-label>Update available – reload</button>
       </div>
-      <span id="perkStarChip" class="perk-star-chip" title="Available veterancy stars">★ 0</span>
+      <div class="perk-star-control">
+        <button id="perkStarChip" class="perk-star-chip" type="button" title="Available veterancy stars" aria-label="Available veterancy stars" aria-expanded="false" aria-controls="perkStarMenu">★ 0</button>
+        <div id="perkStarMenu" class="perk-star-menu" hidden>
+          <button type="button" data-perk-tree="command">Automation perks</button>
+          <button type="button" data-perk-tree="research">Tech center perks</button>
+          <span class="perk-star-menu__empty" hidden>No perk centers available</span>
+        </div>
+      </div>
       <button id="offlineModeButton" class="offline-mode-button" type="button" aria-pressed="false" aria-describedby="offlineModeTip">
         <i class="offline-mode-button__light" aria-hidden="true"></i>
         <span data-offline-label>Online</span>
