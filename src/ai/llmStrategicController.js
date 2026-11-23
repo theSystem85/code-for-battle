@@ -75,7 +75,7 @@ CompactStrategicInput key fields:
 - forceGroups.detailedUnits: extra per-unit detail for harvesters, support, aircraft, damaged units, and units already engaged in combat
 - knownEnemyIntel.visibleForceGroups / priorityTargets: visible enemy groups and the most important enemy ids to attack
 - mapIntel: compact map and base-location context instead of raw map tiles
-- techTreeCsv: compressed CSV string with the full tech tree for long-term planning using k,type,cost,req,extra where k is B or U
+- techTreeCsv: compressed CSV string with the full tech tree for long-term planning using k,type,cost,req,extra where k is B or U. Unit extra overrides the spawn source, which otherwise is the required factory or defaults to vehicleFactory
 - productionOptions.availableBuildings / availableUnits: the current tech-legal buildings and units you may request right now, with costs and basic roles
 - queueState.llmQueue: YOUR current production queue with status tracking:
   - buildings: array of {buildingType, status} where status is "queued"|"building"|"completed"|"failed"
@@ -1012,7 +1012,7 @@ async function runStrategicTickForPlayer(playerId, state, settings, now, modelCo
                   type: 'string',
                   enum: [
                     'constructionYard', 'powerPlant', 'oreRefinery', 'vehicleFactory',
-                    'vehicleWorkshop', 'radarStation', 'hospital', 'helipad', 'shipyard', 'airstrip', 'gasStation',
+                    'vehicleWorkshop', 'radarStation', 'hospital', 'helipad', 'shipyard', 'airstrip', 'planeFactory', 'gasStation',
                     'ammunitionFactory', 'turretGunV1', 'turretGunV2', 'turretGunV3',
                     'rocketTurret', 'teslaCoil', 'artilleryTurret', 'concreteWall'
                   ]
@@ -1034,7 +1034,7 @@ async function runStrategicTickForPlayer(playerId, state, settings, now, modelCo
                     'tank', 'tank_v1', 'tank-v2', 'tank-v3', 'lightTank', 'rocketTank', 'harvester',
                     'ambulance', 'tankerTruck', 'ammunitionTruck', 'recoveryTank',
                     'howitzer', 'apache', 'destroyer', 'hovercraft', 'vehicleFerry', 'aircraftCarrier',
-                    'navalMineLayer', 'battleship', 'submarine', 'f22Raptor', 'f35', 'mineLayer', 'mineSweeper'
+                    'navalMineLayer', 'battleship', 'submarine', 'f22Raptor', 'f35', 'c5Galaxy', 'mineLayer', 'mineSweeper'
                   ]
                 },
                 count: { type: 'number' },

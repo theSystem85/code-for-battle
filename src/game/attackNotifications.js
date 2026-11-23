@@ -59,6 +59,8 @@ const UNIT_TYPE_DISPLAY_NAMES = {
   howitzer: 'Howitzer',
   apache: 'Apache',
   f35: 'F35',
+  f22Raptor: 'F-22 Raptor',
+  c5Galaxy: 'C-5 Galaxy',
   destroyer: 'Destroyer',
   supplyShip: 'Supply Ship',
   hovercraft: 'Hovercraft',
@@ -69,7 +71,7 @@ const UNIT_TYPE_DISPLAY_NAMES = {
   submarine: 'Submarine'
 }
 
-function getUnitDisplayName(unitType) {
+export function getUnitDisplayName(unitType) {
   return UNIT_TYPE_DISPLAY_NAMES[unitType] || unitType.replace(/[_-]/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase())
 }
 

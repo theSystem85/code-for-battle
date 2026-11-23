@@ -19,7 +19,7 @@ import { constructPlayerBuilding } from './game/playerBuildingLifecycle.js'
 import { broadcastUnitSpawn, isHost } from './network/gameCommandSync.js'
 import { gameRandom } from './utils/gameRandom.js'
 import { mapBlueprintsToFootprints } from './planning/blueprintPlanning.js'
-import { ensureAirstripOperations, claimAirstripParkingSlot, canReserveC5ParkingSlots } from './utils/airstripUtils.js'
+import { AIRCRAFT_TYPES, findGalaxySpawnTile, hasPlaneFactory, isOperationalPlaneFactory } from './production/aircraftProduction.js'
 import { getSimulationTime } from './game/time.js'
 import { isLocalPartyAutomationLocked } from './network/multiplayerStore.js'
 import { isReplayInteractionLocked, isReplayModeActive, recordReplayCommand } from './replaySystem.js'
@@ -73,28 +73,9 @@ export const productionQueue = {
     if (!current) return null
     const buildings = gameState.buildings || []
     let candidates = []
-    let available = null
     let nextIndex = 0
-    if (current.type === 'f22Raptor' || current.type === 'c5Galaxy') {
-      candidates = buildings.filter(b => b.type === 'airstrip' && b.owner === gameState.humanPlayer && b.health > 0)
-      available = candidates.filter(building => {
-        ensureAirstripOperations(building)
-        return current.type === 'c5Galaxy' ? canReserveC5ParkingSlots(building) : claimAirstripParkingSlot(building) >= 0
-      })
-      nextIndex = gameState.nextAirstripIndex ?? 0
-    } else if (current.type === 'apache') {
-      candidates = buildings.filter(b => b.type === 'helipad' && b.owner === gameState.humanPlayer && b.health > 0)
-      const empty = candidates.filter(b => !b.landedUnitId)
-      available = empty.length ? empty : candidates
-      nextIndex = gameState.nextHelipadIndex ?? 0
-    } else if (current.type === 'f35') {
-      candidates = buildings.filter(b => (b.type === 'helipad' || b.type === 'airstrip') && b.owner === gameState.humanPlayer && b.health > 0)
-      available = candidates.filter(building => {
-        if (building.type === 'helipad') return !building.landedUnitId
-        ensureAirstripOperations(building)
-        return claimAirstripParkingSlot(building) >= 0
-      })
-      nextIndex = gameState.nextF35PadIndex ?? 0
+    if (AIRCRAFT_TYPES.includes(current.type)) {
+      candidates = buildings.filter(building => isOperationalPlaneFactory(building, gameState.humanPlayer))
     } else if (navalUnitTypes.includes(current.type)) {
       candidates = buildings.filter(b => b.type === 'shipyard' && b.owner === gameState.humanPlayer && b.health > 0)
       nextIndex = gameState.nextShipyardIndex ?? 0
@@ -102,8 +83,8 @@ export const productionQueue = {
       candidates = buildings.filter(b => b.type === 'vehicleFactory' && b.owner === gameState.humanPlayer)
       nextIndex = gameState.nextVehicleFactoryIndex ?? 0
     }
-    const resolution = resolveSpawnFactory(candidates, available || candidates, current.factoryId, nextIndex)
-    return current.type === 'c5Galaxy' && resolution.status === 'unavailable' ? null : resolution.factory
+    const resolution = resolveSpawnFactory(candidates, candidates, current.factoryId, nextIndex)
+    return resolution.factory
   },
 
   updateMapProductionProgress: function(progress) {
@@ -473,6 +454,16 @@ export const productionQueue = {
     // Reset paid tracker for this production
     this.unitPaid = 0
 
+    if (AIRCRAFT_TYPES.includes(item.type) && !hasPlaneFactory(gameState.buildings || [], gameState.humanPlayer)) {
+      showNotification('Aircraft production requires an operational Plane Factory.')
+      failCompletionReceipt(item.completionReceiptId, 'the required Plane Factory is unavailable')
+      this.refundSuspendedProduction(item)
+      this.unitItems.shift()
+      this.updateBatchCounter(item.button, this.unitItems.filter(queued => queued.button === item.button).length)
+      this.startNextUnitProduction()
+      return
+    }
+
     // Check for vehicle factory requirement and multiplier
     let vehicleMultiplier = 1 // Default multiplier
     if (vehicleFactorySpeedUnitTypes.includes(item.type)) {
@@ -711,7 +702,17 @@ export const productionQueue = {
         progressBar.style.width = `${progress * 100}%`
       }
       if (progress >= 1) {
-        if (item.type === 'c5Galaxy' && !this.resolveCurrentUnitSpawnBuilding()) return
+        if (AIRCRAFT_TYPES.includes(item.type)) {
+          const factory = this.productionProgressBuilding
+          if (!factory) return
+          if (item.type === 'c5Galaxy' && !findGalaxySpawnTile(factory, gameState.mapGrid, gameState.occupancyMap)) {
+            if (!this.currentUnit.apronBlockedNotified) {
+              this.currentUnit.apronBlockedNotified = true
+              showNotification('C-5 Galaxy is waiting for a clear apron in front of the Plane Factory.')
+            }
+            return
+          }
+        }
         this.completeCurrentUnitProduction()
       }
     }
@@ -774,142 +775,8 @@ export const productionQueue = {
     let spawnFactory = null
     let rallyPointTarget = this.currentUnit.rallyPoint || null // Rally point from drag&drop
 
-    if (unitType === 'f22Raptor' || unitType === 'c5Galaxy') {
-      const allAirstrips = (gameState.buildings || []).filter(
-        b => b.type === 'airstrip' && b.owner === gameState.humanPlayer && b.health > 0
-      )
-
-      if (allAirstrips.length === 0) {
-        console.error('Cannot spawn F22 Raptor: No Airstrip found.')
-        showNotification('Production cancelled: F22 Raptor requires an operational Airstrip.')
-        this.currentUnit.button.classList.remove('active', 'paused')
-        if (!itemSpawned) failCompletionReceipt(completionReceiptId, 'the unit could not be spawned')
-        this.clearMapProductionProgress()
-        this.currentUnit = null
-        this.startNextUnitProduction()
-        return
-      }
-
-      const availableAirstrips = allAirstrips.filter(airstrip => {
-        ensureAirstripOperations(airstrip)
-        return unitType === 'c5Galaxy' ? canReserveC5ParkingSlots(airstrip) : claimAirstripParkingSlot(airstrip) >= 0
-      })
-
-      if (!availableAirstrips.length) {
-        showNotification('All airstrip parking slots are occupied. F22 production is waiting for a free slot.')
-        this.pausedUnit = true
-        return
-      }
-
-      const requestedAirstrip = resolveSpawnFactory(
-        allAirstrips,
-        availableAirstrips,
-        this.currentUnit.factoryId,
-        gameState.nextAirstripIndex ?? 0
-      )
-      if (requestedAirstrip.status === 'unavailable') {
-        showNotification('Airstrip parking is full. F22 production is waiting for a free slot.')
-        this.pausedUnit = true
-        return
-      }
-      spawnFactory = requestedAirstrip.factory
-      if (requestedAirstrip.selection === 'round-robin') {
-        gameState.nextAirstripIndex = gameState.nextAirstripIndex ?? 0
-        gameState.nextAirstripIndex = (gameState.nextAirstripIndex + 1) % availableAirstrips.length
-      }
-
-      if (!rallyPointTarget && spawnFactory.rallyPoint) {
-        rallyPointTarget = spawnFactory.rallyPoint
-      }
-    } else if (unitType === 'apache') {
-      const allHelipads = (gameState.buildings || []).filter(
-        b => b.type === 'helipad' && b.owner === gameState.humanPlayer && b.health > 0
-      )
-
-      if (allHelipads.length === 0) {
-        console.error('Cannot spawn apache: No Helipad found.')
-        showNotification('Production cancelled: Apache requires an operational Helipad.')
-        this.currentUnit.button.classList.remove('active', 'paused')
-        if (!itemSpawned) failCompletionReceipt(completionReceiptId, 'the unit could not be spawned')
-        this.clearMapProductionProgress()
-        this.currentUnit = null
-        this.startNextUnitProduction()
-        return
-      }
-
-      const availableHelipads = allHelipads.filter(h => !h.landedUnitId)
-      const selectionPool = availableHelipads.length > 0 ? availableHelipads : allHelipads
-      const requestedHelipad = resolveSpawnFactory(
-        allHelipads,
-        selectionPool,
-        this.currentUnit.factoryId,
-        gameState.nextHelipadIndex ?? 0
-      )
-      spawnFactory = requestedHelipad.factory
-      if (requestedHelipad.selection === 'round-robin') {
-        gameState.nextHelipadIndex = gameState.nextHelipadIndex ?? 0
-        gameState.nextHelipadIndex = (gameState.nextHelipadIndex + 1) % selectionPool.length
-      }
-
-      if (spawnFactory && spawnFactory.landedUnitId) {
-        const occupyingUnit = units.find(u => u && u.id === spawnFactory.landedUnitId)
-        if (occupyingUnit) {
-          occupyingUnit.manualFlightState = 'takeoff'
-          occupyingUnit.helipadLandingRequested = false
-          occupyingUnit.helipadTargetId = null
-          occupyingUnit.landedHelipadId = null
-        }
-        spawnFactory.landedUnitId = null
-      }
-
-      if (!rallyPointTarget && spawnFactory.rallyPoint) {
-        rallyPointTarget = spawnFactory.rallyPoint
-      }
-    } else if (unitType === 'f35') {
-      const allPads = (gameState.buildings || []).filter(
-        b => (b.type === 'helipad' || b.type === 'airstrip') && b.owner === gameState.humanPlayer && b.health > 0
-      )
-
-      if (allPads.length === 0) {
-        console.error('Cannot spawn F35: No Helipad or Airstrip found.')
-        showNotification('Production cancelled: F35 requires an operational Helipad or Airstrip.')
-        this.currentUnit.button.classList.remove('active', 'paused')
-        if (!itemSpawned) failCompletionReceipt(completionReceiptId, 'the unit could not be spawned')
-        this.clearMapProductionProgress()
-        this.currentUnit = null
-        this.startNextUnitProduction()
-        return
-      }
-
-      const availablePads = allPads.filter(building => {
-        if (building.type === 'helipad') {
-          return !building.landedUnitId
-        }
-        ensureAirstripOperations(building)
-        return claimAirstripParkingSlot(building) >= 0
-      })
-
-      if (!availablePads.length) {
-        showNotification('All helipad and airstrip parking slots are occupied. F35 production is waiting for a free slot.')
-        this.pausedUnit = true
-        return
-      }
-
-      const requestedPad = resolveSpawnFactory(allPads, availablePads, this.currentUnit.factoryId, gameState.nextF35PadIndex ?? 0)
-      if (requestedPad.status === 'unavailable') {
-        showNotification('The selected pad is full. F35 production is waiting for a free slot.')
-        this.pausedUnit = true
-        return
-      }
-      spawnFactory = requestedPad.factory
-      if (requestedPad.selection === 'round-robin') {
-        gameState.nextF35PadIndex = gameState.nextF35PadIndex ?? 0
-        gameState.nextF35PadIndex = (gameState.nextF35PadIndex + 1) % availablePads.length
-      }
-
-      if (!rallyPointTarget && spawnFactory.rallyPoint) {
-        rallyPointTarget = spawnFactory.rallyPoint
-      }
+    if (AIRCRAFT_TYPES.includes(unitType)) {
+      spawnFactory = this.resolveCurrentUnitSpawnBuilding()
     } else if (navalUnitTypes.includes(unitType)) {
       const shipyards = gameState.buildings.filter(
         b => b.type === 'shipyard' && b.owner === gameState.humanPlayer && b.health > 0
@@ -1918,7 +1785,7 @@ const unitLaneMethods = {
   getSerializableState: productionQueue.getSerializableState,
   restoreFromSerializableState: productionQueue.restoreFromSerializableState
 }
-const airUnitTypes = new Set(['apache', 'f22Raptor', 'f35', 'c5Galaxy'])
+const airUnitTypes = new Set(AIRCRAFT_TYPES)
 const unitProductionLaneForType = type => navalUnitTypes.includes(type) ? 'naval' : airUnitTypes.has(type) ? 'air' : 'ground'
 const createUnitLane = () => {
   const lane = Object.create(productionQueue)

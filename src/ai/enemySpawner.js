@@ -22,8 +22,8 @@ export function spawnEnemyUnit(spawnBuilding, unitType, units, mapGrid, gameStat
 
   unit.owner = aiPlayerId
   unit.spawnTime = getSimulationTime(gameState)
-  unit.spawnedInFactory = true
-  unit.holdInFactory = true
+  unit.spawnedInFactory = !unit.aircraftDelivery
+  unit.holdInFactory = !unit.aircraftDelivery
   unit.factoryBuildEndTime = productionStartTime + 5000
   unit.lastPathCalcTime = 0
   unit.lastPositionCheckTime = 0
@@ -72,7 +72,7 @@ export function spawnEnemyUnit(spawnBuilding, unitType, units, mapGrid, gameStat
   }
 
   // Keep air units pinned to pad/strip while grounded so they never wander across grass.
-  if ((unitType === 'apache' || unitType === 'f22Raptor') && unit.flightState === 'grounded') {
+  if (!unit.aircraftDelivery && (unitType === 'apache' || unitType === 'f22Raptor') && unit.flightState === 'grounded') {
     unit.path = []
     unit.moveTarget = null
     unit.x = Math.floor(unit.x / TILE_SIZE) * TILE_SIZE

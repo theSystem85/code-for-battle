@@ -130,6 +130,9 @@ migrations[10] = state => ({
 // Missing spread boosts and burned-fuel flags retain their default values.
 migrations[8] = state => ({ ...state })
 
+// Legacy aircraft already spawned at their destination and have no factory delivery to resume.
+migrations[11] = state => ({ ...state })
+
 export function migrateLiveState(state, fromVersion, toVersion) {
   assertSchemaVersion(fromVersion, 'source version')
   assertSchemaVersion(toVersion, 'target version')

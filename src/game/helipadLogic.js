@@ -201,6 +201,7 @@ export const updateHelipadLogic = logPerformance(function(units, buildings, _gam
           }
         }
         apacheUnits.forEach(heli => {
+          if (heli.aircraftDelivery && heli.manualFlightState === 'takeoff') return
           const heliCenterX = heli.x + TILE_SIZE / 2
           const heliCenterY = heli.y + TILE_SIZE / 2
           const distance = Math.hypot(heliCenterX - helipadCenterX, heliCenterY - helipadCenterY)
@@ -369,6 +370,7 @@ export const updateHelipadLogic = logPerformance(function(units, buildings, _gam
       if (helipad.type === 'airstrip') {
         const stripUnits = units.filter(u => (u.type === 'f22Raptor' || u.type === 'f35' || u.type === 'apache') && u.health > 0)
         stripUnits.forEach(f22 => {
+          if (f22.aircraftDelivery && f22.manualFlightState === 'takeoff') return
           const assignedParking = Number.isInteger(f22.airstripParkingSlotIndex)
             ? helipad.f22ParkingSpots?.[f22.airstripParkingSlotIndex]
             : null

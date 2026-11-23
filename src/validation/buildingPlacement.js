@@ -1,3 +1,4 @@
+import { isGroundAircraftDelivery } from '../production/aircraftProduction.js'
 import { getAdvancedBuildingRequirement } from '../production/advancedBuildingAccess.js'
 /**
  * Building placement validation functions
@@ -13,7 +14,7 @@ import { hasResearchCenterPrerequisites } from '../production/researchCenterRequ
 import { buildingData } from '../data/buildingData.js'
 import { getRegisteredDecorationLayout } from '../game/decorationLayoutRegistry.js'
 import { gameState } from '../gameState.js'
-import { hasMovableOccupancy } from '../game/occupancyTags.js'
+import { hasMovableOccupancy, movableOccupancyCount } from '../game/occupancyTags.js'
 import { getValidDecorationCell } from '../rendering/decorationLayout.js'
 
 const NON_EXPANDING_BUILD_AREA_TYPES = new Set(['street', 'concreteWall'])
@@ -62,6 +63,19 @@ function hasUnitAtTile(units, tileX, tileY) {
     Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE) === tileX &&
     Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE) === tileY
   )
+}
+
+// A waiting aircraft must be able to receive the street beneath its wheels.
+function blocksPaving(units, mapGrid, x, y) {
+  let deliveryOccupants = 0
+  for (const unit of units) {
+    if (Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE) !== x ||
+      Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE) !== y) continue
+    if (!isGroundAircraftDelivery(unit) || unit.factoryExit || unit.health <= 0) return true
+    if (unit.type !== 'c5Galaxy') deliveryOccupants++
+  }
+  return gameState.mapGrid === mapGrid &&
+    movableOccupancyCount(gameState.occupancyMap?.[y]?.[x]) > deliveryOccupants
 }
 
 /** Shared Shipyard footprint rule used by placement validation and its overlay. */
@@ -201,7 +215,10 @@ export function isBuildingFootprintInBuildRange(type, tileX, tileY, buildings, f
 export function canPlaceBuilding(type, tileX, tileY, mapGrid, units, buildings, factories, owner = 'player', options = {}) {
   if (!buildingData[type]) return false
   if (type === 'technologyResearchCenter' && !options.mapEditMode && !hasResearchCenterPrerequisites(buildings, owner)) return false
-  if (!options.mapEditMode && getAdvancedBuildingRequirement(type, buildings, owner)) return false
+  const aiPlaneFactory = type === 'planeFactory' && options.aiPlaneFactory &&
+    buildings.some(building => building.owner === owner && !building.isBeingSold && building.health > 0 &&
+      (building.type === 'helipad' || building.type === 'airstrip'))
+  if (!options.mapEditMode && !aiPlaneFactory && getAdvancedBuildingRequirement(type, buildings, owner)) return false
   const limit = buildingData[type].limit
   const normalizedOwner = owner === 'player' ? 'player1' : owner
   if (Number.isFinite(limit) && (buildings || []).filter(building => building.type === type && (building.owner === 'player' ? 'player1' : building.owner) === normalizedOwner && building.health > 0).length >= limit) return false
@@ -219,6 +236,7 @@ export function canPlaceBuilding(type, tileX, tileY, mapGrid, units, buildings, 
 
   const isFactoryOrRefinery = type === 'vehicleFactory' || type === 'oreRefinery' || type === 'vehicleWorkshop'
   const isShipyard = type === 'shipyard'
+  const isStreet = type === 'street'
 
   // Check map boundaries
   if (tileX < 0 || tileY < 0 ||
@@ -242,14 +260,14 @@ export function canPlaceBuilding(type, tileX, tileY, mapGrid, units, buildings, 
           mapGrid[y][x].seedCrystal ||
           mapGrid[y][x].building ||
           mapGrid[y][x].buildOnlyOccupied ||
-          hasMovablePlacementBlocker(mapGrid, x, y) ||
+          (isStreet ? blocksPaving(units, mapGrid, x, y) : hasMovablePlacementBlocker(mapGrid, x, y)) ||
           (!isFactoryOrRefinery && mapGrid[y][x].noBuild) ||
           (!isShipyard && isDecorativeBuildBlocker(mapGrid, x, y))) {
         return false
       }
 
       // Check for units at this position
-      if (!isShipyard && hasUnitAtTile(units, x, y)) {
+      if (!isShipyard && !isStreet && hasUnitAtTile(units, x, y)) {
         return false
       }
     }
@@ -330,7 +348,8 @@ export function isTileValid(tileX, tileY, mapGrid, _units, _buildings, _factorie
       mapGrid[tileY][tileX].seedCrystal ||
       mapGrid[tileY][tileX].building ||
       mapGrid[tileY][tileX].buildOnlyOccupied ||
-      hasMovablePlacementBlocker(mapGrid, tileX, tileY) ||
+      (hasMovablePlacementBlocker(mapGrid, tileX, tileY) &&
+        (buildingType !== 'street' || blocksPaving(_units, mapGrid, tileX, tileY))) ||
       (!isFactoryOrRefinery && mapGrid[tileY][tileX].noBuild) ||
       isDecorativeBuildBlocker(mapGrid, tileX, tileY)) {
     return false

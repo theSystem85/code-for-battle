@@ -1,3 +1,4 @@
+import { isGroundAircraftDelivery } from '../production/aircraftProduction.js'
 // unitMovement.js - Handles all unit movement logic
 import {
   TILE_SIZE,
@@ -70,7 +71,7 @@ export const updateUnitMovement = logPerformance(function updateUnitMovement(uni
       continue
     }
 
-    if (unit.factoryExit || unit.type === 'c5Galaxy' || unit.c5Drop || unit.c5Boarding?.loading) continue
+    if (unit.factoryExit || isGroundAircraftDelivery(unit) || unit.type === 'c5Galaxy' || unit.c5Drop || unit.c5Boarding?.loading) continue
     if (unit.embarkedOnId || unit.carrierOperation || unit.transportOperation || unit.transportTransfer || unit.transportBoardingLocked) {
       initializeUnitMovement(unit)
       unit.movement.velocity = { x: 0, y: 0 }

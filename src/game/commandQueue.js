@@ -1,3 +1,4 @@
+import { isGroundAircraftDelivery } from '../production/aircraftProduction.js'
 import { startMineDeployment, isMinePlantTileBlocked } from './mineLayerBehavior.js'
 import { safeSweeperDetonation, getMineAtTile } from './mineSystem.js'
 import { activateSweepingMode } from './mineSweeperBehavior.js'
@@ -8,7 +9,7 @@ import { getSimulationTime } from './time.js'
 
 export function processCommandQueues(units, mapGrid, unitCommands, buildings = []) {
   units.forEach(unit => {
-    if (unit.factoryExit) return
+    if (unit.factoryExit || isGroundAircraftDelivery(unit)) return
     if ((!unit.commandQueue || unit.commandQueue.length === 0) && !unit.currentCommand) return
 
     if (!unit.currentCommand) {

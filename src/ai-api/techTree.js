@@ -1,3 +1,4 @@
+import { AIRCRAFT_TYPES, hasPlaneFactory } from '../production/aircraftProduction.js'
 import { advancedBuildingTypes, getAdvancedBuildingRequirement } from '../production/advancedBuildingAccess.js'
 import { UNIT_COSTS } from '../config.js'
 import { hasResearchCenterPrerequisites } from '../production/researchCenterRequirements.js'
@@ -17,6 +18,7 @@ const FULL_BUILDING_TECH_TREE = [
   { type: 'helipad', req: '-' },
   { type: 'shipyard', req: 'radarStation+vehicleFactory' },
   { type: 'airstrip', req: 'radarStation' },
+  { type: 'planeFactory', req: 'helipad|airstrip' },
   { type: 'gasStation', req: '-' },
   { type: 'turretGunV1', req: '-' },
   { type: 'concreteWall', req: '-' },
@@ -39,7 +41,7 @@ const FULL_UNIT_TECH_TREE = [
   { type: 'recoveryTank', req: 'vehicleFactory+vehicleWorkshop', spawn: 'vehicleFactory' },
   { type: 'mineSweeper', req: 'vehicleFactory+vehicleWorkshop', spawn: 'vehicleFactory' },
   { type: 'mineLayer', req: 'vehicleFactory+vehicleWorkshop+ammunitionFactory', spawn: 'vehicleFactory' },
-  { type: 'apache', req: 'helipad', spawn: 'helipad' },
+  ...AIRCRAFT_TYPES.map(type => ({ type, req: 'planeFactory', spawn: 'planeFactory' })),
   { type: 'destroyer', req: 'shipyard', spawn: 'shipyard' },
   { type: 'hovercraft', req: 'shipyard', spawn: 'shipyard' },
   { type: 'vehicleFerry', req: 'shipyard', spawn: 'shipyard' },
@@ -47,8 +49,6 @@ const FULL_UNIT_TECH_TREE = [
   { type: 'navalMineLayer', req: 'shipyard', spawn: 'shipyard' },
   { type: 'battleship', req: 'shipyard', spawn: 'shipyard' },
   { type: 'submarine', req: 'shipyard', spawn: 'shipyard' },
-  { type: 'f22Raptor', req: 'airstrip', spawn: 'airstrip' },
-  { type: 'f35', req: 'airstrip', spawn: 'airstrip' },
   { type: 'tank-v3', req: '2xvehicleFactory', spawn: 'vehicleFactory' },
   { type: 'lightTank', req: 'vehicleFactory', spawn: 'vehicleFactory' },
   { type: 'rocketTank', req: 'rocketTurret', spawn: 'vehicleFactory' },
@@ -57,7 +57,9 @@ const FULL_UNIT_TECH_TREE = [
 ]
 
 function buildCompactTechTreeLine(kind, type, cost, req, extra) {
-  return [kind, type, cost, req || '', extra || ''].join(',')
+  const fields = [kind, type, cost, req || '']
+  if (extra) fields.push(extra)
+  return fields.join(',')
 }
 
 const FULL_TECH_TREE_CSV = [
@@ -74,7 +76,7 @@ const FULL_TECH_TREE_CSV = [
     entry.type,
     Number(UNIT_COSTS[entry.type] || 0),
     entry.req,
-    entry.spawn === 'vehicleFactory' ? '' : entry.spawn
+    entry.spawn === 'vehicleFactory' || entry.spawn === entry.req ? '' : entry.spawn
   ))
 ].join('\n')
 
@@ -92,6 +94,7 @@ export function computeAvailableBuildingTypes(buildings, factories, owner) {
   const hasRadar = owned.some(building => building.type === 'radarStation')
   const hasFactory = owned.some(building => building.type === 'vehicleFactory')
   if (hasFactory) available.add('ammunitionFactory')
+  if (owned.some(building => ['helipad', 'airstrip'].includes(building.type))) available.add('planeFactory')
   if (owned.some(building => building.type === 'vehicleWorkshop')) available.add('fireDepartment')
   if (hasRadar) {
     available.add('commandCenter')
@@ -123,9 +126,7 @@ export function computeAvailableUnitTypes(buildings, factories, owner) {
   const hasHospital = owned.some(building => building.type === 'hospital')
   const hasWorkshop = owned.some(building => building.type === 'vehicleWorkshop')
   const hasAmmunitionFactory = owned.some(building => building.type === 'ammunitionFactory')
-  const hasHelipad = owned.some(building => building.type === 'helipad')
   const hasShipyard = owned.some(building => building.type === 'shipyard')
-  const hasAirstrip = owned.some(building => building.type === 'airstrip')
   const hasRocketTurret = owned.some(building => building.type === 'rocketTurret')
   const hasArtilleryTurret = owned.some(building => building.type === 'artilleryTurret')
   const hasRadar = owned.some(building => building.type === 'radarStation')
@@ -145,14 +146,10 @@ export function computeAvailableUnitTypes(buildings, factories, owner) {
     available.add('mineSweeper')
   }
   if (hasFactory && hasWorkshop && hasAmmunitionFactory) available.add('mineLayer')
-  if (hasHelipad) available.add('apache')
+  if (hasPlaneFactory(owned, owner)) AIRCRAFT_TYPES.forEach(type => available.add(type))
   if (hasShipyard) {
     ;['destroyer', 'hovercraft', 'vehicleFerry', 'aircraftCarrier', 'navalMineLayer', 'battleship', 'submarine']
       .forEach(type => available.add(type))
-  }
-  if (hasAirstrip) {
-    available.add('f22Raptor')
-    available.add('f35')
   }
   if (factoryCount >= 2) available.add('tank-v3')
   if (hasRocketTurret) available.add('rocketTank')

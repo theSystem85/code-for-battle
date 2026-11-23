@@ -1,3 +1,4 @@
+import { AIRCRAFT_TYPES, isOperationalPlaneFactory } from '../production/aircraftProduction.js'
 import { TILE_SIZE } from '../config.js'
 import { gameState } from '../gameState.js'
 import { buildingData, canPlaceBuilding, repairBuilding } from '../buildings.js'
@@ -91,14 +92,11 @@ function resolveFactoryForUnit({ unitType, factoryId, buildings, factories, owne
     const explicit = allBuildings.find(b => b.id === factoryId)
     return explicit || null
   }
-  if (unitType === 'apache') {
-    return allBuildings.find(b => b.type === 'helipad' && b.owner === owner) || null
+  if (AIRCRAFT_TYPES.includes(unitType)) {
+    return buildings.find(building => isOperationalPlaneFactory(building, owner)) || null
   }
   if (navalUnitTypes.includes(unitType)) {
     return allBuildings.find(b => b.type === 'shipyard' && b.owner === owner) || null
-  }
-  if (unitType === 'f22Raptor' || unitType === 'f35') {
-    return allBuildings.find(b => b.type === 'airstrip' && b.owner === owner) || null
   }
   if (vehicleUnitTypes.includes(unitType)) {
     return allBuildings.find(b => b.type === 'vehicleFactory' && b.owner === owner) || null
@@ -223,15 +221,11 @@ export function applyGameTickOutput(state = gameState, output, options = {}) {
           rejected.push({ actionId: action.actionId, reason: 'UNKNOWN_ENTITY' })
           return
         }
-        if (unitType === 'apache' && factory.type !== 'helipad') {
+        if (AIRCRAFT_TYPES.includes(unitType) && !isOperationalPlaneFactory(factory, owner)) {
           rejected.push({ actionId: action.actionId, reason: 'WRONG_FACTORY' })
           return
         }
         if (navalUnitTypes.includes(unitType) && factory.type !== 'shipyard') {
-          rejected.push({ actionId: action.actionId, reason: 'WRONG_FACTORY' })
-          return
-        }
-        if ((unitType === 'f22Raptor' || unitType === 'f35') && factory.type !== 'airstrip') {
           rejected.push({ actionId: action.actionId, reason: 'WRONG_FACTORY' })
           return
         }
@@ -513,7 +507,7 @@ export function processLlmBuildQueue(state, owner, aiFactory, factories, mapGrid
       )
       if (
         requestedPositionIsSafe &&
-        canPlaceBuilding(item.buildingType, item.tilePosition.x, item.tilePosition.y, mapGrid, units, buildings, factories, owner)
+        canPlaceBuilding(item.buildingType, item.tilePosition.x, item.tilePosition.y, mapGrid, units, buildings, factories, owner, { aiPlaneFactory: true })
       ) {
         position = item.tilePosition
       }

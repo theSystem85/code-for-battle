@@ -1,3 +1,4 @@
+import { AIRCRAFT_TYPES, findGalaxySpawnTile, isGroundAircraftDelivery } from './production/aircraftProduction.js'
 import { changeC5GroundOccupancy } from './game/c5Cargo.js'
 import { beginFactoryExit } from './game/factoryExit.js'
 // units.js
@@ -394,6 +395,7 @@ export const findPath = logPerformance(function findPath(start, end, mapGrid, oc
   const navalType = contextOptions.navalUnitType || (isNavalUnitType(start.type) ? start.type : null)
   const pathContext = {
     unitOwner, ignoreFriendlyMines, streetOnly, movementType: contextOptions.movementType,
+    cardinalOnly: contextOptions.cardinalOnly, tileFilter: contextOptions.tileFilter,
     includeMovableOccupancy: Boolean(contextOptions.includeMovableOccupancy),
     navalOccupancy: contextOptions.navalOccupancy,
     mapWidth: mapGrid[0].length,
@@ -599,7 +601,7 @@ export const findPath = logPerformance(function findPath(start, end, mapGrid, oc
   // If direct line is available, compare costs
   let directPath = null
   let directCost = Infinity
-  if (!streetOnly && isDirectPathClear(start, adjustedEnd, mapGrid, occupancyMap, pathContext)) {
+  if (!streetOnly && !pathContext.cardinalOnly && isDirectPathClear(start, adjustedEnd, mapGrid, occupancyMap, pathContext)) {
     directPath = getLineTiles(start, adjustedEnd)
     directCost = calculatePathCost(directPath, mapGrid)
   }
@@ -612,7 +614,7 @@ export const findPath = logPerformance(function findPath(start, end, mapGrid, oc
     chosenPath = directPath
   }
 
-  if (streetOnly) {
+  if (streetOnly || pathContext.cardinalOnly) {
     return chosenPath
   }
 
@@ -645,6 +647,7 @@ function isTilePassable(mapGrid, x, y) {
 }
 
 function isTilePassableForMode(mapGrid, x, y, options = {}) {
+  if (options.tileFilter && !options.tileFilter(x, y)) return false
   if (options.movementType === 'water') {
     return options.navalClearance
       ? options.navalClearance(x, y)
@@ -732,6 +735,7 @@ function getNeighbors(node, mapGrid, options = {}) {
   const neighbors = []
 
   for (const dir of DIRECTIONS) {
+    if (options.cardinalOnly && dir.x && dir.y) continue
     const x = node.x + dir.x
     const y = node.y + dir.y
     if (isTilePassableForMode(mapGrid, x, y, options)) {
@@ -863,12 +867,16 @@ export function spawnUnit(factory, type, units, mapGrid, rallyPointTarget = null
 
   let spawnPosition = null
   let worldPositionOverride = null
+  const isPlaneFactory = factory.type === 'planeFactory' && AIRCRAFT_TYPES.includes(type)
+  const isGalaxyAtFactory = isPlaneFactory && type === 'c5Galaxy'
   const isHelipadApache = factory.type === 'helipad' && type === 'apache'
   const isPadF35 = (factory.type === 'helipad' || factory.type === 'airstrip') && type === 'f35'
   const isAirstripF22 = factory.type === 'airstrip' && (type === 'f22Raptor' || type === 'c5Galaxy')
   const isShipyardNavalUnit = factory.type === 'shipyard' && isNavalUnitType(type)
 
-  if (isHelipadApache || (isPadF35 && factory.type === 'helipad')) {
+  if (isGalaxyAtFactory) {
+    spawnPosition = findGalaxySpawnTile(factory, mapGrid, occupancyMap)
+  } else if (isHelipadApache || (isPadF35 && factory.type === 'helipad')) {
     const landingTopLeft = getHelipadLandingTopLeft(factory)
     const landingTile = getHelipadLandingTile(factory)
     if (landingTopLeft && landingTile) {
@@ -907,7 +915,7 @@ export function spawnUnit(factory, type, units, mapGrid, rallyPointTarget = null
     options.airstripId = getBuildingIdentifier(factory)
   } else if (isShipyardNavalUnit) {
     spawnPosition = getShipyardLaunchTile(factory, mapGrid)
-  } else if (factory.type === 'vehicleFactory') {
+  } else if (factory.type === 'vehicleFactory' || isPlaneFactory) {
     spawnPosition = { x: factory.x + 1, y: factory.y + 1 }
   } else {
     // Determine the center of the factory/building for spawn proximity check
@@ -933,6 +941,16 @@ export function spawnUnit(factory, type, units, mapGrid, rallyPointTarget = null
     if (units.filter(u => u.type === 'fireEngine' && u.health > 0 && u.owner === owner).length >= capacity) return null
   }
   const newUnit = createUnit(factory, type, spawnPosition.x, spawnPosition.y, unitOptions)
+  if (isPlaneFactory) {
+    newUnit.aircraftDelivery = {}
+    if (isGalaxyAtFactory) {
+      newUnit.direction = newUnit.rotation = Math.PI * 3 / 4
+      changeC5GroundOccupancy(newUnit, occupancyMap, 1)
+    } else {
+      beginFactoryExit(newUnit, factory)
+    }
+    return newUnit
+  }
   if (factory.type === 'vehicleFactory') beginFactoryExit(newUnit, factory, type === 'harvester' ? null : rallyPointTarget)
   if (occupancyMap && !newUnit.factoryExit && !isHelipadApache && !isAirstripF22 && !isPadF35 && !isShipyardNavalUnit) {
     // Use center coordinates for occupancy map consistency
@@ -1642,7 +1660,7 @@ export function resolveUnitCollisions(units, mapGrid) {
 
   for (let i = 0, len = units.length; i < len; i++) {
     const unit1 = units[i]
-    if (!unit1 || unit1.type === 'c5Galaxy' || unit1.factoryExit || unit1.health <= 0 || unit1.embarkedOnId || unit1.c5Drop || unit1.c5Boarding?.loading) continue
+    if (!unit1 || unit1.type === 'c5Galaxy' || isGroundAircraftDelivery(unit1) || unit1.factoryExit || unit1.health <= 0 || unit1.embarkedOnId || unit1.c5Drop || unit1.c5Boarding?.loading) continue
     if (unit1.isAirUnit && unit1.flightState !== 'grounded') continue // Skip airborne units (e.g. F22 in flight)
     if (unit1.path && unit1.path.length > 0) continue // Skip moving units
 
@@ -1659,7 +1677,7 @@ export function resolveUnitCollisions(units, mapGrid) {
 
     for (let j = 0, jlen = nearbyUnits.length; j < jlen; j++) {
       const unit2 = nearbyUnits[j]
-      if (unit2.factoryExit || unit2.type === 'c5Galaxy' || unit2.c5Drop || unit2.c5Boarding?.loading) continue
+      if (unit2.factoryExit || unit2.type === 'c5Galaxy' || isGroundAircraftDelivery(unit2) || unit2.c5Drop || unit2.c5Boarding?.loading) continue
       if (unit2.path && unit2.path.length > 0) continue // Skip moving units
 
       // Create a consistent pair key to avoid processing the same pair twice

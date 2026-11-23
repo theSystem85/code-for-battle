@@ -1,8 +1,7 @@
-// Aircraft also receive the existing vehicle-factory speed bonus; naval units do not.
 export const vehicleFactorySpeedUnitTypes = [
   'tank', 'tank-v2', 'rocketTank', 'tank_v1', 'tank-v3', 'lightTank', 'harvester',
   'ambulance', 'fireEngine', 'tankerTruck', 'ammunitionTruck', 'recoveryTank', 'howitzer',
-  'mineLayer', 'mineSweeper', 'apache', 'f22Raptor', 'f35', 'c5Galaxy'
+  'mineLayer', 'mineSweeper'
 ]
 
 /** Production duration in simulation milliseconds, shared by queues and card estimates. */

@@ -1,3 +1,5 @@
+import { AIRCRAFT_TYPES } from '../../production/aircraftProduction.js'
+
 export const CONDENSED_SIDEBAR_BUTTON_PX = 96
 export const RADIAL_BUTTON_SCALE = 0.5
 
@@ -17,8 +19,6 @@ export const VEHICLE_FACTORY_UNITS = Object.freeze([
   'mineSweeper'
 ])
 
-export const HELIPAD_UNITS = Object.freeze(['apache', 'f35'])
-export const AIRSTRIP_UNITS = Object.freeze(['f22Raptor', 'c5Galaxy', 'f35'])
 export const SHIPYARD_UNITS = Object.freeze([
   'destroyer',
   'supplyShip',
@@ -33,8 +33,7 @@ export const SHIPYARD_UNITS = Object.freeze([
 export const PRODUCTION_BUILDING_TYPES = Object.freeze([
   'constructionYard',
   'vehicleFactory',
-  'helipad',
-  'airstrip',
+  'planeFactory',
   'shipyard'
 ])
 
@@ -55,8 +54,7 @@ export function radialProductionButtonSize() {
 export function catalogForBuilding(type) {
   if (type === 'constructionYard') return { kind: 'building', types: null }
   if (type === 'vehicleFactory') return { kind: 'unit', types: VEHICLE_FACTORY_UNITS }
-  if (type === 'helipad') return { kind: 'unit', types: HELIPAD_UNITS }
-  if (type === 'airstrip') return { kind: 'unit', types: AIRSTRIP_UNITS }
+  if (type === 'planeFactory') return { kind: 'unit', types: AIRCRAFT_TYPES }
   if (type === 'shipyard') return { kind: 'unit', types: SHIPYARD_UNITS }
   return null
 }

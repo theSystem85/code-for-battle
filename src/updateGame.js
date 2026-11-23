@@ -1,5 +1,6 @@
 import { COMMAND_TYPES as C5_COMMAND_TYPES } from './network/commandTypes.js'
-import { canReserveC5ParkingSlots } from './utils/airstripUtils.js'
+import { AIRCRAFT_TYPES, findGalaxySpawnTile, isOperationalPlaneFactory } from './production/aircraftProduction.js'
+import { updateAircraftDeliveries } from './game/aircraftDelivery.js'
 import { updateFireSystem } from './game/fireSystem.js'
 import { findCityBuildingById } from './game/cityBuildings.js'
 import { applyMapAction } from './ui/mapActions/mapActionCommands.js'
@@ -442,9 +443,12 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
           const partyId = cmd.sourcePartyId
           const unitCost = Number(unitCosts?.[unitType]) || 0
 
-          if (unitType === 'c5Galaxy' && !gameState.buildings.some(building => building.id === factoryId &&
-            building.type === 'airstrip' && building.owner === partyId && building.health > 0 && canReserveC5ParkingSlots(building))) {
-            completionAck('failed', 'three lower airstrip parking slots are required')
+          const aircraft = AIRCRAFT_TYPES.includes(unitType)
+          const planeFactory = aircraft && gameState.buildings.find(building =>
+            building.id === factoryId && isOperationalPlaneFactory(building, partyId))
+          if (aircraft && (!planeFactory || (unitType === 'c5Galaxy' &&
+            !findGalaxySpawnTile(planeFactory, mapGrid, occupancyMap)))) {
+            completionAck('failed', 'an operational Plane Factory with a clear exit is required')
             return
           }
           if (!chargePartyProductionCost(partyId, unitCost)) {
@@ -454,8 +458,8 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
           }
 
           // Find the factory for spawning
-          let spawnFactory = null
-          if (factoryId) {
+          let spawnFactory = planeFactory || null
+          if (!spawnFactory && factoryId) {
             spawnFactory = gameState.buildings.find(b => b.id === factoryId && b.owner === partyId)
           }
 
@@ -464,8 +468,6 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
             const vehicleUnitTypes = ['tank', 'tank-v2', 'rocketTank', 'tank_v1', 'tank-v3', 'lightTank', 'harvester', 'ambulance', 'fireEngine', 'tankerTruck', 'ammunitionTruck', 'recoveryTank', 'howitzer', 'mineLayer', 'mineSweeper']
             if (vehicleUnitTypes.includes(unitType)) {
               spawnFactory = gameState.buildings.find(b => b.type === 'vehicleFactory' && b.owner === partyId)
-            } else if (unitType === 'apache') {
-              spawnFactory = gameState.buildings.find(b => b.type === 'helipad' && b.owner === partyId)
             }
           }
 
@@ -576,6 +578,7 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
         updateAirGuard(unit, units, now)
       })
       updateNavalFleet(units, bullets, mapGrid, gameState, now, delta)
+      updateAircraftDeliveries(units, gameState, mapGrid, occupancyMap, getSimulationTime(gameState), delta)
       updateC5GalaxySystem(units, mapGrid, gameState, gameState.frameCount || 0)
       framePhases.begin(FRAME_PHASE.movement)
       updateUnitMovement(units, mapGrid, occupancyMap, gameState, now, factories)

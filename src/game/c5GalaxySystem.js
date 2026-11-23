@@ -69,7 +69,7 @@ function findHome(galaxy, buildings) {
 
 export function startC5Mission(galaxy, target, tick, options = {}) {
   const { mapGrid, buildings = [], drop = true } = options
-  if (galaxy.health <= 0 || galaxy.c5Mission || !Number.isInteger(target?.x) || !Number.isInteger(target?.y)) return false
+  if (galaxy.health <= 0 || galaxy.aircraftDelivery || galaxy.c5Mission || !Number.isInteger(target?.x) || !Number.isInteger(target?.y)) return false
   if (mapGrid && (!mapGrid[target.y]?.[target.x] || (drop && terrainAt(mapGrid, target.x, target.y) === 'water'))) return false
   if (drop && !galaxy.embarkedUnitIds?.length) return false
   const home = findHome(galaxy, buildings)

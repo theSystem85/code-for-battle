@@ -1,3 +1,4 @@
+import { isGroundAircraftDelivery } from '../production/aircraftProduction.js'
 import { UTILITY_QUEUE_MODES, computeUtilityApproachPath, getUnitTilePosition } from './unitCommands/utilityHelpers.js'
 import {
   clearAttackGroupState as clearAttackGroupStateImpl,
@@ -144,11 +145,11 @@ for (const name of Object.keys(proto)) {
   proto[name] = function(...args) {
     const index = name === 'handleServiceProviderRequest' ? 1 : 0
     if (Array.isArray(args[index])) {
-      const exitingUnits = args[index].filter(unit => unit.factoryExit)
+      const exitingUnits = args[index].filter(unit => unit.factoryExit || isGroundAircraftDelivery(unit))
       exitingUnits.forEach(unit => queueFactoryExitOrder(name, unit, args))
-      args[index] = args[index].filter(unit => !unit.factoryExit)
+      args[index] = args[index].filter(unit => !unit.factoryExit && !isGroundAircraftDelivery(unit))
     }
-    else if (args[index]?.factoryExit) return false
+    else if (args[index] && (args[index].factoryExit || isGroundAircraftDelivery(args[index]))) return false
     return handler.apply(this, args)
   }
 }

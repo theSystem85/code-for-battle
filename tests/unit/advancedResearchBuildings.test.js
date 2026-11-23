@@ -1,3 +1,5 @@
+import { AIRCRAFT_TYPES } from '../../src/production/aircraftProduction.js'
+import { computeAvailableUnitTypes } from '../../src/ai-api/techTree.js'
 import { beforeEach, describe, expect, it } from 'vitest'
 import manifest from '../../public/images/prepared/sprite-manifest.json'
 import { applyLevelUps, grantHarvesterStars } from '../../src/game/veterancy.js'
@@ -91,7 +93,7 @@ describe('advanced research buildings', () => {
     expect(manifest.entries.some(entry => entry.id === 'building:spaceshipFactory:base')).toBe(true)
   })
 
-  it('[U07339] requires an Airstrip for the Plane Factory and accelerates fighter production only', () => {
+  it('[U07339] unlocks all aircraft through the Plane Factory without changing production speed', () => {
     const buildings = gameState.buildings
     grantPerkStars(building('vehicleFactory'), 5)
     applyPerkPurchase(owner, 'tc.foundation')
@@ -99,11 +101,13 @@ describe('advanced research buildings', () => {
     expect(getAdvancedBuildingRequirement('planeFactory', buildings, owner)).toMatch(/Airstrip/)
     buildings.push(building('airstrip'))
     expect(getAdvancedBuildingRequirement('planeFactory', buildings, owner)).toBe('')
+    expect(AIRCRAFT_TYPES.some(type => computeAvailableUnitTypes(buildings, [], owner).has(type))).toBe(false)
     buildings.push(building('planeFactory'))
-    expect(getAssemblySpeedMultiplier('f22Raptor', buildings, owner)).toBe(1.25)
-    expect(getAssemblySpeedMultiplier('f35', buildings, owner)).toBe(1.25)
-    expect(getAssemblySpeedMultiplier('c5Galaxy', buildings, owner)).toBe(1)
-    expect(getAssemblySpeedMultiplier('f22Raptor', buildings, 'player2')).toBe(1)
+    const available = computeAvailableUnitTypes(buildings, [], owner)
+    for (const type of AIRCRAFT_TYPES) {
+      expect(available.has(type)).toBe(true)
+      expect(getAssemblySpeedMultiplier(type, buildings, owner)).toBe(1)
+    }
     expect(manifest.entries.some(entry => entry.id === 'building:planeFactory:base')).toBe(true)
   })
 

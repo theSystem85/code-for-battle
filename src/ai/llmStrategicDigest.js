@@ -1,3 +1,4 @@
+import { AIRCRAFT_TYPES } from '../production/aircraftProduction.js'
 import { UNIT_COSTS } from '../config.js'
 import { buildingData } from '../data/buildingData.js'
 import { buildCompactTechTreeCsv, computeAvailableBuildingTypes, computeAvailableUnitTypes } from '../ai-api/techTree.js'
@@ -15,6 +16,7 @@ const PRODUCTION_BUILDING_TYPES = new Set([
   'helipad',
   'shipyard',
   'airstrip',
+  'planeFactory',
   'gasStation',
   'ammunitionFactory'
 ])
@@ -29,7 +31,7 @@ const DEFENSE_BUILDING_TYPES = new Set([
   'concreteWall'
 ])
 
-const AIR_UNIT_TYPES = new Set(['apache', 'f22Raptor', 'f35'])
+const AIR_UNIT_TYPES = new Set(AIRCRAFT_TYPES)
 const SUPPORT_UNIT_TYPES = new Set(['fireEngine', 'ambulance', 'tankerTruck', 'ammunitionTruck', 'recoveryTank'])
 const LOGISTICS_UNIT_TYPES = new Set(['harvester', 'mineLayer', 'mineSweeper'])
 const PRIORITY_TARGET_BUILDING_TYPES = new Set([
@@ -40,6 +42,7 @@ const PRIORITY_TARGET_BUILDING_TYPES = new Set([
   'helipad',
   'shipyard',
   'airstrip',
+  'planeFactory',
   'rocketTurret',
   'teslaCoil',
   'artilleryTurret'
@@ -76,6 +79,7 @@ const UNIT_ROLE_LABELS = {
   apache: 'air-attack',
   f22Raptor: 'air-superiority',
   f35: 'strike-aircraft',
+  c5Galaxy: 'air-transport',
   destroyer: 'naval-combat',
   hovercraft: 'naval-transport',
   vehicleFerry: 'heavy-naval-transport',
@@ -87,16 +91,13 @@ const UNIT_ROLE_LABELS = {
   mineSweeper: 'mine-clearance'
 }
 const UNIT_SPAWN_BUILDINGS = {
-  apache: 'helipad',
   destroyer: 'shipyard',
   hovercraft: 'shipyard',
   vehicleFerry: 'shipyard',
   aircraftCarrier: 'shipyard',
   navalMineLayer: 'shipyard',
   battleship: 'shipyard',
-  submarine: 'shipyard',
-  f22Raptor: 'airstrip',
-  f35: 'airstrip'
+  submarine: 'shipyard'
 }
 const BUILDING_ROLE_LABELS = {
   constructionYard: 'expansion-core',
@@ -107,9 +108,10 @@ const BUILDING_ROLE_LABELS = {
   radarStation: 'tech-radar',
   commandCenter: 'automation-command',
   hospital: 'healing-support',
-  helipad: 'air-production',
+  helipad: 'vtol-service',
+  planeFactory: 'air-production',
   shipyard: 'naval-production',
-  airstrip: 'jet-production',
+  airstrip: 'aircraft-service',
   gasStation: 'fuel-support',
   ammunitionFactory: 'ammo-support',
   turretGunV1: 'defense',
@@ -394,7 +396,7 @@ function summarizeProductionOptions(buildings, playerId) {
       type,
       cost: Number(UNIT_COSTS[type] || 0),
       role: UNIT_ROLE_LABELS[type] || 'combat',
-      spawnsFrom: UNIT_SPAWN_BUILDINGS[type] || 'vehicleFactory'
+      spawnsFrom: AIR_UNIT_TYPES.has(type) ? 'planeFactory' : UNIT_SPAWN_BUILDINGS[type] || 'vehicleFactory'
     }))
 
   return {

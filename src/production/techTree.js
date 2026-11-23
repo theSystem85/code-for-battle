@@ -1,3 +1,4 @@
+import { AIRCRAFT_TYPES } from './aircraftProduction.js'
 import { advancedBuildingTypes, hasBuildingBlueprint } from './advancedBuildingAccess.js'
 
 // A requirement is a building type, or a group of alternative building types.
@@ -13,9 +14,7 @@ export const productionUnlockRules = [
   { requires: ['hospital'], units: ['ambulance'] },
   { requires: ['vehicleFactory', 'vehicleWorkshop'], units: ['recoveryTank', 'mineSweeper'] },
   { requires: ['vehicleFactory', 'vehicleWorkshop', 'ammunitionFactory'], units: ['mineLayer'] },
-  { requires: ['helipad'], units: ['apache'] },
-  { requires: ['airstrip'], units: ['f22Raptor', 'c5Galaxy'] },
-  { requires: [['helipad', 'airstrip'], 'ammunitionFactory'], units: ['f35'] },
+  { requires: ['planeFactory'], units: AIRCRAFT_TYPES, operational: true },
   { requires: ['vehicleFactory'], count: 2, units: ['tank-v3'] },
   { requires: ['shipyard'], units: ['destroyer', 'hovercraft', 'vehicleFerry', 'aircraftCarrier', 'navalMineLayer', 'battleship', 'submarine'] },
   { requires: ['shipyard', ['gasStation', 'hospital', 'ammunitionFactory', 'vehicleWorkshop']], units: ['supplyShip'] },

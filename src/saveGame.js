@@ -633,6 +633,7 @@ function buildSaveObject(label, { includeMap = true, includeStaticConfiguration 
   // Gather all units (human player and AI players)
   const allUnits = units.map(u => {
     const serialized = {
+      aircraftDelivery: u.aircraftDelivery ? { ...u.aircraftDelivery } : null,
       factoryExit: u.factoryExit ? { ...u.factoryExit } : null,
       type: u.type,
       owner: u.owner,
@@ -2069,7 +2070,7 @@ function loadGameFromSaveObject(saveObj, key) {
 
     // Restore F22/F35 airstrip state after all buildings are loaded
     units.forEach(unit => {
-      if (unit.type !== 'f22Raptor' && unit.type !== 'f35') return
+      if ((unit.type !== 'f22Raptor' && unit.type !== 'f35') || unit.aircraftDelivery) return
 
       // For old saves without airstripId, find airstrip by position
       if (!unit.airstripId) {

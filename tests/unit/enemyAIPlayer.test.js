@@ -393,7 +393,7 @@ describe('enemyAIPlayer updateAIPlayer', () => {
     expect(gameState.buildings.some(b => b.type === 'gasStation')).toBe(false)
   })
 
-  it('[U01348] spawns apache production from helipads when capacity exists', () => {
+  it('[U01348] produces Apache helicopters at the Plane Factory when helipad capacity exists', () => {
     const aiPlayerId = 'ai1'
     const aiFactory = {
       id: aiPlayerId,
@@ -401,6 +401,7 @@ describe('enemyAIPlayer updateAIPlayer', () => {
       health: 100,
       budget: 2000
     }
+    const planeFactory = { type: 'planeFactory', owner: aiPlayerId, health: 100 }
     const helipad = { type: 'helipad', owner: aiPlayerId, health: 100 }
     const units = [
       { owner: aiPlayerId, type: 'harvester', health: 100 },
@@ -422,7 +423,8 @@ describe('enemyAIPlayer updateAIPlayer', () => {
         { type: 'rocketTurret', owner: aiPlayerId, health: 100 },
         { type: 'teslaCoil', owner: aiPlayerId, health: 100 },
         { type: 'artilleryTurret', owner: aiPlayerId, health: 100 },
-        helipad
+        helipad,
+        planeFactory
       ],
       enemyPowerSupply: 0,
       enemyBuildSpeedModifier: 1,
@@ -442,8 +444,7 @@ describe('enemyAIPlayer updateAIPlayer', () => {
     )
 
     expect(aiFactory.currentlyProducingUnit).toBe('apache')
-    expect(aiFactory.unitSpawnBuilding).toBe(helipad)
-    expect(gameState.nextai1HelipadIndex).toBe(1)
+    expect(aiFactory.unitSpawnBuilding).toBe(planeFactory)
     expect(updateAIUnit).toHaveBeenCalled()
     expect(manageAICrewHealing).toHaveBeenCalled()
     expect(manageAITankerTrucks).toHaveBeenCalled()
@@ -491,7 +492,7 @@ describe('enemyAIPlayer updateAIPlayer', () => {
   })
 
 
-  it('[U01350] pairs each planned F22 with an F35 on available airstrips', () => {
+  it('[U01350] produces an F-35 at the Plane Factory for each planned F-22', () => {
     const aiPlayerId = 'ai1'
     const aiFactory = {
       id: aiPlayerId,
@@ -499,6 +500,7 @@ describe('enemyAIPlayer updateAIPlayer', () => {
       health: 100,
       budget: 5000
     }
+    const planeFactory = { type: 'planeFactory', owner: aiPlayerId, health: 100 }
     const airstrip = { type: 'airstrip', owner: aiPlayerId, health: 100 }
     const units = [
       { owner: aiPlayerId, type: 'harvester', health: 100 },
@@ -522,7 +524,8 @@ describe('enemyAIPlayer updateAIPlayer', () => {
         { type: 'rocketTurret', owner: aiPlayerId, health: 100 },
         { type: 'teslaCoil', owner: aiPlayerId, health: 100 },
         { type: 'artilleryTurret', owner: aiPlayerId, health: 100 },
-        airstrip
+        airstrip,
+        planeFactory
       ],
       enemyPowerSupply: 0,
       enemyBuildSpeedModifier: 1,
@@ -542,7 +545,7 @@ describe('enemyAIPlayer updateAIPlayer', () => {
     )
 
     expect(aiFactory.currentlyProducingUnit).toBe('f35')
-    expect(aiFactory.unitSpawnBuilding).toBe(airstrip)
+    expect(aiFactory.unitSpawnBuilding).toBe(planeFactory)
   })
 
   it('[U01351] timestamps emergency AI building sales from simulation time', () => {

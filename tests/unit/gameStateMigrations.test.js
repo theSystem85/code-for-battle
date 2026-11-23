@@ -11,6 +11,13 @@ describe('live game-state migrations', () => {
     delete migrations[3]
   })
 
+  it('[U07349] keeps legacy aircraft at their saved parking position when migrating to schema 11', () => {
+    const unit = Object.freeze({ type: 'f22Raptor', x: 64, y: 96, airstripId: 'strip', f22State: 'parked' })
+    const save = Object.freeze({ schemaVersion: 10, gameState: {}, units: Object.freeze([unit]) })
+    expect(migrateLiveState(save, 10, 11)).toEqual({ schemaVersion: 11, gameState: {}, units: [unit] })
+    expect(save.units[0]).not.toHaveProperty('aircraftDelivery')
+  })
+
   it('[U05422] migrates ready-placement state and production history without changing the source', () => {
     const unit = Object.freeze({ id: 'legacy' })
     const original = { gameState: {}, units: [unit], productionQueueState: Object.freeze({ completedBuildings: [] }) }

@@ -9,6 +9,7 @@ export function registerUnitBuildDeliveryHandler(handler) {
 
 export function applyUnitBuildDelivery(unit, delivery) {
   if (!deliveryHandler || !unit || !knownDeliveries.has(delivery) || delivery === 'factoryRally') return false
+  if (unit.aircraftDelivery) { unit.aircraftDelivery.order = delivery; return true }
   if (unit.factoryExit) { unit.factoryExit.delivery = delivery; return true }
   return deliveryHandler(unit, delivery) === true
 }

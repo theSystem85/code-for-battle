@@ -1,3 +1,4 @@
+import { hasBlockingBuilding } from '../utils/buildingPassability.js'
 import { TILE_SIZE } from '../config.js'
 import { getBuildingIdentifier } from '../utils.js'
 import { addMovableOccupancy } from './occupancyTags.js'
@@ -25,20 +26,24 @@ export const canInteractWithUnit = unit => Boolean(unit && !unit.factoryExit)
 export const factoryExitEase = progress => progress * progress * (3 - 2 * progress)
 
 export function beginFactoryExit(unit, factory, rallyPoint = null) {
-  const startX = (factory.x + 1.3) * TILE_SIZE
-  const startY = (factory.y + 0.7) * TILE_SIZE
+  const planeFactory = factory.type === 'planeFactory'
+  const startX = (factory.x + (planeFactory ? 0.91 : 1.3)) * TILE_SIZE
+  const startY = (factory.y + (planeFactory ? 0.76 : 0.7)) * TILE_SIZE
   unit.factoryExit = {
     factoryId: getBuildingIdentifier(factory), factoryX: factory.x, factoryY: factory.y,
-    startX, startY, endX: factory.x * TILE_SIZE,
-    endY: (factory.y + FACTORY_EXIT_END_Y_OFFSET) * TILE_SIZE,
+    startX, startY, endX: (planeFactory && factory.x > 0 ? factory.x - 1 : factory.x) * TILE_SIZE,
+    endY: (factory.y + (planeFactory ? 3.2 : FACTORY_EXIT_END_Y_OFFSET)) * TILE_SIZE,
     elapsed: 0, duration: FACTORY_EXIT_DURATION, phase: 'waiting', waited: 0,
     rallyPoint: rallyPoint ? { x: rallyPoint.x, y: rallyPoint.y } : null
   }
+  if (planeFactory) unit.factoryExit.planeFactory = true
   unit.x = startX
   unit.y = startY
   unit.tileX = Math.floor((startX + TILE_SIZE / 2) / TILE_SIZE)
   unit.tileY = Math.floor((startY + TILE_SIZE / 2) / TILE_SIZE)
-  unit.direction = unit.rotation = unit.turretDirection = Math.PI * 3 / 4
+  unit.direction = unit.rotation = unit.turretDirection = planeFactory
+    ? Math.atan2(unit.factoryExit.endY - startY, unit.factoryExit.endX - startX)
+    : Math.PI * 3 / 4
   unit.selected = false
   unit.spawnedInFactory = false
   unit.path = []
@@ -56,7 +61,7 @@ const unitTileY = unit => Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
 
 function isPassable(mapGrid, x, y) {
   const tile = mapGrid[y]?.[x]
-  return Boolean(tile && tile.type !== 'water' && tile.type !== 'rock' && !tile.building && !tile.impassable && tile.passable !== false && tile.walkable !== false)
+  return Boolean(tile && tile.type !== 'water' && tile.type !== 'rock' && !hasBlockingBuilding(tile) && !tile.impassable && tile.passable !== false && tile.walkable !== false)
 }
 
 const isFree = (mapGrid, occupancyMap, x, y) => isPassable(mapGrid, x, y) && !(occupancyMap?.[y]?.[x] > 0) && !occupied.has(tileKey(x, y)) && !claimed.has(tileKey(x, y))
@@ -163,6 +168,7 @@ function finishExit(unit, state, units, mapGrid, occupancyMap, findPath, onCompl
   unit.holdInFactory = false
   if (occupancyMap?.[unit.tileY]?.[unit.tileX] !== undefined) {
     occupancyMap[unit.tileY][unit.tileX] = addMovableOccupancy(occupancyMap[unit.tileY][unit.tileX], 1)
+    if (state.planeFactory) unit.groundedOccupancyApplied = true
   }
   // AI and harvesters may already have a pending order. Resume it from the exit.
   const target = state.rallyPoint || unit.moveTarget
@@ -184,9 +190,9 @@ export function updateFactoryExits(units, buildings, mapGrid, occupancyMap, delt
   gateLeaders.clear()
   occupied.clear()
   claimed.clear()
-  for (const building of buildings) if (building.type === 'vehicleFactory') factoriesById.set(getBuildingIdentifier(building), building)
+  for (const building of buildings) if ((building.type === 'vehicleFactory' || building.type === 'planeFactory')) factoriesById.set(getBuildingIdentifier(building), building)
   for (const unit of units) {
-    if (unit.health <= 0 || unit.isAirUnit || unit.embarkedOnId) continue
+    if (unit.health <= 0 || (unit.isAirUnit && unit.flightState !== 'grounded') || unit.embarkedOnId) continue
     if (unit.factoryExit?.phase === 'moving') claimed.add(tileKey(Math.floor((unit.factoryExit.endX + TILE_SIZE / 2) / TILE_SIZE), Math.floor((unit.factoryExit.endY + TILE_SIZE / 2) / TILE_SIZE)))
     if (!unit.factoryExit) occupied.add(tileKey(Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE), Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)))
   }
@@ -214,9 +220,10 @@ export function updateFactoryExits(units, buildings, mapGrid, occupancyMap, delt
         state.endX = x * TILE_SIZE
         state.endY = y * TILE_SIZE
       }
-      if (!isFree(mapGrid, occupancyMap, x, y) || !canNavigateFrom(factory, mapGrid, occupancyMap, x, y)) {
+      if (!isFree(mapGrid, occupancyMap, x, y) || (!state.planeFactory && !canNavigateFrom(factory, mapGrid, occupancyMap, x, y))) {
         // Push idle friendly vehicles aside; otherwise take the next free spot after a short wait.
         if (occupied.has(tileKey(x, y)) && isPassable(mapGrid, x, y)) nudgeIdleBlockers(units, unit.owner, x, y, mapGrid, occupancyMap, findPath)
+        if (state.planeFactory && unit.type === 'f22Raptor' && isPassable(mapGrid, x, y)) continue
         state.waited = (state.waited || 0) + Math.max(0, delta)
         if (state.waited < FACTORY_EXIT_BLOCKED_WAIT) continue
         const spot = findNearestFreeTile(mapGrid, occupancyMap, x, y, 2,
@@ -227,6 +234,7 @@ export function updateFactoryExits(units, buildings, mapGrid, occupancyMap, delt
         state.endX = x * TILE_SIZE
         state.endY = y * TILE_SIZE
       }
+      if (state.planeFactory) unit.direction = unit.rotation = Math.atan2(state.endY - state.startY, state.endX - state.startX)
       state.duration = Math.max(1, Math.round(Math.hypot(state.endX - state.startX, state.endY - state.startY) / TILE_SIZE * FACTORY_EXIT_MS_PER_TILE))
       claimed.add(tileKey(x, y))
       state.phase = 'moving'

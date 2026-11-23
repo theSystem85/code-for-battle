@@ -736,6 +736,7 @@ export class Renderer {
     }
     const shadowAlpha = gameCtx.globalAlpha
     for (const unit of visibleExitingUnits) {
+      if (unit.factoryExit.planeFactory) continue
       const visibility = factoryExitVisibility(unit)
       if (visibility <= 0) continue
       shadowCtx.globalAlpha = shadowAlpha * visibility

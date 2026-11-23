@@ -1,3 +1,4 @@
+import { showAircraftDeliveryBlock } from '../game/aircraftDelivery.js'
 import { playC5TransitionSound } from '../game/c5GalaxySystem.js'
 import { FIRE_SPREAD_PROBABILITY, FIRE_DAMAGE_PER_SECOND, setFireSpreadProbability, setFireDamagePerSecond, WIND_DIRECTION, setWindDirectionX, setWindDirectionY } from '../config.js'
 import { burnOut, restoreFires } from '../game/fireSystem.js'
@@ -553,6 +554,7 @@ export function createGameStateSnapshot({ fullAutomation = false } = {}) {
     sweeping: unit.sweeping,
     isNaval: unit.isNaval,
     isAirUnit: unit.isAirUnit,
+    aircraftDelivery: unit.aircraftDelivery ? { blocked: unit.aircraftDelivery.blocked } : null,
     factoryExit: unit.factoryExit ? { ...unit.factoryExit } : null,
     embarkedOnId: unit.embarkedOnId,
     embarkedUnitIds: unit.embarkedUnitIds,
@@ -1088,7 +1090,11 @@ export function applyGameStateSnapshot(snapshot) {
         const { x, y, tileX, tileY, direction, turretDirection, muzzleFlashElapsed: _mfe, recoilElapsed: _re, ...nonPositionData } = snapshotUnit
         const previousFlightState = existing.flightState
         const wasDescending = Boolean(existing.c5Drop)
+        const previousBlock = existing.aircraftDelivery?.blocked
         Object.assign(existing, nonPositionData)
+        if (existing.owner === localPartyId && existing.aircraftDelivery?.blocked && existing.aircraftDelivery.blocked !== previousBlock) {
+          showAircraftDeliveryBlock(existing)
+        }
         if (existing.type === 'c5Galaxy' || existing.c5Drop) playC5TransitionSound(existing, previousFlightState, wasDescending)
         // Apply converted animation times
         existing.muzzleFlashStartTime = muzzleFlashStartTime
@@ -1115,11 +1121,9 @@ export function applyGameStateSnapshot(snapshot) {
         })
         // Create new unit with converted animation times
         const { muzzleFlashElapsed: _mfe, recoilElapsed: _re, ...unitData } = snapshotUnit
-        return {
-          ...unitData,
-          muzzleFlashStartTime,
-          recoilStartTime
-        }
+        const unit = { ...unitData, muzzleFlashStartTime, recoilStartTime }
+        if (unit.owner === localPartyId && unit.aircraftDelivery?.blocked) showAircraftDeliveryBlock(unit)
+        return unit
       }
     })
 

@@ -25,7 +25,7 @@ test('[E00274] produces the Galaxy, boards by left click and airdrops through th
   })
   await prepareRegressionScenario(page, 21)
   const galaxyId = await page.evaluate(async() => {
-    const { createUnit, buildOccupancyMap } = await import('/src/units.js')
+    const { buildOccupancyMap } = await import('/src/units.js')
     const { createBuilding, placeBuilding } = await import('/src/buildings.js')
     const { productionQueue } = await import('/src/productionQueue.js')
     const state = window.gameState
@@ -33,29 +33,47 @@ test('[E00274] produces the Galaxy, boards by left click and airdrops through th
     const units = state.units
     state.money = 10000
     state.gamePaused = false
-    const airstrip = createBuilding('airstrip', 18, 18)
-    airstrip.owner = owner
-    airstrip.constructionFinished = true
-    state.buildings.push(airstrip)
-    placeBuilding(airstrip, state.mapGrid)
+    function place(type, x, y) {
+      const building = createBuilding(type, x, y)
+      building.owner = owner
+      building.constructionFinished = true
+      state.buildings.push(building)
+      placeBuilding(building, state.mapGrid)
+      return building
+    }
+    place('airstrip', 18, 18)
+    const hangar = place('planeFactory', 25, 25)
+    for (let x = 26; x <= 28; x++) place('street', x, 29)
+    for (let y = 24; y < 29; y++) place('street', 28, y)
     state.occupancyMap = buildOccupancyMap(units, state.mapGrid)
     const button = document.querySelector('[data-unit-type="c5Galaxy"]') || document.createElement('button')
-    productionQueue.addItem('c5Galaxy', button, false, null, null, { factoryId: airstrip.id })
+    productionQueue.addItem('c5Galaxy', button, false, null, null, { factoryId: hangar.id })
     const lane = productionQueue.getUnitLane('c5Galaxy')
     const job = lane.currentUnit
-    if (!job) throw new Error(`The Airstrip did not accept Galaxy production: ${JSON.stringify({
+    if (!job) throw new Error(`The Plane Factory did not accept Galaxy production: ${JSON.stringify({
       paused: lane.pausedUnit, items: lane.unitItems.length,
       notification: document.querySelector('.notification')?.textContent
     })}`)
     productionQueue.updateProgress(job.startTime + job.duration)
     const galaxy = units.find(unit => unit.type === 'c5Galaxy')
     if (!galaxy) throw new Error('Galaxy production did not spawn the aircraft')
-    if (!airstrip.f22OccupiedSlotUnitIds.slice(0, 3).every(id => id === galaxy.id)) throw new Error('Galaxy did not occupy its three airstrip slots')
-    const tank = createUnit({ id: owner }, 'tank_v1', galaxy.tileX, galaxy.tileY + 3, { id: 'galaxy-cargo' })
-    units.push(tank)
-    state.occupancyMap = buildOccupancyMap(units, state.mapGrid)
     return galaxy.id
   })
+
+  await expect.poll(() => page.evaluate(id => {
+    const state = window.gameState
+    const galaxy = state.units.find(unit => unit.id === id)
+    const strip = state.buildings.find(building => building.id === galaxy.landedHelipadId)
+    return !galaxy.aircraftDelivery && strip?.f22OccupiedSlotUnitIds.slice(0, 3).every(owner => owner === id)
+  }, galaxyId), { timeout: 45000 }).toBe(true)
+  await page.evaluate(async id => {
+    const { createUnit, buildOccupancyMap } = await import('/src/units.js')
+    const state = window.gameState
+    const galaxy = state.units.find(unit => unit.id === id)
+    const tank = createUnit({ id: state.humanPlayer }, 'tank_v1', galaxy.tileX, galaxy.tileY + 3, { id: 'galaxy-cargo' })
+    state.units.push(tank)
+    state.occupancyMap = buildOccupancyMap(state.units, state.mapGrid)
+  }, galaxyId)
 
   await clickUnit(page, 'galaxy-cargo')
   await clickUnit(page, galaxyId)

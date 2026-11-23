@@ -77,7 +77,7 @@ test.describe('Enemy F35 production parity and strike targeting', () => {
       }
       const completedBase = [
         'airstrip', 'hospital', 'rocketTurret', 'teslaCoil', 'artilleryTurret',
-        'turretGunV1', 'radarStation', 'vehicleFactory', 'oreRefinery'
+        'turretGunV1', 'radarStation', 'vehicleFactory', 'oreRefinery', 'planeFactory'
       ]
       for (const type of completedBase) {
         if (!buildings.some(b => b.owner === enemyPlayer && b.type === type && b.health > 0) &&
@@ -138,6 +138,7 @@ test.describe('Enemy F35 production parity and strike targeting', () => {
 
       window.__enemyF35ParityE2E = {
         enemyPlayer,
+        planeFactoryId: buildings.find(b => b.owner === enemyPlayer && b.type === 'planeFactory').id,
         humanPlayer,
         expectedTargetBuildingId: humanRefinery.id,
         guardedBuildingId: humanPowerPlant.id,
@@ -164,13 +165,14 @@ test.describe('Enemy F35 production parity and strike targeting', () => {
       }, null)
 
       if (!newestF35) return false
+      if (newestF35.factoryExit?.factoryId === tracker.planeFactoryId) tracker.sawFactoryExit = true
       newestF35.lastDecisionTime = 0
       newestF35.lastTargetChangeTime = 0
 
       const target = newestF35.target
       const pickedExpectedGroundBuilding = Boolean(target && target.id === tracker.expectedTargetBuildingId)
       const avoidedGuardedBuilding = !target || target.id !== tracker.guardedBuildingId
-      if (!pickedExpectedGroundBuilding || !avoidedGuardedBuilding) {
+      if (!tracker.sawFactoryExit || !pickedExpectedGroundBuilding || !avoidedGuardedBuilding) {
         return false
       }
 
@@ -181,7 +183,7 @@ test.describe('Enemy F35 production parity and strike targeting', () => {
         targetId: target?.id || null,
         targetType: target?.type || null
       }
-    }, { timeout: 80000 })
+    }, null, { timeout: 80000 })
 
     const result = await parityHandle.jsonValue()
 

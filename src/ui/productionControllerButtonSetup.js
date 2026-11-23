@@ -1,3 +1,4 @@
+import { AIRCRAFT_TYPES, hasPlaneFactory } from '../production/aircraftProduction.js'
 import { advancedBuildingTypes, hasBuildingBlueprint } from '../production/advancedBuildingAccess.js'
 import { subscribePerks } from '../perks/perkState.js'
 import { setupProductionHoverCard } from './productionHoverCard.js'
@@ -235,26 +236,9 @@ export function setupUnitButtons(controller) {
           requirementsMet = false
           requirementText = 'Requires Vehicle Factory & Radar Station'
         }
-      } else if (unitType === 'apache') {
-        const hasHelipad = gameState.buildings.some(b => b.type === 'helipad' && b.owner === gameState.humanPlayer)
-        if (!hasHelipad) {
-          requirementsMet = false
-          requirementText = 'Requires Helipad'
-        }
-      } else if ((unitType === 'f22Raptor' || unitType === 'c5Galaxy')) {
-        const hasAirstrip = gameState.buildings.some(b => b.type === 'airstrip' && b.owner === gameState.humanPlayer)
-        if (!hasAirstrip) {
-          requirementsMet = false
-          requirementText = 'Requires Airstrip'
-        }
-      } else if (unitType === 'f35') {
-        const hasHelipad = gameState.buildings.some(b => b.type === 'helipad' && b.owner === gameState.humanPlayer)
-        const hasAirstrip = gameState.buildings.some(b => b.type === 'airstrip' && b.owner === gameState.humanPlayer)
-        const hasAmmunitionFactory = gameState.buildings.some(b => b.type === 'ammunitionFactory' && b.owner === gameState.humanPlayer)
-        if ((!hasHelipad && !hasAirstrip) || !hasAmmunitionFactory) {
-          requirementsMet = false
-          requirementText = 'Requires Helipad or Airstrip and Ammunition Factory'
-        }
+      } else if (AIRCRAFT_TYPES.includes(unitType)) {
+        requirementsMet = hasPlaneFactory(gameState.buildings, gameState.humanPlayer)
+        requirementText = 'Requires Plane Factory'
       } else if (['destroyer', 'hovercraft', 'vehicleFerry', 'aircraftCarrier', 'navalMineLayer', 'battleship', 'submarine'].includes(unitType)) {
         const hasShipyard = gameState.buildings.some(b => b.type === 'shipyard' && b.owner === gameState.humanPlayer)
         if (!hasShipyard) {

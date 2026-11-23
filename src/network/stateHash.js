@@ -70,6 +70,11 @@ function hashUnit(unit) {
   hash = hashCombine(hash, quantize(unit.tileX, 1))
   hash = hashCombine(hash, quantize(unit.tileY, 1))
 
+  if (unit.aircraftDelivery) {
+    hash = hashCombine(hash, hashString(unit.aircraftDelivery.targetId))
+    hash = hashCombine(hash, quantize(unit.aircraftDelivery.next || 0, 1))
+  }
+
   if (unit.factoryExit) {
     hash = hashCombine(hash, hashString(unit.factoryExit.factoryId || ''))
     hash = hashCombine(hash, hashString(unit.factoryExit.phase))

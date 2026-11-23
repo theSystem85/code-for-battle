@@ -847,9 +847,9 @@ describe('Production Queue System', () => {
       expect(multiplier).toBe(0)
     })
 
-    it('[U03534] should speed up F22 production when multiple vehicle factories exist', () => {
+    it('[U03534] keeps F-22 production at base speed even with multiple Vehicle Factories', () => {
       gameState.buildings = [
-        { type: 'airstrip', owner: 'player', health: 1000 },
+        { type: 'planeFactory', owner: 'player', health: 1000 },
         { type: 'vehicleFactory', owner: 'player', health: 100 },
         { type: 'vehicleFactory', owner: 'player', health: 100 }
       ]
@@ -857,7 +857,7 @@ describe('Production Queue System', () => {
       productionQueue.startNextUnitProduction()
 
       expect(productionQueue.currentUnit).not.toBeNull()
-      expect(productionQueue.currentUnit.duration).toBe(24000)
+      expect(productionQueue.currentUnit.duration).toBe(48000)
     })
   })
 
@@ -1507,7 +1507,7 @@ describe('Production Queue System', () => {
       gameState.buildings = [
         { type: 'vehicleFactory', owner: 'player', health: 100 },
         { type: 'shipyard', owner: 'player', health: 100 },
-        { type: 'helipad', owner: 'player', health: 100 }
+        { type: 'planeFactory', owner: 'player', health: 100 }
       ]
 
       productionQueue.addItem('tank_v1', mockButton, false)
@@ -1526,7 +1526,7 @@ describe('Production Queue System', () => {
       gameState.money = 100000
       gameState.buildings = [
         { type: 'shipyard', owner: 'player', health: 100 },
-        { type: 'helipad', owner: 'player', health: 100 }
+        { type: 'planeFactory', owner: 'player', health: 100 }
       ]
       const button = {
         ...mockButton,

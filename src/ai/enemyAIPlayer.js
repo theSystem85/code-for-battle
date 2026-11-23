@@ -18,7 +18,8 @@ import { logPerformance } from '../performanceUtils.js'
 import { RECOVERY_TANK_RATIO, UNIT_COSTS } from '../config.js'
 import { isPartyUsingLlmStrategic } from './llmStrategicAccess.js'
 import { processLlmBuildQueue, processLlmUnitQueue, markLlmBuildComplete, markLlmUnitComplete } from '../ai-api/applier.js'
-import { ensureAirstripOperations, claimAirstripParkingSlot } from '../utils/airstripUtils.js'
+import { AIRCRAFT_TYPES, findGalaxySpawnTile, isOperationalPlaneFactory } from '../production/aircraftProduction.js'
+import { buildAircraftStreet } from './aircraftStreets.js'
 import { handleStuckHarvester } from '../game/harvesterLogic.js'
 import { createReplayEntityReference, createReplayUnitReference, recordReplayCommand } from '../replaySystem.js'
 import { getClosestEnemyFactory } from './enemyUtils.js'
@@ -40,6 +41,7 @@ const AI_SELL_PRIORITY = [
   'helipad',
   'shipyard',
   'airstrip',
+  'planeFactory',
   'ammunitionFactory',
   'gasStation',
   'hospital',
@@ -458,6 +460,12 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
   const llmStrategicActive = isPartyUsingLlmStrategic(aiPlayerId, gameState)
   const allowStrategicDecisions = !llmStrategicActive
 
+  const planeFactory = aiBuildings.find(building => isOperationalPlaneFactory(building, aiPlayerId))
+  if (planeFactory) {
+    const street = buildAircraftStreet(aiFactory, units, aiBuildings, mapGrid, occupancyMap, gameState, now)
+    if (street) recordAiBuildingPlacement(aiPlayerId, street)
+  }
+
   // Process LLM building & unit queues when LLM strategic AI is active.
   // This uses the same timer-based construction system as the local AI,
   // ensuring buildings/units are produced one at a time (fair to the player).
@@ -599,6 +607,9 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
     ) {
       buildingType = 'helipad'
       cost = buildingData.helipad.cost
+    } else if (!planeFactory && (helipads.length > 0 || airstrips.length > 0) && aiFactory.budget >= buildingData.planeFactory.cost) {
+      buildingType = 'planeFactory'
+      cost = buildingData.planeFactory.cost
     } else if (
       radarStations.length > 0 &&
       helipads.length > 0 &&
@@ -819,7 +830,7 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
       )
       if (
         placementRemainsSafe &&
-        canPlaceBuilding(buildingType, position.x, position.y, gameState.mapGrid || mapGrid, units, gameState.buildings, factories, aiPlayerId)
+        canPlaceBuilding(buildingType, position.x, position.y, gameState.mapGrid || mapGrid, units, gameState.buildings, factories, aiPlayerId, { aiPlaneFactory: true })
       ) {
         const newBuilding = createBuilding(buildingType, position.x, position.y)
         newBuilding.owner = aiPlayerId
@@ -880,7 +891,9 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
   // Complete unit production when timer finishes
   if (aiFactory && aiFactory.currentlyProducingUnit && now - aiFactory.unitBuildStartTime > aiFactory.unitBuildDuration) {
     const unitType = aiFactory.currentlyProducingUnit
-    const spawnFactory = aiFactory.unitSpawnBuilding || aiFactory
+    const aircraft = AIRCRAFT_TYPES.includes(unitType)
+    const spawnFactory = aircraft ? planeFactory : aiFactory.unitSpawnBuilding || aiFactory
+    if (spawnFactory && unitType === 'c5Galaxy' && !findGalaxySpawnTile(spawnFactory, mapGrid, occupancyMap)) return
 
     // If the spawn factory was destroyed before production completed, cancel the spawn
     if (!(!spawnFactory || spawnFactory.health <= 0 || !gameState.buildings.includes(spawnFactory))) {
@@ -983,7 +996,7 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
       const f22CountInProduction = aiFactory.currentlyProducingUnit === 'f22Raptor' ? 1 : 0
       const f35CountInProduction = aiFactory.currentlyProducingUnit === 'f35' ? 1 : 0
       const apacheCapacity = helipadsForProduction.length
-      const needApache = apacheCapacity > 0 && (aiApaches.length + apacheCountInProduction) < apacheCapacity
+      const needApache = planeFactory && apacheCapacity > 0 && (aiApaches.length + apacheCountInProduction) < apacheCapacity
       const destroyerCapacity = shipyardsForProduction.length * 2
       const needDestroyer = aiApaches.length > 0 && destroyerCapacity > 0 &&
         (aiDestroyers.length + destroyerCountInProduction) < destroyerCapacity
@@ -993,9 +1006,9 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
       const multiF22BudgetThreshold = 10000
       const f22PerAirstripTarget = aiFactory.budget > multiF22BudgetThreshold ? 2 : 1
       const f22Capacity = airstripsForProduction.length * f22PerAirstripTarget
-      const needF22 = f22Capacity > 0 && (aiF22s.length + f22CountInProduction) < f22Capacity
+      const needF22 = planeFactory && f22Capacity > 0 && (aiF22s.length + f22CountInProduction) < f22Capacity
       const totalF22Planned = aiF22s.length + f22CountInProduction
-      const needF35 = totalF22Planned > 0 && (aiF35s.length + f35CountInProduction) < totalF22Planned
+      const needF35 = planeFactory && totalF22Planned > 0 && (aiF35s.length + f35CountInProduction) < totalF22Planned
 
       if (aiHarvesters.length < OPENING_HARVESTER_COUNT) {
         unitType = 'harvester'
@@ -1084,53 +1097,14 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
             gameState[lastProductionKey] = now
             return
           }
-        } else if (unitType === 'apache') {
-          if (helipadsForProduction.length > 0) {
-            const helipadIndexKey = `next${aiPlayerId}HelipadIndex`
-            gameState[helipadIndexKey] = gameState[helipadIndexKey] ?? 0
-            spawnFactory = helipadsForProduction[gameState[helipadIndexKey] % helipadsForProduction.length]
-            gameState[helipadIndexKey]++
-          } else {
-            console.error(`Cannot spawn apache: AI player ${aiPlayerId} has no Helipad.`)
-            gameState[lastProductionKey] = now
-            return
-          }
+        } else if (AIRCRAFT_TYPES.includes(unitType)) {
+          spawnFactory = planeFactory
         } else if (unitType === 'destroyer' || unitType === 'supplyShip') {
           if (shipyardsForProduction.length > 0) {
             const shipyardIndexKey = `next${aiPlayerId}ShipyardIndex`
             gameState[shipyardIndexKey] = gameState[shipyardIndexKey] ?? 0
             spawnFactory = shipyardsForProduction[gameState[shipyardIndexKey] % shipyardsForProduction.length]
             gameState[shipyardIndexKey]++
-          } else {
-            gameState[lastProductionKey] = now
-            return
-          }
-        } else if (unitType === 'f22Raptor') {
-          const availableAirstrips = airstripsForProduction.filter(airstrip => {
-            ensureAirstripOperations(airstrip)
-            return claimAirstripParkingSlot(airstrip) >= 0
-          })
-
-          if (availableAirstrips.length > 0) {
-            const airstripIndexKey = `next${aiPlayerId}AirstripIndex`
-            gameState[airstripIndexKey] = gameState[airstripIndexKey] ?? 0
-            spawnFactory = availableAirstrips[gameState[airstripIndexKey] % availableAirstrips.length]
-            gameState[airstripIndexKey]++
-          } else {
-            gameState[lastProductionKey] = now
-            return
-          }
-        } else if (unitType === 'f35') {
-          const availableAirstrips = airstripsForProduction.filter(airstrip => {
-            ensureAirstripOperations(airstrip)
-            return claimAirstripParkingSlot(airstrip) >= 0
-          })
-
-          if (availableAirstrips.length > 0) {
-            const airstripIndexKey = `next${aiPlayerId}AirstripIndex`
-            gameState[airstripIndexKey] = gameState[airstripIndexKey] ?? 0
-            spawnFactory = availableAirstrips[gameState[airstripIndexKey] % availableAirstrips.length]
-            gameState[airstripIndexKey]++
           } else {
             gameState[lastProductionKey] = now
             return

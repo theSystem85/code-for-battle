@@ -1,3 +1,4 @@
+import { AIRCRAFT_TYPES, hasPlaneFactory } from '../production/aircraftProduction.js'
 import { getAdvancedBuildingRequirement, hasBuildingBlueprint } from '../production/advancedBuildingAccess.js'
 import { hasResearchCenterPrerequisites } from '../production/researchCenterRequirements.js'
 import { gameState } from '../gameState.js'
@@ -35,9 +36,7 @@ export function updateVehicleButtonStates(controller) {
     b => b.type === 'radarStation' && b.owner === gameState.humanPlayer && b.health > 0
   )
   const unitButtons = document.querySelectorAll('.production-button[data-unit-type]')
-  const hasHelipad = gameState.buildings.some(
-    b => b.type === 'helipad' && b.owner === gameState.humanPlayer && b.health > 0
-  )
+  const hasAircraftProduction = hasPlaneFactory(gameState.buildings, gameState.humanPlayer)
   const hasShipyard = gameState.buildings.some(
     b => b.type === 'shipyard' && b.owner === gameState.humanPlayer && b.health > 0
   )
@@ -92,32 +91,9 @@ export function updateVehicleButtonStates(controller) {
         button.classList.add('disabled')
         button.dataset.requirement = 'Requires Vehicle Factory & Hospital'
       }
-    } else if (unitType === 'apache') {
-      if (hasHelipad) {
-        button.classList.remove('disabled')
-        button.dataset.requirement = ''
-      } else {
-        button.classList.add('disabled')
-        button.dataset.requirement = 'Requires Helipad'
-      }
-    } else if (unitType === 'f22Raptor') {
-      const hasAirstrip = gameState.buildings.some(b => b.type === 'airstrip' && b.owner === gameState.humanPlayer && b.health > 0)
-      if (hasAirstrip) {
-        button.classList.remove('disabled')
-        button.dataset.requirement = ''
-      } else {
-        button.classList.add('disabled')
-        button.dataset.requirement = 'Requires Airstrip'
-      }
-    } else if (unitType === 'f35') {
-      const hasAirstrip = gameState.buildings.some(b => b.type === 'airstrip' && b.owner === gameState.humanPlayer && b.health > 0)
-      if ((hasHelipad || hasAirstrip) && hasAmmunitionFactory) {
-        button.classList.remove('disabled')
-        button.dataset.requirement = ''
-      } else {
-        button.classList.add('disabled')
-        button.dataset.requirement = 'Requires Helipad or Airstrip and Ammunition Factory'
-      }
+    } else if (AIRCRAFT_TYPES.includes(unitType)) {
+      button.classList.toggle('disabled', !hasAircraftProduction)
+      button.dataset.requirement = hasAircraftProduction ? '' : 'Requires Plane Factory'
     } else if (controller.navalUnitTypes.includes(unitType) && unitType !== 'supplyShip') {
       if (hasShipyard) {
         button.classList.remove('disabled')

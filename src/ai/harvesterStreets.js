@@ -8,7 +8,7 @@ const trafficByFactory = new WeakMap()
 const MAX_TRAFFIC_TILES = 1024
 const TRAFFIC_LIFETIME = 180000
 
-function canPave(tile, mapGrid, x, y) {
+export function canPave(tile, mapGrid, x, y) {
   return tile?.type === 'land' && !tile.ore && !tile.seedCrystal &&
     !tile.building && !tile.noBuild && !tile.buildOnlyOccupied &&
     !isDecorativeBuildBlocker(mapGrid, x, y)
