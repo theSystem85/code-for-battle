@@ -9,6 +9,7 @@ import { hasClearShot, findPositionWithClearShot } from '../../src/logic.js'
 vi.mock('../../src/config.js', () => ({
   TILE_SIZE: 32,
   TANK_FIRE_RANGE: 9,
+  ROCKET_TANK_RANGE_MULTIPLIER: 1.8,
   TANK_BULLET_SPEED: 8,
   TURRET_AIMING_THRESHOLD: 0.2,
   TANK_V3_BURST: { COUNT: 2, DELAY: 150 },

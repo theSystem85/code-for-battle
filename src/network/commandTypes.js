@@ -12,6 +12,7 @@ export const COMMAND_TYPES = {
   UNIT_MOVE: 'unit-move',
   UNIT_ATTACK: 'unit-attack',
   UNIT_STOP: 'unit-stop',
+  UNIT_SELL: 'unit-sell',
   UNIT_GUARD: 'unit-guard',
   C5_LOAD: 'c5-load',
   C5_UNLOAD: 'c5-unload',

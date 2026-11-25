@@ -10,7 +10,8 @@ import {
   HOWITZER_FIRE_COOLDOWN,
   HOWITZER_FIREPOWER,
   HOWITZER_FIRE_RANGE,
-  TANK_FIRE_RANGE
+  TANK_FIRE_RANGE,
+  ROCKET_TANK_RANGE_MULTIPLIER
 } from '../config.js'
 import { computeBuildingDps, generateDangerZoneMapForPlayer } from '../game/dangerZoneMap.js'
 import { combinedDangerAt, refreshDynamicDangerMaps } from '../game/dynamicDangerZoneMap.js'
@@ -374,7 +375,7 @@ function dangerAt(dangerMap, x, y, dynamicState = null) {
 export function weaponRangeTiles(unit) {
   if (!unit) return TANK_FIRE_RANGE
   if (unit.type === 'howitzer') return HOWITZER_FIRE_RANGE
-  if (unit.type === 'rocketTank') return Math.ceil(TANK_FIRE_RANGE * 1.5)
+  if (unit.type === 'rocketTank') return Math.ceil(TANK_FIRE_RANGE * ROCKET_TANK_RANGE_MULTIPLIER)
   if (unit.type === 'f22Raptor') return 16
   if (unit.type === 'f35') return 14
   if (unit.type === 'apache') return Math.max(6, Math.ceil(TANK_FIRE_RANGE * 0.8))

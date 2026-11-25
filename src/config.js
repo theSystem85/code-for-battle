@@ -970,6 +970,7 @@ export function setCheatConsoleHistoryLimit(value) {
 
 // Increase tank range by 50% (for example, from 6 to 9 tiles)
 export let TANK_FIRE_RANGE = 9
+export const ROCKET_TANK_RANGE_MULTIPLIER = 1.8
 
 // Apache helicopters should maintain a slightly closer standoff distance than
 // their original configuration. Apply a shared reduction factor so both
@@ -1007,7 +1008,7 @@ export const BUILDING_PROXIMITY_RANGE = MAX_BUILDING_GAP_TILES
 // Shadow of War configuration
 export const SHADOW_OF_WAR_CONFIG = {
   tilePadding: 0.5,
-  rocketRangeMultiplier: 1.5,
+  rocketRangeMultiplier: ROCKET_TANK_RANGE_MULTIPLIER,
   defaultNonCombatRange: 2,
   harvesterRange: 5,
   initialBaseDiscoveryRadius: 10,

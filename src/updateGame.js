@@ -44,6 +44,7 @@ import { updateHarvesterLogic } from './game/harvesterLogic.js'
 import { updateWorkshopLogic } from './game/workshopLogic.js'
 import { updateBullets } from './game/bulletSystem.js'
 import { updateWreckPhysics } from './game/unitWreckManager.js'
+import { updateSupplyReturns } from './game/supplyReturn.js'
 import { updateHospitalLogic } from './game/hospitalLogic.js'
 import { ServiceUnitIndex } from './game/serviceUnitIndex.js'
 import { updateAmbulanceLogic } from './game/ambulanceSystem.js'
@@ -84,6 +85,7 @@ import {
   cleanupDestroyedFactories,
   checkGameEndConditions
 } from './game/gameStateManager.js'
+import { sellUnitAtWorkshop } from './game/sellUnitAtWorkshop.js'
 import { updateGlobalPathfinding } from './game/pathfinding.js'
 import { logUnitStatus } from './utils/logger.js'
 import { updateRemoteControlledUnits } from './game/remoteControl.js'
@@ -277,6 +279,13 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
           if (building && !building.isBeingSold) {
             building.isBeingSold = true
             building.sellStartTime = sellStartTime
+          }
+        } else if (cmd.commandType === COMMAND_TYPES.UNIT_SELL && cmd.payload) {
+          const owner = cmd.sourcePartyId
+          const unit = mainUnits.find(unit => unit.id === cmd.payload.unitId)
+          const unitRef = createReplayEntityReference(unit)
+          if (unit && sellUnitAtWorkshop(unit.id, owner, mainUnits, gameState, factories)) {
+            recordReplayCommand({ type: COMMAND_TYPES.UNIT_SELL, owner, unitRef }, { source: 'remote-human', playerId: owner })
           }
         } else if (cmd.commandType === COMMAND_TYPES.UNIT_MOVE && cmd.payload) {
           // Apply unit move command from client
@@ -593,6 +602,7 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
       serviceUnitIndex.rebuild(units)
       updateRecoveryTankLogic(units, gameState, delta, serviceUnitIndex)
 
+      updateSupplyReturns(units, gameState, mapGrid, occupancyMap)
       openRefuelPumpFrame()
       updateHospitalLogic(units, gameState.buildings, gameState, delta)
       updateAmbulanceLogic(units, gameState, delta, serviceUnitIndex)

@@ -98,6 +98,24 @@
   margin-top: 20px;
 }
 
+.range-cursor-info--above {
+  transform: translate(-50%, -100%);
+  margin-top: -18px;
+}
+
+.range-cursor-info--above .range-cursor-info__text {
+  padding: 3px 6px;
+  border-radius: 3px;
+  background: #172318;
+  color: #d1f7ce;
+  font-size: 12px;
+  text-shadow: none;
+}
+
+body:not(:has(#gameCanvas.sell-mode)) .range-cursor-info--above {
+  opacity: 0;
+}
+
 .range-cursor-info.visible {
   opacity: 1;
 }

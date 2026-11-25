@@ -3,7 +3,7 @@ import {
   APACHE_RANGE_REDUCTION,
   BATTLESHIP_FIRE_RANGE,
   HOWITZER_FIRE_RANGE,
-  SHADOW_OF_WAR_CONFIG,
+  ROCKET_TANK_RANGE_MULTIPLIER,
   TANK_FIRE_RANGE,
   TILE_SIZE
 } from '../config.js'
@@ -429,7 +429,7 @@ export function updateEnemyHover(handler, worldX, worldY, units, factories, sele
       }
 
       if (unit.type === 'rocketTank') {
-        range *= SHADOW_OF_WAR_CONFIG.rocketRangeMultiplier || 1.5
+        range *= ROCKET_TANK_RANGE_MULTIPLIER
       }
 
       const attackCapableTypes = new Set([

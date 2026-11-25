@@ -1,5 +1,11 @@
 const EMPTY = []
 
+export const supplyReturnTrips = new WeakMap()
+
+export function isReturningForSupplies(unit) {
+  return Boolean(supplyReturnTrips.get(unit)?.building)
+}
+
 export function normalizeServiceOwner(owner) {
   return owner === 'player' ? 'player1' : owner
 }

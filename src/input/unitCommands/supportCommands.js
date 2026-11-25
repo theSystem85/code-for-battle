@@ -95,7 +95,7 @@ function getCandidateOrderForHarvester(unit, oreCandidates, assignedTargets) {
   return [...availableTargets, ...fallbackTargets]
 }
 
-export function handleRefineryUnloadCommand(handler, selectedUnits, refinery, mapGrid) {
+export function handleRefineryUnloadCommand(handler, selectedUnits, refinery) {
   selectedUnits.forEach(u => { u.commandQueue = []; u.currentCommand = null })
   handler.clearAttackGroupState(selectedUnits)
 
@@ -113,25 +113,10 @@ export function handleRefineryUnloadCommand(handler, selectedUnits, refinery, ma
 
       if (unit.oreCarried > 0) {
         forceHarvesterUnloadPriority(unit, refinery, handler.units || [])
-
-        const path = findPathForOwner(
-          { x: unit.tileX, y: unit.tileY },
-          {
-            x: refinery.x + Math.floor(refinery.width / 2),
-            y: refinery.y + Math.floor(refinery.height / 2)
-          },
-          mapGrid,
-          gameState.occupancyMap,
-          unit.owner
-        )
-
-        if (path && path.length > 0) {
-          unit.path = path.length > 1 ? path.slice(1) : path
-          unit.target = null
-          unit.moveTarget = { x: refinery.x + Math.floor(refinery.width / 2),
-            y: refinery.y + Math.floor(refinery.height / 2) }
-          unit.forcedAttack = false
-        }
+        unit.path = []
+        unit.moveTarget = null
+        unit.target = null
+        unit.forcedAttack = false
       }
 
       harvestersCommanded++

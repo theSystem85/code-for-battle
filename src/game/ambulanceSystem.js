@@ -6,7 +6,7 @@ import { getUnitCommandsHandler } from '../inputHandler.js'
 import { getServiceRadiusPixels } from '../utils/serviceRadius.js'
 import { computeUtilityApproachPath, UTILITY_QUEUE_MODES } from '../input/unitCommands/utilityHelpers.js'
 import { playSound } from '../sound.js'
-import { lookupServiceUnit, normalizeServiceOwner } from './serviceUnitIndex.js'
+import { isReturningForSupplies, lookupServiceUnit, normalizeServiceOwner } from './serviceUnitIndex.js'
 
 function isAirborneServiceTarget(unit) {
   if (!unit) return false
@@ -35,6 +35,7 @@ export const updateAmbulanceLogic = logPerformance(function(units, gameState, de
   const unitCommands = getUnitCommandsHandler ? getUnitCommandsHandler() : null
 
   ambulances.forEach(ambulance => {
+    if (isReturningForSupplies(ambulance)) return
     const friendly = serviceIndex?.friendly(ambulance.owner) || units
     const queueState = ambulance.utilityQueue
     const queueActive = queueState && queueState.mode === 'heal' && (

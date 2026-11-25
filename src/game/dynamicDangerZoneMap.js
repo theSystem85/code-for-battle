@@ -3,7 +3,7 @@
 // moved to another cell or whose health or crew changed. Callers must keep the
 // refresh on the 5 second CPU-headroom cadence. There is no per-frame rebuild.
 
-import { HOWITZER_FIRE_RANGE, TANK_FIRE_RANGE } from '../config.js'
+import { HOWITZER_FIRE_RANGE, TANK_FIRE_RANGE, ROCKET_TANK_RANGE_MULTIPLIER } from '../config.js'
 import { isCrippledCrew, shouldRunStrategyEvaluation, unitOffencePerSecond } from '../ai/groundAssaultStrategy.js'
 
 export const DYNAMIC_DANGER_CELL = 4
@@ -24,7 +24,7 @@ const MOBILE_THREAT_TYPES = new Set([
 export function mobileThreatRangeTiles(unit) {
   if (!unit) return 0
   if (unit.type === 'howitzer') return HOWITZER_FIRE_RANGE
-  if (unit.type === 'rocketTank') return Math.ceil(TANK_FIRE_RANGE * 1.5)
+  if (unit.type === 'rocketTank') return Math.ceil(TANK_FIRE_RANGE * ROCKET_TANK_RANGE_MULTIPLIER)
   if (unit.type === 'f22Raptor') return 16
   if (unit.type === 'f35') return 14
   if (unit.type === 'apache') return Math.max(6, Math.ceil(TANK_FIRE_RANGE * 0.8))

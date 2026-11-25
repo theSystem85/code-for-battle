@@ -1,6 +1,7 @@
 import {
   TILE_SIZE,
   TANK_FIRE_RANGE,
+  ROCKET_TANK_RANGE_MULTIPLIER,
   TURRET_AIMING_THRESHOLD,
   HOWITZER_FIRE_RANGE,
   HOWITZER_MIN_RANGE,
@@ -396,7 +397,9 @@ export function getEffectiveFireRange(unit) {
 
   let baseRange = TANK_FIRE_RANGE * TILE_SIZE
 
-  if (unit.type === 'apache') {
+  if (unit.type === 'rocketTank') {
+    baseRange *= ROCKET_TANK_RANGE_MULTIPLIER
+  } else if (unit.type === 'apache') {
     baseRange *= APACHE_RANGE_REDUCTION
   } else if (unit.type === 'f22Raptor') {
     baseRange = 16 * TILE_SIZE

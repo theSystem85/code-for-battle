@@ -11,7 +11,7 @@ import {
 } from './tankerTruckUtils.js'
 import { requestRefuelPump } from '../audio/serviceLoops.js'
 import { playSound } from '../sound.js'
-import { lookupServiceUnit, normalizeServiceOwner } from './serviceUnitIndex.js'
+import { isReturningForSupplies, lookupServiceUnit, normalizeServiceOwner } from './serviceUnitIndex.js'
 
 function isAirborneServiceTarget(unit) {
   if (!unit) return false
@@ -36,6 +36,7 @@ export const updateTankerTruckLogic = logPerformance(function(units, gameState, 
   const unitCommands = getUnitCommandsHandler ? getUnitCommandsHandler() : null
 
   tankers.forEach(tanker => {
+    if (isReturningForSupplies(tanker)) return
     const friendly = serviceIndex?.friendly(tanker.owner) || units
     if (tanker.kamikazeMode) {
       handleKamikazeBehavior(tanker, units, gameState, serviceIndex)

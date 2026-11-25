@@ -23,8 +23,10 @@ import { logPerformance } from '../performanceUtils.js'
 import { getEffectiveFireRange } from './unitCombat/combatHelpers.js'
 import { observeUnitCommandSignals, pruneUnitCommandHistory } from './unitCommandHistory.js'
 import { MovementCollisionIndex } from './movementCollisionIndex.js'
+import { getAircraftAltitudeLift } from './aircraftTargeting.js'
 
 const REMOTE_ATTACK_CHASE_SUPPRESSION_MS = 5000
+const ROCKET_CHASE_RETRY_MS = 500
 const movementCollisionIndex = new MovementCollisionIndex()
 
 function signedAngleDelta(currentAngle, targetAngle) {
@@ -149,6 +151,7 @@ export const updateUnitMovement = logPerformance(function updateUnitMovement(uni
       if (unit.target.tileX !== undefined) {
         targetCenterX = unit.target.x + TILE_SIZE / 2
         targetCenterY = unit.target.y + TILE_SIZE / 2
+        if (unit.type === 'rocketTank') targetCenterY -= getAircraftAltitudeLift(unit.target)
       } else {
         targetCenterX = unit.target.x * TILE_SIZE + (unit.target.width * TILE_SIZE) / 2
         targetCenterY = unit.target.y * TILE_SIZE + (unit.target.height * TILE_SIZE) / 2
@@ -193,7 +196,10 @@ export const updateUnitMovement = logPerformance(function updateUnitMovement(uni
         // 1. We need an initial path
         // 2. Target has moved significantly
         // 3. We're getting farther from target (and interval passed)
-        const shouldRecalculatePath = needsInitialPath || (!aiControlledUnit && pathRecalcNeeded && (targetHasMoved || shouldRecalcForDistance))
+        const rocketTank = unit.type === 'rocketTank'
+        const canRetryRocketPath = !unit.lastAttackPathCalcTime || now - unit.lastAttackPathCalcTime >= ROCKET_CHASE_RETRY_MS
+        const shouldRecalculatePath = (needsInitialPath && (!rocketTank || canRetryRocketPath || targetHasMoved)) ||
+          (!aiControlledUnit && pathRecalcNeeded && (targetHasMoved || shouldRecalcForDistance))
 
         if (shouldRecalculatePath) {
           unit.moveTarget = { x: targetTileX, y: targetTileY }
@@ -212,6 +218,9 @@ export const updateUnitMovement = logPerformance(function updateUnitMovement(uni
           if (path.length > 1) {
             unit.path = path.slice(1)
             unit.pathComputedWithOccupancy = true
+          } else if (rocketTank) {
+            unit.moveTarget = null
+            if (unit.path?.length) unit.path = []
           } else {
             unit.path = [{ x: targetTileX, y: targetTileY }]
           }

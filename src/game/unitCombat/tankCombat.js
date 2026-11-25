@@ -238,8 +238,7 @@ export function updateRocketTankCombat(unit, units, bullets, mapGrid, now, occup
   if (unit.target && unit.target.health > 0) {
     const CHASE_THRESHOLD = TANK_FIRE_RANGE * TILE_SIZE * COMBAT_CONFIG.CHASE_MULTIPLIER.ROCKET
 
-    const rangeMultiplier = unit.type === 'f22Raptor' ? 1 : COMBAT_CONFIG.RANGE_MULTIPLIER.ROCKET
-    const rocketRange = getEffectiveFireRange(unit) * rangeMultiplier
+    const rocketRange = getEffectiveFireRange(unit)
 
     let distance
     let targetCenterX
@@ -267,11 +266,11 @@ export function updateRocketTankCombat(unit, units, bullets, mapGrid, now, occup
       targetCenterY = result.targetCenterY
     }
 
-    // Rocket tanks have no turret, so the hull has to face the target.
+    // While chasing, movement steers the hull. Once in range, aim the hull at the target.
     // F22 heading belongs to the attack-run flight plan. Yawing the nose at the
     // target pulls the jet into a tight circle inside the minimum firing distance
     // and prevents the outbound leg from lining up the next pass.
-    if (!isF22) {
+    if (!isF22 && distance <= rocketRange) {
       const unitCenterX = unit.x + TILE_SIZE / 2
       const unitCenterY = unit.y + TILE_SIZE / 2
       const angleToTarget = Math.atan2(targetCenterY - unitCenterY, targetCenterX - unitCenterX)

@@ -1,3 +1,4 @@
+import { isReturningForSupplies } from './serviceUnitIndex.js'
 import { getAmmoCapacityKey, getAmmoCurrentKey } from '../utils/ammunition.js'
 // Ammunition System Module - Handles ammunition resupply at factories and by supply trucks
 import { TILE_SIZE, AMMO_RESUPPLY_TIME, AMMO_TRUCK_RANGE } from '../config.js'
@@ -129,7 +130,7 @@ function applyAmmoResupply(unit, currentAmmo, maxAmmo, transfer, delta, centerX,
  * @param {number} delta - Time delta in milliseconds
  */
 function processAmmunitionTruckResupply(truck, units, delta) {
-  if (truck.ammoCargo <= 0) return
+  if (truck.ammoCargo <= 0 || isReturningForSupplies(truck)) return
 
   const truckCenterX = truck.x + TILE_SIZE / 2
   const truckCenterY = truck.y + TILE_SIZE / 2

@@ -1,6 +1,7 @@
 import {
   TILE_SIZE,
   TANK_FIRE_RANGE,
+  ROCKET_TANK_RANGE_MULTIPLIER,
   STREET_SPEED_MULTIPLIER,
   ENABLE_ENEMY_CONTROL,
   isTurretTankUnitType,
@@ -201,20 +202,12 @@ function getApacheRemoteRange(unit) {
   return baseRange * APACHE_REMOTE_RANGE_MULTIPLIER
 }
 
-// Rocket Tank remote range is the same as its normal fire range
-function getRocketTankRemoteRange(unit) {
-  let baseRange = TANK_FIRE_RANGE * TILE_SIZE
-  if (unit.level >= 1) {
-    baseRange *= unit.rangeMultiplier || 1.2
-  }
-  return baseRange
-}
-
 // Compute remote aim target for rocket tank (similar to Apache)
 function computeRocketTankRemoteAim(unit, direction) {
   const centerX = unit.x + TILE_SIZE / 2
   const centerY = unit.y + TILE_SIZE / 2
-  const baseRange = getRocketTankRemoteRange(unit)
+  const veterancyMultiplier = unit.level >= 1 ? (unit.rangeMultiplier || 1.2) : 1
+  const baseRange = TANK_FIRE_RANGE * TILE_SIZE * ROCKET_TANK_RANGE_MULTIPLIER * veterancyMultiplier
   const viewportLimitedRange = clampRangeToViewport(baseRange, centerX, centerY, direction)
 
   const cosDir = Math.cos(direction)

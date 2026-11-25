@@ -1,6 +1,7 @@
 import { TILE_SIZE } from '../config.js'
 import { logPerformance } from '../performanceUtils.js'
 import { getServiceRadiusPixels } from '../utils/serviceRadius.js'
+import { normalizeServiceOwner } from './serviceUnitIndex.js'
 import { playSound } from '../sound.js'
 export const updateHospitalLogic = logPerformance(function(units, buildings, gameState, delta) {
   const hospitals = buildings.filter(b => b.type === 'hospital')
@@ -100,7 +101,7 @@ export const updateHospitalLogic = logPerformance(function(units, buildings, gam
     // Handle ambulance medic refills (separate from crew healing)
     units.forEach(unit => {
       // Only refill at friendly hospitals (matching owner)
-      if (unit.type === 'ambulance' && typeof unit.medics === 'number' && unit.owner === hospital.owner) {
+      if (unit.type === 'ambulance' && typeof unit.medics === 'number' && normalizeServiceOwner(unit.owner) === normalizeServiceOwner(hospital.owner)) {
         const unitCenterX = (unit.x ?? unit.tileX * TILE_SIZE) + TILE_SIZE / 2
         const unitCenterY = (unit.y ?? unit.tileY * TILE_SIZE) + TILE_SIZE / 2
         const distance = Math.hypot(unitCenterX - centerX, unitCenterY - centerY)

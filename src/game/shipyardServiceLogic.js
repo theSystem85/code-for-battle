@@ -1,4 +1,5 @@
 import { AMMO_RESUPPLY_TIME, GAS_REFILL_TIME, TILE_SIZE } from '../config.js'
+import { isReturningForSupplies } from './serviceUnitIndex.js'
 import { logPerformance } from '../performanceUtils.js'
 import {
   hasShipyardServiceDependency,
@@ -117,7 +118,7 @@ function refillSupplyShipCargo(unit, delta, buildings, mapGrid) {
 }
 
 function updateSupplyShipService(units, buildings, delta) {
-  const suppliers = (units || []).filter(unit => unit?.type === 'supplyShip' && unit.health > 0 && isStationary(unit))
+  const suppliers = (units || []).filter(unit => unit?.type === 'supplyShip' && unit.health > 0 && isStationary(unit) && !isReturningForSupplies(unit))
   suppliers.forEach(supplier => {
     ;(units || []).forEach(target => {
       if (!isInSupplyShipRadius(target, supplier) || !isStationary(target)) return

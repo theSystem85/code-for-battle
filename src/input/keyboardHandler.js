@@ -627,7 +627,7 @@ export class KeyboardHandler {
         gameCanvas.classList.add('sell-mode')
 
         // Show notification
-        this.showNotification('Sell mode activated - Click on a building to sell it for 70% of build price', 3000)
+        this.showNotification('Sell mode activated. Buildings sell at 70%. Fully repaired units near a Vehicle Workshop sell at 66%.', 3000)
       }
     } else {
       // Turn off sell mode

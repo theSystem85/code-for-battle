@@ -3,6 +3,7 @@ import { BATTLESHIP_TURRET_RENDER_SCALE, BATTLESHIP_BARREL_LATERAL_OFFSET, BATTL
 import { getRecoilOffset } from '../rendering/turretFiringEffects.js'
 import { gameState } from '../gameState.js'
 import { getSimulationTime } from '../game/time.js'
+import { normalizeServiceOwner } from '../game/serviceUnitIndex.js'
 import { TILE_SIZE } from '../config.js'
 import masks from './navalImageMasks.json'
 import { getNavalRenderLengthTiles, hasNativeNavalSprite, NAVAL_SPRITE_NATIVE_DENSITY } from '../utils/navalUtils.js'
@@ -65,4 +66,20 @@ function battleshipPartsContainPoint(unit, dx, dy) {
     }
   }
   return false
+}
+
+export function findOwnedUnitAtPoint(units, worldX, worldY, owner) {
+  let closest = null
+  let closestDistance = Infinity
+  const normalizedOwner = normalizeServiceOwner(owner)
+  for (const unit of units || []) {
+    if (!unit || normalizeServiceOwner(unit.owner) !== normalizedOwner ||
+        !unitContainsPoint(unit, worldX, worldY, TILE_SIZE * 0.8)) continue
+    const distance = Math.hypot(worldX - unit.x - TILE_SIZE / 2, worldY - unit.y - TILE_SIZE / 2)
+    if (distance < closestDistance) {
+      closest = unit
+      closestDistance = distance
+    }
+  }
+  return closest
 }

@@ -28,7 +28,7 @@ vi.mock('../../src/game/unitWreckManager.js', () => ({
 
 import { CursorManager } from '../../src/input/cursorManager.js'
 import { GAME_DEFAULT_CURSOR } from '../../src/input/cursorStyles.js'
-import { TILE_SIZE, CURSOR_METERS_PER_TILE } from '../../src/config.js'
+import { TILE_SIZE, CURSOR_METERS_PER_TILE, UNIT_COSTS } from '../../src/config.js'
 import { gameState } from '../../src/gameState.js'
 import { findWreckAtTile } from '../../src/game/unitWreckManager.js'
 import { createTestMapGrid, resetGameState } from '../testUtils.js'
@@ -249,6 +249,27 @@ describe('CursorManager', () => {
     manager.updateCustomCursor(event, mapGrid, [], [], [])
 
     expect(canvas.classList.contains('sell-mode')).toBe(true)
+  })
+
+  it('[U07353] shows the workshop resale price above the green cursor only at full health', () => {
+    const manager = new CursorManager()
+    const canvas = createCanvas()
+    const mapGrid = createTestMapGrid(8, 8)
+    const unit = { type: 'rocketTank', owner: 'player1', x: TILE_SIZE * 3, y: TILE_SIZE * 2, health: 99, maxHealth: 100 }
+    gameState.buildings = [{ type: 'vehicleWorkshop', owner: 'player1', x: 0, y: 1, width: 2, height: 2, health: 100 }]
+    gameState.sellMode = true
+    const event = createMouseEvent(unit.x + TILE_SIZE / 2, unit.y + TILE_SIZE / 2)
+
+    manager.updateCustomCursor(event, mapGrid, [], [unit], [unit])
+    expect(canvas.classList.contains('sell-blocked-mode')).toBe(true)
+    expect(manager.rangeCursorElements.container.classList.contains('visible')).toBe(false)
+
+    unit.health = unit.maxHealth
+    manager.updateCustomCursor(event, mapGrid, [], [unit], [unit])
+    expect(canvas.classList.contains('sell-mode')).toBe(true)
+    expect(manager.rangeCursorElements.container.classList.contains('range-cursor-info--above')).toBe(true)
+    expect(manager.rangeCursorElements.container.classList.contains('visible')).toBe(true)
+    expect(manager.rangeCursorElements.rangeText.textContent).toBe(`$${Math.floor(UNIT_COSTS.rocketTank * 0.66).toLocaleString()}`)
   })
 
   it('[U01119] uses move-blocked cursor for blocked terrain with selected units', () => {

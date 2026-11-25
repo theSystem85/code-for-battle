@@ -1,3 +1,4 @@
+import { isReturningForSupplies } from './serviceUnitIndex.js'
 import { serviceUnitDistanceTiles } from '../utils/serviceUnitDistance.js'
 import { needsAmmo as targetNeedsAmmo, getAmmoCapacityKey, getAmmoCurrentKey } from '../utils/ammunition.js'
 // ammunitionTruckLogic.js
@@ -65,6 +66,7 @@ export const updateAmmunitionTruckLogic = logPerformance(function(units, gameSta
   const unitCommands = getUnitCommandsHandler ? getUnitCommandsHandler() : null
 
   ammoTrucks.forEach(ammoTruck => {
+    if (isReturningForSupplies(ammoTruck)) return
     // Ensure ammo truck has proper ammo cargo properties initialized
     if (ammoTruck.ammoCargo === undefined || ammoTruck.maxAmmoCargo === undefined) {
       ammoTruck.maxAmmoCargo = 500 // Default AMMO_TRUCK_CARGO value

@@ -173,7 +173,7 @@ describe('buildingSellHandler.js', () => {
       const event = createClickEvent(25, 25) // Empty location
       const result = buildingSellHandler(event, gameState, mockCanvas, mapGrid, [], factories, null)
 
-      expect(showNotification).toHaveBeenCalledWith('No player building found to sell.')
+      expect(showNotification).toHaveBeenCalledWith('No player building or unit found to sell.')
       expect(result).toBe(false)
     })
 
@@ -186,7 +186,7 @@ describe('buildingSellHandler.js', () => {
       const event = createClickEvent(10, 10)
       const result = buildingSellHandler(event, gameState, mockCanvas, mapGrid, [], factories, null)
 
-      expect(showNotification).toHaveBeenCalledWith('No player building found to sell.')
+      expect(showNotification).toHaveBeenCalledWith('No player building or unit found to sell.')
       expect(result).toBe(false)
     })
 

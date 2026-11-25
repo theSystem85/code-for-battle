@@ -1434,6 +1434,29 @@ describe('Building System', () => {
       expect(building.health).toBeGreaterThanOrEqual(50)
     })
 
+    it('[U07350] applies the 30-second voice cooldown when repair starts and then pauses for funds', () => {
+      const building = createBuilding('powerPlant', 5, 5)
+      building.owner = 'player1'
+      building.health = 50
+      building.maxHealth = 100
+
+      gameState.money = 0
+      gameState.humanPlayer = 'player1'
+      gameState.buildingsAwaitingRepair = [{
+        building,
+        repairCost: 50,
+        healthToRepair: 50,
+        lastAttackedTime: 1000
+      }]
+
+      buildingsModule.updateBuildingsAwaitingRepair(gameState, 11000)
+      expect(playSound).toHaveBeenCalledWith('repairStarted', 1, 30, true)
+
+      buildingsModule.updateBuildingsUnderRepair(gameState, 12000)
+      expect(gameState.buildingsUnderRepair[0].paused).toBe(true)
+      expect(playSound).toHaveBeenCalledWith('repairPaused', 1, 30, true)
+    })
+
     it('[U00689] should complete repair when duration elapsed', () => {
       const building = createBuilding('powerPlant', 5, 5)
       building.owner = 'player1'

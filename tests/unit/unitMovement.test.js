@@ -6,6 +6,7 @@ import {
   updateSpawnExit
 } from '../../src/game/unitMovement.js'
 import { gameState } from '../../src/gameState.js'
+import { TILE_SIZE, TANK_FIRE_RANGE } from '../../src/config.js'
 import { selectedUnits as _selectedUnits, cleanupDestroyedSelectedUnits } from '../../src/inputHandler.js'
 import { findPath } from '../../src/units.js'
 import { getCachedPath } from '../../src/game/pathfinding.js'
@@ -104,6 +105,28 @@ describe('unitMovement.js', () => {
   })
 
   describe('updateUnitMovement', () => {
+    it('[U07356] pursues a rocket tank target only while it is beyond the extended firing range', () => {
+      const extendRow = () => Array.from({ length: 30 }, () => ({ type: 'land' }))
+      const map = Array.from({ length: 10 }, extendRow)
+      const target = { tileX: 20, tileY: 2, x: 20 * TILE_SIZE, y: 2 * TILE_SIZE, owner: 'player2', health: 100 }
+      const unit = { type: 'rocketTank', owner: 'player1', tileX: 2, tileY: 2, x: 2 * TILE_SIZE, y: target.y, health: 100, target, path: [] }
+      getCachedPath.mockImplementationOnce((start, end) => [start, end]).mockImplementationOnce((start, end) => [start, end])
+
+      updateUnitMovement([unit], map, null, mockGameState, 10000)
+      expect(unit.moveTarget).toEqual({ x: target.tileX, y: target.tileY })
+
+      unit.x = target.x - TANK_FIRE_RANGE * 1.7 * TILE_SIZE
+      unit.tileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
+      updateUnitMovement([unit], map, null, mockGameState, 10500)
+      expect(unit.moveTarget).toBeNull()
+      expect(unit.path).toEqual([])
+
+      target.x += 4 * TILE_SIZE
+      target.tileX += 4
+      updateUnitMovement([unit], map, null, mockGameState, 11000)
+      expect(unit.moveTarget).toEqual({ x: target.tileX, y: target.tileY })
+    })
+
     it('[U04755] should clean up destroyed units', () => {
       const units = [{ health: 100, x: 32, y: 32, tileX: 1, tileY: 1 }]
       updateUnitMovement(units, mockMapGrid, mockOccupancyMap, mockGameState, performance.now())

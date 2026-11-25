@@ -306,7 +306,7 @@ describe('KeyboardHandler', () => {
     expect(gameCanvas.classList.contains('sell-mode')).toBe(true)
     expect(gameCanvas.style.cursor).toBe('default')
     expect(handler.showNotification).toHaveBeenCalledWith(
-      'Sell mode activated - Click on a building to sell it for 70% of build price',
+      'Sell mode activated. Buildings sell at 70%. Fully repaired units near a Vehicle Workshop sell at 66%.',
       3000
     )
 

@@ -140,6 +140,10 @@ export function setupInputHandlers(units, factories, mapGrid) {
   })
 }
 
+export function refreshGameCursor(units) {
+  cursorManager.refreshCursor(gameState.mapGrid || [], gameState.factories || [], selectedUnits, units)
+}
+
 // Safety function: Call this at the beginning of each frame update
 // to remove any destroyed units from selection
 export function cleanupDestroyedSelectedUnits() {

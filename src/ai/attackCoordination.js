@@ -1,5 +1,6 @@
 // attackCoordination.js - AI attack coordination and multi-directional attack strategies
 import { TILE_SIZE, TANK_FIRE_RANGE, HOWITZER_FIRE_RANGE } from '../config.js'
+import { getEffectiveFireRange } from '../game/unitCombat/combatHelpers.js'
 import { createFormationOffsets, getCachedPath } from '../game/pathfinding.js'
 import { getSimulationTime } from '../game/time.js'
 import { gameRandom } from '../utils/gameRandom.js'
@@ -206,15 +207,8 @@ export function shouldConductGroupAttack(unit, units, gameState, target) {
 
     const distanceToTarget = Math.hypot(targetCenterX - unitCenterX, targetCenterY - unitCenterY)
 
-    // Tanks and rocket tanks have slightly different ranges, but using the
-    // standard tank fire range as a baseline is sufficient. Adding a small
-    // buffer keeps the check tolerant to targeting jitter.
-    let effectiveRange = TANK_FIRE_RANGE * TILE_SIZE
-    if (unit.type === 'rocketTank') {
-      effectiveRange *= 1.3
-    } else if (unit.type === 'howitzer') {
-      effectiveRange = HOWITZER_FIRE_RANGE * TILE_SIZE
-    }
+    // Use the weapon's actual range so ranged units can fire from their stopping point.
+    const effectiveRange = getEffectiveFireRange(unit)
     if (distanceToTarget <= effectiveRange * 1.1) {
       return true
     }

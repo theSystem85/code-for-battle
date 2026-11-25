@@ -12,7 +12,7 @@ import { prioritizeEconomyActions } from './llmStrategicPolicy.js'
 import { showNotification } from '../ui/notifications.js'
 import { isHost } from '../network/gameCommandSync.js'
 import { gameState } from '../gameState.js'
-import { TILE_SIZE, TANK_FIRE_RANGE, PARTY_COLORS } from '../config.js'
+import { TILE_SIZE, TANK_FIRE_RANGE, ROCKET_TANK_RANGE_MULTIPLIER, PARTY_COLORS } from '../config.js'
 import { buildingData } from '../data/buildingData.js'
 import { pruneTransitionsUpTo } from '../ai-api/transitionCollector.js'
 import { isEffectivelyOffline } from '../pwa/offlineState.js'
@@ -737,7 +737,7 @@ function computeAiVisibleTiles(state, playerId) {
     let range = TANK_FIRE_RANGE
     if (unit.type === 'harvester') range = 5
     else if (unit.type === 'ambulance' || unit.type === 'tankerTruck') range = 2
-    else if (unit.type === 'rocketTank') range = TANK_FIRE_RANGE * 1.5
+    else if (unit.type === 'rocketTank') range = TANK_FIRE_RANGE * ROCKET_TANK_RANGE_MULTIPLIER
     else if (unit.type === 'howitzer') range = 18
     markCircle(cx, cy, range)
   }

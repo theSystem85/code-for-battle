@@ -40,6 +40,7 @@ vi.mock('../../src/game/tankerTruckUtils.js', () => ({ detonateTankerTruck: mock
 vi.mock('../../src/game/ammunitionTruckLogic.js', () => ({
   detonateAmmunitionTruck: mocks.detonateAmmunitionTruck
 }))
+vi.mock('../../src/game/harvesterLogic.js', () => ({ interruptHarvesterAutomation: vi.fn() }))
 vi.mock('../../src/game/mineSystem.js', () => ({ distributeMineLayerPayload: mocks.distributeMineLayerPayload }))
 vi.mock('../../src/utils/smokeUtils.js', () => ({ removeSmokeParticle: mocks.removeSmokeParticle }))
 vi.mock('../../src/utils/gameRandom.js', () => ({ gameRandom: mocks.gameRandom }))
@@ -83,11 +84,13 @@ import {
   INERTIA_STOP_THRESHOLD,
   ORE_SPREAD_INTERVAL,
   TILE_SIZE,
+  UNIT_COSTS,
   WIND_DIRECTION,
   WIND_STRENGTH,
   WIND_SWAY_AMPLITUDE,
   WIND_SWAY_FREQUENCY
 } from '../../src/config.js'
+import { sellUnitAtWorkshop } from '../../src/game/sellUnitAtWorkshop.js'
 import { explosions } from '../../src/logic.js'
 import { isHost as isHostImport } from '../../src/network/gameCommandSync.js'
 
@@ -107,6 +110,28 @@ describe('gameStateManager', () => {
 
   afterEach(() => {
     vi.useRealTimers()
+  })
+
+  it('[U07354] sells only fully repaired owned units within workshop range and refunds them once', () => {
+    const workshop = { type: 'vehicleWorkshop', owner: 'player1', health: 100, x: 3, y: 3, width: 3, height: 3 }
+    const unit = { id: 'truck', type: 'ammunitionTruck', owner: 'player1', x: TILE_SIZE * 15, y: TILE_SIZE * 5, health: 99, maxHealth: 100 }
+    const units = [unit]
+    const state = { humanPlayer: 'player1', money: 50, occupancyMap: [], buildings: [workshop] }
+
+    expect(sellUnitAtWorkshop(unit.id, 'player1', units, state)).toBe(0)
+    unit.x = TILE_SIZE * 6
+    expect(sellUnitAtWorkshop(unit.id, 'player1', units, state)).toBe(0)
+    unit.health = unit.maxHealth
+    expect(sellUnitAtWorkshop(unit.id, 'player2', units, state)).toBe(0)
+
+    const expectedPrice = Math.floor(UNIT_COSTS.ammunitionTruck * 0.66)
+    expect(sellUnitAtWorkshop(unit.id, 'player1', units, state)).toBe(expectedPrice)
+    expect(units).toEqual([])
+    expect(state.money).toBe(50 + expectedPrice)
+    expect(removeUnitOccupancy).toHaveBeenCalledWith(unit, state.occupancyMap)
+    expect(detonateAmmunitionTruck).not.toHaveBeenCalled()
+    expect(sellUnitAtWorkshop(unit.id, 'player1', units, state)).toBe(0)
+    expect(state.money).toBe(50 + expectedPrice)
   })
 
   describe('updateMapScrolling', () => {

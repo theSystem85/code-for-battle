@@ -31,6 +31,7 @@ vi.mock('../../src/buildings.js', () => ({
 }))
 vi.mock('../../src/units.js', () => ({ spawnUnit: vi.fn() }))
 vi.mock('../../src/utils.js', () => ({ getBuildingIdentifier: vi.fn() }))
+vi.mock('../../src/game/sellUnitAtWorkshop.js', () => ({ sellUnitAtWorkshop: vi.fn() }))
 vi.mock('../../src/game/unitWreckManager.js', () => ({ getWreckById: vi.fn() }))
 vi.mock('../../src/behaviours/retreat.js', () => ({ initiateRetreat: vi.fn() }))
 vi.mock('../../src/game/dangerZoneMap.js', () => ({ updateDangerZoneMaps: vi.fn() }))

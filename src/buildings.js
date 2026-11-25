@@ -652,6 +652,8 @@ export function calculateRepairCost(building) {
   return repairCost
 }
 
+const BUILDING_REPAIR_VOICE_COOLDOWN_SECONDS = 30
+
 function isPlayerOwnedBuilding(building) {
   if (!building) return true
   const owner = building.owner
@@ -797,7 +799,7 @@ export const updateBuildingsUnderRepair = logPerformance(function updateBuilding
         repairInfo.paused = true
         repairInfo.startTime = currentTime - progress * repairInfo.duration
         if (isPlayerBuilding) {
-          playSound('repairPaused', 1.0, 0, true)
+          playSound('repairPaused', 1.0, BUILDING_REPAIR_VOICE_COOLDOWN_SECONDS, true)
           showNotification('Repair paused: not enough money.')
         }
         continue
@@ -889,7 +891,7 @@ function actuallyPauseRepair(building, gameState, currentTime) {
         })
 
         if (isPlayerOwnedBuilding(building)) {
-          playSound('repairPaused', 1.0, 0, true)
+          playSound('repairPaused', 1.0, BUILDING_REPAIR_VOICE_COOLDOWN_SECONDS, true)
           showNotification('Repair paused due to attack!')
         }
       }
@@ -957,7 +959,7 @@ export const updateBuildingsAwaitingRepair = logPerformance(function updateBuild
 
           if (!awaitingRepair.initiatedByAI && isPlayerOwnedBuilding(building)) {
             showNotification(`Factory repair started for $${awaitingRepair.repairCost}`)
-            playSound('repairStarted', 1.0, 0, true)
+            playSound('repairStarted', 1.0, BUILDING_REPAIR_VOICE_COOLDOWN_SECONDS, true)
           }
         } else {
           // Start building repair manually (don't use repairBuilding as it starts immediately)
@@ -984,7 +986,7 @@ export const updateBuildingsAwaitingRepair = logPerformance(function updateBuild
 
           if (!awaitingRepair.initiatedByAI && isPlayerOwnedBuilding(building)) {
             showNotification(`Building repair started for $${awaitingRepair.repairCost}`)
-            playSound('repairStarted', 1.0, 0, true)
+            playSound('repairStarted', 1.0, BUILDING_REPAIR_VOICE_COOLDOWN_SECONDS, true)
           }
         }
       }

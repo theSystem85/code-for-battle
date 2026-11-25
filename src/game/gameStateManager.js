@@ -655,37 +655,31 @@ export function cleanupDestroyedUnits(units, gameState) {
         playSound('enemyUnitDestroyed', 1.0, 0, true)
       }
 
-      // Remove unit from cheat system tracking if it exists
-      if (window.cheatSystem) {
-        window.cheatSystem.removeUnitFromTracking(unit.id)
-      }
-
-      if (!unit.occupancyRemoved) {
-        removeUnitOccupancy(unit, gameState.occupancyMap)
-      }
-
-      // Mark unit as destroyed before stopping sounds so async audio start callbacks also self-cancel.
-      unit.destroyed = true
-
-      if (unit.engineSound) {
-        try {
-          unit.engineSound.gainNode.gain.cancelScheduledValues(audioContext.currentTime)
-          unit.engineSound.source.stop()
-        } catch (e) {
-          console.error('Error stopping engine sound:', e)
-        }
-        unit.engineSound = null
-      }
-
-      if (unit.type === 'apache' || unit.type === 'f35') {
-        stopApacheRotorSound(unit)
-      }
-
-      noteCompletionTargetDestroyed(unit, 'unit')
-      unregisterAutomationEntity(unit)
-      units.splice(i, 1)
+      removeUnitFromGame(unit, i, units, gameState)
     }
   }
+}
+
+export function removeUnitFromGame(unit, index, units, state) {
+  globalThis.window?.cheatSystem?.removeUnitFromTracking?.(unit.id)
+  if (!unit.occupancyRemoved) removeUnitOccupancy(unit, state.occupancyMap)
+  unit.destroyed = true
+
+  if (unit.engineSound) {
+    try {
+      unit.engineSound.gainNode.gain.cancelScheduledValues(audioContext.currentTime)
+      unit.engineSound.source.stop()
+    } catch (error) {
+      console.error('Error stopping engine sound:', error)
+    }
+    unit.engineSound = null
+  }
+
+  if (unit.type === 'apache' || unit.type === 'f35') stopApacheRotorSound(unit)
+
+  noteCompletionTargetDestroyed(unit, 'unit')
+  unregisterAutomationEntity(unit)
+  units.splice(index, 1)
 }
 
 /**

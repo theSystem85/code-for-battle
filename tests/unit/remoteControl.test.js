@@ -14,6 +14,7 @@ import { handleTankFiring } from '../../src/game/unitCombat/firingHandlers.js'
 vi.mock('../../src/config.js', () => ({
   TILE_SIZE: 32,
   TANK_FIRE_RANGE: 8,
+  ROCKET_TANK_RANGE_MULTIPLIER: 1.8,
   STREET_SPEED_MULTIPLIER: 1.5,
   ENABLE_ENEMY_CONTROL: false,
   isTurretTankUnitType: vi.fn((type) => type === 'rocketTank'),

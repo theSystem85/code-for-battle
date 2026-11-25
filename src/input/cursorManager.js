@@ -1,7 +1,8 @@
 import { evaluateC5Load } from '../game/c5Cargo.js'
 import { needsAmmo as targetNeedsAmmo, getAmmoCapacityKey, getAmmoCurrentKey } from '../utils/ammunition.js'
-import { unitContainsPoint } from './unitHitTest.js'
+import { findOwnedUnitAtPoint, unitContainsPoint } from './unitHitTest.js'
 import { canSupplyShipServe } from '../game/shipyardServiceLogic.js'
+import { getWorkshopUnitSalePrice } from '../game/workshopUnitSales.js'
 // cursorManager.js
 import { TILE_SIZE, CURSOR_METERS_PER_TILE } from '../config.js'
 import { gameState } from '../gameState.js'
@@ -265,7 +266,8 @@ export class CursorManager {
       return
     }
 
-    const { distance: distanceValue, maxRange, displayText } = this.rangeCursorInfo
+    const { distance: distanceValue, maxRange, displayText, above } = this.rangeCursorInfo
+    container.classList.toggle('range-cursor-info--above', Boolean(above))
     if (typeof displayText === 'string' && displayText.length > 0) {
       rangeText.textContent = displayText
     } else {
@@ -451,7 +453,7 @@ export class CursorManager {
     gameState.cursorX = worldX
     gameState.cursorY = worldY
 
-    if (this.isCursorOverSelectedUnitOrHud(worldX, worldY, selectedUnits)) {
+    if (!gameState.sellMode && this.isCursorOverSelectedUnitOrHud(worldX, worldY, selectedUnits)) {
       setCursor('default')
       this.updateRangeCursorDisplay(rangeCursorPosition, false)
       return
@@ -466,6 +468,31 @@ export class CursorManager {
     const gridHeight = gridReady ? mapGrid.length : 0
     const tileWithinBounds = gridReady && tileX >= 0 && tileY >= 0 && tileX < gridWidth && tileY < gridHeight
     const hoveredTile = tileWithinBounds && mapGrid[tileY] ? mapGrid[tileY][tileX] : null
+
+    if (gameState.sellMode && !gameState.repairMode) {
+      this.isOverSellableBuilding = false
+      if (!this.isOverGameCanvas) {
+        setCursor('default')
+        return
+      }
+      const owner = gameState.humanPlayer
+      const unit = findOwnedUnitAtPoint(units, worldX, worldY, owner)
+      const price = getWorkshopUnitSalePrice(unit, gameState.buildings, owner)
+      if (!unit && tileWithinBounds) {
+        this.isOverSellableBuilding = Boolean(gameState.buildings?.some(building =>
+          building.owner === owner && !building.isBeingSold &&
+          tileX >= building.x && tileX < building.x + building.width &&
+          tileY >= building.y && tileY < building.y + building.height
+        ))
+      }
+      setCursor('none', price || this.isOverSellableBuilding ? 'sell-mode' : 'sell-blocked-mode')
+      if (price) {
+        this.setRangeCursorInfo({ displayText: `$${price.toLocaleString()}`, above: true })
+        this.updateRangeCursorDisplay(rangeCursorPosition, true)
+      }
+      return
+    }
+    this.isOverSellableBuilding = false
 
     const isFriendlyOwner = owner => owner === gameState.humanPlayer || (gameState.humanPlayer === 'player1' && owner === 'player')
     const hoveredUnits = (units || [])
@@ -971,26 +998,6 @@ export class CursorManager {
       }
     }
 
-    // Check if mouse is over a sellable building (when in sell mode)
-    this.isOverSellableBuilding = false
-    if (gameState.sellMode && this.isOverGameCanvas) {
-      // Check player factory first - Player factory can't be sold
-
-      // Check player buildings
-      if (gameState.buildings && gameState.buildings.length > 0 && gridReady && tileWithinBounds) {
-        for (const building of gameState.buildings) {
-          if (building.owner === gameState.humanPlayer &&
-              tileX >= building.x && tileX < (building.x + building.width) &&
-              tileY >= building.y && tileY < (building.y + building.height) &&
-              !building.isBeingSold) {
-            // All player buildings can be sold if not currently being sold
-            this.isOverSellableBuilding = true
-            break
-          }
-        }
-      }
-    }
-
     // If not over the game canvas, just use default cursor
     if (!this.isOverGameCanvas) {
       setCursor('default')
@@ -1001,14 +1008,6 @@ export class CursorManager {
     if (gameState.repairMode) {
       // Use CSS class for cursors and hide system cursor
       const cursorClass = this.isOverRepairableBuilding ? 'repair-mode' : 'repair-blocked-mode'
-      setCursor('none', cursorClass)
-      return // Exit early to prevent other cursors from showing
-    }
-
-    // SELL MODE TAKES SECOND PRIORITY
-    if (gameState.sellMode) {
-      // Use CSS class for cursors and hide system cursor
-      const cursorClass = this.isOverSellableBuilding ? 'sell-mode' : 'sell-blocked-mode'
       setCursor('none', cursorClass)
       return // Exit early to prevent other cursors from showing
     }

@@ -1,3 +1,4 @@
+import { sellUnitAtWorkshop } from './game/sellUnitAtWorkshop.js'
 import { applyPerkPurchase } from './perks/perkState.js'
 import { COMMAND_TYPES } from './network/commandTypes.js'
 import { findCityBuildingById } from './game/cityBuildings.js'
@@ -921,6 +922,11 @@ function executeReplayCommand(entry) {
     }
     if (command.type === 'automation-edit') {
       applyAutomationMutation(command.payload, [...(gameState.units || []), ...(gameState.buildings || [])])
+      return
+    }
+    if (command.type === COMMAND_TYPES.UNIT_SELL) {
+      const unit = resolveReplayEntityReference(command.unitRef)
+      if (unit) sellUnitAtWorkshop(unit.id, command.owner, gameState.units || [], gameState)
       return
     }
     if (command.type === 'unit_command') {

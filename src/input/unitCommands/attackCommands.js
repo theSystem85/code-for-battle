@@ -97,6 +97,19 @@ export function handleAttackCommand(handler, selectedUnits, target, mapGrid, isF
       return
     }
 
+    if (unit.type === 'rocketTank') {
+      // Chase from the current position. The movement system stops at weapon range.
+      unit.path = []
+      unit.moveTarget = null
+      unit.target = target
+      unit.lastAttackPathCalcTime = null
+      unit.lastKnownTargetPos = null
+      unit.mapHoldPosition = false
+      unit.mapArrivalAction = null
+      unit.forcedAttack = isForceAttack
+      return
+    }
+
     const position = formationPositions[index]
 
     const unitCenter = { x: unit.x + TILE_SIZE / 2, y: unit.y + TILE_SIZE / 2 }

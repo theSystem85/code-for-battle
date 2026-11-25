@@ -9,6 +9,7 @@ import { setupMusicControls } from './musicControls.js'
 import { initMasterVolumeControl } from './volumeControl.js'
 import { buildingRepairHandler } from '../buildingRepairHandler.js'
 import { buildingSellHandler } from '../buildingSellHandler.js'
+import { refreshGameCursor } from '../inputHandler.js'
 import { showNotification } from './notifications.js'
 import { milestoneSystem } from '../game/milestoneSystem.js'
 import { isInputFieldFocused } from '../utils/inputUtils.js'
@@ -235,10 +236,10 @@ export class EventHandlers {
     gameCanvas.addEventListener('click', (e) => {
       if (gameState.mapEditMode || isReplayInteractionLocked()) return
       const sold = buildingSellHandler(e, gameState, gameCanvas, this.mapGrid, this.units, this.factories, this.moneyEl)
-      // If a building was successfully sold, update button states
-      if (sold && this.productionController) {
-        this.productionController.updateVehicleButtonStates()
-        this.productionController.updateBuildingButtonStates()
+      if (sold) {
+        refreshGameCursor(this.units)
+        this.productionController?.updateVehicleButtonStates()
+        this.productionController?.updateBuildingButtonStates()
       }
     })
   }
@@ -944,7 +945,7 @@ export class EventHandlers {
       if (gameState.sellMode) {
         gameState.sellPlanCancellationPreview = null
         sellBtn.classList.add('active')
-        showNotification('Sell mode activated. Click on a building to sell it for 70% of build price.')
+        showNotification('Sell mode activated. Buildings sell at 70%. Fully repaired units near a Vehicle Workshop sell at 66%.')
 
         // Turn off repair mode if it's active
         if (gameState.repairMode) {

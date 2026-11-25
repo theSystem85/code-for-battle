@@ -169,6 +169,25 @@ describe('Harvester Logic', () => {
     resetHarvesterRuntimeState(gameState)
   })
 
+  it('[U07355] credits only the cargo on board when a harvester is ordered to unload early', () => {
+    const refinery = createTestRefinery(8, 8)
+    const harvester = createTestHarvester('partial-load', 9, 11)
+    harvester.oreCarried = 300
+    mapGrid[11][9].ore = true
+    gameState.buildings.push(refinery)
+    units.push(harvester)
+    forceHarvesterUnloadPriority(harvester, refinery, units)
+
+    updateHarvesterLogic(units, mapGrid, gameState.occupancyMap, gameState, factories, now)
+    expect(harvester.harvesting).toBe(false)
+    expect(harvester.unloadingAtRefinery).toBe(true)
+
+    updateHarvesterLogic(units, mapGrid, gameState.occupancyMap, gameState, factories, now + 5001)
+    expect(harvester.oreCarried).toBe(0)
+    expect(gameState.money).toBe(5300)
+    expect(gameState.refineryRevenue[refinery.id]).toBe(300)
+  })
+
   describe('Ore Detection and Harvesting', () => {
     it('[U01849] should start harvesting when harvester is near ore tile', () => {
       const harvester = createTestHarvester('harv1', 5, 5)

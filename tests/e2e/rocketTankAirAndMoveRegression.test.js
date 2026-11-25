@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 import { prepareRegressionScenario, observeSimulation, pollRegressionState } from './helpers/regressionScenario.js'
 
 test('[E00098] rocket tank hits an airborne Apache and fires no rockets after an ordinary move order', async({ page }) => {
-  await prepareRegressionScenario(page, 212)
+  await prepareRegressionScenario(page, 212, 64)
   await page.evaluate(() => {
     const r = window.__regression
     r.rocket = r.unit('rocketTank', r.human, 22, 24)
@@ -46,4 +46,33 @@ test('[E00098] rocket tank hits an airborne Apache and fires no rockets after an
   expect(state, `After ordinary move: ${JSON.stringify(state)}`).toMatchObject({
     target: null, ammo: state.initialAmmo, lastShot: state.initialShot, moved: true, burstActive: false
   })
+})
+
+test('[E00280] an ordered rocket tank approaches an enemy building and fires from its extended range', async({ page }) => {
+  await prepareRegressionScenario(page, 212, 64)
+  await page.evaluate(() => {
+    const r = window.__regression
+    const gs = window.gameState
+    r.rocket = r.unit('rocketTank', r.human, 17, 24)
+    r.target = r.building('powerPlant', r.enemy, 38, 24)
+    r.initialX = r.rocket.x
+    r.initialAmmo = r.rocket.ammunition
+    window.unitCommandsHandler.handleAttackCommand([r.rocket], r.target, gs.mapGrid)
+    gs.gamePaused = false
+  })
+
+  await pollRegressionState(page, 'The rocket tank must drive into range, stop and fire', () => {
+    const { rocket, target, initialX, initialAmmo } = window.__regression
+    const distance = Math.hypot(
+      (target.x + target.width / 2) - (rocket.x / 32 + 0.5),
+      (target.y + target.height / 2) - (rocket.y / 32 + 0.5)
+    )
+    return {
+      moved: rocket.x > initialX,
+      fired: rocket.ammunition < initialAmmo,
+      inExtendedRange: distance > 13.5 && distance <= 16.2,
+      stopped: !rocket.moveTarget && !rocket.path.length && !rocket.movement.isMoving,
+      distance
+    }
+  }, { moved: true, fired: true, inExtendedRange: true, stopped: true }, 30000)
 })

@@ -5,7 +5,11 @@ import { buildingCosts } from './main.js'
 import { showNotification } from './ui/notifications.js'
 import { productionQueue } from './productionQueue.js'
 import { updateMoneyBar } from './ui/moneyBar.js'
-import { broadcastBuildingSell } from './network/gameCommandSync.js'
+import { broadcastBuildingSell, broadcastGameCommand, isHost, COMMAND_TYPES } from './network/gameCommandSync.js'
+import { sellUnitAtWorkshop } from './game/sellUnitAtWorkshop.js'
+import { getWorkshopUnitSalePrice } from './game/workshopUnitSales.js'
+import { findOwnedUnitAtPoint } from './input/unitHitTest.js'
+import { createReplayEntityReference, recordReplayCommand } from './replaySystem.js'
 import { buildingData } from './data/buildingData.js'
 import { getCascadingBlueprintCancellation } from './planning/blueprintPlanning.js'
 // No need to modify map grid immediately; building removal occurs after the sell animation
@@ -39,6 +43,36 @@ export function buildingSellHandler(e, gameState, gameCanvas, mapGrid, units, fa
 
   const mouseX = e.clientX - gameCanvas.getBoundingClientRect().left + gameState.scrollOffset.x
   const mouseY = e.clientY - gameCanvas.getBoundingClientRect().top + gameState.scrollOffset.y
+
+  const owner = gameState.humanPlayer
+  const unit = findOwnedUnitAtPoint(units, mouseX, mouseY, owner)
+  if (unit) {
+    gameState.sellPlanCancellationPreview = null
+    const price = getWorkshopUnitSalePrice(unit, gameState.buildings, owner)
+    if (!price) {
+      const message = unit.health < unit.maxHealth
+        ? 'Repair this unit to full health before selling it.'
+        : 'Move this unit into range of a friendly Vehicle Workshop to sell it.'
+      showNotification(message)
+      playSound('error')
+      return false
+    }
+
+    if (!isHost()) {
+      broadcastGameCommand(COMMAND_TYPES.UNIT_SELL, { unitId: unit.id }, owner)
+      return true
+    }
+
+    const unitRef = createReplayEntityReference(unit)
+    const soldPrice = sellUnitAtWorkshop(unit.id, owner, units, gameState, factories)
+    if (!soldPrice) return false
+    recordReplayCommand({ type: COMMAND_TYPES.UNIT_SELL, owner, unitRef })
+    productionQueue?.tryResumeProduction?.()
+    updateMoneyBar()
+    playSound('deposit')
+    showNotification(`Unit sold for $${soldPrice.toLocaleString()}.`)
+    return true
+  }
 
   // Convert to tile coordinates
   const tileX = Math.floor(mouseX / TILE_SIZE)
@@ -149,6 +183,6 @@ export function buildingSellHandler(e, gameState, gameCanvas, mapGrid, units, fa
   }
 
   gameState.sellPlanCancellationPreview = null
-  showNotification('No player building found to sell.')
+  showNotification('No player building or unit found to sell.')
   return false
 }

@@ -555,6 +555,8 @@ export const updateHarvesterLogic = logPerformance(function updateHarvesterLogic
       checkHarvesterProductivity(unit, mapGrid, occupancyMap, gameState, factories, now)
     }
 
+    const shouldUnload = wantsToUnload(unit, effectiveCapacity)
+
     // Mining ore logic with more tolerant detection
     // Skip auto-harvesting if harvester is heading to or being repaired at workshop, or is in repair queue
     const isInRepairQueue = unit.targetWorkshop && unit.targetWorkshop.repairQueue &&
@@ -568,7 +570,7 @@ export const updateHarvesterLogic = logPerformance(function updateHarvesterLogic
     }
 
     if (unit.manualOreTarget &&
-        unit.oreCarried < effectiveCapacity &&
+        !shouldUnload &&
         !unit.harvesting && !unit.unloadingAtRefinery &&
         (
           !unit.path || unit.path.length === 0 ||
@@ -580,7 +582,7 @@ export const updateHarvesterLogic = logPerformance(function updateHarvesterLogic
     }
 
     if (!hasPlayerHarvesterPriority(unit, now) &&
-        unit.oreCarried < effectiveCapacity && !unit.harvesting && !unit.unloadingAtRefinery &&
+        !shouldUnload && !unit.harvesting && !unit.unloadingAtRefinery &&
         !unit.targetWorkshop && !unit.repairingAtWorkshop && !isInRepairQueue) {
       // Check if harvester is near an ore tile (more tolerant detection)
       const nearbyOreTile = findNearbyOreTile(unit, mapGrid, unitTileX, unitTileY)
@@ -670,10 +672,10 @@ export const updateHarvesterLogic = logPerformance(function updateHarvesterLogic
       }
     }
 
-    // Handle unloading when at capacity
+    // Unload at capacity or when the player orders a partial delivery.
     // Skip auto-unloading if harvester is heading to or being repaired at workshop, or is in repair queue
     if (!isRemoteControlOverrideActive(unit, now) &&
-        unit.oreCarried >= effectiveCapacity && !unit.unloadingAtRefinery && !unit.harvesting &&
+        shouldUnload && !unit.unloadingAtRefinery && !unit.harvesting &&
         !unit.targetWorkshop && !unit.repairingAtWorkshop && !isInRepairQueue) {
       handleHarvesterUnloading(unit, factories, mapGrid, gameState, now, occupancyMap, units)
     }
@@ -767,6 +769,10 @@ export const updateHarvesterLogic = logPerformance(function updateHarvesterLogic
   gameState.targetedOreTiles = targetedOreTiles
 })
 
+function wantsToUnload(unit, capacity = getHarvesterCargoCapacity(unit)) {
+  return unit.oreCarried >= capacity || (unit.oreCarried > 0 && unit.forcedUnload)
+}
+
 /**
  * Handles harvester unloading logic at refineries
  */
@@ -793,10 +799,7 @@ function handleHarvesterUnloading(unit, factories, mapGrid, gameState, now, occu
 
   // Priority 1: Check if harvester has a manual assignment from force unload command
   if (unit.assignedRefinery) {
-    const assignedRefinery = refineries.find(r =>
-      r === unit.assignedRefinery ||
-      (r.id || `refinery_${r.x}_${r.y}`) === (unit.assignedRefinery.id || `refinery_${unit.assignedRefinery.x}_${unit.assignedRefinery.y}`)
-    )
+    const assignedRefinery = resolveAssignedRefinery(unit, refineries)
     if (assignedRefinery) {
       targetRefinery = assignedRefinery
       targetUnloadTile = findAdjacentTile(targetRefinery, mapGrid)
@@ -900,9 +903,11 @@ function handleHarvesterUnloading(unit, factories, mapGrid, gameState, now, occu
       const waitingHarvesters = units.filter(u =>
         u.type === 'harvester' &&
         u.targetRefinery === refineryId &&
-        u.health > 0 &&
+        u.health > 0 && wantsToUnload(u) && !u.unloadingAtRefinery &&
         (isAdjacentToBuilding(u, targetRefinery) || isAtRefineryUnloadingPosition(u, targetRefinery))
       ).sort((a, b) => {
+        if (Boolean(a.forcedUnload) !== Boolean(b.forcedUnload)) return a.forcedUnload ? -1 : 1
+
         // Calculate distance to refinery center with preference for proper unloading positions
         const refineryCenter = {
           x: (targetRefinery.x + targetRefinery.width / 2) * TILE_SIZE,
@@ -968,7 +973,7 @@ function handleHarvesterUnloading(unit, factories, mapGrid, gameState, now, occu
 
       // **PREVENT MOVING AWAY WHEN WANTING TO UNLOAD**
       // If harvester is full of ore and close to refinery, don't accept new movement commands
-      if (unit.oreCarried >= getHarvesterCargoCapacity(unit)) {
+      if (wantsToUnload(unit)) {
         const distanceToRefinery = Math.hypot(
           unit.tileX - (targetRefinery.x + targetRefinery.width / 2),
           unit.tileY - (targetRefinery.y + targetRefinery.height / 2)
@@ -1730,7 +1735,7 @@ export function handleStuckHarvester(unit, mapGrid, occupancyMap, gameState, fac
   const unitTileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
   const currentTile = mapGrid[unitTileY] && mapGrid[unitTileY][unitTileX]
 
-  if (currentTile && canHarvesterHarvestTile(unit, currentTile) && unit.oreCarried < getHarvesterCargoCapacity(unit)) {
+  if (currentTile && canHarvesterHarvestTile(unit, currentTile) && !wantsToUnload(unit)) {
     const tileKey = `${unitTileX},${unitTileY}`
     if (!harvestedTiles.has(tileKey)) {
       // Harvester should start harvesting this tile
@@ -1754,7 +1759,7 @@ export function handleStuckHarvester(unit, mapGrid, occupancyMap, gameState, fac
   stopMovement(unit)
 
   // Determine what the harvester should do based on its state
-  if (unit.oreCarried >= getHarvesterCargoCapacity(unit)) {
+  if (wantsToUnload(unit)) {
     // Harvester is full, need to find alternative unload location
     handleStuckHarvesterUnloading(unit, mapGrid, gameState, factories, occupancyMap)
   } else {
@@ -2017,7 +2022,7 @@ function getHarvesterProgressSnapshot(unit, mapGrid, gameState) {
     return { type: 'retreat', productive: true, goalKey: null }
   }
 
-  if (unit.oreCarried >= getHarvesterCargoCapacity(unit)) {
+  if (wantsToUnload(unit)) {
     const refinery = getHarvesterPreferredRefinery(unit, gameState)
     const refineryId = getRefineryId(refinery)
     if (refinery && refineryId) {
@@ -2142,10 +2147,9 @@ function checkHarvesterProductivity(unit, mapGrid, occupancyMap, gameState, fact
     Boolean(snapshot.hasMovementIntent)
 
   if (!isProductive) {
-    if (unit.oreCarried >= getHarvesterCargoCapacity(unit)) {
-      // Full harvester should be unloading
+    if (wantsToUnload(unit)) {
+      // Let the unload update choose a reachable refinery without losing the order.
       stopMovement(unit)
-      clearHarvesterUnloadingState(unit, gameState)
     } else {
       stopMovement(unit)
 

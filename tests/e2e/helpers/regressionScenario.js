@@ -1,12 +1,12 @@
 import { expect } from '@playwright/test'
 import { waitForLoadingScreenHidden } from './loadingScreen.js'
 
-export async function prepareRegressionScenario(page, seed) {
+export async function prepareRegressionScenario(page, seed, mapSize = null) {
   await page.addInitScript(() => {
-    localStorage.setItem('tutorial-settings', JSON.stringify({ showTutorial: false, speechEnabled: false }))
-    localStorage.setItem('tutorial-progress', JSON.stringify({ completed: true, stepIndex: 0 }))
+    localStorage.setItem('rts_tutorial_settings', JSON.stringify({ showTutorial: false, speechEnabled: false }))
+    localStorage.setItem('rts_tutorial_progress', JSON.stringify({ completed: true, stepIndex: 0 }))
   })
-  await page.goto(`/?seed=${seed}`)
+  await page.goto(`/?seed=${seed}${mapSize ? `&size=${mapSize}&players=2` : ''}`)
   await page.waitForFunction(() => Boolean(
     window.gameState?.gameStarted && window.gameInstance?.units && window.cheatSystem && window.unitCommandsHandler
   ), null, { timeout: 30000 })
@@ -15,7 +15,7 @@ export async function prepareRegressionScenario(page, seed) {
     const { buildOccupancyMap, removeUnitOccupancy, updateUnitOccupancy } = await import('/src/units.js')
     const { clearBuildingFromMapGrid } = await import('/src/buildings.js')
     const { ensureMultiplayerState } = await import('/src/network/multiplayerStore.js')
-    document.querySelector('[aria-label="Skip tutorial"]')?.click()
+    document.querySelector('[data-tutorial-action="skip"]')?.click()
     document.getElementById('benchmarkModalCloseBtn')?.click()
     const gs = window.gameState
     // An empty partyStates list makes the enemy AI loop drive every party, including the
