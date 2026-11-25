@@ -6,7 +6,8 @@ import { showNotification } from '../ui/notifications.js'
 import { getCurrentGame } from '../main.js'
 import { runWithLoadingScreen } from '../ui/loadingScreen.js'
 import { renderMapEditorOverlay } from '../mapEditor.js'
-import { mapBlueprintsToFootprints } from '../planning/blueprintPlanning.js'
+import { getValidShipyardChainLength, mapBlueprintsToFootprints } from '../planning/blueprintPlanning.js'
+import { doesShipyardFootprintTouchCoast } from '../validation/buildingPlacement.js'
 import { getCanvasPixelRatio } from './renderingUtils.js'
 import {
   getCanvasLogicalHeight,
@@ -230,6 +231,10 @@ export class UIRenderer {
           gameState.humanPlayer,
           { mapEditMode: gameState.mapEditMode }
         )
+        const meetsFootprintRequirements = footprintInRange && (
+          gameState.currentBuildingType !== 'shipyard' ||
+          doesShipyardFootprintTouchCoast(tileX, tileY, buildingInfo.width, buildingInfo.height, mapGrid)
+        )
 
         // Draw placement grid
         for (let y = 0; y < buildingInfo.height; y++) {
@@ -241,7 +246,7 @@ export class UIRenderer {
             const screenX = currentTileX * TILE_SIZE - scrollOffset.x
             const screenY = currentTileY * TILE_SIZE - scrollOffset.y
 
-            // Blocked tiles stay red. Open tiles are green inside base range and orange outside it.
+            // Blocked tiles are red. Clear tiles turn green when the footprint meets range and coast requirements.
             const isValid = isTileValid(
               currentTileX,
               currentTileY,
@@ -253,7 +258,7 @@ export class UIRenderer {
               { x: tileX, y: tileY }
             )
 
-            ctx.fillStyle = placementTileOverlayFill(isValid, footprintInRange)
+            ctx.fillStyle = placementTileOverlayFill(isValid, meetsFootprintRequirements)
             ctx.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE)
 
             // Draw tile outline
@@ -376,7 +381,7 @@ export class UIRenderer {
   }
 
 
-  renderChainPlacement(ctx, gameState, scrollOffset, mapGrid, units) {
+  renderChainPlacement(ctx, gameState, scrollOffset, mapGrid, units, buildings, factories) {
     if (gameState.chainBuildMode && gameState.chainBuildingType) {
       const info = buildingData[gameState.chainBuildingType]
       const startX = gameState.chainStartX
@@ -384,15 +389,19 @@ export class UIRenderer {
       const endX = Math.floor(gameState.cursorX / TILE_SIZE)
       const endY = Math.floor(gameState.cursorY / TILE_SIZE)
       const positions = this.computeChainPositions(startX, startY, endX, endY, info)
+      const isShipyard = gameState.chainBuildingType === 'shipyard'
+      const validShipyards = isShipyard
+        ? getValidShipyardChainLength(positions, mapGrid, units, buildings, factories, gameState)
+        : 0
 
-      positions.forEach(pos => {
+      positions.forEach((pos, index) => {
         for (let y = 0; y < info.height; y++) {
           for (let x = 0; x < info.width; x++) {
             const tx = pos.x + x
             const ty = pos.y + y
             const screenX = tx * TILE_SIZE - scrollOffset.x
             const screenY = ty * TILE_SIZE - scrollOffset.y
-            const isValid = isTileValid(
+            const isValid = isShipyard ? index < validShipyards : isTileValid(
               tx,
               ty,
               mapGrid,
@@ -800,7 +809,7 @@ export class UIRenderer {
     this.renderRallyPoints(ctx, factories, scrollOffset)
     this.renderBlueprints(ctx, gameState.blueprints || [], scrollOffset)
     this.renderBuildingPlacement(ctx, gameState, scrollOffset, buildings, factories, mapGrid, units)
-    this.renderChainPlacement(ctx, gameState, scrollOffset, mapGrid, units)
+    this.renderChainPlacement(ctx, gameState, scrollOffset, mapGrid, units, buildings, factories)
     this.renderMobileBuildPaintPlacement(ctx, gameState, scrollOffset, mapGrid, units)
     renderMapEditorOverlay(ctx, scrollOffset)
   }

@@ -30,7 +30,7 @@ import { TILE_SIZE, MAX_BUILDING_GAP_TILES } from '../config.js'
 import { GAME_DEFAULT_CURSOR } from '../input/cursorStyles.js'
 import { endMapEditOnPlay } from './mapEditorControls.js'
 import { getPlayableViewportHeight, getPlayableViewportWidth } from '../utils/layoutMetrics.js'
-import { mapBlueprintsToFootprints } from '../planning/blueprintPlanning.js'
+import { getValidShipyardChainLength, mapBlueprintsToFootprints } from '../planning/blueprintPlanning.js'
 import { isLocalPartyAutomationLocked } from '../network/multiplayerStore.js'
 import {
   completeFinishedReplaySession,
@@ -831,35 +831,41 @@ export class EventHandlers {
       info
     )
 
-    const occ = new Set()
-    gameState.blueprints.forEach(bp => {
-      const bi = buildingData[bp.type]
-      for (let y = 0; y < bi.height; y++) {
-        for (let x = 0; x < bi.width; x++) {
-          occ.add(`${bp.x + x},${bp.y + y}`)
-        }
-      }
-    })
-
-    const validPositions = []
-    for (const pos of positions) {
-      let valid = true
-      for (let y = 0; y < info.height; y++) {
-        for (let x = 0; x < info.width; x++) {
-          const tx = pos.x + x
-          const ty = pos.y + y
-          if (!isTileValid(tx, ty, this.mapGrid, this.units, [], [], gameState.chainBuildingType) || occ.has(`${tx},${ty}`)) {
-            valid = false
-            break
+    let validPositions
+    if (gameState.chainBuildingType === 'shipyard') {
+      const count = getValidShipyardChainLength(positions, gameState.mapGrid || this.mapGrid, this.units, gameState.buildings, this.factories, gameState)
+      validPositions = positions.slice(0, count)
+    } else {
+      const occ = new Set()
+      gameState.blueprints.forEach(bp => {
+        const bi = buildingData[bp.type]
+        for (let y = 0; y < bi.height; y++) {
+          for (let x = 0; x < bi.width; x++) {
+            occ.add(`${bp.x + x},${bp.y + y}`)
           }
         }
+      })
+
+      validPositions = []
+      for (const pos of positions) {
+        let valid = true
+        for (let y = 0; y < info.height; y++) {
+          for (let x = 0; x < info.width; x++) {
+            const tx = pos.x + x
+            const ty = pos.y + y
+            if (!isTileValid(tx, ty, this.mapGrid, this.units, [], [], gameState.chainBuildingType) || occ.has(`${tx},${ty}`)) {
+              valid = false
+              break
+            }
+          }
+          if (!valid) break
+        }
         if (!valid) break
-      }
-      if (!valid) break
-      validPositions.push(pos)
-      for (let y = 0; y < info.height; y++) {
-        for (let x = 0; x < info.width; x++) {
-          occ.add(`${pos.x + x},${pos.y + y}`)
+        validPositions.push(pos)
+        for (let y = 0; y < info.height; y++) {
+          for (let x = 0; x < info.width; x++) {
+            occ.add(`${pos.x + x},${pos.y + y}`)
+          }
         }
       }
     }

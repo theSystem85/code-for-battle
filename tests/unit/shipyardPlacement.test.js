@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import {
   PLACEMENT_OVERLAY_GREEN,
   PLACEMENT_OVERLAY_ORANGE,
@@ -9,6 +9,15 @@ import {
   shouldShowPlacementTileAsValid
 } from '../../src/validation/buildingPlacement.js'
 import { TILE_SIZE } from '../../src/config.js'
+import { UIRenderer } from '../../src/rendering/uiRenderer.js'
+import { getValidShipyardChainLength } from '../../src/planning/blueprintPlanning.js'
+
+vi.mock('../../src/main.js', () => ({ getCurrentGame: () => null }))
+vi.mock('../../src/mapEditor.js', () => ({ renderMapEditorOverlay: vi.fn() }))
+vi.mock('../../src/buildings.js', async() => ({
+  ...await import('../../src/validation/buildingPlacement.js'),
+  ...await import('../../src/data/buildingData.js')
+}))
 
 const grid = (width = 20, height = 20, type = 'water') => Array.from(
   { length: height },
@@ -43,7 +52,7 @@ describe('Shipyard placement', () => {
     expect(isTileValid(6, 6, mapGrid, [], [], [factory], 'shipyard', { x: 5, y: 5 })).toBe(false)
   })
 
-  it('[U06512] marks open water green inside range, orange outside range, and blocked tiles red', () => {
+  it('[U06512] colors clear, out-of-range, and blocked footprint tiles', () => {
     expect(shouldShowPlacementTileAsValid('shipyard', true, true)).toBe(true)
     expect(shouldShowPlacementTileAsValid('shipyard', true, false)).toBe(false)
     expect(shouldShowPlacementTileAsValid('shipyard', false, true)).toBe(false)
@@ -79,5 +88,44 @@ describe('Shipyard placement', () => {
     const unit = { x: 6 * TILE_SIZE, y: 6 * TILE_SIZE }
     expect(isTileValid(6, 6, mapGrid, [unit], [], [], 'shipyard', { x: 5, y: 5 })).toBe(false)
     expect(canPlaceBuilding('shipyard', 5, 5, mapGrid, [unit], [], [factory], 'player1')).toBe(false)
+  })
+
+  it('[U07359] renders a fully green preview only when the shipyard footprint can be placed', () => {
+    const mapGrid = grid()
+    mapGrid[7][3].type = 'land'
+    const state = { buildingPlacementMode: true, currentBuildingType: 'shipyard', humanPlayer: 'player1' }
+    const renderer = new UIRenderer()
+
+    function preview(x, y, units = []) {
+      state.cursorX = x * TILE_SIZE
+      state.cursorY = y * TILE_SIZE
+      const fills = []
+      const ctx = {
+        fillRect() { fills.push(this.fillStyle) },
+        strokeRect() {},
+        fillText() {}
+      }
+      renderer.renderBuildingPlacement(ctx, state, { x: 0, y: 0 }, [], [factory], mapGrid, units)
+      return fills
+    }
+
+    expect(preview(5, 5)).toEqual(Array(25).fill(PLACEMENT_OVERLAY_ORANGE))
+    expect(canPlaceBuilding('shipyard', 5, 5, mapGrid, [], [], [factory], 'player1')).toBe(false)
+    expect(preview(4, 5)).toEqual(Array(25).fill(PLACEMENT_OVERLAY_GREEN))
+    expect(canPlaceBuilding('shipyard', 4, 5, mapGrid, [], [], [factory], 'player1')).toBe(true)
+    const units = [{ x: 4 * TILE_SIZE, y: 5 * TILE_SIZE }]
+    expect(preview(4, 5, units)).toContain(PLACEMENT_OVERLAY_RED)
+    expect(canPlaceBuilding('shipyard', 4, 5, mapGrid, units, [], [factory], 'player1')).toBe(false)
+  })
+
+  it('[U07360] stops chain placement at the first shipyard without a valid shoreline footprint', () => {
+    const mapGrid = grid(30)
+    mapGrid[4][6].type = 'land'
+    mapGrid[4][16].type = 'land'
+    const state = { humanPlayer: 'player1', blueprints: [] }
+    const positions = [{ x: 5, y: 5 }, { x: 10, y: 5 }, { x: 15, y: 5 }]
+    expect(getValidShipyardChainLength(positions, mapGrid, [], [], [factory], state)).toBe(1)
+    mapGrid[4][11].type = 'land'
+    expect(getValidShipyardChainLength(positions, mapGrid, [], [], [factory], state)).toBe(3)
   })
 })

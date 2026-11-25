@@ -16,7 +16,7 @@ import { GAME_STATE_SCHEMA_VERSION } from '../gameStateSchema.js'
 import { UPDATE_RELOAD_GUARD } from './startupUpdate.js'
 import { createLiveSwapScheduler, setActiveLiveSwapScheduler } from './liveSwapScheduler.js'
 import { getLiveModule } from './liveModuleRegistry.js'
-import { createReleaseDigest, getReleaseDelta, releaseEntries } from '../ui/releaseDigest.js'
+import { createReleaseDigest, getReleaseDelta, releaseEntries, RELEASE_CATEGORIES } from '../ui/releaseDigest.js'
 
 export const BUILD_INFO_URL = '/build-info.json'
 export const LIVE_UPDATE_INTERVAL_MS = 20000
@@ -214,7 +214,7 @@ export function createUpdateNoticeUi(doc = document) {
     label.className = 'live-update-bubble__text'
     label.textContent = text
     el.appendChild(label)
-    if (digest) {
+    if (digest && RELEASE_CATEGORIES.some(category => digest[category].length)) {
       const changes = doc.createElement('div')
       changes.className = 'live-update-bubble__changes'
       changes.tabIndex = 0
@@ -327,8 +327,7 @@ export function createLiveUpdater({
   function digestFor(info, previous = baseline || running) {
     return getReleaseDelta(previous?.releases, info?.releases, {
       fromVersion: previous?.version,
-      toVersion: info?.version,
-      fallback: true
+      toVersion: info?.version
     })
   }
 
@@ -358,7 +357,7 @@ export function createLiveUpdater({
       // A peer may have joined while files were downloading.
       if (isMultiplayerActive(getGameState())) {
         doc.getElementById('liveUpdateProgress')?.remove()
-        ui.showDeferred?.(info, 'breaking')
+        ui.showDeferred?.(info, 'breaking', digestFor(info))
         return 'deferred'
       }
       await activateServiceWorker()
@@ -371,7 +370,7 @@ export function createLiveUpdater({
           version: info.version,
           commit: info.commit,
           previousVersion: baseline?.version || running.version,
-          previousReleases: baseline?.releases || running.releases || []
+          previousReleases: (baseline || running).releases
         }))
         // The new worker is already active; the startup check must not reload again.
         win.sessionStorage?.setItem(UPDATE_RELOAD_GUARD, '1')
@@ -465,8 +464,7 @@ export function announceAppliedUpdate({ win = window, ui = null, running = { ver
   if (applied?.commit && applied.commit === running.commit) {
     const digest = getReleaseDelta(applied.previousReleases, running.releases, {
       fromVersion: applied.previousVersion,
-      toVersion: running.version,
-      fallback: true
+      toVersion: running.version
     })
     ui?.showApplied(applied, digest)
     return true

@@ -72,7 +72,7 @@ describe('release digest', () => {
 })
 
 describe('unreleased release-note entries', () => {
-  it('[U06525] computes entry deltas for same-version builds, newer releases, and empty-delta fallback', () => {
+  it('[U06525] shows only added notes in same-version builds and newer releases', () => {
     const previous = [{ version: '1.0.0', features: ['Existing'], improvements: [], bugfixes: [] }]
     const sameVersion = [{ version: '1.0.0', features: ['Existing'], improvements: ['New polish'], bugfixes: [] }]
     expect(getReleaseDelta(previous, sameVersion, { fromVersion: '1.0.0', toVersion: '1.0.0' }).improvements).toEqual(['New polish'])
@@ -82,9 +82,26 @@ describe('unreleased release-note entries', () => {
     expect(newerDigest.features).toEqual(['New mode'])
     expect(newerDigest.bugfixes).toEqual(['Fixed save'])
 
-    const fallback = getReleaseDelta(sameVersion, sameVersion, { fromVersion: '1.0.0', toVersion: '1.0.0' })
-    expect(fallback.features).toEqual(['Existing'])
-    expect(fallback.improvements).toEqual(['New polish'])
+    const unchanged = getReleaseDelta(sameVersion, sameVersion, { fromVersion: '1.0.0', toVersion: '1.0.0' })
+    expect(unchanged.features).toEqual([])
+    expect(unchanged.improvements).toEqual([])
+  })
+
+  it('[U07358] carries installed notes across version bumps and release rollups while preserving duplicate counts', () => {
+    const previous = [
+      { version: '1.0.0', bugfixes: ['Shared description'] },
+      { version: '1.0.1', bugfixes: ['Already installed', 'Shared description'] }
+    ]
+    const next = [
+      previous[0],
+      { version: '1.1.0', features: ['New mode'], bugfixes: ['Already installed', 'Shared description'] },
+      { version: '1.1.1', bugfixes: ['Shared description'] },
+      { version: '1.1.2', bugfixes: ['Future'] }
+    ]
+    const digest = getReleaseDelta(previous, next, { fromVersion: '1.0.1', toVersion: '1.1.1' })
+    expect(digest.features).toEqual(['New mode'])
+    expect(digest.bugfixes).toEqual(['Shared description'])
+    expect(getReleaseDelta(previous, next.slice(0, 2)).bugfixes).toEqual([])
   })
 
   it('[U05185] collects one file per change into the build version by category', () => {

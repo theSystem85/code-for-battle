@@ -6,14 +6,16 @@ test('[E00200] a CSS-only deploy swaps styles without reloading or losing game s
     commit: 'eaefa6e',
     stateSchemaVersion: 1,
     jsSignature: 'same-js',
-    css: { 'html:0': '/assets/live-update-old.css' }
+    css: { 'html:0': '/assets/live-update-old.css' },
+    releases: [{ version: '0.63.0', features: ['Already installed feature'] }]
   }
   const newBuild = {
     ...oldBuild,
     version: '0.63.1',
     commit: '6956c8f',
     update: { kind: 'safe', reason: '' },
-    css: { 'html:0': '/assets/live-update-new.css' }
+    css: { 'html:0': '/assets/live-update-new.css' },
+    releases: [{ version: '0.63.1', features: ['Already installed feature'], improvements: ['New stylesheet'] }]
   }
   let currentBuild = oldBuild
 
@@ -58,6 +60,8 @@ test('[E00200] a CSS-only deploy swaps styles without reloading or losing game s
   expect(await page.evaluate(() => window.__liveUpdater.check())).toBe('safe')
   await expect(page.locator('#live-update-probe')).toHaveCSS('font-size', '12px')
   await expect(page.locator('link[data-live-update]')).toHaveAttribute('href', '/assets/live-update-new.css')
+  await expect(page.locator('#liveUpdateBubble .live-update-bubble__changes')).toContainText('New stylesheet')
+  await expect(page.locator('#liveUpdateBubble')).not.toContainText('Already installed feature')
   expect(await page.evaluate(() => ({ state: window.__liveUpdateGameState, reloaded: window.__liveUpdateReloaded }))).toEqual({
     state: { credits: 4321, selectedUnits: ['tank-1'] },
     reloaded: false

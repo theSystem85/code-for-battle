@@ -41,28 +41,26 @@ export function getReleaseDigest(fromVersion, toVersion, entries) {
   return digest
 }
 
-// Live dev builds commonly share a version. Compare the actual entries per
-// version, preserving duplicate counts, instead of relying only on semver.
-export function getReleaseDelta(previous = [], next = [], { fromVersion, toVersion, fallback = true } = {}) {
+// Unreleased notes can carry forward under a different build version or be
+// folded into a release. Match note counts across versions within each category.
+export function getReleaseDelta(previous, next, { fromVersion, toVersion } = {}) {
   const digest = { fromVersion, toVersion, features: [], improvements: [], bugfixes: [] }
-  const previousByVersion = new Map(previous.map(entry => [entry.version, entry]))
-  const ordered = [...next].sort((a, b) => compareVersions(a.version, b.version))
-  for (const entry of ordered) {
-    const before = previousByVersion.get(entry.version)
-    for (const category of RELEASE_CATEGORIES) {
-      const remaining = new Map()
-      for (const text of before?.[category] || []) remaining.set(text, (remaining.get(text) || 0) + 1)
+  if (!Array.isArray(previous) || !Array.isArray(next)) return digest
+
+  const ordered = next.filter(entry => !toVersion || compareVersions(entry.version, toVersion) <= 0)
+    .sort((a, b) => compareVersions(a.version, b.version))
+  for (const category of RELEASE_CATEGORIES) {
+    const remaining = new Map()
+    for (const entry of previous) {
+      for (const text of entry[category] || []) remaining.set(text, (remaining.get(text) || 0) + 1)
+    }
+    for (const entry of ordered) {
       for (const text of entry[category] || []) {
         const count = remaining.get(text) || 0
         if (count) remaining.set(text, count - 1)
         else digest[category].push(text)
       }
     }
-  }
-  if (!fallback || RELEASE_CATEGORIES.some(category => digest[category].length)) return digest
-  const current = ordered.filter(entry => compareVersions(entry.version, toVersion) === 0)
-  for (const entry of current) {
-    for (const category of RELEASE_CATEGORIES) digest[category].push(...(entry[category] || []))
   }
   return digest
 }

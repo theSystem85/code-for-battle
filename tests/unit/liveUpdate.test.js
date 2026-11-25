@@ -191,11 +191,13 @@ describe('dev live update', () => {
     expect(bubble.querySelectorAll('.live-update-bubble__changes li')).toHaveLength(3)
     noticeUi.showApplied({ version: '0.63.0', commit: 'eeeeeee' }, digest)
     expect(bubble.querySelectorAll('.live-update-bubble__changes li')).toHaveLength(3)
+    noticeUi.showSafe({ version: '0.63.0', commit: 'fffffff' }, 0, 0, { features: [], improvements: [], bugfixes: [] })
+    expect(bubble.querySelector('.live-update-bubble__changes')).toBeNull()
 
     const storage = memoryStorage()
     storage.setItem(LIVE_UPDATE_APPLIED_KEY, JSON.stringify({ version: '0.62.3', commit: 'bbbbbbb', previousVersion: '0.62.2', previousReleases: base.releases }))
     const ui = fakeUi()
-    const running = { version: '0.62.3', commit: 'bbbbbbb', releases: [...base.releases, { version: '0.62.3', features: ['Restored feature'], improvements: [], bugfixes: [] }] }
+    const running = { version: '0.62.3', commit: 'bbbbbbb', releases: [{ version: '0.62.3', features: ['Existing feature', 'Restored feature'], improvements: [], bugfixes: [] }] }
     expect(announceAppliedUpdate({ win: { sessionStorage: storage }, ui, running })).toBe(true)
     expect(ui.showApplied).toHaveBeenCalledWith(expect.objectContaining({ version: '0.62.3', commit: 'bbbbbbb' }), expect.objectContaining({ features: ['Restored feature'] }))
     expect(storage.getItem(LIVE_UPDATE_APPLIED_KEY)).toBe(null)

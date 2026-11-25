@@ -1,5 +1,6 @@
 import { MAX_BUILDING_GAP_TILES } from '../config.js'
 import { buildingData } from '../data/buildingData.js'
+import { canPlaceBuilding } from '../validation/buildingPlacement.js'
 
 export function blueprintToFootprint(blueprint, owner) {
   if (!blueprint || !blueprint.type) {
@@ -27,6 +28,29 @@ export function mapBlueprintsToFootprints(blueprints, owner, options = {}) {
     .filter(bp => !exclude || !exclude.has(bp))
     .map(bp => blueprintToFootprint(bp, owner))
     .filter(Boolean)
+}
+
+export function getValidShipyardChainLength(positions, mapGrid, units, buildings, factories, gameState) {
+  if (!positions.length) return 0
+
+  const { width, height } = buildingData.shipyard
+  const { humanPlayer, mapEditMode } = gameState
+  const planned = mapBlueprintsToFootprints(gameState.blueprints, humanPlayer)
+  const anchors = [...buildings, ...planned]
+
+  for (let i = 0; i < positions.length; i++) {
+    const { x, y } = positions[i]
+    const overlapsBlueprint = planned.some(plan =>
+      x < plan.x + plan.width && x + width > plan.x &&
+      y < plan.y + plan.height && y + height > plan.y
+    )
+    if (overlapsBlueprint || !canPlaceBuilding('shipyard', x, y, mapGrid, units, anchors, factories, humanPlayer, { mapEditMode })) {
+      return i
+    }
+    anchors.push({ type: 'shipyard', x, y, width, height, owner: humanPlayer })
+  }
+
+  return positions.length
 }
 
 function areFootprintsNear(a, b, maxDistance = MAX_BUILDING_GAP_TILES) {
