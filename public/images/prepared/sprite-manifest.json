@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "assetVersion": "7e1e1137ac6b8a79",
+  "assetVersion": "b80c18e61e5dc022",
   "generatedBy": "scripts/build-prepared-sprites.mjs",
   "webpQuality": 85,
   "unitWebpQuality": 95,
@@ -16042,7 +16042,7 @@
     {
       "id": "building:planeFactory:base",
       "category": "building",
-      "source": "/images/map/buildings/plane_factory_map.webp",
+      "source": "/images/map/buildings/plane_factory_open_hangar_map.webp",
       "sourceWidth": 192,
       "sourceHeight": 192,
       "logicalWidth": 96,

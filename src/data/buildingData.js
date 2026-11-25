@@ -170,7 +170,7 @@ export const buildingData = {
     height: 3,
     cost: 5500,
     power: -120,
-    image: 'plane_factory_map.webp',
+    image: 'plane_factory_open_hangar_map.webp',
     displayName: 'Plane Factory',
     health: 500,
     armor: 2,

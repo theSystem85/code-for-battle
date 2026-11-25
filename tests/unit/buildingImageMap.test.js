@@ -1,4 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import spriteManifest from '../../public/images/prepared/sprite-manifest.json'
+import { buildingData } from '../../src/data/buildingData.js'
 
 // Import test utilities
 import '../setup.js'
@@ -91,6 +93,16 @@ describe('buildingImageMap.js', () => {
   })
 
   describe('getBuildingImage', () => {
+    it('[U07357] uses the jet-free hangar in the fallback loader and prepared manifest', async() => {
+      const source = 'images/map/buildings/plane_factory_open_hangar_map.webp'
+      const image = await new Promise(resolve => getBuildingImage('planeFactory', resolve))
+      const sprite = spriteManifest.entries.find(entry => entry.id === 'building:planeFactory:base')
+
+      expect(image.src).toContain(source)
+      expect(sprite.source).toBe(`/${source}`)
+      expect(buildingData.planeFactory.image).toBe(source.split('/').at(-1))
+    })
+
     it('[U00521] should return null for unknown building type', () => {
       const result = getBuildingImage('unknownBuilding')
 

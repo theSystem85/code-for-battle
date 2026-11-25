@@ -205,7 +205,7 @@ const definitions = [
     ['concreteWallVertical', 'concrete_wall_vertical.webp', 1, 1],
     ['mineClearance', 'mineclearance_map.webp', 1, 1],
     ['technologyResearchCenter', 'technology_research_center_map.webp', 3, 3],
-    ['planeFactory', 'plane_factory_map.webp', 3, 3],
+    ['planeFactory', 'plane_factory_open_hangar_map.webp', 3, 3],
     ['spaceshipFactory', 'spaceship_factory_map.webp', 3, 3],
     ['rocketLaunchBase', 'rocket_launch_base_map.webp', 3, 3],
     ['aiCenter', 'ai_center_map.webp', 3, 3],

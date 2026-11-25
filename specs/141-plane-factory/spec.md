@@ -10,9 +10,9 @@ The standard one-yard timer is 4.125 simulation seconds at normal power. Once pl
 
 F-22s continue to spawn at Airstrips. F-35s retain existing Airstrip and Helipad production. The factory supplies assemblies and has no runway. C-5 Galaxy and Apache production stay unchanged. Scripted opponents do not independently purchase research or build this tier.
 
-Patrick approved map option 4 and sidebar option 5 on 2026-11-21. These are the [map sprite](../../public/images/map/buildings/plane_factory_map.webp) and [build button](../../public/images/sidebar/plane_factory_sidebar.webp).
+Patrick approved map option 4 and sidebar option 5 on 2026-11-21. These are the [map sprite](../../public/images/map/buildings/plane_factory_open_hangar_map.webp) and [build button](../../public/images/sidebar/plane_factory_sidebar.webp).
 
-![Plane Factory map sprite](../../public/images/map/buildings/plane_factory_map.webp)
+![Plane Factory map sprite](../../public/images/map/buildings/plane_factory_open_hangar_map.webp)
 
 ![Plane Factory build button](../../public/images/sidebar/plane_factory_sidebar.webp)
 
