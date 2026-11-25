@@ -20,8 +20,9 @@ test('[E00273] research cards update when the player buys a blueprint branch', a
     const state = window.gameState
     const yard = state.buildings.find(building => building.owner === state.humanPlayer && building.type === 'constructionYard')
     const center = { ...yard, id: 'research-fixture', type: 'technologyResearchCenter', health: 500, maxHealth: 500, constructionFinished: true }
+    for (const type of ['powerPlant', 'oreRefinery', 'vehicleFactory', 'radarStation', 'airstrip']) state.buildings.push({ ...yard, type })
+    window.gameInstance.productionController.syncTechTreeWithBuildings()
     state.buildings.push(center)
-    for (const type of ['powerPlant', 'oreRefinery', 'vehicleFactory', 'radarStation']) state.buildings.push({ ...yard, type })
     state.perks.owners[state.humanPlayer] = { earned: 12, spent: 0, owned: [], log: [] }
     window.selectedUnitsRef.length = 0
     window.gameInstance.productionController.updateBuildingButtonStates()
@@ -47,7 +48,8 @@ test('[E00273] research cards update when the player buys a blueprint branch', a
   await openBuildingPerks('Research Perks')
   await expect(page.getByRole('heading', { name: 'Research Perks' })).toBeVisible()
   await expect(launchCard).toBeHidden()
-  await expect(planeCard).toBeHidden()
+  await expect(planeCard).toBeVisible()
+  await expect(planeCard).not.toHaveClass(/disabled/)
   const foundation = page.locator('[data-perk-id="tc.foundation"]')
   await foundation.click()
   await expect(foundation.getByText('Hold for 2s to unlock!')).toBeVisible()
@@ -67,7 +69,7 @@ test('[E00273] research cards update when the player buys a blueprint branch', a
   await expect(foundation).toHaveClass(/is-owned/)
   await touch.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
   await touch.detach()
-  for (const id of ['tc.autonomy', 'tc.orbit', 'tc.aerospace']) {
+  for (const id of ['tc.autonomy', 'tc.orbit']) {
     const node = page.locator(`[data-perk-id="${id}"]`)
     await node.locator('.perk-node__badge').hover()
     await page.mouse.down()
@@ -83,7 +85,7 @@ test('[E00273] research cards update when the player buys a blueprint branch', a
   await expect(launchCard).not.toHaveClass(/disabled/)
   await expect(page.locator('[data-building-type="spaceshipFactory"]')).toBeVisible()
   await expect(planeCard).toBeVisible()
-  await expect(planeCard).toHaveAttribute('data-requirement', /Airstrip/)
+  await expect(planeCard).not.toHaveClass(/disabled/)
   await page.evaluate(() => {
     window.gameState.buildings.find(building => building.id === 'research-fixture').type = 'commandCenter'
   })

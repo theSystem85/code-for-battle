@@ -94,10 +94,7 @@ describe('advanced research buildings', () => {
   })
 
   it('[U07339] unlocks all aircraft through the Plane Factory without changing production speed', () => {
-    const buildings = gameState.buildings
-    grantPerkStars(building('vehicleFactory'), 5)
-    applyPerkPurchase(owner, 'tc.foundation')
-    applyPerkPurchase(owner, 'tc.aerospace')
+    const buildings = []
     expect(getAdvancedBuildingRequirement('planeFactory', buildings, owner)).toMatch(/Airstrip/)
     buildings.push(building('airstrip'))
     expect(getAdvancedBuildingRequirement('planeFactory', buildings, owner)).toBe('')

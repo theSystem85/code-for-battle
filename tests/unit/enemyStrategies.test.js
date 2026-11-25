@@ -9,13 +9,18 @@ const assignAmbulanceToHealUnitMock = vi.fn(() => true)
 const calculateRepairCostMock = vi.fn(() => 100)
 const gameRandomMock = vi.fn(() => 0)
 
-vi.mock('../../src/config.js', () => ({
+vi.mock('../../src/config.js', async importOriginal => ({
+  ...await importOriginal(),
   TILE_SIZE: 32,
   TANK_FIRE_RANGE: 6,
   HOWITZER_FIRE_RANGE: 9,
   HOWITZER_FIREPOWER: 80,
   HOWITZER_FIRE_COOLDOWN: 4000
 }))
+
+// Range calculations load these combat dependencies, but group coordination does not call them.
+vi.mock('../../src/logic.js', () => ({}))
+vi.mock('../../src/game/unifiedMovement.js', () => ({}))
 
 vi.mock('../../src/gameState.js', () => ({
   gameState: {

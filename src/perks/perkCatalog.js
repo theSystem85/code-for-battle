@@ -1,4 +1,4 @@
-import { RESEARCH_PERKS } from './researchCatalog.js'
+import { RESEARCH_PERK_CATALOG } from './researchCatalog.js'
 
 export const CAPSTONE_PERK_ID = 'cc.def.capstone'
 export const START_PERK_BY_VARIANT = Object.freeze({ unit: 'cc.unit.start', defence: 'cc.def.start', build: 'cc.base.start', unitBuild: 'cc.prod.start' })
@@ -193,6 +193,6 @@ export const PERKS = Object.freeze(definitions.map(([id,name,tree,variant,lane,o
   ...(PERK_TEXTS[id] || {}),
   badge: `images/perks/${id}.webp`, manualAnchor: `perk-${id}`
 })))
-const byId = new Map([...PERKS, ...RESEARCH_PERKS].map(perk => [perk.id, perk]))
+const byId = new Map([...PERKS, ...RESEARCH_PERK_CATALOG].map(perk => [perk.id, perk]))
 export const getPerk = id => byId.get(id)
 export const perksForTree = tree => PERKS.filter(perk => perk.tree === tree)

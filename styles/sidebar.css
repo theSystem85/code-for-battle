@@ -1399,7 +1399,7 @@ body.is-touch .money-tooltip__meta {
   }
 
   .production-button.production-label-hover:hover .new-label,
-  .production-button.production-label-hover:hover .batch-counter,
+  .production-button.production-label-hover:hover:not(.paused) .batch-counter,
   .production-button.production-label-hover:hover .ready-counter {
     opacity: 0;
   }
@@ -1429,7 +1429,7 @@ body.is-touch .money-tooltip__meta {
 }
 
 .production-button:focus-visible .new-label,
-.production-button:focus-visible .batch-counter,
+.production-button:focus-visible:not(.paused) .batch-counter,
 .production-button:focus-visible .ready-counter {
   opacity: 0;
 }
@@ -2137,11 +2137,16 @@ body.save-game-editor-open { overflow: hidden; }
   }
 }
 
+.production-button.paused .batch-counter {
+  z-index: 8;
+}
+
 .production-button.paused::before {
   content: 'Ⅱ';
   position: absolute;
-  top: 4px;
-  right: 4px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   padding: 2px 5px;
   background: rgba(0, 0, 0, 0.75);
   color: #ffdf60;

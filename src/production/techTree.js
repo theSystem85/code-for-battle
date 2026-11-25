@@ -14,6 +14,7 @@ export const productionUnlockRules = [
   { requires: ['hospital'], units: ['ambulance'] },
   { requires: ['vehicleFactory', 'vehicleWorkshop'], units: ['recoveryTank', 'mineSweeper'] },
   { requires: ['vehicleFactory', 'vehicleWorkshop', 'ammunitionFactory'], units: ['mineLayer'] },
+  { requires: ['airstrip'], buildings: ['planeFactory'], operational: true },
   { requires: ['planeFactory'], units: AIRCRAFT_TYPES, operational: true },
   { requires: ['vehicleFactory'], count: 2, units: ['tank-v3'] },
   { requires: ['shipyard'], units: ['destroyer', 'hovercraft', 'vehicleFerry', 'aircraftCarrier', 'navalMineLayer', 'battleship', 'submarine'] },

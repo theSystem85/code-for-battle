@@ -25,7 +25,8 @@ async function startGestureTestGame(page) {
     const prerequisites = [
       ['vehicleFactory', 8, 8],
       ['helipad', 12, 8],
-      ['shipyard', 16, 8]
+      ['shipyard', 16, 8],
+      ['planeFactory', 20, 8]
     ]
     prerequisites.forEach(([type, x, y]) => {
       if (!gs.buildings.some(building => building.type === type && building.owner === owner)) {
@@ -161,7 +162,9 @@ test('[E00213] pausing multiple building stacks advances to the next unpaused st
     const box = await button.boundingBox()
     await button.click({ position: { x: box.width / 2, y: box.height * 0.6 } })
     await expect(button).toHaveClass(/paused/)
-    await expect(button.locator('.batch-counter')).toHaveText('1')
+    const counter = button.locator('.batch-counter')
+    await expect(counter).toHaveText('1')
+    await expect(counter).toHaveCSS('opacity', '1')
     expect(await button.evaluate(element => window.getComputedStyle(element, '::before').content)).toContain('Ⅱ')
   }
   await expect(buttons[2]).toHaveClass(/active/)

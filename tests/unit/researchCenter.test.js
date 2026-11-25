@@ -65,23 +65,21 @@ describe('Technology Research Center', () => {
     expect(canPurchasePerk(owner, 'tc.autonomy').reason).toBe('noResearchCenter')
   })
 
-  it('[U07312] hides real blueprint buttons until the relevant perk and uses the approved images', () => {
+  it('[U07312] shows the Plane Factory with an Airstrip, without changing research blueprint artwork', () => {
     document.body.innerHTML = '<button class="production-button unlocked" data-building-type="planeFactory"></button>'
-    gameState.buildings = [center()]
+    gameState.buildings = ['constructionYard', 'powerPlant', 'oreRefinery', 'vehicleFactory']
+      .map(type => ({ type, owner, health: 400 }))
     gameState.availableBuildingTypes = new Set(['planeFactory'])
     const card = document.querySelector('[data-building-type="planeFactory"]')
     const refresh = () => updateBuildingButtonStates({ getBuildingProductionCount: () => 0 })
     refresh()
     expect(card.style.display).toBe('none')
-    grantPerkStars({ owner }, 5)
-    applyPerkPurchase(owner, 'tc.foundation')
-    refresh()
-    expect(card.style.display).toBe('none')
-    applyPerkPurchase(owner, 'tc.aerospace')
+    expect(card.dataset.requirement).toMatch(/Airstrip/)
+    gameState.buildings.push({ type: 'airstrip', owner, health: 400 })
     refresh()
     expect(card.style.display).toBe('')
-    expect(card.classList.contains('disabled')).toBe(true)
-    expect(card.dataset.requirement).toMatch(/Airstrip/)
+    expect(card.classList.contains('disabled')).toBe(false)
+
     const html = readFileSync('index.html', 'utf8')
     for (const perk of RESEARCH_PERKS) {
       expect(existsSync(`public/${perk.badge}`)).toBe(true)

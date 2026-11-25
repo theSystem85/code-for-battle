@@ -148,7 +148,7 @@ export const buildingData = {
     armor: 2,
     passiveDiscoveryRadius: 14,
     researchPerk: 'tc.orbit',
-    researchPrerequisite: 'radarStation',
+    operationalPrerequisite: 'radarStation',
     limit: 1,
     smokeSpots: []
   },
@@ -174,8 +174,7 @@ export const buildingData = {
     displayName: 'Plane Factory',
     health: 500,
     armor: 2,
-    researchPerk: 'tc.aerospace',
-    researchPrerequisite: 'airstrip',
+    operationalPrerequisite: 'airstrip',
     limit: 1,
     smokeSpots: []
   },

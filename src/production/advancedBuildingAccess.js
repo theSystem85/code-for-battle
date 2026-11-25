@@ -12,11 +12,13 @@ export function hasBuildingBlueprint(type, owner) {
 
 export function getAdvancedBuildingRequirement(type, buildings, owner) {
   const data = buildingData[type]
-  if (!data?.researchPerk) return ''
-  if (!hasBuildingBlueprint(type, owner)) return `Research ${getPerk(data.researchPerk).name}`
-  if (!hasOperationalBuilding(buildings, 'technologyResearchCenter', owner)) return 'Requires a Technology Research Center'
-  if (data.researchPrerequisite && !hasOperationalBuilding(buildings, data.researchPrerequisite, owner)) {
-    return `Requires an operational ${buildingData[data.researchPrerequisite].displayName}`
+  if (!data) return ''
+  if (data.researchPerk) {
+    if (!hasBuildingBlueprint(type, owner)) return `Research ${getPerk(data.researchPerk).name}`
+    if (!hasOperationalBuilding(buildings, 'technologyResearchCenter', owner)) return 'Requires a Technology Research Center'
+  }
+  if (data.operationalPrerequisite && !hasOperationalBuilding(buildings, data.operationalPrerequisite, owner)) {
+    return `Requires an operational ${buildingData[data.operationalPrerequisite].displayName}`
   }
   return ''
 }
