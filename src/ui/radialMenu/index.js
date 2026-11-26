@@ -9,6 +9,7 @@ export {
 export {
   hitTestRadial,
   layoutRadialItems,
+  layoutRadialSubmenu,
   resolveRadialTiming,
   RADIAL_BUILD_BUDGET_MS,
   DEFAULT_BUTTON_SIZE,

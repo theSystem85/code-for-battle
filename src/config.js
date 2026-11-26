@@ -909,12 +909,12 @@ export function setDesktopEdgeAutoscrollEnabled(value) {
   DESKTOP_EDGE_AUTOSCROLL_ENABLED = Boolean(value)
 }
 
-export const DEFAULT_MAP_ACTION_LONG_PRESS_MS = 500
+export const DEFAULT_MAP_ACTION_LONG_PRESS_MS = 250
 export let MAP_ACTION_LONG_PRESS_MS = DEFAULT_MAP_ACTION_LONG_PRESS_MS
 export function setMapActionLongPressMs(value) {
   const ms = Number(value)
   if (!Number.isFinite(ms)) return false
-  MAP_ACTION_LONG_PRESS_MS = Math.max(300, Math.min(5000, Math.round(ms)))
+  MAP_ACTION_LONG_PRESS_MS = Math.max(150, Math.min(5000, Math.round(ms)))
   setStoredItem('rts_map_action_long_press_ms', String(MAP_ACTION_LONG_PRESS_MS))
   return true
 }
@@ -922,7 +922,7 @@ export function setMapActionLongPressMs(value) {
 export function loadMapActionLongPressSetting() {
   const stored = getStoredItem('rts_map_action_long_press_ms')
   if (stored !== null && Number.isFinite(Number(stored))) {
-    MAP_ACTION_LONG_PRESS_MS = Math.max(300, Math.min(5000, Math.round(Number(stored))))
+    MAP_ACTION_LONG_PRESS_MS = Math.max(150, Math.min(5000, Math.round(Number(stored))))
   }
 }
 

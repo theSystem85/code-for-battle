@@ -1,3 +1,5 @@
+import { GROUND_ACTIONS, SUPPLY_TYPES, GROUND_COMMANDS, groundSelection, buildingActionOptions, availableSupply } from './groundActions.js'
+import { createMapOrderDraft } from './mapOrderDraft.js'
 import { unitContainsPoint } from '../../input/unitHitTest.js'
 import { unitActionOptions, canServeUnit } from './unitActions.js'
 import { TILE_SIZE, MAP_ACTION_LONG_PRESS_MS, setMapActionLongPressMs } from '../../config.js'
@@ -10,7 +12,10 @@ import { COMMAND_TYPES } from '../../network/commandTypes.js'
 import { isLocalPartyAutomationLocked } from '../../network/multiplayerStore.js'
 import { fitMapActionLabels } from './mapActionLabels.js'
 import { getPolicyLock } from '../../perks/perkState.js'
+import { showNotification } from '../notifications.js'
 import './mapActionMenu.css'
+
+function showOrderFailure() { showNotification('No available service or reachable destination for this order', 2000) }
 
 const installedMenus = new WeakMap()
 const perkMenus = {
@@ -29,6 +34,9 @@ function perkBuildingAt(point, owner) {
 
 const labels = {
   attackUnit: 'Attack', forceAttackUnit: 'Force attack', guardUnit: 'Guard', serveUnit: 'Serve', followUnit: 'Follow', landOnUnit: 'Land on', embarkUnit: 'Embark',
+  retreatTo: 'Retreat to…', retreatToBase: 'Retreat to base', planPath: 'Plan path', callSupply: 'Call supply',
+  supplyAmmo: 'Ammo', supplyRepair: 'Repair', supplyGas: 'Gas', supplyCrew: 'Crew',
+  defendBuilding: 'Defend building', repairAtBuilding: 'Get repair', fuelAtBuilding: 'Get fuel', crewAtBuilding: 'Get crew', ammoAtBuilding: 'Get ammo', unloadAtBuilding: 'Unload ore',
   c5Airdrop: 'Airdrop here', c5Unload: 'Unload / cancel',
   forceAttackAt: 'Force attack here', defendHoldAt: 'Defend and hold here',
   applyAutomationOnArrival: 'Automation on arrival', holdFire: 'Hold fire', clearTarget: 'Clear target'
@@ -36,7 +44,7 @@ const labels = {
 
 export function installMapActionMenu(canvas, { selection, units, commands, handler }) {
   if (installedMenus.has(canvas)) return installedMenus.get(canvas)
-  const menu = createRadialMenu()
+  const menu = createRadialMenu({ onSubmenuOpen: fitMapActionLabels })
   menu.element.dataset.mapActionMenu = 'true'
   const ring = document.createElement('div')
   ring.className = 'map-action-progress'
@@ -44,6 +52,7 @@ export function installMapActionMenu(canvas, { selection, units, commands, handl
   document.body.appendChild(ring)
   let origin = null
   let targetUnit = null
+  let targetBuilding = null
   let rightDown = null
   let heldPointer = null
   let pressCamera = null
@@ -71,10 +80,12 @@ export function installMapActionMenu(canvas, { selection, units, commands, handl
     handler.activeTouchPointers.clear()
     handler.twoFingerPan = null
   }
-  function dispatch(action, point = origin) {
+  const draft = createMapOrderDraft({ canvas, locked, resetInput,
+    commit: (action, point, entityIds) => dispatch(action, point, entityIds) })
+  function dispatch(action, point = origin, entityIds = null) {
     if (locked() || !point) return false
-    const payload = { action, ...point, ...(targetUnit ? { targetId: targetUnit.id } : {}), entityIds: commandableSelection(selection, owner()).map(entity => entity.id) }
-    if (!payload.entityIds.length || !optionsForTarget().includes(action) ||
+    const payload = { action, ...point, ...((targetUnit || targetBuilding) ? { targetId: (targetUnit || targetBuilding).id } : {}), entityIds: entityIds || commandableSelection(selection, owner()).map(entity => entity.id) }
+    if (!payload.entityIds.length || !(entityIds ? GROUND_COMMANDS : [...optionsForTarget(), ...Object.keys(SUPPLY_TYPES)]).includes(action) ||
       !Number.isFinite(point.x) || !Number.isFinite(point.y) || point.x < 0 || point.y < 0 ||
       point.x >= (gameState.mapGrid?.[0]?.length || 0) * TILE_SIZE || point.y >= (gameState.mapGrid?.length || 0) * TILE_SIZE) return false
     if (action === 'applyAutomationOnArrival' && !applicableAutomations(selection, owner()).some(entry => entry.policy.id === point.policyId)) return false
@@ -83,11 +94,13 @@ export function installMapActionMenu(canvas, { selection, units, commands, handl
     broadcastGameCommand(COMMAND_TYPES.MAP_ACTION, payload)
     return true
   }
-  function close() { menu.close(); targetUnit = null }
+  function close() { menu.close(); targetUnit = null; targetBuilding = null }
   function optionsForTarget() {
     const tileOptions = mapActionOptions(selection, owner())
+    const groundOptions = groundSelection(selection, owner()).length ? GROUND_ACTIONS : []
+    if (targetBuilding) return [...buildingActionOptions(selection, targetBuilding, owner()), ...groundOptions]
     if (!targetUnit) return tileOptions
-    return [...unitActionOptions(selection, targetUnit, owner(), gameState.buildings), ...tileOptions.filter(action => action === 'c5Airdrop')]
+    return [...unitActionOptions(selection, targetUnit, owner(), gameState.buildings), ...tileOptions.filter(action => action === 'c5Airdrop' || groundOptions.includes(action))]
   }
   function openPerkBuilding(building, anchor) {
     if (locked() || !building) return false
@@ -108,10 +121,13 @@ export function installMapActionMenu(canvas, { selection, units, commands, handl
     if (locked() || !Number.isFinite(point?.x) || !Number.isFinite(point?.y)) return false
     const rect = canvas.getBoundingClientRect()
     const anchor = { x: rect.left + point.x - gameState.scrollOffset.x, y: rect.top + point.y - gameState.scrollOffset.y }
-    if (openPerkBuilding(perkBuildingAt(point, owner()), anchor)) {
+    if (!groundSelection(selection, owner()).length && openPerkBuilding(perkBuildingAt(point, owner()), anchor)) {
       resetInput()
       return true
     }
+    targetBuilding = gameState.buildings?.find(building => building.health > 0 &&
+      point.x >= building.x * TILE_SIZE && point.x < (building.x + building.width) * TILE_SIZE &&
+      point.y >= building.y * TILE_SIZE && point.y < (building.y + building.height) * TILE_SIZE) || null
     targetUnit = units.find(unit => !selection.includes(unit) && unitContainsPoint(unit, point.x, point.y)) || null
     const options = optionsForTarget()
     if (!options.length) return false
@@ -119,8 +135,17 @@ export function installMapActionMenu(canvas, { selection, units, commands, handl
     const items = options.map(id => ({
       id, label: labels[id], text: labels[id], customTooltip: true,
       disabled: id === 'serveUnit' && !selection.some(unit => canServeUnit(unit, targetUnit, gameState.buildings, commands)),
+      children: id === 'callSupply' ? Object.keys(SUPPLY_TYPES).map(action => ({
+        id: action, label: labels[action], text: labels[action], customTooltip: true,
+        disabled: !availableSupply(selection, owner(), { units, buildings: gameState.buildings, commands }, action).length,
+        onSelect() { if (!dispatch(action)) showOrderFailure(); close() }
+      })) : undefined,
       onSelect() {
-        if (id === 'applyAutomationOnArrival') {
+        if (id === 'retreatTo' || id === 'planPath') {
+          const ids = groundSelection(selection, owner()).map(unit => unit.id)
+          close()
+          draft.start(id, ids)
+        } else if (id === 'applyAutomationOnArrival') {
           menu.open(anchor, applicableAutomations(selection, owner()).map(entry => ({
             id: entry.policy.id, label: entry.policy.name, text: entry.policy.name, customTooltip: true,
             disabled: Boolean(getPolicyLock(owner(), entry.policy)),
@@ -128,7 +153,7 @@ export function installMapActionMenu(canvas, { selection, units, commands, handl
             onSelect: () => { dispatch(id, { ...origin, policyId: entry.policy.id }); close() }
           })))
           fitMapActionLabels(menu.element)
-        } else { dispatch(id); close() }
+        } else { if (!dispatch(id)) showOrderFailure(); close() }
       }
     }))
     menu.open(anchor, items)
@@ -151,6 +176,7 @@ export function installMapActionMenu(canvas, { selection, units, commands, handl
   function cancel() {
     controller.cancel()
     canvas.dataset.mapActionTracking = 'false'
+    delete canvas.dataset.mapActionGroundContext
     clearInterval(cameraTimer)
     cameraTimer = 0
   }
@@ -173,14 +199,14 @@ export function installMapActionMenu(canvas, { selection, units, commands, handl
     }
   }, true)
   window.addEventListener('pointerdown', event => {
+    if (draft.handle(event)) return
     pointers.add(event.pointerId)
     if (pointers.size > 1) { cancel(); close(); return }
     if (menu.isOpen()) {
       stop(event)
       swallowUntil = performance.now() + 600
-      const item = menu.updatePointer(event.clientX, event.clientY)
-      if (item && !item.disabled) item.onSelect?.()
-      else close()
+      heldPointer = event.pointerId
+      if (!menu.updatePointer(event.clientX, event.clientY)) close()
       return
     }
     if (event.target !== canvas || (event.pointerType !== 'touch' && event.button !== 0) || locked()) return
@@ -188,22 +214,24 @@ export function installMapActionMenu(canvas, { selection, units, commands, handl
     heldPointer = event.pointerId
     pressCamera = { ...gameState.scrollOffset }
     canvas.dataset.mapActionTracking = 'true'
+    canvas.dataset.mapActionGroundContext = String(groundSelection(selection, owner()).length > 0)
     controller.down({ x: event.clientX, y: event.clientY, touch: event.pointerType === 'touch' })
     cameraTimer = setInterval(() => {
       if (locked() || handler.wasDragging || gameState.isRightDragging || pressCamera.x !== gameState.scrollOffset.x || pressCamera.y !== gameState.scrollOffset.y) cancel()
     }, 50)
   }, true)
   window.addEventListener('pointermove', event => {
+    if (draft.handle(event)) return
     if (menu.isOpen()) menu.updatePointer(event.clientX, event.clientY)
     controller.move({ x: event.clientX, y: event.clientY })
     if (!controller.isTracking()) { canvas.dataset.mapActionTracking = 'false'; clearInterval(cameraTimer) }
   }, true)
   const end = event => {
+    if (draft.handle(event)) { swallowUntil = performance.now() + 600; return }
     pointers.delete(event.pointerId)
     const consumed = controller.up()
     if (event.type !== 'pointercancel' && heldPointer === event.pointerId && menu.isOpen()) {
-      const item = menu.updatePointer(event.clientX, event.clientY)
-      if (item && !item.disabled) item.onSelect?.()
+      menu.activate(event.clientX, event.clientY)
     }
     heldPointer = null
     cancel()
@@ -218,15 +246,23 @@ export function installMapActionMenu(canvas, { selection, units, commands, handl
   for (const type of ['mousedown', 'mouseup', 'click', 'contextmenu']) {
     window.addEventListener(type, event => {
       if (type === 'mouseup' && event.button === 2) return
-      if (menu.isOpen() || (event.target === canvas && performance.now() < swallowUntil)) stop(event)
+      if (draft.active() || menu.isOpen() || (event.target === canvas && performance.now() < swallowUntil)) stop(event)
     }, true)
   }
-  window.addEventListener('wheel', () => { cancel(); close() }, true)
-  window.addEventListener('blur', () => { cancel(); close(); pointers.clear(); rightDown = null })
-  window.addEventListener('keydown', event => { cancel(); if (event.key === 'Escape') close() }, true)
+  window.addEventListener('wheel', () => {
+    cancel(); close()
+    if (draft.active()) requestAnimationFrame(draft.paint)
+  }, true)
+  window.addEventListener('blur', () => { draft.clear(); cancel(); close(); pointers.clear(); rightDown = null })
+  window.addEventListener('keydown', event => {
+    cancel()
+    if (event.key === 'Escape') { draft.clear(); close() }
+    if (event.key === 'Enter' && draft.active()) { event.preventDefault(); draft.finish() }
+  }, true)
   const api = {
     openMapActionMenu: open,
-    closeMapActionMenu: close,
+    closeMapActionMenu: () => { draft.clear(); close() },
+    finishMapPath: draft.finish,
     forceAttackAt: point => dispatch('forceAttackAt', point),
     defendHoldAt: point => dispatch('defendHoldAt', point),
     applyAutomationOnArrival: point => dispatch('applyAutomationOnArrival', point),

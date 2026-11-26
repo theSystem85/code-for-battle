@@ -16,9 +16,12 @@ async function prepare(page) {
     r.tank.selected = true
     window.selectedUnitsRef.splice(0, window.selectedUnitsRef.length, r.tank)
     window.remoteControlApi.setLongPressDuration(400)
+    const { setAutomationPerkMode } = await import('/src/perks/perkState.js')
+    setAutomationPerkMode('allUnlocked')
     const { savePolicy } = await import('/src/policies/policyStore.js')
     const { POLICY_TEMPLATES } = await import('/src/policies/policyTemplates.js')
-    savePolicy(r.human, POLICY_TEMPLATES[0].create('map-arrival-test'))
+    const saved = savePolicy(r.human, POLICY_TEMPLATES[0].create('map-arrival-test'))
+    if (!saved.ok) throw new Error(`Could not save route automation: ${JSON.stringify(saved)}`)
     const rect = document.getElementById('gameCanvas').getBoundingClientRect()
     return { x: rect.left + 300, y: rect.top + 300 }
   })
@@ -131,7 +134,7 @@ async function labelOverflow(page) {
   })
 }
 
-test('[E00063] default hold is 500 ms and every label fits inside its round button', async({ page }) => {
+test('[E00063] default hold is 250 ms and every label fits inside its round button', async({ page }) => {
   const point = await prepare(page)
   await page.evaluate(async() => {
     const { DEFAULT_MAP_ACTION_LONG_PRESS_MS } = await import('/src/config.js')
@@ -140,11 +143,11 @@ test('[E00063] default hold is 500 ms and every label fits inside its round butt
     const { POLICY_TEMPLATES } = await import('/src/policies/policyTemplates.js')
     savePolicy(window.__regression.human, { ...POLICY_TEMPLATES[0].create('map-arrival-long'), name: 'Retreat to repair depot when damaged' })
   })
-  expect(await page.evaluate(async() => (await import('/src/config.js')).DEFAULT_MAP_ACTION_LONG_PRESS_MS)).toBe(500)
-  await hold(page, point, 300)
+  expect(await page.evaluate(async() => (await import('/src/config.js')).DEFAULT_MAP_ACTION_LONG_PRESS_MS)).toBe(250)
+  await hold(page, point, 180)
   await expect(menu(page)).toBeHidden()
   await page.evaluate(() => { window.selectedUnitsRef.splice(0, window.selectedUnitsRef.length, window.__regression.tank) })
-  await hold(page, point, 650)
+  await hold(page, point, 400)
   await expect(menu(page)).toBeVisible()
   const main = await labelOverflow(page)
   expect(main.map(entry => entry.id)).toEqual(expect.arrayContaining(['forceAttackAt', 'defendHoldAt', 'applyAutomationOnArrival']))

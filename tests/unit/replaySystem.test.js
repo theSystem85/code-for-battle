@@ -39,7 +39,8 @@ vi.mock('../../src/ai/enemySpawner.js', () => ({ spawnEnemyUnit: vi.fn() }))
 vi.mock('../../src/network/deterministicRandom.js', () => ({ initializeSessionRNG: vi.fn() }))
 vi.mock('../../src/sound.js', () => ({ terminateAllSounds: terminateAllSoundsMock }))
 
-import { loadReplay } from '../../src/replaySystem.js'
+import { gameState } from '../../src/gameState.js'
+import { loadReplay, updateReplayPlayback } from '../../src/replaySystem.js'
 
 describe('replaySystem.loadReplay', () => {
   beforeEach(() => {
@@ -67,4 +68,23 @@ describe('replaySystem.loadReplay', () => {
       loadGameFromStateMock.mock.invocationCallOrder[0]
     )
   })
+})
+
+it('[U07379] waits for the first planned route leg before replaying queued legs', () => {
+  const unit = { id: 'route-unit', owner: 'player1', health: 100, x: 32, y: 32, commandQueue: [] }
+  const previousHandler = window.unitCommandsHandler
+  window.unitCommandsHandler = { handleMovementCommand: vi.fn() }
+  Object.assign(gameState, { simulationTime: 100, gamePaused: false, replayMode: true, units: [unit], mapGrid: [], replay: {
+    playbackActive: true, playbackStartedAt: 0, playbackCursor: 0,
+    playbackCommands: [
+      { at: 0, command: { type: 'unit_command', command: 'move', owner: 'player1', unitIds: [unit.id], targetPos: { space: 'world', x: 100, y: 100 }, plannedRouteStart: true } },
+      { at: 0, command: { type: 'unit_command', command: 'move', owner: 'player1', unitIds: [unit.id], targetPos: { space: 'world', x: 200, y: 100 }, queueAppend: true } }
+    ]
+  } })
+  try {
+    updateReplayPlayback()
+    expect(window.unitCommandsHandler.handleMovementCommand).toHaveBeenCalledOnce()
+    expect(unit.currentCommand).toEqual({ type: 'move', x: 100, y: 100 })
+    expect(unit.commandQueue).toEqual([{ type: 'move', x: 200, y: 100 }])
+  } finally { window.unitCommandsHandler = previousHandler }
 })

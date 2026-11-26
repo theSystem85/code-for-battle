@@ -9,6 +9,7 @@ import { isDefenceReady } from '../../policies/defenceCapabilities.js'
 import { COMBAT_UNIT_TYPES } from '../../policies/policyWorld.js'
 import { queueDefenseBuildingTarget } from '../../input/unitCommands/defenceCommands.js'
 import { noteDefenceDirectOrder } from '../../policies/defenceCommandApi.js'
+import { GROUND_ACTIONS, GROUND_COMMANDS, groundSelection, applyGroundAction } from './groundActions.js'
 
 const MAP_COMBAT_TYPES = new Set([...COMBAT_UNIT_TYPES, 'destroyer'])
 
@@ -30,6 +31,7 @@ export function mapActionOptions(selection, owner) {
   const options = []
   if (entities.some(entity => entity.isBuilding || MAP_COMBAT_TYPES.has(entity.type))) options.push('forceAttackAt')
   if (units) options.push('defendHoldAt')
+  if (groundSelection(entities, owner).length) options.push(...GROUND_ACTIONS)
   if (entities.some(entity => entity.type === 'c5Galaxy' && !entity.c5Mission && entity.embarkedUnitIds?.length)) options.push('c5Airdrop')
   if (entities.some(entity => entity.type === 'c5Galaxy' && entity.flightState === 'grounded')) options.push('c5Unload')
   if (applicableAutomations(entities, owner).length) options.push('applyAutomationOnArrival')
@@ -40,6 +42,9 @@ export function mapActionOptions(selection, owner) {
 // Called both locally and by the authoritative multiplayer command processor.
 export function applyMapAction(payload, owner, context) {
   const { action, x, y, policyId, entityIds } = payload || {}
+  if (GROUND_COMMANDS.includes(action) && Array.isArray(entityIds) && Number.isFinite(x) && Number.isFinite(y)) {
+    return withoutUnitCommandBroadcast(() => applyGroundAction(payload, owner, context))
+  }
   if (typeof action === 'string' && action.endsWith('Unit') && Array.isArray(entityIds)) {
     return withoutUnitCommandBroadcast(() => applyUnitAction(payload, owner, context))
   }

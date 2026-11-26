@@ -24,8 +24,8 @@ export function updateGuardBehavior(unit, mapGrid, occupancyMap, now) {
       let closestTarget = unit.guardTargets[0]
       let closestDistance = Infinity
       unit.guardTargets.forEach(target => {
-        const targetCenterX = target.x + TILE_SIZE / 2
-        const targetCenterY = target.y + TILE_SIZE / 2
+        const targetCenterX = target.isBuilding ? (target.x + target.width / 2) * TILE_SIZE : target.x + TILE_SIZE / 2
+        const targetCenterY = target.isBuilding ? (target.y + target.height / 2) * TILE_SIZE : target.y + TILE_SIZE / 2
         const distance = Math.hypot(targetCenterX - unitCenterX, targetCenterY - unitCenterY)
         if (distance < closestDistance) {
           closestDistance = distance
@@ -39,6 +39,9 @@ export function updateGuardBehavior(unit, mapGrid, occupancyMap, now) {
   if (unit.guardTarget && unit.guardTarget.health > 0) {
     unit.guardMode = true
     if (AIR_GUARD_TYPES.has(unit.type)) return
+    // Buildings are stationary. The defend order already issued a passable perimeter
+    // destination; retain it and let combat targeting engage the building's attackers.
+    if (unit.guardTarget.isBuilding) return
     const unitCenterX = unit.x + TILE_SIZE / 2
     const unitCenterY = unit.y + TILE_SIZE / 2
     const targetCenterX = unit.guardTarget.x + TILE_SIZE / 2

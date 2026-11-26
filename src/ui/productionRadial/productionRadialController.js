@@ -345,7 +345,7 @@ export function installProductionRadialMenu(canvas) {
   }
 
   const begin = (event, pointerType) => {
-    if (bypass || session || gestureBlocked()) return false
+    if (bypass || session || gestureBlocked() || canvas.dataset.mapActionGroundContext === 'true') return false
     loadSelectItem()
     if (pointerType !== 'touch' && event.button !== 0) return false
     const building = findOwnedProductionBuildingFromClient(event.clientX, event.clientY, canvas)

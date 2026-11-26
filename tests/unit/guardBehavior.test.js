@@ -58,6 +58,19 @@ describe('guard behavior', () => {
   })
 
   describe('updateGuardBehavior', () => {
+    it('[U07376] keeps a building defense perimeter path instead of rerouting to tile coordinates as pixels', () => {
+      const building = { id: 'workshop', isBuilding: true, health: 100, x: 8, y: 8, width: 3, height: 3 }
+      const path = [{ x: 7, y: 8 }]
+      mockUnit.guardTarget = building
+      mockUnit.guardTargets = [building]
+      mockUnit.path = path
+      updateGuardBehavior(mockUnit, mockMapGrid, mockOccupancyMap, now)
+      expect(mockUnit.guardMode).toBe(true)
+      expect(mockUnit.guardTarget).toBe(building)
+      expect(mockUnit.path).toBe(path)
+      expect(findPath).not.toHaveBeenCalled()
+    })
+
     it('[U01835] should not set guard mode when no guard target exists', () => {
       mockUnit.guardTarget = null
 

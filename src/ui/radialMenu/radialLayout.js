@@ -1,4 +1,4 @@
-export const RADIAL_BUILD_BUDGET_MS = 1000
+export const RADIAL_BUILD_BUDGET_MS = 500
 export const DEFAULT_BUTTON_SIZE = 48
 export const DEFAULT_RADIUS = 96
 export const DEFAULT_GAP = 8
@@ -9,11 +9,11 @@ export const MAX_ITEMS_PER_RING = 8
 export function resolveRadialTiming(count, options = {}) {
   const total = Math.max(1, count | 0)
   const budget = Number.isFinite(options.budgetMs) ? options.budgetMs : RADIAL_BUILD_BUDGET_MS
-  let fly = Number.isFinite(options.duration) ? options.duration : 220
+  let fly = Number.isFinite(options.duration) ? options.duration : 110
   if (fly < 60) fly = 60
   if (fly > budget) fly = budget
   const room = Math.max(0, budget - fly)
-  const requested = Number.isFinite(options.stagger) ? options.stagger : 40
+  const requested = Number.isFinite(options.stagger) ? options.stagger : 20
   const stagger = total <= 1 ? 0 : Math.min(Math.max(0, requested), room / (total - 1))
   return {
     flyMs: fly,
@@ -157,4 +157,28 @@ export function hitTestRadial(points, x, y, buttonSize) {
     }
   }
   return best
+}
+
+// Keep the fan in the approach direction when possible; rotate inward at screen edges.
+export function layoutRadialSubmenu(count, parent, direction, options = {}) {
+  const size = options.buttonSize || DEFAULT_BUTTON_SIZE
+  const viewport = options.viewport || { x: 0, y: 0, width: 1280, height: 720 }
+  const margin = size / 2 + DEFAULT_PADDING
+  let best = null
+  for (const sweep of [Math.PI, Math.PI * 0.75, Math.PI / 2]) {
+    const radius = Math.max(size * 1.6, (size + DEFAULT_GAP) / (2 * Math.sin(sweep / Math.max(2, (count - 1) * 2))))
+    for (let turn = 0; turn < 16; turn++) {
+      const offset = (turn % 2 ? 1 : -1) * Math.ceil(turn / 2) * Math.PI / 8
+      const points = Array.from({ length: count }, (_, index) => {
+        const angle = direction + offset + (count <= 1 ? 0 : (index / (count - 1) - 0.5) * sweep)
+        return { index, x: parent.x + Math.cos(angle) * radius, y: parent.y + Math.sin(angle) * radius }
+      })
+      const overflow = points.reduce((sum, point) => sum +
+        Math.max(0, viewport.x + margin - point.x, point.x - (viewport.x + viewport.width - margin)) +
+        Math.max(0, viewport.y + margin - point.y, point.y - (viewport.y + viewport.height - margin)), 0)
+      const score = overflow * 100 + Math.abs(offset) + (Math.PI - sweep) * 0.1
+      if (!best || score < best.score) best = { points, score }
+    }
+  }
+  return best.points
 }

@@ -1,3 +1,4 @@
+import { isGroundUnit } from '../utils/groundUnit.js'
 /**
  * Retreat Behavior System
  *
@@ -26,16 +27,19 @@ export function isRetreating(unit) {
 
 function clearRetreatVisualizationState(unit) {
   unit.retreatIssuedByPlayer = false
+  unit.retreatUsesPath = false
+  unit.retreatForceBackward = false
+  unit.retreatFireRange = null
 }
 
 /**
  * Initiate retreat behavior for selected units to target position
  * Called when shift+click is used
  */
-export function initiateRetreat(selectedUnits, targetX, targetY, mapGrid) {
+export function initiateRetreat(selectedUnits, targetX, targetY, mapGrid, options = {}) {
   const retreatingUnits = selectedUnits.filter(unit =>
-    unit.owner === gameState.humanPlayer &&
-    (unit.type === 'tank' || unit.type === 'tank_v1' || unit.type === 'tank-v2' ||
+    unit.owner === (options.owner || gameState.humanPlayer) &&
+    ((options.allGround && isGroundUnit(unit)) || unit.type === 'tank' || unit.type === 'tank_v1' || unit.type === 'tank-v2' ||
     unit.type === 'tank-v3' || unit.type === 'lightTank' || unit.type === 'rocketTank' || unit.type === 'howitzer')
   )
 
@@ -59,12 +63,19 @@ export function initiateRetreat(selectedUnits, targetX, targetY, mapGrid) {
     const currentTarget = unit.target
 
     // Set retreat mode
+    unit.retreatForceBackward = Boolean(options.forceBackward)
+    unit.retreatUsesPath = false
     unit.isRetreating = true
     unit.retreatIssuedByPlayer = true
     unit.retreatTarget = { x: retreatTileX, y: retreatTileY }
     unit.retreatStartTime = performance.now()
 
     // Cancel any existing attack/movement behavior that might conflict
+    unit.commandQueue = []
+    unit.currentCommand = null
+    unit.guardTarget = null
+    unit.guardTargets = null
+    unit.guardMode = false
     unit.attackQueue = [] // Clear attack queue
     unit.isAttacking = false
     unit.lastAttackTime = 0
@@ -124,7 +135,7 @@ function calculateRetreatMovement(unit, _mapGrid) {
   const backwardAngleDiff = Math.abs(angleDiff(backwardDirection, retreatDirection))
 
   // Choose movement strategy based on which requires less rotation
-  if (backwardAngleDiff < forwardAngleDiff) {
+  if (unit.retreatForceBackward || backwardAngleDiff < forwardAngleDiff) {
     // Moving backwards is more efficient - need to orient so back faces retreat direction
     unit.retreatMovementDirection = 'backward'
     unit.isMovingBackwards = true
@@ -175,6 +186,7 @@ export function updateRetreatBehavior(unit, now, mapGrid, units = []) {
   const retreatWorldX = unit.retreatTarget.x * TILE_SIZE + TILE_SIZE / 2
   const retreatWorldY = unit.retreatTarget.y * TILE_SIZE + TILE_SIZE / 2
   const distanceToRetreat = Math.hypot(unitCenterX - retreatWorldX, unitCenterY - retreatWorldY)
+  const retreatFireRange = unit.retreatFireRange || TANK_FIRE_RANGE * TILE_SIZE
 
   if (distanceToRetreat < TILE_SIZE * 0.8) {
     // Reached retreat position - stop retreating and clear all retreat state
@@ -198,7 +210,7 @@ export function updateRetreatBehavior(unit, now, mapGrid, units = []) {
     // Keep target for defensive firing but don't chase
     if (unit.retreatOriginalTarget && unit.retreatOriginalTarget.health > 0) {
       const targetDistance = getDistanceToTarget(unit, unit.retreatOriginalTarget)
-      if (targetDistance <= TANK_FIRE_RANGE * TILE_SIZE) {
+      if (targetDistance <= retreatFireRange) {
         unit.target = unit.retreatOriginalTarget
       } else {
         // Target out of range - stop targeting
@@ -211,7 +223,7 @@ export function updateRetreatBehavior(unit, now, mapGrid, units = []) {
   }
 
   // Check if retreat path is blocked by obstacles or units
-  if (checkRetreatPathBlocked(unit, mapGrid, units)) {
+  if (!unit.retreatUsesPath && checkRetreatPathBlocked(unit, mapGrid, units)) {
     // Path is blocked - stop retreat here and clear retreat state
     unit.isRetreating = false
     clearRetreatVisualizationState(unit)
@@ -233,7 +245,7 @@ export function updateRetreatBehavior(unit, now, mapGrid, units = []) {
     // Keep original target for defensive firing
     if (unit.retreatOriginalTarget && unit.retreatOriginalTarget.health > 0) {
       const targetDistance = getDistanceToTarget(unit, unit.retreatOriginalTarget)
-      if (targetDistance <= TANK_FIRE_RANGE * TILE_SIZE) {
+      if (targetDistance <= retreatFireRange) {
         unit.target = unit.retreatOriginalTarget
       } else {
         unit.target = null
@@ -264,6 +276,12 @@ function updateRetreatMovement(unit, now) {
   const retreatWorldX = unit.retreatTarget.x * TILE_SIZE + TILE_SIZE / 2
   const retreatWorldY = unit.retreatTarget.y * TILE_SIZE + TILE_SIZE / 2
 
+  if (unit.retreatForceBackward && unit.retreatUsesPath && unit.path?.length) {
+    const next = unit.path[0]
+    unit.targetDirection = Math.atan2(next.y * TILE_SIZE - unit.y, next.x * TILE_SIZE - unit.x) + Math.PI
+    if (unit.targetDirection > Math.PI) unit.targetDirection -= 2 * Math.PI
+    unit.canAccelerate = Math.abs(angleDiff(unit.direction || 0, unit.targetDirection)) < 0.25
+  }
   const currentDirection = unit.direction || 0
   const targetDirection = unit.targetDirection
 
@@ -350,7 +368,7 @@ function updateRetreatCombat(unit, _now) {
   if (unit.target && unit.target.health > 0) {
     const targetDistance = getDistanceToTarget(unit, unit.target)
 
-    if (targetDistance > TANK_FIRE_RANGE * TILE_SIZE) {
+    if (targetDistance > (unit.retreatFireRange || TANK_FIRE_RANGE * TILE_SIZE)) {
       // Target out of range - stop firing but continue retreat
       // Do NOT clear target immediately to avoid re-acquiring
       unit.canFire = false
@@ -404,6 +422,8 @@ export function cancelRetreatForUnits(units) {
  */
 export function shouldExitRetreat(unit, now) {
   if (!isRetreating(unit)) return false
+  // Destination orders finish on arrival or stuck detection, even if the target dies.
+  if (unit.retreatUsesPath) return false
 
   // Exit retreat if target is destroyed
   if (unit.retreatOriginalTarget && unit.retreatOriginalTarget.health <= 0) {
@@ -492,8 +512,8 @@ function checkRetreatPathBlocked(unit, mapGrid, units) {
     // Check for other units occupying this tile
     const isOccupied = units.some(otherUnit => {
       if (otherUnit.id === unit.id || otherUnit.health <= 0) return false
-      const otherTileX = Math.floor(otherUnit.x / TILE_SIZE)
-      const otherTileY = Math.floor(otherUnit.y / TILE_SIZE)
+      const otherTileX = Math.floor((otherUnit.x + TILE_SIZE / 2) / TILE_SIZE)
+      const otherTileY = Math.floor((otherUnit.y + TILE_SIZE / 2) / TILE_SIZE)
       return otherTileX === currentX && otherTileY === currentY
     })
 

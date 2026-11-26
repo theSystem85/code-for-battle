@@ -640,6 +640,9 @@ function executeReplayUnitCommand(command) {
         const worldTarget = normalizeReplayWorldPosition(command.targetPos)
         if (!worldTarget) return false
         handler.handleMovementCommand(selectedUnits, worldTarget.x, worldTarget.y, mapGrid)
+        if (command.plannedRouteStart) for (const unit of selectedUnits) {
+          unit.currentCommand = { type: 'move', x: worldTarget.x, y: worldTarget.y }
+        }
         return true
       }
       return false
@@ -695,7 +698,12 @@ function executeReplayUnitCommand(command) {
       if (command.targetPos) {
         const retreatTarget = normalizeReplayWorldPosition(command.targetPos)
         if (!retreatTarget) return false
-        initiateRetreat(selectedUnits, retreatTarget.x, retreatTarget.y, mapGrid)
+        initiateRetreat(selectedUnits, retreatTarget.x, retreatTarget.y, mapGrid, command.retreatOptions)
+        if (command.retreatPath) for (const unit of selectedUnits) {
+          unit.path = command.retreatPath.map(point => ({ ...point }))
+          unit.retreatUsesPath = true
+          unit.retreatFireRange = command.retreatFireRange
+        }
         return true
       }
       return false

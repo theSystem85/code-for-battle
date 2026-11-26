@@ -24,3 +24,36 @@
   overflow-wrap: normal;
   hyphens: manual;
 }
+
+.map-order-draft {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-hud-popover);
+  pointer-events: none;
+}
+.map-order-draft__hint {
+  position: absolute;
+  left: 50%;
+  bottom: max(24px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  max-width: 85vw;
+  padding: 10px 18px;
+  border: 1px solid #63d8c4;
+  border-radius: 12px;
+  background: #142633ee;
+  color: #d9fff5;
+  font: 12px sans-serif;
+  text-align: center;
+}
+.map-order-draft__point {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  transform: translate(-50%, -50%);
+  border: 2px solid #83e8d4;
+  border-radius: 50%;
+  background: #142633;
+  color: #fff;
+  font: bold 12px/24px sans-serif;
+  text-align: center;
+}

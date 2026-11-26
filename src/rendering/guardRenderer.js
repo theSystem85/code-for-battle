@@ -25,8 +25,8 @@ export class GuardRenderer {
       const guardianX = unit.x + TILE_SIZE / 2 - scrollOffset.x
       const guardianY = unit.y + TILE_SIZE / 2 - scrollOffset.y
       const target = unit.guardTarget
-      const targetX = target.x + TILE_SIZE / 2 - scrollOffset.x
-      const targetY = target.y + TILE_SIZE / 2 - scrollOffset.y
+      const targetX = (target.isBuilding ? (target.x + target.width / 2) * TILE_SIZE : target.x + TILE_SIZE / 2) - scrollOffset.x
+      const targetY = (target.isBuilding ? (target.y + target.height / 2) * TILE_SIZE : target.y + TILE_SIZE / 2) - scrollOffset.y
 
       // animated line between unit and guard target
       ctx.strokeStyle = `rgba(255, 165, 0, ${lineOpacity})`
@@ -44,8 +44,8 @@ export class GuardRenderer {
         const id = guardTarget.id || `${guardTarget.x}_${guardTarget.y}`
         if (drawnTargets.has(id)) return
         drawnTargets.add(id)
-        const guardTargetX = guardTarget.x + TILE_SIZE / 2 - scrollOffset.x
-        const guardTargetY = guardTarget.y + TILE_SIZE / 2 - scrollOffset.y
+        const guardTargetX = (guardTarget.isBuilding ? (guardTarget.x + guardTarget.width / 2) * TILE_SIZE : guardTarget.x + TILE_SIZE / 2) - scrollOffset.x
+        const guardTargetY = (guardTarget.isBuilding ? (guardTarget.y + guardTarget.height / 2) * TILE_SIZE : guardTarget.y + TILE_SIZE / 2) - scrollOffset.y
         ctx.strokeStyle = 'rgba(255, 165, 0, 0.8)'
         ctx.lineWidth = 2
         ctx.beginPath()

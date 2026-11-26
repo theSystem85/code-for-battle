@@ -548,7 +548,15 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
       if (unit.isRetreating) {
         const currentDirection = unit.direction || 0
 
-        if (unit.isMovingBackwards) {
+        if (unit.retreatForceBackward) {
+          // Follow each path segment in reverse, including turns around obstacles.
+          const reverseDirection = Math.atan2(dy, dx) + Math.PI
+          const aligned = Math.abs(normalizeAngle(reverseDirection - currentDirection)) < 0.25
+          movement.targetRotation = reverseDirection
+          movement.targetVelocity.x = aligned ? dirX * effectiveMaxSpeed : 0
+          movement.targetVelocity.y = aligned ? dirY * effectiveMaxSpeed : 0
+          movement.isMoving = aligned
+        } else if (unit.isMovingBackwards) {
           const forwardX = Math.cos(currentDirection)
           const forwardY = Math.sin(currentDirection)
 

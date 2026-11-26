@@ -19,8 +19,8 @@ describe('map long press controller', () => {
     const controller = createMapLongPressController({ duration: () => DEFAULT_MAP_ACTION_LONG_PRESS_MS, open, progress })
     return { controller, open, progress }
   }
-  it('[U02494] defaults to a 500 ms hold', () => {
-    expect(DEFAULT_MAP_ACTION_LONG_PRESS_MS).toBe(500)
+  it('[U02494] defaults to a 250 ms hold', () => {
+    expect(DEFAULT_MAP_ACTION_LONG_PRESS_MS).toBe(250)
   })
   it('[U02495] delays feedback and opens once at the configured duration, consuming release', () => {
     const { controller, open, progress } = setup()
@@ -29,8 +29,8 @@ describe('map long press controller', () => {
     vi.advanceTimersByTime(199)
     expect(progress).not.toHaveBeenCalled()
     vi.advanceTimersByTime(1)
-    expect(progress).toHaveBeenCalledWith({ x: 100, y: 100 }, 300)
-    vi.advanceTimersByTime(299)
+    expect(progress).toHaveBeenCalledWith({ x: 100, y: 100 }, 50)
+    vi.advanceTimersByTime(49)
     expect(open).not.toHaveBeenCalled()
     vi.advanceTimersByTime(1)
     expect(open).toHaveBeenCalledTimes(1)
@@ -40,7 +40,7 @@ describe('map long press controller', () => {
   it('[U02496] short release never opens or consumes the click', () => {
     const { controller, open } = setup()
     controller.down({ x: 0, y: 0 })
-    vi.advanceTimersByTime(499)
+    vi.advanceTimersByTime(249)
     expect(controller.up()).toBe(false)
     vi.advanceTimersByTime(2000)
     expect(open).not.toHaveBeenCalled()
@@ -67,7 +67,7 @@ describe('map long press controller', () => {
 describe('map action selection and dispatch', () => {
   beforeEach(() => resetPolicyStore())
   it('[U02499] filters ownership and building capabilities', () => {
-    expect(mapActionOptions([tank()], 'player1')).toEqual(['forceAttackAt', 'defendHoldAt'])
+    expect(mapActionOptions([tank()], 'player1')).toEqual(['forceAttackAt', 'defendHoldAt', 'retreatTo', 'retreatToBase', 'planPath', 'callSupply'])
     expect(mapActionOptions([turret()], 'player1')).toEqual(['forceAttackAt', 'holdFire', 'clearTarget'])
     expect(mapActionOptions([{ ...tank(), owner: 'player2' }, { ...turret(), type: 'powerPlant' }], 'player1')).toEqual([])
     expect(mapActionOptions([tank(), turret()], 'player1')).toContain('defendHoldAt')
@@ -163,8 +163,8 @@ describe('map action selection and dispatch', () => {
     expect(ctx.commands.handleMovementCommand).not.toHaveBeenCalled()
   })
   it('[U02508] clamps the persisted setting and rejects invalid durations', () => {
-    expect(setMapActionLongPressMs(200)).toBe(true)
-    expect(MAP_ACTION_LONG_PRESS_MS).toBe(300)
+    expect(setMapActionLongPressMs(100)).toBe(true)
+    expect(MAP_ACTION_LONG_PRESS_MS).toBe(150)
     setMapActionLongPressMs(9000)
     expect(MAP_ACTION_LONG_PRESS_MS).toBe(5000)
     expect(setMapActionLongPressMs(NaN)).toBe(false)

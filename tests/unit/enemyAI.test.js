@@ -30,6 +30,7 @@ vi.mock('../../src/performanceUtils.js', () => ({
 vi.mock('../../src/gameState.js', () => ({
   gameState: {
     humanPlayer: 'player1',
+    remoteControl: {},
     playerCount: 2,
     buildings: [],
     units: [],

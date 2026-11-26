@@ -141,6 +141,11 @@ describe('retreat behavior', () => {
   })
 
   describe('shouldExitRetreat', () => {
+    it('[U07378] keeps a destination retreat active after its target dies or a long route takes 30 seconds', () => {
+      const unit = { isRetreating: true, retreatUsesPath: true, retreatOriginalTarget: { health: 0 }, retreatStartTime: 1 }
+      expect(shouldExitRetreat(unit, 40000)).toBe(false)
+    })
+
     it('[U03810] returns false if unit is not retreating', () => {
       const unit = { isRetreating: false }
       expect(shouldExitRetreat(unit, performance.now())).toBe(false)

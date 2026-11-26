@@ -109,3 +109,40 @@ body.radial-blueprint-drag #gameCanvas {
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
   pointer-events: none;
 }
+
+.radial-menu__button {
+  border-color: #6d9cae;
+  background: linear-gradient(145deg, #294456, #101c28);
+  box-shadow: inset 0 0 0 2px #0c1e2b, 0 3px 8px #0009;
+  transition-timing-function: cubic-bezier(0.2, 0.8, 0.25, 1);
+}
+
+.radial-menu__button.has-text {
+  background: linear-gradient(145deg, #335569, #142633 70%);
+}
+
+.radial-menu__button.is-highlighted {
+  border-color: #baf9e7;
+  background: linear-gradient(145deg, #376d77, #1a4054);
+  box-shadow: inset 0 0 0 2px #102b38, 0 0 0 3px #63d8c4, 0 0 12px #63d8c477;
+}
+
+.radial-menu__button.has-submenu::before {
+  content: '•••';
+  position: absolute;
+  bottom: 2px;
+  left: 0;
+  width: 100%;
+  color: #83e8d4;
+  font-size: 9px;
+  text-align: center;
+}
+
+.radial-menu__button.is-submenu-origin {
+  opacity: 0.55;
+  border-style: dashed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .radial-menu__button { transition: none; }
+}
