@@ -189,3 +189,7 @@ GitHub app access and the shell approval reviewer are separate controls. If a pu
 ## UI styleguide
 
 Never use shadows on buttons in any UI state.
+
+## Voice To-Do List
+
+When the user asks to brainstorm to-dos or run the To-Do List skill, follow [skills/to-do-list/SKILL.md](skills/to-do-list/SKILL.md). This workflow applies to ChatGPT, Grok, and Grok Bot. Route the agreed draft through Grok Bot for saving in [docs/brainstorm.md](docs/brainstorm.md) when the user asks to wrap up.

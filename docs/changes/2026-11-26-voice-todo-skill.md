@@ -1,0 +1,3 @@
+- [x] **Voice To-Do List skill**
+  - Document the shared voice brainstorming workflow and where to save the agreed backlog.
+  - Spec: none
