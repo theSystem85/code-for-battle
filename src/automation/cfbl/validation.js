@@ -22,7 +22,7 @@ export function validateCFBL(ast) {
     for (const key of Object.keys(node)) if (!reserved.includes(key) && !meta.params.some(param => param.key === key)) issue('parameter', `Unknown parameter ${key}.`, node)
     for (const param of meta.params) {
       const value = node[param.key] ?? param.default
-      if (param.options ? !param.options.some(option => option.value === value) : !Number.isFinite(value) || value < param.min || value > param.max || param.integer && !Number.isInteger(value)) issue('parameter_domain', `Invalid ${param.key} value.`, node)
+      if (param.type === 'route' ? !param.validate(value) : param.options ? !param.options.some(option => option.value === value) : !Number.isFinite(value) || value < param.min || value > param.max || param.integer && !Number.isInteger(value)) issue('parameter_domain', `Invalid ${param.key} value.`, node)
     }
   }
   function condition(node, depth = 0) {

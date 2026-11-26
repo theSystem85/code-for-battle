@@ -165,7 +165,11 @@ export function createRadialMenu(options = {}) {
 
   function activate(x, y) {
     const item = updatePointer(x, y)
-    if (!item || item.disabled) return null
+    if (!item) return null
+    if (item.disabled) {
+      if (item.onDisabledSelect) { close(); item.onDisabledSelect(item) }
+      return null
+    }
     if (item.children?.length) {
       const entry = openState.entries.find(candidate => candidate.item === item)
       expandSubmenu(entry, Math.atan2(entry.point.y - openState.layout.centerY, entry.point.x - openState.layout.centerX))

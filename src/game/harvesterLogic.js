@@ -530,11 +530,11 @@ export const updateHarvesterLogic = logPerformance(function updateHarvesterLogic
       }
     }
 
-    runScheduledHarvesterAction(unit, mapGrid, occupancyMap, gameState, now)
+    if (!unit.patrol) runScheduledHarvesterAction(unit, mapGrid, occupancyMap, gameState, now)
 
     const unitTileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
     const unitTileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
-    const isRetreatingFromThreat = Boolean(unit.isRetreating)
+    const isRetreatingFromThreat = Boolean(unit.isRetreating || unit.patrol)
 
     // Retreat behavior is controlled by AI strategy logic (retreatLogic.js).
     // While retreating, suspend economy loops so harvester ore/unload policies
@@ -2018,7 +2018,7 @@ function getHarvesterProgressSnapshot(unit, mapGrid, gameState) {
     return { type: 'workshop', productive: true, goalKey: null }
   }
 
-  if (unit.isRetreating) {
+  if (unit.isRetreating || unit.patrol) {
     return { type: 'retreat', productive: true, goalKey: null }
   }
 

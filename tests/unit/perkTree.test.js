@@ -16,9 +16,16 @@ describe('perk tree overlay', () => {
     vi.spyOn(window, 'scrollTo').mockImplementation(() => {})
   })
   afterEach(() => { closePerkTree(); vi.useRealTimers(); vi.restoreAllMocks() })
+  it('[U07390] opens and focuses the requested patrol perk in an existing or new tree', () => {
+    const overlay = openPerkTree('command', 'cc.unit.do.patrol')
+    const patrol = overlay.querySelector('[data-perk-id="cc.unit.do.patrol"]')
+    expect(document.activeElement).toBe(patrol)
+    expect(patrol.classList.contains('show-tooltip')).toBe(true)
+    expect(openPerkTree('command', 'cc.unit.do.patrol')).toBe(overlay)
+  })
   it('[U07291] renders every catalog node, ledger and purchasable state, and pauses single player', () => {
     openPerkTree()
-    expect(document.querySelectorAll('.perk-node')).toHaveLength(35)
+    expect(document.querySelectorAll('.perk-node')).toHaveLength(36)
     expect(document.querySelector('[data-perk-id="cc.base.start"]')?.classList.contains('is-available')).toBe(true)
     expect(document.querySelector('.perk-ledger').textContent).toContain('10 available')
     expect(gameState.gamePaused).toBe(true)

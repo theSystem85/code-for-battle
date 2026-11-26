@@ -45,7 +45,7 @@ export function createMapOrderDraft({ canvas, locked, commit, resetInput }) {
     draft = { action, entityIds: entityIds.slice(), points: [] }
     canvas.dataset.mapOrderDraft = action
     overlay.hidden = false
-    hint.textContent = action === 'retreatTo' ? 'Tap a retreat destination · Esc to cancel' : 'Tap to add route points · Two-finger tap or Enter to start · Esc to cancel'
+    hint.textContent = action === 'patrol' ? 'Tap patrol points · Two-finger tap or Enter to loop · One point returns to your starting position' : action === 'retreatTo' ? 'Tap a retreat destination · Esc to cancel' : 'Tap to add route points · Two-finger tap or Enter to start · Esc to cancel'
   }
   function stop(event) { event.preventDefault(); event.stopImmediatePropagation() }
   function handle(event) {
@@ -79,13 +79,13 @@ export function createMapOrderDraft({ canvas, locked, commit, resetInput }) {
         if (!pointers.size) {
           const shouldFinish = !gesture.moved && performance.now() - gesture.time < 350
           gesture = null
-          if (shouldFinish && draft.action === 'planPath') finish()
+          if (shouldFinish && (draft.action === 'planPath' || draft.action === 'patrol')) finish()
         }
       } else if (!tracked.moved) {
         const rect = canvas.getBoundingClientRect()
         const point = { x: event.clientX - rect.left + gameState.scrollOffset.x, y: event.clientY - rect.top + gameState.scrollOffset.y }
         const tile = gameState.mapGrid?.[Math.floor(point.y / TILE_SIZE)]?.[Math.floor(point.x / TILE_SIZE)]
-        if (tile && !['water', 'rock'].includes(tile.type) && !tile.building && !tile.seedCrystal && draft.points.length < 256) {
+        if (tile && (draft.action === 'patrol' || !['water', 'rock'].includes(tile.type) && !tile.building && !tile.seedCrystal) && draft.points.length < 256) {
           draft.points.push(point)
           if (draft.action === 'retreatTo') finish()
           else paint()

@@ -17,7 +17,7 @@ export function fuzzyOptions(options, query = '') {
   }).filter(Boolean).sort((a, b) => a.score - b.score || a.option.value.localeCompare(b.option.value)).map(item => item.option)
 }
 function defaultCall(name, meta) {
-  return `${name}(${meta.params.map(param => `${param.key}=${typeof param.default === 'number' ? decimal(param.default) : param.default}`).join(',')})`
+  return `${name}(${meta.params.map(param => `${param.key}=${param.type === 'route' ? JSON.stringify(param.default) : typeof param.default === 'number' ? decimal(param.default) : param.default}`).join(',')})`
 }
 function atomEnd(source, start, end) {
   let depth = 0

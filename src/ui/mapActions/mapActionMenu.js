@@ -1,3 +1,4 @@
+import { patrolUnitAvailable, PATROL_PERK_ID } from '../../game/patrolRoutes.js'
 import { GROUND_ACTIONS, SUPPLY_TYPES, GROUND_COMMANDS, groundSelection, buildingActionOptions, availableSupply } from './groundActions.js'
 import { createMapOrderDraft } from './mapOrderDraft.js'
 import { unitContainsPoint } from '../../input/unitHitTest.js'
@@ -11,7 +12,7 @@ import { broadcastGameCommand } from '../../network/commandBroadcast.js'
 import { COMMAND_TYPES } from '../../network/commandTypes.js'
 import { isLocalPartyAutomationLocked } from '../../network/multiplayerStore.js'
 import { fitMapActionLabels } from './mapActionLabels.js'
-import { getPolicyLock } from '../../perks/perkState.js'
+import { ownsPerk, hasLivingCommandCenter, getPolicyLock } from '../../perks/perkState.js'
 import { showNotification } from '../notifications.js'
 import './mapActionMenu.css'
 
@@ -34,7 +35,7 @@ function perkBuildingAt(point, owner) {
 
 const labels = {
   attackUnit: 'Attack', forceAttackUnit: 'Force attack', guardUnit: 'Guard', serveUnit: 'Serve', followUnit: 'Follow', landOnUnit: 'Land on', embarkUnit: 'Embark',
-  retreatTo: 'Retreat to…', retreatToBase: 'Retreat to base', planPath: 'Plan path', callSupply: 'Call supply',
+  patrol: 'Patrol', retreatTo: 'Retreat to…', retreatToBase: 'Retreat to base', planPath: 'Plan path', callSupply: 'Call supply',
   supplyAmmo: 'Ammo', supplyRepair: 'Repair', supplyGas: 'Gas', supplyCrew: 'Crew',
   defendBuilding: 'Defend building', repairAtBuilding: 'Get repair', fuelAtBuilding: 'Get fuel', crewAtBuilding: 'Get crew', ammoAtBuilding: 'Get ammo', unloadAtBuilding: 'Unload ore',
   c5Airdrop: 'Airdrop here', c5Unload: 'Unload / cancel',
@@ -85,7 +86,7 @@ export function installMapActionMenu(canvas, { selection, units, commands, handl
   function dispatch(action, point = origin, entityIds = null) {
     if (locked() || !point) return false
     const payload = { action, ...point, ...((targetUnit || targetBuilding) ? { targetId: (targetUnit || targetBuilding).id } : {}), entityIds: entityIds || commandableSelection(selection, owner()).map(entity => entity.id) }
-    if (!payload.entityIds.length || !(entityIds ? GROUND_COMMANDS : [...optionsForTarget(), ...Object.keys(SUPPLY_TYPES)]).includes(action) ||
+    if (!payload.entityIds.length || !(entityIds ? [...GROUND_COMMANDS, 'patrol'] : [...optionsForTarget(), ...Object.keys(SUPPLY_TYPES)]).includes(action) ||
       !Number.isFinite(point.x) || !Number.isFinite(point.y) || point.x < 0 || point.y < 0 ||
       point.x >= (gameState.mapGrid?.[0]?.length || 0) * TILE_SIZE || point.y >= (gameState.mapGrid?.length || 0) * TILE_SIZE) return false
     if (action === 'applyAutomationOnArrival' && !applicableAutomations(selection, owner()).some(entry => entry.policy.id === point.policyId)) return false
@@ -98,9 +99,9 @@ export function installMapActionMenu(canvas, { selection, units, commands, handl
   function optionsForTarget() {
     const tileOptions = mapActionOptions(selection, owner())
     const groundOptions = groundSelection(selection, owner()).length ? GROUND_ACTIONS : []
-    if (targetBuilding) return [...buildingActionOptions(selection, targetBuilding, owner()), ...groundOptions]
+    if (targetBuilding) return [...buildingActionOptions(selection, targetBuilding, owner()), ...groundOptions, ...tileOptions.filter(action => action === 'patrol')]
     if (!targetUnit) return tileOptions
-    return [...unitActionOptions(selection, targetUnit, owner(), gameState.buildings), ...tileOptions.filter(action => action === 'c5Airdrop' || groundOptions.includes(action))]
+    return [...unitActionOptions(selection, targetUnit, owner(), gameState.buildings), ...tileOptions.filter(action => action === 'c5Airdrop' || action === 'patrol' || groundOptions.includes(action))]
   }
   function openPerkBuilding(building, anchor) {
     if (locked() || !building) return false
@@ -134,15 +135,20 @@ export function installMapActionMenu(canvas, { selection, units, commands, handl
     origin = { x: point.x, y: point.y }
     const items = options.map(id => ({
       id, label: labels[id], text: labels[id], customTooltip: true,
-      disabled: id === 'serveUnit' && !selection.some(unit => canServeUnit(unit, targetUnit, gameState.buildings, commands)),
+      disabled: id === 'patrol' && !ownsPerk(owner(), PATROL_PERK_ID) || id === 'serveUnit' && !selection.some(unit => canServeUnit(unit, targetUnit, gameState.buildings, commands)),
+      onDisabledSelect: id === 'patrol' ? () => {
+        close()
+        if (hasLivingCommandCenter(owner())) import('../perks/perkTree.js').then(({ openPerkTree }) => openPerkTree('command', PATROL_PERK_ID))
+        else showNotification('Build a Command Center to unlock Patrol Routes (2 stars)', 2500)
+      } : undefined,
       children: id === 'callSupply' ? Object.keys(SUPPLY_TYPES).map(action => ({
         id: action, label: labels[action], text: labels[action], customTooltip: true,
         disabled: !availableSupply(selection, owner(), { units, buildings: gameState.buildings, commands }, action).length,
         onSelect() { if (!dispatch(action)) showOrderFailure(); close() }
       })) : undefined,
       onSelect() {
-        if (id === 'retreatTo' || id === 'planPath') {
-          const ids = groundSelection(selection, owner()).map(unit => unit.id)
+        if (id === 'retreatTo' || id === 'planPath' || id === 'patrol') {
+          const ids = (id === 'patrol' ? commandableSelection(selection, owner()).filter(patrolUnitAvailable) : groundSelection(selection, owner())).map(unit => unit.id)
           close()
           draft.start(id, ids)
         } else if (id === 'applyAutomationOnArrival') {
@@ -263,6 +269,7 @@ export function installMapActionMenu(canvas, { selection, units, commands, handl
     openMapActionMenu: open,
     closeMapActionMenu: () => { draft.clear(); close() },
     finishMapPath: draft.finish,
+    patrol: point => dispatch('patrol', point),
     forceAttackAt: point => dispatch('forceAttackAt', point),
     defendHoldAt: point => dispatch('defendHoldAt', point),
     applyAutomationOnArrival: point => dispatch('applyAutomationOnArrival', point),

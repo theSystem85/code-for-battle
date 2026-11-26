@@ -133,6 +133,9 @@ migrations[8] = state => ({ ...state })
 // Legacy aircraft already spawned at their destination and have no factory delivery to resume.
 migrations[11] = state => ({ ...state })
 
+// Old saves have no patrol order. Preserve their existing movement and queues.
+migrations[12] = state => ({ ...state, units: Array.isArray(state.units) ? state.units.map(unit => ({ ...unit, patrol: unit.patrol || null })) : state.units })
+
 export function migrateLiveState(state, fromVersion, toVersion) {
   assertSchemaVersion(fromVersion, 'source version')
   assertSchemaVersion(toVersion, 'target version')

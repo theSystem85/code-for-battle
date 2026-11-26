@@ -1,3 +1,7 @@
+import { beginPatrol, patrolUnitAvailable } from '../../game/patrolRoutes.js'
+import { ownsPerk } from '../../perks/perkState.js'
+import { getSimulationTime } from '../../game/time.js'
+import { createReplayUnitReferences, recordReplayCommand } from '../../replaySystem.js'
 import { applyC5Order } from '../../game/c5GalaxySystem.js'
 import { gameState } from '../../gameState.js'
 import { applyUnitAction } from './unitActions.js'
@@ -31,6 +35,7 @@ export function mapActionOptions(selection, owner) {
   const options = []
   if (entities.some(entity => entity.isBuilding || MAP_COMBAT_TYPES.has(entity.type))) options.push('forceAttackAt')
   if (units) options.push('defendHoldAt')
+  if (entities.some(patrolUnitAvailable)) options.push('patrol')
   if (groundSelection(entities, owner).length) options.push(...GROUND_ACTIONS)
   if (entities.some(entity => entity.type === 'c5Galaxy' && !entity.c5Mission && entity.embarkedUnitIds?.length)) options.push('c5Airdrop')
   if (entities.some(entity => entity.type === 'c5Galaxy' && entity.flightState === 'grounded')) options.push('c5Unload')
@@ -42,6 +47,15 @@ export function mapActionOptions(selection, owner) {
 // Called both locally and by the authoritative multiplayer command processor.
 export function applyMapAction(payload, owner, context) {
   const { action, x, y, policyId, entityIds } = payload || {}
+  if (action === 'patrol') {
+    if (!Array.isArray(entityIds) || !ownsPerk(owner, 'cc.unit.do.patrol')) return false
+    const ids = new Set(entityIds)
+    const selected = context.units.filter(unit => ids.has(unit.id) && canCommandPolicy(owner, unit.owner) && patrolUnitAvailable(unit))
+    const accepted = withoutUnitCommandBroadcast(() => beginPatrol(selected, payload.points, { ...context, now: getSimulationTime(gameState) }))
+    if (accepted) recordReplayCommand({ type: 'unit_command', owner, command: 'patrol', unitIds: selected.map(unit => unit.id),
+      unitRefs: createReplayUnitReferences(selected.map(unit => unit.id)), points: payload.points }, { source: 'human' })
+    return accepted
+  }
   if (GROUND_COMMANDS.includes(action) && Array.isArray(entityIds) && Number.isFinite(x) && Number.isFinite(y)) {
     return withoutUnitCommandBroadcast(() => applyGroundAction(payload, owner, context))
   }

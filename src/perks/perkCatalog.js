@@ -12,6 +12,7 @@ const definitions = [
   ['cc.unit.do.service','Logistics Protocols','unit','unit','do',1,0,['cc.unit.start'],[],['requestRefill','goToWorkshop','goToHospital','goToAmmoFactory','serviceNearestFriendly'],[]],
   ['cc.unit.do.combat','Combat Doctrine','unit','unit','do',2,3,['cc.unit.do.service'],[],['attackNearestEnemy','autoAttackInRange','aimNearestEnemy','fireAtLocked','fireForward','turretLeft','turretRight','protectNearestFriendly'],[]],
   ['cc.unit.do.movement','Maneuver Drills','unit','unit','do',3,2,['cc.unit.do.combat'],[],['hold','retreat','moveForward','moveBackward','moveLeft','moveRight','turnLeft','turnRight'],[]],
+  ['cc.unit.do.patrol','Patrol Routes','unit','unit','do',5,2,['cc.unit.start'],[],['patrol'],[]],
   ['cc.unit.do.air','Flight Control','unit','unit','do',4,1,['cc.unit.do.movement'],[],['takeoff','land'],[]],
   ['cc.def.start','Defence Grid Uplink','def','defence','start',0,2,[],[],[]],
   ['cc.def.if.sensing','Perimeter Sensors','def','defence','if',1,0,['cc.def.start'],['distance','enemyVisible','enemyInFireRange','enemyInRange','enemyDistance'],[],[]],
@@ -43,6 +44,10 @@ const definitions = [
 ]
 
 const PERK_TEXTS = Object.freeze({
+  'cc.unit.do.patrol': {
+    summary: 'Unlocks looping patrol routes in unit circle menus and CFBL. Units engage nearby enemies while patrolling.',
+    howTo: 'Plan a patrol from the circle menu, or use patrol(route="10,10;20,10;20,20") in a control-unit automation. A single point adds the current position.'
+  },
   'cc.unit.start': {
     'summary': 'Opens the control-unit automation type: write automations for single units and apply them to your units.',
     'howTo': 'Buy it, then add a "control unit" automation in the Automations panel. Starter combo: if fuel < 20% → go to workshop / request refill.'
@@ -191,7 +196,7 @@ export const PERKS = Object.freeze(definitions.map(([id,name,tree,variant,lane,o
   howTo: conditions.length ? `Use ${conditions[0]} in an IF, WHILE or AFTER condition.` : effects.length ? `Choose ${effects[0]} as a DO action.` : options.length ? `Choose ${options[0][2][0]} for ${options[0][1]}.` : lane === 'capstone' ? 'Earn turret veterancy from combat kills.' : `Create a ${variant} automation from the Command Center.`,
   unlocks: Object.freeze({ conditions: Object.freeze(conditions), effects: Object.freeze(effects), options: Object.freeze(options.map(([effect,param,values]) => Object.freeze({ effect,param,values:Object.freeze(values) }))) }),
   ...(PERK_TEXTS[id] || {}),
-  badge: `images/perks/${id}.webp`, manualAnchor: `perk-${id}`
+  badge: `images/perks/${id === 'cc.unit.do.patrol' ? 'cc.unit.do.movement' : id}.webp`, manualAnchor: `perk-${id}`
 })))
 const byId = new Map([...PERKS, ...RESEARCH_PERK_CATALOG].map(perk => [perk.id, perk]))
 export const getPerk = id => byId.get(id)

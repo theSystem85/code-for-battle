@@ -48,6 +48,11 @@ export class CFBLParser {
         const key = this.expect(remaining().map(param => param.key), 'parameter').value
         const param = meta.params.find(param => param.key === key)
         this.expect('=')
+        if (param.type === 'route') {
+          if (this.token.type !== 'string') this.expect(['"10,10;20,10"'], 'route')
+          params[key] = JSON.parse(this.tokens[this.position++].value)
+          continue
+        }
         params[key] = param.options ? this.expect(param.options.map(option => option.value), 'enum').value : this.number(param)
       } while (this.take(','))
       this.expect(')')

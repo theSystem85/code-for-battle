@@ -67,7 +67,7 @@ describe('map long press controller', () => {
 describe('map action selection and dispatch', () => {
   beforeEach(() => resetPolicyStore())
   it('[U02499] filters ownership and building capabilities', () => {
-    expect(mapActionOptions([tank()], 'player1')).toEqual(['forceAttackAt', 'defendHoldAt', 'retreatTo', 'retreatToBase', 'planPath', 'callSupply'])
+    expect(mapActionOptions([tank()], 'player1')).toEqual(['forceAttackAt', 'defendHoldAt', 'patrol', 'retreatTo', 'retreatToBase', 'planPath', 'callSupply'])
     expect(mapActionOptions([turret()], 'player1')).toEqual(['forceAttackAt', 'holdFire', 'clearTarget'])
     expect(mapActionOptions([{ ...tank(), owner: 'player2' }, { ...turret(), type: 'powerPlant' }], 'player1')).toEqual([])
     expect(mapActionOptions([tank(), turret()], 'player1')).toContain('defendHoldAt')
@@ -77,7 +77,7 @@ describe('map action selection and dispatch', () => {
     const entries = [entry('yes'), entry('base', 'build'), entry('defence', 'defence'), entry('global', 'unit', 'global'), entry('foreign', 'unit', 'perUnit', 'player2')]
     expect(applicableAutomations([tank(), turret()], 'player1', entries).map(entry => entry.policy.id)).toEqual(['yes'])
     expect(applicableAutomations([turret()], 'player1', entries)).toEqual([])
-    expect(applicableAutomations([{ ...tank(), type: 'harvester' }], 'player1', entries)).toEqual([])
+    expect(applicableAutomations([{ ...tank(), type: 'powerPlant', isBuilding: true }], 'player1', entries)).toEqual([])
   })
   function context() {
     const unit = tank()

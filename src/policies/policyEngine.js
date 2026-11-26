@@ -1,3 +1,4 @@
+import { cancelPatrol } from '../game/patrolRoutes.js'
 import { updateMapArrival } from './mapArrivalOrders.js'
 // Unit policy engine: runs policy state machines for units and decides how a
 // policy interacts with direct orders.
@@ -55,7 +56,9 @@ export const RETREAT_ARRIVAL_TILES = 3
 /** Units that can carry policies: combat vehicles, helicopters/F-35 and service units. */
 export const PROGRAMMABLE_UNIT_TYPES = Object.freeze(new Set([
   'tank', 'tank_v1', 'tank-v2', 'tank-v3', 'lightTank', 'rocketTank', 'howitzer',
-  'apache', 'f35', 'ambulance', 'tankerTruck', 'ammunitionTruck', 'recoveryTank'
+  'apache', 'f22Raptor', 'f35', 'c5Galaxy', 'ambulance', 'tankerTruck', 'ammunitionTruck', 'recoveryTank',
+  'harvester', 'fireEngine', 'mineLayer', 'mineSweeper', 'destroyer', 'battleship', 'submarine',
+  'aircraftCarrier', 'supplyShip', 'hovercraft', 'vehicleFerry', 'navalMineLayer'
 ]))
 
 export function isProgrammableUnit(unit) {
@@ -105,6 +108,7 @@ export function noteDirectOrder(units, now = getSimulationTime(gameState)) {
   for (let i = 0; i < units.length; i++) {
     const unit = units[i]
     if (!unit) continue
+    if (unit.patrol) cancelPatrol(unit)
     unit.mapArrivalAction = null
     if (unit.mapHoldPosition) {
       unit.mapHoldPosition = null
@@ -165,7 +169,7 @@ export function isUnitIdle(unit, orderTarget = null, strict = true) {
   if (unit.path && unit.path.length > 0) return false
   if (unit.attackQueue && unit.attackQueue.length > 0) return false
   if (unit.commandQueue && unit.commandQueue.length > 0) return false
-  if (unit.currentCommand || unit.isRetreating) return false
+  if (unit.currentCommand || unit.isRetreating || unit.patrol) return false
   return !hasLiveTarget(unit, orderTarget, strict)
 }
 
@@ -254,6 +258,7 @@ export function findRetreatTile(unit, buildings, mapGrid) {
 const effectArgs = { target: null, tiles: undefined, resource: undefined, tileX: 0, tileY: 0 }
 
 function resetArgs() {
+  effectArgs.route = undefined
   effectArgs.target = null
   effectArgs.tiles = undefined
   effectArgs.resource = undefined
@@ -278,6 +283,9 @@ export function applyPolicyEffect(unit, effect, context) {
   const params = effect.params || effect
   const args = resetArgs()
   switch (effect.type) {
+    case 'patrol':
+      args.route = params.route
+      break
     case 'retreat': {
       const bases = context.factories && context.factories.length ? context.buildings.concat(context.factories) : context.buildings
       const tile = findRetreatTile(unit, bases, context.mapGrid)

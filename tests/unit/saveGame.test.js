@@ -299,6 +299,24 @@ describe('saveGame.js', () => {
     localStorage.clear()
   })
 
+  it('[U07393] round trips patrol routes, departure timing and formation offsets', async() => {
+    const { units, factories } = await import('../../src/main.js')
+    const { gameState } = await import('../../src/gameState.js')
+    const originalBuildings = gameState.buildings
+    const yard = { id: 'player1', type: 'constructionYard', owner: 'player1', isBuilding: true, x: 0, y: 0, width: 3, height: 3, health: 350, maxHealth: 350 }
+    factories.push(yard)
+    gameState.buildings = [yard]
+    const patrol = { points: [{ x: 144, y: 144 }, { x: 240, y: 144 }], index: 1, startAt: 5000, groupId: 'formation-one', moving: true, nextScanAt: 1500, retryAt: 2000 }
+    const offset = { x: -16, y: 16 }
+    try {
+      units.push({ id: 'patrol-save', type: 'tank_v1', owner: 'player1', x: 128, y: 128, health: 100, maxHealth: 100, path: [], patrol, formationActive: true, groupNumber: 1, formationOffset: offset })
+      saveGameModule.saveGame('PatrolRoundTrip')
+      units.length = 0
+      saveGameModule.loadGame('rts_save_PatrolRoundTrip')
+      expect(units.find(unit => unit.id === 'patrol-save')).toMatchObject({ patrol, formationActive: true, groupNumber: 1, formationOffset: offset })
+    } finally { gameState.buildings = originalBuildings }
+  })
+
   it('[U07174] round trips burning tile timers, water, station assignment, route timing and fire wind', async() => {
     const { gameState } = await import('../../src/gameState.js')
     const { mapGrid, units, factories } = await import('../../src/main.js')

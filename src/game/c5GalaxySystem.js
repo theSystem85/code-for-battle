@@ -69,6 +69,12 @@ function findHome(galaxy, buildings) {
 
 export function startC5Mission(galaxy, target, tick, options = {}) {
   const { mapGrid, buildings = [], drop = true } = options
+  if (galaxy.health > 0 && !galaxy.aircraftDelivery && galaxy.patrol && galaxy.c5Mission?.drop === false && drop === false && mapGrid?.[target?.y]?.[target?.x]) {
+    galaxy.c5Mission.target = { ...target }
+    galaxy.c5Mission.phase = 'outbound'
+    galaxy.c5Mission.path = null
+    return true
+  }
   if (galaxy.health <= 0 || galaxy.aircraftDelivery || galaxy.c5Mission || !Number.isInteger(target?.x) || !Number.isInteger(target?.y)) return false
   if (mapGrid && (!mapGrid[target.y]?.[target.x] || (drop && terrainAt(mapGrid, target.x, target.y) === 'water'))) return false
   if (drop && !galaxy.embarkedUnitIds?.length) return false
@@ -231,7 +237,7 @@ function finishOutbound(galaxy, mission, grid, tick) {
     beginC5Airdrop(galaxy, mission.target, tick)
     mission.phase = 'dropping'
   } else {
-    mission.phase = 'return'
+    mission.phase = galaxy.patrol ? 'patrolHold' : 'return'
   }
   mission.path = null
 }

@@ -680,6 +680,9 @@ function buildSaveObject(label, { includeMap = true, includeStaticConfiguration 
       path: u.path || [],
       commandQueue: Array.isArray(u.commandQueue) ? u.commandQueue.map(serializeUnitCommand) : [],
       currentCommand: serializeUnitCommand(u.currentCommand),
+      patrol: u.patrol ? globalThis.structuredClone(u.patrol) : null,
+      formationActive: Boolean(u.formationActive),
+      formationOffset: u.formationOffset ? { ...u.formationOffset } : null,
       // Save target as ID only to avoid circular references
       targetId: u.target?.id || null,
       guardTargetIds: u.guardTargets?.map(target => target.id) || (u.guardTarget ? [u.guardTarget.id] : []),

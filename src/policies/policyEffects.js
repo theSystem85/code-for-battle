@@ -1,3 +1,4 @@
+import { parsePatrolRoute } from '../utils/patrolRoute.js'
 // Effect vocabulary for unit policies: pure data, no game imports.
 //
 // A state's `effect` is { type, ...params }. The engine turns every effect into
@@ -84,6 +85,9 @@ export const EFFECTS = Object.freeze({
   turretRight: { variants: ['unit', 'defence'], group: 'combat', label: 'Turn turret right', command: 'turretRight', repeat: 'tick' },
   protectNearestFriendly: { group: 'combat', label: 'Protect nearest friendly unit', command: 'protect', repeat: 'idle' },
   hold: { group: 'movement', label: 'Hold position', command: 'stop', repeat: 'idle' },
+  patrol: { group: 'movement', label: 'Patrol route', command: 'patrol', repeat: 'idle', params: [
+    { key: 'route', label: 'route (tile x,y; x,y)', type: 'route', default: '10,10;20,10', validate: value => Boolean(parsePatrolRoute(value)) }
+  ] },
   retreat: { group: 'movement', label: 'Retreat to base', command: 'retreatTo', repeat: 'idle' },
   moveForward: { group: 'movement', label: 'Move forwards', command: 'moveForward', repeat: 'idle', params: [TILES_PARAM] },
   moveBackward: { group: 'movement', label: 'Move backwards', command: 'moveBackward', repeat: 'idle', params: [TILES_PARAM] },
@@ -196,7 +200,9 @@ export function validateEffectParams(effect, variant = EFFECTS[effect.type]?.var
   ;(meta.params || []).forEach(param => {
     const value = effect[param.key]
     if (value === undefined) return
-    if (param.options) {
+    if (param.type === 'route') {
+      if (!param.validate(value)) problems.push('Patrol route needs one to 256 tile coordinate pairs, separated by semicolons.')
+    } else if (param.options) {
       if (!param.options.some(option => option.value === value)) {
         problems.push(`"${value}" is not valid for "${meta.label}".`)
       }

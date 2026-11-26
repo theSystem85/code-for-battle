@@ -537,6 +537,9 @@ export function createGameStateSnapshot({ fullAutomation = false } = {}) {
     attackTarget: unit.attackTarget ? { id: unit.attackTarget.id } : null,
     guardPosition: unit.guardPosition,
     guardOrderMode: unit.guardOrderMode,
+    patrol: unit.patrol || null,
+    formationActive: unit.formationActive,
+    formationOffset: unit.formationOffset,
     mapHoldPosition: unit.mapHoldPosition,
     mapArrivalAction: unit.mapArrivalAction,
     // Leveling/experience state

@@ -1,3 +1,4 @@
+import { updatePatrols } from './game/patrolRoutes.js'
 import { COMMAND_TYPES as C5_COMMAND_TYPES } from './network/commandTypes.js'
 import { AIRCRAFT_TYPES, findGalaxySpawnTile, isOperationalPlaneFactory } from './production/aircraftProduction.js'
 import { updateAircraftDeliveries } from './game/aircraftDelivery.js'
@@ -59,7 +60,7 @@ import { updateMines } from './game/mineSystem.js'
 import { updateC5GalaxySystem } from './game/c5GalaxySystem.js'
 import { updateMineLayerBehavior } from './game/mineLayerBehavior.js'
 import { updateMineSweeperBehavior } from './game/mineSweeperBehavior.js'
-import { setBattleshipTarget, updateNavalFleet } from './game/navalFleetSystem.js'
+import { commandCarrierStrike, setBattleshipTarget, updateNavalFleet } from './game/navalFleetSystem.js'
 import { cancelTransportOperations } from './game/transportOperationCancellation.js'
 import { clearBattleshipFireControl } from './game/battleshipTurrets.js'
 import { updateBuildings, updateTeslaCoilEffects } from './game/buildingSystem.js'
@@ -117,6 +118,16 @@ const factoryExitFindPath = (...args) => findFactoryExitPath(...args)
 const factoryExitCompleted = (unit, state) => { if (state.delivery) applyUnitBuildDelivery(unit, state.delivery) }
 const EMPTY_BUILDINGS = []
 const policyContext = installPolicyGameBindings({ units: null, mapGrid: null, buildings: EMPTY_BUILDINGS, factories: EMPTY_BUILDINGS, commands: null, bullets: null, now: 0 })
+policyContext.onPatrolTarget = (unit, target, wing) => {
+  if (unit.type === 'battleship') setBattleshipTarget(unit, target)
+  if (unit.type === 'aircraftCarrier' && wing.length) {
+    // The wing index is prepared once per patrol pass. Include the target so the
+    // existing strike helper resolves it locally without a world-wide lookup.
+    wing.push(target)
+    try { commandCarrierStrike(unit, target, wing, false, policyContext.now) } finally { wing.pop() }
+  }
+}
+
 const basePolicyContext = installBasePolicyGameBindings({ owner: null, units: null, mapGrid: null, buildings: EMPTY_BUILDINGS, factories: EMPTY_BUILDINGS })
 const unitBuildDeliveryContext = { game: null }
 
@@ -577,6 +588,7 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
       policyContext.commands = unitCommands
       policyContext.bullets = bullets
       updateUnitPolicies(units, policyContext, now)
+      updatePatrols(units, policyContext, now)
 
       // Apply remote control inputs for selected tanks
       updateRemoteControlledUnits(units, bullets, mapGrid, occupancyMap)

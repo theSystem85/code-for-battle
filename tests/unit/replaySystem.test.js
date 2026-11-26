@@ -88,3 +88,19 @@ it('[U07379] waits for the first planned route leg before replaying queued legs'
     expect(unit.commandQueue).toEqual([{ type: 'move', x: 200, y: 100 }])
   } finally { window.unitCommandsHandler = previousHandler }
 })
+
+it('[U07392] replays a patrol command with its full route and deterministic departure time', () => {
+  const units = [{ id: 'patrol-replay', type: 'tank_v1', owner: 'player1', health: 100, x: 32, y: 32 }]
+  const previous = window.unitCommandsHandler
+  window.unitCommandsHandler = { handleMovementCommand: vi.fn() }
+  Object.assign(gameState, { simulationTime: 2000, gamePaused: false, replayMode: true, units,
+    mapGrid: Array.from({ length: 12 }, () => Array.from({ length: 12 }, () => ({ type: 'land' }))),
+    replay: { playbackActive: true, playbackStartedAt: 0, playbackCursor: 0, playbackCommands: [
+      { at: 0, command: { type: 'unit_command', command: 'patrol', owner: 'player1', unitIds: [units[0].id], points: [{ x: 144, y: 144 }, { x: 240, y: 144 }] } }
+    ] }
+  })
+  try {
+    updateReplayPlayback()
+    expect(units[0].patrol).toMatchObject({ index: 0, startAt: 2000, points: [{ x: 144, y: 144 }, { x: 240, y: 144 }] })
+  } finally { window.unitCommandsHandler = previous }
+})

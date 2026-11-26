@@ -178,8 +178,22 @@ function renderCommandTree(canvas, ledger) {
   canvas.appendChild(cap)
 }
 
-export function openPerkTree(tree = 'command') {
-  if (overlay && activeTree === tree) return overlay
+function focusPerk(perkId) {
+  if (!perkId || !overlay) return
+  const button = overlay.querySelector(`[data-perk-id="${perkId}"]`)
+  if (!button) return
+  const viewport = overlay.querySelector('.perk-tree__viewport')
+  const box = button.getBoundingClientRect()
+  const view = viewport.getBoundingClientRect()
+  cleanupPan.panBy(view.left + view.width / 2 - box.left - box.width / 2, view.top + view.height / 2 - box.top - box.height / 2)
+  if (openTooltip) openTooltip.classList.remove('show-tooltip')
+  button.classList.add('show-tooltip')
+  openTooltip = button
+  button.focus({ preventScroll: true })
+}
+
+export function openPerkTree(tree = 'command', perkId = null) {
+  if (overlay && activeTree === tree) { focusPerk(perkId); return overlay }
   if (overlay) closePerkTree()
   activeTree = tree
   const research = tree === 'research'
@@ -212,6 +226,7 @@ export function openPerkTree(tree = 'command') {
   if (pauseWasRunning) gameState.gamePaused = true
   render()
   viewport.focus()
+  focusPerk(perkId)
   return overlay
 }
 

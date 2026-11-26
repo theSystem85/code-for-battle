@@ -1,3 +1,4 @@
+import { beginPatrol } from './game/patrolRoutes.js'
 import { sellUnitAtWorkshop } from './game/sellUnitAtWorkshop.js'
 import { applyPerkPurchase } from './perks/perkState.js'
 import { COMMAND_TYPES } from './network/commandTypes.js'
@@ -628,6 +629,8 @@ function executeReplayUnitCommand(command) {
   }
 
   switch (command.command) {
+    case 'patrol':
+      return beginPatrol(selectedUnits, command.points, { commands: handler, mapGrid, now: getNowMs() })
     case 'move':
       if (command.queueAppend) {
         if (!command.targetPos) return false

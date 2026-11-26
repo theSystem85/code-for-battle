@@ -14,6 +14,7 @@ import { hasBlockingBuilding } from '../../utils/buildingPassability.js'
 import { getBuildingIdentifier } from '../../utils.js'
 import { interruptHarvesterAutomation } from '../../game/harvesterLogic.js'
 import { createCommandPathOptions } from './commandPathOptions.js'
+import { startC5Mission } from '../../game/c5GalaxySystem.js'
 
 export function handleMovementCommand(handler, selectedUnits, targetX, targetY, mapGrid, skipQueueClear = false) {
   const now = performance.now()
@@ -127,7 +128,8 @@ export function handleMovementCommand(handler, selectedUnits, targetX, targetY, 
     }
 
     if (unit.type === 'c5Galaxy') {
-      dispatchC5Command(COMMAND_TYPES.C5_MOVE, { galaxyId: unit.id, target: destTile }, gameState.units, mapGrid)
+      if (unit.patrol) startC5Mission(unit, destTile, gameState.frameCount || 0, { mapGrid, buildings: gameState.buildings, drop: false })
+      else dispatchC5Command(COMMAND_TYPES.C5_MOVE, { galaxyId: unit.id, target: destTile }, gameState.units, mapGrid)
       return
     }
 

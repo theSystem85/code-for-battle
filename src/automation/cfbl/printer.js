@@ -16,7 +16,7 @@ export function decimal(value) {
 }
 export function printCFBL(ast) {
   const catalog = getCatalog(ast.variant)
-  const call = (name, node, meta) => `${name}(${(meta?.params || []).map(param => `${param.key}=${typeof (node[param.key] ?? param.default) === 'number' ? decimal(node[param.key] ?? param.default) : node[param.key] ?? param.default}`).join(',')})`
+  const call = (name, node, meta) => `${name}(${(meta?.params || []).map(param => `${param.key}=${param.type === 'route' ? JSON.stringify(node[param.key] ?? param.default) : typeof (node[param.key] ?? param.default) === 'number' ? decimal(node[param.key] ?? param.default) : node[param.key] ?? param.default}`).join(',')})`
   function condition(node) {
     if (node.type === 'not') return `not (${condition(node.of)})`
     if (node.type === 'and' || node.type === 'or') return `(${node.of.map(condition).join(` ${node.type} `)})`

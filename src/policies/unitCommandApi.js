@@ -1,3 +1,5 @@
+import { beginPatrol, cancelPatrol, parsePatrolRoute, validPatrolPoints } from '../game/patrolRoutes.js'
+import { ownsPerk } from '../perks/perkState.js'
 // Unit command API: the one internal way policy code gives a unit an order.
 //
 // executeUnitCommand(name, unit, args, ctx) runs a command only when the engine
@@ -38,6 +40,7 @@ export const DEFAULT_MOVE_TILES = 2
 const MODES = Object.freeze({ heal: 'heal', refuel: 'refuel', repair: 'repair', ammo: 'ammoResupply' })
 const JET_TYPES = new Set(['f22Raptor', 'f35'])
 const FIRING_TANK_TYPES = TURRET_TANK_TYPES
+const PATROL_REPLACEMENT_COMMANDS = new Set(['stop', 'attackAndChase', 'retreatTo', 'moveForward', 'moveBackward', 'moveSidewaysLeft', 'moveSidewaysRight', 'goToWorkshop', 'goToHospital', 'goToAmmoFactory', 'serviceTarget', 'protect', 'takeoff', 'land'])
 const NAVAL_HOLD_WEAPON_TYPES = new Set(['destroyer', 'battleship', 'submarine'])
 
 function normalizeAngle(angle) {
@@ -343,6 +346,21 @@ function groundFlightRefusal(unit, wantGrounded) {
 }
 
 const COMMANDS = {
+  patrol: {
+    check(unit, args, ctx) {
+      const base = mobilityRefusal(unit)
+      if (base && base !== 'the aircraft is on the ground') return base
+      if (!ownsPerk(unit.owner, 'cc.unit.do.patrol')) return 'Patrol Routes is locked'
+      if (!ctx.commands?.handleMovementCommand) return 'no command handler is available'
+      return validPatrolPoints(unit, parsePatrolRoute(args.route), ctx.mapGrid) ? null : 'the patrol route is invalid or blocked'
+    },
+    run(unit, args, ctx) {
+      if (unit.patrol?.sourceRoute === args.route) return false
+      const accepted = beginPatrol([unit], parsePatrolRoute(args.route), ctx)
+      if (accepted) unit.patrol.sourceRoute = args.route
+      return accepted
+    }
+  },
   moveForward: moveCommand(0, false),
   moveBackward: moveCommand(Math.PI, false),
   moveSidewaysLeft: moveCommand(-Math.PI / 2, true),
@@ -638,6 +656,7 @@ export function executeUnitCommand(name, unit, args = NO_ARGS, ctx = EMPTY_CTX) 
   }
   if (ctx.captureCompletionObjective) ctx.completionObjective = completionObjective(name, unit, safeArgs, ctx)
   const accepted = runAsPolicy(() => command.run(unit, safeArgs, ctx)) === true
+  if (accepted && unit.patrol && PATROL_REPLACEMENT_COMMANDS.has(name)) cancelPatrol(unit)
   if (accepted) recordAutomationUnitCommand(name, unit, safeArgs)
   return accepted
 }

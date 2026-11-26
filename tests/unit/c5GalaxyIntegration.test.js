@@ -6,6 +6,21 @@ import { TILE_SIZE, UNIT_PROPERTIES } from '../../src/config.js'
 import { ensureAirstripOperations, setC5ParkingOccupant } from '../../src/utils/airstripUtils.js'
 
 describe('C-5 real simulation wiring', () => {
+  it('[U07391] retargets a patrol transport in flight without returning to base between legs', () => {
+    const galaxy = { id: 'c5-patrol', type: 'c5Galaxy', health: 300, x: 100, y: 100, flightState: 'airborne', altitude: 100, patrol: { index: 0 } }
+    const mapGrid = Array.from({ length: 40 }, () => Array.from({ length: 40 }, () => ({ type: 'land' })))
+    expect(startC5Mission(galaxy, { x: 20, y: 20 }, 0, { mapGrid, drop: false })).toBe(true)
+    const mission = galaxy.c5Mission
+    expect(startC5Mission(galaxy, { x: 25, y: 15 }, 1, { mapGrid, drop: false })).toBe(true)
+    expect(galaxy.c5Mission).toBe(mission)
+    expect(mission).toMatchObject({ phase: 'outbound', target: { x: 25, y: 15 }, path: null, drop: false })
+    const state = { buildings: [], occupancyMap: mapGrid.map(row => row.map(() => 0)) }
+    for (let tick = 0; tick < 10000 && mission.phase === 'outbound'; tick++) updateC5GalaxySystem([galaxy], mapGrid, state, tick)
+    expect(mission.phase).toBe('patrolHold')
+    expect(galaxy.flightState).toBe('airborne')
+    galaxy.health = 0
+    expect(startC5Mission(galaxy, { x: 20, y: 20 }, 2, { mapGrid, drop: false })).toBe(false)
+  })
   it('[U07315] runs a full mission: taxi, takeoff, outbound, airdrop, return, landing, parking, and cargo loss on destruction', () => {
     const airstrip = { id: 'strip', type: 'airstrip', x: 2, y: 2, width: 12, height: 6 }
     ensureAirstripOperations(airstrip)

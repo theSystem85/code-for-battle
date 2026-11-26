@@ -354,6 +354,11 @@ export function openPolicyEditor(options = {}) {
     if (!meta) return []
     const controls = (meta.params || []).map(param => {
       const value = state.effect[param.key] !== undefined ? state.effect[param.key] : param.default
+      if (param.type === 'route') return h('input', {
+        class: 'policy-field__control policy-state__param', type: 'text', value,
+        'aria-label': `State ${index + 1} ${param.label}`,
+        onChange: e => { if (param.validate(e.target.value)) { state.effect[param.key] = e.target.value; render() } }
+      })
       if (param.options) {
         return h('select', {
           class: 'policy-field__control policy-state__param',

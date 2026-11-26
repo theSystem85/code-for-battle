@@ -61,7 +61,7 @@ describe('CFBL language v1', () => {
         if (kind === 'fields') continue
         for (const [name, meta] of Object.entries(entries)) {
           const calls = [`${name}()`]
-          for (const param of meta.params) for (const value of param.options?.map(option => option.value) || [param.min, param.max]) calls.push(`${name}(${param.key}=${value})`)
+          for (const param of meta.params) for (const value of (param.type === 'route' ? [JSON.stringify(param.default)] : param.options?.map(option => option.value) || [param.min, param.max])) calls.push(`${name}(${param.key}=${value})`)
           for (const call of calls) parse(program(kind === 'checks' ? call : 'always', kind === 'effects' ? call : 'wait', category))
         }
       }
