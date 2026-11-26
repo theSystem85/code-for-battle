@@ -1,0 +1,3 @@
+- [x] **Backlog completion evidence**
+  - Close verified backlog items with implementation commits and historic build versions, and record partial progress where acceptance is still open.
+  - Spec: none

@@ -23,19 +23,10 @@ When a spec exists, replace `Spec: none` with a relative link such as `[Title](.
 
 ## Rendering and WebGPU
 
-- [ ] **When the game is paused, rotating the screen should trigger a fresh** — map render so the canvas is drawn in the new orientation.
-  - Spec: [Paused Rotation Render Refresh](../specs/024-paused-rotation-render/spec.md)
-
 ## Units and Combat
-
-- [ ] **Defense turrets should not fire through buildings; block shots when line of** — sight is obstructed for player and AI turrets.
-  - Spec: none
 
 - [ ] **Rocket tanks should advance into range and fire through obstacles; attack cursor** — should show out-of-range targets for all units.
   - Spec: [Combat System Enhancements](../specs/006-combat-system-enhancements/spec.md)
-
-- [ ] **Tanks must respect building line-of-sight** — blocked shots should prevent firing for both player and AI and trigger repositioning until clear.
-  - Spec: none
 
 ## Air and Jets
 
@@ -56,11 +47,12 @@ When a spec exists, replace `Spec: none` with a relative link such as `[Title](.
 
 ## Economy and Buildings
 
-- [x] **Enemy base power display shows NaN when selecting an enemy construction yard; ensure it shows the correct power value.**
-  - Spec: none
-
 - [ ] **ensure when using drag and drop on the mobile build buttons that** — the unit or building info tooltip does not pop up. Only show it when the user hold the button but not when is pressed and then the finger is moved. It can pop up when the button is hold but as soon as the finger is moved by about half the size of the button the tooltip should go away again.
   - Spec: [Mobile Portrait Sidebar Expand Button](../specs/022-mobile-portrait-sidebar-expand-button.md)
+  - Status: Tooltip dismissal while dragging landed in [49e144fb](https://github.com/theSystem85/code-for-battle/commit/49e144fbaf1dd24aeeaadf660eb12b6f38c44e2e) (build v0.19.0). That change uses an 8 px threshold. The requested half-button threshold remains unverified.
+
+- [x] **Enemy base power display shows NaN when selecting an enemy construction yard; ensure it shows the correct power value.**
+  - Spec: none
 
 ## AI
 
@@ -114,6 +106,10 @@ When a spec exists, replace `Spec: none` with a relative link such as `[Title](.
 Completed entries stay here so the detail is not dropped. Do not add new work in this section.
 
 ### Rendering and WebGPU
+
+- [x] **When the game is paused, rotating the screen should trigger a fresh** — map render so the canvas is drawn in the new orientation.
+  - Spec: [Paused Rotation Render Refresh](../specs/024-paused-rotation-render/spec.md)
+  - Completed 2026-01-26 (commit date) · Commit: [7a41da06](https://github.com/theSystem85/code-for-battle/commit/7a41da06076914b3d944f3b11c73e6f17a60971e) · Version: v0.14.1 (build)
 
 - [x] **Settings and FPS widget disagreed about WebGPU (2026-09-25)** — After a successful probe, settings said "Using WebGPU." whenever the sticky active flag was not WebGL, including while every terrain frame still drew with WebGL. The default water-only path has no sprite-sheet image, so texture sync returned false after a validation scope was already open and WebGPU never retried. Both read the latest drawn frame now. A handoff records not ready, validation pending, texture sync failed, no instances, restore, or the init failure, shows that reason on the widget's renderer row, and logs it once per change with a `[WebGPU]` prefix. Water-only frames bind a 1×1 placeholder atlas until a real sprite sheet exists.
   - Spec: [GPU Terrain and Sprite Rendering](../specs/014-webgl-rendering-upgrade/spec.md)
@@ -320,6 +316,14 @@ Completed entries stay here so the detail is not dropped. Do not add new work in
   - Spec: none
 
 ### Units and Combat
+
+- [x] **Tanks must respect building line-of-sight** — blocked shots should prevent firing for both player and AI and trigger repositioning until clear.
+  - Spec: none
+  - Completed 2025-12-16 (commit date) · Commit: [034abd9a](https://github.com/theSystem85/code-for-battle/commit/034abd9a00e7ae5b9da8be20e1bf198e9050d805) · Version: v0.13.0 (build)
+
+- [x] **Defense turrets should not fire through buildings; block shots when line of** — sight is obstructed for player and AI turrets.
+  - Spec: none
+  - Completed 2026-02-01 (commit date) · Commit: [6383ad29](https://github.com/theSystem85/code-for-battle/commit/6383ad294dfcccdf2f5cd09074ce7aaf8ac64e15) · Version: v0.15.0 (build)
 
 - [x] **Enemy tank target-without-firing LOS stall follow-up (2026-04-14)** — the prior `allowedToAttack` fix was necessary but not sufficient. Tanks could still target enemies, move into nominal range, fail `hasClearShot()`, and then stand still forever because `findPositionWithClearShot()` assigned a sidestep path that `handleTankMovement()` immediately cleared again just because the unit was already within firing range. Tank combat now only auto-stops on range when there is already a clear shot, so blocked in-range tanks keep their reposition path and sidestep into a firing lane.
   - Spec: [Combat System Enhancements](../specs/006-combat-system-enhancements/spec.md)

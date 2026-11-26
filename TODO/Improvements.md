@@ -78,6 +78,7 @@ When a spec exists, replace `Spec: none` with a relative link such as `[Title](.
 
 - [ ] **Expand the sell buildings function so that also unit can be sold** — when they are in the repair workshop and fully repaired and the player clicks on them while in repair mode. When in repair mode and the user hovers over a unit that does not fulfill these conditions show the selling_blocked cursor instead of the sell cursor.
   - Spec: none
+  - Status: Unit sales near a workshop for fully repaired units landed in [bb2fa205](https://github.com/theSystem85/code-for-battle/commit/bb2fa2053fdd2b024a74aed86e0935077f4e757f) (build v0.102.95). The original location, mode, and blocked-cursor requirements remain to be checked.
 
 - [ ] **Enable symmetrical supply interactions** — supply vehicles should travel to the requesting units (not vice versa), dragging a box with any selected service unit queues every serviceable unit inside (ammo truck, ambulance, tanker, recovery), show move-into cursor, and queue requests LIFO when the provider is busy.
   - [ ] Deterministic lockstep visuals: ensure multiplayer clients render explosion animations correctly, remote building construction plays its full animation instead of popping in, and building smoke only starts after the build animation completes.
@@ -120,16 +121,10 @@ When a spec exists, replace `Spec: none` with a relative link such as `[Title](.
 - [ ] **In non-PWA portrait condensed mode, dock the money/energy bars to the right** — of the build bar after the toggle, with vertical fill and rotated labels that do not increase sidebar height.
   - Spec: [Mobile Portrait Sidebar Toggle](../specs/010-mobile-portrait-sidebar-toggle/spec.md)
 
-- [ ] **Persist mobile portrait sidebar expanded/collapsed/condensed preference across reloads and default to condensed** — on first load.
-  - Spec: [Mobile Portrait Sidebar Toggle](../specs/010-mobile-portrait-sidebar-toggle/spec.md)
-
 - [x] **Disable the Buildings tab when the construction yard is destroyed and auto-switch** — to the Units tab if a vehicle factory remains available.
   - Spec: none
 
 ## Missions and Campaign
-
-- [ ] **Ensure tutorial voice narration also reads the hint/subtext guidance for each step.**
-  - Spec: [Tutorial System](../specs/021-tutorial-system.md)
 
 ## Performance
 
@@ -867,6 +862,10 @@ Completed entries stay here so the detail is not dropped. Do not add new work in
 
 ### UI, Sidebar, and Settings
 
+- [x] **Persist mobile portrait sidebar expanded/collapsed/condensed preference across reloads and default to condensed** — on first load.
+  - Spec: [Mobile Portrait Sidebar Toggle](../specs/010-mobile-portrait-sidebar-toggle/spec.md)
+  - Completed 2026-02-02 (commit date) · Commit: [2951286a](https://github.com/theSystem85/code-for-battle/commit/2951286ae6b3d87dede66a1ec5c316f012bc9a0e) · Version: v0.16.2 (build)
+
 - [x] **Single sidebar online/offline toggle (2026-09-27)** — remove the map pill and the second sidebar chip. One gamepad-style button stays at the top of the sidebar in both states, with a body-level cache tooltip and no native `title`.
   - Spec: [Offline mode](../specs/095-offline-mode.md)
 
@@ -1017,6 +1016,10 @@ Completed entries stay here so the detail is not dropped. Do not add new work in
   - Spec: none
 
 ### Missions and Campaign
+
+- [x] **Ensure tutorial voice narration also reads the hint/subtext guidance for each step.**
+  - Spec: [Tutorial System](../specs/021-tutorial-system.md)
+  - Completed 2026-01-26 (commit date) · Commit: [ab04bb96](https://github.com/theSystem85/code-for-battle/commit/ab04bb961b713cee159f70706132869a1a35007a) · Version: v0.14.1 (build)
 
 - [x] **Refine sidebar floating-label inputs to stay compact at 40px height with solid** — brightened backgrounds, no borders/gradients, tutorial-green labels, and desktop-only styled number spinners.
   - Spec: [Sidebar Floating Label Inputs](../specs/050-sidebar-floating-label-inputs.md)

@@ -62,6 +62,7 @@ When a spec exists, replace `Spec: none` with a relative link such as `[Title](.
 - [ ] **Wrecks and recovery/recycling** — Ensure the units when destroyed do not just vanish from the map but their left overs keep lying on the map. The left overs should look totally color desaturated and slightly noisy to indicated dirt and damage (cache those desaturated images and reuse them). Any (also the ones from the enemy) left over unit can be pulled by a recovery tank to the base when player has the recovery tank selected and clicks on the tank. The the recovery tank will drive to the target then mount (indicated by a 2px black string that connects both units) and then automatically drive to the workshop where it unmounts and the unit gets fully restored but without crew.
   - 2nd option is that the user has the recovery tank selected and clicks on the left over unit while holding shift key. Then the leftover unit get recycled completely (vanishes from the map) but the owner of the recovery tank gets 33% of the value of the unit added to his budget (like a harvesting of resources). This process takes about as long as it took the unit to build. Show blue progress bar on the recovery tank while this mode is active.
   - Spec: none
+  - Status: Wreck persistence and salvage landed in [424f9f5a](https://github.com/theSystem85/code-for-battle/commit/424f9f5a7db029e5c960a0b8040f6cd1bb8cdd60) (build v0.1.1), with workshop restoration changes in [44fd77b8](https://github.com/theSystem85/code-for-battle/commit/44fd77b80faf5812f30475b35ace5db96b7f27fa) (build v0.2.0). Check the original visuals, towing, and restoration requirements before closing.
 
 - [x] **Add permanent per-tile decals for combat events:**
   - `impact` decal when unit-fired shots impact a tile/target tile.
@@ -74,14 +75,13 @@ When a spec exists, replace `Spec: none` with a relative link such as `[Title](.
 
 ## Air and Jets
 
-- [ ] **F22 combat follow-up (2026-03-20)** — only fire rockets while targets remain inside the active firing window, and hard-cap effective F22 firing range at 20 tiles including bonuses.
-  - Spec: [F22 Raptor Consolidated Requirements (Non-Street)](../specs/021-f22-raptor-unit.md)
-
 - [ ] **Add F35 stealth strike fighter unit with generated sidebar/map assets, VTOL landing** — on helipads/airstrip parking/empty ground, JDAM multi-target AGF bombing, radar stealth, F22-relative speed/cost tuning, ground-only attack rules, landed logistics servicing/refill, crash wreck recovery parity, build prerequisites ((airstrip OR helipad) AND ammo fab), F35 sound hooks, and cheat-spawn support.
   - Spec: [F35 VTOL Stealth Strike Fighter](../specs/052-f35-unit.md)
+  - Status: F35 implementation and behavior follow-up landed in [100389f5](https://github.com/theSystem85/code-for-battle/commit/100389f59dc007b18c4937a713f92fc7209e2b79) and [97106f36](https://github.com/theSystem85/code-for-battle/commit/97106f36d8c656338928b5f13fa0e91b62e7d2d3) (build v0.27.0). Check the full original acceptance list before closing.
 
 - [ ] **C-5 Galaxy airlift** — a large airstrip-produced transport with realistic vehicle weights, a 122 t weight-based cargo capacity (any mix that fits), and parachute airdrop. Art was picked 2026-11-21 (map 4 desert camo, build button 2) and is on dev; no construction icon. Work in progress lives on branch `feat/c5-galaxy-airlift` (head 4def416f, not playable yet); continue from `docs/galaxy-handoff.md` on that branch. Still open there: wire the Unload/Airdrop buttons, airdrop target picking and right-click boarding; call the parachute renderer; keep F-22s out of the Galaxy's lower-airstrip slots 0–2; confirm landing/takeoff animations render and normal move orders work in the browser; check mission/drop state survives save/load and multiplayer sync; integration test through the main game loop and command path incl. mid-mission save/load; full user-manual entry.
   - Spec: [C-5 Galaxy airlift (draft)](../specs/140-c5-galaxy-airlift/spec.md)
+  - Status: The branch-only note in this entry describes the original draft. Playable airlift gameplay landed on dev in [d79da16a](https://github.com/theSystem85/code-for-battle/commit/d79da16a977258d5225041b0bd8875871c5a2deb) (build v0.95.75). Check the original integration and acceptance criteria before closing.
 
 ## Economy and Buildings
 
@@ -90,9 +90,11 @@ When a spec exists, replace `Spec: none` with a relative link such as `[Title](.
 
 - [ ] **Technology Center (draft)** — a research building using the existing unused Technology Center art. It unlocks the Drone Factory, AI Center (AI data center), Rocket Launch Base (Mechazilla-style launch tower with the rocket / Starship), and Spaceship Factory. Costs, further prerequisites, and what each follow-on building enables are still open.
   - Spec: [Technology Center (draft)](../specs/139-technology-center/spec.md)
+  - Status: The research center landed in [0108bbae](https://github.com/theSystem85/code-for-battle/commit/0108bbae78de2ce152e571c92a1054a54370e874) (build v0.94.75). The follow-on buildings are present by [cd1481e3](https://github.com/theSystem85/code-for-battle/commit/cd1481e3dac3ef43e9e785ccec33ae0c4c9d6e4b) (build v0.99.76). Check the original unlock and prerequisite details before closing.
 
 - [ ] **Plane Factory (draft)** — a dedicated jet assembly building. Art (map option 4, build button 5) was picked 2026-11-21 and is committed unused; jets currently spawn from the airstrip. What it produces versus the airstrip, footprint, cost, prerequisites, relation to the Technology Center, and AI use are still open.
   - Spec: [Plane Factory (draft)](../specs/141-plane-factory/spec.md)
+  - Status: Aircraft production from the factory landed in [d50422ba](https://github.com/theSystem85/code-for-battle/commit/d50422ba8356ecde73869e90cbdc51cd28a80db8) (build v0.101.90), with the unlock fix in [78539f40](https://github.com/theSystem85/code-for-battle/commit/78539f40e470e0aa0933af0ad1a7acdbd890f06b) (build v0.102.98). Check the remaining draft requirements before closing.
 
 ## AI
 
@@ -562,6 +564,10 @@ Completed entries stay here so the detail is not dropped. Do not add new work in
   - Spec: none
 
 ### Air and Jets
+
+- [x] **F22 combat follow-up (2026-03-20)** — only fire rockets while targets remain inside the active firing window, and hard-cap effective F22 firing range at 20 tiles including bonuses.
+  - Spec: [F22 Raptor Consolidated Requirements (Non-Street)](../specs/021-f22-raptor-unit.md)
+  - Completed 2026-03-20 (commit date) · Commit: [b39546cc](https://github.com/theSystem85/code-for-battle/commit/b39546cc9ac79f45131aa92fca398d0ca368bcc0) · Version: v0.28.2 (build)
 
 - [x] **Jet fuel, emergency landing, and recovery-tank tow (2026-09-19)** — F22 and F35 return home with enough fuel for the inbound leg, refuse takeoff or attack orders that cannot complete a round trip, emergency-land with the existing landing animation plus a notification if they still run dry, accept tanker refill while grounded, and must be towed onto a street by a recovery tank before they can take off again. S releases any mounted unit, not only jets. Merged with the completed jet-fuel work. Spec 080 and src/game/jetFuel.js describe the shipped behavior, and a matching done entry already existed.
   - Spec: [Unit Under-Attack Focus Notification](../specs/045-unit-under-attack-focus-notification.md)
