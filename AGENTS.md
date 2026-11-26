@@ -195,3 +195,13 @@ Never use shadows on buttons in any UI state.
 When the user asks to brainstorm to-dos or run the To-Do List skill, follow [skills/to-do-list/SKILL.md](skills/to-do-list/SKILL.md). This workflow applies to ChatGPT, Grok, and Grok Bot. Route the agreed draft through Grok Bot for saving in [docs/brainstorm.md](docs/brainstorm.md) when the user asks to wrap up.
 
 For voice To-Do List brainstorming, the only repository record is the agreed final list. Keep the conversation and interim drafts in the session. Omit prompt-history entries, transcripts, verbatim quotes, and per-turn notes for these sessions.
+
+## To-do completion records
+
+Keep completed entries and their specs. In the category lists under `TODO/`, change the checkbox to `[x]` and move the entry to the matching area under Done. For `docs/brainstorm.md`, Grok Bot keeps the original idea ID and text and marks the entry `[x]` in the completion line.
+
+Add one indented line to the checked entry in this format:
+
+`- Completed YYYY-MM-DD · Commit: [short SHA](https://github.com/theSystem85/code-for-battle/commit/full-sha) · Version: vX.Y.Z (dev)`
+
+Use the UTC date of the first verified deployment containing the finished work and link the implementation commit on the target branch. When historical deployment dates are unavailable, label the implementation date as the commit date. Use the first verified build that contains the complete change, including a successful `dev` deploy when it shipped there first. Match the version and deployed commit in the deploy's `build-info.json` and verify that the implementation commit is included. A later main release may be added alongside the dev version. For historical entries, identify the version from a release record or the version produced by the historical source, and label source-derived versions as build versions. If a version is still unverified, record it as pending and fill it in when confirmed. Keep partially implemented items open.

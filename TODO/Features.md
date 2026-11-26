@@ -7,7 +7,7 @@ Open work is grouped by game area. Finished work is under [Done](#done) in the s
     - [ ] **Short title** — One-line description.
       - Spec: none
 
-When a spec exists, replace `Spec: none` with a relative link such as `[Title](../specs/021-f22-raptor-unit.md)`. Do not invent a spec file. When the work is finished, mark the checkbox `[x]` and move the entry under Done for that area.
+When a spec exists, replace `Spec: none` with a relative link such as `[Title](../specs/021-f22-raptor-unit.md)`. Do not invent a spec file. When the work is finished, mark the checkbox `[x]` and move the entry under Done for that area. Add the completion date, implementation commit, and version using the [completion format](../AGENTS.md#to-do-completion-records).
 
 ## Contents
 

@@ -7,7 +7,7 @@ Open work is grouped by game area. Finished work is under [Done](#done) in the s
     - [ ] **Short title** — One-line description.
       - Spec: none
 
-When a spec exists, replace `Spec: none` with a relative link such as `[Title](../specs/021-f22-raptor-unit.md)`. Do not invent a spec file. When the work is finished, mark the checkbox `[x]` and move the entry under Done for that area.
+When a spec exists, replace `Spec: none` with a relative link such as `[Title](../specs/021-f22-raptor-unit.md)`. Do not invent a spec file. When the work is finished, mark the checkbox `[x]` and move the entry under Done for that area. Add the completion date, implementation commit, and version using the [completion format](../AGENTS.md#to-do-completion-records).
 
 ## Contents
 
@@ -77,12 +77,6 @@ When a spec exists, replace `Spec: none` with a relative link such as `[Title](.
 
 - [x] **Fix attack cursor to toggle between in-range and out-of-range states on hover** — based on distance, and ensure range labels render in red.
   - Spec: [Combat System Enhancements](../specs/006-combat-system-enhancements/spec.md)
-
-- [ ] **On mobile PWA portrait mode, stretch the sidebar to the very bottom so no unused black bar remains.**
-  - Spec: none
-
-- [ ] **Remove the blue progress bar from sidebar build buttons once a unit finishes production.**
-  - Spec: none
 
 ## Missions and Campaign
 
@@ -995,6 +989,14 @@ Completed entries stay here so the detail is not dropped. Do not add new work in
   - Spec: [Online Multiplayer Takeover](../specs/001-add-online-multiplayer/spec.md)
 
 ### UI, Sidebar, and Settings
+
+- [x] **On mobile PWA portrait mode, stretch the sidebar to the very bottom so no unused black bar remains.**
+  - Spec: none
+  - Completed 2025-12-10 (commit date) · Commit: [4b8af5bc](https://github.com/theSystem85/code-for-battle/commit/4b8af5bc4f15ae139a258c9d3c3f6eefa916d9d8) · Version: v0.12.0 (build)
+
+- [x] **Remove the blue progress bar from sidebar build buttons once a unit finishes production.**
+  - Spec: none
+  - Completed 2025-12-16 (commit date) · Commit: [79c71a5b](https://github.com/theSystem85/code-for-battle/commit/79c71a5b50be2622ed66c4a0c7e6edb2c2db1fac) · Version: v0.13.0 (build)
 
 - [x] **iPhone offline cache stalls and the offline relaunch never boots (2026-09-27)** — the Workbox precache was all-or-nothing, so a suspended or failed install never activated the worker. The boot shell now precaches on its own, bulk assets resume in a separate cache, audio Range requests are served offline, and readiness is the real Cache API count.
   - Spec: [Offline mode](../specs/095-offline-mode.md)

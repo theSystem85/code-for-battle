@@ -1,0 +1,3 @@
+- [x] **Traceable to-do completion**
+  - Record dates, implementation commits, and dev or release versions on completed to-dos.
+  - Spec: none

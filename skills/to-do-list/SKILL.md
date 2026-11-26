@@ -17,3 +17,5 @@ Use a short title and a description of the intended outcome for each item. Inclu
 ## Voice session records
 
 Save only the agreed final to-do entries. Keep the conversation and interim drafts in the session. The prompt-history rule in AGENTS.md exempts these sessions. Omit transcripts, verbatim quotes, and per-turn notes from the repository and from any handoff to Grok Bot.
+
+When an item is completed, retain it and follow the [to-do completion records](../../AGENTS.md#to-do-completion-records) format for the checkbox, date, implementation commit, and version.
