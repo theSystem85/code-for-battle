@@ -1,4 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { PERKS } from '../../src/perks/perkCatalog.js'
+import { RESEARCH_PERKS } from '../../src/perks/researchCatalog.js'
 import { gameState } from '../../src/gameState.js'
 import { applyPerkPurchase, grantPerkStars, resetPerkState } from '../../src/perks/perkState.js'
 import { closePerkTree, openPerkTree } from '../../src/ui/perks/perkTree.js'
@@ -76,10 +78,15 @@ describe('perk tree overlay', () => {
     vi.advanceTimersByTime(2000)
     expect(document.querySelector('.perk-ledger').textContent).toContain('8 available')
   })
-  it('[U07302] keeps the eight live SVG merge lanes and cancels interrupted touch holds', () => {
+  it('[U07397] draws every available research dependency', () => {
+    openPerkTree('research')
+    expect(document.querySelectorAll('.perk-tree__connectors path')).toHaveLength(RESEARCH_PERKS.flatMap(perk => perk.requires.all).length)
+  })
+  it('[U07302] draws every command perk dependency and cancels interrupted touch holds', () => {
     vi.useFakeTimers()
     openPerkTree()
-    expect(document.querySelectorAll('.perk-capstone__merge path')).toHaveLength(8)
+    const edges = PERKS.flatMap(perk => perk.requires.all || perk.requires.any)
+    expect(document.querySelectorAll('.perk-tree__connectors path')).toHaveLength(edges.length)
     const node = document.querySelector('[data-perk-id="cc.base.start"]')
     dispatchPointer(node, 'pointerdown', 'touch')
     expect(node.classList.contains('is-holding')).toBe(true)

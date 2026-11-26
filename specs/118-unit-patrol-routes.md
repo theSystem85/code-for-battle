@@ -1,10 +1,11 @@
 # Looping unit patrol routes
 
 Patrol is offered in the circle menu for all commandable land, naval and air units.
-It uses the existing route draft: map taps add points, a two-finger tap or Enter
+It uses the existing route draft: map taps add points, and right-click, a two-finger tap or Enter
 commits, two-finger dragging pans, and Escape/cancel/blur discard the draft.
 Movement-domain validation is authoritative: land vehicles require passable land,
-ships water, and aircraft may fly over any in-bounds tile.
+ships water, and aircraft may fly over any in-bounds tile. Blue numbered circles
+mark waypoints, with arrows indicating direction on the draft and selected patrols.
 
 - **Unlock:** Patrol Routes is a 2-star perk in the unit automation DO lane,
   requiring Unit Command Link. Its existing movement badge is reused. The menu
@@ -47,15 +48,16 @@ The update runs once per simulation tick: at 100 active units and 60 ticks/s,
 scans. Cohort records and member arrays are reused after the first update and
 expired cohorts are removed. Carrier wing lookups are indexed once per acquisition pass, with no per-carrier army scan; artillery ignores targets inside its minimum firing distance. Route normalization, nominal loop-length calculation
 and validation occur only on orders. Pathfinding only runs on new legs or bounded
-one-second retries; arrival immediately releases the next leg. No rendering loop,
-large canvas fills, image resizing or DPR-dependent work is added. At DPR 3 the
-same scalar update work applies. Unit snapshots add optional route fields to the
+one-second retries, and arrival immediately releases the next leg. The route overlay draws one
+numbered circle and short arrow per waypoint in the existing renderer. Units with a
+shared route array draw once per frame. At DPR 3, the marker and line strokes cover
+more pixels while simulation work stays the same. Unit snapshots add optional route fields to the
 existing serialization cadence, with no new per-frame deep clone.
 
 Hardware acceptance remains pending: no hardware GPU is verified here. Patrick
 should exercise 100 patrolling units, mixed aircraft/naval groups, formations,
 firing and fast full-map scrolling at unchanged visual settings/DPR on dev, and
-record the 60 FPS gate, frame-time p95/p99/max, missed deadlines, CPU update/render
+record the 75 FPS gate, frame-time p95/p99/max, missed deadlines, CPU update/render
 time, GPU timing where available and memory/GC. Functional tests are not GPU/FPS
 certification.
 

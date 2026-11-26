@@ -811,7 +811,7 @@ export class Renderer {
     const hudSpan = renderProfiler.startSpan(PROFILER_SPAN_IDS.HUD)
     // Render movement target indicators (green triangles)
     this.movementTargetRenderer.render(gameCtx, units, scrollOffset)
-    this.pathPlanningRenderer.render(gameCtx, units, scrollOffset, frameEntityIndex)
+    this.pathPlanningRenderer.render(gameCtx, units, scrollOffset, frameEntityIndex, logicalCanvasWidth, logicalCanvasHeight)
 
     // Render retreat target indicators (orange circles)
     this.retreatTargetRenderer.renderRetreatTargets(gameCtx, units, scrollOffset)

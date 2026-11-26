@@ -7,9 +7,8 @@ import { TILE_SIZE, MAP_ACTION_LONG_PRESS_MS, setMapActionLongPressMs } from '..
 import { gameState } from '../../gameState.js'
 import { createRadialMenu } from '../radialMenu/radialMenu.js'
 import { createMapLongPressController } from './longPressController.js'
-import { commandableSelection, applicableAutomations, mapActionOptions, applyMapAction } from './mapActionCommands.js'
-import { broadcastGameCommand } from '../../network/commandBroadcast.js'
-import { COMMAND_TYPES } from '../../network/commandTypes.js'
+import { commandableSelection, applicableAutomations, mapActionOptions } from './mapActionCommands.js'
+import { dispatchMapAction } from './mapActionDispatch.js'
 import { isLocalPartyAutomationLocked } from '../../network/multiplayerStore.js'
 import { fitMapActionLabels } from './mapActionLabels.js'
 import { ownsPerk, hasLivingCommandCenter, getPolicyLock } from '../../perks/perkState.js'
@@ -82,7 +81,12 @@ export function installMapActionMenu(canvas, { selection, units, commands, handl
     handler.twoFingerPan = null
   }
   const draft = createMapOrderDraft({ canvas, locked, resetInput,
-    commit: (action, point, entityIds) => dispatch(action, point, entityIds) })
+    requestRender: () => handler.requestRenderFrame?.(),
+    commit: (action, point, entityIds) => {
+      const accepted = dispatch(action, point, entityIds)
+      if (!accepted) showOrderFailure()
+      return accepted
+    } })
   function dispatch(action, point = origin, entityIds = null) {
     if (locked() || !point) return false
     const payload = { action, ...point, ...((targetUnit || targetBuilding) ? { targetId: (targetUnit || targetBuilding).id } : {}), entityIds: entityIds || commandableSelection(selection, owner()).map(entity => entity.id) }
@@ -90,10 +94,9 @@ export function installMapActionMenu(canvas, { selection, units, commands, handl
       !Number.isFinite(point.x) || !Number.isFinite(point.y) || point.x < 0 || point.y < 0 ||
       point.x >= (gameState.mapGrid?.[0]?.length || 0) * TILE_SIZE || point.y >= (gameState.mapGrid?.length || 0) * TILE_SIZE) return false
     if (action === 'applyAutomationOnArrival' && !applicableAutomations(selection, owner()).some(entry => entry.policy.id === point.policyId)) return false
-    const remote = gameState.multiplayerSession?.isRemote && gameState.multiplayerSession.localRole !== 'host'
-    if (!remote && !applyMapAction(payload, owner(), { units, buildings: gameState.buildings, commands, mapGrid: gameState.mapGrid, occupancyMap: gameState.occupancyMap })) return false
-    broadcastGameCommand(COMMAND_TYPES.MAP_ACTION, payload)
-    return true
+    const accepted = dispatchMapAction(payload, { units, buildings: gameState.buildings, commands, mapGrid: gameState.mapGrid, occupancyMap: gameState.occupancyMap })
+    if (accepted) handler.requestRenderFrame?.()
+    return accepted
   }
   function close() { menu.close(); targetUnit = null; targetBuilding = null }
   function optionsForTarget() {
@@ -147,7 +150,7 @@ export function installMapActionMenu(canvas, { selection, units, commands, handl
         onSelect() { if (!dispatch(action)) showOrderFailure(); close() }
       })) : undefined,
       onSelect() {
-        if (id === 'retreatTo' || id === 'planPath' || id === 'patrol') {
+        if (id === 'planPath' || id === 'patrol') {
           const ids = (id === 'patrol' ? commandableSelection(selection, owner()).filter(patrolUnitAvailable) : groundSelection(selection, owner())).map(unit => unit.id)
           close()
           draft.start(id, ids)
@@ -205,7 +208,7 @@ export function installMapActionMenu(canvas, { selection, units, commands, handl
     }
   }, true)
   window.addEventListener('pointerdown', event => {
-    if (draft.handle(event)) return
+    if (draft.handle(event)) { swallowUntil = performance.now() + 600; return }
     pointers.add(event.pointerId)
     if (pointers.size > 1) { cancel(); close(); return }
     if (menu.isOpen()) {
@@ -215,7 +218,7 @@ export function installMapActionMenu(canvas, { selection, units, commands, handl
       if (!menu.updatePointer(event.clientX, event.clientY)) close()
       return
     }
-    if (event.target !== canvas || (event.pointerType !== 'touch' && event.button !== 0) || locked()) return
+    if (event.target !== canvas || (event.pointerType !== 'touch' && event.button !== 0) || event.shiftKey || event.altKey || locked()) return
     if (!mapActionOptions(selection, owner()).length && !perkBuildingAt(world({ x: event.clientX, y: event.clientY }), owner())) return
     heldPointer = event.pointerId
     pressCamera = { ...gameState.scrollOffset }
@@ -251,13 +254,12 @@ export function installMapActionMenu(canvas, { selection, units, commands, handl
   window.addEventListener('pointercancel', event => { end(event); close() }, true)
   for (const type of ['mousedown', 'mouseup', 'click', 'contextmenu']) {
     window.addEventListener(type, event => {
-      if (type === 'mouseup' && event.button === 2) return
+      if (type === 'mouseup' && event.button === 2 && !draft.active() && performance.now() >= swallowUntil) return
       if (draft.active() || menu.isOpen() || (event.target === canvas && performance.now() < swallowUntil)) stop(event)
     }, true)
   }
   window.addEventListener('wheel', () => {
     cancel(); close()
-    if (draft.active()) requestAnimationFrame(draft.paint)
   }, true)
   window.addEventListener('blur', () => { draft.clear(); cancel(); close(); pointers.clear(); rightDown = null })
   window.addEventListener('keydown', event => {

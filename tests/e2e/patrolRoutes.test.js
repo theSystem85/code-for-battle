@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 import { prepareRegressionScenario } from './helpers/regressionScenario.js'
 
 async function prepare(page) {
-  await prepareRegressionScenario(page, 521, 64)
+  await prepareRegressionScenario(page, 521, 64, 60000)
   return page.evaluate(async() => {
     const { applyPerkPurchase, adjustPerkStars, setAutomationPerkMode } = await import('/src/perks/perkState.js')
     const { human, unit, building } = window.__regression
@@ -77,7 +77,7 @@ test('[E00286] locked patrol focuses its two-star perk; one-point mobile patrol 
   await expect.poll(() => page.evaluate(() => window.__patrol.tank.patrol?.index), { timeout: 45000 }).toBe(1)
 })
 
-test('[E00287] shared selections stagger independent patrols while formation members depart together', async({ page }) => {
+test('[E00287] desktop right-click starts staggered patrols while formation members depart together', async({ page }) => {
   const point = await unlock(page)
   await page.evaluate(() => {
     const { human, unit } = window.__regression
@@ -94,7 +94,8 @@ test('[E00287] shared selections stagger independent patrols while formation mem
   await choosePatrol(page, point)
   await page.mouse.click(point.x + 128, point.y + 96)
   await page.mouse.click(point.x + 64, point.y + 128)
-  await finishTouch(page, point)
+  await page.mouse.click(point.x + 64, point.y + 128, { button: 'right' })
+  await expect(page.locator('#gameCanvas')).not.toHaveAttribute('data-map-order-draft')
   const routes = await page.evaluate(() => window.__patrol.units.map(unit => unit.patrol))
   expect(routes[0].groupId).toBe(routes[1].groupId)
   expect(routes[0].startAt).toBe(routes[1].startAt)

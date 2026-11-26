@@ -1,3 +1,4 @@
+import { appendMoveWaypoint } from '../../game/moveWaypoints.js'
 import { getEffectiveFireRange } from '../../game/unitCombat/fireRange.js'
 import { TILE_SIZE } from '../../config.js'
 import { canCommandPolicy } from '../../policies/policyStore.js'
@@ -102,20 +103,31 @@ export function applyGroundAction(payload, owner, context) {
   if (!selected.length) return false
   const { action } = payload
   if (action === 'retreatTo' || action === 'retreatToBase') {
+    const isBaseRetreat = action === 'retreatToBase'
+    const targets = selected.map(unit => unit.target)
+    if (!isBaseRetreat) {
+      if (!passable(Math.floor(payload.x / TILE_SIZE), Math.floor(payload.y / TILE_SIZE), context.mapGrid)) return false
+      context.commands.handleMovementCommand(selected, payload.x, payload.y, context.mapGrid)
+    }
     let accepted = false
-    for (const unit of selected) {
-      const point = action === 'retreatToBase' ? retreatBasePoint(unit, owner, context) : payload
-      if (!point || !passable(Math.floor(point.x / TILE_SIZE), Math.floor(point.y / TILE_SIZE), context.mapGrid)) continue
-      const target = unit.target
-      context.commands.handleMovementCommand([unit], point.x, point.y, context.mapGrid)
+    for (const [index, unit] of selected.entries()) {
+      if (isBaseRetreat) {
+        const point = retreatBasePoint(unit, owner, context)
+        if (!point) continue
+        context.commands.handleMovementCommand([unit], point.x, point.y, context.mapGrid)
+      }
       const path = unit.path
-      if (!path?.length) continue
-      unit.target = target
-      initiateRetreat([unit], point.x, point.y, context.mapGrid, { allGround: true, forceBackward: true, owner: unit.owner })
+      const destination = path?.at(-1)
+      if (!destination || !passable(destination.x, destination.y, context.mapGrid) || typeof unit.maxGas === 'number' && unit.gas <= 0) continue
+      const x = (destination.x + 0.5) * TILE_SIZE
+      const y = (destination.y + 0.5) * TILE_SIZE
+      unit.target = targets[index]
+      const retreatOptions = { allGround: true, forceBackward: true, owner: unit.owner }
+      initiateRetreat([unit], x, y, context.mapGrid, retreatOptions)
       unit.path = path
       unit.retreatUsesPath = true
       unit.retreatFireRange = getEffectiveFireRange(unit)
-      replay([unit], owner, { command: 'retreat', targetPos: { space: 'world', x: point.x, y: point.y }, retreatOptions: { allGround: true, forceBackward: true, owner: unit.owner }, retreatPath: path, retreatFireRange: unit.retreatFireRange })
+      replay([unit], owner, { command: 'retreat', targetPos: { space: 'world', x, y }, retreatOptions, retreatPath: path, retreatFireRange: unit.retreatFireRange })
       accepted = true
     }
     return accepted
@@ -124,13 +136,10 @@ export function applyGroundAction(payload, owner, context) {
     if (!Array.isArray(payload.points) || !payload.points.length || payload.points.length > 256 ||
       payload.points.some(point => !Number.isFinite(point?.x) || !Number.isFinite(point?.y) ||
         !passable(Math.floor(point.x / TILE_SIZE), Math.floor(point.y / TILE_SIZE), context.mapGrid))) return false
-    const [first, ...rest] = payload.points
-    context.commands.handleMovementCommand(selected, first.x, first.y, context.mapGrid)
-    for (const unit of selected) unit.commandQueue = payload.points.map(point => ({ type: 'move', x: point.x, y: point.y }))
-    // The queue owns the first move as well; it waits for completion before the next.
-    for (const unit of selected) { unit.currentCommand = unit.commandQueue.shift() }
-    replay(selected, owner, { command: 'move', targetPos: { space: 'world', ...first }, plannedRouteStart: true })
-    for (const point of rest) replay(selected, owner, { command: 'move', targetPos: { space: 'world', ...point }, queueAppend: true })
+    for (const { x, y } of payload.points) {
+      appendMoveWaypoint(selected, x, y)
+      replay(selected, owner, { command: 'move', targetPos: { space: 'world', x, y }, queueAppend: true })
+    }
     return true
   }
   if (SUPPLY_TYPES[action]) {

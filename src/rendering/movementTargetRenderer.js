@@ -1,12 +1,13 @@
 // movementTargetRenderer.js - Renders green triangular indicators for movement targets
 import { TILE_SIZE, MOVE_TARGET_INDICATOR_SIZE, MOVE_TARGET_BOUNCE_SPEED } from '../config.js'
 import { gameState } from '../gameState.js'
-import { getAvailableLandingSpots } from '../utils/airLandingSpots.js'
+import { getAvailableLandingSpots, getCarrierDeckSlotPoint } from '../utils/airLandingSpots.js'
 
 export class MovementTargetRenderer {
   constructor() {
     this.landingSpotSelection = []
     this.landingSpots = []
+    this.carrierSpotPoint = { x: 0, y: 0 }
     this.landingSpotsRefreshedAt = 0
   }
   /**
@@ -79,8 +80,9 @@ export class MovementTargetRenderer {
     ctx.strokeStyle = 'rgba(0, 110, 30, 0.95)'
     ctx.lineWidth = 2
     this.landingSpots.forEach(spot => {
-      const x = spot.worldX - scrollOffset.x
-      const y = spot.worldY - scrollOffset.y
+      const point = spot.kind === 'carrier' ? getCarrierDeckSlotPoint(spot.structure, spot.index, this.carrierSpotPoint) : null
+      const x = (point ? point.x : spot.worldX) - scrollOffset.x
+      const y = (point ? point.y : spot.worldY) - scrollOffset.y
       ctx.beginPath()
       ctx.arc(x, y, TILE_SIZE * 0.22, 0, Math.PI * 2)
       ctx.fill()

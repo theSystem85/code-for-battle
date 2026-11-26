@@ -20,6 +20,22 @@ describe('mouseCommands fallback defense-building targeting', () => {
     gameState.sellMode = false
   })
 
+  it('[U07399] routes Shift-click through pathfinding and keeps the retreat target', () => {
+    const enemy = { id: 'enemy', health: 100 }
+    const tank = { id: 'tank', type: 'tank', owner: 'player1', health: 100, x: 32, y: 32, target: enemy }
+    const handler = { selectionManager: { isCommandableUnit: () => true } }
+    const mapGrid = Array.from({ length: 6 }, () => Array.from({ length: 6 }, () => ({ type: 'grass' })))
+    mapGrid[1][2].type = 'rock'
+    const path = [{ x: 1, y: 2 }, { x: 2, y: 2 }, { x: 3, y: 1 }]
+    const commands = { handleMovementCommand: vi.fn(() => { tank.path = path; tank.target = null }) }
+
+    handleFallbackCommand(handler, 112, 48, [tank], commands, mapGrid, { shiftKey: true })
+
+    expect(commands.handleMovementCommand).toHaveBeenCalledWith([tank], 112, 48, mapGrid)
+    expect(tank).toMatchObject({ isRetreating: true, isMovingBackwards: true, retreatTarget: { x: 3, y: 1 }, target: enemy })
+    expect(tank.path).toBe(path)
+  })
+
   it('[U02987] queues normal-click enemy target for selected defense buildings and promotes clicked target to active', () => {
     const existingQueuedTarget = { id: 'enemy-old', owner: 'enemy', health: 100, x: 0, y: 0 }
     const activeTarget = { id: 'enemy-active', owner: 'enemy', health: 100, x: 0, y: 0 }

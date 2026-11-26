@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test'
 import { waitForLoadingScreenHidden } from './loadingScreen.js'
 
-export async function prepareRegressionScenario(page, seed, mapSize = null) {
+export async function prepareRegressionScenario(page, seed, mapSize = null, startupTimeout = 30000) {
   await page.addInitScript(() => {
     localStorage.setItem('rts_tutorial_settings', JSON.stringify({ showTutorial: false, speechEnabled: false }))
     localStorage.setItem('rts_tutorial_progress', JSON.stringify({ completed: true, stepIndex: 0 }))
@@ -9,7 +9,7 @@ export async function prepareRegressionScenario(page, seed, mapSize = null) {
   await page.goto(`/?seed=${seed}${mapSize ? `&size=${mapSize}&players=2` : ''}`)
   await page.waitForFunction(() => Boolean(
     window.gameState?.gameStarted && window.gameInstance?.units && window.cheatSystem && window.unitCommandsHandler
-  ), null, { timeout: 30000 })
+  ), null, { timeout: startupTimeout })
   await waitForLoadingScreenHidden(page)
   await page.evaluate(async() => {
     const { buildOccupancyMap, removeUnitOccupancy, updateUnitOccupancy } = await import('/src/units.js')

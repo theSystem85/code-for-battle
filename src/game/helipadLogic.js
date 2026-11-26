@@ -2,7 +2,10 @@ import { HELIPAD_FUEL_CAPACITY, HELIPAD_RELOAD_TIME, TILE_SIZE, TANKER_SUPPLY_CA
 import { logPerformance } from '../performanceUtils.js'
 import { getBuildingIdentifier } from '../utils.js'
 import { getHelipadLandingCenter, isHelipadAvailableForUnit } from '../utils/helipadUtils.js'
-import { ensureAirstripOperations, setAirstripSlotOccupant } from '../utils/airstripUtils.js'
+import { ensureAirstripOperations, reconcileAirstripParking, setAirstripSlotOccupant } from '../utils/airstripUtils.js'
+
+const AIRSTRIP_AIRCRAFT_TYPES = new Set(['f22Raptor', 'f35', 'apache', 'c5Galaxy'])
+const airstripAircraftById = new Map()
 
 const SERVICE_SETTLE_TIME_MS = 250
 
@@ -116,9 +119,19 @@ export const updateHelipadLogic = logPerformance(function(units, buildings, _gam
   const helipads = buildings.filter(b => (b.type === 'helipad' || b.type === 'airstrip') && b.health > 0)
   if (helipads.length === 0) return
 
+  airstripAircraftById.clear()
+  if (helipads.some(pad => pad.type === 'airstrip')) {
+    for (const unit of units || []) {
+      if (unit.health > 0 && AIRSTRIP_AIRCRAFT_TYPES.has(unit.type)) airstripAircraftById.set(unit.id, unit)
+    }
+  }
+
   helipads.forEach(helipad => {
     const helipadId = getBuildingIdentifier(helipad)
-    if (helipad.type === 'airstrip') ensureAirstripOperations(helipad)
+    if (helipad.type === 'airstrip') {
+      ensureAirstripOperations(helipad)
+      reconcileAirstripParking(helipad, helipadId, airstripAircraftById)
+    }
     if (typeof helipad.maxFuel !== 'number' || helipad.maxFuel <= 0) {
       helipad.maxFuel = HELIPAD_FUEL_CAPACITY
     }
@@ -368,8 +381,8 @@ export const updateHelipadLogic = logPerformance(function(units, buildings, _gam
       } // end if helipad.type === 'helipad'
 
       if (helipad.type === 'airstrip') {
-        const stripUnits = units.filter(u => (u.type === 'f22Raptor' || u.type === 'f35' || u.type === 'apache') && u.health > 0)
-        stripUnits.forEach(f22 => {
+        airstripAircraftById.forEach(f22 => {
+          if (f22.type === 'c5Galaxy') return
           if (f22.aircraftDelivery && f22.manualFlightState === 'takeoff') return
           const assignedParking = Number.isInteger(f22.airstripParkingSlotIndex)
             ? helipad.f22ParkingSpots?.[f22.airstripParkingSlotIndex]
@@ -391,6 +404,7 @@ export const updateHelipadLogic = logPerformance(function(units, buildings, _gam
               f22.flightPlan = null
               f22.moveTarget = { x: assignedParking.x, y: assignedParking.y }
               f22.landedHelipadId = helipadId
+              f22.helipadLandingRequested = false
               f22.groundLandingRequested = false
               f22.groundLandingTarget = null
               f22.landedOnGround = false

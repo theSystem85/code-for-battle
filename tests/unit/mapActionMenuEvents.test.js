@@ -134,6 +134,22 @@ describe('map action DOM integration', () => {
       allUnits.splice(1)
     }
   })
+  it('[U07398] retreats immediately to the circle menu opening tile', () => {
+    commands.handleMovementCommand.mockImplementationOnce(([recipient]) => {
+      recipient.path = [{ x: 2, y: 3 }, { x: 3, y: 3 }]
+    })
+    pointer('pointerdown', 105, 1, false, 114)
+    vi.advanceTimersByTime(300)
+    const item = document.querySelector('[data-map-action-menu] [data-id="retreatTo"]')
+    const x = parseFloat(item.style.getPropertyValue('--tx'))
+    const y = parseFloat(item.style.getPropertyValue('--ty'))
+    pointer('pointermove', x, 1, false, y)
+    pointer('pointerup', x, 1, false, y)
+    expect(commands.handleMovementCommand).toHaveBeenCalledWith([unit], 105, 114, gameState.mapGrid)
+    expect(unit).toMatchObject({ isRetreating: true, retreatUsesPath: true, retreatTarget: { x: 3, y: 3 } })
+    expect(canvas.dataset.mapOrderDraft).toBeUndefined()
+  })
+
   it('[U07029] cancels the gesture without running a command on pointer cancellation', () => {
     pointer('pointerdown')
     vi.advanceTimersByTime(300)

@@ -15,7 +15,12 @@ function setup() {
   const context = {
     units: [tank], buildings: [], mapGrid: Array.from({ length: 30 }, () => Array.from({ length: 30 }, () => ({ type: 'grass' }))),
     commands: {
-      handleMovementCommand: vi.fn((units, x, y) => units.forEach(u => { u.path = [{ x: Math.floor(x / 32), y: Math.floor(y / 32) }]; u.moveTarget = { x, y }; u.target = null; u.commandQueue = []; u.currentCommand = null })),
+      handleMovementCommand: vi.fn((units, x, y, skipQueueClear) => units.forEach(u => {
+        u.path = [{ x: Math.floor(x / 32), y: Math.floor(y / 32) }]
+        u.moveTarget = { x, y }
+        u.target = null
+        if (!skipQueueClear) { u.commandQueue = []; u.currentCommand = null }
+      })),
       handleServiceProviderRequest: vi.fn(() => true), canTankerProvideFuel: () => true, isUtilityTargetValid: (_mode, provider, target) => provider.id !== target.id && target.type === 'tank'
     }
   }
@@ -70,6 +75,9 @@ describe('ground context commands', () => {
     expect(context.commands.handleMovementCommand).not.toHaveBeenCalled()
     const points = [{ x: 100, y: 100 }, { x: 200, y: 100 }, { x: 200, y: 200 }]
     expect(order('planPath', { points })).toBe(true)
+    expect(context.commands.handleMovementCommand).not.toHaveBeenCalled()
+    expect(tank.commandQueue).toMatchObject(points)
+    processCommandQueues([tank], context.mapGrid, context.commands)
     expect(tank.currentCommand).toMatchObject(points[0])
     tank.path = []
     tank.moveTarget = null

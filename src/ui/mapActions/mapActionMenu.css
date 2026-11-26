@@ -45,15 +45,3 @@
   font: 12px sans-serif;
   text-align: center;
 }
-.map-order-draft__point {
-  position: absolute;
-  width: 24px;
-  height: 24px;
-  transform: translate(-50%, -50%);
-  border: 2px solid #83e8d4;
-  border-radius: 50%;
-  background: #142633;
-  color: #fff;
-  font: bold 12px/24px sans-serif;
-  text-align: center;
-}

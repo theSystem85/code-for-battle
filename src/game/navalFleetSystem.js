@@ -841,7 +841,7 @@ function moveAircraftWithHeading(aircraft, target, delta, speedScale = 1) {
 
 function carrierUsedSlots(carrier, units, ignoredAircraftId = null) {
   return (units || []).reduce((total, aircraft) => {
-    if (aircraft.id === ignoredAircraftId) return total
+    if (!aircraft || aircraft.health <= 0 || aircraft.id === ignoredAircraftId) return total
     const assignedCarrierId = aircraft.carrierOperation?.carrierId || aircraft.carrierId
     if (assignedCarrierId !== carrier.id) return total
     return total + (AIRCRAFT_SLOT_WEIGHT[aircraft.type] || 0)
@@ -864,7 +864,7 @@ export function requestCarrierLanding(aircraft, carrier, units, now = gameState.
   if (!weight || carrier?.type !== 'aircraftCarrier' || aircraft.owner !== carrier.owner) return false
   if (aircraft.carrierId || aircraft.carrierOperation) return false
   if (carrierUsedSlots(carrier, units, aircraft.id) + weight > carrier.deckSlotCapacity) return false
-  assignCarrierSlot(aircraft, carrier, units, options.slotIndex)
+  if (assignCarrierSlot(aircraft, carrier, units, options.slotIndex) === null) return false
   if (!options.preserveMission) clearGuardState(aircraft)
   aircraft.target = null
   aircraft.flightPlan = null
@@ -890,6 +890,10 @@ export function requestCarrierLanding(aircraft, carrier, units, now = gameState.
 
 export function requestCarrierLaunch(aircraft, destination = null, now = gameState.simulationTime || 0) {
   if (!aircraft?.carrierId || !AIRCRAFT_SLOT_WEIGHT[aircraft.type]) return false
+  if (aircraft.carrierOperation?.state === 'launch' || aircraft.carrierOperation?.state === 'launch_taxi') {
+    if (destination) aircraft.carrierOperation.destination = destination
+    return true
+  }
   if (!aircraft.carrierStrikeActive) {
     aircraft.carrierStrikeActive = false
     aircraft.pendingCarrierStrikeTargetId = null
@@ -908,10 +912,10 @@ export function requestCarrierLaunch(aircraft, destination = null, now = gameSta
 }
 
 function assignCarrierSlot(aircraft, carrier, units, preferredIndex = null) {
-  if (Number.isInteger(aircraft.carrierDeckSlotIndex)) return aircraft.carrierDeckSlotIndex
+  if (aircraft.carrierId === carrier.id && Number.isInteger(aircraft.carrierDeckSlotIndex)) return aircraft.carrierDeckSlotIndex
   const occupiedSlots = getOccupiedCarrierDeckSlots(carrier, units, aircraft.id)
   const aircraftWeight = AIRCRAFT_SLOT_WEIGHT[aircraft.type] || 1
-  const fits = index => Array.from({ length: aircraftWeight }, (_, offset) => index + offset)
+  const fits = index => index >= 0 && Array.from({ length: aircraftWeight }, (_, offset) => index + offset)
     .every(slot => slot < carrier.deckSlotCapacity && !occupiedSlots.has(slot))
   let slotIndex = Number.isInteger(preferredIndex) && fits(preferredIndex) ? preferredIndex : 0
   while (
@@ -919,6 +923,7 @@ function assignCarrierSlot(aircraft, carrier, units, preferredIndex = null) {
     Array.from({ length: aircraftWeight }, (_, offset) => slotIndex + offset)
       .some(slot => slot >= carrier.deckSlotCapacity || occupiedSlots.has(slot))
   ) slotIndex++
+  if (slotIndex >= carrier.deckSlotCapacity) return null
   aircraft.carrierId = carrier.id
   aircraft.carrierDeckSlotIndex = slotIndex
   return slotIndex

@@ -184,6 +184,53 @@ export function clearAirstripSlotOccupant(airstrip, unitId) {
   }
 }
 
+// Repair stale claims from interrupted flights and saves. The caller indexes aircraft
+// once for all airstrips so each slot takes at most two lookups per tick.
+export function reconcileAirstripParking(airstrip, airstripId, aircraftById) {
+  const occupied = airstrip.f22OccupiedSlotUnitIds
+  const reserved = airstrip.f22ReservedSlotUnitIds
+  for (let index = 0; index < occupied.length; index++) {
+    const occupant = occupied[index] && aircraftById.get(occupied[index])
+    if (occupied[index] && !isHoldingAirstripSlot(occupant, airstrip, airstripId, index)) {
+      if (airstrip.landedUnitId === occupied[index]) airstrip.landedUnitId = null
+      if (occupant?.landedHelipadId === airstripId && occupant.flightState !== 'grounded') {
+        occupant.landedHelipadId = null
+        if (occupant.manualFlightState === 'takeoff' && occupant.helipadTargetId === airstripId &&
+            occupant.airstripParkingSlotIndex === index) {
+          occupant.helipadLandingRequested = false
+        }
+      }
+      occupied[index] = null
+    }
+
+    if (!reserved[index] || reserved[index] === occupied[index]) continue
+    const aircraft = aircraftById.get(reserved[index])
+    const delivery = aircraft?.aircraftDelivery
+    const delivering = delivery?.targetId === airstripId &&
+      (aircraft.type === 'c5Galaxy' ? C5_LOWER_SLOT_INDICES.includes(index) : delivery.slot === index)
+    const landing = aircraft?.helipadLandingRequested && aircraft.helipadTargetId === airstripId &&
+      aircraft.airstripParkingSlotIndex === index
+    if (!delivering && !landing) reserved[index] = null
+  }
+}
+
+function isHoldingAirstripSlot(aircraft, airstrip, airstripId, index) {
+  if (!aircraft || aircraft.carrierOperation) return false
+  if (aircraft.type === 'f22Raptor') {
+    if (aircraft.airstripParkingSlotIndex !== index) return false
+    if (aircraft.f22State === 'taxi_to_parking') return aircraft.airstripId === airstripId
+    return aircraft.flightState === 'grounded' && aircraft.landedHelipadId === airstripId &&
+      (aircraft.f22State === 'parked' || aircraft.f22State === 'wait_takeoff_clearance')
+  }
+  if (aircraft.flightState !== 'grounded') return false
+  const galaxy = aircraft.type === 'c5Galaxy'
+  const parkedAt = galaxy ? aircraft.homeAirstripId ?? aircraft.airstripId : aircraft.landedHelipadId
+  if (parkedAt !== airstripId || (galaxy ? !C5_LOWER_SLOT_INDICES.includes(index) : aircraft.airstripParkingSlotIndex !== index)) return false
+  const spot = airstrip.f22ParkingSpots[galaxy ? C5_LOWER_SLOT_INDICES[1] : index]
+  return Math.abs(aircraft.x + TILE_SIZE / 2 - spot.worldX) <= TILE_SIZE / 2 &&
+    Math.abs(aircraft.y + TILE_SIZE / 2 - spot.worldY) <= TILE_SIZE / 2
+}
+
 export const C5_LOWER_SLOT_INDICES = Object.freeze([0, 1, 2])
 
 export function getC5ParkingPosition(airstrip) {

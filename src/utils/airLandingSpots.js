@@ -6,32 +6,32 @@ import { getHelipadLandingCenter } from './helipadUtils.js'
 export const LANDING_AIRCRAFT_TYPES = new Set(['apache', 'f22Raptor', 'f35', 'c5Galaxy'])
 export const CARRIER_AIRCRAFT_SLOT_WEIGHT = Object.freeze({ f22Raptor: 1, f35: 2, apache: 2 })
 
-function carrierCenter(carrier) {
-  return { x: carrier.x + TILE_SIZE / 2, y: carrier.y + TILE_SIZE / 2 }
-}
+const CARRIER_DECK_POINTS = [
+  { forward: -1.25, right: 0.55 },
+  { forward: -0.25, right: 0.55 },
+  { forward: 0.75, right: 0.55 },
+  { forward: 1.7, right: 0.55 }
+]
 
-export function getCarrierDeckSlotPoint(carrier, index) {
-  const slots = [
-    { forward: -1.25, right: 0.55 },
-    { forward: -0.25, right: 0.55 },
-    { forward: 0.75, right: 0.55 },
-    { forward: 1.7, right: 0.55 }
-  ]
-  const slot = slots[index] || slots[0]
+export function getCarrierDeckSlotPoint(carrier, index, point = {}) {
+  const slot = CARRIER_DECK_POINTS[index] || CARRIER_DECK_POINTS[0]
   const direction = carrier.direction || 0
-  const center = carrierCenter(carrier)
-  return {
-    x: center.x + Math.cos(direction) * slot.forward * TILE_SIZE - Math.sin(direction) * slot.right * TILE_SIZE,
-    y: center.y + Math.sin(direction) * slot.forward * TILE_SIZE + Math.cos(direction) * slot.right * TILE_SIZE
-  }
+  const forward = slot.forward * TILE_SIZE
+  const right = slot.right * TILE_SIZE
+  const cos = Math.cos(direction)
+  const sin = Math.sin(direction)
+  point.x = carrier.x + TILE_SIZE / 2 + cos * forward - sin * right
+  point.y = carrier.y + TILE_SIZE / 2 + sin * forward + cos * right
+  return point
 }
 
 export function getOccupiedCarrierDeckSlots(carrier, units, ignoredUnitIds = []) {
   const ignored = new Set(Array.isArray(ignoredUnitIds) ? ignoredUnitIds : [ignoredUnitIds])
   const occupied = new Set()
   ;(units || []).forEach(unit => {
+    if (!unit || unit.health <= 0 || ignored.has(unit.id)) return
     const carrierId = unit.carrierOperation?.carrierId || unit.carrierId
-    if (!unit || ignored.has(unit.id) || carrierId !== carrier.id || !Number.isInteger(unit.carrierDeckSlotIndex)) return
+    if (carrierId !== carrier.id || !Number.isInteger(unit.carrierDeckSlotIndex)) return
     const weight = CARRIER_AIRCRAFT_SLOT_WEIGHT[unit.type] || 1
     for (let offset = 0; offset < weight; offset++) occupied.add(unit.carrierDeckSlotIndex + offset)
   })
@@ -71,7 +71,8 @@ export function getAvailableLandingSpots(selectedUnits, buildings, units) {
     for (let index = 0; index < capacity; index++) {
       if (occupied.has(index)) continue
       const compatible = Array.from(types).some(type => {
-        const weight = CARRIER_AIRCRAFT_SLOT_WEIGHT[type] || 1
+        const weight = CARRIER_AIRCRAFT_SLOT_WEIGHT[type]
+        if (!weight) return false
         for (let offset = 0; offset < weight; offset++) {
           if (index + offset >= capacity || occupied.has(index + offset)) return false
         }

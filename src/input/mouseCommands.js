@@ -1,6 +1,7 @@
 import { findPathForOwner } from '../units.js'
 import { needsAmmo as targetNeedsAmmo } from '../utils/ammunition.js'
 import { applyMapAction } from '../ui/mapActions/mapActionCommands.js'
+import { dispatchMapAction } from '../ui/mapActions/mapActionDispatch.js'
 import { broadcastGameCommand } from '../network/commandBroadcast.js'
 import { COMMAND_TYPES } from '../network/commandTypes.js'
 import { canSupplyShipServe } from '../game/shipyardServiceLogic.js'
@@ -13,7 +14,7 @@ import { findWreckAtTile } from '../game/unitWreckManager.js'
 import { playSound } from '../sound.js'
 import { findEnemyTarget } from './mouseHelpers.js'
 import { isForceAttackModifierActive } from '../utils/inputUtils.js'
-import { initiateRetreat } from '../behaviours/retreat.js'
+import { appendMoveWaypoint } from '../game/moveWaypoints.js'
 import { isLocalPartyAutomationLocked } from '../network/multiplayerStore.js'
 import { createReplayEntityReference, createReplayUnitReferences, isReplayInteractionLocked, recordReplayCommand } from '../replaySystem.js'
 import {
@@ -493,6 +494,7 @@ export function handleStandardCommands(handler, worldX, worldY, selectedUnits, u
           queueAppend: true
         })
         markWaypointsAdded()
+        handler.requestRenderFrame?.()
       } else {
         const carriers = commandableUnits.filter(unit => unit.type === 'aircraftCarrier')
         carriers.forEach(unit => commandCarrierStrike(unit, target, handler.gameUnits || [], false))
@@ -510,16 +512,14 @@ export function handleStandardCommands(handler, worldX, worldY, selectedUnits, u
       }
     } else {
       if (altPressed) {
-        commandableUnits.forEach(unit => {
-          if (!unit.commandQueue) unit.commandQueue = []
-          unit.commandQueue.push({ type: 'move', x: worldX, y: worldY })
-        })
+        appendMoveWaypoint(commandableUnits, worldX, worldY)
         recordHumanUnitCommand(commandableUnits.map(unit => unit.id), {
           command: 'move',
           targetPos: { space: 'world', x: worldX, y: worldY },
           queueAppend: true
         })
         markWaypointsAdded()
+        handler.requestRenderFrame?.()
       } else {
         unitCommands.handleMovementCommand(commandableUnits, worldX, worldY, mapGrid)
         recordHumanUnitCommand(commandableUnits.map(unit => unit.id), {
@@ -594,6 +594,12 @@ export function handleServiceProviderClick(handler, provider, selectedUnits, uni
   return handled
 }
 
+export function handleRetreatClick(handler, selected, x, y, commands, mapGrid) {
+  if (isReplayInteractionLocked() || isLocalPartyAutomationLocked()) return
+  if (dispatchMapAction({ action: 'retreatTo', x, y, entityIds: selected.map(unit => unit.id) },
+    { units: selected, buildings: gameState.buildings, commands, mapGrid })) handler.requestRenderFrame?.()
+}
+
 export function handleFallbackCommand(handler, worldX, worldY, selectedUnits, unitCommands, mapGrid, e, units = [], factories = []) {
   if (selectedUnits.length === 0 || gameState.buildingPlacementMode || gameState.repairMode || gameState.sellMode) {
     return
@@ -620,15 +626,11 @@ export function handleFallbackCommand(handler, worldX, worldY, selectedUnits, un
   }
 
   if (e.shiftKey) {
-    initiateRetreat(commandableUnits, worldX, worldY, mapGrid)
-    recordHumanUnitCommand(commandableUnits.map(unit => unit.id), {
-      command: 'retreat',
-      targetPos: { space: 'world', x: worldX, y: worldY }
-    })
+    handleRetreatClick(handler, commandableUnits, worldX, worldY, unitCommands, mapGrid)
     return
   }
 
-  if (e.altKey) {
+  if (e.altKey || gameState.altKeyDown) {
     handleStandardCommands(handler, worldX, worldY, commandableUnits, unitCommands, mapGrid, true)
   } else if (!isForceAttackModifierActive(e)) {
     handleStandardCommands(handler, worldX, worldY, commandableUnits, unitCommands, mapGrid, false)

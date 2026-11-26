@@ -1,15 +1,83 @@
 import { TILE_SIZE, MOVE_TARGET_INDICATOR_SIZE } from '../config.js'
 import { gameState } from '../gameState.js'
+import { getMapOrderPreview } from '../ui/mapActions/mapOrderDraft.js'
+
+const ROUTE_MARKER_RADIUS = 11
+const ROUTE_BLUE = '#81c9ff'
+
+function drawRouteSegment(ctx, fromX, fromY, toX, toY, directed = false, paired = false, previousMarker = false) {
+  const distance = Math.hypot(toX - fromX, toY - fromY)
+  if (distance === 0) return
+  const dx = (toX - fromX) / distance
+  const dy = (toY - fromY) / distance
+  const startInset = previousMarker ? Math.min(ROUTE_MARKER_RADIUS, distance) : 0
+  ctx.strokeStyle = ROUTE_BLUE
+  ctx.lineWidth = 1.5
+  ctx.beginPath()
+  ctx.moveTo(fromX + dx * startInset, fromY + dy * startInset)
+  ctx.lineTo(toX, toY)
+  ctx.stroke()
+  if (!directed) return
+  // A two-point loop uses opposite halves so both directions remain visible.
+  const middleX = fromX + (toX - fromX) * (paired ? 0.35 : 0.5)
+  const middleY = fromY + (toY - fromY) * (paired ? 0.35 : 0.5)
+  ctx.beginPath()
+  ctx.moveTo(middleX - dx * 5 - dy * 4, middleY - dy * 5 + dx * 4)
+  ctx.lineTo(middleX + dx * 3, middleY + dy * 3)
+  ctx.lineTo(middleX - dx * 5 + dy * 4, middleY - dy * 5 - dx * 4)
+  ctx.stroke()
+}
+
+function drawRouteMarker(ctx, x, y, index) {
+  ctx.strokeStyle = ROUTE_BLUE
+  ctx.lineWidth = 1.5
+  ctx.fillStyle = '#142b4a'
+  ctx.beginPath()
+  ctx.arc(x, y, ROUTE_MARKER_RADIUS, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.stroke()
+  ctx.fillStyle = '#fff'
+  ctx.font = 'bold 11px sans-serif'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.fillText(String(index + 1), x, y)
+}
+
+function drawRoute(ctx, points, scrollOffset, loop, width, height) {
+  if (!points.length) return
+  const margin = ROUTE_MARKER_RADIUS
+  ctx.save()
+  let previous = loop ? points.at(-1) : points[0]
+  for (let i = loop ? 0 : 1; i < points.length; i++) {
+    const point = points[i]
+    const x1 = previous.x - scrollOffset.x
+    const y1 = previous.y - scrollOffset.y
+    const x2 = point.x - scrollOffset.x
+    const y2 = point.y - scrollOffset.y
+    if (Math.max(x1, x2) >= -margin && Math.min(x1, x2) <= width + margin &&
+        Math.max(y1, y2) >= -margin && Math.min(y1, y2) <= height + margin) {
+      drawRouteSegment(ctx, x1, y1, x2, y2, loop, loop && points.length === 2)
+    }
+    previous = point
+  }
+  for (let i = 0; i < points.length; i++) {
+    const x = points[i].x - scrollOffset.x
+    const y = points[i].y - scrollOffset.y
+    if (x >= -margin && x <= width + margin && y >= -margin && y <= height + margin) drawRouteMarker(ctx, x, y, i)
+  }
+  ctx.restore()
+}
 
 export class PathPlanningRenderer {
   constructor() {
     this.actionBuffer = []
+    this.drawnPatrols = new Set()
     this.utilityActionPool = []
     this.seenUnitTargetIds = new Set()
     this.seenWreckTargetIds = new Set()
   }
 
-  render(ctx, units, scrollOffset, entityIndex = null) {
+  render(ctx, units, scrollOffset, entityIndex = null, width = Infinity, height = Infinity) {
     if (!units) return
 
     const buildUtilityQueueActions = unit => {
@@ -114,8 +182,14 @@ export class PathPlanningRenderer {
       ctx.fillText(String(idx + 1), screenX, screenY - half / 2 + 2)
     }
 
+    this.drawnPatrols.clear()
     units.forEach(unit => {
       if (!unit.selected) return
+      const patrolPoints = unit.patrol?.points
+      if (patrolPoints && !this.drawnPatrols.has(patrolPoints)) {
+        drawRoute(ctx, patrolPoints, scrollOffset, true, width, height)
+        this.drawnPatrols.add(patrolPoints)
+      }
       const queue = actionsForUnit(unit)
       if (queue.length === 0) return
 
@@ -197,6 +271,14 @@ export class PathPlanningRenderer {
         const screenY = targetY - scrollOffset.y
 
         ctx.save()
+        if (action.type === 'move' || action.type === 'attack' || action.type === 'agf') {
+          drawRouteSegment(ctx, screenPrevX, screenPrevY, screenX, screenY, false, false, idx > 0)
+          drawRouteMarker(ctx, screenX, screenY, idx)
+          ctx.restore()
+          prevX = targetX
+          prevY = targetY
+          return
+        }
         ctx.strokeStyle = 'rgba(255, 165, 0, 0.5)'
         ctx.lineWidth = 1
         ctx.beginPath()
@@ -229,6 +311,9 @@ export class PathPlanningRenderer {
         prevY = targetY
       })
     })
+
+    const draft = getMapOrderPreview()
+    if (draft) drawRoute(ctx, draft.points, scrollOffset, draft.action === 'patrol', width, height)
 
     if (gameState.moveWaypointsVisible) {
       units.forEach(unit => {

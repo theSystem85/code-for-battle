@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { createMapOrderDraft } from '../../src/ui/mapActions/mapOrderDraft.js'
+import { createMapOrderDraft, getMapOrderPreview } from '../../src/ui/mapActions/mapOrderDraft.js'
+import { PathPlanningRenderer } from '../../src/rendering/pathPlanningRenderer.js'
 import { gameState } from '../../src/gameState.js'
 
 describe('map order drafts', () => {
@@ -7,8 +8,9 @@ describe('map order drafts', () => {
   let draft
   let commit
   let locked
-  function pointer(type, id, x, y) {
-    return draft.handle({ type, pointerId: id, clientX: x, clientY: y, button: 0, target: canvas, preventDefault() {}, stopImmediatePropagation() {} })
+  let requestRender
+  function pointer(type, id, x, y, button = 0) {
+    return draft.handle({ type, pointerId: id, clientX: x, clientY: y, button, target: canvas, preventDefault() {}, stopImmediatePropagation() {} })
   }
   function tap(id, x, y) { pointer('pointerdown', id, x, y); pointer('pointerup', id, x, y) }
   beforeEach(() => {
@@ -19,7 +21,8 @@ describe('map order drafts', () => {
     gameState.scrollOffset = { x: 0, y: 0 }
     commit = vi.fn(() => true)
     locked = false
-    draft = createMapOrderDraft({ canvas, commit, locked: () => locked, resetInput() {} })
+    requestRender = vi.fn()
+    draft = createMapOrderDraft({ canvas, commit, locked: () => locked, resetInput() {}, requestRender })
   })
   afterEach(() => { draft.clear(); document.body.innerHTML = '' })
   it('[U07372] does not issue movement until a two-finger tap finalizes all route points', () => {
@@ -27,7 +30,8 @@ describe('map order drafts', () => {
     tap(1, 100, 100)
     tap(1, 150, 150)
     expect(commit).not.toHaveBeenCalled()
-    expect(document.querySelectorAll('.map-order-draft__point')).toHaveLength(2)
+    expect(getMapOrderPreview().points).toEqual([{ x: 100, y: 100 }, { x: 150, y: 150 }])
+    expect(requestRender).toHaveBeenCalledTimes(2)
     pointer('pointerdown', 1, 200, 200)
     pointer('pointerdown', 2, 250, 200)
     pointer('pointerup', 1, 200, 200)
@@ -35,6 +39,7 @@ describe('map order drafts', () => {
     pointer('pointerup', 2, 250, 200)
     expect(commit).toHaveBeenCalledWith('planPath', { x: 100, y: 100, points: [{ x: 100, y: 100 }, { x: 150, y: 150 }] }, ['tank'])
     expect(draft.active()).toBe(false)
+    expect(requestRender).toHaveBeenCalledTimes(3)
   })
   it('[U07373] treats a two-finger pan as camera movement and leaves the route open', () => {
     draft.start('planPath', ['tank'])
@@ -48,22 +53,40 @@ describe('map order drafts', () => {
     expect(commit).not.toHaveBeenCalled()
     expect(draft.active()).toBe(true)
   })
-  it('[U07374] commits a retreat on the next valid destination and keeps the captured selection', () => {
+  it('[U07374] commits the captured selection and points on desktop right-click', () => {
     const selection = ['tank']
-    draft.start('retreatTo', selection)
+    draft.start('planPath', selection)
     selection.push('other')
     gameState.mapGrid[3][3].type = 'water'
     tap(1, 100, 100)
     expect(commit).not.toHaveBeenCalled()
     tap(1, 200, 200)
-    expect(commit).toHaveBeenCalledWith('retreatTo', expect.objectContaining({ x: 200, y: 200 }), ['tank'])
+    expect(commit).not.toHaveBeenCalled()
+    expect(pointer('pointerdown', 1, 300, 300, 2)).toBe(true)
+    expect(commit).toHaveBeenCalledWith('planPath', { x: 200, y: 200, points: [{ x: 200, y: 200 }] }, ['tank'])
+    expect(getMapOrderPreview()).toBeNull()
   })
+  it('[U07400] draws numbered patrol markers with a line and direction on each leg', () => {
+    draft.start('patrol', ['tank'])
+    tap(1, 80, 80)
+    tap(1, 160, 80)
+    tap(1, 160, 160)
+    const ctx = Object.fromEntries(['save', 'restore', 'beginPath', 'moveTo', 'lineTo', 'stroke', 'fill', 'arc', 'fillText'].map(method => [method, vi.fn()]))
+    new PathPlanningRenderer().render(ctx, [], { x: 8, y: 0 })
+
+    expect(ctx.arc).toHaveBeenCalledTimes(3)
+    expect(ctx.fillText.mock.calls).toEqual([['1', 72, 80], ['2', 152, 80], ['3', 152, 160]])
+    expect(ctx.lineTo).toHaveBeenCalledWith(152, 80)
+    expect(ctx.lineTo).toHaveBeenCalledWith(115, 80)
+    expect(ctx.lineTo).toHaveBeenCalledTimes(9)
+  })
+
   it('[U07375] clears cancelled or locked drafts without issuing orders', () => {
     draft.start('planPath', ['tank'])
     tap(1, 100, 100)
     pointer('pointercancel', 1, 100, 100)
     expect(draft.active()).toBe(false)
-    draft.start('retreatTo', ['tank'])
+    draft.start('patrol', ['tank'])
     locked = true
     tap(1, 200, 200)
     expect(draft.active()).toBe(false)

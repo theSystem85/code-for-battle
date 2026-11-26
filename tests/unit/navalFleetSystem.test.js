@@ -39,6 +39,7 @@ import {
   rebuildWaterMineLookup,
   updateWaterMines
 } from '../../src/game/waterMineSystem.js'
+import { getOccupiedCarrierDeckSlots } from '../../src/utils/airLandingSpots.js'
 import { addShipWake, getNavalHullDimensions, getNavalRenderLengthTiles } from '../../src/utils/navalUtils.js'
 import { playPositionalSound } from '../../src/sound.js'
 import {
@@ -661,6 +662,7 @@ describe('six-ship naval fleet systems', () => {
       flightState: 'grounded'
     }
     const units = [carrier, f22]
+    expect(getOccupiedCarrierDeckSlots(carrier, units).has(0)).toBe(true)
 
     expect(requestCarrierLaunch(f22, { x: 20, y: 8 }, 100)).toBe(true)
     expect(f22.carrierOperation.state).toBe('launch_taxi')
@@ -678,14 +680,17 @@ describe('six-ship naval fleet systems', () => {
     const launchStartedAt = f22.carrierOperation.startedAt
     updateNavalFleet(units, [], createMap(), { occupancyMap: [] }, launchStartedAt + 850, 16)
     expect(f22.x).toBeGreaterThan(runwayStartX)
+    expect(requestCarrierLaunch(f22, { x: 21, y: 8 }, launchStartedAt + 850)).toBe(true)
+    expect(f22.carrierOperation.startedAt).toBe(launchStartedAt)
     expect(f22.altitude).toBeGreaterThan(0)
     expect(f22.altitude).toBeLessThan(TILE_SIZE * 4.5)
     updateNavalFleet(units, [], createMap(), { occupancyMap: [] }, launchStartedAt + 1800, 16)
     expect(f22.carrierOperation).toBeNull()
     expect(f22.carrierId).toBeNull()
-    expect(f22.moveTarget).toEqual({ x: 20, y: 8 })
+    expect(getOccupiedCarrierDeckSlots(carrier, units).has(0)).toBe(false)
+    expect(f22.moveTarget).toEqual({ x: 21, y: 8 })
     expect(f22.f22AssignedDestination).toMatchObject({
-      destinationTile: { x: 20, y: 8 },
+      destinationTile: { x: 21, y: 8 },
       mode: 'manual',
       followTargetId: null
     })
@@ -693,7 +698,7 @@ describe('six-ship naval fleet systems', () => {
 
     updateNavalFleet(units, [], createMap(), { occupancyMap: [] }, launchStartedAt + 1816, 16)
     expect(f22.carrierOperation).toBeNull()
-    expect(f22.f22AssignedDestination.destinationTile).toEqual({ x: 20, y: 8 })
+    expect(f22.f22AssignedDestination.destinationTile).toEqual({ x: 21, y: 8 })
   })
 
   it('[U03145] holds F35 altitude until directly above its reserved carrier parking position', () => {

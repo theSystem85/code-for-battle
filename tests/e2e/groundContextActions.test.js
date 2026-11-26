@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 import { prepareRegressionScenario } from './helpers/regressionScenario.js'
 
 async function prepare(page) {
-  await prepareRegressionScenario(page, 419)
+  await prepareRegressionScenario(page, 419, 64, 60000)
   return page.evaluate(() => {
     const gs = window.gameState
     const { human, unit, building } = window.__regression
@@ -36,10 +36,17 @@ async function openAndChoose(page, origin, id) {
 
 test('[E00283] ground context offers retreat destinations, reverse movement and workshop defense', async({ page }) => {
   const origin = await prepare(page)
-  await openAndChoose(page, origin, 'retreatTo')
-  await expect(page.locator('#gameCanvas')).toHaveAttribute('data-map-order-draft', 'retreatTo')
-  await page.mouse.click(origin.x - 64, origin.y)
-  expect(await page.evaluate(() => ({ retreat: window.__groundContext.tank.isRetreating, backwards: window.__groundContext.tank.isMovingBackwards }))).toEqual({ retreat: true, backwards: true })
+  await openAndChoose(page, { x: origin.x - 64, y: origin.y }, 'retreatTo')
+  const retreatState = () => page.evaluate(() => {
+    const { isRetreating, isMovingBackwards, retreatTarget, retreatUsesPath } = window.__groundContext.tank
+    return { isRetreating, isMovingBackwards, retreatTarget, retreatUsesPath }
+  })
+  await expect.poll(retreatState).toEqual({ isRetreating: true, isMovingBackwards: true, retreatTarget: { x: 21, y: 23 }, retreatUsesPath: true })
+  await page.waitForTimeout(650)
+  await page.keyboard.down('Shift')
+  await page.mouse.click(origin.x + 96, origin.y + 64)
+  await page.keyboard.up('Shift')
+  await expect.poll(retreatState).toEqual({ isRetreating: true, isMovingBackwards: true, retreatTarget: { x: 26, y: 25 }, retreatUsesPath: true })
   const workshop = await page.evaluate(() => {
     const gs = window.gameState
     const b = window.__groundContext.workshop
@@ -75,12 +82,35 @@ test('[E00285] mobile map taps collect a route and a two-finger tap starts it', 
     await touch('pointerdown', 1, x, y)
     await touch('pointerup', 1, x, y)
   }
-  await expect(page.locator('.map-order-draft__point')).toHaveCount(2)
   expect(await page.evaluate(() => window.__groundContext.tank.moveTarget)).toBeNull()
   await touch('pointerdown', 1, origin.x, origin.y)
   await touch('pointerdown', 2, origin.x + 40, origin.y)
   await touch('pointerup', 1, origin.x, origin.y)
   await touch('pointerup', 2, origin.x + 40, origin.y)
   await expect(page.locator('#gameCanvas')).not.toHaveAttribute('data-map-order-draft')
-  expect(await page.evaluate(() => window.__groundContext.tank.commandQueue.length)).toBe(1)
+  expect(await page.evaluate(() => window.__groundContext.tank.commandQueue.length)).toBe(2)
+  await page.evaluate(() => { window.gameState.gamePaused = false })
+  await expect.poll(() => page.evaluate(() => window.__groundContext.tank.currentCommand?.type)).toBe('move')
+})
+
+test('[E00289] desktop right-click commits a route to the same queue as Option-click', async({ page }) => {
+  const origin = await prepare(page)
+  await page.keyboard.down('Alt')
+  await page.mouse.click(origin.x + 100, origin.y)
+  await page.keyboard.up('Alt')
+  await openAndChoose(page, origin, 'planPath')
+  await page.mouse.click(origin.x + 24, origin.y + 68)
+  await page.mouse.click(origin.x + 85, origin.y + 98)
+  await page.mouse.click(origin.x + 110, origin.y + 110, { button: 'right' })
+  await expect(page.locator('#gameCanvas')).not.toHaveAttribute('data-map-order-draft')
+  const actions = await page.evaluate(() => {
+    const tank = window.__groundContext.tank
+    return [tank.currentCommand, ...tank.commandQueue].filter(Boolean)
+  })
+  const world = 23 * 32 + 16
+  expect(actions).toEqual([
+    { type: 'move', x: world + 100, y: world },
+    { type: 'move', x: world + 24, y: world + 68 },
+    { type: 'move', x: world + 85, y: world + 98 }
+  ])
 })

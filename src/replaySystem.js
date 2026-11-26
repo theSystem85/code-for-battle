@@ -1,3 +1,4 @@
+import { appendMoveWaypoint } from './game/moveWaypoints.js'
 import { beginPatrol } from './game/patrolRoutes.js'
 import { sellUnitAtWorkshop } from './game/sellUnitAtWorkshop.js'
 import { applyPerkPurchase } from './perks/perkState.js'
@@ -603,13 +604,6 @@ function restoreReplaySelectedUnits(unitIds = [], command = null) {
   return true
 }
 
-function queueReplayMove(selectedUnits, targetPos) {
-  selectedUnits.forEach(unit => {
-    if (!unit.commandQueue) unit.commandQueue = []
-    unit.commandQueue.push({ type: 'move', x: targetPos.x, y: targetPos.y })
-  })
-}
-
 function queueReplayAttack(selectedUnits, target) {
   selectedUnits.forEach(unit => {
     if (!unit.commandQueue) unit.commandQueue = []
@@ -636,7 +630,7 @@ function executeReplayUnitCommand(command) {
         if (!command.targetPos) return false
         const queuedTarget = normalizeReplayWorldPosition(command.targetPos)
         if (!queuedTarget) return false
-        queueReplayMove(selectedUnits, queuedTarget)
+        appendMoveWaypoint(selectedUnits, queuedTarget.x, queuedTarget.y)
         return true
       }
       if (command.targetPos) {

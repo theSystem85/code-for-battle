@@ -11,6 +11,7 @@ let overlay = null
 let activeTree = 'command'
 let cleanupViewport = null
 let cleanupPan = null
+let connectorObserver = null
 let unsubscribe = null
 let pauseWasRunning = false
 let openTooltip = null
@@ -119,12 +120,50 @@ function node(perk, ledger) {
   return button
 }
 
-function connectors(perks, ledger) {
-  return perks.slice(1).map(perk => {
-    const requirement = perk.requires.all?.[0]
-    const lit = requirement && ledger.owned.includes(requirement)
-    return `<i class="perk-connector${lit ? ' is-lit' : ''}" aria-hidden="true"></i>`
-  }).join('')
+const SVG_NS = 'http://www.w3.org/2000/svg'
+
+function renderConnectors(canvas, ledger) {
+  const lines = document.createElementNS(SVG_NS, 'svg')
+  lines.classList.add('perk-tree__connectors')
+  lines.setAttribute('aria-hidden', 'true')
+  canvas.prepend(lines)
+
+  const nodes = new Map([...canvas.querySelectorAll('.perk-node')].map(button => [button.dataset.perkId, button]))
+  const edges = []
+  for (const [id, child] of nodes) {
+    const { all, any } = getPerk(id).requires
+    for (const requirement of all || any || []) {
+      const parent = nodes.get(requirement)
+      if (!parent) continue
+      const line = document.createElementNS(SVG_NS, 'path')
+      if (ledger.owned.includes(requirement)) line.classList.add('is-lit')
+      lines.appendChild(line)
+      edges.push({ parent, child, line, merge: Boolean(any) })
+    }
+  }
+
+  function layout() {
+    const bounds = canvas.getBoundingClientRect()
+    for (const { parent, child, line, merge } of edges) {
+      const from = parent.getBoundingClientRect()
+      const to = child.getBoundingClientRect()
+      const x1 = from.left + from.width / 2 - bounds.left
+      const y1 = from.bottom - bounds.top
+      const x2 = to.left + to.width / 2 - bounds.left
+      const y2 = to.top - bounds.top
+      const elbow = (y1 + y2) / 2
+      const path = merge
+        ? `M${x1},${y1} V${y2 - 42} L${x2},${y2 - 4} V${y2}`
+        : `M${x1},${y1} V${elbow} H${x2} V${y2}`
+      line.setAttribute('d', path)
+    }
+  }
+  layout()
+  if (typeof window.ResizeObserver !== 'undefined') {
+    connectorObserver = new window.ResizeObserver(layout)
+    connectorObserver.observe(canvas)
+    for (const button of nodes.values()) connectorObserver.observe(button)
+  }
 }
 
 function render() {
@@ -133,6 +172,7 @@ function render() {
   openTooltip = null
   const ledger = getPerkLedger(owner())
   const canvas = overlay.querySelector('.perk-tree__canvas')
+  connectorObserver?.disconnect()
   canvas.replaceChildren()
   if (activeTree === 'research') {
     const section = document.createElement('section')
@@ -147,6 +187,7 @@ function render() {
     section.append(foundation, lanes)
     canvas.appendChild(section)
   } else renderCommandTree(canvas, ledger)
+  renderConnectors(canvas, ledger)
   overlay.querySelector('.perk-ledger').innerHTML = `${star()} <b>${ledger.available} available</b> · ${ledger.earned} earned · ${ledger.spent} used <small>Earn stars when units gain veterancy.</small>`
   const research = activeTree === 'research'
   const online = research ? hasLivingResearchCenter(owner()) : hasLivingCommandCenter(owner())
@@ -160,20 +201,29 @@ function renderCommandTree(canvas, ledger) {
     const column = document.createElement('section')
     column.className = `perk-branch perk-branch--${tree}`
     const start = perks.find(perk => perk.lane === 'start')
-    const ifPerks = perks.filter(perk => perk.lane === 'if')
-    const doPerks = perks.filter(perk => perk.lane === 'do')
-    column.innerHTML = `<h2>${{ base: 'Base build', prod: 'Unit build', unit: 'Unit control', def: 'Base defence' }[tree]}</h2><div class="perk-branch__start"></div><div class="perk-lanes"><div class="perk-lane perk-lane--if"><span>IF</span>${connectors(ifPerks, ledger)}</div><div class="perk-lane perk-lane--do"><span>DO</span>${connectors(doPerks, ledger)}</div></div>`
+    column.innerHTML = `<h2>${{ base: 'Base build', prod: 'Unit build', unit: 'Unit control', def: 'Base defence' }[tree]}</h2><div class="perk-branch__start"></div><div class="perk-lanes"></div>`
     column.querySelector('.perk-branch__start').appendChild(node(start, ledger))
-    const lanes = column.querySelectorAll('.perk-lane')
-    ifPerks.forEach(perk => lanes[0].appendChild(node(perk, ledger)))
-    doPerks.forEach(perk => lanes[1].appendChild(node(perk, ledger)))
+    const lanes = column.querySelector('.perk-lanes')
+    for (const type of ['if', 'do']) {
+      const lanePerks = perks.filter(perk => perk.lane === type).sort((a, b) => a.order - b.order)
+      const independent = lanePerks.filter(perk => perk.order > 1 && perk.requires.all?.includes(start.id))
+      const label = document.createElement('span')
+      label.className = 'perk-lane__label'
+      label.textContent = type.toUpperCase()
+      label.style.gridColumnEnd = `span ${1 + independent.length}`
+      lanes.appendChild(label)
+      for (const chain of [lanePerks.filter(perk => !independent.includes(perk)), ...independent.map(perk => [perk])]) {
+        const lane = document.createElement('div')
+        lane.className = 'perk-lane'
+        for (const perk of chain) lane.appendChild(node(perk, ledger))
+        lanes.appendChild(lane)
+      }
+    }
     canvas.appendChild(column)
   }
   const capstone = getPerk('cc.def.capstone')
   const cap = document.createElement('section')
   cap.className = 'perk-capstone'
-  const ends = ['cc.unit.if.sensing', 'cc.unit.do.air', 'cc.def.if.world', 'cc.def.do.manual', 'cc.base.if.enemies', 'cc.base.do.defence', 'cc.prod.if.enemies', 'cc.prod.do.naval']
-  cap.innerHTML = `<svg class="perk-capstone__merge" viewBox="0 0 800 100" preserveAspectRatio="none" aria-hidden="true">${ends.map((id, index) => `<path class="${ledger.owned.includes(id) ? 'is-lit' : ''}" d="M${50 + index * 100} 0 L${50 + index * 100} 45 L400 95"/>`).join('')}</svg>`
   cap.appendChild(node(capstone, ledger))
   canvas.appendChild(cap)
 }
@@ -185,7 +235,7 @@ function focusPerk(perkId) {
   const viewport = overlay.querySelector('.perk-tree__viewport')
   const box = button.getBoundingClientRect()
   const view = viewport.getBoundingClientRect()
-  cleanupPan.panBy(view.left + view.width / 2 - box.left - box.width / 2, view.top + view.height / 2 - box.top - box.height / 2)
+  cleanupPan.panBy(box.left + box.width / 2 - view.left - view.width / 2, box.top + box.height / 2 - view.top - view.height / 2)
   if (openTooltip) openTooltip.classList.remove('show-tooltip')
   button.classList.add('show-tooltip')
   openTooltip = button
@@ -209,7 +259,9 @@ export function openPerkTree(tree = 'command', perkId = null) {
   document.body.appendChild(overlay)
   cleanupViewport = attachAutomationViewport(overlay, overlay.querySelector('.perk-tree'))
   const viewport = overlay.querySelector('.perk-tree__viewport')
-  cleanupPan = createPanSurface(viewport, { content: overlay.querySelector('.perk-tree__canvas'), initialX: research ? 0 : 450, speed: 1.2, inertia: true })
+  const canvas = overlay.querySelector('.perk-tree__canvas')
+  const initialX = Math.max(0, (canvas.offsetWidth - viewport.clientWidth) / 2)
+  cleanupPan = createPanSurface(viewport, { content: canvas, initialX, speed: 1.2, inertia: true })
   overlay.querySelector('.perk-tree__close').addEventListener('click', closePerkTree)
   overlay.addEventListener('keydown', event => { if (event.key === 'Escape') closePerkTree() })
   overlay.addEventListener('pointerup', event => {
@@ -233,6 +285,7 @@ export function openPerkTree(tree = 'command', perkId = null) {
 export function closePerkTree() {
   if (!overlay) return
   unsubscribe?.(); unsubscribe = null
+  connectorObserver?.disconnect(); connectorObserver = null
   cleanupPan?.destroy(); cleanupPan = null
   cleanupViewport?.(); cleanupViewport = null
   window.removeEventListener('blur', cancelHold)

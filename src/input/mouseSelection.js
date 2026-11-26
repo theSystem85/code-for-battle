@@ -14,7 +14,6 @@ import { showNotification } from '../ui/notifications.js'
 import { isForceAttackModifierActive, isGuardModifierActive } from '../utils/inputUtils.js'
 import { findWreckAtTile } from '../game/unitWreckManager.js'
 import { canRecoveryTankTowTarget } from '../game/jetFuel.js'
-import { initiateRetreat } from '../behaviours/retreat.js'
 import * as mineInput from './mineInputHandler.js'
 import { isWithinBaseRange } from '../utils/baseUtils.js'
 import { getAttackableCityAtWorld } from '../game/cityBuildings.js'
@@ -32,7 +31,8 @@ import {
   handleSupplyShipServiceCommand,
   handleServiceProviderClick,
   handleMineLayerFactoryServiceCommand,
-  handleFallbackCommand
+  handleFallbackCommand,
+  handleRetreatClick
 } from './mouseCommands.js'
 import { getUnitSelectionCenter } from './selectionManager.js'
 import { createReplayEntityReference, createReplayUnitReferences, recordReplayCommand } from '../replaySystem.js'
@@ -1248,7 +1248,7 @@ function handleUnitSelection(handler, worldX, worldY, e, units, factories, selec
 
         if (commandableUnits.length > 0) {
           if (e.shiftKey) {
-            initiateRetreat(commandableUnits, worldX, worldY, mapGrid)
+            handleRetreatClick(handler, commandableUnits, worldX, worldY, unitCommands, mapGrid)
           } else if (e.altKey) {
             handler.handleStandardCommands(worldX, worldY, commandableUnits, unitCommands, mapGrid, true)
           } else if (!isForceAttackModifierActive(e)) {
@@ -1293,11 +1293,7 @@ function handleUnitSelection(handler, worldX, worldY, e, units, factories, selec
     if (commandableUnits.length > 0) {
       selectionManager.resetDoubleClickTracking()
       if (e.shiftKey) {
-        initiateRetreat(commandableUnits, worldX, worldY, mapGrid)
-        recordHumanUnitCommand(commandableUnits.map(unit => unit.id), {
-          command: 'retreat',
-          targetPos: { space: 'world', x: worldX, y: worldY }
-        })
+        handleRetreatClick(handler, commandableUnits, worldX, worldY, unitCommands, mapGrid)
       } else if (e.altKey || gameState.altKeyDown) {
         commandableUnits.forEach(unit => {
           if (!unit.commandQueue) unit.commandQueue = []
@@ -1308,6 +1304,7 @@ function handleUnitSelection(handler, worldX, worldY, e, units, factories, selec
           targetRef: createReplayEntityReference(clickedUnit),
           queueAppend: true
         })
+        handler.requestRenderFrame?.()
       } else {
         unitCommands.handleAttackCommand(commandableUnits, clickedUnit, mapGrid, false)
         recordHumanUnitCommand(commandableUnits.map(unit => unit.id), {

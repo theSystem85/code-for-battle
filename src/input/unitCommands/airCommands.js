@@ -41,7 +41,7 @@ export function assignApacheFlight(unit, destTile, destCenter, options = {}) {
     unit.autoHoldAltitude = true
 
     if (options.mode === 'airstrip' && options.airstrip) {
-      beginAirstripLanding(unit, options.airstrip)
+      if (!beginAirstripLanding(unit, options.airstrip, { slotIndex: options.airstripParkingSlotIndex })) return false
       unit.commandIntent = 'landAtStructure'
       unit.airstripId = getBuildingIdentifier(options.airstrip)
       unit.homeAirstripId = unit.airstripId
