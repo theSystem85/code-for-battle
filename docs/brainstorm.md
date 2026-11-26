@@ -42,10 +42,6 @@ The automation mode gets a complete large language model integration. The game c
 Add a decision model, a fast "System One" style model that reacts directly instead of reasoning in text. The reference and inspiration is Jeff, the first well-known decision model, but it doesn't have to be Jeff itself: another open-source decision model will probably be used. Over time the decision model takes over the part the large language model handles today, which is mainly unit control, because it would be much better and more efficient at fast, frequent control decisions than the current LLM approach. After that, the LLM is only used to commentate on game events. The decision model drives units through the same shared high-level command set (see B-001 and B-005).
 - Added 2026-10-17.
 
-### B-007: Dev branch workflow
-Add a `dev` branch alongside `main` in the code-for-battle repo. Patrick decides when we switch modes. While he hasn't said otherwise, work goes through `main` as now: feature branches, draft PRs, and merges only when he asks. Once he says to work against dev, Grok Bot (and Codex) open PRs into `dev` that are auto-merged once conflicts are resolved (see B-007 decisions, which supersede the original direct-commit idea), still following the usual repo rules (conventional commits, lint and tests before every commit, docs and prompt-history entries). Netlify deploys every commit to `dev` live automatically, so no PRs are needed in that mode. `main` stays untouched while we work on dev. Every so often, when everything on dev has gone well and Patrick asks, dev is merged into main to bring them back in sync, again only when he says so. He also decides when to switch back to main.
-- Added 2026-10-17.
-
 ### B-008: Hot code push in dev mode (continuous delivery on steroids)
 Single-player hot code push, with Grok Bot as the coding partner while Patrick plays. He plays a single-player game, talks to Grok Bot while playing, points at a spot or thing in the game, and says what should change. Grok Bot makes the change and commits it to dev (B-007), and Netlify deploys it. Then the running game shows that an update has arrived, loads the changes, and Patrick can test them right away in the same match without reloading. To make that work, the game is refactored into modules that stay real production code (built, minified and as fast as normal). The running game notices a new deploy, for example by polling a small version or build manifest that each deploy publishes, fetches only the changed module files in the background, and swaps them in. The hard, still unsolved part is doing that swap safely. The likely approach is to keep the game state (units, buildings, map, resources) as plain data separate from the logic modules, swap modules only at a safe point between simulation ticks, give each module a way to hand over or rebuild its internal state, and fall back to saving the game, reloading and restoring it when a change can't be applied live. Pointing at a spot needs a way to pass the location or selected object to Grok Bot, for example map coordinates or a unit or building ID.
 - State migration (hard requirement): when the shape of the game state changes between versions, for example new fields, renamed properties or restructured data, the running game must notice it and migrate the live state during play, not just reload. The state carries a schema version, and each deploy ships migration functions that take it from the old version to the new one. These run at the safe swap point, before the new modules take over. Without this, hot code push can't work across breaking state changes.
@@ -85,14 +81,17 @@ Open research / design still needed before implementation: real-world weights an
 - Status: open — brainstorm only; do not implement until Patrick asks.
 
 
+## Done (moved to the repo)
+
+### B-007: Dev branch workflow
+Add a `dev` branch alongside `main` in the code-for-battle repo. Patrick decides when we switch modes. While he hasn't said otherwise, work goes through `main` as now: feature branches, draft PRs, and merges only when he asks. Once he says to work against dev, Grok Bot (and Codex) open PRs into `dev` that are auto-merged once conflicts are resolved (see B-007 decisions, which supersede the original direct-commit idea), still following the usual repo rules (conventional commits, lint and tests before every commit, docs and prompt-history entries). Netlify deploys every commit to `dev` live automatically, so no PRs are needed in that mode. `main` stays untouched while we work on dev. Every so often, when everything on dev has gone well and Patrick asks, dev is merged into main to bring them back in sync, again only when he says so. He also decides when to switch back to main.
+- Added 2026-10-17.
+- [x] Completed 2026-10-18 (commit date) · Commit: [c6176c3e](https://github.com/theSystem85/code-for-battle/commit/c6176c3e64b25276f2f7e29d9ef0a2c908e2d5fe) · Version: v0.62.1 (build)
+
 ### B-010: Production building spawn progress bar
 When a production building is actively producing a unit, show a small **blue** progress bar on that building. If multiple production buildings of the same kind (or sharing a queue) are present, **only** the building that will actually **spawn** the produced unit shows the progress bar — the others must not show a bar for that same production.
 - Added 2026-10-29.
-- Status: open — brainstorm only; do not implement until Patrick asks.
-
-## Done (moved to the repo)
-
-(none yet)
+- [x] Completed 2026-10-30 (commit date) · Commit: [729acbc1](https://github.com/theSystem85/code-for-battle/commit/729acbc15ae44db9d4384bcc328b1725d7ae0c20) · Version: v0.66.0 (build)
 
 ### B-007 decisions (2026-10-18) — start only AFTER #688 is merged to main, then start automatically
 1. Netlify deploys only `dev` as a branch deploy (no other branches).
