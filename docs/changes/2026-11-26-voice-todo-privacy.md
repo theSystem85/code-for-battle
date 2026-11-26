@@ -1,0 +1,3 @@
+- [x] **Voice brainstorming records**
+  - Limit repository records of voice brainstorming sessions to the agreed final to-do entries.
+  - Spec: none
