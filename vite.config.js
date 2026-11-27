@@ -12,6 +12,7 @@ import {
 } from './src/pwa/precachePolicy.js'
 import { computeAppVersion, versionDefines } from './scripts/versioning.mjs'
 import { isLiveUpdateBuild, liveUpdateBuildInfoPlugin } from './scripts/liveUpdateBuildInfo.mjs'
+import { todoBuildRevisions, todoDevPlugin } from './scripts/todo-vite.mjs'
 import { GAME_STATE_SCHEMA_VERSION } from './src/gameStateSchema.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -107,9 +108,14 @@ export default defineConfig({
   // APP_VERSION is computed here from package.json plus the unreleased
   // release-note entries (see scripts/versioning.mjs). Nothing in src/ holds a
   // hand-edited version number.
-  define: { ...versionDefines(__dirname), __LIVE_UPDATE__: JSON.stringify(LIVE_UPDATE) },
+  define: {
+    ...versionDefines(__dirname),
+    __LIVE_UPDATE__: JSON.stringify(LIVE_UPDATE),
+    __TODO_REVISIONS__: JSON.stringify(todoBuildRevisions(__dirname, LIVE_UPDATE))
+  },
   plugins: [
     legalRoutePlugin,
+    todoDevPlugin(__dirname),
     liveUpdateBuildInfoPlugin({ root: __dirname, version: computeAppVersion(__dirname).version, enabled: LIVE_UPDATE, stateSchemaVersion: GAME_STATE_SCHEMA_VERSION }),
     offlineAssetManifestPlugin(),
     VitePWA({

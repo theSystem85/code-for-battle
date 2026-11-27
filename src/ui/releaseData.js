@@ -10,13 +10,22 @@ export function compareVersions(a = '', b = '') {
   return 0
 }
 
+export function appendReleaseNote(release, category, description, todoIds) {
+  const index = release[category].push(description) - 1
+  if (todoIds?.length) {
+    release.todoIds ??= {}
+    release.todoIds[category] ??= {}
+    release.todoIds[category][index] = todoIds
+  }
+}
+
 export function buildUnreleasedRelease(files, version) {
   const release = { version, features: [], improvements: [], bugfixes: [] }
   for (const path of Object.keys(files).sort()) {
     const category = path.split('/').at(-2)
     const description = files[path]?.description
     if (RELEASE_CATEGORIES.includes(category) && typeof description === 'string' && description.trim()) {
-      release[category].push(description.trim())
+      appendReleaseNote(release, category, description.trim(), files[path].todoIds)
     }
   }
   return RELEASE_CATEGORIES.some(category => release[category].length) ? release : null
@@ -26,9 +35,15 @@ export function mergeReleaseEntries(released, unreleased) {
   if (!unreleased) return released
   const existing = released.find(entry => compareVersions(entry.version, unreleased.version) === 0)
   if (!existing) return [...released, unreleased]
-  return released.map(entry => entry === existing
-    ? Object.fromEntries([['version', entry.version], ...RELEASE_CATEGORIES.map(category => [category, [...(entry[category] || []), ...unreleased[category]]])])
-    : entry)
+  const combined = { version: existing.version, features: [], improvements: [], bugfixes: [] }
+  for (const source of [existing, unreleased]) {
+    for (const category of RELEASE_CATEGORIES) {
+      for (const [index, description] of (source[category] || []).entries()) {
+        appendReleaseNote(combined, category, description, source.todoIds?.[category]?.[index])
+      }
+    }
+  }
+  return released.map(entry => entry === existing ? combined : entry)
 }
 
 export function getReleaseDigest(fromVersion, toVersion, entries) {

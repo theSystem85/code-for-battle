@@ -2403,3 +2403,81 @@ body.mobile-portrait .tutorial-card {
   z-index: var(--z-modal-popover);
   pointer-events: auto;
 }
+
+.release-notes__todo-reference {
+  display: block;
+  margin-top: 4px;
+  color: #80efad;
+  font: inherit;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.todo-panel button, button.release-notes__todo-reference {
+  min-height: 40px;
+  padding: 6px 10px;
+  border: 1px solid rgba(138, 211, 186, 0.4);
+  border-radius: 6px;
+  color: #d1e5e8;
+  background: #102933;
+  cursor: pointer;
+}
+
+.todo-panel button[aria-pressed="true"] { border-color: #75e7a4; color: #80efad; }
+.todo-panel button:disabled { opacity: 0.55; cursor: default; }
+.todo-panel :is(button, input, select, summary):focus-visible, button.release-notes__todo-reference:focus-visible {
+  outline: 2px solid #75e7a4;
+  outline-offset: 2px;
+}
+
+.todo-panel__overview, .todo-panel__quick {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin: 0 0 12px;
+}
+
+.todo-panel__overview { color: #a9c7ca; font-size: 13px; }
+.todo-panel__filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 130px), 1fr));
+  gap: 8px 12px;
+}
+
+.todo-panel__filters label { display: grid; gap: 3px; min-width: 0; font-size: 13px; color: #a9c7ca; }
+.todo-panel__filters :is(input, select) {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 40px;
+  padding: 6px;
+  border: 1px solid rgba(138, 211, 186, 0.4);
+  border-radius: 6px;
+  background: #102933;
+  color: #effff5;
+  font-size: 16px;
+}
+
+.todo-panel__status { color: #a9c7ca; }
+.todo-panel__status:empty { display: none; }
+.todo-panel__list { display: grid; gap: 8px; margin: 12px 0; }
+.todo-panel__entry {
+  border: 1px solid rgba(138, 211, 186, 0.2);
+  border-radius: 10px;
+  background: rgba(14, 34, 43, 0.78);
+  overflow-wrap: anywhere;
+}
+
+.todo-panel__entry summary { padding: 12px; color: #80efad; cursor: pointer; }
+.todo-panel__entry-meta { display: block; padding-left: 15px; font-size: 13px; color: #a9c7ca; }
+.todo-panel__details { padding: 0 12px 12px; color: #d1e5e8; line-height: 1.45; }
+.todo-panel__details h4 { margin: 13px 0 4px; color: #effff5; }
+.todo-panel__details :is(p, ul, ol) { margin: 0 0 7px; }
+.todo-panel__details :is(ul, ol) { padding-left: 22px; }
+.todo-panel__description { white-space: pre-wrap; }
+
+@media (max-height: 480px) {
+  .release-notes__header { padding-top: 6px; padding-bottom: 6px; }
+  .release-notes__tabs { padding-top: 1px; }
+  .todo-panel { padding-top: 10px; }
+}

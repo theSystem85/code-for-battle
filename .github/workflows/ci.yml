@@ -13,27 +13,51 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      # Keep the named required check even when its application steps can be skipped.
+      # Run the classifier from the trusted base, and fall back to normal CI if absent.
+      - name: Classify TODO-only commits
+        id: changes
+        env:
+          CHANGE_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          CHANGE_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          if [[ "$CHANGE_BASE" =~ ^[a-f0-9]{40}$ ]] &&
+             git show "$CHANGE_BASE:scripts/todo-paths.mjs" > "$RUNNER_TEMP/todo-paths.mjs" &&
+             node "$RUNNER_TEMP/todo-paths.mjs" "$CHANGE_BASE" "$CHANGE_HEAD"; then
+            echo "todo_only=true" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Setup Node
+        if: steps.changes.outputs.todo_only != 'true'
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
 
       - name: Install dependencies
+        if: steps.changes.outputs.todo_only != 'true'
         run: npm ci
 
       - name: Lint
+        if: steps.changes.outputs.todo_only != 'true'
         run: npm run lint
 
       - name: Unit tests
+        if: steps.changes.outputs.todo_only != 'true'
         run: npm run test:unit
 
       - name: Integration tests
+        if: steps.changes.outputs.todo_only != 'true'
         run: npm run test:integration
 
       - name: Build
+        if: steps.changes.outputs.todo_only != 'true'
         run: npm run build
 
       - name: Browser smoke test
+        if: steps.changes.outputs.todo_only != 'true'
         run: npm run test:smoke

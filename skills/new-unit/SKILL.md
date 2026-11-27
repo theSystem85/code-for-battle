@@ -109,7 +109,7 @@ These rules come from the tank image overhaul (#740, #742) and the light tank. E
 - Take Playwright screenshots at DPR 1 and DPR 3 of the unit in game next to existing units, plus the build button, and inspect them before committing.
 - Run `npm run test:unit` and fix root causes.
 - Run `npm run lint:fix:changed` and manually resolve remaining lint issues.
-- Update the matching TODO file and specs, and record the prompt in `prompt-history/`. A new unit is a feature: add it under the right area heading in `TODO/Features.md` (above Done) as `- [ ] **Title** — description` plus `Spec: [Title](../specs/....md)` or `Spec: none`. Do not append it to Done or to the end of the file.
+- Reconcile the new unit as a feature in the canonical backlog under the relevant subsystem. Follow the [repository TODO reconciliation rules](../../AGENTS.md#todo-reconciliation) and keep its spec and prompt history.
 
 ## Supply units with tile effects (fire-system implementation)
 - Model an overlay such as fire as a serializable tile tag plus a compact active-record list; never replace terrain or retain entity references in saved records. Restore tags and the active list together for saves, replay baselines and host snapshots; clear them on map reset.

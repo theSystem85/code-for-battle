@@ -1,8 +1,8 @@
 RULES for agentic codeing
 1) running a development server is allowed when required for verification/debugging (especially Playwright E2E), and should be used when a task depends on a live app runtime. You HAVE to run all unit tests using "npm run test:unit" before concluding your code changes and fix all issues in a meaningful way (means fix the root issues in the code and not just adjust the test to pass). This test requirement does not apply to a docs-only change (rule 21).
 2) after completing any code implementation, always run `npm run lint:fix:changed` to auto-fix linting issues. If any errors remain that cannot be auto-fixed, manually resolve them before finishing the task.
-3) with every prompt, record the feature, improvement, or bug in a new markdown file under `docs/changes/`. Name it `YYYY-MM-DD-<short-slug>.md` or `<pr-or-issue>-<slug>.md`. Do not append that note to the shared files `TODO/Bugs.md`, `TODO/Features.md`, or `TODO/Improvements.md`. Those three files are edited by almost every branch; on this invite-code branch `TODO/Features.md` had to be merged with main's offline-mode notes (#720) and `TODO/Bugs.md` conflicted on an earlier rebase of the same branch against main. Classify the note the same way those files used to: a bug is something broken or contrary to intended/spec'd behavior, an improvement is polish of something that already exists (performance, UX, refactors, balance), and a feature is a new capability. Use `- [ ]` while the work is open and `- [x]` when it is finished, a short **bold title**, one description line, and `Spec: [Title](../specs/....md)` or `Spec: none`. Spec content for a new feature goes in its own new file under `specs/`. Do not append that feature's requirements to an existing shared spec. A dedicated cleanup PR periodically consolidates `docs/changes/` back into `TODO/Bugs.md`, `TODO/Features.md`, and `TODO/Improvements.md`.
-4) Except for voice To-Do List brainstorming sessions, as described under “Voice To-Do List”, put the content of any prompt into the prompt-history folder and for each prompt create a new file inside that folder that has the UTC timestamp as its name followed by an underscore and up to 3 word summary (with dashes as separators) of the prompt so a user can quickly identify what the prompt was about when reading the filename. The file is and .md file with UTC timestamp added on top and the name of the LLM that processed it (copilot, chatGPT, codex, ...).
+3) For implementation prompts, record each feature, improvement or bug in a new Markdown file under `docs/changes/`. Use `YYYY-MM-DD-<short-slug>.md` or `<pr-or-issue>-<slug>.md`, a checkbox, a short bold title, one description line and a spec link or `Spec: none`. Create a new specification under `specs/` for new features. For all TODO records and traceability requirements follow [TODO reconciliation](#todo-reconciliation).
+4) For implementation and other ordinary coding prompts, store the prompt in an English Markdown file in `prompt-history/`. Name it using a UTC timestamp, an underscore and a summary of up to three dash-separated words. Include the UTC timestamp and available model/harness information. Strict TODO-only operations use the dedicated prompt history defined in the To-Do List skill.
 5) when adding new buildings to the game the sidebar image can be found in public/images/sidebar and the image to render the building on the map in public/images/map/buildings
 6) when adding new units to the game the sidebar image can be found in public/images/sidebar and the image to render the unit on the map in public/images/map/units
 7) when the image assets for the new units are not specified in the prompt search the content of the folders mentioned in rule 5 and 6 for matching filenames. The names should be self explanatory so you could easily match them to the new units or buildings that you have to implement. The assets are usually added to the repo before you have to start the implementation.
@@ -19,7 +19,7 @@ RULES for agentic codeing
 17) All new image and other binary asset files added to the repository MUST use WebP format with 85% compression. Do not add new PNG, JPG, or other binary formats.
 18) PREPARED RENDERING REQUIREMENT: Prepare static terrain, final-size map/entity imagery, masks, shaders and necessary texture uploads before gameplay where possible, using explicit readiness and bounded byte budgets. Do not perform ordinary source-image resizing or lazily build resized sprite variants during gameplay; plane/helicopter takeoff and landing size animations are the only authorized animation exceptions. Preserve continuous rotation, clipping, procedural-water animation and existing visuals. Account for effective canvas DPR when auditing resizing. Handle explicit display/graphics changes through a controlled preparation-and-swap lifecycle. If another dynamic visual cannot satisfy this policy without deterioration, document the conflict instead of silently exempting it or degrading the image. Follow rendering_improvement_todos.md for staged ownership and implementation.
 19) Codebase prompt-history entries are always written in English, regardless of the language of the user's message. When the user wrote the request in German or any other language, translate it into English in the new file under `prompt-history/`. Do not rewrite older prompt-history files.
-20) Before every commit, run `npm run lint` and fix every reported issue. Never weaken, disable, or skip lint rules to make CI pass, and never omit the lint step from CI. This includes a docs-only commit (rule 21): lint is not a test.
+20) Before every commit, run `npm run lint` and fix every reported issue. Keep lint required in CI for all normal and mixed changes. This includes a docs-only commit. Validated strict TODO-only operations have the separate lightweight check below.
 21) DOCS-ONLY CHANGES: When a change **only** adds or edits documentation Markdown (`.md`) files, and none of those files is code or a configuration file, do **not** run any tests at all. Commit and push that change **straight onto the `dev` branch** with **no pull request** and no feature branch. Do not push it to `main`. Follow a different branch, pull request, or test demand only when the user explicitly asks for it. The full definition and the exclusions are under "Docs-only changes".
 22) SOUND EFFECT PROMPT MAPPING: every sound effect you add to or regenerate in the repo (`public/sound/*.mp3` outside `music/`, `story/` and `tutorial/`, plus `public/mine_explosion.mp3`) MUST get an entry in `docs/asset-sources/sound-effects-prompts.json` in the same commit: path, exact prompt, `model_id` (use `eleven_text_to_sound_v3` for new ElevenLabs sound effects), flow/node/generation ids, generation date, settings (duration, prompt influence, loop), shipped duration and loudness, and status. A new voice line goes into `VOICE_LINES` in `tests/unit/soundEffectsPromptMapping.test.js` instead. That unit test fails on any unmapped sound effect. Every new or renamed audio file anywhere under `public/` (sound effects, music, narration, voice lines, milestone narration) must also get an entry in `src/audio/audioCatalogue.js` in the same commit: friendly name, file, section, when it plays, loop flag, and the generation prompt/model when one exists. `tests/unit/audioCatalogue.test.js` fails if a shipped audio file is missing from that catalogue. The Settings Audio tab loads this module only when the player opens it; do not import it from startup or simulation code. Regenerated effects also keep their pre-v3 file in `public/sound/legacy/`, recorded as `previous.legacy_path`. The mapping guard ignores that folder as a current effect and checks each legacy path. The game plays the legacy file until the player checks New on that row; the choice is IndexedDB only and must stay out of simulation, saves, replays and multiplayer.
 
@@ -54,7 +54,7 @@ There is no CI on `dev` and deploys are not gated, so the agent that pushes is t
 
 If Playwright reports a missing browser, check `command -v chromium` before trying a download. When the system browser is present, run `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH="$(command -v chromium)" npm run test:e2e -- --project=chromium` and add affected test paths when using the targeted fallback. This uses the browser already installed even when the Playwright CDN is blocked. For older checkouts, verify that `playwright.config.js` reads `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`.
 
-A docs-only change skips the test commands in this list. Run `npm run lint` only, then push straight to `dev` (rule 21).
+A docs-only change skips the test commands in this list. Run `npm run lint` only, then push straight to `dev` (rule 21). A strict TODO-only commit uses the lightweight validation and push workflow below.
 
 GitHub Actions (`.github/workflows/ci.yml`) only runs for PRs into `main` and pushes to `main`. Do not add CI jobs for `dev`.
 
@@ -62,14 +62,6 @@ GitHub Actions (`.github/workflows/ci.yml`) only runs for PRs into `main` and pu
 
 A change is docs-only when **every** file it adds or edits is a documentation Markdown file (`.md`) and **none** of those files is code or a configuration file. Documentation Markdown includes `AGENTS.md` (agent rules are documentation, not configuration), README files, `docs/`, `specs/`, `prompt-history/`, `TODO/`, skill notes, and other prose `.md` files. Source code, tests, styles, scripts, JSON, YAML, TOML, and any other code or configuration file are outside this exception, whatever the extension. A `.md` file is also outside this exception when the repository treats that file itself as code or configuration (for example a file the build executes, or generated configuration stored as Markdown). Ordinary prose stays inside the exception. If the change also touches anything outside it, the change is not docs-only: run the normal checks and use the current branch workflow above. Change notes and prompt history that accompany a code or configuration edit do not make that edit docs-only.
 
-
-### Brainstorm list (`docs/brainstorm.md`)
-
-`docs/brainstorm.md` is the shared open-ideas brainstorm for code-for-battle (B-001, B-002, …). **Grok Bot alone** creates and edits this file. Other agents (including Codex) must not touch it.
-
-1. When the **only** change needed is to `docs/brainstorm.md`, Grok Bot commits and pushes that change **directly to `dev`**. No prompt-history entry, no `docs/changes/` note, no features/unreleased entry, and no other file in the same commit.
-2. After the initial bootstrap commit that introduced `docs/brainstorm.md` together with this AGENTS.md rule, every later edit to `docs/brainstorm.md` **must** be committed **alone** — never in the same commit as any other file.
-3. Do not implement brainstorm ideas from this file until Patrick asks for implementation; the file is the living idea list, not a work queue by itself.
 
 For a docs-only change:
 
@@ -83,7 +75,7 @@ For a docs-only change:
 ### Netlify
 
 - `main` deploys to production.
-- `dev` is the only branch deploy. Netlify builds it right after each merge into `dev`.
+- `dev` is the only branch deploy. Netlify builds application changes after they reach `dev`. The ignore command skips validated TODO-only commit ranges where Git history is available.
 - Deploy previews are built for PRs into both `main` and `dev`, at `https://deploy-preview-<PR-number>--code-for-battle.netlify.app`. Use the preview to verify a change before merging.
 - `netlify.toml` runs `node scripts/netlify-ignore.mjs` as its `ignore` command. It builds production, the `dev` branch deploy, and all PR deploy previews, including PRs into `dev`. Other branch deploys are skipped. Preview decisions do not require a GitHub API lookup.
 - **Backend separation:** the dev branch deploy uses the same Upstash Redis database and Netlify Blobs stores as production, but Netlify sets `REDIS_KEY_PREFIX=dev:` for the branch-deploy context only. Every Redis key (multiplayer stats Lua scripts) and every Blobs key (signalling, invite codes, Blobs stats fallback) is then written under `dev:` (`src/network/storageKeyPrefix.js`). Production has no prefix, and neither do deploy previews of PRs into `main`: they share production's keys. Any new server or edge code that touches Redis or Blobs must go through that prefix (`readStorageKeyPrefix` / `prefixBlobStore`) and needs a test for it.
@@ -128,7 +120,7 @@ Never edit the version by hand. `package.json` holds the **last released** versi
 Every PR that changes behaviour adds one small file per change under `features/unreleased/<category>/`, where category is `features`, `improvements` or `bugfixes`:
 
 ```json
-{ "description": "One short, user-facing line that fits the loading screen." }
+{ "description": "One short, user-facing line that fits the loading screen.", "todoIds": ["FEAT-77361c9a334540aebba139bd2302efb5"] }
 ```
 
 Name it `<pr-number>-<slug>.json` or `<YYYY-MM-DD>-<slug>.json`. Add `"breaking": true` for a breaking change. Never edit another PR's entry file and never edit released `features/<version>.json` files. Because each PR only adds its own files, parallel branches never conflict on the version.
@@ -190,21 +182,19 @@ GitHub app access and the shell approval reviewer are separate controls. If a pu
 
 Never use shadows on buttons in any UI state.
 
-## Voice To-Do List
+## To-Do List skill
 
-When the user asks to brainstorm to-dos or run the To-Do List skill, follow [skills/to-do-list/SKILL.md](skills/to-do-list/SKILL.md). This workflow applies to ChatGPT, Grok, and Grok Bot. Route the agreed draft through Grok Bot for saving in [docs/brainstorm.md](docs/brainstorm.md) when the user asks to wrap up.
+For brainstorming, backlog management and manual QA reports, use [the To-Do List skill](skills/to-do-list/SKILL.md). Codex, Grok and Grok Bot can all maintain the same canonical `TODO/records/` backlog. The original `docs/brainstorm.md` and the three category Markdown lists are historical snapshots. Existing brainstorm IDs resolve as aliases.
 
-For voice To-Do List brainstorming, the only repository record is the agreed final list. Keep the conversation and interim drafts in the session. Omit prompt-history entries, transcripts, verbatim quotes, and per-turn notes for these sessions.
+Strict TODO-only operations invoke the skill's data-only validation and direct push to `dev`. They are exempt from the general lint, test, documentation and prompt Markdown requirements. Record text interactions under `prompt-history/todo/`. For voice brainstorming, commit only the agreed TODO records. A change that also alters code, specs, skills, release notes or other paths receives the normal checks.
 
-## To-do completion records
+## TODO reconciliation
 
-Keep completed entries and their specs. In the category lists under `TODO/`, change the checkbox to `[x]` and move the entry to the matching area under Done. For `docs/brainstorm.md`, Grok Bot keeps the original idea ID and text and marks the entry `[x]` in the completion line.
-
-Add one indented line to the checked entry in this format:
-
-`- Completed YYYY-MM-DD · Commit: [short SHA](https://github.com/theSystem85/code-for-battle/commit/full-sha) · Version: vX.Y.Z (dev)`
-
-Use the UTC date of the first verified deployment containing the finished work and link the implementation commit on the target branch. When historical deployment dates are unavailable, label the implementation date as the commit date. Use the first verified build that contains the complete change, including a successful `dev` deploy when it shipped there first. Match the version and deployed commit in the deploy's `build-info.json` and verify that the implementation commit is included. A later main release may be added alongside the dev version. For historical entries, identify the version from a release record or the version produced by the historical source, and label source-derived versions as build versions. If a version is still unverified, record it as pending and fill it in when confirmed. Keep partially implemented items open.
+- Before implementation, search the backlog by ID, subsystem or behavior using `node scripts/todo.mjs query` and `get`. Check overlap and dependencies. Keep unrelated work outside the implementation and capture newly discovered issues in the backlog.
+- Update relevant records in the same verified change set. Use IMPLEMENTED when complete, PARTIALLY_IMPLEMENTED when incomplete, and BLOCKED when appropriate. For an untracked user-visible change, create an IMPLEMENTED record linked to the originating prompt and its implementation. Include a short, playable manual test plan with stable steps and expected outcomes. Internal work without manual QA may use NOT_APPLICABLE.
+- Advance the implementation revision when tested behavior changes. Preserve historical verification, keep new work NOT_TESTED and allow the tooling to set RETEST_REQUIRED when a previously tested revision changes. Only the user's manual result may mark PASSED or FAILED.
+- Put the exact canonical TODO ID in the relevant spec, a concise source comment near the behavior, the change note and the `todoIds` array of its release-note entry. Use a shared comment at the relevant boundary when several code paths implement the same TODO. Include spec, source, release note and available implementation/deployment references in the record. An open item gets implementation references as they become applicable. Preserve authoritative historical references.
+- Before delivery validate record changes with `node scripts/todo.mjs validate` in addition to the normal application checks. As verified deployments become available, record the first verified dev version and commit where useful. See [schema and workflow](specs/repository-todo-management.md).
 
 ## Explicit push authorization reaffirmed (2026-11-26)
 

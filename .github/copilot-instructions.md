@@ -1,5 +1,7 @@
 # GitHub Copilot Instructions - Gemini RTS Game Clone
 
+Follow the canonical [TODO reconciliation rules](../AGENTS.md#todo-reconciliation) for implementation and [To-Do List skill](../skills/to-do-list/SKILL.md) for backlog management.
+
 ## Project Overview
 This is a 2D tile-based Real-Time Strategy (RTS) game built with vanilla JavaScript ES6 modules, Vite, and Canvas rendering. The game features unit management, building construction, resource harvesting, AI enemies, and combat mechanics.
 

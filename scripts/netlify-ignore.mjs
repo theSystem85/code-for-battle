@@ -3,15 +3,19 @@
 // Exit 0 = skip this build, exit 1 = build.
 //
 // - production (main): always build
-// - branch deploys: build only the `dev` branch
+// - branch deploys: build only the `dev` branch, skipping backlog-only updates
 // - deploy previews: always build, including PRs targeting dev
 import { fileURLToPath } from 'node:url'
 import { resolve } from 'node:path'
+import { todoRangeOnly } from './todo-paths.mjs'
 
 export const DEV_BRANCH = 'dev'
-export async function decideNetlifyBuild(env) {
+export async function decideNetlifyBuild(env, cwd) {
   const context = env.CONTEXT || ''
   if (context === 'branch-deploy') {
+    if (env.BRANCH === DEV_BRANCH && todoRangeOnly(env.CACHED_COMMIT_REF, env.COMMIT_REF, cwd)) {
+      return { build: false, reason: 'TODO-only commits; backlog is served directly from Git' }
+    }
     return env.BRANCH === DEV_BRANCH
       ? { build: true, reason: 'dev branch deploy' }
       : { build: false, reason: `branch deploys are limited to ${DEV_BRANCH} (got ${env.BRANCH || 'unknown'})` }

@@ -11,6 +11,7 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { appendReleaseNote } from '../src/ui/releaseData.js'
 import { CATEGORIES, RELEASES_DIR, computeAppVersion, readBaseVersion } from './versioning.mjs'
 
 // CFB_RELEASE_ROOT lets the unit tests run the script against a scratch repo.
@@ -28,7 +29,10 @@ function fail(message) {
 export function buildReleaseFile(version, entries) {
   const release = { version }
   for (const category of CATEGORIES) {
-    release[category] = entries.filter(entry => entry.category === category).map(entry => entry.description)
+    release[category] = []
+    for (const entry of entries.filter(entry => entry.category === category)) {
+      appendReleaseNote(release, category, entry.description, entry.todoIds)
+    }
   }
   return release
 }

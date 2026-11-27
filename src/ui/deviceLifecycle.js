@@ -212,7 +212,7 @@ export function setupDoubleTapPrevention() {
     }
 
     const target = event.target
-    if (target && typeof target.closest === 'function' && target.closest('input, textarea, select, [contenteditable="true"], .graphics-tuner-info')) {
+    if (target && typeof target.closest === 'function' && target.closest('input, textarea, select, [contenteditable="true"], .graphics-tuner-info, .release-notes__dialog')) {
       lastTouchEnd = Date.now()
       return
     }

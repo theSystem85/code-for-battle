@@ -10,6 +10,7 @@
 // features/<version>.json and writes that version into package.json.
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join, relative } from 'node:path'
+import { ID_PATTERN } from '../src/todo/schema.js'
 
 export const CATEGORIES = Object.freeze(['features', 'improvements', 'bugfixes'])
 export const RELEASES_DIR = 'features'
@@ -43,7 +44,12 @@ export function validateEntry(data, file = 'entry') {
   if ('breaking' in data && typeof data.breaking !== 'boolean') {
     errors.push(`${file}: "breaking" must be true or false when present`)
   }
-  const extra = Object.keys(data).filter(key => key !== 'description' && key !== 'breaking')
+  if ('todoIds' in data && (!Array.isArray(data.todoIds) || !data.todoIds.length ||
+    !data.todoIds.every(id => typeof id === 'string' && ID_PATTERN.test(id)) ||
+    new Set(data.todoIds).size !== data.todoIds.length)) {
+    errors.push(`${file}: "todoIds" must contain unique, valid TODO IDs`)
+  }
+  const extra = Object.keys(data).filter(key => !['description', 'breaking', 'todoIds'].includes(key))
   if (extra.length) errors.push(`${file}: unknown keys ${extra.join(', ')}`)
   return errors
 }
@@ -70,7 +76,7 @@ export function readUnreleasedEntries(root) {
         errors.push(...entryErrors)
         continue
       }
-      entries.push({ category, file: rel, description: data.description.trim(), breaking: data.breaking === true })
+      entries.push({ category, file: rel, description: data.description.trim(), breaking: data.breaking === true, ...(data.todoIds ? { todoIds: data.todoIds } : {}) })
     }
   }
   return { entries, errors }

@@ -1,0 +1,4 @@
+- [x] **Repository TODOs and in-game manual QA plans**
+  - Added the shared backlog, text and voice agent workflow, and the read-only TODO tab in Release notes on dev.
+  - TODO ID: `FEAT-77361c9a334540aebba139bd2302efb5`
+  - Spec: [Repository TODO management](../../specs/repository-todo-management.md)

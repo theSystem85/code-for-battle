@@ -59,7 +59,8 @@ export default [
         process: 'readonly',
         Netlify: 'readonly',
         __APP_VERSION__: 'readonly',
-        __LIVE_UPDATE__: 'readonly'
+        __LIVE_UPDATE__: 'readonly',
+        __TODO_REVISIONS__: 'readonly'
       }
     },
     rules: {
